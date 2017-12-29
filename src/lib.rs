@@ -1,5 +1,4 @@
 extern crate actix;
-extern crate actix_web;
 extern crate bytes;
 extern crate cookie;
 extern crate futures;
@@ -14,8 +13,15 @@ extern crate redis_async;
 #[macro_use]
 extern crate failure;
 
+#[cfg(feature="web")]
+extern crate actix_web;
+
 mod redis;
+
+#[cfg(feature="web")]
 mod session;
 
 pub use redis::RedisActor;
+
+#[cfg(feature="web")]
 pub use session::RedisSessionBackend;

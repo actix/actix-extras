@@ -16,6 +16,12 @@ exclude = [".gitignore", ".travis.yml", ".cargo/config", "appveyor.yml"]
 name = "actix_redis"
 path = "src/lib.rs"
 
+[features]
+default = ["web"]
+
+# actix-web integration
+web = ["actix-web"]
+
 [dependencies]
 rand = "0.3"
 http = "0.1"
@@ -30,7 +36,7 @@ actix = "^0.3.5"
 redis-async = "0.0"
 cookie = { version="0.10", features=["percent-encode", "secure"] }
 
-actix-web = { git = "https://github.com/actix/actix-web.git" }
+actix-web = { git="https://github.com/actix/actix-web.git", optional=true }
 
 [dev-dependencies]
 env_logger = "0.4"
