@@ -3,7 +3,6 @@ use std::collections::VecDeque;
 
 use bytes::BytesMut;
 use futures::Future;
-use futures::future::Either;
 use futures::unsync::oneshot;
 use tokio_core::net::TcpStream;
 use tokio_io::codec::{Decoder, Encoder};
@@ -108,7 +107,7 @@ impl Handler<Command> for RedisActor {
     fn handle(&mut self, msg: Command, ctx: &mut Self::Context) -> Response<Self, Command> {
         let (tx, rx) = oneshot::channel();
         self.queue.push_back(tx);
-        ctx.send(Value(msg.0));
+        let _ = ctx.send(Value(msg.0));
 
         Self::async_reply(
             rx.map_err(|_| io::Error::new(io::ErrorKind::Other, "").into())

@@ -2,12 +2,23 @@
 name = "actix-redis"
 version = "0.1.0"
 authors = ["Nikolay Kim <fafhrd91@gmail.com>"]
+description = "Redis integration for actix web framework"
+license = "MIT/Apache-2.0"
+readme = "README.md"
+keywords = ["http", "web", "framework", "async", "actix"]
+homepage = "https://github.com/actix/actix-redis"
+repository = "https://github.com/actix/actix-redis.git"
+documentation = "https://docs.rs/actix-redis/"
+categories = ["network-programming", "asynchronous"]
+exclude = [".gitignore", ".travis.yml", ".cargo/config", "appveyor.yml"]
 
 [lib]
 name = "actix_redis"
 path = "src/lib.rs"
 
 [dependencies]
+rand = "0.3"
+http = "0.1"
 bytes = "0.4"
 failure = "^0.1.1"
 futures = "0.1"
@@ -16,5 +27,10 @@ serde_json = "1.0"
 tokio-io = "0.1"
 tokio-core = "0.1"
 actix = "^0.3.5"
-actix-web = { path = "../actix-web/" }
-redis-async = { git = "https://github.com/benashford/redis-async-rs.git" }
+redis-async = "0.0"
+cookie = { version="0.10", features=["percent-encode", "secure"] }
+
+actix-web = { git = "https://github.com/actix/actix-web.git" }
+
+[dev-dependencies]
+env_logger = "0.4"

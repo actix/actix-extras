@@ -15,11 +15,6 @@ use actix_redis::RedisSessionBackend;
 /// simple handler
 fn index(mut req: HttpRequest) -> Result<HttpResponse> {
     println!("{:?}", req);
-    if let Ok(ch) = req.payload_mut().readany().poll() {
-        if let futures::Async::Ready(Some(d)) = ch {
-            println!("{}", String::from_utf8_lossy(d.as_ref()));
-        }
-    }
 
     // session
     if let Some(count) = req.session().get::<i32>("counter")? {
@@ -43,14 +38,14 @@ fn main() {
             .middleware(middleware::Logger::default())
             // cookie session middleware
             .middleware(middleware::SessionStorage::new(
-                RedisSessionBackend::new("127.0.0.1:6379", Duration::from_secs(7200))
+                RedisSessionBackend::new("127.0.0.1:6379", &[0; 32])
                     .expect("Can not connect to redis server")
             ))
             // register simple route, handle all methods
             .resource("/", |r| r.f(index)))
         .bind("0.0.0.0:8080").unwrap()
+        .threads(1)
         .start();
 
-    println!("Starting http server: 127.0.0.1:8080");
     let _ = sys.run();
 }
