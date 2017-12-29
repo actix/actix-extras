@@ -1,0 +1,20 @@
+[package]
+name = "actix-redis"
+version = "0.1.0"
+authors = ["Nikolay Kim <fafhrd91@gmail.com>"]
+
+[lib]
+name = "actix_redis"
+path = "src/lib.rs"
+
+[dependencies]
+bytes = "0.4"
+failure = "^0.1.1"
+futures = "0.1"
+serde = "1.0"
+serde_json = "1.0"
+tokio-io = "0.1"
+tokio-core = "0.1"
+actix = "^0.3.5"
+actix-web = { path = "../actix-web/" }
+redis-async = { git = "https://github.com/benashford/redis-async-rs.git" }
