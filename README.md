@@ -13,9 +13,10 @@ Note that whatever you write into your session is visible by the user (but not m
 Constructor panics if key length is less than 32 bytes.
 
 ```rust,ignore
-# extern crate actix;
-# extern crate actix_web;
-# use actix_web::*;
+extern crate actix_web;
+extern crate actix_redis;
+
+use actix_web::*;
 use actix_web::middleware::SessionStorage;
 use actix_redis::RedisSessionBackend;
 
