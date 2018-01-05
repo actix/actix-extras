@@ -17,11 +17,9 @@ extern crate failure;
 extern crate actix_web;
 
 mod redis;
+pub use redis::RedisActor;
 
 #[cfg(feature="web")]
 mod session;
-
-pub use redis::RedisActor;
-
 #[cfg(feature="web")]
 pub use session::RedisSessionBackend;

@@ -1,11 +1,9 @@
 use std::io;
 use std::collections::VecDeque;
 
-use bytes::BytesMut;
 use futures::Future;
 use futures::unsync::oneshot;
 use tokio_core::net::TcpStream;
-use tokio_io::codec::{Decoder, Encoder};
 use redis_async::{resp, error};
 
 use actix::prelude::*;
@@ -27,34 +25,9 @@ impl From<io::Error> for Error {
     }
 }
 
-#[derive(Message)]
-pub struct Value(resp::RespValue);
-
-/// Redis codec wrapper
-pub struct RedisCodec;
-
-impl Encoder for RedisCodec {
-    type Item = Value;
-    type Error = Error;
-
-    fn encode(&mut self, msg: Value, buf: &mut BytesMut) -> Result<(), Self::Error> {
-        match resp::RespCodec.encode(msg.0, buf) {
-            Ok(()) => Ok(()),
-            Err(err) => Err(Error::Io(err))
-        }
-    }
-}
-
-impl Decoder for RedisCodec {
-    type Item = Value;
-    type Error = Error;
-
-    fn decode(&mut self, buf: &mut BytesMut) -> Result<Option<Self::Item>, Self::Error> {
-        match resp::RespCodec.decode(buf) {
-            Ok(Some(item)) => Ok(Some(Value(item))),
-            Ok(None) => Ok(None),
-            Err(err) => Err(Error::Redis(err)),
-        }
+impl From<error::Error> for Error {
+    fn from(err: error::Error) -> Error {
+        Error::Redis(err)
     }
 }
 
@@ -72,7 +45,7 @@ pub struct RedisActor {
 
 impl RedisActor {
     pub fn start(io: TcpStream) -> Address<RedisActor> {
-        RedisActor{queue: VecDeque::new()}.framed(io, RedisCodec)
+        RedisActor{queue: VecDeque::new()}.framed(io, resp::RespCodec)
     }
 }
 
@@ -82,34 +55,24 @@ impl Actor for RedisActor {
 
 impl FramedActor for RedisActor {
     type Io = TcpStream;
-    type Codec = RedisCodec;
-}
+    type Codec = resp::RespCodec;
 
-impl StreamHandler<Value, Error> for RedisActor {}
-
-impl Handler<Value, Error> for RedisActor {
-
-    fn error(&mut self, err: Error, _: &mut Self::Context) {
+    fn handle(&mut self, msg: Result<resp::RespValue, error::Error>, _ctx: &mut Self::Context) {
         if let Some(tx) = self.queue.pop_front() {
-            let _ = tx.send(Err(err));
+            let _ = tx.send(msg.map_err(|e| e.into()));
         }
-    }
-
-    fn handle(&mut self, msg: Value, _ctx: &mut Self::Context) -> Response<Self, Value> {
-        if let Some(tx) = self.queue.pop_front() {
-            let _ = tx.send(Ok(msg.0));
-        }
-        Self::empty()
     }
 }
 
 impl Handler<Command> for RedisActor {
-    fn handle(&mut self, msg: Command, ctx: &mut Self::Context) -> Response<Self, Command> {
+    type Result = ResponseFuture<Self, Command>;
+
+    fn handle(&mut self, msg: Command, ctx: &mut Self::Context) -> Self::Result {
         let (tx, rx) = oneshot::channel();
         self.queue.push_back(tx);
-        let _ = ctx.send(Value(msg.0));
+        let _ = ctx.send(msg.0);
 
-        Self::async_reply(
+        Box::new(
             rx.map_err(|_| io::Error::new(io::ErrorKind::Other, "").into())
                 .and_then(|res| res)
                 .actfuture())
