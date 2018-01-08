@@ -36,7 +36,7 @@ redis-async = "0.0"
 # cookie = { version="0.10", features=["percent-encode", "secure"] }
 cookie = { git="https://github.com/alexcrichton/cookie-rs.git", features=["percent-encode", "secure"] }
 
-actix = "0.4"
+actix = "^0.4.2"
 actix-web = { git="https://github.com/actix/actix-web.git", optional=true }
 
 [dev-dependencies]
