@@ -12,7 +12,7 @@ use redis_async::resp::RespValue;
 use cookie::{CookieJar, Cookie, Key};
 use http::header::{self, HeaderValue};
 use actix::prelude::*;
-use actix_web::{error, Error, HttpRequest, HttpResponse};
+use actix_web::{error, Error, Result, HttpRequest, HttpResponse};
 use actix_web::middleware::{SessionImpl, SessionBackend, Response as MiddlewareResponse};
 
 use redis::{Command, RedisActor};
@@ -51,11 +51,12 @@ impl SessionImpl for RedisSession {
         self.state.clear()
     }
 
-    fn write(&self, resp: HttpResponse) -> MiddlewareResponse {
+    fn write(&self, resp: HttpResponse) -> Result<MiddlewareResponse> {
         if self.changed {
-            MiddlewareResponse::Future(self.inner.update(&self.state, resp, self.value.as_ref()))
+            Ok(MiddlewareResponse::Future(
+                self.inner.update(&self.state, resp, self.value.as_ref())))
         } else {
-            MiddlewareResponse::Done(resp)
+            Ok(MiddlewareResponse::Done(resp))
         }
     }
 }
