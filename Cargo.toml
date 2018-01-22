@@ -20,23 +20,30 @@ path = "src/lib.rs"
 default = ["web"]
 
 # actix-web integration
-web = ["actix-web"]
+web = ["actix-web", "cookie", "http", "rand", "serde", "serde_json"]
 
 [dependencies]
-rand = "0.3"
-http = "0.1"
-bytes = "0.4"
+actix = "^0.4.3"
+
+log = "0.4"
+backoff = "0.1"
 failure = "^0.1.1"
 futures = "0.1"
-serde = "1.0"
-serde_json = "1.0"
 tokio-io = "0.1"
 tokio-core = "0.1"
 redis-async = "0.0"
-cookie = { version="0.10", features=["percent-encode", "secure"] }
+trust-dns-resolver = "0.7"
 
-actix = "^0.4.2"
+# actix web session
 actix-web = { version="0.3", optional=true }
+cookie = { version="0.10", features=["percent-encode", "secure"], optional=true }
+http = { version="0.1", optional=true }
+rand = { version="0.3", optional=true }
+serde = { version="1.0", optional=true }
+serde_json = { version="1.0", optional=true }
 
 [dev-dependencies]
-env_logger = "0.4"
+env_logger = "0.5"
+
+[patch.crates-io]
+"actix" = { git = 'https://github.com/actix/actix.git' }

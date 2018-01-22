@@ -28,8 +28,8 @@ fn index(mut req: HttpRequest) -> Result<HttpResponse> {
 }
 
 fn main() {
-    ::std::env::set_var("RUST_LOG", "actix_web=info");
-    let _ = env_logger::init();
+    ::std::env::set_var("RUST_LOG", "actix_web=info,actix_redis=info");
+    env_logger::init();
     let sys = actix::System::new("basic-example");
 
     HttpServer::new(
@@ -39,7 +39,6 @@ fn main() {
             // cookie session middleware
             .middleware(middleware::SessionStorage::new(
                 RedisSessionBackend::new("127.0.0.1:6379", &[0; 32])
-                    .expect("Can not connect to redis server")
             ))
             // register simple route, handle all methods
             .resource("/", |r| r.f(index)))

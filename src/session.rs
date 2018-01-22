@@ -1,4 +1,3 @@
-use std::{io, net};
 use std::rc::Rc;
 use std::iter::FromIterator;
 use std::collections::HashMap;
@@ -7,7 +6,6 @@ use serde_json;
 use rand::{self, Rng};
 use futures::Future;
 use futures::future::{Either, ok as FutOk, err as FutErr};
-use tokio_core::net::TcpStream;
 use redis_async::resp::RespValue;
 use cookie::{CookieJar, Cookie, Key};
 use http::header::{self, HeaderValue};
@@ -76,28 +74,12 @@ impl RedisSessionBackend {
     /// Create new redis session backend
     ///
     /// * `addr` - address of the redis server
-    pub fn new<S: net::ToSocketAddrs>(addr: S, key: &[u8]) -> io::Result<RedisSessionBackend> {
-        let h = Arbiter::handle();
-        let mut err = None;
-        for addr in addr.to_socket_addrs()? {
-            match net::TcpStream::connect(&addr) {
-                Err(e) => err = Some(e),
-                Ok(conn) => {
-                    let addr = RedisActor::start(
-                        TcpStream::from_stream(conn, h).expect("Can not create tcp stream"));
-                    return Ok(RedisSessionBackend(
-                        Rc::new(Inner{key: Key::from_master(key),
-                                      ttl: "7200".to_owned(),
-                                      addr: addr,
-                                      name: "actix-session".to_owned()})));
-                },
-            }
-        }
-        if let Some(e) = err.take() {
-            Err(e)
-        } else {
-            Err(io::Error::new(io::ErrorKind::Other, "Can not connect to redis server."))
-        }
+    pub fn new<S: Into<String>>(addr: S, key: &[u8]) -> RedisSessionBackend {
+        RedisSessionBackend(
+            Rc::new(Inner{key: Key::from_master(key),
+                          ttl: "7200".to_owned(),
+                          addr: RedisActor::start(addr),
+                          name: "actix-session".to_owned()}))
     }
 
     /// Set time to live in seconds for session value
