@@ -27,11 +27,7 @@ pub struct RedisSession {
 impl SessionImpl for RedisSession {
 
     fn get(&self, key: &str) -> Option<&str> {
-        if let Some(s) = self.state.get(key) {
-            Some(s)
-        } else {
-            None
-        }
+        self.state.get(key).map(|s| s.as_str())
     }
 
     fn set(&mut self, key: &str, value: String) {
@@ -88,6 +84,7 @@ impl RedisSessionBackend {
         self
     }
 
+    /// Set custom cookie name for session id
     pub fn cookie_name(mut self, name: &str) -> Self {
         Rc::get_mut(&mut self.0).unwrap().name = name.to_owned();
         self
@@ -108,15 +105,13 @@ impl<S> SessionBackend<S> for RedisSessionBackend {
                     changed: false,
                     inner: inner,
                     state: state,
-                    value: Some(value),
-                }
+                    value: Some(value) }
             } else {
                 RedisSession {
                     changed: false,
                     inner: inner,
                     state: HashMap::new(),
-                    value: None,
-                }
+                    value: None }
             }
         }))
     }
@@ -130,8 +125,10 @@ struct Inner {
 }
 
 impl Inner {
+    #[cfg_attr(feature = "cargo-clippy", allow(type_complexity))]
     fn load<S>(&self, req: &mut HttpRequest<S>)
-               -> Box<Future<Item=Option<(HashMap<String, String>, String)>, Error=Error>> {
+               -> Box<Future<Item=Option<(HashMap<String, String>, String)>, Error=Error>>
+    {
         if let Ok(cookies) = req.cookies() {
             for cookie in cookies {
                 if cookie.name() == self.name {
@@ -142,28 +139,26 @@ impl Inner {
                         return Box::new(
                             self.addr.call_fut(Command(resp_array!["GET", cookie.value()]))
                                 .map_err(Error::from)
-                                .and_then(move |res| {
-                                    match res {
-                                        Ok(val) => {
-                                            match val {
-                                                RespValue::Error(err) =>
-                                                    return Err(
-                                                        error::ErrorInternalServerError(err).into()),
-                                                RespValue::SimpleString(s) =>
-                                                    if let Ok(val) = serde_json::from_str(&s) {
-                                                        return Ok(Some((val, value)))
-                                                    },
-                                                RespValue::BulkString(s) => {
-                                                    if let Ok(val) = serde_json::from_slice(&s) {
-                                                        return Ok(Some((val, value)))
-                                                    }
+                                .and_then(move |res| match res {
+                                    Ok(val) => {
+                                        match val {
+                                            RespValue::Error(err) =>
+                                                return Err(
+                                                    error::ErrorInternalServerError(err).into()),
+                                            RespValue::SimpleString(s) =>
+                                                if let Ok(val) = serde_json::from_str(&s) {
+                                                    return Ok(Some((val, value)))
                                                 },
-                                                _ => (),
-                                            }
-                                            Ok(None)
-                                        },
-                                        Err(err) => Err(error::ErrorInternalServerError(err).into())
-                                    }
+                                            RespValue::BulkString(s) => {
+                                                if let Ok(val) = serde_json::from_slice(&s) {
+                                                    return Ok(Some((val, value)))
+                                                }
+                                            },
+                                            _ => (),
+                                        }
+                                        Ok(None)
+                                    },
+                                    Err(err) => Err(error::ErrorInternalServerError(err).into())
                                 }))
                     } else {
                         return Box::new(FutOk(None))
@@ -198,27 +193,23 @@ impl Inner {
         Box::new(
             match serde_json::to_string(state) {
                 Err(e) => Either::A(FutErr(e.into())),
-                Ok(body) => {
-                    Either::B(
-                        self.addr.call_fut(
-                            Command(resp_array!["SET", value, body,"EX", &self.ttl]))
-                            .map_err(Error::from)
-                            .and_then(move |res| {
-                                match res {
-                                    Ok(_) => {
-                                        if let Some(jar) = jar {
-                                            for cookie in jar.delta() {
-                                                let val = HeaderValue::from_str(
-                                                    &cookie.to_string())?;
-                                                resp.headers_mut().append(header::SET_COOKIE, val);
-                                            }
-                                        }
-                                        Ok(resp)
-                                    },
-                                    Err(err) => Err(error::ErrorInternalServerError(err).into())
+                Ok(body) => Either::B(
+                    self.addr.call_fut(
+                        Command(resp_array!["SET", value, body,"EX", &self.ttl]))
+                        .map_err(Error::from)
+                        .and_then(move |res| match res {
+                            Ok(_) => {
+                                if let Some(jar) = jar {
+                                    for cookie in jar.delta() {
+                                        let val = HeaderValue::from_str(
+                                            &cookie.to_string())?;
+                                        resp.headers_mut().append(header::SET_COOKIE, val);
+                                    }
                                 }
-                            }))
-                }
+                                Ok(resp)
+                            },
+                            Err(err) => Err(error::ErrorInternalServerError(err).into())
+                        }))
             })
     }
 }
