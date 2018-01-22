@@ -57,7 +57,7 @@ impl RedisActor {
                          cell: None,
                          backoff: ExponentialBackoff::default(),
                          queue: VecDeque::new() }
-        }).0
+        })
     }
 }
 
