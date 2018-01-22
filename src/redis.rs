@@ -53,7 +53,8 @@ impl Actor for RedisActor {
             .map_err(|err, act, ctx| {
                 error!("Can not connect to redis server: {}", err);
                 debug!("{:?}", err);
-                // re-connect with backoff time
+                // re-connect with backoff time.
+                // we stop currect context, supervisor will restart it.
                 if let Some(timeout) = act.backoff.next_backoff() {
                     ctx.run_later(timeout, |_, ctx| ctx.stop());
                 } else {
