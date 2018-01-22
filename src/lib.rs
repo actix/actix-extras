@@ -34,3 +34,25 @@ extern crate serde_json;
 mod session;
 #[cfg(feature="web")]
 pub use session::RedisSessionBackend;
+
+
+#[derive(Fail, Debug)]
+pub enum Error {
+    #[fail(display="Redis error {}", _0)]
+    Redis(redis_async::error::Error),
+    /// Receiving message during reconnecting
+    #[fail(display="Redis: Not connected")]
+    NotConnected,
+    /// Cancel all waters when connection get dropped
+    #[fail(display="Redis: Disconnected")]
+    Disconnected,
+}
+
+unsafe impl Send for Error {}
+unsafe impl Sync for Error {}
+
+impl From<redis_async::error::Error> for Error {
+    fn from(err: redis_async::error::Error) -> Error {
+        Error::Redis(err)
+    }
+}
