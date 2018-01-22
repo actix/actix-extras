@@ -70,7 +70,7 @@ impl Actor for RedisActor {
             .map(|stream, act, ctx| {
                 info!("Connected to redis server: {}", act.addr);
                 act.backoff.reset();
-                act.cell = Some(act.add_framed(ctx, stream.framed(resp::RespCodec)));
+                act.cell = Some(act.add_framed(stream.framed(resp::RespCodec), ctx));
             })
             .map_err(|err, act, ctx| {
                 error!("Can not connect to redis server: {}", err);
