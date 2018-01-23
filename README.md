@@ -41,3 +41,18 @@ fn main() {
     let _ = sys.run();
 }
 ```
+
+## License
+
+This project is licensed under either of
+
+* Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0))
+* MIT license ([LICENSE-MIT](LICENSE-MIT) or [http://opensource.org/licenses/MIT](http://opensource.org/licenses/MIT))
+
+at your option.
+
+## Code of Conduct
+
+Contribution to the actix-web crate is organized under the terms of the
+Contributor Covenant, the maintainer of actix-redis, @fafhrd91, promises to
+intervene to uphold that code of conduct.
