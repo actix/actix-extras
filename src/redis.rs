@@ -14,7 +14,7 @@ use redis_async::resp::{RespCodec, RespValue};
 use Error;
 use connect::TcpConnector;
 
-#[derive(Message)]
+#[derive(Message, Debug)]
 #[rtype(RespValue, Error)]
 pub struct Command(pub RespValue);
 

@@ -14,7 +14,7 @@ extern crate trust_dns_resolver;
 mod redis;
 mod connect;
 
-pub use redis::RedisActor;
+pub use redis::{Command, RedisActor};
 pub use connect::TcpConnector;
 
 #[cfg(feature="web")]
@@ -56,3 +56,7 @@ impl From<redis_async::error::Error> for Error {
         Error::Redis(err)
     }
 }
+
+// re-export
+pub use redis_async::resp::RespValue;
+pub use redis_async::error::Error as RespError;
