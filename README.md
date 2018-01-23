@@ -62,6 +62,6 @@ at your option.
 
 ## Code of Conduct
 
-Contribution to the actix-web crate is organized under the terms of the
+Contribution to the actix-redis crate is organized under the terms of the
 Contributor Covenant, the maintainer of actix-redis, @fafhrd91, promises to
 intervene to uphold that code of conduct.
