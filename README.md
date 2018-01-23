@@ -1,4 +1,6 @@
-# Redis integration for actix framework
+# Actix redis [![Build Status](https://travis-ci.org/actix/actix-redis.svg?branch=master)](https://travis-ci.org/actix/actix-redis) [![codecov](https://codecov.io/gh/actix/actix-redis/branch/master/graph/badge.svg)](https://codecov.io/gh/actix/actix-redis) [![crates.io](http://meritbadge.herokuapp.com/actix-web)](https://crates.io/crates/actix-redis) 
+
+Redis integration for actix framework.
 
 ## Documentation
 

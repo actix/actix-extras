@@ -16,6 +16,10 @@ exclude = [".gitignore", ".travis.yml", ".cargo/config", "appveyor.yml"]
 name = "actix_redis"
 path = "src/lib.rs"
 
+[badges]
+travis-ci = { repository = "actix/actix-redis", branch = "master" }
+codecov = { repository = "actix/actix-redis", branch = "master", service = "github" }
+
 [features]
 default = ["web"]
 
