@@ -27,8 +27,7 @@ default = ["web"]
 web = ["actix-web", "cookie", "http", "rand", "serde", "serde_json"]
 
 [dependencies]
-#actix = "^0.4.4"
-actix = { git = 'https://github.com/actix/actix.git' }
+actix = "^0.4.5"
 
 log = "0.4"
 backoff = "0.1"
@@ -49,6 +48,3 @@ serde_json = { version="1.0", optional=true }
 
 [dev-dependencies]
 env_logger = "0.5"
-
-[patch.crates-io]
-"actix" = { git = 'https://github.com/actix/actix.git' }
