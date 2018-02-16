@@ -2,32 +2,38 @@ use std::io;
 use std::collections::VecDeque;
 
 use actix::prelude::*;
+use actix::actors::{Connect, Connector};
 use backoff::ExponentialBackoff;
 use backoff::backoff::Backoff;
 use futures::Future;
 use futures::unsync::oneshot;
 use tokio_io::AsyncRead;
+use tokio_io::io::WriteHalf;
+use tokio_io::codec::FramedRead;
 use tokio_core::net::TcpStream;
 use redis_async::error::Error as RespError;
 use redis_async::resp::{RespCodec, RespValue};
 
 use Error;
-use connect::TcpConnector;
 
-#[derive(Message, Debug)]
-#[rtype(RespValue, Error)]
+
+#[derive(Debug)]
 pub struct Command(pub RespValue);
+
+impl Message for Command {
+    type Result = Result<RespValue, Error>;
+}
 
 /// Redis comminucation actor
 pub struct RedisActor {
     addr: String,
     backoff: ExponentialBackoff,
-    cell: Option<FramedCell<RedisActor>>,
+    cell: Option<actix::io::FramedWrite<WriteHalf<TcpStream>, RespCodec>>,
     queue: VecDeque<oneshot::Sender<Result<RespValue, Error>>>,
 }
 
 impl RedisActor {
-    pub fn start<S: Into<String>>(addr: S) -> Address<RedisActor> {
+    pub fn start<S: Into<String>>(addr: S) -> Addr<Unsync, RedisActor> {
         let addr = addr.into();
 
         Supervisor::start(|_| {
@@ -43,16 +49,36 @@ impl Actor for RedisActor {
     type Context = Context<Self>;
 
     fn started(&mut self, ctx: &mut Context<Self>) {
-        TcpConnector::new(self.addr.as_str())
+        Connector::from_registry().send(Connect::host(self.addr.as_str()))
             .into_actor(self)
-            .map(|stream, act, ctx| {
-                info!("Connected to redis server: {}", act.addr);
-                act.backoff.reset();
-                act.cell = Some(act.add_framed(stream.framed(RespCodec), ctx));
+            .map(|res, act, ctx| match res {
+                Ok(stream) => {
+                    info!("Connected to redis server: {}", act.addr);
+
+                    let (r, w) = stream.split();
+
+                    // configure write side of the connection
+                    let mut framed = actix::io::FramedWrite::new(w, RespCodec, ctx);
+                    act.cell = Some(framed);
+
+                    // read side of the connection
+                    ctx.add_stream(FramedRead::new(r, RespCodec));
+
+                    act.backoff.reset();
+                },
+                Err(err) => {
+                    error!("Can not connect to redis server: {}", err);
+                    // re-connect with backoff time.
+                    // we stop currect context, supervisor will restart it.
+                    if let Some(timeout) = act.backoff.next_backoff() {
+                        ctx.run_later(timeout, |_, ctx| ctx.stop());
+                    } else {
+                        ctx.stop();
+                    }
+                }
             })
             .map_err(|err, act, ctx| {
                 error!("Can not connect to redis server: {}", err);
-                debug!("{:?}", err);
                 // re-connect with backoff time.
                 // we stop currect context, supervisor will restart it.
                 if let Some(timeout) = act.backoff.next_backoff() {
@@ -74,40 +100,42 @@ impl Supervised for RedisActor {
     }
 }
 
-impl FramedActor for RedisActor {
-    type Io = TcpStream;
-    type Codec = RespCodec;
+impl actix::io::WriteHandler<io::Error> for RedisActor {
 
-    fn closed(&mut self, error: Option<io::Error>, _: &mut Self::Context) {
-        if let Some(err) = error {
-            warn!("Redis connection dropped: {} error: {}", self.addr, err);
-        } else {
-            warn!("Redis connection dropped: {}", self.addr);
+    fn error(&mut self, err: io::Error, _: &mut Self::Context) -> Running {
+        warn!("Redis connection dropped: {} error: {}", self.addr, err);
+        Running::Stop
+    }
+}
+
+impl StreamHandler<RespValue, RespError> for RedisActor {
+
+    fn error(&mut self, err: RespError, _: &mut Self::Context) -> Running {
+        if let Some(tx) = self.queue.pop_front() {
+            let _ = tx.send(Err(err.into()));
         }
+        Running::Stop
     }
 
-    fn handle(&mut self, msg: Result<RespValue, RespError>, _ctx: &mut Self::Context) {
+    fn handle(&mut self, msg: RespValue, _: &mut Self::Context) {
         if let Some(tx) = self.queue.pop_front() {
-            let _ = tx.send(msg.map_err(|e| e.into()));
+            let _ = tx.send(Ok(msg));
         }
     }
 }
 
 impl Handler<Command> for RedisActor {
-    type Result = ResponseFuture<Self, Command>;
+    type Result = ResponseFuture<RespValue, Error>;
 
     fn handle(&mut self, msg: Command, _: &mut Self::Context) -> Self::Result {
         let (tx, rx) = oneshot::channel();
         if let Some(ref mut cell) = self.cell {
             self.queue.push_back(tx);
-            cell.send(msg.0);
+            cell.write(msg.0);
         } else {
             let _ = tx.send(Err(Error::NotConnected));
         }
 
-        Box::new(
-            rx.map_err(|_| Error::Disconnected)
-                .and_then(|res| res)
-                .actfuture())
+        Box::new(rx.map_err(|_| Error::Disconnected).and_then(|res| res))
     }
 }

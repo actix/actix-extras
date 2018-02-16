@@ -121,7 +121,7 @@ struct Inner {
     key: Key,
     ttl: String,
     name: String,
-    addr: Address<RedisActor>,
+    addr: Addr<Unsync, RedisActor>,
 }
 
 impl Inner {
@@ -137,7 +137,7 @@ impl Inner {
                     if let Some(cookie) = jar.signed(&self.key).get(&self.name) {
                         let value = cookie.value().to_owned();
                         return Box::new(
-                            self.addr.call_fut(Command(resp_array!["GET", cookie.value()]))
+                            self.addr.send(Command(resp_array!["GET", cookie.value()]))
                                 .map_err(Error::from)
                                 .and_then(move |res| match res {
                                     Ok(val) => {
@@ -194,8 +194,7 @@ impl Inner {
             match serde_json::to_string(state) {
                 Err(e) => Either::A(FutErr(e.into())),
                 Ok(body) => Either::B(
-                    self.addr.call_fut(
-                        Command(resp_array!["SET", value, body,"EX", &self.ttl]))
+                    self.addr.send(Command(resp_array!["SET", value, body,"EX", &self.ttl]))
                         .map_err(Error::from)
                         .and_then(move |res| match res {
                             Ok(_) => {

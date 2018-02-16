@@ -9,13 +9,9 @@ extern crate log;
 extern crate redis_async;
 #[macro_use]
 extern crate failure;
-extern crate trust_dns_resolver;
 
 mod redis;
-mod connect;
-
 pub use redis::{Command, RedisActor};
-pub use connect::TcpConnector;
 
 #[cfg(feature="web")]
 extern crate actix_web;

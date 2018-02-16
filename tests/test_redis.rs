@@ -17,13 +17,13 @@ fn test_error_connect() {
     let _addr2 = addr.clone();
 
     Arbiter::handle().spawn_fn(move || {
-        addr.call_fut(Command(resp_array!["GET", "test"]))
+        addr.send(Command(resp_array!["GET", "test"]))
             .then(|res| {
                 match res {
                     Ok(Err(Error::NotConnected)) => (),
                     _ => panic!("Should not happen {:?}", res),
                 }
-                Arbiter::system().send(actix::msgs::SystemExit(0));
+                Arbiter::system().do_send(actix::msgs::SystemExit(0));
                 Ok(())
             })
     });
@@ -42,11 +42,11 @@ fn test_redis() {
 
     Arbiter::handle().spawn_fn(move || {
         let addr2 = addr.clone();
-        addr.call_fut(Command(resp_array!["SET", "test", "value"]))
+        addr.send(Command(resp_array!["SET", "test", "value"]))
             .then(move |res| match res {
                 Ok(Ok(resp)) => {
                     assert_eq!(resp, RespValue::SimpleString("OK".to_owned()));
-                    addr2.call_fut(Command(resp_array!["GET", "test"]))
+                    addr2.send(Command(resp_array!["GET", "test"]))
                         .then(|res| {
                             match res {
                                 Ok(Ok(resp)) => {
@@ -56,7 +56,7 @@ fn test_redis() {
                                 },
                                 _ => panic!("Should not happen {:?}", res),
                             }
-                            Arbiter::system().send(actix::msgs::SystemExit(0));
+                            Arbiter::system().do_send(actix::msgs::SystemExit(0));
                             Ok(())
                         })
                 },
