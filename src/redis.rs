@@ -17,6 +17,7 @@ use redis_async::resp::{RespCodec, RespValue};
 use Error;
 
 
+/// Command for send data to Redis
 #[derive(Debug)]
 pub struct Command(pub RespValue);
 
@@ -33,6 +34,7 @@ pub struct RedisActor {
 }
 
 impl RedisActor {
+    /// Start new `Supervisor` with `RedisActor`.
     pub fn start<S: Into<String>>(addr: S) -> Addr<Unsync, RedisActor> {
         let addr = addr.into();
 
@@ -69,7 +71,7 @@ impl Actor for RedisActor {
                 Err(err) => {
                     error!("Can not connect to redis server: {}", err);
                     // re-connect with backoff time.
-                    // we stop currect context, supervisor will restart it.
+                    // we stop current context, supervisor will restart it.
                     if let Some(timeout) = act.backoff.next_backoff() {
                         ctx.run_later(timeout, |_, ctx| ctx.stop());
                     } else {
@@ -80,7 +82,7 @@ impl Actor for RedisActor {
             .map_err(|err, act, ctx| {
                 error!("Can not connect to redis server: {}", err);
                 // re-connect with backoff time.
-                // we stop currect context, supervisor will restart it.
+                // we stop current context, supervisor will restart it.
                 if let Some(timeout) = act.backoff.next_backoff() {
                     ctx.run_later(timeout, |_, ctx| ctx.stop());
                 } else {
