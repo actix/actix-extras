@@ -17,6 +17,7 @@ use redis_async::resp::{RespCodec, RespValue};
 use Error;
 
 
+/// Command for send data to Redis
 #[derive(Debug)]
 pub struct Command(pub RespValue);
 
@@ -33,6 +34,7 @@ pub struct RedisActor {
 }
 
 impl RedisActor {
+    /// Start new `Supervisor` with `RedisActor`.
     pub fn start<S: Into<String>>(addr: S) -> Addr<Unsync, RedisActor> {
         let addr = addr.into();
 

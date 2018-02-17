@@ -1,3 +1,12 @@
+//! Redis integration for Actix framework.
+//!
+//! ## Documentation
+//! * [API Documentation (Development)](http://actix.github.io/actix-redis/actix_redis/)
+//! * [API Documentation (Releases)](https://docs.rs/actix-redis/)
+//! * [Chat on gitter](https://gitter.im/actix/actix)
+//! * Cargo package: [actix-redis](https://crates.io/crates/actix-redis)
+//! * Minimum supported Rust version: 1.21 or later
+//! 
 extern crate actix;
 extern crate backoff;
 extern crate futures;
@@ -31,7 +40,7 @@ mod session;
 #[cfg(feature="web")]
 pub use session::RedisSessionBackend;
 
-
+/// General purpose actix redis error
 #[derive(Fail, Debug)]
 pub enum Error {
     #[fail(display="Redis error {}", _0)]
