@@ -1,6 +1,6 @@
 [package]
 name = "actix-redis"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Nikolay Kim <fafhrd91@gmail.com>"]
 description = "Redis integration for actix framework"
 license = "MIT/Apache-2.0"
@@ -38,8 +38,8 @@ tokio-core = "0.1"
 redis-async = "0.0"
 
 # actix web session
-# actix-web = { version="0.4", optional=true }
-actix-web = { git = "https://github.com/actix/actix-web.git", optional=true }
+actix-web = { version="0.4", optional=true }
+# actix-web = { git = "https://github.com/actix/actix-web.git", optional=true }
 cookie = { version="0.10", features=["percent-encode", "secure"], optional=true }
 http = { version="0.1", optional=true }
 rand = { version="0.3", optional=true }
