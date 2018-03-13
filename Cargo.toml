@@ -1,0 +1,37 @@
+[package]
+name = "actix-protobuf"
+version = "0.1.0"
+authors = ["kingxsp <jin.hb.zh@outlook.com>"]
+
+[lib]
+name = "actix_protobuf"
+path = "src/lib.rs"
+
+[features]
+default = ["use_prost"]
+
+use_prost = ["prost"]
+
+
+
+[dependencies]
+bytes = "0.4"
+futures = "0.1"
+failure = "0.1"
+env_logger = "*"
+
+actix = "^0.5"
+actix-web = "^0.4"
+
+prost = { version="^0.2", optional = true }
+
+[dev-dependencies]
+http = "^0.1.5"
+prost-derive = "^0.2"
+
+
+[workspace]
+members = [
+  "./",
+  "examples/prost-example",
+]
