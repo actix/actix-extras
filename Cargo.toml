@@ -7,13 +7,6 @@ authors = ["kingxsp <jin.hb.zh@outlook.com>"]
 name = "actix_protobuf"
 path = "src/lib.rs"
 
-[features]
-default = ["use_prost"]
-
-use_prost = ["prost"]
-
-
-
 [dependencies]
 bytes = "0.4"
 futures = "0.1"
@@ -23,7 +16,7 @@ env_logger = "*"
 actix = "^0.5"
 actix-web = "^0.4"
 
-prost = { version="^0.2", optional = true }
+prost = "^0.2"
 
 [dev-dependencies]
 http = "^0.1.5"
