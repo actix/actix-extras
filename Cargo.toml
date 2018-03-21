@@ -22,12 +22,11 @@ path = "src/lib.rs"
 bytes = "0.4"
 futures = "0.1"
 failure = "0.1"
-env_logger = "*"
 
-actix = "^0.5"
-actix-web = "^0.4"
+actix = "0.5"
+actix-web = "0.4"
 
-prost = "^0.2"
+prost = "0.2"
 
 [dev-dependencies]
 http = "^0.1.5"

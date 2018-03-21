@@ -4,7 +4,6 @@ extern crate bytes;
 extern crate futures;
 #[macro_use]
 extern crate failure;
-extern crate env_logger;
 
 #[cfg(test)]
 extern crate http;
