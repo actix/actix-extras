@@ -22,7 +22,6 @@ prost = "^0.2"
 http = "^0.1.5"
 prost-derive = "^0.2"
 
-
 [workspace]
 members = [
   "./",
