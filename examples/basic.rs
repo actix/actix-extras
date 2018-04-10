@@ -7,7 +7,7 @@ extern crate actix_redis;
 extern crate env_logger;
 extern crate futures;
 
-use actix_web::*;
+use actix_web::{server, middleware, App, HttpRequest, HttpResponse, Result};
 use actix_web::middleware::RequestSession;
 use actix_redis::RedisSessionBackend;
 
@@ -32,8 +32,8 @@ fn main() {
     env_logger::init();
     let sys = actix::System::new("basic-example");
 
-    HttpServer::new(
-        || Application::new()
+    server::new(
+        || App::new()
             // enable logger
             .middleware(middleware::Logger::default())
             // cookie session middleware
