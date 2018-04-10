@@ -6,8 +6,8 @@ Protobuf support for actix-web framework.
 ## Example
 
 ```rust,ignore
-use actix_web::*;
-use actix_protobuf::*;
+use actix_web::HttpResponse;
+use actix_protobuf::ProtoBuf;
 use futures::Future;
 
 #[derive(Clone, Debug, PartialEq, Message)]
@@ -18,14 +18,9 @@ pub struct MyObj {
     pub name: String,
 }
 
-fn index(req: HttpRequest) -> Box<Future<Item=HttpResponse, Error=Error>> {
-    req.protobuf()
-        .from_err()  // convert all errors into `Error`
-        .and_then(|val: MyObj| {
-            println!("model: {:?}", val);
-            Ok(httpcodes::HTTPOk.build().protobuf(val)?)  // <- send response
-        })
-        .responder()
+fn index(msg: ProtoBuf<MyObj>) -> HttpResponse {
+    println!("model: {:?}", val);
+    HttpResponse::Ok().protobuf(val)?)  // <- send response
 }
 ```
 

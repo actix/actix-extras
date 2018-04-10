@@ -12,6 +12,8 @@ extern crate prost;
 #[cfg(test)]
 #[macro_use] extern crate prost_derive;
 
+use std::fmt;
+use std::ops::{Deref, DerefMut};
 use bytes::{Bytes, BytesMut};
 use futures::{Poll, Future, Stream};
 
@@ -20,11 +22,10 @@ use prost::Message;
 use prost::DecodeError as ProtoBufDecodeError;
 use prost::EncodeError as ProtoBufEncodeError;
 
-use actix_web::header::http::{CONTENT_TYPE, CONTENT_LENGTH};
-use actix_web::{Responder, HttpMessage, HttpRequest, HttpResponse};
+use actix_web::http::header::{CONTENT_TYPE, CONTENT_LENGTH};
+use actix_web::{Responder, HttpMessage, HttpRequest, HttpResponse, FromRequest};
 use actix_web::dev::HttpResponseBuilder;
 use actix_web::error::{Error, PayloadError, ResponseError};
-use actix_web::httpcodes::{HttpBadRequest, HttpPayloadTooLarge};
 
 
 #[derive(Fail, Debug)]
@@ -50,8 +51,8 @@ impl ResponseError for ProtoBufPayloadError {
 
     fn error_response(&self) -> HttpResponse {
         match *self {
-            ProtoBufPayloadError::Overflow => HttpPayloadTooLarge.into(),
-            _ => HttpBadRequest.into(),
+            ProtoBufPayloadError::Overflow => HttpResponse::PayloadTooLarge().into(),
+            _ => HttpResponse::BadRequest().into(),
         }
     }
 }
@@ -68,10 +69,70 @@ impl From<ProtoBufDecodeError> for ProtoBufPayloadError {
     }
 }
 
-#[derive(Debug)]
 pub struct ProtoBuf<T: Message>(pub T);
 
-impl<T: Message> Responder for ProtoBuf<T> {
+impl<T: Message> Deref for ProtoBuf<T> {
+    type Target = T;
+
+    fn deref(&self) -> &T {
+        &self.0
+    }
+}
+
+impl<T: Message> DerefMut for ProtoBuf<T> {
+    fn deref_mut(&mut self) -> &mut T {
+        &mut self.0
+    }
+}
+
+impl<T: Message> fmt::Debug for ProtoBuf<T> where T: fmt::Debug {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "ProtoBuf: {:?}", self.0)
+    }
+}
+
+impl<T: Message> fmt::Display for ProtoBuf<T> where T: fmt::Display {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fmt::Display::fmt(&self.0, f)
+    }
+}
+
+pub struct ProtoBufConfig {
+    limit: usize,
+}
+
+impl ProtoBufConfig {
+
+    /// Change max size of payload. By default max size is 256Kb
+    pub fn limit(&mut self, limit: usize) -> &mut Self {
+        self.limit = limit;
+        self
+    }
+}
+
+impl Default for ProtoBufConfig {
+    fn default() -> Self {
+        ProtoBufConfig{limit: 262_144}
+    }
+}
+
+impl<T, S> FromRequest<S> for ProtoBuf<T>
+    where T: Message + Default + 'static, S: 'static
+{
+    type Config = ProtoBufConfig;
+    type Result = Box<Future<Item=Self, Error=Error>>;
+
+    #[inline]
+    fn from_request(req: &HttpRequest<S>, cfg: &Self::Config) -> Self::Result {
+        Box::new(
+            ProtoBufMessage::new(req.clone())
+                .limit(cfg.limit)
+                .from_err()
+                .map(ProtoBuf))
+    }
+}
+
+impl<T: Message + Default> Responder for ProtoBuf<T> {
     type Item = HttpResponse;
     type Error = Error;
 
@@ -82,8 +143,7 @@ impl<T: Message> Responder for ProtoBuf<T> {
             .and_then(|()| {
                 Ok(HttpResponse::Ok()
                    .content_type("application/protobuf")
-                   .body(buf)
-                   .into())
+                   .body(buf))
             })
     }
 }
@@ -178,7 +238,7 @@ impl ProtoBufResponseBuilder for HttpResponseBuilder {
 
         let mut body = Vec::new();
         value.encode(&mut body).map_err(ProtoBufPayloadError::Serialize)?;
-        Ok(self.body(body)?)
+        Ok(self.body(body))
     }
 }
 
@@ -221,7 +281,6 @@ mod tests {
             }
         }
     }
-
 
     #[derive(Clone, Debug, PartialEq, Message)]
     pub struct MyObject {
