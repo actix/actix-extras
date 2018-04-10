@@ -27,19 +27,19 @@ Constructor panics if key length is less than 32 bytes.
 extern crate actix_web;
 extern crate actix_redis;
 
-use actix_web::*;
-use actix_web::middleware::SessionStorage;
+use actix_web::{App, server};
+use actix_web::middleware::{Logger, SessionStorage};
 use actix_redis::RedisSessionBackend;
 
 fn main() {
     ::std::env::set_var("RUST_LOG", "actix_web=info");
-    let _ = env_logger::init();
+    env_logger::init();
     let sys = actix::System::new("basic-example");
 
-    HttpServer::new(
-        || Application::new()
+    server::new(
+        || App::new()
             // enable logger
-            .middleware(middleware::Logger::default())
+            .middleware(Logger::default())
             // cookie session middleware
             .middleware(SessionStorage::new(
                 RedisSessionBackend::new("127.0.0.1:6379", &[0; 32])
