@@ -19,7 +19,7 @@ pub struct MyObj {
 
 fn index(msg: ProtoBuf<MyObj>) -> Result<HttpResponse> {
     println!("model: {:?}", msg);
-    HttpResponse::Ok().protobuf(msg)  // <- send response
+    HttpResponse::Ok().protobuf(msg.0)  // <- send response
 }
 ```
 
