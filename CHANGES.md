@@ -1,5 +1,9 @@
 # Changes
 
+## 0.4.0 (2018-05-08)
+
+* Actix web 0.6 compatibility
+
 ## 0.3.0 (2018-04-10)
 
 * Actix web 0.5 compatibility

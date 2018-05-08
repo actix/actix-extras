@@ -1,20 +1,20 @@
-use std::rc::Rc;
-use std::iter::FromIterator;
 use std::collections::HashMap;
+use std::iter::FromIterator;
+use std::rc::Rc;
 
-use serde_json;
-use rand::{self, Rng};
-use futures::Future;
-use futures::future::{Either, ok as FutOk, err as FutErr};
-use redis_async::resp::RespValue;
-use cookie::{CookieJar, Cookie, Key};
-use http::header::{self, HeaderValue};
 use actix::prelude::*;
-use actix_web::{error, Error, Result, HttpRequest, HttpResponse};
-use actix_web::middleware::{SessionImpl, SessionBackend, Response as MiddlewareResponse};
+use actix_web::middleware::session::{SessionBackend, SessionImpl};
+use actix_web::middleware::Response as MiddlewareResponse;
+use actix_web::{error, Error, HttpRequest, HttpResponse, Result};
+use cookie::{Cookie, CookieJar, Key};
+use futures::future::{err as FutErr, ok as FutOk, Either};
+use futures::Future;
+use http::header::{self, HeaderValue};
+use rand::{self, Rng};
+use redis_async::resp::RespValue;
+use serde_json;
 
 use redis::{Command, RedisActor};
-
 
 /// Session that stores data in redis
 pub struct RedisSession {
@@ -25,7 +25,6 @@ pub struct RedisSession {
 }
 
 impl SessionImpl for RedisSession {
-
     fn get(&self, key: &str) -> Option<&str> {
         self.state.get(key).map(|s| s.as_str())
     }
@@ -47,8 +46,11 @@ impl SessionImpl for RedisSession {
 
     fn write(&self, resp: HttpResponse) -> Result<MiddlewareResponse> {
         if self.changed {
-            Ok(MiddlewareResponse::Future(
-                self.inner.update(&self.state, resp, self.value.as_ref())))
+            Ok(MiddlewareResponse::Future(self.inner.update(
+                &self.state,
+                resp,
+                self.value.as_ref(),
+            )))
         } else {
             Ok(MiddlewareResponse::Done(resp))
         }
@@ -58,10 +60,11 @@ impl SessionImpl for RedisSession {
 /// Use redis as session storage.
 ///
 /// You need to pass an address of the redis server and random value to the
-/// constructor of `RedisSessionBackend`. This is private key for cookie session,
-/// When this value is changed, all session data is lost.
+/// constructor of `RedisSessionBackend`. This is private key for cookie
+/// session, When this value is changed, all session data is lost.
 ///
-/// Note that whatever you write into your session is visible by the user (but not modifiable).
+/// Note that whatever you write into your session is visible by the user (but
+/// not modifiable).
 ///
 /// Constructor panics if key length is less than 32 bytes.
 pub struct RedisSessionBackend(Rc<Inner>);
@@ -71,11 +74,12 @@ impl RedisSessionBackend {
     ///
     /// * `addr` - address of the redis server
     pub fn new<S: Into<String>>(addr: S, key: &[u8]) -> RedisSessionBackend {
-        RedisSessionBackend(
-            Rc::new(Inner{key: Key::from_master(key),
-                          ttl: "7200".to_owned(),
-                          addr: RedisActor::start(addr),
-                          name: "actix-session".to_owned()}))
+        RedisSessionBackend(Rc::new(Inner {
+            key: Key::from_master(key),
+            ttl: "7200".to_owned(),
+            addr: RedisActor::start(addr),
+            name: "actix-session".to_owned(),
+        }))
     }
 
     /// Set time to live in seconds for session value
@@ -92,9 +96,8 @@ impl RedisSessionBackend {
 }
 
 impl<S> SessionBackend<S> for RedisSessionBackend {
-
     type Session = RedisSession;
-    type ReadFuture = Box<Future<Item=RedisSession, Error=Error>>;
+    type ReadFuture = Box<Future<Item = RedisSession, Error = Error>>;
 
     fn from_request(&self, req: &mut HttpRequest<S>) -> Self::ReadFuture {
         let inner = Rc::clone(&self.0);
@@ -105,13 +108,15 @@ impl<S> SessionBackend<S> for RedisSessionBackend {
                     changed: false,
                     inner: inner,
                     state: state,
-                    value: Some(value) }
+                    value: Some(value),
+                }
             } else {
                 RedisSession {
                     changed: false,
                     inner: inner,
                     state: HashMap::new(),
-                    value: None }
+                    value: None,
+                }
             }
         }))
     }
@@ -126,8 +131,9 @@ struct Inner {
 
 impl Inner {
     #[cfg_attr(feature = "cargo-clippy", allow(type_complexity))]
-    fn load<S>(&self, req: &mut HttpRequest<S>)
-               -> Box<Future<Item=Option<(HashMap<String, String>, String)>, Error=Error>>
+    fn load<S>(
+        &self, req: &mut HttpRequest<S>,
+    ) -> Box<Future<Item = Option<(HashMap<String, String>, String)>, Error = Error>>
     {
         if let Ok(cookies) = req.cookies() {
             for cookie in cookies {
@@ -137,31 +143,42 @@ impl Inner {
                     if let Some(cookie) = jar.signed(&self.key).get(&self.name) {
                         let value = cookie.value().to_owned();
                         return Box::new(
-                            self.addr.send(Command(resp_array!["GET", cookie.value()]))
+                            self.addr
+                                .send(Command(resp_array!["GET", cookie.value()]))
                                 .map_err(Error::from)
                                 .and_then(move |res| match res {
                                     Ok(val) => {
                                         match val {
-                                            RespValue::Error(err) =>
+                                            RespValue::Error(err) => {
                                                 return Err(
-                                                    error::ErrorInternalServerError(err).into()),
-                                            RespValue::SimpleString(s) =>
-                                                if let Ok(val) = serde_json::from_str(&s) {
-                                                    return Ok(Some((val, value)))
-                                                },
-                                            RespValue::BulkString(s) => {
-                                                if let Ok(val) = serde_json::from_slice(&s) {
-                                                    return Ok(Some((val, value)))
+                                                    error::ErrorInternalServerError(err)
+                                                        .into(),
+                                                )
+                                            }
+                                            RespValue::SimpleString(s) => {
+                                                if let Ok(val) = serde_json::from_str(&s)
+                                                {
+                                                    return Ok(Some((val, value)));
                                                 }
-                                            },
+                                            }
+                                            RespValue::BulkString(s) => {
+                                                if let Ok(val) =
+                                                    serde_json::from_slice(&s)
+                                                {
+                                                    return Ok(Some((val, value)));
+                                                }
+                                            }
                                             _ => (),
                                         }
                                         Ok(None)
-                                    },
-                                    Err(err) => Err(error::ErrorInternalServerError(err).into())
-                                }))
+                                    }
+                                    Err(err) => {
+                                        Err(error::ErrorInternalServerError(err).into())
+                                    }
+                                }),
+                        );
                     } else {
-                        return Box::new(FutOk(None))
+                        return Box::new(FutOk(None));
                     }
                 }
             }
@@ -169,10 +186,10 @@ impl Inner {
         Box::new(FutOk(None))
     }
 
-    fn update(&self, state: &HashMap<String, String>,
-              mut resp: HttpResponse,
-              value: Option<&String>) -> Box<Future<Item=HttpResponse, Error=Error>>
-    {
+    fn update(
+        &self, state: &HashMap<String, String>, mut resp: HttpResponse,
+        value: Option<&String>,
+    ) -> Box<Future<Item = HttpResponse, Error = Error>> {
         let (value, jar) = if let Some(value) = value {
             (value.clone(), None)
         } else {
@@ -190,25 +207,28 @@ impl Inner {
             (value, Some(jar))
         };
 
-        Box::new(
-            match serde_json::to_string(state) {
-                Err(e) => Either::A(FutErr(e.into())),
-                Ok(body) => Either::B(
-                    self.addr.send(Command(resp_array!["SET", value, body,"EX", &self.ttl]))
-                        .map_err(Error::from)
-                        .and_then(move |res| match res {
-                            Ok(_) => {
-                                if let Some(jar) = jar {
-                                    for cookie in jar.delta() {
-                                        let val = HeaderValue::from_str(
-                                            &cookie.to_string())?;
-                                        resp.headers_mut().append(header::SET_COOKIE, val);
-                                    }
+        Box::new(match serde_json::to_string(state) {
+            Err(e) => Either::A(FutErr(e.into())),
+            Ok(body) => Either::B(
+                self.addr
+                    .send(Command(resp_array![
+                        "SET", value, body, "EX", &self.ttl
+                    ]))
+                    .map_err(Error::from)
+                    .and_then(move |res| match res {
+                        Ok(_) => {
+                            if let Some(jar) = jar {
+                                for cookie in jar.delta() {
+                                    let val =
+                                        HeaderValue::from_str(&cookie.to_string())?;
+                                    resp.headers_mut().append(header::SET_COOKIE, val);
                                 }
-                                Ok(resp)
-                            },
-                            Err(err) => Err(error::ErrorInternalServerError(err).into())
-                        }))
-            })
+                            }
+                            Ok(resp)
+                        }
+                        Err(err) => Err(error::ErrorInternalServerError(err).into()),
+                    }),
+            ),
+        })
     }
 }

@@ -1,21 +1,20 @@
-use std::io;
 use std::collections::VecDeque;
+use std::io;
 
-use actix::prelude::*;
 use actix::actors::{Connect, Connector};
-use backoff::ExponentialBackoff;
+use actix::prelude::*;
 use backoff::backoff::Backoff;
-use futures::Future;
+use backoff::ExponentialBackoff;
 use futures::unsync::oneshot;
-use tokio_io::AsyncRead;
-use tokio_io::io::WriteHalf;
-use tokio_io::codec::FramedRead;
-use tokio_core::net::TcpStream;
+use futures::Future;
 use redis_async::error::Error as RespError;
 use redis_async::resp::{RespCodec, RespValue};
+use tokio_core::net::TcpStream;
+use tokio_io::codec::FramedRead;
+use tokio_io::io::WriteHalf;
+use tokio_io::AsyncRead;
 
 use Error;
-
 
 /// Command for send data to Redis
 #[derive(Debug)]
@@ -38,11 +37,11 @@ impl RedisActor {
     pub fn start<S: Into<String>>(addr: S) -> Addr<Unsync, RedisActor> {
         let addr = addr.into();
 
-        Supervisor::start(|_| {
-            RedisActor { addr: addr,
-                         cell: None,
-                         backoff: ExponentialBackoff::default(),
-                         queue: VecDeque::new() }
+        Supervisor::start(|_| RedisActor {
+            addr: addr,
+            cell: None,
+            backoff: ExponentialBackoff::default(),
+            queue: VecDeque::new(),
         })
     }
 }
@@ -51,7 +50,8 @@ impl Actor for RedisActor {
     type Context = Context<Self>;
 
     fn started(&mut self, ctx: &mut Context<Self>) {
-        Connector::from_registry().send(Connect::host(self.addr.as_str()))
+        Connector::from_registry()
+            .send(Connect::host(self.addr.as_str()))
             .into_actor(self)
             .map(|res, act, ctx| match res {
                 Ok(stream) => {
@@ -67,7 +67,7 @@ impl Actor for RedisActor {
                     ctx.add_stream(FramedRead::new(r, RespCodec));
 
                     act.backoff.reset();
-                },
+                }
                 Err(err) => {
                     error!("Can not connect to redis server: {}", err);
                     // re-connect with backoff time.
@@ -103,15 +103,16 @@ impl Supervised for RedisActor {
 }
 
 impl actix::io::WriteHandler<io::Error> for RedisActor {
-
     fn error(&mut self, err: io::Error, _: &mut Self::Context) -> Running {
-        warn!("Redis connection dropped: {} error: {}", self.addr, err);
+        warn!(
+            "Redis connection dropped: {} error: {}",
+            self.addr, err
+        );
         Running::Stop
     }
 }
 
 impl StreamHandler<RespValue, RespError> for RedisActor {
-
     fn error(&mut self, err: RespError, _: &mut Self::Context) -> Running {
         if let Some(tx) = self.queue.pop_front() {
             let _ = tx.send(Err(err.into()));
@@ -138,6 +139,9 @@ impl Handler<Command> for RedisActor {
             let _ = tx.send(Err(Error::NotConnected));
         }
 
-        Box::new(rx.map_err(|_| Error::Disconnected).and_then(|res| res))
+        Box::new(
+            rx.map_err(|_| Error::Disconnected)
+                .and_then(|res| res),
+        )
     }
 }

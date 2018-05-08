@@ -8,7 +8,7 @@ Redis integration for actix framework.
 * [API Documentation (Releases)](https://docs.rs/actix-redis/)
 * [Chat on gitter](https://gitter.im/actix/actix)
 * Cargo package: [actix-redis](https://crates.io/crates/actix-redis)
-* Minimum supported Rust version: 1.21 or later
+* Minimum supported Rust version: 1.24 or later
 
 
 ## Redis session backend
@@ -23,12 +23,12 @@ Note that whatever you write into your session is visible by the user (but not m
 
 Constructor panics if key length is less than 32 bytes.
 
-```rust,ignore
+```rust
 extern crate actix_web;
 extern crate actix_redis;
 
-use actix_web::{App, server};
-use actix_web::middleware::{Logger, SessionStorage};
+use actix_web::{App, server, middleware};
+use actix_web::middleware::session::SessionStorage;
 use actix_redis::RedisSessionBackend;
 
 fn main() {
@@ -39,7 +39,7 @@ fn main() {
     server::new(
         || App::new()
             // enable logger
-            .middleware(Logger::default())
+            .middleware(middleware::Logger::default())
             // cookie session middleware
             .middleware(SessionStorage::new(
                 RedisSessionBackend::new("127.0.0.1:6379", &[0; 32])

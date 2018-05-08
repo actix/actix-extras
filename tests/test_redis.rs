@@ -2,11 +2,11 @@ extern crate actix;
 extern crate actix_redis;
 #[macro_use]
 extern crate redis_async;
-extern crate futures;
 extern crate env_logger;
+extern crate futures;
 
 use actix::prelude::*;
-use actix_redis::{RedisActor, Command, Error, RespValue};
+use actix_redis::{Command, Error, RedisActor, RespValue};
 use futures::Future;
 
 #[test]
@@ -31,7 +31,6 @@ fn test_error_connect() {
     sys.run();
 }
 
-
 #[test]
 fn test_redis() {
     env_logger::init();
@@ -46,20 +45,23 @@ fn test_redis() {
             .then(move |res| match res {
                 Ok(Ok(resp)) => {
                     assert_eq!(resp, RespValue::SimpleString("OK".to_owned()));
-                    addr2.send(Command(resp_array!["GET", "test"]))
+                    addr2
+                        .send(Command(resp_array!["GET", "test"]))
                         .then(|res| {
                             match res {
                                 Ok(Ok(resp)) => {
                                     println!("RESP: {:?}", resp);
                                     assert_eq!(
-                                        resp, RespValue::BulkString((&b"value"[..]).into()));
-                                },
+                                        resp,
+                                        RespValue::BulkString((&b"value"[..]).into())
+                                    );
+                                }
                                 _ => panic!("Should not happen {:?}", res),
                             }
                             Arbiter::system().do_send(actix::msgs::SystemExit(0));
                             Ok(())
                         })
-                },
+                }
                 _ => panic!("Should not happen {:?}", res),
             })
     });
