@@ -1,0 +1,16 @@
+[package]
+name = "actix-web-httpauth"
+version = "0.0.1"
+authors = ["svartalf <self@svartalf.info>"]
+description = "HTTP authorization schemes for actix-web"
+readme = "README.md"
+keywords = ["http", "web", "framework"]
+homepage = "https://github.com/svartalf/actix-web-httpauth"
+repository = "https://github.com/svartlaf/actix-web-httpauth.git"
+documentation = "https://docs.rs/actix-web-httpauth/"
+categories = ["web-programming::http-server"]
+license = "MIT/Apache-2.0"
+
+[dependencies]
+actix-web = "0.6"
+base64 = "0.9"
