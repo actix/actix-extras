@@ -5,4 +5,4 @@ mod schemes;
 mod errors;
 
 pub use schemes::*;
-pub use errors::Error;
+pub use errors::AuthError;

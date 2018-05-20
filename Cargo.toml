@@ -10,6 +10,10 @@ repository = "https://github.com/svartlaf/actix-web-httpauth.git"
 documentation = "https://docs.rs/actix-web-httpauth/"
 categories = ["web-programming::http-server"]
 license = "MIT/Apache-2.0"
+exclude = [".travis.yml", ".gitignore"]
+
+[badges]
+travis-ci = { repository = "svartalf/actix-web-httpauth", branch = "master" }
 
 [dependencies]
 actix-web = "0.6"
