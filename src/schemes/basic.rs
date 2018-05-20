@@ -9,11 +9,13 @@ use errors::AuthError;
 ///
 /// # Example
 ///
+/// ```rust
 /// use actix_web_httpauth::BasicAuth;
 ///
 /// pub fn handler(auth: BasicAuth) -> String {
 ///     format!("Hello, {}", auth.username)
 /// }
+/// ```
 #[derive(Debug, PartialEq)]
 pub struct BasicAuth {
     pub username: String,

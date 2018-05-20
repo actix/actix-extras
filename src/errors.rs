@@ -58,7 +58,7 @@ impl ResponseError for AuthError {
         };
 
         HttpResponse::build(status)
-            .header("WWW-Authenticate", "Basic, charset=\"UTF-8\"")
+            .header("WWW-Authenticate", "Basic")
             .finish()
     }
 
