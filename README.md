@@ -11,4 +11,4 @@ and can be used both in middlewares and request handlers, check the `examples/` 
 
 ## Supported schemes
 
-    * [Basic](https://tools.ietf.org/html/rfc7617)
+ * [Basic](https://tools.ietf.org/html/rfc7617)
