@@ -18,3 +18,5 @@ travis-ci = { repository = "svartalf/actix-web-httpauth", branch = "master" }
 [dependencies]
 actix-web = "0.6"
 base64 = "0.9"
+percent-encoding = "1.0.1"
+bytes = "0.4.7"
