@@ -4,8 +4,6 @@ use bytes::Bytes;
 use percent_encoding;
 use actix_web::http::header::{HeaderValue, IntoHeaderValue, InvalidHeaderValue};
 
-use challenge::Challenge;
-
 /// Challenge configuration for [BasicAuth](./struct.BasicAuth.html) extractor.
 #[derive(Debug, Clone)]
 pub struct Config {
@@ -57,5 +55,3 @@ impl Default for Config {
         }
     }
 }
-
-impl Challenge for Config {}

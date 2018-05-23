@@ -9,5 +9,4 @@ extern crate actix_web;
 extern crate base64;
 
 mod errors;
-mod challenge;
 pub mod basic;
