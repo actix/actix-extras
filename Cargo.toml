@@ -1,6 +1,6 @@
 [package]
 name = "actix-web-httpauth"
-version = "0.0.1"
+version = "0.0.2"
 authors = ["svartalf <self@svartalf.info>"]
 description = "HTTP authentication schemes for actix-web"
 readme = "README.md"
