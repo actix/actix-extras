@@ -37,10 +37,13 @@ impl RedisActor {
     pub fn start<S: Into<String>>(addr: S) -> Addr<Unsync, RedisActor> {
         let addr = addr.into();
 
+        let mut backoff = ExponentialBackoff::default();
+        backoff.max_elapsed_time = None;
+
         Supervisor::start(|_| RedisActor {
             addr: addr,
             cell: None,
-            backoff: ExponentialBackoff::default(),
+            backoff: backoff,
             queue: VecDeque::new(),
         })
     }
