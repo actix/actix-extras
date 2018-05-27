@@ -77,8 +77,6 @@ impl Actor for RedisActor {
                     // we stop current context, supervisor will restart it.
                     if let Some(timeout) = act.backoff.next_backoff() {
                         ctx.run_later(timeout, |_, ctx| ctx.stop());
-                    } else {
-                        ctx.stop();
                     }
                 }
             })
@@ -88,8 +86,6 @@ impl Actor for RedisActor {
                 // we stop current context, supervisor will restart it.
                 if let Some(timeout) = act.backoff.next_backoff() {
                     ctx.run_later(timeout, |_, ctx| ctx.stop());
-                } else {
-                    ctx.stop();
                 }
             })
             .wait(ctx);
