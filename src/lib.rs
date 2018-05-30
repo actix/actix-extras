@@ -1,12 +1,15 @@
-//! HTTP authorization routines for [actix-web](https://github.com/actix/actix-web) framework.
+//! HTTP Authorization support for [actix-web](https://actix.rs) framework.
 //!
-//! Currently supported schemas:
-//!  * Basic ([RFC-7617](https://tools.ietf.org/html/rfc7617))
+//! Provides [`Authorization`](./headers/authorization/struct.Authorization.html)
+//! and  [`WWW-Authenticate`](./headers/www_authenticate/struct.WWWAuthenticate.html) headers,
+//! and `actix-web` extractors for an `Authorization` header.
 
-extern crate bytes;
-extern crate percent_encoding;
+#![cfg_attr(feature = "nightly", feature(test))]
+#[cfg(feature = "nightly")] extern crate test;
+
 extern crate actix_web;
+extern crate bytes;
 extern crate base64;
 
-mod errors;
-pub mod basic;
+pub mod headers;
+pub mod extractors;
