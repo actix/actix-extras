@@ -55,11 +55,13 @@ pub struct Bearer {
 
 impl Challenge for Bearer {
     fn to_bytes(&self) -> Bytes {
+        let desc_uri_required =
+            self.error_description.as_ref().map_or(0, |desc| desc.len() + 20) +
+            self.error_uri.as_ref().map_or(0, |url| url.len() + 12);
         let capacity = 6 +
             self.realm.as_ref().map_or(0, |realm| realm.len() + 9) +
             self.scope.as_ref().map_or(0, |scope| scope.len() + 9) +
-            self.error_description.as_ref().map_or(0, |desc| desc.len() + 20) +
-            self.error_uri.as_ref().map_or(0, |url| url.len() + 12);
+            desc_uri_required;
         let mut buffer = BytesMut::with_capacity(capacity);
         buffer.put("Bearer");
 
@@ -78,9 +80,9 @@ impl Challenge for Bearer {
         if let Some(ref error) = self.error {
             let error_repr = error.as_str();
             let remaining = buffer.remaining_mut();
-            let required = error_repr.len() + 9; // 9 is for `" error=\"\""`
+            let required = desc_uri_required + error_repr.len() + 9; // 9 is for `" error=\"\""`
             if remaining < required {
-                buffer.reserve(required - remaining);
+                buffer.reserve(required);
             }
             buffer.put(" error=\"");
             buffer.put(error_repr);
@@ -132,5 +134,23 @@ impl IntoHeaderValue for Bearer {
 
     fn try_into(self) -> Result<HeaderValue, <Self as IntoHeaderValue>::Error> {
         HeaderValue::from_shared(self.to_bytes())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn to_bytes() {
+        let b = Bearer {
+            scope: None,
+            realm: None,
+            error: Some(Error::InvalidToken),
+            error_description: Some(String::from("Subject 8740827c-2e0a-447b-9716-d73042e4039d not found")),
+            error_uri: None,
+        };
+        assert_eq!("Bearer error=\"invalid_token\" error_description=\"Subject 8740827c-2e0a-447b-9716-d73042e4039d not found\"",
+            format!("{}", b));
     }
 }
