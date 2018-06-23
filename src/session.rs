@@ -83,7 +83,7 @@ impl RedisSessionBackend {
             path: "/".to_owned(),
             domain: None,
             secure: false,
-            max_age: None,
+            max_age: Some(Duration::days(7)),
             same_site: None,
         }))
     }
