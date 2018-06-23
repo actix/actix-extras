@@ -36,6 +36,7 @@ futures = "0.1"
 tokio-io = "0.1"
 tokio-core = "0.1"
 redis-async = "0.0"
+time = "0.1"
 
 # actix web session
 actix-web = { version="0.6", optional=true }
