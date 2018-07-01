@@ -70,7 +70,7 @@ impl IntoHeaderValue for Basic {
 
     fn try_into(self) -> Result<HeaderValue, <Self as IntoHeaderValue>::Error> {
         let mut credentials = BytesMut::with_capacity(
-            self.username.len() + self.password.as_ref().map_or(0, |pwd| pwd.len())
+            self.username.len() + 1 + self.password.as_ref().map_or(0, |pwd| pwd.len())
         );
         credentials.put(&self.username);
         credentials.put_u8(b':');
