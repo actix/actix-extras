@@ -37,10 +37,10 @@ pub enum ProtoBufPayloadError {
     #[fail(display="Content type error")]
     ContentType,
     /// Serialize error
-    #[fail(display="ProtoBud serialize error: {}", _0)]
+    #[fail(display="ProtoBuf serialize error: {}", _0)]
     Serialize(#[cause] ProtoBufEncodeError),
     /// Deserialize error
-    #[fail(display="ProtoBud deserialize error: {}", _0)]
+    #[fail(display="ProtoBuf deserialize error: {}", _0)]
     Deserialize(#[cause] ProtoBufDecodeError),
     /// Payload error
     #[fail(display="Error that occur during reading payload: {}", _0)]
