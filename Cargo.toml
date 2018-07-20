@@ -37,6 +37,7 @@ tokio-io = "0.1"
 tokio-codec = "0.1"
 tokio-tcp = "0.1"
 redis-async = "0.3.2"
+time = "0.1"
 
 # actix web session
 actix-web = { git = "https://github.com/actix/actix-web.git", optional=true }

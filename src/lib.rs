@@ -19,6 +19,7 @@ extern crate log;
 extern crate redis_async;
 #[macro_use]
 extern crate failure;
+extern crate time;
 
 mod redis;
 pub use redis::{Command, RedisActor};

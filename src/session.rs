@@ -6,7 +6,7 @@ use actix::prelude::*;
 use actix_web::middleware::session::{SessionBackend, SessionImpl};
 use actix_web::middleware::Response as MiddlewareResponse;
 use actix_web::{error, Error, HttpRequest, HttpResponse, Result};
-use cookie::{Cookie, CookieJar, Key};
+use cookie::{Cookie, CookieJar, Key, SameSite};
 use futures::future::{err as FutErr, ok as FutOk, Either};
 use futures::Future;
 use http::header::{self, HeaderValue};
@@ -14,6 +14,7 @@ use rand::distributions::Alphanumeric;
 use rand::{self, Rng};
 use redis_async::resp::RespValue;
 use serde_json;
+use time::Duration;
 
 use redis::{Command, RedisActor};
 
@@ -80,6 +81,11 @@ impl RedisSessionBackend {
             ttl: "7200".to_owned(),
             addr: RedisActor::start(addr),
             name: "actix-session".to_owned(),
+            path: "/".to_owned(),
+            domain: None,
+            secure: false,
+            max_age: Some(Duration::days(7)),
+            same_site: None,
         }))
     }
 
@@ -92,6 +98,38 @@ impl RedisSessionBackend {
     /// Set custom cookie name for session id
     pub fn cookie_name(mut self, name: &str) -> Self {
         Rc::get_mut(&mut self.0).unwrap().name = name.to_owned();
+        self
+    }
+
+    /// Set custom cookie path
+    pub fn cookie_path(mut self, path: &str) -> Self {
+        Rc::get_mut(&mut self.0).unwrap().path = path.to_owned();
+        self
+    }
+
+    /// Set custom cookie domain
+    pub fn cookie_domain(mut self, domain: &str) -> Self {
+        Rc::get_mut(&mut self.0).unwrap().domain = Some(domain.to_owned());
+        self
+    }
+
+    /// Set custom cookie secure
+    /// If the `secure` field is set, a cookie will only be transmitted when the
+    /// connection is secure - i.e. `https`
+    pub fn cookie_secure(mut self, secure: bool) -> Self {
+        Rc::get_mut(&mut self.0).unwrap().secure = secure;
+        self
+    }
+
+    /// Set custom cookie max-age
+    pub fn cookie_max_age(mut self, max_age: Duration) -> Self {
+        Rc::get_mut(&mut self.0).unwrap().max_age = Some(max_age);
+        self
+    }
+
+    /// Set custom cookie SameSite
+    pub fn cookie_same_site(mut self, same_site: SameSite) -> Self {
+        Rc::get_mut(&mut self.0).unwrap().same_site = Some(same_site);
         self
     }
 }
@@ -126,8 +164,13 @@ impl<S> SessionBackend<S> for RedisSessionBackend {
 struct Inner {
     key: Key,
     ttl: String,
-    name: String,
     addr: Addr<RedisActor>,
+    name: String,
+    path: String,
+    domain: Option<String>,
+    secure: bool,
+    max_age: Option<Duration>,
+    same_site: Option<SameSite>,
 }
 
 impl Inner {
@@ -200,8 +243,21 @@ impl Inner {
                 .collect();
 
             let mut cookie = Cookie::new(self.name.clone(), value.clone());
-            cookie.set_path("/");
+            cookie.set_path(self.path.clone());
+            cookie.set_secure(self.secure);
             cookie.set_http_only(true);
+
+            if let Some(ref domain) = self.domain {
+                cookie.set_domain(domain.clone());
+            }
+
+            if let Some(max_age) = self.max_age {
+                cookie.set_max_age(max_age);
+            }
+
+            if let Some(same_site) = self.same_site {
+                cookie.set_same_site(same_site);
+            }
 
             // set cookie
             let mut jar = CookieJar::new();

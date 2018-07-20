@@ -37,10 +37,13 @@ impl RedisActor {
     pub fn start<S: Into<String>>(addr: S) -> Addr<RedisActor> {
         let addr = addr.into();
 
+        let mut backoff = ExponentialBackoff::default();
+        backoff.max_elapsed_time = None;
+
         Supervisor::start(|_| RedisActor {
             addr,
             cell: None,
-            backoff: ExponentialBackoff::default(),
+            backoff: backoff,
             queue: VecDeque::new(),
         })
     }
@@ -74,8 +77,6 @@ impl Actor for RedisActor {
                     // we stop current context, supervisor will restart it.
                     if let Some(timeout) = act.backoff.next_backoff() {
                         ctx.run_later(timeout, |_, ctx| ctx.stop());
-                    } else {
-                        ctx.stop();
                     }
                 }
             })
@@ -85,8 +86,6 @@ impl Actor for RedisActor {
                 // we stop current context, supervisor will restart it.
                 if let Some(timeout) = act.backoff.next_backoff() {
                     ctx.run_later(timeout, |_, ctx| ctx.stop());
-                } else {
-                    ctx.stop();
                 }
             })
             .wait(ctx);
