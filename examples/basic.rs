@@ -12,7 +12,7 @@ use actix_web::middleware::session::{self, RequestSession};
 use actix_web::{middleware, server, App, HttpRequest, HttpResponse, Result};
 
 /// simple handler
-fn index(req: HttpRequest) -> Result<HttpResponse> {
+fn index(req: &HttpRequest) -> Result<HttpResponse> {
     println!("{:?}", req);
 
     // session

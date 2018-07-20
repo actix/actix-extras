@@ -16,16 +16,15 @@ fn test_error_connect() {
     let addr = RedisActor::start("localhost:54000");
     let _addr2 = addr.clone();
 
-    Arbiter::handle().spawn_fn(move || {
-        addr.send(Command(resp_array!["GET", "test"]))
-            .then(|res| {
-                match res {
-                    Ok(Err(Error::NotConnected)) => (),
-                    _ => panic!("Should not happen {:?}", res),
-                }
-                Arbiter::system().do_send(actix::msgs::SystemExit(0));
-                Ok(())
-            })
+    Arbiter::spawn_fn(move || {
+        addr.send(Command(resp_array!["GET", "test"])).then(|res| {
+            match res {
+                Ok(Err(Error::NotConnected)) => (),
+                _ => panic!("Should not happen {:?}", res),
+            }
+            System::current().stop();
+            Ok(())
+        })
     });
 
     sys.run();
@@ -39,28 +38,26 @@ fn test_redis() {
     let addr = RedisActor::start("127.0.0.1:6379");
     let _addr2 = addr.clone();
 
-    Arbiter::handle().spawn_fn(move || {
+    Arbiter::spawn_fn(move || {
         let addr2 = addr.clone();
         addr.send(Command(resp_array!["SET", "test", "value"]))
             .then(move |res| match res {
                 Ok(Ok(resp)) => {
                     assert_eq!(resp, RespValue::SimpleString("OK".to_owned()));
-                    addr2
-                        .send(Command(resp_array!["GET", "test"]))
-                        .then(|res| {
-                            match res {
-                                Ok(Ok(resp)) => {
-                                    println!("RESP: {:?}", resp);
-                                    assert_eq!(
-                                        resp,
-                                        RespValue::BulkString((&b"value"[..]).into())
-                                    );
-                                }
-                                _ => panic!("Should not happen {:?}", res),
+                    addr2.send(Command(resp_array!["GET", "test"])).then(|res| {
+                        match res {
+                            Ok(Ok(resp)) => {
+                                println!("RESP: {:?}", resp);
+                                assert_eq!(
+                                    resp,
+                                    RespValue::BulkString((&b"value"[..]).into())
+                                );
                             }
-                            Arbiter::system().do_send(actix::msgs::SystemExit(0));
-                            Ok(())
-                        })
+                            _ => panic!("Should not happen {:?}", res),
+                        }
+                        System::current().stop();
+                        Ok(())
+                    })
                 }
                 _ => panic!("Should not happen {:?}", res),
             })

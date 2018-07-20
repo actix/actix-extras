@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::iter::FromIterator;
+use std::iter;
 use std::rc::Rc;
 
 use actix::prelude::*;
@@ -10,6 +10,7 @@ use cookie::{Cookie, CookieJar, Key};
 use futures::future::{err as FutErr, ok as FutOk, Either};
 use futures::Future;
 use http::header::{self, HeaderValue};
+use rand::distributions::Alphanumeric;
 use rand::{self, Rng};
 use redis_async::resp::RespValue;
 use serde_json;
@@ -105,15 +106,15 @@ impl<S> SessionBackend<S> for RedisSessionBackend {
         Box::new(self.0.load(req).map(move |state| {
             if let Some((state, value)) = state {
                 RedisSession {
+                    inner,
+                    state,
                     changed: false,
-                    inner: inner,
-                    state: state,
                     value: Some(value),
                 }
             } else {
                 RedisSession {
+                    inner,
                     changed: false,
-                    inner: inner,
                     state: HashMap::new(),
                     value: None,
                 }
@@ -126,7 +127,7 @@ struct Inner {
     key: Key,
     ttl: String,
     name: String,
-    addr: Addr<Unsync, RedisActor>,
+    addr: Addr<RedisActor>,
 }
 
 impl Inner {
@@ -136,7 +137,7 @@ impl Inner {
     ) -> Box<Future<Item = Option<(HashMap<String, String>, String)>, Error = Error>>
     {
         if let Ok(cookies) = req.cookies() {
-            for cookie in cookies {
+            for cookie in cookies.iter() {
                 if cookie.name() == self.name {
                     let mut jar = CookieJar::new();
                     jar.add_original(cookie.clone());
@@ -151,8 +152,7 @@ impl Inner {
                                         match val {
                                             RespValue::Error(err) => {
                                                 return Err(
-                                                    error::ErrorInternalServerError(err)
-                                                        .into(),
+                                                    error::ErrorInternalServerError(err),
                                                 )
                                             }
                                             RespValue::SimpleString(s) => {
@@ -173,7 +173,7 @@ impl Inner {
                                         Ok(None)
                                     }
                                     Err(err) => {
-                                        Err(error::ErrorInternalServerError(err).into())
+                                        Err(error::ErrorInternalServerError(err))
                                     }
                                 }),
                         );
@@ -194,7 +194,10 @@ impl Inner {
             (value.clone(), None)
         } else {
             let mut rng = rand::OsRng::new().unwrap();
-            let value = String::from_iter(rng.gen_ascii_chars().take(32));
+            let value: String = iter::repeat(())
+                .map(|()| rng.sample(Alphanumeric))
+                .take(32)
+                .collect();
 
             let mut cookie = Cookie::new(self.name.clone(), value.clone());
             cookie.set_path("/");
@@ -211,9 +214,7 @@ impl Inner {
             Err(e) => Either::A(FutErr(e.into())),
             Ok(body) => Either::B(
                 self.addr
-                    .send(Command(resp_array![
-                        "SET", value, body, "EX", &self.ttl
-                    ]))
+                    .send(Command(resp_array!["SET", value, body, "EX", &self.ttl]))
                     .map_err(Error::from)
                     .and_then(move |res| match res {
                         Ok(_) => {
@@ -226,7 +227,7 @@ impl Inner {
                             }
                             Ok(resp)
                         }
-                        Err(err) => Err(error::ErrorInternalServerError(err).into()),
+                        Err(err) => Err(error::ErrorInternalServerError(err)),
                     }),
             ),
         })

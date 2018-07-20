@@ -1,7 +1,7 @@
 use std::collections::VecDeque;
 use std::io;
 
-use actix::actors::{Connect, Connector};
+use actix::actors::resolver::{Connect, Resolver};
 use actix::prelude::*;
 use backoff::backoff::Backoff;
 use backoff::ExponentialBackoff;
@@ -9,10 +9,10 @@ use futures::unsync::oneshot;
 use futures::Future;
 use redis_async::error::Error as RespError;
 use redis_async::resp::{RespCodec, RespValue};
-use tokio_core::net::TcpStream;
-use tokio_io::codec::FramedRead;
+use tokio_codec::FramedRead;
 use tokio_io::io::WriteHalf;
 use tokio_io::AsyncRead;
+use tokio_tcp::TcpStream;
 
 use Error;
 
@@ -34,11 +34,11 @@ pub struct RedisActor {
 
 impl RedisActor {
     /// Start new `Supervisor` with `RedisActor`.
-    pub fn start<S: Into<String>>(addr: S) -> Addr<Unsync, RedisActor> {
+    pub fn start<S: Into<String>>(addr: S) -> Addr<RedisActor> {
         let addr = addr.into();
 
         Supervisor::start(|_| RedisActor {
-            addr: addr,
+            addr,
             cell: None,
             backoff: ExponentialBackoff::default(),
             queue: VecDeque::new(),
@@ -50,7 +50,7 @@ impl Actor for RedisActor {
     type Context = Context<Self>;
 
     fn started(&mut self, ctx: &mut Context<Self>) {
-        Connector::from_registry()
+        Resolver::from_registry()
             .send(Connect::host(self.addr.as_str()))
             .into_actor(self)
             .map(|res, act, ctx| match res {
@@ -104,10 +104,7 @@ impl Supervised for RedisActor {
 
 impl actix::io::WriteHandler<io::Error> for RedisActor {
     fn error(&mut self, err: io::Error, _: &mut Self::Context) -> Running {
-        warn!(
-            "Redis connection dropped: {} error: {}",
-            self.addr, err
-        );
+        warn!("Redis connection dropped: {} error: {}", self.addr, err);
         Running::Stop
     }
 }
@@ -139,9 +136,6 @@ impl Handler<Command> for RedisActor {
             let _ = tx.send(Err(Error::NotConnected));
         }
 
-        Box::new(
-            rx.map_err(|_| Error::Disconnected)
-                .and_then(|res| res),
-        )
+        Box::new(rx.map_err(|_| Error::Disconnected).and_then(|res| res))
     }
 }

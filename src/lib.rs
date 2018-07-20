@@ -5,13 +5,14 @@
 //! * [API Documentation (Releases)](https://docs.rs/actix-redis/)
 //! * [Chat on gitter](https://gitter.im/actix/actix)
 //! * Cargo package: [actix-redis](https://crates.io/crates/actix-redis)
-//! * Minimum supported Rust version: 1.21 or later
+//! * Minimum supported Rust version: 1.26 or later
 //!
 extern crate actix;
 extern crate backoff;
 extern crate futures;
-extern crate tokio_core;
+extern crate tokio_codec;
 extern crate tokio_io;
+extern crate tokio_tcp;
 #[macro_use]
 extern crate log;
 #[macro_use]
@@ -52,9 +53,6 @@ pub enum Error {
     #[fail(display = "Redis: Disconnected")]
     Disconnected,
 }
-
-unsafe impl Send for Error {}
-unsafe impl Sync for Error {}
 
 impl From<redis_async::error::Error> for Error {
     fn from(err: redis_async::error::Error) -> Error {
