@@ -40,6 +40,8 @@ extern crate serde_json;
 mod session;
 #[cfg(feature = "web")]
 pub use session::RedisSessionBackend;
+#[cfg(feature = "web")]
+pub use cookie::{SameSite};
 
 /// General purpose actix redis error
 #[derive(Fail, Debug)]
