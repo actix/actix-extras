@@ -1,5 +1,10 @@
 # Changes
 
+## 0.5.1 (2018-08-02)
+
+* USe cookie 0.11
+
+
 ## 0.5.0 (2018-07-21)
 
 * Session cookie configuration

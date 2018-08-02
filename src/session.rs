@@ -65,9 +65,6 @@ impl SessionImpl for RedisSession {
 /// constructor of `RedisSessionBackend`. This is private key for cookie
 /// session, When this value is changed, all session data is lost.
 ///
-/// Note that whatever you write into your session is visible by the user (but
-/// not modifiable).
-///
 /// Constructor panics if key length is less than 32 bytes.
 pub struct RedisSessionBackend(Rc<Inner>);
 
