@@ -9,7 +9,7 @@ use actix_web_httpauth::extractors::AuthenticationError;
 struct Auth;
 
 impl<S> Middleware<S> for Auth {
-    fn start(&self, req: &mut HttpRequest<S>) -> Result<Started> {
+    fn start(&self, req: &HttpRequest<S>) -> Result<Started> {
         let mut config = Config::default();
         config.realm("WallyWorld");
         let auth = BasicAuth::from_request(&req, &config)?;

@@ -9,7 +9,7 @@ use actix_web::middleware::{Middleware, Started};
 struct Auth;
 
 impl<S> Middleware<S> for Auth {
-    fn start(&self, req: &mut HttpRequest<S>) -> Result<Started> {
+    fn start(&self, req: &HttpRequest<S>) -> Result<Started> {
         let mut config = Config::default();
         config.realm("Restricted area");
         config.scope("openid profile email");
