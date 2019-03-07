@@ -10,7 +10,7 @@ extern crate prost_derive;
 use actix_web::*;
 use actix_protobuf::*;
 
-#[derive(Clone, Debug, PartialEq, Message)]
+#[derive(Clone, PartialEq, Message)]
 pub struct MyObj {
     #[prost(int32, tag="1")]
     pub number: i32,

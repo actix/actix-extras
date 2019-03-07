@@ -1,6 +1,6 @@
 [package]
 name = "actix-protobuf"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["kingxsp <jin.hb.zh@outlook.com>"]
 description = "Protobuf support for actix-web framework."
 readme = "README.md"
@@ -23,14 +23,14 @@ bytes = "0.4"
 futures = "0.1"
 failure = "0.1"
 
-actix = "0.5"
-actix-web = "0.5"
+actix = "0.7"
+actix-web = "0.7"
 
-prost = "0.2"
+prost = "0.4"
 
 [dev-dependencies]
-http = "^0.1.5"
-prost-derive = "^0.2"
+http = "^0.1"
+prost-derive = "^0.4"
 
 [workspace]
 members = [

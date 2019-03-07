@@ -1,15 +1,15 @@
 [package]
 name = "prost-example"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["kingxsp <jin.hb.zh@outlook.com>"]
 
 [dependencies]
 bytes = "0.4"
 env_logger = "*"
 
-prost = "0.2"
-prost-derive = "0.2"
+prost = "0.4"
+prost-derive = "0.4"
 
-actix = "0.5"
-actix-web = "0.5"
+actix = "0.7"
+actix-web = "0.7"
 actix-protobuf = { path="../../" }
