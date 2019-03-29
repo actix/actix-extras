@@ -3,61 +3,20 @@ use std::iter;
 use std::rc::Rc;
 
 use actix::prelude::*;
-use actix_web::middleware::session::{SessionBackend, SessionImpl};
-use actix_web::middleware::Response as MiddlewareResponse;
-use actix_web::{error, Error, HttpRequest, HttpResponse, Result};
+use actix_service::{Service, Transform};
+use actix_session::Session;
+use actix_utils::cloneable::CloneableService;
+use actix_web::dev::{ServiceRequest, ServiceResponse};
+use actix_web::http::header::{self, HeaderValue};
+use actix_web::{error, Error, HttpMessage};
 use cookie::{Cookie, CookieJar, Key, SameSite};
-use futures::future::{err as FutErr, ok as FutOk, Either};
-use futures::Future;
-use http::header::{self, HeaderValue};
-use rand::distributions::Alphanumeric;
-use rand::{self, Rng};
+use futures::future::{err, ok, Either, Future, FutureResult};
+use futures::Poll;
+use rand::{distributions::Alphanumeric, rngs::OsRng, Rng};
 use redis_async::resp::RespValue;
-use serde_json;
 use time::Duration;
 
-use redis::{Command, RedisActor};
-
-/// Session that stores data in redis
-pub struct RedisSession {
-    changed: bool,
-    inner: Rc<Inner>,
-    state: HashMap<String, String>,
-    value: Option<String>,
-}
-
-impl SessionImpl for RedisSession {
-    fn get(&self, key: &str) -> Option<&str> {
-        self.state.get(key).map(|s| s.as_str())
-    }
-
-    fn set(&mut self, key: &str, value: String) {
-        self.changed = true;
-        self.state.insert(key.to_owned(), value);
-    }
-
-    fn remove(&mut self, key: &str) {
-        self.changed = true;
-        self.state.remove(key);
-    }
-
-    fn clear(&mut self) {
-        self.changed = true;
-        self.state.clear()
-    }
-
-    fn write(&self, resp: HttpResponse) -> Result<MiddlewareResponse> {
-        if self.changed {
-            Ok(MiddlewareResponse::Future(self.inner.update(
-                &self.state,
-                resp,
-                self.value.as_ref(),
-            )))
-        } else {
-            Ok(MiddlewareResponse::Done(resp))
-        }
-    }
-}
+use crate::redis::{Command, RedisActor};
 
 /// Use redis as session storage.
 ///
@@ -66,14 +25,14 @@ impl SessionImpl for RedisSession {
 /// session, When this value is changed, all session data is lost.
 ///
 /// Constructor panics if key length is less than 32 bytes.
-pub struct RedisSessionBackend(Rc<Inner>);
+pub struct RedisSession(Rc<Inner>);
 
-impl RedisSessionBackend {
+impl RedisSession {
     /// Create new redis session backend
     ///
     /// * `addr` - address of the redis server
-    pub fn new<S: Into<String>>(addr: S, key: &[u8]) -> RedisSessionBackend {
-        RedisSessionBackend(Rc::new(Inner {
+    pub fn new<S: Into<String>>(addr: S, key: &[u8]) -> RedisSession {
+        RedisSession(Rc::new(Inner {
             key: Key::from_master(key),
             ttl: "7200".to_owned(),
             addr: RedisActor::start(addr),
@@ -131,29 +90,77 @@ impl RedisSessionBackend {
     }
 }
 
-impl<S> SessionBackend<S> for RedisSessionBackend {
-    type Session = RedisSession;
-    type ReadFuture = Box<Future<Item = RedisSession, Error = Error>>;
+impl<S, P, B> Transform<S> for RedisSession
+where
+    S: Service<
+            Request = ServiceRequest<P>,
+            Response = ServiceResponse<B>,
+            Error = Error,
+        > + 'static,
+    S::Future: 'static,
+    P: 'static,
+    B: 'static,
+{
+    type Request = ServiceRequest<P>;
+    type Response = ServiceResponse<B>;
+    type Error = S::Error;
+    type InitError = ();
+    type Transform = RedisSessionMiddleware<S>;
+    type Future = FutureResult<Self::Transform, Self::InitError>;
 
-    fn from_request(&self, req: &mut HttpRequest<S>) -> Self::ReadFuture {
-        let inner = Rc::clone(&self.0);
+    fn new_transform(&self, service: S) -> Self::Future {
+        ok(RedisSessionMiddleware {
+            service: CloneableService::new(service),
+            inner: self.0.clone(),
+        })
+    }
+}
 
-        Box::new(self.0.load(req).map(move |state| {
-            if let Some((state, value)) = state {
-                RedisSession {
-                    inner,
-                    state,
-                    changed: false,
-                    value: Some(value),
-                }
+/// Cookie session middleware
+pub struct RedisSessionMiddleware<S: 'static> {
+    service: CloneableService<S>,
+    inner: Rc<Inner>,
+}
+
+impl<S, P, B> Service for RedisSessionMiddleware<S>
+where
+    S: Service<
+            Request = ServiceRequest<P>,
+            Response = ServiceResponse<B>,
+            Error = Error,
+        > + 'static,
+    S::Future: 'static,
+    P: 'static,
+    B: 'static,
+{
+    type Request = ServiceRequest<P>;
+    type Response = ServiceResponse<B>;
+    type Error = Error;
+    type Future = Box<Future<Item = Self::Response, Error = Self::Error>>;
+
+    fn poll_ready(&mut self) -> Poll<(), Self::Error> {
+        self.service.poll_ready()
+    }
+
+    fn call(&mut self, mut req: ServiceRequest<P>) -> Self::Future {
+        let mut srv = self.service.clone();
+        let inner = self.inner.clone();
+
+        Box::new(self.inner.load(&req).and_then(move |state| {
+            let value = if let Some((state, value)) = state {
+                Session::set_session(state.into_iter(), &mut req);
+                Some(value)
             } else {
-                RedisSession {
-                    inner,
-                    changed: false,
-                    state: HashMap::new(),
-                    value: None,
+                None
+            };
+
+            srv.call(req).and_then(move |mut res| {
+                if let Some(state) = Session::get_changes(&mut res) {
+                    Either::A(inner.update(res, state, value))
+                } else {
+                    Either::B(ok(res))
                 }
-            }
+            })
         }))
     }
 }
@@ -171,10 +178,10 @@ struct Inner {
 }
 
 impl Inner {
-    #[cfg_attr(feature = "cargo-clippy", allow(type_complexity))]
-    fn load<S>(
-        &self, req: &mut HttpRequest<S>,
-    ) -> Box<Future<Item = Option<(HashMap<String, String>, String)>, Error = Error>>
+    fn load<P>(
+        &self,
+        req: &ServiceRequest<P>,
+    ) -> impl Future<Item = Option<(HashMap<String, String>, String)>, Error = Error>
     {
         if let Ok(cookies) = req.cookies() {
             for cookie in cookies.iter() {
@@ -183,7 +190,7 @@ impl Inner {
                     jar.add_original(cookie.clone());
                     if let Some(cookie) = jar.signed(&self.key).get(&self.name) {
                         let value = cookie.value().to_owned();
-                        return Box::new(
+                        return Either::A(
                             self.addr
                                 .send(Command(resp_array!["GET", cookie.value()]))
                                 .map_err(Error::from)
@@ -193,7 +200,7 @@ impl Inner {
                                             RespValue::Error(err) => {
                                                 return Err(
                                                     error::ErrorInternalServerError(err),
-                                                )
+                                                );
                                             }
                                             RespValue::SimpleString(s) => {
                                                 if let Ok(val) = serde_json::from_str(&s)
@@ -218,27 +225,30 @@ impl Inner {
                                 }),
                         );
                     } else {
-                        return Box::new(FutOk(None));
+                        return Either::B(ok(None));
                     }
                 }
             }
         }
-        Box::new(FutOk(None))
+        Either::B(ok(None))
     }
 
-    fn update(
-        &self, state: &HashMap<String, String>, mut resp: HttpResponse,
-        value: Option<&String>,
-    ) -> Box<Future<Item = HttpResponse, Error = Error>> {
+    fn update<B>(
+        &self,
+        mut res: ServiceResponse<B>,
+        state: impl Iterator<Item = (String, String)>,
+        value: Option<String>,
+    ) -> impl Future<Item = ServiceResponse<B>, Error = Error> {
         let (value, jar) = if let Some(value) = value {
             (value.clone(), None)
         } else {
-            let mut rng = rand::OsRng::new().unwrap();
+            let mut rng = OsRng::new().unwrap();
             let value: String = iter::repeat(())
                 .map(|()| rng.sample(Alphanumeric))
                 .take(32)
                 .collect();
 
+            // prepare session id cookie
             let mut cookie = Cookie::new(self.name.clone(), value.clone());
             cookie.set_path(self.path.clone());
             cookie.set_secure(self.secure);
@@ -263,26 +273,28 @@ impl Inner {
             (value, Some(jar))
         };
 
-        Box::new(match serde_json::to_string(state) {
-            Err(e) => Either::A(FutErr(e.into())),
+        let state: HashMap<_, _> = state.collect();
+
+        match serde_json::to_string(&state) {
+            Err(e) => Either::A(err(e.into())),
             Ok(body) => Either::B(
                 self.addr
                     .send(Command(resp_array!["SET", value, body, "EX", &self.ttl]))
                     .map_err(Error::from)
-                    .and_then(move |res| match res {
+                    .and_then(move |redis_result| match redis_result {
                         Ok(_) => {
                             if let Some(jar) = jar {
                                 for cookie in jar.delta() {
                                     let val =
                                         HeaderValue::from_str(&cookie.to_string())?;
-                                    resp.headers_mut().append(header::SET_COOKIE, val);
+                                    res.headers_mut().append(header::SET_COOKIE, val);
                                 }
                             }
-                            Ok(resp)
+                            Ok(res)
                         }
                         Err(err) => Err(error::ErrorInternalServerError(err)),
                     }),
             ),
-        })
+        }
     }
 }

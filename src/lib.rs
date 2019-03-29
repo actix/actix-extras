@@ -7,60 +7,34 @@
 //! * Cargo package: [actix-redis](https://crates.io/crates/actix-redis)
 //! * Minimum supported Rust version: 1.26 or later
 //!
-extern crate actix;
-extern crate backoff;
-extern crate futures;
-extern crate tokio_codec;
-extern crate tokio_io;
-extern crate tokio_tcp;
 #[macro_use]
 extern crate log;
 #[macro_use]
 extern crate redis_async;
 #[macro_use]
-extern crate failure;
-extern crate time;
+extern crate derive_more;
 
 mod redis;
 pub use redis::{Command, RedisActor};
 
 #[cfg(feature = "web")]
-extern crate actix_web;
-#[cfg(feature = "web")]
-extern crate cookie;
-#[cfg(feature = "web")]
-extern crate http;
-#[cfg(feature = "web")]
-extern crate rand;
-#[cfg(feature = "web")]
-extern crate serde;
-#[cfg(feature = "web")]
-extern crate serde_json;
-
-#[cfg(feature = "web")]
 mod session;
 #[cfg(feature = "web")]
-pub use session::RedisSessionBackend;
+pub use cookie::SameSite;
 #[cfg(feature = "web")]
-pub use cookie::{SameSite};
+pub use session::RedisSession;
 
 /// General purpose actix redis error
-#[derive(Fail, Debug)]
+#[derive(Debug, Display, From)]
 pub enum Error {
-    #[fail(display = "Redis error {}", _0)]
+    #[display(fmt = "Redis error {}", _0)]
     Redis(redis_async::error::Error),
     /// Receiving message during reconnecting
-    #[fail(display = "Redis: Not connected")]
+    #[display(fmt = "Redis: Not connected")]
     NotConnected,
     /// Cancel all waters when connection get dropped
-    #[fail(display = "Redis: Disconnected")]
+    #[display(fmt = "Redis: Disconnected")]
     Disconnected,
-}
-
-impl From<redis_async::error::Error> for Error {
-    fn from(err: redis_async::error::Error) -> Error {
-        Error::Redis(err)
-    }
 }
 
 // re-export

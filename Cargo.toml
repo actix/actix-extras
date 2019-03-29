@@ -1,6 +1,6 @@
 [package]
 name = "actix-redis"
-version = "0.5.1"
+version = "0.6.0"
 authors = ["Nikolay Kim <fafhrd91@gmail.com>"]
 description = "Redis integration for actix framework"
 license = "MIT/Apache-2.0"
@@ -11,6 +11,7 @@ repository = "https://github.com/actix/actix-redis.git"
 documentation = "https://docs.rs/actix-redis/"
 categories = ["network-programming", "asynchronous"]
 exclude = [".gitignore", ".travis.yml", ".cargo/config", "appveyor.yml"]
+edition = "2018"
 
 [lib]
 name = "actix_redis"
@@ -24,14 +25,14 @@ codecov = { repository = "actix/actix-redis", branch = "master", service = "gith
 default = ["web"]
 
 # actix-web integration
-web = ["actix-web", "cookie", "http", "rand", "serde", "serde_json"]
+web = ["actix/http", "actix-service", "actix-utils", "actix-web/cookies", "actix-session", "cookie", "rand", "serde", "serde_json"]
 
 [dependencies]
-actix = "0.7"
+actix = "0.8.0-alpha.2"
 
 log = "0.4"
 backoff = "0.1"
-failure = "^0.1.1"
+derive_more = "0.14"
 futures = "0.1"
 tokio-io = "0.1"
 tokio-codec = "0.1"
@@ -40,12 +41,14 @@ redis-async = "0.4"
 time = "0.1"
 
 # actix web session
-actix-web = { version = "^0.7.3", optional=true }
+actix-web = { version = "1.0.0-alpha.1", optional=true }
+actix-utils = { version = "0.3.3", optional=true }
+actix-service = { version = "0.3.4", optional=true }
+actix-session = { version = "0.1.0-alpha.1", optional=true }
 cookie = { version="0.11", features=["percent-encode", "secure"], optional=true }
-http = { version="0.1", optional=true }
-rand = { version="0.5", optional=true }
+rand = { version="0.6.5", optional=true }
 serde = { version="1.0", optional=true }
 serde_json = { version="1.0", optional=true }
 
 [dev-dependencies]
-env_logger = "0.5"
+env_logger = "0.6"

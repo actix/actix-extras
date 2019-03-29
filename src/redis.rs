@@ -14,7 +14,7 @@ use tokio_io::io::WriteHalf;
 use tokio_io::AsyncRead;
 use tokio_tcp::TcpStream;
 
-use Error;
+use crate::Error;
 
 /// Command for send data to Redis
 #[derive(Debug)]
@@ -63,7 +63,7 @@ impl Actor for RedisActor {
                     let (r, w) = stream.split();
 
                     // configure write side of the connection
-                    let mut framed = actix::io::FramedWrite::new(w, RespCodec, ctx);
+                    let framed = actix::io::FramedWrite::new(w, RespCodec, ctx);
                     act.cell = Some(framed);
 
                     // read side of the connection
