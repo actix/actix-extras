@@ -20,7 +20,7 @@ pub use redis::{Command, RedisActor};
 #[cfg(feature = "web")]
 mod session;
 #[cfg(feature = "web")]
-pub use cookie::SameSite;
+pub use actix_web::cookie::SameSite;
 #[cfg(feature = "web")]
 pub use session::RedisSession;
 
