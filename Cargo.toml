@@ -28,7 +28,7 @@ default = ["web"]
 web = ["actix/http", "actix-service", "actix-utils", "actix-web", "actix-session/cookie-session", "rand", "serde", "serde_json"]
 
 [dependencies]
-actix = "0.8.0-alpha.2"
+actix = "0.8.0-alpha.3"
 
 log = "0.4"
 backoff = "0.1"
@@ -41,10 +41,10 @@ redis-async = "0.4"
 time = "0.1"
 
 # actix web session
-actix-web = { version = "1.0.0-alpha.2", optional=true }
+actix-web = { version = "1.0.0-alpha.6", optional=true }
 actix-utils = { version = "0.3.3", optional=true }
 actix-service = { version = "0.3.4", optional=true }
-actix-session = { version = "0.1.0-alpha.2", optional=true }
+actix-session = { version = "0.1.0-alpha.6", optional=true }
 rand = { version="0.6.5", optional=true }
 serde = { version="1.0", optional=true }
 serde_json = { version="1.0", optional=true }

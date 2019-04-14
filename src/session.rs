@@ -90,18 +90,14 @@ impl RedisSession {
     }
 }
 
-impl<S, P, B> Transform<S> for RedisSession
+impl<S, B> Transform<S> for RedisSession
 where
-    S: Service<
-            Request = ServiceRequest<P>,
-            Response = ServiceResponse<B>,
-            Error = Error,
-        > + 'static,
+    S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error>
+        + 'static,
     S::Future: 'static,
-    P: 'static,
     B: 'static,
 {
-    type Request = ServiceRequest<P>;
+    type Request = ServiceRequest;
     type Response = ServiceResponse<B>;
     type Error = S::Error;
     type InitError = ();
@@ -122,18 +118,14 @@ pub struct RedisSessionMiddleware<S: 'static> {
     inner: Rc<Inner>,
 }
 
-impl<S, P, B> Service for RedisSessionMiddleware<S>
+impl<S, B> Service for RedisSessionMiddleware<S>
 where
-    S: Service<
-            Request = ServiceRequest<P>,
-            Response = ServiceResponse<B>,
-            Error = Error,
-        > + 'static,
+    S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error>
+        + 'static,
     S::Future: 'static,
-    P: 'static,
     B: 'static,
 {
-    type Request = ServiceRequest<P>;
+    type Request = ServiceRequest;
     type Response = ServiceResponse<B>;
     type Error = Error;
     type Future = Box<Future<Item = Self::Response, Error = Self::Error>>;
@@ -142,7 +134,7 @@ where
         self.service.poll_ready()
     }
 
-    fn call(&mut self, mut req: ServiceRequest<P>) -> Self::Future {
+    fn call(&mut self, mut req: ServiceRequest) -> Self::Future {
         let mut srv = self.service.clone();
         let inner = self.inner.clone();
 
@@ -178,9 +170,9 @@ struct Inner {
 }
 
 impl Inner {
-    fn load<P>(
+    fn load(
         &self,
-        req: &ServiceRequest<P>,
+        req: &ServiceRequest,
     ) -> impl Future<Item = Option<(HashMap<String, String>, String)>, Error = Error>
     {
         if let Ok(cookies) = req.cookies() {
