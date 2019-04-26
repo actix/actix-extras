@@ -1,6 +1,6 @@
 [package]
 name = "actix-web-httpauth"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["svartalf <self@svartalf.info>"]
 description = "HTTP authentication schemes for actix-web"
 readme = "README.md"
@@ -15,7 +15,7 @@ exclude = [".travis.yml", ".gitignore"]
 [dependencies]
 actix-web = { version = "0.7", default_features = false }
 bytes = "0.4"
-base64 = "0.9"
+base64 = "0.10"
 
 [features]
 default = []
@@ -23,3 +23,4 @@ nightly = []
 
 [badges]
 travis-ci = { repository = "svartalf/actix-web-httpauth", branch = "master" }
+maintenance = { status = "passively-maintained" }
