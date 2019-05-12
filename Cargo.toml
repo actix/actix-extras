@@ -21,10 +21,10 @@ path = "src/lib.rs"
 [dependencies]
 bytes = "0.4"
 futures = "0.1"
-failure = "0.1"
+derive_more = "0.14"
 
-actix = "0.7"
-actix-web = "0.7"
+actix = "0.8.1"
+actix-web = "1.0.0-b3"
 
 prost = "0.4"
 
