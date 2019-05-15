@@ -1,18 +1,51 @@
-use std::str;
+use std::borrow::Cow;
 use std::fmt;
+use std::str;
 
+use actix_web::http::header::{HeaderValue, IntoHeaderValue, InvalidHeaderValueBytes};
 use base64;
 use bytes::{BufMut, BytesMut};
-use actix_web::http::header::{HeaderValue, IntoHeaderValue, InvalidHeaderValueBytes};
 
-use headers::authorization::Scheme;
-use headers::authorization::errors::ParseError;
+use crate::headers::authorization::errors::ParseError;
+use crate::headers::authorization::Scheme;
+use crate::utils;
 
 /// Credentials for `Basic` authentication scheme, defined in [RFC 7617](https://tools.ietf.org/html/rfc7617)
 #[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Basic {
-    pub username: String,
-    pub password: Option<String>,
+    user_id: Cow<'static, str>,
+    password: Option<Cow<'static, str>>,
+}
+
+impl Basic {
+    /// Creates `Basic` credentials with provided `user_id` and optional `password`.
+    ///
+    /// ## Example
+    ///
+    /// ```rust
+    /// # use actix_web_httpauth::headers::authorization::Basic;
+    /// let credentials = Basic::new("Alladin", Some("open sesame"));
+    /// ```
+    pub fn new<U, P>(user_id: U, password: Option<P>) -> Basic
+    where
+        U: Into<Cow<'static, str>>,
+        P: Into<Cow<'static, str>>,
+    {
+        Basic {
+            user_id: user_id.into(),
+            password: password.map(Into::into),
+        }
+    }
+
+    /// Returns client's user-ID.
+    pub fn user_id(&self) -> &Cow<'static, str> {
+        &self.user_id
+    }
+
+    /// Returns client's password if provided.
+    pub fn password(&self) -> Option<&Cow<'static, str>> {
+        self.password.as_ref()
+    }
 }
 
 impl Scheme for Basic {
@@ -29,24 +62,25 @@ impl Scheme for Basic {
         }
 
         let decoded = base64::decode(parts.next().ok_or(ParseError::Invalid)?)?;
-        let mut credentials = str::from_utf8(&decoded)?
-            .splitn(2, ':');
+        let mut credentials = str::from_utf8(&decoded)?.splitn(2, ':');
 
-        let username = credentials.next()
-            .ok_or(ParseError::MissingField("username"))
-            .map(|username| username.to_string())?;
-        let password = credentials.next()
+        let user_id = credentials
+            .next()
+            .ok_or(ParseError::MissingField("user_id"))
+            .map(|user_id| user_id.to_string().into())?;
+        let password = credentials
+            .next()
             .ok_or(ParseError::MissingField("password"))
             .map(|password| {
                 if password.is_empty() {
                     None
                 } else {
-                    Some(password.to_string())
+                    Some(password.to_string().into())
                 }
             })?;
 
-        Ok(Basic{
-            username,
+        Ok(Basic {
+            user_id,
             password,
         })
     }
@@ -54,14 +88,13 @@ impl Scheme for Basic {
 
 impl fmt::Debug for Basic {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.write_fmt(format_args!("Basic {}:******", self.username))
+        f.write_fmt(format_args!("Basic {}:******", self.user_id))
     }
 }
 
 impl fmt::Display for Basic {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        // TODO: Display password also
-        f.write_fmt(format_args!("Basic {}:******", self.username))
+        f.write_fmt(format_args!("Basic {}:******", self.user_id))
     }
 }
 
@@ -69,13 +102,12 @@ impl IntoHeaderValue for Basic {
     type Error = InvalidHeaderValueBytes;
 
     fn try_into(self) -> Result<HeaderValue, <Self as IntoHeaderValue>::Error> {
-        let mut credentials = BytesMut::with_capacity(
-            self.username.len() + 1 + self.password.as_ref().map_or(0, |pwd| pwd.len())
-        );
-        credentials.put(&self.username);
+        let mut credentials =
+            BytesMut::with_capacity(self.user_id.len() + 1 + self.password.as_ref().map_or(0, |pwd| pwd.len()));
+        utils::put_cow(&mut credentials, &self.user_id);
         credentials.put_u8(b':');
         if let Some(ref password) = self.password {
-            credentials.put(password);
+            utils::put_cow(&mut credentials, password);
         }
 
         // TODO: It would be nice not to allocate new `String`  here but write directly to `value`
@@ -90,8 +122,8 @@ impl IntoHeaderValue for Basic {
 
 #[cfg(test)]
 mod tests {
+    use super::{Basic, Scheme};
     use actix_web::http::header::{HeaderValue, IntoHeaderValue};
-    use super::{Scheme, Basic};
 
     #[test]
     fn test_parse_header() {
@@ -100,8 +132,8 @@ mod tests {
 
         assert!(scheme.is_ok());
         let scheme = scheme.unwrap();
-        assert_eq!(scheme.username, "Aladdin");
-        assert_eq!(scheme.password, Some("open sesame".to_string()));
+        assert_eq!(scheme.user_id, "Aladdin");
+        assert_eq!(scheme.password, Some("open sesame".into()));
     }
 
     #[test]
@@ -111,7 +143,7 @@ mod tests {
 
         assert!(scheme.is_ok());
         let scheme = scheme.unwrap();
-        assert_eq!(scheme.username, "Aladdin");
+        assert_eq!(scheme.user_id, "Aladdin");
         assert_eq!(scheme.password, None);
     }
 
@@ -150,16 +182,18 @@ mod tests {
     #[test]
     fn test_into_header_value() {
         let basic = Basic {
-            username: "Aladdin".to_string(),
-            password: Some("open sesame".to_string()),
+            user_id: "Aladdin".into(),
+            password: Some("open sesame".into()),
         };
 
         let result = basic.try_into();
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), HeaderValue::from_static("Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ=="));
+        assert_eq!(
+            result.unwrap(),
+            HeaderValue::from_static("Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==")
+        );
     }
 }
-
 
 #[cfg(all(test, feature = "nightly"))]
 mod benches {
@@ -172,17 +206,15 @@ mod benches {
     #[bench]
     fn bench_parsing(b: &mut Bencher) {
         let value = HeaderValue::from_static("Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==");
-        b.iter(|| {
-            Basic::parse(&value)
-        });
+        b.iter(|| Basic::parse(&value));
     }
 
     #[bench]
     fn bench_serializing(b: &mut Bencher) {
         b.iter(|| {
             let basic = Basic {
-                username: "Aladdin".to_string(),
-                password: Some("open sesame".to_string()),
+                user_id: "Aladdin".into(),
+                password: Some("open sesame".into()),
             };
 
             basic.try_into()

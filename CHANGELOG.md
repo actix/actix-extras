@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+ - Crate edition was changed to `2018`, same as `actix-web`
+ - Depends on `actix-web = "^1.0"` version now
+ - `WWWAuthenticate` header struct was renamed into `WwwAuthenticate`
+ - Challenges and extractor configs are now operating with `Cow<'static, str>` types instead of `String` types
+
 ## [0.2.0] - 2019-04-26
 ### Changed
  - `actix-web` dependency is used without default features now ([#6](https://github.com/svartalf/actix-web-httpauth/pull/6))

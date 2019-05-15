@@ -1,12 +1,10 @@
-use std::ops;
 use std::fmt;
 
-use actix_web::{HttpMessage};
 use actix_web::error::ParseError;
 use actix_web::http::header::{Header, HeaderName, HeaderValue, IntoHeaderValue, AUTHORIZATION};
+use actix_web::HttpMessage;
 
-use headers::authorization::scheme::Scheme;
-
+use crate::headers::authorization::scheme::Scheme;
 
 /// `Authorization` header, defined in [RFC 7235](https://tools.ietf.org/html/rfc7235#section-4.2)
 ///
@@ -21,24 +19,54 @@ use headers::authorization::scheme::Scheme;
 /// # Example
 ///
 /// ```rust
-/// # extern crate actix_web;
-/// # extern crate actix_web_httpauth;
-///
-/// use actix_web::{HttpRequest, Result};
-/// use actix_web::http::header::Header;
-/// use actix_web_httpauth::headers::authorization::{Authorization, Basic};
-///
+/// # use actix_web::http::header::Header;
+/// # use actix_web::{HttpRequest, Result};
+/// # use actix_web_httpauth::headers::authorization::{Authorization, Basic};
 /// fn handler(req: HttpRequest) -> Result<String> {
 ///     let auth = Authorization::<Basic>::parse(&req)?;
 ///
-///     Ok(format!("Hello, {}!", auth.username))
+///     Ok(format!("Hello, {}!", auth.as_ref().user_id()))
 /// }
 /// ```
+#[derive(Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default, Clone)]
 pub struct Authorization<S: Scheme>(S);
 
-impl<S: Scheme> Authorization<S> {
-    pub fn into_inner(self) -> S {
+impl<S> Authorization<S>
+where
+    S: Scheme,
+{
+    /// Consumes `Authorization` header and returns inner [`Scheme`] implementation.
+    ///
+    /// [`Scheme`]: ./trait.Scheme.html
+    pub fn into_scheme(self) -> S {
         self.0
+    }
+}
+
+impl<S> From<S> for Authorization<S>
+where
+    S: Scheme,
+{
+    fn from(scheme: S) -> Authorization<S> {
+        Authorization(scheme)
+    }
+}
+
+impl<S> AsRef<S> for Authorization<S>
+where
+    S: Scheme,
+{
+    fn as_ref(&self) -> &S {
+        &self.0
+    }
+}
+
+impl<S> AsMut<S> for Authorization<S>
+where
+    S: Scheme,
+{
+    fn as_mut(&mut self) -> &mut S {
+        &mut self.0
     }
 }
 
@@ -67,19 +95,5 @@ impl<S: Scheme> IntoHeaderValue for Authorization<S> {
 impl<S: Scheme> fmt::Display for Authorization<S> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         fmt::Display::fmt(&self.0, f)
-    }
-}
-
-impl<S: Scheme> ops::Deref for Authorization<S> {
-    type Target = S;
-
-    fn deref(&self) -> &<Self as ops::Deref>::Target {
-        &self.0
-    }
-}
-
-impl<S: Scheme> ops::DerefMut for Authorization<S> {
-    fn deref_mut(&mut self) -> &mut <Self as ops::Deref>::Target {
-        &mut self.0
     }
 }

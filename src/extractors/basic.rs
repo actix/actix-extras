@@ -1,16 +1,22 @@
-use std::default::Default;
+//! Extractor for the "Basic" HTTP Authentication Scheme
 
-use actix_web::{HttpRequest, FromRequest};
+use std::borrow::Cow;
+
+use actix_web::dev::{Payload, ServiceRequest};
 use actix_web::http::header::Header;
+use actix_web::{FromRequest, HttpRequest};
 
-use headers::authorization::{Authorization, Basic};
-use headers::www_authenticate::basic::Basic as Challenge;
-use super::errors::AuthenticationError;
 use super::config::ExtractorConfig;
+use super::errors::AuthenticationError;
+use crate::headers::authorization::{Authorization, Basic};
+use crate::headers::www_authenticate::basic::Basic as Challenge;
 
-/// [`BasicAuth`](./struct.BasicAuth.html) extractor configuration,
-/// used for `WWW-Authenticate` header later.
-#[derive(Debug, Clone)]
+/// [`BasicAuth`] extractor configuration,
+/// used for [`WWW-Authenticate`] header later.
+///
+/// [`BasicAuth`]: ./struct.BasicAuth.html
+/// [`WWW-Authenticate`]: ../../headers/www_authenticate/struct.WwwAuthenticate.html
+#[derive(Debug, Clone, Default)]
 pub struct Config(Challenge);
 
 impl Config {
@@ -18,9 +24,18 @@ impl Config {
     ///
     /// The "realm" attribute indicates the scope of protection in the manner described in HTTP/1.1
     /// [RFC2617](https://tools.ietf.org/html/rfc2617#section-1.2).
-    pub fn realm<T: Into<String>>(&mut self, value: T) -> &mut Config {
+    pub fn realm<T>(mut self, value: T) -> Config
+    where
+        T: Into<Cow<'static, str>>,
+    {
         self.0.realm = Some(value.into());
         self
+    }
+}
+
+impl AsRef<Challenge> for Config {
+    fn as_ref(&self) -> &Challenge {
+        &self.0
     }
 }
 
@@ -32,49 +47,94 @@ impl ExtractorConfig for Config {
     }
 }
 
-impl Default for Config {
-    fn default() -> Self {
-        Config(Challenge::default())
-    }
-}
-
-/// Extractor for HTTP Basic auth
+/// Extractor for HTTP Basic auth.
 ///
 /// # Example
 ///
 /// ```rust
-/// # extern crate actix_web;
-/// # extern crate actix_web_httpauth;
 /// use actix_web::Result;
 /// use actix_web_httpauth::extractors::basic::BasicAuth;
 ///
-/// fn index(auth: BasicAuth) -> Result<String> {
-///    Ok(format!("Hello, {}!", auth.username()))
+/// fn index(auth: BasicAuth) -> String {
+///     format!("Hello, {}!", auth.user_id())
 /// }
 /// ```
+///
+/// If authentication fails, this extractor fetches the [`Config`] instance
+/// from the [app data] in order to properly form the `WWW-Authenticate` response header.
+///
+/// ## Example
+///
+/// ```rust
+/// use actix_web::{web, App};
+/// use actix_web_httpauth::extractors::basic::{BasicAuth, Config};
+///
+/// fn index(auth: BasicAuth) -> String {
+///     format!("Hello, {}!", auth.user_id())
+/// }
+///
+/// fn main() {
+///     let app = App::new()
+///         .data(Config::default().realm("Restricted area"))
+///         .service(web::resource("/index.html").route(web::get().to(index)));
+/// }
+/// ```
+///
+/// [`Config`]: ./struct.Config.html
+/// [app data]: https://docs.rs/actix-web/1.0.0-beta.5/actix_web/struct.App.html#method.data
 #[derive(Debug, Clone)]
 pub struct BasicAuth(Basic);
 
 impl BasicAuth {
-    pub fn username(&self) -> &str {
-        self.0.username.as_str()
+    /// Returns client's user-ID.
+    pub fn user_id(&self) -> &Cow<'static, str> {
+        &self.0.user_id()
     }
 
-    pub fn password(&self) -> Option<&str> {
-        match self.0.password {
-            None => None,
-            Some(ref pwd) => Some(pwd.as_str())
-        }
+    /// Returns client's password.
+    pub fn password(&self) -> Option<&Cow<'static, str>> {
+        self.0.password()
+    }
+
+    /// Try to parse actix-web' `ServiceRequest` and fetch the `BasicAuth` from it.
+    ///
+    /// ## Warning
+    ///
+    /// This function is used right now for middleware creation only
+    /// and might change or be totally removed,
+    /// depends on `actix-web = "1.0"` release changes.
+    ///
+    /// This issue will be resolved in the `0.3.0` release.
+    /// Before that -- brace yourselves!
+    pub fn from_service_request(req: &mut ServiceRequest, config: &Config) -> <Self as FromRequest>::Future {
+        Authorization::<Basic>::parse(&req)
+            .map(|auth| BasicAuth(auth.into_scheme()))
+            .map_err(|_| {
+                // TODO: debug! the original error
+                let challenge = config.clone().into_inner();
+
+                AuthenticationError::new(challenge)
+            })
     }
 }
 
-impl<S> FromRequest<S> for BasicAuth {
+impl FromRequest for BasicAuth {
+    type Future = Result<Self, Self::Error>;
     type Config = Config;
-    type Result = Result<Self, AuthenticationError<Challenge>>;
+    type Error = AuthenticationError<Challenge>;
 
-    fn from_request(req: &HttpRequest<S>, cfg: &<Self as FromRequest<S>>::Config) -> <Self as FromRequest<S>>::Result {
+    fn from_request(req: &HttpRequest, _: &mut Payload) -> <Self as FromRequest>::Future {
         Authorization::<Basic>::parse(req)
-            .map(|auth| BasicAuth(auth.into_inner()))
-            .map_err(|_| AuthenticationError::new(cfg.0.clone()))
+            .map(|auth| BasicAuth(auth.into_scheme()))
+            .map_err(|_| {
+                // TODO: debug! the original error
+                let challenge = req
+                    .get_app_data::<Self::Config>()
+                    .map(|config| config.0.clone())
+                    // TODO: Add trace! about `Default::default` call
+                    .unwrap_or_else(Default::default);
+
+                AuthenticationError::new(challenge)
+            })
     }
 }

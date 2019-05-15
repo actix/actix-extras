@@ -1,15 +1,21 @@
 //! HTTP Authorization support for [actix-web](https://actix.rs) framework.
 //!
-//! Provides [`Authorization`](./headers/authorization/struct.Authorization.html)
-//! and  [`WWW-Authenticate`](./headers/www_authenticate/struct.WWWAuthenticate.html) headers,
-//! and `actix-web` extractors for an `Authorization` header.
+//! Provides [Authorization] and  [WWW-Authenticate] headers,
+//! and [extractors] for an [Authorization] header.
+//!
+//! ## Supported schemes
+//!
+//!  * `Basic`, as defined in [RFC7617](https://tools.ietf.org/html/rfc7617)
+//!  * `Bearer`, as defined in [RFC6750](https://tools.ietf.org/html/rfc6750)
+//!
+//! [Authorization]: `crate::headers::authorization::Authorization`
+//! [WWW-Authenticate]: `crate::headers::www_authenticate::WwwAuthenticate`
+//! [extractors]: https://actix.rs/docs/extractors/
 
+#![forbid(bare_trait_objects)]
+#![forbid(missing_docs)]
 #![cfg_attr(feature = "nightly", feature(test))]
-#[cfg(feature = "nightly")] extern crate test;
 
-extern crate actix_web;
-extern crate bytes;
-extern crate base64;
-
-pub mod headers;
 pub mod extractors;
+pub mod headers;
+mod utils;

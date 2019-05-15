@@ -1,17 +1,43 @@
+use std::borrow::Cow;
 use std::fmt;
 
-use bytes::{BufMut, BytesMut};
 use actix_web::http::header::{HeaderValue, IntoHeaderValue, InvalidHeaderValueBytes};
+use bytes::{BufMut, BytesMut};
 
-use headers::authorization::scheme::Scheme;
-use headers::authorization::errors::ParseError;
+use crate::headers::authorization::errors::ParseError;
+use crate::headers::authorization::scheme::Scheme;
+use crate::utils;
 
 /// Credentials for `Bearer` authentication scheme, defined in [RFC6750](https://tools.ietf.org/html/rfc6750)
 ///
 /// Should be used in combination with [`Authorization`](./struct.Authorization.html) header.
 #[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Bearer {
-    pub token: String,
+    token: Cow<'static, str>,
+}
+
+impl Bearer {
+    /// Creates new `Bearer` credentials with the token provided.
+    ///
+    /// ## Example
+    ///
+    /// ```rust
+    /// # use actix_web_httpauth::headers::authorization::Bearer;
+    /// let credentials = Bearer::new("mF_9.B5f-4.1JqM");
+    /// ```
+    pub fn new<T>(token: T) -> Bearer
+    where
+        T: Into<Cow<'static, str>>,
+    {
+        Bearer {
+            token: token.into(),
+        }
+    }
+
+    /// Gets reference to the credentials token.
+    pub fn token(&self) -> &Cow<'static, str> {
+        &self.token
+    }
 }
 
 impl Scheme for Bearer {
@@ -29,8 +55,8 @@ impl Scheme for Bearer {
 
         let token = parts.next().ok_or(ParseError::Invalid)?;
 
-        Ok(Bearer{
-            token: token.to_string(),
+        Ok(Bearer {
+            token: token.to_string().into(),
         })
     }
 }
@@ -53,7 +79,7 @@ impl IntoHeaderValue for Bearer {
     fn try_into(self) -> Result<HeaderValue, <Self as IntoHeaderValue>::Error> {
         let mut buffer = BytesMut::with_capacity(7 + self.token.len());
         buffer.put("Bearer ");
-        buffer.put(self.token);
+        utils::put_cow(&mut buffer, &self.token);
 
         HeaderValue::from_shared(buffer.freeze())
     }
@@ -61,8 +87,8 @@ impl IntoHeaderValue for Bearer {
 
 #[cfg(test)]
 mod tests {
+    use super::{Bearer, Scheme};
     use actix_web::http::header::{HeaderValue, IntoHeaderValue};
-    use super::{Scheme, Bearer};
 
     #[test]
     fn test_parse_header() {
@@ -100,9 +126,7 @@ mod tests {
 
     #[test]
     fn test_into_header_value() {
-        let bearer = Bearer {
-            token: "mF_9.B5f-4.1JqM".to_string(),
-        };
+        let bearer = Bearer::new("mF_9.B5f-4.1JqM");
 
         let result = bearer.try_into();
         assert!(result.is_ok());

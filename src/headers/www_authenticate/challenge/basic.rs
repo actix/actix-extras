@@ -1,20 +1,78 @@
-use std::str;
-use std::fmt;
-use std::default::Default;
+//! Challenge for the "Basic" HTTP Authentication Scheme
 
-use bytes::{BufMut, Bytes, BytesMut};
+use std::borrow::Cow;
+use std::default::Default;
+use std::fmt;
+use std::str;
+
 use actix_web::http::header::{HeaderValue, IntoHeaderValue, InvalidHeaderValueBytes};
+use bytes::{BufMut, Bytes, BytesMut};
 
 use super::Challenge;
+use crate::utils;
 
-/// Challenge for `WWW-Authenticate` header with HTTP Basic auth scheme,
+/// Challenge for [`WWW-Authenticate`] header with HTTP Basic auth scheme,
 /// described in [RFC 7617](https://tools.ietf.org/html/rfc7617)
-#[derive(Debug, Clone)]
+///
+/// ## Example
+///
+/// ```rust
+/// # use actix_web::{web, App, HttpRequest, HttpResponse, HttpServer};
+/// use actix_web_httpauth::headers::www_authenticate::basic::Basic;
+/// use actix_web_httpauth::headers::www_authenticate::WwwAuthenticate;
+///
+/// fn index(_req: HttpRequest) -> HttpResponse {
+///     let challenge = Basic::with_realm("Restricted area");
+///
+///     HttpResponse::Unauthorized().set(WwwAuthenticate(challenge)).finish()
+/// }
+/// ```
+///
+/// [`WWW-Authenticate`]: ../struct.WwwAuthenticate.html
+#[derive(Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default, Clone)]
 pub struct Basic {
     // "realm" parameter is optional now: https://tools.ietf.org/html/rfc7235#appendix-A
-    pub realm: Option<String>,
+    pub(crate) realm: Option<Cow<'static, str>>,
 }
 
+impl Basic {
+    /// Creates new `Basic` challenge with an empty `realm` field.
+    ///
+    /// ## Example
+    ///
+    /// ```rust
+    /// # use actix_web_httpauth::headers::www_authenticate::basic::Basic;
+    /// let challenge = Basic::new();
+    /// ```
+    pub fn new() -> Basic {
+        Default::default()
+    }
+
+    /// Creates new `Basic` challenge from the provided `realm` field value.
+    ///
+    /// ## Examples
+    ///
+    /// ```rust
+    /// # use actix_web_httpauth::headers::www_authenticate::basic::Basic;
+    /// let challenge = Basic::with_realm("Restricted area");
+    /// ```
+    ///
+    /// ```rust
+    /// # use actix_web_httpauth::headers::www_authenticate::basic::Basic;
+    /// let my_realm = "Earth realm".to_string();
+    /// let challenge = Basic::with_realm(my_realm);
+    /// ```
+    pub fn with_realm<T>(value: T) -> Basic
+    where
+        T: Into<Cow<'static, str>>,
+    {
+        Basic {
+            realm: Some(value.into()),
+        }
+    }
+}
+
+#[doc(hidden)]
 impl Challenge for Basic {
     fn to_bytes(&self) -> Bytes {
         // 5 is for `"Basic"`, 9 is for `"realm=\"\""`
@@ -23,7 +81,7 @@ impl Challenge for Basic {
         buffer.put("Basic");
         if let Some(ref realm) = self.realm {
             buffer.put(" realm=\"");
-            buffer.put(realm);
+            utils::put_cow(&mut buffer, realm);
             buffer.put("\"");
         }
 
@@ -51,15 +109,6 @@ impl IntoHeaderValue for Basic {
     }
 }
 
-
-impl Default for Basic {
-    fn default() -> Self {
-        Self {
-            realm: None,
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::Basic;
@@ -80,7 +129,7 @@ mod tests {
     #[test]
     fn test_with_realm_into_header_value() {
         let challenge = Basic {
-            realm: Some("Restricted area".to_string()),
+            realm: Some("Restricted area".into()),
         };
 
         let value = challenge.try_into();

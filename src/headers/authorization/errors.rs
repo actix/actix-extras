@@ -1,9 +1,8 @@
-use std::str;
-use std::fmt;
-use std::error::Error;
 use std::convert::From;
+use std::error::Error;
+use std::fmt;
+use std::str;
 
-use base64;
 use actix_web::http::header;
 
 /// Possible errors while parsing `Authorization` header.
@@ -18,8 +17,11 @@ pub enum ParseError {
     MissingScheme,
     /// Required authentication field is missing
     MissingField(&'static str),
+    /// Unable to convert header into the str
     ToStrError(header::ToStrError),
+    /// Malformed base64 string
     Base64DecodeError(base64::DecodeError),
+    /// Malformed UTF-8 string
     Utf8Error(str::Utf8Error),
 }
 
@@ -41,7 +43,7 @@ impl Error for ParseError {
         }
     }
 
-    fn cause(&self) -> Option<&Error> {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
             ParseError::Invalid => None,
             ParseError::MissingScheme => None,
