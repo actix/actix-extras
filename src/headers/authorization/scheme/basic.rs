@@ -2,7 +2,9 @@ use std::borrow::Cow;
 use std::fmt;
 use std::str;
 
-use actix_web::http::header::{HeaderValue, IntoHeaderValue, InvalidHeaderValueBytes};
+use actix_web::http::header::{
+    HeaderValue, IntoHeaderValue, InvalidHeaderValueBytes,
+};
 use base64;
 use bytes::{BufMut, BytesMut};
 
@@ -18,7 +20,8 @@ pub struct Basic {
 }
 
 impl Basic {
-    /// Creates `Basic` credentials with provided `user_id` and optional `password`.
+    /// Creates `Basic` credentials with provided `user_id` and optional
+    /// `password`.
     ///
     /// ## Example
     ///
@@ -102,15 +105,19 @@ impl IntoHeaderValue for Basic {
     type Error = InvalidHeaderValueBytes;
 
     fn try_into(self) -> Result<HeaderValue, <Self as IntoHeaderValue>::Error> {
-        let mut credentials =
-            BytesMut::with_capacity(self.user_id.len() + 1 + self.password.as_ref().map_or(0, |pwd| pwd.len()));
+        let mut credentials = BytesMut::with_capacity(
+            self.user_id.len()
+                + 1
+                + self.password.as_ref().map_or(0, |pwd| pwd.len()),
+        );
         utils::put_cow(&mut credentials, &self.user_id);
         credentials.put_u8(b':');
         if let Some(ref password) = self.password {
             utils::put_cow(&mut credentials, password);
         }
 
-        // TODO: It would be nice not to allocate new `String`  here but write directly to `value`
+        // TODO: It would be nice not to allocate new `String`  here but write
+        // directly to `value`
         let encoded = base64::encode(&credentials);
         let mut value = BytesMut::with_capacity(6 + encoded.len());
         value.put("Basic ");
@@ -127,7 +134,8 @@ mod tests {
 
     #[test]
     fn test_parse_header() {
-        let value = HeaderValue::from_static("Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==");
+        let value =
+            HeaderValue::from_static("Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==");
         let scheme = Basic::parse(&value);
 
         assert!(scheme.is_ok());
@@ -205,7 +213,8 @@ mod benches {
 
     #[bench]
     fn bench_parsing(b: &mut Bencher) {
-        let value = HeaderValue::from_static("Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==");
+        let value =
+            HeaderValue::from_static("Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==");
         b.iter(|| Basic::parse(&value));
     }
 

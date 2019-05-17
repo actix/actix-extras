@@ -6,8 +6,9 @@ use actix_web::dev::{Payload, ServiceRequest};
 use actix_web::http::header::Header;
 use actix_web::{FromRequest, HttpRequest};
 
-use super::config::ExtractorConfig;
+use super::config::AuthExtractorConfig;
 use super::errors::AuthenticationError;
+use super::AuthExtractor;
 use crate::headers::authorization::{Authorization, Basic};
 use crate::headers::www_authenticate::basic::Basic as Challenge;
 
@@ -15,15 +16,16 @@ use crate::headers::www_authenticate::basic::Basic as Challenge;
 /// used for [`WWW-Authenticate`] header later.
 ///
 /// [`BasicAuth`]: ./struct.BasicAuth.html
-/// [`WWW-Authenticate`]: ../../headers/www_authenticate/struct.WwwAuthenticate.html
+/// [`WWW-Authenticate`]:
+/// ../../headers/www_authenticate/struct.WwwAuthenticate.html
 #[derive(Debug, Clone, Default)]
 pub struct Config(Challenge);
 
 impl Config {
     /// Set challenge `realm` attribute.
     ///
-    /// The "realm" attribute indicates the scope of protection in the manner described in HTTP/1.1
-    /// [RFC2617](https://tools.ietf.org/html/rfc2617#section-1.2).
+    /// The "realm" attribute indicates the scope of protection in the manner
+    /// described in HTTP/1.1 [RFC2617](https://tools.ietf.org/html/rfc2617#section-1.2).
     pub fn realm<T>(mut self, value: T) -> Config
     where
         T: Into<Cow<'static, str>>,
@@ -39,7 +41,7 @@ impl AsRef<Challenge> for Config {
     }
 }
 
-impl ExtractorConfig for Config {
+impl AuthExtractorConfig for Config {
     type Inner = Challenge;
 
     fn into_inner(self) -> Self::Inner {
@@ -61,7 +63,8 @@ impl ExtractorConfig for Config {
 /// ```
 ///
 /// If authentication fails, this extractor fetches the [`Config`] instance
-/// from the [app data] in order to properly form the `WWW-Authenticate` response header.
+/// from the [app data] in order to properly form the `WWW-Authenticate`
+/// response header.
 ///
 /// ## Example
 ///
@@ -95,27 +98,6 @@ impl BasicAuth {
     pub fn password(&self) -> Option<&Cow<'static, str>> {
         self.0.password()
     }
-
-    /// Try to parse actix-web' `ServiceRequest` and fetch the `BasicAuth` from it.
-    ///
-    /// ## Warning
-    ///
-    /// This function is used right now for middleware creation only
-    /// and might change or be totally removed,
-    /// depends on `actix-web = "1.0"` release changes.
-    ///
-    /// This issue will be resolved in the `0.3.0` release.
-    /// Before that -- brace yourselves!
-    pub fn from_service_request(req: &mut ServiceRequest, config: &Config) -> <Self as FromRequest>::Future {
-        Authorization::<Basic>::parse(&req)
-            .map(|auth| BasicAuth(auth.into_scheme()))
-            .map_err(|_| {
-                // TODO: debug! the original error
-                let challenge = config.clone().into_inner();
-
-                AuthenticationError::new(challenge)
-            })
-    }
 }
 
 impl FromRequest for BasicAuth {
@@ -123,13 +105,36 @@ impl FromRequest for BasicAuth {
     type Config = Config;
     type Error = AuthenticationError<Challenge>;
 
-    fn from_request(req: &HttpRequest, _: &mut Payload) -> <Self as FromRequest>::Future {
+    fn from_request(
+        req: &HttpRequest,
+        _: &mut Payload,
+    ) -> <Self as FromRequest>::Future {
         Authorization::<Basic>::parse(req)
             .map(|auth| BasicAuth(auth.into_scheme()))
             .map_err(|_| {
                 // TODO: debug! the original error
                 let challenge = req
-                    .get_app_data::<Self::Config>()
+                    .app_data::<Self::Config>()
+                    .map(|config| config.0.clone())
+                    // TODO: Add trace! about `Default::default` call
+                    .unwrap_or_else(Default::default);
+
+                AuthenticationError::new(challenge)
+            })
+    }
+}
+
+impl AuthExtractor for BasicAuth {
+    type Error = AuthenticationError<Challenge>;
+    type Future = Result<Self, Self::Error>;
+
+    fn from_service_request(req: &ServiceRequest) -> Self::Future {
+        Authorization::<Basic>::parse(req)
+            .map(|auth| BasicAuth(auth.into_scheme()))
+            .map_err(|_| {
+                // TODO: debug! the original error
+                let challenge = req
+                    .app_data::<Config>()
                     .map(|config| config.0.clone())
                     // TODO: Add trace! about `Default::default` call
                     .unwrap_or_else(Default::default);

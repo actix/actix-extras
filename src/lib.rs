@@ -1,7 +1,9 @@
 //! HTTP Authorization support for [actix-web](https://actix.rs) framework.
 //!
-//! Provides [Authorization] and  [WWW-Authenticate] headers,
-//! and [extractors] for an [Authorization] header.
+//! Provides:
+//!  * typed [Authorization] and  [WWW-Authenticate] headers
+//!  * [extractors] for an [Authorization] header
+//!  * [middleware] for easier authorization checking
 //!
 //! ## Supported schemes
 //!
@@ -11,11 +13,14 @@
 //! [Authorization]: `crate::headers::authorization::Authorization`
 //! [WWW-Authenticate]: `crate::headers::www_authenticate::WwwAuthenticate`
 //! [extractors]: https://actix.rs/docs/extractors/
+//! [middleware]: ./middleware/
 
-#![forbid(bare_trait_objects)]
-#![forbid(missing_docs)]
+#![deny(bare_trait_objects)]
+#![deny(missing_docs)]
+#![deny(unused)]
 #![cfg_attr(feature = "nightly", feature(test))]
 
 pub mod extractors;
 pub mod headers;
+pub mod middleware;
 mod utils;

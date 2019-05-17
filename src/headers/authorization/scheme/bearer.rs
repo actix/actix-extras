@@ -1,7 +1,9 @@
 use std::borrow::Cow;
 use std::fmt;
 
-use actix_web::http::header::{HeaderValue, IntoHeaderValue, InvalidHeaderValueBytes};
+use actix_web::http::header::{
+    HeaderValue, IntoHeaderValue, InvalidHeaderValueBytes,
+};
 use bytes::{BufMut, BytesMut};
 
 use crate::headers::authorization::errors::ParseError;
@@ -10,7 +12,8 @@ use crate::utils;
 
 /// Credentials for `Bearer` authentication scheme, defined in [RFC6750](https://tools.ietf.org/html/rfc6750)
 ///
-/// Should be used in combination with [`Authorization`](./struct.Authorization.html) header.
+/// Should be used in combination with
+/// [`Authorization`](./struct.Authorization.html) header.
 #[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Bearer {
     token: Cow<'static, str>,
@@ -130,6 +133,9 @@ mod tests {
 
         let result = bearer.try_into();
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), HeaderValue::from_static("Bearer mF_9.B5f-4.1JqM"));
+        assert_eq!(
+            result.unwrap(),
+            HeaderValue::from_static("Bearer mF_9.B5f-4.1JqM")
+        );
     }
 }

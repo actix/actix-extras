@@ -5,7 +5,9 @@ use std::default::Default;
 use std::fmt;
 use std::str;
 
-use actix_web::http::header::{HeaderValue, IntoHeaderValue, InvalidHeaderValueBytes};
+use actix_web::http::header::{
+    HeaderValue, IntoHeaderValue, InvalidHeaderValueBytes,
+};
 use bytes::{BufMut, Bytes, BytesMut};
 
 use super::Challenge;
@@ -24,7 +26,9 @@ use crate::utils;
 /// fn index(_req: HttpRequest) -> HttpResponse {
 ///     let challenge = Basic::with_realm("Restricted area");
 ///
-///     HttpResponse::Unauthorized().set(WwwAuthenticate(challenge)).finish()
+///     HttpResponse::Unauthorized()
+///         .set(WwwAuthenticate(challenge))
+///         .finish()
 /// }
 /// ```
 ///

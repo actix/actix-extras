@@ -2,7 +2,9 @@ use std::borrow::Cow;
 use std::fmt;
 use std::str;
 
-use actix_web::http::header::{HeaderValue, IntoHeaderValue, InvalidHeaderValueBytes};
+use actix_web::http::header::{
+    HeaderValue, IntoHeaderValue, InvalidHeaderValueBytes,
+};
 use bytes::{BufMut, Bytes, BytesMut};
 
 use super::super::Challenge;
@@ -16,7 +18,9 @@ use crate::utils;
 ///
 /// ```rust
 /// # use actix_web::{web, App, HttpRequest, HttpResponse, HttpServer};
-/// use actix_web_httpauth::headers::www_authenticate::bearer::{Bearer, Error};
+/// use actix_web_httpauth::headers::www_authenticate::bearer::{
+///     Bearer, Error,
+/// };
 /// use actix_web_httpauth::headers::www_authenticate::WwwAuthenticate;
 ///
 /// fn index(_req: HttpRequest) -> HttpResponse {
@@ -28,7 +32,9 @@ use crate::utils;
 ///         .error_uri("http://example.org")
 ///         .finish();
 ///
-///     HttpResponse::Unauthorized().set(WwwAuthenticate(challenge)).finish()
+///     HttpResponse::Unauthorized()
+///         .set(WwwAuthenticate(challenge))
+///         .finish()
 /// }
 /// ```
 ///
@@ -62,7 +68,10 @@ impl Bearer {
 #[doc(hidden)]
 impl Challenge for Bearer {
     fn to_bytes(&self) -> Bytes {
-        let desc_uri_required = self.error_description.as_ref().map_or(0, |desc| desc.len() + 20)
+        let desc_uri_required = self
+            .error_description
+            .as_ref()
+            .map_or(0, |desc| desc.len() + 20)
             + self.error_uri.as_ref().map_or(0, |url| url.len() + 12);
         let capacity = 6
             + self.realm.as_ref().map_or(0, |realm| realm.len() + 9)

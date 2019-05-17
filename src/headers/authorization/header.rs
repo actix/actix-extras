@@ -1,7 +1,9 @@
 use std::fmt;
 
 use actix_web::error::ParseError;
-use actix_web::http::header::{Header, HeaderName, HeaderValue, IntoHeaderValue, AUTHORIZATION};
+use actix_web::http::header::{
+    Header, HeaderName, HeaderValue, IntoHeaderValue, AUTHORIZATION,
+};
 use actix_web::HttpMessage;
 
 use crate::headers::authorization::scheme::Scheme;
@@ -14,7 +16,8 @@ use crate::headers::authorization::scheme::Scheme;
 /// credentials containing the authentication information of the user
 /// agent for the realm of the resource being requested.
 ///
-/// `Authorization` header is generic over [authentication scheme](./trait.Scheme.html).
+/// `Authorization` header is generic over [authentication
+/// scheme](./trait.Scheme.html).
 ///
 /// # Example
 ///
@@ -35,7 +38,8 @@ impl<S> Authorization<S>
 where
     S: Scheme,
 {
-    /// Consumes `Authorization` header and returns inner [`Scheme`] implementation.
+    /// Consumes `Authorization` header and returns inner [`Scheme`]
+    /// implementation.
     ///
     /// [`Scheme`]: ./trait.Scheme.html
     pub fn into_scheme(self) -> S {
@@ -77,7 +81,8 @@ impl<S: Scheme> Header for Authorization<S> {
     }
 
     fn parse<T: HttpMessage>(msg: &T) -> Result<Self, ParseError> {
-        let header = msg.headers().get(AUTHORIZATION).ok_or(ParseError::Header)?;
+        let header =
+            msg.headers().get(AUTHORIZATION).ok_or(ParseError::Header)?;
         let scheme = S::parse(header).map_err(|_| ParseError::Header)?;
 
         Ok(Authorization(scheme))
