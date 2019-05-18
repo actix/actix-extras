@@ -2,7 +2,7 @@
 
 ## 0.4.0 (2019-05-18)
 
-* Upgrade to actix-web 1.0.0-beta5
+* Upgrade to actix-web 1.0.0-rc
 * Removed `protobuf` method for `HttpRequest` (use `ProtoBuf` extractor instead)
 
 ## 0.3.0 (2019-03-07)
