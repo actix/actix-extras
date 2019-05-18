@@ -1,6 +1,6 @@
 [package]
 name = "actix-redis"
-version = "0.6.0-beta.4"
+version = "0.6.0"
 authors = ["Nikolay Kim <fafhrd91@gmail.com>"]
 description = "Redis integration for actix framework"
 license = "MIT/Apache-2.0"
@@ -33,7 +33,7 @@ actix = "0.8.2"
 log = "0.4"
 backoff = "0.1"
 derive_more = "0.14"
-futures = "0.1"
+futures = "0.1.25"
 tokio-io = "0.1"
 tokio-codec = "0.1"
 tokio-tcp = "0.1"
@@ -41,10 +41,10 @@ redis-async = "0.4"
 time = "0.1"
 
 # actix web session
-actix-web = { version = "1.0.0-beta.5", optional=true }
-actix-utils = { version = "0.4.0", optional=true }
+actix-web = { version = "1.0.0-rc", optional=true }
+actix-utils = { version = "0.4.1", optional=true }
 actix-service = { version = "0.4.0", optional=true }
-actix-session = { version = "0.1.0-beta.4", optional=true }
+actix-session = { version = "0.1.0", optional=true }
 rand = { version="0.6.5", optional=true }
 serde = { version="1.0", optional=true }
 serde_json = { version="1.0", optional=true }

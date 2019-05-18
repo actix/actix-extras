@@ -1,5 +1,10 @@
 # Changes
 
+## 0.6.0 (2019-05-18)
+
+* actix-web 1.0.0 compatibility
+
+
 ## 0.5.1 (2018-08-02)
 
 * Use cookie 0.11
