@@ -11,5 +11,5 @@ prost = "0.4"
 prost-derive = "0.4"
 
 actix = "0.8.1"
-actix-web = "1.0.0-b3"
+actix-web = "1.0.0-beta.5"
 actix-protobuf = { path="../../" }
