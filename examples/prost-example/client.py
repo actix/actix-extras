@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # just start server and run client.py
 
 # wget https://github.com/google/protobuf/releases/download/v3.5.1/protobuf-python-3.5.1.zip
@@ -5,12 +6,11 @@
 # cd protobuf-3.5.1/python/
 # python3.6 setup.py install
 
-# pip3.6 install --upgrade pip
-# pip3.6 install aiohttp
+# pip3 install --upgrade pip
+# pip3 install aiohttp
 
-# python3.6 client.py
+# python3 client.py
 
-#!/usr/bin/env python
 import test_pb2
 import traceback
 import sys
@@ -48,7 +48,7 @@ async def fetch(session):
     obj = test_pb2.MyObj()
     obj.number = 9
     obj.name = 'USB'
-    async with session.post('http://localhost:8080/', data=obj.SerializeToString(),
+    async with session.post('http://127.0.0.1:8081/', data=obj.SerializeToString(),
         headers={"content-type": "application/protobuf"}) as resp:
         print(resp.status)
         data = await resp.read()

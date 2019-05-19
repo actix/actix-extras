@@ -2,8 +2,7 @@ extern crate actix;
 extern crate actix_web;
 extern crate bytes;
 extern crate futures;
-#[macro_use]
-extern crate failure;
+extern crate derive_more;
 
 #[cfg(test)]
 extern crate http;
@@ -13,6 +12,7 @@ extern crate prost;
 #[macro_use] extern crate prost_derive;
 
 use std::fmt;
+use derive_more::Display;
 use std::ops::{Deref, DerefMut};
 
 use bytes::{BytesMut, IntoBuf};
@@ -23,27 +23,26 @@ use prost::EncodeError as ProtoBufEncodeError;
 use futures::{Poll, Future, Stream};
 use actix_web::http::header::{CONTENT_TYPE, CONTENT_LENGTH};
 use actix_web::{Responder, HttpMessage, HttpRequest, HttpResponse, FromRequest};
-use actix_web::dev::HttpResponseBuilder;
+use actix_web::dev::{HttpResponseBuilder, Payload};
 use actix_web::error::{Error, PayloadError, ResponseError};
 
-
-#[derive(Fail, Debug)]
+#[derive(Debug, Display)]
 pub enum ProtoBufPayloadError {
     /// Payload size is bigger than 256k
-    #[fail(display="Payload size is bigger than 256k")]
+    #[display(fmt="Payload size is bigger than 256k")]
     Overflow,
     /// Content type error
-    #[fail(display="Content type error")]
+    #[display(fmt="Content type error")]
     ContentType,
     /// Serialize error
-    #[fail(display="ProtoBuf serialize error: {}", _0)]
-    Serialize(#[cause] ProtoBufEncodeError),
+    #[display(fmt="ProtoBuf serialize error: {}", _0)]
+    Serialize(ProtoBufEncodeError),
     /// Deserialize error
-    #[fail(display="ProtoBuf deserialize error: {}", _0)]
-    Deserialize(#[cause] ProtoBufDecodeError),
+    #[display(fmt="ProtoBuf deserialize error: {}", _0)]
+    Deserialize(ProtoBufDecodeError),
     /// Payload error
-    #[fail(display="Error that occur during reading payload: {}", _0)]
-    Payload(#[cause] PayloadError),
+    #[display(fmt="Error that occur during reading payload: {}", _0)]
+    Payload(PayloadError),
 }
 
 impl ResponseError for ProtoBufPayloadError {
@@ -115,27 +114,31 @@ impl Default for ProtoBufConfig {
     }
 }
 
-impl<T, S> FromRequest<S> for ProtoBuf<T>
-    where T: Message + Default + 'static, S: 'static
+impl<T> FromRequest for ProtoBuf<T>
+    where T: Message + Default + 'static
 {
     type Config = ProtoBufConfig;
-    type Result = Box<Future<Item=Self, Error=Error>>;
+    type Error = Error;
+    type Future = Box<Future<Item=Self, Error=Error>>;
 
     #[inline]
-    fn from_request(req: &HttpRequest<S>, cfg: &Self::Config) -> Self::Result {
+    fn from_request(req: &HttpRequest, payload: &mut Payload) -> Self::Future {
+        let limit = req.app_data::<ProtoBufConfig>().map(|c| c.limit).unwrap_or(262_144);
         Box::new(
-            ProtoBufMessage::new(req)
-                .limit(cfg.limit)
-                .from_err()
+            ProtoBufMessage::new(req, payload)
+                .limit(limit)
+                .map_err(move |e| {
+                    e.into()
+                })
                 .map(ProtoBuf))
     }
 }
 
 impl<T: Message + Default> Responder for ProtoBuf<T> {
-    type Item = HttpResponse;
     type Error = Error;
+    type Future = Result<HttpResponse, Error>;
 
-    fn respond_to<S>(self, _: &HttpRequest<S>) -> Result<HttpResponse, Error> {
+    fn respond_to(self, _: &HttpRequest) -> Self::Future {
         let mut buf = Vec::new();
         self.0.encode(&mut buf)
             .map_err(|e| Error::from(ProtoBufPayloadError::Serialize(e)))
@@ -147,18 +150,18 @@ impl<T: Message + Default> Responder for ProtoBuf<T> {
     }
 }
 
-pub struct ProtoBufMessage<T: HttpMessage, U: Message + Default>{
+pub struct ProtoBufMessage<T: Message + Default>{
     limit: usize,
     length: Option<usize>,
-    stream: Option<T::Stream>,
+    stream: Option<Payload>,
     err: Option<ProtoBufPayloadError>,
-    fut: Option<Box<Future<Item=U, Error=ProtoBufPayloadError>>>,
+    fut: Option<Box<Future<Item=T, Error=ProtoBufPayloadError>>>,
 }
 
-impl<T: HttpMessage, U: Message + Default> ProtoBufMessage<T, U> {
+impl<T: Message + Default> ProtoBufMessage<T> {
 
     /// Create `ProtoBufMessage` for request.
-    pub fn new(req: &T) -> Self {
+    pub fn new(req: &HttpRequest, payload: &mut Payload) -> Self {
         if req.content_type() != "application/protobuf" {
             return ProtoBufMessage {
                 limit: 262_144,
@@ -181,7 +184,7 @@ impl<T: HttpMessage, U: Message + Default> ProtoBufMessage<T, U> {
         ProtoBufMessage {
             limit: 262_144,
             length: len,
-            stream: Some(req.payload()),
+            stream: Some(payload.take()),
             fut: None,
             err: None,
         }
@@ -194,13 +197,12 @@ impl<T: HttpMessage, U: Message + Default> ProtoBufMessage<T, U> {
     }
 }
 
-impl<T, U: Message + Default + 'static> Future for ProtoBufMessage<T, U>
-where T: HttpMessage + 'static
+impl<T: Message + Default + 'static> Future for ProtoBufMessage<T>
 {
-    type Item = U;
+    type Item = T;
     type Error = ProtoBufPayloadError;
 
-    fn poll(&mut self) -> Poll<U, ProtoBufPayloadError> {
+    fn poll(&mut self) -> Poll<T, ProtoBufPayloadError> {
         if let Some(ref mut fut) = self.fut {
             return fut.poll();
         }
@@ -228,7 +230,7 @@ where T: HttpMessage + 'static
                     body.extend_from_slice(&chunk);
                     Ok(body)
                 }
-            }).and_then(|body| Ok(<U>::decode(&mut body.into_buf())?));
+            }).and_then(|body| Ok(<T>::decode(&mut body.into_buf())?));
         self.fut = Some(Box::new(fut));
         self.poll()
     }
@@ -251,30 +253,11 @@ impl ProtoBufResponseBuilder for HttpResponseBuilder {
     }
 }
 
-
-
-pub trait ProtoBufHttpMessage {
-    fn protobuf<T: Message + Default>(&self) -> ProtoBufMessage<Self, T>
-        where Self: HttpMessage + 'static;
-}
-
-impl<S> ProtoBufHttpMessage for HttpRequest<S> {
-
-    #[inline]
-    fn protobuf<T: Message + Default>(&self) -> ProtoBufMessage<Self, T>
-        where Self: HttpMessage + 'static
-    {
-        ProtoBufMessage::new(self)
-    }
-}
-
-
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use http::header;
-    use actix_web::test::TestRequest;
+    use actix_web::test::{block_on, TestRequest};
 
     impl PartialEq for ProtoBufPayloadError {
         fn eq(&self, other: &ProtoBufPayloadError) -> bool {
@@ -303,33 +286,34 @@ mod tests {
     #[test]
     fn test_protobuf() {
         let protobuf = ProtoBuf(MyObject{number: 9 , name: "test".to_owned()});
-        let resp = protobuf.respond_to(&TestRequest::default().finish()).unwrap();
+        let req = TestRequest::default().to_http_request();
+        let resp = protobuf.respond_to(&req).unwrap();
         assert_eq!(resp.headers().get(header::CONTENT_TYPE).unwrap(), "application/protobuf");
     }
 
     #[test]
     fn test_protobuf_message() {
-        let req = TestRequest::default().finish();
-        let mut protobuf = req.protobuf::<MyObject>();
-        assert_eq!(protobuf.poll().err().unwrap(), ProtoBufPayloadError::ContentType);
+        let (req, mut pl) = TestRequest::default().to_http_parts();
+        let protobuf = block_on(ProtoBufMessage::<MyObject>::new(&req, &mut pl));
+        assert_eq!(protobuf.err().unwrap(), ProtoBufPayloadError::ContentType);
 
-        let req = TestRequest::default()
+        let (req, mut pl) = TestRequest::default()
                         .header(
                             header::CONTENT_TYPE,
                             header::HeaderValue::from_static("application/text"),
-                        ).finish();
-        let mut protobuf = req.protobuf::<MyObject>();
-        assert_eq!(protobuf.poll().err().unwrap(), ProtoBufPayloadError::ContentType);
+                        ).to_http_parts();
+        let protobuf = block_on(ProtoBufMessage::<MyObject>::new(&req, &mut pl));
+        assert_eq!(protobuf.err().unwrap(), ProtoBufPayloadError::ContentType);
 
-        let req = TestRequest::default()
+        let (req, mut pl) = TestRequest::default()
                         .header(
                             header::CONTENT_TYPE,
                             header::HeaderValue::from_static("application/protobuf"),
                         ).header(
                             header::CONTENT_LENGTH,
                             header::HeaderValue::from_static("10000"),
-                        ).finish();
-        let mut protobuf = req.protobuf::<MyObject>().limit(100);
-        assert_eq!(protobuf.poll().err().unwrap(), ProtoBufPayloadError::Overflow);
+                        ).to_http_parts();
+        let protobuf = block_on(ProtoBufMessage::<MyObject>::new(&req, &mut pl).limit(100));
+        assert_eq!(protobuf.err().unwrap(), ProtoBufPayloadError::Overflow);
     }
 }
