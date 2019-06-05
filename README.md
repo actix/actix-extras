@@ -2,13 +2,19 @@
 
 [![Latest Version](https://img.shields.io/crates/v/actix-web-httpauth.svg)](https://crates.io/crates/actix-web-httpauth)
 [![Latest Version](https://docs.rs/actix-web-httpauth/badge.svg)](https://docs.rs/actix-web-httpauth)
+[![dependency status](https://deps.rs/crate/actix-web-httpauth/0.3.0/status.svg)](https://deps.rs/crate/actix-web-httpauth/0.3.0)
 ![Build Status](https://travis-ci.org/svartalf/actix-web-httpauth.svg?branch=master)
 ![Apache 2.0 OR MIT licensed](https://img.shields.io/badge/license-Apache2.0%2FMIT-blue.svg)
 
 HTTP authentication schemes for [actix-web](https://github.com/actix/actix-web) framework.
 
-All supported schemas are actix [Extractors](https://docs.rs/actix-web/0.6.7/actix_web/trait.FromRequest.html),
-and can be used both in middlewares and request handlers, check the `examples/` folder.
+Provides:
+ * typed [Authorization] and  [WWW-Authenticate] headers
+ * [extractors] for an [Authorization] header
+ * [middleware] for easier authorization checking
+
+All supported schemas are actix [Extractors](https://docs.rs/actix-web/1.0.0/actix_web/trait.FromRequest.html),
+and can be used both in the middlewares and request handlers.
 
 ## Supported schemes
 

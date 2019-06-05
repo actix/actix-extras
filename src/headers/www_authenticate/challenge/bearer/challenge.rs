@@ -82,13 +82,13 @@ impl Challenge for Bearer {
 
         if let Some(ref realm) = self.realm {
             buffer.put(" realm=\"");
-            utils::put_cow(&mut buffer, realm);
+            utils::put_quoted(&mut buffer, realm);
             buffer.put("\"");
         }
 
         if let Some(ref scope) = self.scope {
             buffer.put(" scope=\"");
-            utils::put_cow(&mut buffer, scope);
+            utils::put_quoted(&mut buffer, scope);
             buffer.put("\"");
         }
 
@@ -100,19 +100,19 @@ impl Challenge for Bearer {
                 buffer.reserve(required);
             }
             buffer.put(" error=\"");
-            buffer.put(error_repr);
+            utils::put_quoted(&mut buffer, error_repr);
             buffer.put("\"")
         }
 
         if let Some(ref error_description) = self.error_description {
             buffer.put(" error_description=\"");
-            utils::put_cow(&mut buffer, error_description);
+            utils::put_quoted(&mut buffer, error_description);
             buffer.put("\"");
         }
 
         if let Some(ref error_uri) = self.error_uri {
             buffer.put(" error_uri=\"");
-            utils::put_cow(&mut buffer, error_uri);
+            utils::put_quoted(&mut buffer, error_uri);
             buffer.put("\"");
         }
 

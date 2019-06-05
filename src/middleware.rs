@@ -16,27 +16,31 @@ use crate::extractors::{basic, bearer, AuthExtractor};
 /// If there is no `Authorization` header in the request,
 /// this middleware returns an error immediately,
 /// without calling the `F` callback.
-/// Otherwise, it will pass parsed credentials into it.
+///
+/// Otherwise, it will pass both the request and
+/// the parsed credentials into it.
+/// In case of successful validation `F` callback
+/// is required to return the `ServiceRequest` back.
 pub struct HttpAuthentication<T, F>
 where
     T: AuthExtractor,
 {
-    validator_fn: Rc<F>,
+    process_fn: Rc<F>,
     _extractor: PhantomData<T>,
 }
 
 impl<T, F, O> HttpAuthentication<T, F>
 where
     T: AuthExtractor,
-    F: FnMut(&mut ServiceRequest, T) -> O,
-    O: IntoFuture<Item = (), Error = Error>,
+    F: FnMut(ServiceRequest, T) -> O,
+    O: IntoFuture<Item = ServiceRequest, Error = Error>,
 {
     /// Construct `HttpAuthentication` middleware
     /// with the provided auth extractor `T` and
     /// validation callback `F`.
-    pub fn with_fn(validator_fn: F) -> HttpAuthentication<T, F> {
+    pub fn with_fn(process_fn: F) -> HttpAuthentication<T, F> {
         HttpAuthentication {
-            validator_fn: Rc::new(validator_fn),
+            process_fn: Rc::new(process_fn),
             _extractor: PhantomData,
         }
     }
@@ -44,15 +48,15 @@ where
 
 impl<F, O> HttpAuthentication<basic::BasicAuth, F>
 where
-    F: FnMut(&mut ServiceRequest, basic::BasicAuth) -> O,
-    O: IntoFuture<Item = (), Error = Error>,
+    F: FnMut(ServiceRequest, basic::BasicAuth) -> O,
+    O: IntoFuture<Item = ServiceRequest, Error = Error>,
 {
     /// Construct `HttpAuthentication` middleware for the HTTP "Basic"
     /// authentication scheme.
     ///
     /// ## Example
     ///
-    /// ```
+    /// ```rust
     /// # use actix_web::Error;
     /// # use actix_web::dev::ServiceRequest;
     /// # use futures::future::{self, FutureResult};
@@ -64,39 +68,40 @@ where
     /// // it can be extended to query database
     /// // or to do something else in a async manner.
     /// fn validator(
-    ///     req: &mut ServiceRequest,
-    ///     credentials: BasicAuth,
-    /// ) -> FutureResult<(), Error> {
+    ///     req: ServiceRequest,
+    ///    credentials: BasicAuth,
+    /// ) -> FutureResult<ServiceRequest, Error> {
     ///     // All users are great and more than welcome!
-    ///     future::ok(())
+    ///     future::ok(req)
     /// }
     ///
     /// let middleware = HttpAuthentication::basic(validator);
     /// ```
-    pub fn basic(validator_fn: F) -> Self {
-        Self::with_fn(validator_fn)
+    pub fn basic(process_fn: F) -> Self {
+        Self::with_fn(process_fn)
     }
 }
 
 impl<F, O> HttpAuthentication<bearer::BearerAuth, F>
 where
-    F: FnMut(&mut ServiceRequest, bearer::BearerAuth) -> O,
-    O: IntoFuture<Item = (), Error = Error>,
+    F: FnMut(ServiceRequest, bearer::BearerAuth) -> O,
+    O: IntoFuture<Item = ServiceRequest, Error = Error>,
 {
     /// Construct `HttpAuthentication` middleware for the HTTP "Bearer"
     /// authentication scheme.
+    ///
     /// ## Example
     ///
-    /// ```
+    /// ```rust
     /// # use actix_web::Error;
     /// # use actix_web::dev::ServiceRequest;
     /// # use futures::future::{self, FutureResult};
     /// # use actix_web_httpauth::middleware::HttpAuthentication;
     /// # use actix_web_httpauth::extractors::bearer::{Config, BearerAuth};
     /// # use actix_web_httpauth::extractors::{AuthenticationError, AuthExtractorConfig};
-    /// fn validator(req: &mut ServiceRequest, credentials: BearerAuth) -> FutureResult<(), Error> {
+    /// fn validator(req: ServiceRequest, credentials: BearerAuth) -> FutureResult<ServiceRequest, Error> {
     ///     if credentials.token() == "mF_9.B5f-4.1JqM" {
-    ///         future::ok(())
+    ///         future::ok(req)
     ///     } else {
     ///         let config = req.app_data::<Config>()
     ///             .map(|data| data.get_ref().clone())
@@ -109,8 +114,8 @@ where
     ///
     /// let middleware = HttpAuthentication::bearer(validator);
     /// ```
-    pub fn bearer(validator_fn: F) -> Self {
-        Self::with_fn(validator_fn)
+    pub fn bearer(process_fn: F) -> Self {
+        Self::with_fn(process_fn)
     }
 }
 
@@ -122,8 +127,8 @@ where
             Error = Error,
         > + 'static,
     S::Future: 'static,
-    F: Fn(&mut ServiceRequest, T) -> O + 'static,
-    O: IntoFuture<Item = (), Error = Error> + 'static,
+    F: Fn(ServiceRequest, T) -> O + 'static,
+    O: IntoFuture<Item = ServiceRequest, Error = Error> + 'static,
     T: AuthExtractor + 'static,
 {
     type Request = ServiceRequest;
@@ -136,7 +141,7 @@ where
     fn new_transform(&self, service: S) -> Self::Future {
         future::ok(AuthenticationMiddleware {
             service: Some(service),
-            validator_fn: self.validator_fn.clone(),
+            process_fn: self.process_fn.clone(),
             _extractor: PhantomData,
         })
     }
@@ -148,7 +153,7 @@ where
     T: AuthExtractor,
 {
     service: Option<S>,
-    validator_fn: Rc<F>,
+    process_fn: Rc<F>,
     _extractor: PhantomData<T>,
 }
 
@@ -160,8 +165,8 @@ where
             Error = Error,
         > + 'static,
     S::Future: 'static,
-    F: Fn(&mut ServiceRequest, T) -> O + 'static,
-    O: IntoFuture<Item = (), Error = Error> + 'static,
+    F: Fn(ServiceRequest, T) -> O + 'static,
+    O: IntoFuture<Item = ServiceRequest, Error = Error> + 'static,
     T: AuthExtractor + 'static,
 {
     type Request = ServiceRequest;
@@ -177,7 +182,7 @@ where
     }
 
     fn call(&mut self, req: Self::Request) -> Self::Future {
-        let validator_fn = self.validator_fn.clone();
+        let process_fn = self.process_fn.clone();
         let mut service = self
             .service
             .take()
@@ -185,7 +190,7 @@ where
 
         let f = Extract::new(req)
             .and_then(move |(req, credentials)| {
-                Validate::new(req, validator_fn, credentials)
+                (process_fn)(req, credentials)
             })
             .and_then(move |req| service.call(req));
 
@@ -236,62 +241,5 @@ where
 
         let req = self.req.take().expect("Extract future was polled twice!");
         Ok(Async::Ready((req, credentials)))
-    }
-}
-
-struct Validate<F, T> {
-    req: Option<ServiceRequest>,
-    validation_f: Option<Box<dyn Future<Item = (), Error = Error>>>,
-    validator_fn: Rc<F>,
-    credentials: Option<T>,
-}
-
-impl<F, T> Validate<F, T> {
-    pub fn new(
-        req: ServiceRequest,
-        validator_fn: Rc<F>,
-        credentials: T,
-    ) -> Self {
-        Validate {
-            req: Some(req),
-            credentials: Some(credentials),
-            validator_fn,
-            validation_f: None,
-        }
-    }
-}
-
-impl<F, T, O> Future for Validate<F, T>
-where
-    F: Fn(&mut ServiceRequest, T) -> O,
-    O: IntoFuture<Item = (), Error = Error> + 'static,
-{
-    type Item = ServiceRequest;
-    type Error = Error;
-
-    fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
-        if self.validation_f.is_none() {
-            let req = self
-                .req
-                .as_mut()
-                .expect("Unable to get the mutable access to the request");
-            let credentials = self
-                .credentials
-                .take()
-                .expect("Validate future was polled in some weird manner");
-            let f = (self.validator_fn)(req, credentials).into_future();
-
-            self.validation_f = Some(Box::new(f));
-        }
-
-        let f = self
-            .validation_f
-            .as_mut()
-            .expect("Validation future should exist at this moment");
-        // We do not care about returned `Ok(())`
-        futures::try_ready!(f.poll());
-        let req = self.req.take().expect("Validate future was polled already");
-
-        Ok(Async::Ready(req))
     }
 }

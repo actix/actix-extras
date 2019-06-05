@@ -85,7 +85,7 @@ impl Challenge for Basic {
         buffer.put("Basic");
         if let Some(ref realm) = self.realm {
             buffer.put(" realm=\"");
-            utils::put_cow(&mut buffer, realm);
+            utils::put_quoted(&mut buffer, realm);
             buffer.put("\"");
         }
 

@@ -10,7 +10,6 @@ use bytes::{BufMut, BytesMut};
 
 use crate::headers::authorization::errors::ParseError;
 use crate::headers::authorization::Scheme;
-use crate::utils;
 
 /// Credentials for `Basic` authentication scheme, defined in [RFC 7617](https://tools.ietf.org/html/rfc7617)
 #[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
@@ -107,13 +106,14 @@ impl IntoHeaderValue for Basic {
     fn try_into(self) -> Result<HeaderValue, <Self as IntoHeaderValue>::Error> {
         let mut credentials = BytesMut::with_capacity(
             self.user_id.len()
-                + 1
+                + 1 // ':'
                 + self.password.as_ref().map_or(0, |pwd| pwd.len()),
         );
-        utils::put_cow(&mut credentials, &self.user_id);
+
+        credentials.extend_from_slice(self.user_id.as_bytes());
         credentials.put_u8(b':');
         if let Some(ref password) = self.password {
-            utils::put_cow(&mut credentials, password);
+            credentials.extend_from_slice(password.as_bytes());
         }
 
         // TODO: It would be nice not to allocate new `String`  here but write

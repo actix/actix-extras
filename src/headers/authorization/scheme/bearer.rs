@@ -8,7 +8,6 @@ use bytes::{BufMut, BytesMut};
 
 use crate::headers::authorization::errors::ParseError;
 use crate::headers::authorization::scheme::Scheme;
-use crate::utils;
 
 /// Credentials for `Bearer` authentication scheme, defined in [RFC6750](https://tools.ietf.org/html/rfc6750)
 ///
@@ -82,7 +81,7 @@ impl IntoHeaderValue for Bearer {
     fn try_into(self) -> Result<HeaderValue, <Self as IntoHeaderValue>::Error> {
         let mut buffer = BytesMut::with_capacity(7 + self.token.len());
         buffer.put("Bearer ");
-        utils::put_cow(&mut buffer, &self.token);
+        buffer.extend_from_slice(self.token.as_bytes());
 
         HeaderValue::from_shared(buffer.freeze())
     }
