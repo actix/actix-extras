@@ -1,13 +1,14 @@
 //! HTTP Authentication middleware.
 
 use std::marker::PhantomData;
-use std::rc::Rc;
+use std::sync::Arc;
 
 use actix_service::{Service, Transform};
 use actix_web::dev::{ServiceRequest, ServiceResponse};
 use actix_web::Error;
 use futures::future::{self, FutureResult};
 use futures::{Async, Future, IntoFuture, Poll};
+use futures_locks::Mutex;
 
 use crate::extractors::{basic, bearer, AuthExtractor};
 
@@ -21,11 +22,12 @@ use crate::extractors::{basic, bearer, AuthExtractor};
 /// the parsed credentials into it.
 /// In case of successful validation `F` callback
 /// is required to return the `ServiceRequest` back.
+#[derive(Debug, Clone)]
 pub struct HttpAuthentication<T, F>
 where
     T: AuthExtractor,
 {
-    process_fn: Rc<F>,
+    process_fn: Arc<F>,
     _extractor: PhantomData<T>,
 }
 
@@ -40,7 +42,7 @@ where
     /// validation callback `F`.
     pub fn with_fn(process_fn: F) -> HttpAuthentication<T, F> {
         HttpAuthentication {
-            process_fn: Rc::new(process_fn),
+            process_fn: Arc::new(process_fn),
             _extractor: PhantomData,
         }
     }
@@ -69,7 +71,7 @@ where
     /// // or to do something else in a async manner.
     /// fn validator(
     ///     req: ServiceRequest,
-    ///    credentials: BasicAuth,
+    ///     credentials: BasicAuth,
     /// ) -> FutureResult<ServiceRequest, Error> {
     ///     // All users are great and more than welcome!
     ///     future::ok(req)
@@ -140,7 +142,7 @@ where
 
     fn new_transform(&self, service: S) -> Self::Future {
         future::ok(AuthenticationMiddleware {
-            service: Some(service),
+            service: Mutex::new(service),
             process_fn: self.process_fn.clone(),
             _extractor: PhantomData,
         })
@@ -152,8 +154,8 @@ pub struct AuthenticationMiddleware<S, F, T>
 where
     T: AuthExtractor,
 {
-    service: Option<S>,
-    process_fn: Rc<F>,
+    service: Mutex<S>,
+    process_fn: Arc<F>,
     _extractor: PhantomData<T>,
 }
 
@@ -176,23 +178,24 @@ where
 
     fn poll_ready(&mut self) -> Poll<(), Self::Error> {
         self.service
-            .as_mut()
+            .try_lock()
             .expect("AuthenticationMiddleware was called already")
             .poll_ready()
     }
 
     fn call(&mut self, req: Self::Request) -> Self::Future {
         let process_fn = self.process_fn.clone();
-        let mut service = self
-            .service
-            .take()
-            .expect("AuthenticationMiddleware was called twice");
+        // Note: cloning the mutex, not the service itself
+        let inner = self.service.clone();
 
         let f = Extract::new(req)
-            .and_then(move |(req, credentials)| {
-                (process_fn)(req, credentials)
-            })
-            .and_then(move |req| service.call(req));
+            .and_then(move |(req, credentials)| (process_fn)(req, credentials))
+            .and_then(move |req| {
+                inner
+                    .lock()
+                    .map_err(Into::into)
+                    .and_then(|mut service| service.call(req))
+            });
 
         Box::new(f)
     }

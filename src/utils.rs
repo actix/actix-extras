@@ -26,24 +26,20 @@ impl<'a> Iterator for Quoted<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         match self.state {
-            State::YieldStr => {
-                match self.inner.next() {
-                    Some(s) => {
-                        self.state = State::YieldQuote;
-                        Some(s)
-                    },
-                    None => None,
+            State::YieldStr => match self.inner.next() {
+                Some(s) => {
+                    self.state = State::YieldQuote;
+                    Some(s)
                 }
+                None => None,
             },
-            State::YieldQuote => {
-                match self.inner.peek() {
-                    Some(_) => {
-                        self.state = State::YieldStr;
-                        Some("\\\"")
-                    },
-                    None => None,
+            State::YieldQuote => match self.inner.peek() {
+                Some(_) => {
+                    self.state = State::YieldStr;
+                    Some("\\\"")
                 }
-            }
+                None => None,
+            },
         }
     }
 }

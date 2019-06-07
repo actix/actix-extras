@@ -2,7 +2,7 @@
 
 [![Latest Version](https://img.shields.io/crates/v/actix-web-httpauth.svg)](https://crates.io/crates/actix-web-httpauth)
 [![Latest Version](https://docs.rs/actix-web-httpauth/badge.svg)](https://docs.rs/actix-web-httpauth)
-[![dependency status](https://deps.rs/crate/actix-web-httpauth/0.3.0/status.svg)](https://deps.rs/crate/actix-web-httpauth/0.3.0)
+[![dependency status](https://deps.rs/crate/actix-web-httpauth/0.3.1/status.svg)](https://deps.rs/crate/actix-web-httpauth/0.3.1)
 ![Build Status](https://travis-ci.org/svartalf/actix-web-httpauth.svg?branch=master)
 ![Apache 2.0 OR MIT licensed](https://img.shields.io/badge/license-Apache2.0%2FMIT-blue.svg)
 
