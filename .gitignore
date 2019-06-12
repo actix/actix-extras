@@ -2,6 +2,7 @@ Cargo.lock
 target/
 guide/build/
 /gh-pages
+/.history
 
 *.so
 *.out
