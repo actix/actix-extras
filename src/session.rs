@@ -151,23 +151,33 @@ where
                         Either::B(Either::A(inner.update(res, state, value))),
                     (SessionStatus::Purged, Some(_)) => {
                         Either::B(Either::B(
-                            inner.clear_cache(value)
-                                 .and_then(move |_| 
-                                    match inner.remove_cookie(&mut res){
-                                        Ok(_) => Either::A(ok(res)),
-                                        Err(_err) => Either::B(err(
-                                            error::ErrorInternalServerError(_err)))
-                                  })
+                            if let Some(val) = value {
+                                Either::A(
+                                    inner.clear_cache(val)
+                                        .and_then(move |_| 
+                                            match inner.remove_cookie(&mut res){
+                                                Ok(_) => Either::A(ok(res)),
+                                                Err(_err) => Either::B(err(
+                                                    error::ErrorInternalServerError(_err)))
+                                        })
+                                )
+                            } else {
+                                Either::B(err(error::ErrorInternalServerError("unexpected")))
+                            }
                         ))
                     },
                     (SessionStatus::Renewed, Some(state)) => { 
+                        if let Some(val) = value {
                             Either::A(
                                 Either::B(
-                                inner.clear_cache(value)
+                                inner.clear_cache(val)
                                      .and_then(move |_|
                                         inner.update(res, state, None))
                                 )
                             )
+                        } else {
+                            Either::B(Either::A(inner.update(res, state, None)))
+                        }
                     },
                     (_, None) => unreachable!()
                 }
@@ -285,7 +295,6 @@ impl Inner {
         };
 
         let state: HashMap<_, _> = state.collect();
-
         match serde_json::to_string(&state) {
             Err(e) => Either::A(err(e.into())),
             Ok(body) => Either::B(
@@ -310,26 +319,19 @@ impl Inner {
     }
 
     /// removes cache entry 
-    fn clear_cache(&self, value: Option<String>)
+    fn clear_cache(&self, key: String)
                     -> impl Future<Item=(), Error=Error> {
-        if let Some(key) = value {
-            Either::A(
-                self.addr
-                .send(Command(resp_array!["DEL", key]))
-                .map_err(Error::from)
-                .and_then(|res| 
-                    match res {
-                        // redis responds with number of deleted records
-                        Ok(RespValue::Integer(x)) if x > 0 => Ok(()),
-                        _ => Err(error::ErrorInternalServerError(
-                            "failed to remove session from cache"))
-                    }
-                )
-            )
-        } else {
-            Either::B(err(error::ErrorInternalServerError(
-                                "missing session key - unexpected")))
-        }
+        self.addr
+        .send(Command(resp_array!["DEL", key]))
+        .map_err(Error::from)
+        .and_then(|res| {
+            match res {
+                // redis responds with number of deleted records
+                Ok(RespValue::Integer(x)) if x > 0 => Ok(()),
+                _ => Err(error::ErrorInternalServerError(
+                    "failed to remove session from cache"))
+            }
+        })
     } 
 
     /// invalidates session cookie
