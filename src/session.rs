@@ -145,38 +145,50 @@ where
 
             srv.call(req).and_then(move |mut res| {
                 match Session::get_changes(&mut res) {
-                    (SessionStatus::Unchanged, _) =>
-                        Either::A(Either::A(ok(res))),
-                    (SessionStatus::Changed, Some(state)) =>
-                        Either::B(Either::A(inner.update(res, state, value))),
-                    (SessionStatus::Purged, Some(_)) => {
-                        Either::B(Either::B(
-                            if let Some(val) = value {
+                    (SessionStatus::Unchanged, None) =>
+                        Either::A(Either::A(Either::A(ok(res)))),
+                    (SessionStatus::Unchanged, Some(state)) =>
+                        Either::A(Either::A(Either::B(
+                            if value.is_none(){  // implies the session is new
                                 Either::A(
-                                    inner.clear_cache(val)
-                                        .and_then(move |_| 
-                                            match inner.remove_cookie(&mut res){
-                                                Ok(_) => Either::A(ok(res)),
-                                                Err(_err) => Either::B(err(
-                                                    error::ErrorInternalServerError(_err)))
-                                        })
+                                    inner.update(res, state, value)
                                 )
                             } else {
-                                Either::B(err(error::ErrorInternalServerError("unexpected")))
+                                Either::B(
+                                    ok(res)
+                                )
                             }
-                        ))
+                        ))),
+                    (SessionStatus::Changed, Some(state)) => 
+                        Either::A(Either::B(Either::A(inner.update(res, state, value)))),
+                    (SessionStatus::Purged, Some(_)) => {
+                            if let Some(val) = value {
+                                Either::A(Either::B(Either::B(Either::A(
+                                        inner.clear_cache(val)
+                                            .and_then(move |_| 
+                                                match inner.remove_cookie(&mut res){
+                                                    Ok(_) => Either::A(ok(res)),
+                                                    Err(_err) => Either::B(err(
+                                                        error::ErrorInternalServerError(_err)))
+                                            })
+                                ))))
+                            } else {
+                                Either::A(Either::B(Either::B(Either::B(
+                                    err(error::ErrorInternalServerError("unexpected"))
+                                ))))
+                            }
                     },
                     (SessionStatus::Renewed, Some(state)) => { 
                         if let Some(val) = value {
-                            Either::A(
-                                Either::B(
+                            Either::B(Either::A(
                                 inner.clear_cache(val)
                                      .and_then(move |_|
                                         inner.update(res, state, None))
-                                )
-                            )
+                            ))
                         } else {
-                            Either::B(Either::A(inner.update(res, state, None)))
+                            Either::B(Either::B(
+                                inner.update(res, state, None)
+                            ))
                         }
                     },
                     (_, None) => unreachable!()
