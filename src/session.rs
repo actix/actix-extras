@@ -275,9 +275,8 @@ impl Inner {
         let (value, jar) = if let Some(value) = value {
             (value.clone(), None)
         } else {
-            let mut rng = OsRng::new().unwrap();
             let value: String = iter::repeat(())
-                .map(|()| rng.sample(Alphanumeric))
+                .map(|()| OsRng.sample(Alphanumeric))
                 .take(32)
                 .collect();
 
