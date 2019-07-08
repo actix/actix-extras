@@ -30,7 +30,7 @@ web = ["actix/http", "actix-service", "actix-utils", "actix-web", "actix-session
 [dependencies]
 actix = "0.8.3"
 
-log = "0.4"
+log = "0.4.6"
 backoff = "0.1.5"
 derive_more = "0.15.0"
 futures = "0.1.28"
