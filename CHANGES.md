@@ -1,7 +1,9 @@
 # Changes
 
 
-## 0.7.0 (2019-xx-xx)
+## 0.6.0 (2019-07-08)
+
+* actix-web 1.0.0 compatibility
 
 * Upgraded logic that evaluates session state, including new SessionStatus field,
   and introduced ``session.renew()`` and ``session.purge()`` functionality.
@@ -10,10 +12,6 @@
   Use ``purge()`` at logout to invalidate the session cookie and remove the
   session's redis cache entry.
 
-
-## 0.6.0 (2019-05-18)
-
-* actix-web 1.0.0 compatibility
 
 
 ## 0.5.1 (2018-08-02)
