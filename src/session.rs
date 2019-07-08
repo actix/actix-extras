@@ -1,10 +1,7 @@
-use std::collections::HashMap;
-use std::iter;
-use std::rc::Rc;
-
+use std::{collections::HashMap, iter, rc::Rc};
 use actix::prelude::*;
 use actix_service::{Service, Transform};
-use actix_session::Session;
+use actix_session::{Session, SessionStatus};
 use actix_utils::cloneable::CloneableService;
 use actix_web::cookie::{Cookie, CookieJar, Key, SameSite};
 use actix_web::dev::{ServiceRequest, ServiceResponse};
@@ -14,7 +11,7 @@ use futures::future::{err, ok, Either, Future, FutureResult};
 use futures::Poll;
 use rand::{distributions::Alphanumeric, rngs::OsRng, Rng};
 use redis_async::resp::RespValue;
-use time::Duration;
+use time::{self, Duration};
 
 use crate::redis::{Command, RedisActor};
 
@@ -147,10 +144,54 @@ where
             };
 
             srv.call(req).and_then(move |mut res| {
-                if let Some(state) = Session::get_changes(&mut res) {
-                    Either::A(inner.update(res, state, value))
-                } else {
-                    Either::B(ok(res))
+                match Session::get_changes(&mut res) {
+                    (SessionStatus::Unchanged, None) =>
+                        Either::A(Either::A(Either::A(ok(res)))),
+                    (SessionStatus::Unchanged, Some(state)) =>
+                        Either::A(Either::A(Either::B(
+                            if value.is_none(){  // implies the session is new
+                                Either::A(
+                                    inner.update(res, state, value)
+                                )
+                            } else {
+                                Either::B(
+                                    ok(res)
+                                )
+                            }
+                        ))),
+                    (SessionStatus::Changed, Some(state)) => 
+                        Either::A(Either::B(Either::A(inner.update(res, state, value)))),
+                    (SessionStatus::Purged, Some(_)) => {
+                            if let Some(val) = value {
+                                Either::A(Either::B(Either::B(Either::A(
+                                        inner.clear_cache(val)
+                                            .and_then(move |_| 
+                                                match inner.remove_cookie(&mut res){
+                                                    Ok(_) => Either::A(ok(res)),
+                                                    Err(_err) => Either::B(err(
+                                                        error::ErrorInternalServerError(_err)))
+                                            })
+                                ))))
+                            } else {
+                                Either::A(Either::B(Either::B(Either::B(
+                                    err(error::ErrorInternalServerError("unexpected"))
+                                ))))
+                            }
+                    },
+                    (SessionStatus::Renewed, Some(state)) => { 
+                        if let Some(val) = value {
+                            Either::B(Either::A(
+                                inner.clear_cache(val)
+                                     .and_then(move |_|
+                                        inner.update(res, state, None))
+                            ))
+                        } else {
+                            Either::B(Either::B(
+                                inner.update(res, state, None)
+                            ))
+                        }
+                    },
+                    (_, None) => unreachable!()
                 }
             })
         }))
@@ -266,7 +307,6 @@ impl Inner {
         };
 
         let state: HashMap<_, _> = state.collect();
-
         match serde_json::to_string(&state) {
             Err(e) => Either::A(err(e.into())),
             Ok(body) => Either::B(
@@ -288,5 +328,36 @@ impl Inner {
                     }),
             ),
         }
+    }
+
+    /// removes cache entry 
+    fn clear_cache(&self, key: String)
+                    -> impl Future<Item=(), Error=Error> {
+        self.addr
+        .send(Command(resp_array!["DEL", key]))
+        .map_err(Error::from)
+        .and_then(|res| {
+            match res {
+                // redis responds with number of deleted records
+                Ok(RespValue::Integer(x)) if x > 0 => Ok(()),
+                _ => Err(error::ErrorInternalServerError(
+                    "failed to remove session from cache"))
+            }
+        })
+    } 
+
+    /// invalidates session cookie
+    fn remove_cookie<B>(&self, res: &mut ServiceResponse<B>)
+                    -> Result<(), Error> {
+        let mut cookie = Cookie::named(self.name.clone());
+        cookie.set_value("");
+        cookie.set_max_age(Duration::seconds(0));
+        cookie.set_expires(time::now() - Duration::days(365));
+
+        let val = HeaderValue::from_str(&cookie.to_string())
+                    .map_err(|err| error::ErrorInternalServerError(err))?;
+        res.headers_mut().append(header::SET_COOKIE, val);
+
+        Ok(())
     }
 }
