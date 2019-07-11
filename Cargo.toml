@@ -49,6 +49,8 @@ rand = { version = "0.7.0", optional = true }
 serde = { version = "1.0.94", optional = true }
 serde_json = { version = "1.0.40", optional = true }
 env_logger = "0.6.2"
+actix-http-test = "0.2.2"
+actix-http = "0.2.5"
 
 [dev-dependencies]
 env_logger = "0.6"
