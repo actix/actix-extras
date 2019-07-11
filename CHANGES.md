@@ -1,5 +1,9 @@
 # Changes
 
+## 0.6.1 (2019-07-11)
+
+* added comprehensive tests for session workflow
+
 
 ## 0.6.0 (2019-07-08)
 
