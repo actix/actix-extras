@@ -1,6 +1,8 @@
 # Changes
 
-## 0.6.1 (2019-07-11)
+## 0.6.1 (2019-07-19)
+
+* remove ClonableService usage
 
 * added comprehensive tests for session workflow
 
