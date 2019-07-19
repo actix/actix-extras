@@ -34,7 +34,7 @@ where
 impl<T, F, O> HttpAuthentication<T, F>
 where
     T: AuthExtractor,
-    F: FnMut(ServiceRequest, T) -> O,
+    F: Fn(ServiceRequest, T) -> O,
     O: IntoFuture<Item = ServiceRequest, Error = Error>,
 {
     /// Construct `HttpAuthentication` middleware
@@ -50,7 +50,7 @@ where
 
 impl<F, O> HttpAuthentication<basic::BasicAuth, F>
 where
-    F: FnMut(ServiceRequest, basic::BasicAuth) -> O,
+    F: Fn(ServiceRequest, basic::BasicAuth) -> O,
     O: IntoFuture<Item = ServiceRequest, Error = Error>,
 {
     /// Construct `HttpAuthentication` middleware for the HTTP "Basic"
@@ -86,7 +86,7 @@ where
 
 impl<F, O> HttpAuthentication<bearer::BearerAuth, F>
 where
-    F: FnMut(ServiceRequest, bearer::BearerAuth) -> O,
+    F: Fn(ServiceRequest, bearer::BearerAuth) -> O,
     O: IntoFuture<Item = ServiceRequest, Error = Error>,
 {
     /// Construct `HttpAuthentication` middleware for the HTTP "Bearer"
