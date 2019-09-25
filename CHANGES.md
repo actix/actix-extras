@@ -1,5 +1,11 @@
 # Changes
 
+## 0.7 (2019-09-25)
+
+* added cache_keygen functionality to RedisSession builder, enabling support for
+  customizable cache key creation
+
+
 ## 0.6.1 (2019-07-19)
 
 * remove ClonableService usage

@@ -88,6 +88,7 @@ impl RedisSession {
         self
     }
 
+    /// Set a custom cache key generation strategy, expecting session key as input
     pub fn cache_keygen(mut self, keygen: Box<dyn Fn(&str) -> String>) -> Self {
         Rc::get_mut(&mut self.0).unwrap().cache_keygen = keygen;
         self
