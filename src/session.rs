@@ -32,6 +32,7 @@ impl RedisSession {
     pub fn new<S: Into<String>>(addr: S, key: &[u8]) -> RedisSession {
         RedisSession(Rc::new(Inner {
             key: Key::from_master(key),
+            cache_keygen: Box::new(|key: &str| format!("session:{}", &key)),
             ttl: "7200".to_owned(),
             addr: RedisActor::start(addr),
             name: "actix-session".to_owned(),
@@ -86,6 +87,11 @@ impl RedisSession {
         Rc::get_mut(&mut self.0).unwrap().same_site = Some(same_site);
         self
     }
+
+    pub fn cache_keygen(mut self, keygen: Box<dyn Fn(&str) -> String>) -> Self {
+        Rc::get_mut(&mut self.0).unwrap().cache_keygen = keygen;
+        self
+    }
 }
 
 impl<S, B> Transform<S> for RedisSession
@@ -126,7 +132,7 @@ where
     type Request = ServiceRequest;
     type Response = ServiceResponse<B>;
     type Error = Error;
-    type Future = Box<Future<Item = Self::Response, Error = Self::Error>>;
+    type Future = Box<dyn Future<Item = Self::Response, Error = Self::Error>>;
 
     fn poll_ready(&mut self) -> Poll<(), Self::Error> {
         self.service.borrow_mut().poll_ready()
@@ -198,6 +204,7 @@ where
 
 struct Inner {
     key: Key,
+    cache_keygen: Box<dyn Fn(&str) -> String>,
     ttl: String,
     addr: Addr<RedisActor>,
     name: String,
@@ -221,9 +228,10 @@ impl Inner {
                     jar.add_original(cookie.clone());
                     if let Some(cookie) = jar.signed(&self.key).get(&self.name) {
                         let value = cookie.value().to_owned();
+                        let cachekey = (self.cache_keygen)(&cookie.value());
                         return Either::A(
                             self.addr
-                                .send(Command(resp_array!["GET", cookie.value()]))
+                                .send(Command(resp_array!["GET", cachekey]))
                                 .map_err(Error::from)
                                 .and_then(move |res| match res {
                                     Ok(val) => {
@@ -303,12 +311,14 @@ impl Inner {
             (value, Some(jar))
         };
 
+        let cachekey = (self.cache_keygen)(&value);
+
         let state: HashMap<_, _> = state.collect();
         match serde_json::to_string(&state) {
             Err(e) => Either::A(err(e.into())),
             Ok(body) => Either::B(
                 self.addr
-                    .send(Command(resp_array!["SET", value, body, "EX", &self.ttl]))
+                    .send(Command(resp_array!["SET", cachekey, body, "EX", &self.ttl]))
                     .map_err(Error::from)
                     .and_then(move |redis_result| match redis_result {
                         Ok(_) => {
@@ -329,8 +339,10 @@ impl Inner {
 
     /// removes cache entry
     fn clear_cache(&self, key: String) -> impl Future<Item = (), Error = Error> {
+        let cachekey = (self.cache_keygen)(&key);
+
         self.addr
-            .send(Command(resp_array!["DEL", key]))
+            .send(Command(resp_array!["DEL", cachekey]))
             .map_err(Error::from)
             .and_then(|res| {
                 match res {
