@@ -364,7 +364,7 @@ impl Inner {
         cookie.set_expires(time::now() - Duration::days(365));
 
         let val = HeaderValue::from_str(&cookie.to_string())
-            .map_err(|err| error::ErrorInternalServerError(err))?;
+            .map_err(error::ErrorInternalServerError)?;
         res.headers_mut().append(header::SET_COOKIE, val);
 
         Ok(())
