@@ -125,7 +125,7 @@ where
 {
     type Config = ProtoBufConfig;
     type Error = Error;
-    type Future = Box<Future<Item = Self, Error = Error>>;
+    type Future = Box<dyn Future<Item = Self, Error = Error>>;
 
     #[inline]
     fn from_request(req: &HttpRequest, payload: &mut Payload) -> Self::Future {
@@ -164,7 +164,7 @@ pub struct ProtoBufMessage<T: Message + Default> {
     length: Option<usize>,
     stream: Option<Payload>,
     err: Option<ProtoBufPayloadError>,
-    fut: Option<Box<Future<Item = T, Error = ProtoBufPayloadError>>>,
+    fut: Option<Box<dyn Future<Item = T, Error = ProtoBufPayloadError>>>,
 }
 
 impl<T: Message + Default> ProtoBufMessage<T> {
