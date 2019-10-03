@@ -1,5 +1,9 @@
 # Changes
 
+## 0.4.1 (2019-10-03)
+
+* Upgrade prost and prost-derive to 0.5.0
+
 ## 0.4.0 (2019-05-18)
 
 * Upgrade to actix-web 1.0.0-rc

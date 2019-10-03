@@ -1,6 +1,6 @@
 [package]
 name = "actix-protobuf"
-version = "0.4.0"
+version = "0.4.1"
 authors = ["kingxsp <jin.hb.zh@outlook.com>"]
 description = "Protobuf support for actix-web framework."
 readme = "README.md"
