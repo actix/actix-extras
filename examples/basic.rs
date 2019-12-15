@@ -3,7 +3,7 @@ use actix_session::Session;
 use actix_web::{middleware, web, App, Error, HttpRequest, HttpServer, Responder};
 
 /// simple handler
-fn index(req: HttpRequest, session: Session) -> Result<impl Responder, Error> {
+async fn index(req: HttpRequest, session: Session) -> Result<impl Responder, Error> {
     println!("{:?}", req);
 
     // session
@@ -17,7 +17,8 @@ fn index(req: HttpRequest, session: Session) -> Result<impl Responder, Error> {
     Ok("Welcome!")
 }
 
-fn main() -> std::io::Result<()> {
+#[actix_rt::main]
+async fn main() -> std::io::Result<()> {
     std::env::set_var("RUST_LOG", "actix_web=info,actix_redis=info");
     env_logger::init();
 
@@ -31,5 +32,6 @@ fn main() -> std::io::Result<()> {
             .service(web::resource("/").to(index))
     })
     .bind("0.0.0.0:8080")?
-    .run()
+    .start()
+    .await
 }
