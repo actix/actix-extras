@@ -1,5 +1,9 @@
 # Changes
 
+## 0.8.0-alpha.1 (2019-12-xx)
+
+* Migrate to actix 0.9
+
 ## 0.7 (2019-09-25)
 
 * added cache_keygen functionality to RedisSession builder, enabling support for
