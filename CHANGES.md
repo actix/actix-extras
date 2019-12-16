@@ -1,6 +1,6 @@
 # Changes
 
-## 0.8.0-alpha.1 (2019-12-xx)
+## 0.8.0-alpha.1 (2019-12-16)
 
 * Migrate to actix 0.9
 

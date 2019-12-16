@@ -374,7 +374,6 @@ impl Inner {
 #[cfg(test)]
 mod test {
     use super::*;
-    use actix_http::httpmessage::HttpMessage;
     use actix_session::Session;
     use actix_web::{
         middleware, test, web,

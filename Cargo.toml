@@ -52,4 +52,3 @@ env_logger = "0.6.2"
 
 [dev-dependencies]
 env_logger = "0.6"
-actix-http = "1.0.0"
