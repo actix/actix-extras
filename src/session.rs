@@ -207,10 +207,10 @@ struct Inner {
 }
 
 impl Inner {
-    fn load(
+    async fn load(
         &self,
         req: &ServiceRequest,
-    ) -> impl Future<Output = Result<Option<(HashMap<String, String>, String)>, Error>>
+    ) -> Result<Option<(HashMap<String, String>, String)>, Error>
     {
         if let Ok(cookies) = req.cookies() {
             for cookie in cookies.iter() {
@@ -220,7 +220,7 @@ impl Inner {
                     if let Some(cookie) = jar.signed(&self.key).get(&self.name) {
                         let value = cookie.value().to_owned();
                         let cachekey = (self.cache_keygen)(&cookie.value());
-                        return Either::Left(
+                        return 
                             self.addr.send(Command(resp_array!["GET", cachekey])).map(
                                 |result| match result {
                                     Err(e) => Err(Error::from(e)),
@@ -257,23 +257,23 @@ impl Inner {
                                         }
                                     },
                                 },
-                            ),
-                        );
+                            )
+                            .await;
                     } else {
-                        return Either::Right(ok(None));
+                        return ok(None).await
                     }
                 }
             }
         }
-        Either::Right(ok(None))
+        ok(None).await
     }
 
-    fn update<B>(
+    async fn update<B>(
         &self,
         mut res: ServiceResponse<B>,
         state: impl Iterator<Item = (String, String)>,
         value: Option<String>,
-    ) -> impl Future<Output = Result<ServiceResponse<B>, Error>> {
+    ) -> Result<ServiceResponse<B>, Error> {
         let (value, jar) = if let Some(value) = value {
             (value.clone(), None)
         } else {
@@ -311,8 +311,8 @@ impl Inner {
 
         let state: HashMap<_, _> = state.collect();
         match serde_json::to_string(&state) {
-            Err(e) => Either::Left(err(e.into())),
-            Ok(body) => Either::Right(
+            Err(e) => err(e.into()).await,
+            Ok(body) =>
                 self.addr
                     .send(Command(resp_array!["SET", cachekey, body, "EX", &self.ttl]))
                     .map(|result| match result {
@@ -331,13 +331,13 @@ impl Inner {
                             }
                             Err(err) => Err(error::ErrorInternalServerError(err)),
                         },
-                    }),
-            ),
+                    })
+                    .await,
         }
     }
 
     /// removes cache entry
-    fn clear_cache(&self, key: String) -> impl Future<Output = Result<(), Error>> {
+    async fn clear_cache(&self, key: String) -> Result<(), Error> {
         let cachekey = (self.cache_keygen)(&key);
 
         self.addr
@@ -354,6 +354,7 @@ impl Inner {
                     }
                 }
             })
+            .await
     }
 
     /// invalidates session cookie
