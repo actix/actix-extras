@@ -221,44 +221,42 @@ impl Inner {
                         let value = cookie.value().to_owned();
                         let cachekey = (self.cache_keygen)(&cookie.value());
                         return 
-                            self.addr.send(Command(resp_array!["GET", cachekey])).map(
-                                |result| match result {
-                                    Err(e) => Err(Error::from(e)),
-                                    Ok(res) => match res {
-                                        Ok(val) => {
-                                            match val {
-                                                RespValue::Error(err) => {
-                                                    return Err(
-                                                        error::ErrorInternalServerError(
-                                                            err,
-                                                        ),
-                                                    );
-                                                }
-                                                RespValue::SimpleString(s) => {
-                                                    if let Ok(val) =
-                                                        serde_json::from_str(&s)
-                                                    {
-                                                        return Ok(Some((val, value)));
-                                                    }
-                                                }
-                                                RespValue::BulkString(s) => {
-                                                    if let Ok(val) =
-                                                        serde_json::from_slice(&s)
-                                                    {
-                                                        return Ok(Some((val, value)));
-                                                    }
-                                                }
-                                                _ => (),
+                            match self.addr.send(Command(resp_array!["GET", cachekey]))
+                                           .await {
+                                Err(e) => Err(Error::from(e)),
+                                Ok(res) => match res {
+                                    Ok(val) => {
+                                        match val {
+                                            RespValue::Error(err) => {
+                                                return Err(
+                                                    error::ErrorInternalServerError(
+                                                        err,
+                                                    ),
+                                                );
                                             }
-                                            Ok(None)
+                                            RespValue::SimpleString(s) => {
+                                                if let Ok(val) =
+                                                    serde_json::from_str(&s)
+                                                {
+                                                    return Ok(Some((val, value)));
+                                                }
+                                            }
+                                            RespValue::BulkString(s) => {
+                                                if let Ok(val) =
+                                                    serde_json::from_slice(&s)
+                                                {
+                                                    return Ok(Some((val, value)));
+                                                }
+                                            }
+                                            _ => (),
                                         }
-                                        Err(err) => {
-                                            Err(error::ErrorInternalServerError(err))
-                                        }
-                                    },
+                                        Ok(None)
+                                    }
+                                    Err(err) => {
+                                        Err(error::ErrorInternalServerError(err))
+                                    }
                                 },
-                            )
-                            .await;
+                            }
                     } else {
                         return Ok(None)
                     }
@@ -312,10 +310,10 @@ impl Inner {
         let state: HashMap<_, _> = state.collect();
         match serde_json::to_string(&state) {
             Err(e) => Err(e.into()),
-            Ok(body) =>
-                self.addr
+            Ok(body) => {
+                match self.addr
                     .send(Command(resp_array!["SET", cachekey, body, "EX", &self.ttl]))
-                    .map(|result| match result {
+                    .await {
                         Err(e) => Err(Error::from(e)),
                         Ok(redis_result) => match redis_result {
                             Ok(_) => {
@@ -331,8 +329,8 @@ impl Inner {
                             }
                             Err(err) => Err(error::ErrorInternalServerError(err)),
                         },
-                    })
-                    .await,
+                    }
+            }
         }
     }
 
@@ -340,9 +338,9 @@ impl Inner {
     async fn clear_cache(&self, key: String) -> Result<(), Error> {
         let cachekey = (self.cache_keygen)(&key);
 
-        self.addr
+        match self.addr
             .send(Command(resp_array!["DEL", cachekey]))
-            .map(|res| match res {
+            .await {
                 Err(e) => Err(Error::from(e)),
                 Ok(res) => {
                     match res {
@@ -353,8 +351,7 @@ impl Inner {
                         )),
                     }
                 }
-            })
-            .await
+            }
     }
 
     /// invalidates session cookie
