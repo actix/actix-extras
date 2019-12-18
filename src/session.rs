@@ -260,12 +260,12 @@ impl Inner {
                             )
                             .await;
                     } else {
-                        return ok(None).await
+                        return Ok(None)
                     }
                 }
             }
         }
-        ok(None).await
+        Ok(None)
     }
 
     async fn update<B>(
@@ -311,7 +311,7 @@ impl Inner {
 
         let state: HashMap<_, _> = state.collect();
         match serde_json::to_string(&state) {
-            Err(e) => err(e.into()).await,
+            Err(e) => Err(e.into()),
             Ok(body) =>
                 self.addr
                     .send(Command(resp_array!["SET", cachekey, body, "EX", &self.ttl]))
