@@ -139,7 +139,7 @@ impl Handler<Command> for RedisActor {
             let _ = tx.send(Err(Error::NotConnected));
         }
 
-        Box::new(rx.map(|res| match res {
+        Box::pin(rx.map(|res| match res {
             Ok(res) => res,
             Err(_) => Err(Error::Disconnected),
         }))

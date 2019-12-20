@@ -210,8 +210,7 @@ impl Inner {
     async fn load(
         &self,
         req: &ServiceRequest,
-    ) -> Result<Option<(HashMap<String, String>, String)>, Error>
-    {
+    ) -> Result<Option<(HashMap<String, String>, String)>, Error> {
         if let Ok(cookies) = req.cookies() {
             for cookie in cookies.iter() {
                 if cookie.name() == self.name {
@@ -220,45 +219,39 @@ impl Inner {
                     if let Some(cookie) = jar.signed(&self.key).get(&self.name) {
                         let value = cookie.value().to_owned();
                         let cachekey = (self.cache_keygen)(&cookie.value());
-                        return 
-                            match self.addr.send(Command(resp_array!["GET", cachekey]))
-                                           .await {
-                                Err(e) => Err(Error::from(e)),
-                                Ok(res) => match res {
-                                    Ok(val) => {
-                                        match val {
-                                            RespValue::Error(err) => {
-                                                return Err(
-                                                    error::ErrorInternalServerError(
-                                                        err,
-                                                    ),
-                                                );
-                                            }
-                                            RespValue::SimpleString(s) => {
-                                                if let Ok(val) =
-                                                    serde_json::from_str(&s)
-                                                {
-                                                    return Ok(Some((val, value)));
-                                                }
-                                            }
-                                            RespValue::BulkString(s) => {
-                                                if let Ok(val) =
-                                                    serde_json::from_slice(&s)
-                                                {
-                                                    return Ok(Some((val, value)));
-                                                }
-                                            }
-                                            _ => (),
+                        return match self
+                            .addr
+                            .send(Command(resp_array!["GET", cachekey]))
+                            .await
+                        {
+                            Err(e) => Err(Error::from(e)),
+                            Ok(res) => match res {
+                                Ok(val) => {
+                                    match val {
+                                        RespValue::Error(err) => {
+                                            return Err(
+                                                error::ErrorInternalServerError(err),
+                                            );
                                         }
-                                        Ok(None)
+                                        RespValue::SimpleString(s) => {
+                                            if let Ok(val) = serde_json::from_str(&s) {
+                                                return Ok(Some((val, value)));
+                                            }
+                                        }
+                                        RespValue::BulkString(s) => {
+                                            if let Ok(val) = serde_json::from_slice(&s) {
+                                                return Ok(Some((val, value)));
+                                            }
+                                        }
+                                        _ => (),
                                     }
-                                    Err(err) => {
-                                        Err(error::ErrorInternalServerError(err))
-                                    }
-                                },
-                            }
+                                    Ok(None)
+                                }
+                                Err(err) => Err(error::ErrorInternalServerError(err)),
+                            },
+                        };
                     } else {
-                        return Ok(None)
+                        return Ok(None);
                     }
                 }
             }
@@ -311,25 +304,26 @@ impl Inner {
         match serde_json::to_string(&state) {
             Err(e) => Err(e.into()),
             Ok(body) => {
-                match self.addr
+                match self
+                    .addr
                     .send(Command(resp_array!["SET", cachekey, body, "EX", &self.ttl]))
-                    .await {
-                        Err(e) => Err(Error::from(e)),
-                        Ok(redis_result) => match redis_result {
-                            Ok(_) => {
-                                if let Some(jar) = jar {
-                                    for cookie in jar.delta() {
-                                        let val =
-                                            HeaderValue::from_str(&cookie.to_string())?;
-                                        res.headers_mut()
-                                            .append(header::SET_COOKIE, val);
-                                    }
+                    .await
+                {
+                    Err(e) => Err(Error::from(e)),
+                    Ok(redis_result) => match redis_result {
+                        Ok(_) => {
+                            if let Some(jar) = jar {
+                                for cookie in jar.delta() {
+                                    let val =
+                                        HeaderValue::from_str(&cookie.to_string())?;
+                                    res.headers_mut().append(header::SET_COOKIE, val);
                                 }
-                                Ok(res)
                             }
-                            Err(err) => Err(error::ErrorInternalServerError(err)),
-                        },
-                    }
+                            Ok(res)
+                        }
+                        Err(err) => Err(error::ErrorInternalServerError(err)),
+                    },
+                }
             }
         }
     }
@@ -338,20 +332,18 @@ impl Inner {
     async fn clear_cache(&self, key: String) -> Result<(), Error> {
         let cachekey = (self.cache_keygen)(&key);
 
-        match self.addr
-            .send(Command(resp_array!["DEL", cachekey]))
-            .await {
-                Err(e) => Err(Error::from(e)),
-                Ok(res) => {
-                    match res {
-                        // redis responds with number of deleted records
-                        Ok(RespValue::Integer(x)) if x > 0 => Ok(()),
-                        _ => Err(error::ErrorInternalServerError(
-                            "failed to remove session from cache",
-                        )),
-                    }
+        match self.addr.send(Command(resp_array!["DEL", cachekey])).await {
+            Err(e) => Err(Error::from(e)),
+            Ok(res) => {
+                match res {
+                    // redis responds with number of deleted records
+                    Ok(RespValue::Integer(x)) if x > 0 => Ok(()),
+                    _ => Err(error::ErrorInternalServerError(
+                        "failed to remove session from cache",
+                    )),
                 }
             }
+        }
     }
 
     /// invalidates session cookie
