@@ -4,11 +4,10 @@ Redis integration for actix framework.
 
 ## Documentation
 
-* [API Documentation (Development)](http://actix.github.io/actix-redis/actix_redis/)
-* [API Documentation (Releases)](https://docs.rs/actix-redis/)
+* [API Documentation](http://actix.github.io/actix-redis/actix_redis/)
 * [Chat on gitter](https://gitter.im/actix/actix)
 * Cargo package: [actix-redis](https://crates.io/crates/actix-redis)
-* Minimum supported Rust version: 1.26 or later
+* Minimum supported Rust version: 1.39 or later
 
 
 ## Redis session backend
@@ -24,32 +23,25 @@ Note that whatever you write into your session is visible by the user (but not m
 Constructor panics if key length is less than 32 bytes.
 
 ```rust
-extern crate actix_web;
-extern crate actix_redis;
-
-use actix_web::{App, server, middleware};
+use actix_web::{App, HttpServer, web, middleware};
 use actix_web::middleware::session::SessionStorage;
 use actix_redis::RedisSessionBackend;
 
-fn main() {
-    ::std::env::set_var("RUST_LOG", "actix_web=info");
-    env_logger::init();
-    let sys = actix::System::new("basic-example");
-
-    server::new(
-        || App::new()
-            // enable logger
-            .middleware(middleware::Logger::default())
-            // cookie session middleware
-            .middleware(SessionStorage::new(
-                RedisSessionBackend::new("127.0.0.1:6379", &[0; 32])
-            ))
-            // register simple route, handle all methods
-            .resource("/", |r| r.f(index)))
-        .bind("0.0.0.0:8080").unwrap()
-        .start();
-
-    let _ = sys.run();
+#[actix_rt::main]
+async fn main() -> std::io::Result {
+    HttpServer::new(|| App::new()
+        // enable logger
+        .middleware(middleware::Logger::default())
+        // cookie session middleware
+        .middleware(SessionStorage::new(
+            RedisSessionBackend::new("127.0.0.1:6379", &[0; 32])
+        ))
+        // register simple route, handle all methods
+        .service(web::resource("/").to(index))
+    )
+    .bind("0.0.0.0:8080")?
+    .start()
+    .await
 }
 ```
 
