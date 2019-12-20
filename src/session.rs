@@ -10,7 +10,7 @@ use actix_web::cookie::{Cookie, CookieJar, Key, SameSite};
 use actix_web::dev::{ServiceRequest, ServiceResponse};
 use actix_web::http::header::{self, HeaderValue};
 use actix_web::{error, Error, HttpMessage};
-use futures::future::{err, ok, Either, Future, FutureExt, Ready};
+use futures::future::{err, ok, Future, Ready};
 use rand::{distributions::Alphanumeric, rngs::OsRng, Rng};
 use redis_async::resp::RespValue;
 use time::{self, Duration};
@@ -207,10 +207,10 @@ struct Inner {
 }
 
 impl Inner {
-    fn load(
+    async fn load(
         &self,
         req: &ServiceRequest,
-    ) -> impl Future<Output = Result<Option<(HashMap<String, String>, String)>, Error>>
+    ) -> Result<Option<(HashMap<String, String>, String)>, Error>
     {
         if let Ok(cookies) = req.cookies() {
             for cookie in cookies.iter() {
@@ -220,60 +220,58 @@ impl Inner {
                     if let Some(cookie) = jar.signed(&self.key).get(&self.name) {
                         let value = cookie.value().to_owned();
                         let cachekey = (self.cache_keygen)(&cookie.value());
-                        return Either::Left(
-                            self.addr.send(Command(resp_array!["GET", cachekey])).map(
-                                |result| match result {
-                                    Err(e) => Err(Error::from(e)),
-                                    Ok(res) => match res {
-                                        Ok(val) => {
-                                            match val {
-                                                RespValue::Error(err) => {
-                                                    return Err(
-                                                        error::ErrorInternalServerError(
-                                                            err,
-                                                        ),
-                                                    );
-                                                }
-                                                RespValue::SimpleString(s) => {
-                                                    if let Ok(val) =
-                                                        serde_json::from_str(&s)
-                                                    {
-                                                        return Ok(Some((val, value)));
-                                                    }
-                                                }
-                                                RespValue::BulkString(s) => {
-                                                    if let Ok(val) =
-                                                        serde_json::from_slice(&s)
-                                                    {
-                                                        return Ok(Some((val, value)));
-                                                    }
-                                                }
-                                                _ => (),
+                        return 
+                            match self.addr.send(Command(resp_array!["GET", cachekey]))
+                                           .await {
+                                Err(e) => Err(Error::from(e)),
+                                Ok(res) => match res {
+                                    Ok(val) => {
+                                        match val {
+                                            RespValue::Error(err) => {
+                                                return Err(
+                                                    error::ErrorInternalServerError(
+                                                        err,
+                                                    ),
+                                                );
                                             }
-                                            Ok(None)
+                                            RespValue::SimpleString(s) => {
+                                                if let Ok(val) =
+                                                    serde_json::from_str(&s)
+                                                {
+                                                    return Ok(Some((val, value)));
+                                                }
+                                            }
+                                            RespValue::BulkString(s) => {
+                                                if let Ok(val) =
+                                                    serde_json::from_slice(&s)
+                                                {
+                                                    return Ok(Some((val, value)));
+                                                }
+                                            }
+                                            _ => (),
                                         }
-                                        Err(err) => {
-                                            Err(error::ErrorInternalServerError(err))
-                                        }
-                                    },
+                                        Ok(None)
+                                    }
+                                    Err(err) => {
+                                        Err(error::ErrorInternalServerError(err))
+                                    }
                                 },
-                            ),
-                        );
+                            }
                     } else {
-                        return Either::Right(ok(None));
+                        return Ok(None)
                     }
                 }
             }
         }
-        Either::Right(ok(None))
+        Ok(None)
     }
 
-    fn update<B>(
+    async fn update<B>(
         &self,
         mut res: ServiceResponse<B>,
         state: impl Iterator<Item = (String, String)>,
         value: Option<String>,
-    ) -> impl Future<Output = Result<ServiceResponse<B>, Error>> {
+    ) -> Result<ServiceResponse<B>, Error> {
         let (value, jar) = if let Some(value) = value {
             (value.clone(), None)
         } else {
@@ -311,11 +309,11 @@ impl Inner {
 
         let state: HashMap<_, _> = state.collect();
         match serde_json::to_string(&state) {
-            Err(e) => Either::Left(err(e.into())),
-            Ok(body) => Either::Right(
-                self.addr
+            Err(e) => Err(e.into()),
+            Ok(body) => {
+                match self.addr
                     .send(Command(resp_array!["SET", cachekey, body, "EX", &self.ttl]))
-                    .map(|result| match result {
+                    .await {
                         Err(e) => Err(Error::from(e)),
                         Ok(redis_result) => match redis_result {
                             Ok(_) => {
@@ -331,18 +329,18 @@ impl Inner {
                             }
                             Err(err) => Err(error::ErrorInternalServerError(err)),
                         },
-                    }),
-            ),
+                    }
+            }
         }
     }
 
     /// removes cache entry
-    fn clear_cache(&self, key: String) -> impl Future<Output = Result<(), Error>> {
+    async fn clear_cache(&self, key: String) -> Result<(), Error> {
         let cachekey = (self.cache_keygen)(&key);
 
-        self.addr
+        match self.addr
             .send(Command(resp_array!["DEL", cachekey]))
-            .map(|res| match res {
+            .await {
                 Err(e) => Err(Error::from(e)),
                 Ok(res) => {
                     match res {
@@ -353,7 +351,7 @@ impl Inner {
                         )),
                     }
                 }
-            })
+            }
     }
 
     /// invalidates session cookie
