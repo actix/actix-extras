@@ -32,6 +32,6 @@ async fn main() -> std::io::Result<()> {
             .service(web::resource("/").to(index))
     })
     .bind("0.0.0.0:8080")?
-    .start()
+    .run()
     .await
 }

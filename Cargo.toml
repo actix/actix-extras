@@ -42,7 +42,7 @@ tokio = "0.2.6"
 tokio-util = "0.2.0"
 
 # actix web session
-actix-web = { version = "2.0.0-rc", optional = true }
+actix-web = { version = "2.0.0", optional = true }
 actix-service = { version = "1.0.0", optional = true }
 actix-session = { version = "0.3.0", optional = true }
 rand = { version = "0.7.0", optional = true }
