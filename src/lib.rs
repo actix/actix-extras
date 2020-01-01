@@ -1,17 +1,3 @@
-extern crate actix;
-extern crate actix_web;
-extern crate bytes;
-extern crate derive_more;
-extern crate futures;
-
-#[cfg(test)]
-extern crate http;
-
-extern crate prost;
-#[cfg(test)]
-#[macro_use]
-extern crate prost_derive;
-
 use derive_more::Display;
 use std::fmt;
 use std::ops::{Deref, DerefMut};
