@@ -1,8 +1,8 @@
 use derive_more::Display;
 use std::fmt;
+use std::future::Future;
 use std::ops::{Deref, DerefMut};
 use std::pin::Pin;
-use std::future::Future;
 use std::task;
 use std::task::Poll;
 
@@ -15,7 +15,7 @@ use actix_web::dev::{HttpResponseBuilder, Payload};
 use actix_web::error::{Error, PayloadError, ResponseError};
 use actix_web::http::header::{CONTENT_LENGTH, CONTENT_TYPE};
 use actix_web::{FromRequest, HttpMessage, HttpRequest, HttpResponse, Responder};
-use futures::future::{ready, LocalBoxFuture, FutureExt, Ready};
+use futures::future::{ready, FutureExt, LocalBoxFuture, Ready};
 use futures::StreamExt;
 
 #[derive(Debug, Display)]
@@ -140,14 +140,16 @@ impl<T: Message + Default> Responder for ProtoBuf<T> {
 
     fn respond_to(self, _: &HttpRequest) -> Self::Future {
         let mut buf = Vec::new();
-        ready(self.0
-            .encode(&mut buf)
-            .map_err(|e| Error::from(ProtoBufPayloadError::Serialize(e)))
-            .and_then(|()| {
-                Ok(HttpResponse::Ok()
-                    .content_type("application/protobuf")
-                    .body(buf))
-            }))
+        ready(
+            self.0
+                .encode(&mut buf)
+                .map_err(|e| Error::from(ProtoBufPayloadError::Serialize(e)))
+                .and_then(|()| {
+                    Ok(HttpResponse::Ok()
+                        .content_type("application/protobuf")
+                        .body(buf))
+                }),
+        )
     }
 }
 
@@ -200,7 +202,10 @@ impl<T: Message + Default> ProtoBufMessage<T> {
 impl<T: Message + Default + 'static> Future for ProtoBufMessage<T> {
     type Output = Result<T, ProtoBufPayloadError>;
 
-    fn poll(mut self: Pin<&mut Self>, task: &mut task::Context<'_>) -> Poll<Self::Output> {
+    fn poll(
+        mut self: Pin<&mut Self>,
+        task: &mut task::Context<'_>,
+    ) -> Poll<Self::Output> {
         if let Some(ref mut fut) = self.fut {
             return Pin::new(fut).poll(task);
         }
@@ -216,7 +221,10 @@ impl<T: Message + Default + 'static> Future for ProtoBufMessage<T> {
             }
         }
 
-        let mut stream = self.stream.take().expect("ProtoBufMessage could not be used second time");
+        let mut stream = self
+            .stream
+            .take()
+            .expect("ProtoBufMessage could not be used second time");
 
         self.fut = Some(
             async move {
@@ -258,8 +266,8 @@ impl ProtoBufResponseBuilder for HttpResponseBuilder {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use actix_web::test::TestRequest;
     use actix_web::http::header;
+    use actix_web::test::TestRequest;
 
     impl PartialEq for ProtoBufPayloadError {
         fn eq(&self, other: &ProtoBufPayloadError) -> bool {
@@ -305,22 +313,19 @@ mod tests {
         let protobuf = ProtoBufMessage::<MyObject>::new(&req, &mut pl).await;
         assert_eq!(protobuf.err().unwrap(), ProtoBufPayloadError::ContentType);
 
-        let (req, mut pl) = TestRequest::with_header(
-                header::CONTENT_TYPE,
-                "application/text",
-            ).to_http_parts();
+        let (req, mut pl) =
+            TestRequest::with_header(header::CONTENT_TYPE, "application/text")
+                .to_http_parts();
         let protobuf = ProtoBufMessage::<MyObject>::new(&req, &mut pl).await;
         assert_eq!(protobuf.err().unwrap(), ProtoBufPayloadError::ContentType);
 
-        let (req, mut pl) = TestRequest::with_header(
-                header::CONTENT_TYPE,
-                "application/protobuf",
-            ).header(
-                header::CONTENT_LENGTH,
-                "10000",
-            ).to_http_parts();
-        let protobuf =
-            ProtoBufMessage::<MyObject>::new(&req, &mut pl).limit(100).await;
+        let (req, mut pl) =
+            TestRequest::with_header(header::CONTENT_TYPE, "application/protobuf")
+                .header(header::CONTENT_LENGTH, "10000")
+                .to_http_parts();
+        let protobuf = ProtoBufMessage::<MyObject>::new(&req, &mut pl)
+            .limit(100)
+            .await;
         assert_eq!(protobuf.err().unwrap(), ProtoBufPayloadError::Overflow);
     }
 }
