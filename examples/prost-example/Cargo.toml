@@ -1,7 +1,8 @@
 [package]
 name = "prost-example"
-version = "0.3.0"
-authors = ["kingxsp <jin.hb.zh@outlook.com>"]
+version = "0.4.0"
+edition = "2018"
+authors = ["kingxsp <jin.hb.zh@outlook.com>, Yuki Okushi <huyuumi.dev@gmail.com>"]
 
 [dependencies]
 bytes = "0.4"
@@ -10,6 +11,7 @@ env_logger = "*"
 prost = "0.5.0"
 prost-derive = "0.5.0"
 
-actix = "0.8.1"
-actix-web = "1.0.0-rc"
+actix = "0.9"
+actix-rt = "1"
+actix-web = "2"
 actix-protobuf = { path="../../" }

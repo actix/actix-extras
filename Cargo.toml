@@ -1,7 +1,8 @@
 [package]
 name = "actix-protobuf"
 version = "0.4.1"
-authors = ["kingxsp <jin.hb.zh@outlook.com>"]
+edition = "2018"
+authors = ["kingxsp <jin.hb.zh@outlook.com>, Yuki Okushi <huyuumi.dev@gmail.com>"]
 description = "Protobuf support for actix-web framework."
 readme = "README.md"
 keywords = ["actix"]
@@ -20,16 +21,16 @@ path = "src/lib.rs"
 
 [dependencies]
 bytes = "0.4"
-futures = "0.1"
-derive_more = "0.14"
+futures = "0.3.1"
+derive_more = "0.99"
 
-actix = "0.8.1"
-actix-web = "1.0.0-rc"
+actix = "0.9"
+actix-rt = "1"
+actix-web = "2"
 
 prost = "0.5.0"
 
 [dev-dependencies]
-http = "^0.1"
 prost-derive = "0.5.0"
 
 [workspace]
