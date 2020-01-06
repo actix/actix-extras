@@ -2,7 +2,7 @@
 
 use actix_web::dev::ServiceRequest;
 use actix_web::Error;
-use futures::IntoFuture;
+use futures::future::Future;
 
 pub mod basic;
 pub mod bearer;
@@ -26,7 +26,7 @@ pub trait AuthExtractor: Sized {
     type Error: Into<Error>;
 
     /// Future that resolves into extracted credentials type.
-    type Future: IntoFuture<Item = Self, Error = Self::Error>;
+    type Future: Future<Output = Result<Self, Self::Error>>;
 
     /// Parse the authentication credentials from the actix' `ServiceRequest`.
     fn from_service_request(req: &ServiceRequest) -> Self::Future;

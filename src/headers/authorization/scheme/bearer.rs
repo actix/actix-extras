@@ -2,7 +2,7 @@ use std::borrow::Cow;
 use std::fmt;
 
 use actix_web::http::header::{
-    HeaderValue, IntoHeaderValue, InvalidHeaderValueBytes,
+    HeaderValue, IntoHeaderValue, InvalidHeaderValue,
 };
 use bytes::{BufMut, BytesMut};
 
@@ -76,14 +76,14 @@ impl fmt::Display for Bearer {
 }
 
 impl IntoHeaderValue for Bearer {
-    type Error = InvalidHeaderValueBytes;
+    type Error = InvalidHeaderValue;
 
     fn try_into(self) -> Result<HeaderValue, <Self as IntoHeaderValue>::Error> {
         let mut buffer = BytesMut::with_capacity(7 + self.token.len());
         buffer.put("Bearer ");
         buffer.extend_from_slice(self.token.as_bytes());
 
-        HeaderValue::from_shared(buffer.freeze())
+        HeaderValue::from_maybe_shared(buffer.freeze())
     }
 }
 

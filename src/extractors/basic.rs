@@ -5,6 +5,7 @@ use std::borrow::Cow;
 use actix_web::dev::{Payload, ServiceRequest};
 use actix_web::http::header::Header;
 use actix_web::{FromRequest, HttpRequest};
+use futures::future;
 
 use super::config::AuthExtractorConfig;
 use super::errors::AuthenticationError;
@@ -57,7 +58,7 @@ impl AuthExtractorConfig for Config {
 /// use actix_web::Result;
 /// use actix_web_httpauth::extractors::basic::BasicAuth;
 ///
-/// fn index(auth: BasicAuth) -> String {
+/// async fn index(auth: BasicAuth) -> String {
 ///     format!("Hello, {}!", auth.user_id())
 /// }
 /// ```
@@ -72,7 +73,7 @@ impl AuthExtractorConfig for Config {
 /// use actix_web::{web, App};
 /// use actix_web_httpauth::extractors::basic::{BasicAuth, Config};
 ///
-/// fn index(auth: BasicAuth) -> String {
+/// async fn index(auth: BasicAuth) -> String {
 ///     format!("Hello, {}!", auth.user_id())
 /// }
 ///
@@ -101,7 +102,7 @@ impl BasicAuth {
 }
 
 impl FromRequest for BasicAuth {
-    type Future = Result<Self, Self::Error>;
+    type Future = future::Ready<Result<Self, Self::Error>>;
     type Config = Config;
     type Error = AuthenticationError<Challenge>;
 
@@ -109,37 +110,41 @@ impl FromRequest for BasicAuth {
         req: &HttpRequest,
         _: &mut Payload,
     ) -> <Self as FromRequest>::Future {
-        Authorization::<Basic>::parse(req)
-            .map(|auth| BasicAuth(auth.into_scheme()))
-            .map_err(|_| {
-                // TODO: debug! the original error
-                let challenge = req
-                    .app_data::<Self::Config>()
-                    .map(|config| config.0.clone())
-                    // TODO: Add trace! about `Default::default` call
-                    .unwrap_or_else(Default::default);
+        future::ready(
+            Authorization::<Basic>::parse(req)
+                .map(|auth| BasicAuth(auth.into_scheme()))
+                .map_err(|_| {
+                    // TODO: debug! the original error
+                    let challenge = req
+                        .app_data::<Self::Config>()
+                        .map(|config| config.0.clone())
+                        // TODO: Add trace! about `Default::default` call
+                        .unwrap_or_else(Default::default);
 
-                AuthenticationError::new(challenge)
-            })
+                    AuthenticationError::new(challenge)
+                }),
+        )
     }
 }
 
 impl AuthExtractor for BasicAuth {
     type Error = AuthenticationError<Challenge>;
-    type Future = Result<Self, Self::Error>;
+    type Future = future::Ready<Result<Self, Self::Error>>;
 
     fn from_service_request(req: &ServiceRequest) -> Self::Future {
-        Authorization::<Basic>::parse(req)
-            .map(|auth| BasicAuth(auth.into_scheme()))
-            .map_err(|_| {
-                // TODO: debug! the original error
-                let challenge = req
-                    .app_data::<Config>()
-                    .map(|config| config.0.clone())
-                    // TODO: Add trace! about `Default::default` call
-                    .unwrap_or_else(Default::default);
+        future::ready(
+            Authorization::<Basic>::parse(req)
+                .map(|auth| BasicAuth(auth.into_scheme()))
+                .map_err(|_| {
+                    // TODO: debug! the original error
+                    let challenge = req
+                        .app_data::<Config>()
+                        .map(|config| config.0.clone())
+                        // TODO: Add trace! about `Default::default` call
+                        .unwrap_or_else(Default::default);
 
-                AuthenticationError::new(challenge)
-            })
+                    AuthenticationError::new(challenge)
+                }),
+        )
     }
 }
