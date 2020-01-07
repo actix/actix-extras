@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [0.3.2] - 2019-07-19
 ### Changed
- - Middleware accepts any `Fn` as a validator function instead of `FnMut` ([#11](https://github.com/svartalf/actix-web-httpauth/pull/11))
+ - Middleware accepts any `Fn` as a validator function instead of `FnMut` ([#11](https://github.com/actix/actix-web-httpauth/pull/11))
 
 ## [0.3.1] - 2019-06-09
 ### Fixed
@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [0.2.0] - 2019-04-26
 ### Changed
- - `actix-web` dependency is used without default features now ([#6](https://github.com/svartalf/actix-web-httpauth/pull/6))
+ - `actix-web` dependency is used without default features now ([#6](https://github.com/actix/actix-web-httpauth/pull/6))
  - `base64` dependency version was bumped to `0.10`
 
 ## [0.1.0] - 2018-09-08
