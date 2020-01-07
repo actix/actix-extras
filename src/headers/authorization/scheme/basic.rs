@@ -202,31 +202,3 @@ mod tests {
         );
     }
 }
-
-#[cfg(all(test, feature = "nightly"))]
-mod benches {
-    use test::Bencher;
-
-    use actix_web::http::header::{HeaderValue, IntoHeaderValue};
-
-    use super::{Basic, Scheme};
-
-    #[bench]
-    fn bench_parsing(b: &mut Bencher) {
-        let value =
-            HeaderValue::from_static("Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==");
-        b.iter(|| Basic::parse(&value));
-    }
-
-    #[bench]
-    fn bench_serializing(b: &mut Bencher) {
-        b.iter(|| {
-            let basic = Basic {
-                user_id: "Aladdin".into(),
-                password: Some("open sesame".into()),
-            };
-
-            basic.try_into()
-        })
-    }
-}
