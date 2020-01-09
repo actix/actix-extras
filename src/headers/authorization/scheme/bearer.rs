@@ -80,7 +80,7 @@ impl IntoHeaderValue for Bearer {
 
     fn try_into(self) -> Result<HeaderValue, <Self as IntoHeaderValue>::Error> {
         let mut buffer = BytesMut::with_capacity(7 + self.token.len());
-        buffer.put("Bearer ");
+        buffer.put(&b"Bearer "[..]);
         buffer.extend_from_slice(self.token.as_bytes());
 
         HeaderValue::from_maybe_shared(buffer.freeze())

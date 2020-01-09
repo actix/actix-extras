@@ -82,11 +82,11 @@ impl Challenge for Basic {
         // 5 is for `"Basic"`, 9 is for `"realm=\"\""`
         let length = 5 + self.realm.as_ref().map_or(0, |realm| realm.len() + 9);
         let mut buffer = BytesMut::with_capacity(length);
-        buffer.put("Basic");
+        buffer.put(&b"Basic"[..]);
         if let Some(ref realm) = self.realm {
-            buffer.put(" realm=\"");
+            buffer.put(&b" realm=\""[..]);
             utils::put_quoted(&mut buffer, realm);
-            buffer.put("\"");
+            buffer.put_u8(b'"');
         }
 
         buffer.freeze()

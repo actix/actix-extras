@@ -78,18 +78,18 @@ impl Challenge for Bearer {
             + self.scope.as_ref().map_or(0, |scope| scope.len() + 9)
             + desc_uri_required;
         let mut buffer = BytesMut::with_capacity(capacity);
-        buffer.put("Bearer");
+        buffer.put(&b"Bearer"[..]);
 
         if let Some(ref realm) = self.realm {
-            buffer.put(" realm=\"");
+            buffer.put(&b" realm=\""[..]);
             utils::put_quoted(&mut buffer, realm);
-            buffer.put("\"");
+            buffer.put_u8(b'"');
         }
 
         if let Some(ref scope) = self.scope {
-            buffer.put(" scope=\"");
+            buffer.put(&b" scope=\""[..]);
             utils::put_quoted(&mut buffer, scope);
-            buffer.put("\"");
+            buffer.put_u8(b'"');
         }
 
         if let Some(ref error) = self.error {
@@ -99,21 +99,21 @@ impl Challenge for Bearer {
             if remaining < required {
                 buffer.reserve(required);
             }
-            buffer.put(" error=\"");
+            buffer.put(&b" error=\""[..]);
             utils::put_quoted(&mut buffer, error_repr);
-            buffer.put("\"")
+            buffer.put_u8(b'"')
         }
 
         if let Some(ref error_description) = self.error_description {
-            buffer.put(" error_description=\"");
+            buffer.put(&b" error_description=\""[..]);
             utils::put_quoted(&mut buffer, error_description);
-            buffer.put("\"");
+            buffer.put_u8(b'"');
         }
 
         if let Some(ref error_uri) = self.error_uri {
-            buffer.put(" error_uri=\"");
+            buffer.put(&b" error_uri=\""[..]);
             utils::put_quoted(&mut buffer, error_uri);
-            buffer.put("\"");
+            buffer.put_u8(b'"');
         }
 
         buffer.freeze()

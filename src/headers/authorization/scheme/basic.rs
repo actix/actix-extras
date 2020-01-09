@@ -120,8 +120,8 @@ impl IntoHeaderValue for Basic {
         // directly to `value`
         let encoded = base64::encode(&credentials);
         let mut value = BytesMut::with_capacity(6 + encoded.len());
-        value.put("Basic ");
-        value.put(&encoded);
+        value.put(&b"Basic "[..]);
+        value.put(&encoded.as_bytes()[..]);
 
         HeaderValue::from_maybe_shared(value.freeze())
     }
