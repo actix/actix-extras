@@ -27,22 +27,21 @@ pub enum ParseError {
 
 impl fmt::Display for ParseError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.write_str(self.description())
+        let display = match self {
+            ParseError::Invalid => "Invalid header value".to_string(),
+            ParseError::MissingScheme => {
+                "Missing authorization scheme".to_string()
+            }
+            ParseError::MissingField(_) => "Missing header field".to_string(),
+            ParseError::ToStrError(e) => e.to_string(),
+            ParseError::Base64DecodeError(e) => e.to_string(),
+            ParseError::Utf8Error(e) => e.to_string(),
+        };
+        f.write_str(&display)
     }
 }
 
 impl Error for ParseError {
-    fn description(&self) -> &str {
-        match self {
-            ParseError::Invalid => "Invalid header value",
-            ParseError::MissingScheme => "Missing authorization scheme",
-            ParseError::MissingField(_) => "Missing header field",
-            ParseError::ToStrError(e) => e.description(),
-            ParseError::Base64DecodeError(e) => e.description(),
-            ParseError::Utf8Error(e) => e.description(),
-        }
-    }
-
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
             ParseError::Invalid => None,
