@@ -54,11 +54,13 @@ impl AuthExtractorConfig for Config {
     }
 }
 
+// Needs `fn main` to display complete example.
+#[allow(clippy::needless_doctest_main)]
 /// Extractor for HTTP Bearer auth
 ///
 /// # Example
 ///
-/// ```rust
+/// ```
 /// use actix_web_httpauth::extractors::bearer::BearerAuth;
 ///
 /// async fn index(auth: BearerAuth) -> String {
@@ -72,7 +74,7 @@ impl AuthExtractorConfig for Config {
 ///
 /// ## Example
 ///
-/// ```rust
+/// ```
 /// use actix_web::{web, App};
 /// use actix_web_httpauth::extractors::bearer::{BearerAuth, Config};
 ///

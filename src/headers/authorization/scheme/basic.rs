@@ -24,7 +24,7 @@ impl Basic {
     ///
     /// ## Example
     ///
-    /// ```rust
+    /// ```
     /// # use actix_web_httpauth::headers::authorization::Basic;
     /// let credentials = Basic::new("Alladin", Some("open sesame"));
     /// ```
@@ -89,13 +89,13 @@ impl Scheme for Basic {
 }
 
 impl fmt::Debug for Basic {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_fmt(format_args!("Basic {}:******", self.user_id))
     }
 }
 
 impl fmt::Display for Basic {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_fmt(format_args!("Basic {}:******", self.user_id))
     }
 }

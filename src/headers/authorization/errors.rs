@@ -26,7 +26,7 @@ pub enum ParseError {
 }
 
 impl fmt::Display for ParseError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let display = match self {
             ParseError::Invalid => "Invalid header value".to_string(),
             ParseError::MissingScheme => {

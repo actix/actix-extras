@@ -17,7 +17,10 @@
 
 #![deny(bare_trait_objects)]
 #![deny(missing_docs)]
+#![deny(nonstandard_style)]
+#![deny(rust_2018_idioms)]
 #![deny(unused)]
+#![deny(clippy::all)]
 #![cfg_attr(feature = "nightly", feature(test))]
 
 pub mod extractors;

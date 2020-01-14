@@ -50,11 +50,13 @@ impl AuthExtractorConfig for Config {
     }
 }
 
+// Needs `fn main` to display complete example.
+#[allow(clippy::needless_doctest_main)]
 /// Extractor for HTTP Basic auth.
 ///
 /// # Example
 ///
-/// ```rust
+/// ```
 /// use actix_web::Result;
 /// use actix_web_httpauth::extractors::basic::BasicAuth;
 ///
@@ -69,7 +71,7 @@ impl AuthExtractorConfig for Config {
 ///
 /// ## Example
 ///
-/// ```rust
+/// ```
 /// use actix_web::{web, App};
 /// use actix_web_httpauth::extractors::basic::{BasicAuth, Config};
 ///

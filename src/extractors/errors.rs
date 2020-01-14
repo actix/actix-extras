@@ -43,7 +43,7 @@ impl<C: Challenge> AuthenticationError<C> {
 }
 
 impl<C: Challenge> fmt::Display for AuthenticationError<C> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Display::fmt(&self.status_code, f)
     }
 }

@@ -16,7 +16,7 @@ use crate::utils;
 ///
 /// ## Example
 ///
-/// ```rust
+/// ```
 /// # use actix_web::{web, App, HttpRequest, HttpResponse, HttpServer};
 /// use actix_web_httpauth::headers::www_authenticate::bearer::{
 ///     Bearer, Error,
@@ -53,7 +53,7 @@ impl Bearer {
     ///
     /// ## Example
     ///
-    /// ```rust
+    /// ```
     /// # use actix_web_httpauth::headers::www_authenticate::bearer::{Bearer};
     /// let challenge = Bearer::build()
     ///     .realm("Restricted area")
@@ -121,7 +121,7 @@ impl Challenge for Bearer {
 }
 
 impl fmt::Display for Bearer {
-    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         let bytes = self.to_bytes();
         let repr = str::from_utf8(&bytes)
             // Should not happen since challenges are crafted manually

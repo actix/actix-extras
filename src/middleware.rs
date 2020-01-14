@@ -59,7 +59,7 @@ where
     ///
     /// ## Example
     ///
-    /// ```rust
+    /// ```
     /// # use actix_web::Error;
     /// # use actix_web::dev::ServiceRequest;
     /// # use actix_web_httpauth::middleware::HttpAuthentication;
@@ -94,7 +94,7 @@ where
     ///
     /// ## Example
     ///
-    /// ```rust
+    /// ```
     /// # use actix_web::Error;
     /// # use actix_web::dev::ServiceRequest;
     /// # use actix_web_httpauth::middleware::HttpAuthentication;

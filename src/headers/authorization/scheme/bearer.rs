@@ -23,7 +23,7 @@ impl Bearer {
     ///
     /// ## Example
     ///
-    /// ```rust
+    /// ```
     /// # use actix_web_httpauth::headers::authorization::Bearer;
     /// let credentials = Bearer::new("mF_9.B5f-4.1JqM");
     /// ```
@@ -64,13 +64,13 @@ impl Scheme for Bearer {
 }
 
 impl fmt::Debug for Bearer {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_fmt(format_args!("Bearer ******"))
     }
 }
 
 impl fmt::Display for Bearer {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_fmt(format_args!("Bearer {}", self.token))
     }
 }
