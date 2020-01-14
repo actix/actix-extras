@@ -1,6 +1,6 @@
 [package]
 name = "actix-web-httpauth"
-version = "0.3.2"
+version = "0.4.0"
 authors = ["svartalf <self@svartalf.info>", "Yuki Okushi <huyuumi.dev@gmail.com>"]
 description = "HTTP authentication schemes for actix-web"
 readme = "README.md"
@@ -10,7 +10,7 @@ repository = "https://github.com/actix/actix-web-httpauth.git"
 documentation = "https://docs.rs/actix-web-httpauth/"
 categories = ["web-programming::http-server"]
 license = "MIT OR Apache-2.0"
-exclude = [".travis.yml", ".gitignore"]
+exclude = [".github/*", ".gitignore"]
 edition = "2018"
 
 [dependencies]
@@ -28,5 +28,4 @@ default = []
 nightly = []
 
 [badges]
-travis-ci = { repository = "actix/actix-web-httpauth", branch = "master" }
 maintenance = { status = "passively-maintained" }
