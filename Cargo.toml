@@ -28,10 +28,10 @@ actix = "0.9"
 actix-rt = "1"
 actix-web = "2"
 
-prost = "0.5.0"
+prost = "0.6.0"
 
 [dev-dependencies]
-prost-derive = "0.5.0"
+prost-derive = "0.6.0"
 
 [workspace]
 members = [
