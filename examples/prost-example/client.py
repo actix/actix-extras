@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # just start server and run client.py
 
-# wget https://github.com/google/protobuf/releases/download/v3.5.1/protobuf-python-3.5.1.zip
-# unzip protobuf-python-3.5.1.zip.1
-# cd protobuf-3.5.1/python/
-# python3.6 setup.py install
+# wget https://github.com/protocolbuffers/protobuf/releases/download/v3.11.2/protobuf-python-3.11.2.zip
+# unzip protobuf-python-3.11.2.zip.1
+# cd protobuf-3.11.2/python/
+# python3 setup.py install
 
 # pip3 install --upgrade pip
 # pip3 install aiohttp

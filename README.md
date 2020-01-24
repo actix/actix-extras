@@ -6,22 +6,24 @@ Protobuf support for actix-web framework.
 ## Example
 
 ```rust,ignore
-use actix_web::{HttpResponse, Result};
-use actix_protobuf::ProtoBuf;
+use actix_protobuf::*;
+use actix_web::*;
 
-#[derive(Clone, Debug, PartialEq, Message)]
+#[derive(Clone, PartialEq, Message)]
 pub struct MyObj {
-    #[prost(int32, tag="1")]
+    #[prost(int32, tag = "1")]
     pub number: i32,
-    #[prost(string, tag="2")]
+    #[prost(string, tag = "2")]
     pub name: String,
 }
 
-fn index(msg: ProtoBuf<MyObj>) -> Result<HttpResponse> {
+async fn index(msg: ProtoBuf<MyObj>) -> Result<HttpResponse> {
     println!("model: {:?}", msg);
-    HttpResponse::Ok().protobuf(msg.0)  // <- send response
+    HttpResponse::Ok().protobuf(msg.0) // <- send response
 }
 ```
+
+See [here](https://github.com/actix/actix-protobuf/tree/master/examples/prost-example) for the complete example.
 
 ## License
 
