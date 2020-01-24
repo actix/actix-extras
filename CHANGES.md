@@ -1,6 +1,6 @@
 # Changes
 
-## 0.5.0 (in the future)
+## 0.5.0 (2019-01-24)
 
 * Migrate to actix-web 2.0.0 and std::future
 * Update prost to 0.6
