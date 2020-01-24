@@ -6,7 +6,7 @@ use std::pin::Pin;
 use std::task;
 use std::task::Poll;
 
-use bytes::{BytesMut, IntoBuf};
+use bytes::BytesMut;
 use prost::DecodeError as ProtoBufDecodeError;
 use prost::EncodeError as ProtoBufEncodeError;
 use prost::Message;
@@ -239,7 +239,7 @@ impl<T: Message + Default + 'static> Future for ProtoBufMessage<T> {
                     }
                 }
 
-                return Ok(<T>::decode(&mut body.into_buf())?);
+                return Ok(<T>::decode(&mut body)?);
             }
             .boxed_local(),
         );
