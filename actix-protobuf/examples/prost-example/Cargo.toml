@@ -1,0 +1,17 @@
+[package]
+name = "prost-example"
+version = "0.5.0"
+edition = "2018"
+authors = ["kingxsp <jin.hb.zh@outlook.com>, Yuki Okushi <huyuumi.dev@gmail.com>"]
+
+[dependencies]
+bytes = "0.5"
+env_logger = "*"
+
+prost = "0.6.0"
+prost-derive = "0.6.0"
+
+actix = "0.9"
+actix-rt = "1"
+actix-web = "2"
+actix-protobuf = { path="../../" }
