@@ -9,7 +9,7 @@ homepage = "https://github.com/actix/actix-web-httpauth"
 repository = "https://github.com/actix/actix-web-httpauth.git"
 documentation = "https://docs.rs/actix-web-httpauth/"
 categories = ["web-programming::http-server"]
-license = "MIT OR Apache-2.0"
+license = "MIT/Apache-2.0"
 exclude = [".github/*"]
 edition = "2018"
 
