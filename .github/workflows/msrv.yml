@@ -1,0 +1,43 @@
+name: CI (Linux, MSRV)
+
+on: [push, pull_request]
+
+jobs:
+  build_and_test:
+    strategy:
+      fail-fast: false
+      matrix:
+        version:
+          - 1.39.0
+
+    name: ${{ matrix.version }} - x86_64-unknown-linux-gnu
+    runs-on: ubuntu-latest
+
+    services:
+      redis:
+        image: redis:5.0.7
+        ports:
+          - 6379:6379
+        options: --entrypoint redis-server
+
+    steps:
+      - uses: actions/checkout@master
+
+      - name: Install ${{ matrix.version }}
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.version }}-x86_64-unknown-linux-gnu
+          profile: minimal
+          override: true
+
+      - name: tests (1.39.0)
+        if: matrix.version == '1.39.0'
+        uses: actions-rs/cargo@v1
+        timeout-minutes: 40
+        with:
+          command: test
+          args: --package=actix-cors
+                --package=actix-protobuf
+                --package=actix-redis
+                --package=actix-web-httpauth
+                --all-features --no-fail-fast -- --nocapture

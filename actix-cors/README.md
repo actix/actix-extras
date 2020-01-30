@@ -16,4 +16,4 @@
 * [API Documentation](https://docs.rs/actix-cors/)
 * [Chat on gitter](https://gitter.im/actix/actix)
 * Cargo package: [actix-cors](https://crates.io/crates/actix-cors)
-* Minimum supported Rust version: 1.34 or later
+* Minimum supported Rust version: 1.39.0 or later

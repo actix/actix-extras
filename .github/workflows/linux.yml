@@ -7,7 +7,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: # FIXME: Add MSRV for each crate
+        version:
           - stable
           - nightly
 
