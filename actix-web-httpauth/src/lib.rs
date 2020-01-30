@@ -21,7 +21,6 @@
 #![deny(rust_2018_idioms)]
 #![deny(unused)]
 #![deny(clippy::all)]
-#![cfg_attr(feature = "nightly", feature(test))]
 
 pub mod extractors;
 pub mod headers;

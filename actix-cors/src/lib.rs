@@ -160,14 +160,12 @@ impl<T> AllOrSome<T> {
 /// use actix_cors::Cors;
 /// use actix_web::http::header;
 ///
-/// # fn main() {
 /// let cors = Cors::new()
 ///     .allowed_origin("https://www.rust-lang.org/")
 ///     .allowed_methods(vec!["GET", "POST"])
 ///     .allowed_headers(vec![header::AUTHORIZATION, header::ACCEPT])
 ///     .allowed_header(header::CONTENT_TYPE)
 ///     .max_age(3600);
-/// # }
 /// ```
 #[derive(Default)]
 pub struct Cors {
@@ -585,7 +583,7 @@ impl Inner {
                     AllOrSome::All => Ok(()),
                     AllOrSome::Some(ref allowed_origins) => allowed_origins
                         .get(origin)
-                        .and_then(|_| Some(()))
+                        .map(|_| ())
                         .ok_or_else(|| CorsError::OriginNotAllowed),
                 };
             }
@@ -633,7 +631,7 @@ impl Inner {
                     return self
                         .methods
                         .get(&method)
-                        .and_then(|_| Some(()))
+                        .map(|_| ())
                         .ok_or_else(|| CorsError::MethodNotAllowed);
                 }
             }
@@ -651,6 +649,7 @@ impl Inner {
                     req.headers().get(&header::ACCESS_CONTROL_REQUEST_HEADERS)
                 {
                     if let Ok(headers) = hdr.to_str() {
+                        #[allow(clippy::mutable_key_type)] // FIXME: revisit here
                         let mut hdrs = HashSet::new();
                         for hdr in headers.split(',') {
                             match HeaderName::try_from(hdr.trim()) {
@@ -779,7 +778,7 @@ where
                         {
                             res.headers_mut().insert(
                                 header::ACCESS_CONTROL_ALLOW_ORIGIN,
-                                origin.clone(),
+                                origin,
                             );
                         };
 

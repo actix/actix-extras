@@ -6,8 +6,8 @@ description = "Redis integration for actix framework"
 license = "MIT/Apache-2.0"
 readme = "README.md"
 keywords = ["web", "redis", "async", "actix", "tokio"]
-homepage = "https://github.com/actix/actix-redis"
-repository = "https://github.com/actix/actix-redis.git"
+homepage = "https://github.com/actix/actix-extras"
+repository = "https://github.com/actix/actix-extras.git"
 documentation = "https://docs.rs/actix-redis/"
 categories = ["network-programming", "asynchronous"]
 exclude = [".travis.yml", ".cargo/config"]
@@ -16,10 +16,6 @@ edition = "2018"
 [lib]
 name = "actix_redis"
 path = "src/lib.rs"
-
-[badges]
-travis-ci = { repository = "actix/actix-redis", branch = "master" }
-codecov = { repository = "actix/actix-redis", branch = "master", service = "github" }
 
 [features]
 default = ["web"]

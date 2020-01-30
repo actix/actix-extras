@@ -134,6 +134,7 @@ where
     type Request = ServiceRequest;
     type Response = ServiceResponse<B>;
     type Error = Error;
+    #[allow(clippy::type_complexity)]
     type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>>>>;
 
     fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
@@ -266,7 +267,7 @@ impl Inner {
         value: Option<String>,
     ) -> Result<ServiceResponse<B>, Error> {
         let (value, jar) = if let Some(value) = value {
-            (value.clone(), None)
+            (value, None)
         } else {
             let value: String = iter::repeat(())
                 .map(|()| OsRng.sample(Alphanumeric))
@@ -559,7 +560,7 @@ mod test {
             .unwrap();
         assert_eq!(
             true,
-            cookie_1.value().to_string() != cookie_2.value().to_string()
+            cookie_1.value() != cookie_2.value()
         );
 
         let result_5 = resp_5.json::<IndexResponse>().await.unwrap();
@@ -618,7 +619,7 @@ mod test {
                 counter: 0
             }
         );
-        assert!(cookie_3.value().to_string() != cookie_2.value().to_string());
+        assert!(cookie_3.value() != cookie_2.value());
 
         // Step 9: POST to logout, including session cookie #2
         //   - set-cookie actix-session will be in response with session cookie #2
@@ -632,7 +633,7 @@ mod test {
             .into_iter()
             .find(|c| c.name() == "test-session")
             .unwrap();
-        assert!(&time::now().tm_year != &cookie_4.expires().map(|t| t.tm_year).unwrap());
+        assert_ne!(time::now().tm_year, cookie_4.expires().map(|t| t.tm_year).unwrap());
 
         // Step 10: GET index, including session cookie #2 in request
         //   - set-cookie actix-session will be in response (session cookie #3)
@@ -655,6 +656,6 @@ mod test {
             .into_iter()
             .find(|c| c.name() == "test-session")
             .unwrap();
-        assert!(cookie_5.value().to_string() != cookie_2.value().to_string());
+        assert!(cookie_5.value() != cookie_2.value());
     }
 }
