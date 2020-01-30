@@ -2,7 +2,7 @@
 name = "actix-identity"
 version = "0.2.1"
 authors = ["Nikolay Kim <fafhrd91@gmail.com>"]
-description = "Identity service for actix web framework."
+description = "Identity service for actix-web framework."
 readme = "README.md"
 keywords = ["http", "web", "framework", "async", "futures"]
 homepage = "https://actix.rs"

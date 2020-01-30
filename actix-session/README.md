@@ -8,7 +8,7 @@
 ![Apache 2.0 or MIT licensed](https://img.shields.io/crates/l/actix-session)
 [![Join the chat at https://gitter.im/actix/actix](https://badges.gitter.im/actix/actix.svg)](https://gitter.im/actix/actix?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-> Session for actix web framework.
+> Session for actix-web framework.
 
 ## Documentation & community resources
 

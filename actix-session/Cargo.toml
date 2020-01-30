@@ -2,7 +2,7 @@
 name = "actix-session"
 version = "0.3.0"
 authors = ["Nikolay Kim <fafhrd91@gmail.com>"]
-description = "Session for actix web framework."
+description = "Session for actix-web framework."
 readme = "README.md"
 keywords = ["http", "web", "framework", "async", "futures"]
 homepage = "https://actix.rs"
