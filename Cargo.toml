@@ -1,0 +1,6 @@
+[workspace]
+members = [
+  "actix-protobuf",
+  "actix-redis",
+  "actix-web-httpauth",
+]

@@ -10,7 +10,7 @@ homepage = "https://github.com/actix/actix-redis"
 repository = "https://github.com/actix/actix-redis.git"
 documentation = "https://docs.rs/actix-redis/"
 categories = ["network-programming", "asynchronous"]
-exclude = [".gitignore", ".travis.yml", ".cargo/config", "appveyor.yml"]
+exclude = [".travis.yml", ".cargo/config"]
 edition = "2018"
 
 [lib]

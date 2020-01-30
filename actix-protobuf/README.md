@@ -1,4 +1,11 @@
-# Actix-web ProtoBuf [![Build Status](https://travis-ci.org/actix/actix-protobuf.svg?branch=master)](https://travis-ci.org/actix/actix-protobuf) [![codecov](https://codecov.io/gh/actix/actix-protobuf/branch/master/graph/badge.svg)](https://codecov.io/gh/actix/actix-protobuf) [![crates.io](http://meritbadge.herokuapp.com/actix-protobuf)](https://crates.io/crates/actix-protobuf) [![Join the chat at https://gitter.im/actix/actix](https://badges.gitter.im/actix/actix.svg)](https://gitter.im/actix/actix?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+# actix-protobuf
+
+<center>
+[![Build Status](https://travis-ci.org/actix/actix-protobuf.svg?branch=master)](https://travis-ci.org/actix/actix-protobuf)
+[![codecov](https://codecov.io/gh/actix/actix-protobuf/branch/master/graph/badge.svg)](https://codecov.io/gh/actix/actix-protobuf)
+[![crates.io](http://meritbadge.herokuapp.com/actix-protobuf)](https://crates.io/crates/actix-protobuf)
+[![Join the chat at https://gitter.im/actix/actix](https://badges.gitter.im/actix/actix.svg)](https://gitter.im/actix/actix?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+</center>
 
 Protobuf support for actix-web framework.
 

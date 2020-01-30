@@ -8,8 +8,7 @@ readme = "README.md"
 keywords = ["actix"]
 homepage = "https://github.com/actix/actix-protobuf"
 license = "MIT/Apache-2.0"
-exclude = [".gitignore", ".travis.yml", ".cargo/config",
-           "appveyor.yml", "/examples/**"]
+exclude = [".travis.yml", ".cargo/config", "/examples/**"]
 
 [badges]
 travis-ci = { repository = "actix/actix-protobuf", branch = "master" }
@@ -32,9 +31,3 @@ prost = "0.6.0"
 
 [dev-dependencies]
 prost-derive = "0.6.0"
-
-[workspace]
-members = [
-  "./",
-  "examples/prost-example",
-]

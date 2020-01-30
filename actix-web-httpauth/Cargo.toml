@@ -10,8 +10,12 @@ repository = "https://github.com/actix/actix-web-httpauth.git"
 documentation = "https://docs.rs/actix-web-httpauth/"
 categories = ["web-programming::http-server"]
 license = "MIT OR Apache-2.0"
-exclude = [".github/*", ".gitignore"]
+exclude = [".github/*"]
 edition = "2018"
+
+[lib]
+name = "actix_web_httpauth"
+path = "src/lib.rs"
 
 [dependencies]
 actix-web = { version = "^2.0", default_features = false }
