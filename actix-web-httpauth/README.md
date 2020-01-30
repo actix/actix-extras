@@ -1,14 +1,13 @@
 # actix-web-httpauth
 
-<center>
-[![Latest Version](https://img.shields.io/crates/v/actix-web-httpauth.svg)](https://crates.io/crates/actix-web-httpauth)
-[![Latest Version](https://docs.rs/actix-web-httpauth/badge.svg)](https://docs.rs/actix-web-httpauth)
-[![dependency status](https://deps.rs/crate/actix-web-httpauth/0.4.0/status.svg)](https://deps.rs/crate/actix-web-httpauth/0.4.0)
+[![crates.io](https://img.shields.io/crates/v/actix-web-httpauth)](https://crates.io/crates/actix-web-httpauth)
+[![Documentation](https://docs.rs/actix-web-httpauth/badge.svg)](https://docs.rs/actix-web-httpauth)
+[![Dependency Status](https://deps.rs/crate/actix-web-httpauth/0.4.0/status.svg)](https://deps.rs/crate/actix-web-httpauth/0.4.0)
 ![Build Status](https://github.com/actix/actix-web-httpauth/workflows/CI/badge.svg?branch=master&event=push)
-![Apache 2.0 OR MIT licensed](https://img.shields.io/badge/license-Apache2.0%2FMIT-blue.svg)
-<center>
+![Apache 2.0 or MIT licensed](https://img.shields.io/crates/l/actix-web-httpauth)
+[![Join the chat at https://gitter.im/actix/actix](https://badges.gitter.im/actix/actix.svg)](https://gitter.im/actix/actix?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-HTTP authentication schemes for [actix-web](https://github.com/actix/actix-web) framework.
+> HTTP authentication schemes for [actix-web](https://github.com/actix/actix-web) framework.
 
 Provides:
  * typed [Authorization] and [WWW-Authenticate] headers
