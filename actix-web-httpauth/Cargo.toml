@@ -29,7 +29,7 @@ actix-rt = "1.0"
 
 [features]
 default = []
-nightly = []
+nightly = [] # leave it for compatibility
 
 [badges]
 maintenance = { status = "passively-maintained" }
