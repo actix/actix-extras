@@ -7,16 +7,17 @@
 
 ## Crates
 
-| Crate                |                                                                                                                                                                                                                      |                                            |
-| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
-| [actix-protobuf]     | [![crates.io](https://img.shields.io/crates/v/actix-protobuf)](https://crates.io/crates/actix-protobuf) [![Documentation](https://docs.rs/actix-protobuf/badge.svg)](https://docs.rs/actix-protobuf)                 | Protobuf support for actix-web framework.  |
-| [actix-redis]        | [![crates.io](https://img.shields.io/crates/v/actix-redis)](https://crates.io/crates/actix-redis) [![Documentation](https://docs.rs/actix-redis/badge.svg)](https://docs.rs/actix-redis)                             | Reds integration for actix framework.      |
-| [actix-web-httpauth] | [![crates.io](https://img.shields.io/crates/v/actix-web-httpauth)](https://crates.io/crates/actix-web-httpauth) [![Documentation](https://docs.rs/actix-web-httpauth/badge.svg)](https://docs.rs/actix-web-httpauth) | HTTP authentication schemes for actix-web. |
+| Crate                |                                                                                                                                                                                                                      |                                                                  |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| [actix-cors]         | [![crates.io](https://img.shields.io/crates/v/actix-cors)](https://crates.io/crates/actix-cors) [![Documentation](https://docs.rs/actix-cors/badge.svg)](https://docs.rs/actix-cors)                                 | Cross-origin resource sharing (CORS) for actix-web applications. |
+| [actix-identity]     | [![crates.io](https://img.shields.io/crates/v/actix-identity)](https://crates.io/crates/actix-identity) [![Documentation](https://docs.rs/actix-identity/badge.svg)](https://docs.rs/actix-identity)                 | Identity service for actix-web framework.                        |
+| [actix-protobuf]     | [![crates.io](https://img.shields.io/crates/v/actix-protobuf)](https://crates.io/crates/actix-protobuf) [![Documentation](https://docs.rs/actix-protobuf/badge.svg)](https://docs.rs/actix-protobuf)                 | Protobuf support for actix-web framework.                        |
+| [actix-redis]        | [![crates.io](https://img.shields.io/crates/v/actix-redis)](https://crates.io/crates/actix-redis) [![Documentation](https://docs.rs/actix-redis/badge.svg)](https://docs.rs/actix-redis)                             | Redis integration for actix framework.                           |
+| [actix-session]      | [![crates.io](https://img.shields.io/crates/v/actix-session)](https://crates.io/crates/actix-session) [![Documentation](https://docs.rs/actix-session/badge.svg)](https://docs.rs/actix-session)                     | Session for actix web framework.                                 |
+| [actix-web-httpauth] | [![crates.io](https://img.shields.io/crates/v/actix-web-httpauth)](https://crates.io/crates/actix-web-httpauth) [![Documentation](https://docs.rs/actix-web-httpauth/badge.svg)](https://docs.rs/actix-web-httpauth) | HTTP authentication schemes for actix-web.                       |
 
 
 <!-- REFERENCES -->
 [actix]: https://github.com/actix/actix
 [actix-web]: https://github.com/actix/actix-web
-[actix-protobuf]: actix-protobuf
-[actix-redis]: actix-redis
-[actix-web-httpauth]: actix-web-httpauth
+[actix-extras]: https://github.com/actix/actix-extras
