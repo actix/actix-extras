@@ -5,7 +5,6 @@ use std::str;
 use actix_web::http::header::{
     HeaderValue, IntoHeaderValue, InvalidHeaderValue,
 };
-use base64;
 use bytes::{BufMut, BytesMut};
 
 use crate::headers::authorization::errors::ParseError;
