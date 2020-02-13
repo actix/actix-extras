@@ -2,7 +2,7 @@
 name = "actix-protobuf"
 version = "0.5.0"
 edition = "2018"
-authors = ["kingxsp <jin.hb.zh@outlook.com>, Yuki Okushi <huyuumi.dev@gmail.com>"]
+authors = ["kingxsp <jin.hb.zh@outlook.com>", "Yuki Okushi <huyuumi.dev@gmail.com>"]
 description = "Protobuf support for actix-web framework."
 readme = "README.md"
 keywords = ["actix"]
