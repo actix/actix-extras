@@ -1,5 +1,9 @@
 # Changes
 
+## 0.5.1 (2019-02-17)
+
+* Move repository to actix-extras
+
 ## 0.5.0 (2019-01-24)
 
 * Migrate to actix-web 2.0.0 and std::future

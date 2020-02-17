@@ -1,8 +1,8 @@
 [package]
 name = "prost-example"
-version = "0.5.0"
+version = "0.5.1"
 edition = "2018"
-authors = ["kingxsp <jin.hb.zh@outlook.com>, Yuki Okushi <huyuumi.dev@gmail.com>"]
+authors = ["kingxsp <jin.hb.zh@outlook.com>", "Yuki Okushi <huyuumi.dev@gmail.com>"]
 
 [dependencies]
 bytes = "0.5"
