@@ -2,7 +2,7 @@
 # just start server and run client.py
 
 # wget https://github.com/protocolbuffers/protobuf/releases/download/v3.11.2/protobuf-python-3.11.2.zip
-# unzip protobuf-python-3.11.2.zip.1
+# unzip protobuf-python-3.11.2.zip
 # cd protobuf-3.11.2/python/
 # python3 setup.py install
 
