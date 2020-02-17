@@ -2,7 +2,7 @@
 
 ## [0.8.1] 2020-02-18
 
-* Update `env_logger` to 0.7
+* Move `env_logger` dependency to dev-dependencies and update to 0.7
 
 * Update `actix_web` to 2.0.0 from 2.0.0-rc
 
