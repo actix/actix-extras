@@ -6,7 +6,7 @@ use actix_web_httpauth::middleware::HttpAuthentication;
 
 async fn validator(
     req: ServiceRequest,
-    _credentials: BasicAuth,
+    _credentials: Option<BasicAuth>,
 ) -> Result<ServiceRequest, Error> {
     Ok(req)
 }
