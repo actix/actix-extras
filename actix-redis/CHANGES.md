@@ -1,5 +1,13 @@
 # Changes
 
+## [0.8.1] 2020-02-18
+
+* Move `env_logger` dependency to dev-dependencies and update to 0.7
+
+* Update `actix_web` to 2.0.0 from 2.0.0-rc
+
+* Move repository to actix-extras
+
 ## [0.8.0] 2019-12-20
 
 * Release

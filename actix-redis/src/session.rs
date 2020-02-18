@@ -373,7 +373,6 @@ mod test {
     };
     use serde::{Deserialize, Serialize};
     use serde_json::json;
-    use time;
 
     #[derive(Serialize, Deserialize, Debug, PartialEq)]
     pub struct IndexResponse {
