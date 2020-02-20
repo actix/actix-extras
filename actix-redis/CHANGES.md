@@ -6,6 +6,8 @@
 
 * Update `actix_web` to 2.0.0 from 2.0.0-rc
 
+* Update `time` to 0.2.6
+
 * Move repository to actix-extras
 
 ## [0.8.0] 2019-12-20

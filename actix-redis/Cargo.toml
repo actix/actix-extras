@@ -33,7 +33,7 @@ derive_more = "0.99.2"
 futures = "0.3.1"
 redis-async = "0.6.1"
 actix-rt = "1.0.0"
-time = "0.1.42"
+time = "0.2.6"
 tokio = "0.2.6"
 tokio-util = "0.2.0"
 
