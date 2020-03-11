@@ -52,7 +52,7 @@ use actix_web::http::header::{self, HeaderName, HeaderValue};
 use actix_web::http::{self, Error as HttpError, Method, StatusCode, Uri};
 use actix_web::HttpResponse;
 use derive_more::Display;
-use futures::future::{ok, Either, FutureExt, LocalBoxFuture, Ready};
+use futures_util::future::{ok, Either, FutureExt, LocalBoxFuture, Ready};
 
 /// A set of errors that can occur during processing CORS
 #[derive(Debug, Display)]

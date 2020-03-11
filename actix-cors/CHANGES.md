@@ -1,5 +1,9 @@
 # Changes
 
+## [0.3.0-alpha.1] - 2020-03-11
+
+* Minimize `futures-*` dependencies
+
 ## [0.2.0] - 2019-12-20
 
 * Release
