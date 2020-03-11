@@ -776,10 +776,8 @@ where
                         if let Some(origin) =
                             inner.access_control_allow_origin(res.request().head())
                         {
-                            res.headers_mut().insert(
-                                header::ACCESS_CONTROL_ALLOW_ORIGIN,
-                                origin,
-                            );
+                            res.headers_mut()
+                                .insert(header::ACCESS_CONTROL_ALLOW_ORIGIN, origin);
                         };
 
                         if let Some(ref expose) = inner.expose_hdrs {
