@@ -6,6 +6,6 @@ members = [
   "actix-identity",
   "actix-protobuf",
   "actix-redis",
-#   "actix-session",
+  "actix-session",
   "actix-web-httpauth",
 ]
