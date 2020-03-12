@@ -3,7 +3,7 @@
 [workspace]
 members = [
   "actix-cors",
-#   "actix-identity",
+  "actix-identity",
   "actix-protobuf",
   "actix-redis",
 #   "actix-session",
