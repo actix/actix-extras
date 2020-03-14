@@ -49,10 +49,9 @@ use actix_web::dev::{
     Extensions, Payload, RequestHead, ServiceRequest, ServiceResponse,
 };
 use actix_web::{Error, FromRequest, HttpMessage, HttpRequest};
-use futures::future::{ok, Ready};
+use futures_util::future::{ok, Ready};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
-use serde_json;
 
 #[cfg(feature = "cookie-session")]
 mod cookie;

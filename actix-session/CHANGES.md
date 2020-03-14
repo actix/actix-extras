@@ -1,10 +1,11 @@
 # Changes
 
-## [0.4.0-alpha.1] - 2020-03-12
+## [0.4.0-alpha.1] - 2020-03-14
 
 * Update the `time` dependency to 0.2.7
 * Update the `actix-web` dependency to 3.0.0-alpha.1
 * Long lasting auto-prolonged session [#1292]
+* Minimize `futures` dependency
 
 [#1292]: https://github.com/actix/actix-web/pull/1292
 
