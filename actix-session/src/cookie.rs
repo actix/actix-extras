@@ -25,7 +25,7 @@ use actix_web::dev::{ServiceRequest, ServiceResponse};
 use actix_web::http::{header::SET_COOKIE, HeaderValue};
 use actix_web::{Error, HttpMessage, ResponseError};
 use derive_more::{Display, From};
-use futures::future::{ok, FutureExt, LocalBoxFuture, Ready};
+use futures_util::future::{ok, FutureExt, LocalBoxFuture, Ready};
 use serde_json::error::Error as JsonError;
 use time::{Duration, OffsetDateTime};
 
