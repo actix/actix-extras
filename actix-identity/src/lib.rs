@@ -53,7 +53,7 @@ use std::task::{Context, Poll};
 use std::time::SystemTime;
 
 use actix_service::{Service, Transform};
-use futures::future::{ok, FutureExt, LocalBoxFuture, Ready};
+use futures_util::future::{ok, FutureExt, LocalBoxFuture, Ready};
 use serde::{Deserialize, Serialize};
 use time::Duration;
 
@@ -1085,7 +1085,7 @@ mod tests {
 
     #[actix_rt::test]
     async fn test_borrowed_mut_error() {
-        use futures::future::{lazy, ok, Ready};
+        use futures_util::future::{lazy, ok, Ready};
 
         struct Ident;
         impl IdentityPolicy for Ident {
