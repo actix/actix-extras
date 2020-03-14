@@ -52,7 +52,6 @@ use actix_web::{Error, FromRequest, HttpMessage, HttpRequest};
 use futures_util::future::{ok, Ready};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
-use serde_json;
 
 #[cfg(feature = "cookie-session")]
 mod cookie;

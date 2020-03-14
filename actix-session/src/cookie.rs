@@ -391,11 +391,9 @@ mod tests {
         let mut app = test::init_service(
             App::new()
                 .wrap(CookieSession::signed(&[0; 32]).secure(false))
-                .service(web::resource("/").to(|ses: Session| {
-                    async move {
-                        let _ = ses.set("counter", 100);
-                        "test"
-                    }
+                .service(web::resource("/").to(|ses: Session| async move {
+                    let _ = ses.set("counter", 100);
+                    "test"
                 })),
         )
         .await;
@@ -414,11 +412,9 @@ mod tests {
         let mut app = test::init_service(
             App::new()
                 .wrap(CookieSession::private(&[0; 32]).secure(false))
-                .service(web::resource("/").to(|ses: Session| {
-                    async move {
-                        let _ = ses.set("counter", 100);
-                        "test"
-                    }
+                .service(web::resource("/").to(|ses: Session| async move {
+                    let _ = ses.set("counter", 100);
+                    "test"
                 })),
         )
         .await;
@@ -437,11 +433,9 @@ mod tests {
         let mut app = test::init_service(
             App::new()
                 .wrap(CookieSession::signed(&[0; 32]).secure(false))
-                .service(web::resource("/").to(|ses: Session| {
-                    async move {
-                        let _ = ses.set("counter", 100);
-                        "test"
-                    }
+                .service(web::resource("/").to(|ses: Session| async move {
+                    let _ = ses.set("counter", 100);
+                    "test"
                 })),
         )
         .await;
@@ -468,17 +462,13 @@ mod tests {
                         .same_site(SameSite::Lax)
                         .max_age(100),
                 )
-                .service(web::resource("/").to(|ses: Session| {
-                    async move {
-                        let _ = ses.set("counter", 100);
-                        "test"
-                    }
+                .service(web::resource("/").to(|ses: Session| async move {
+                    let _ = ses.set("counter", 100);
+                    "test"
                 }))
-                .service(web::resource("/test/").to(|ses: Session| {
-                    async move {
-                        let val: usize = ses.get("counter").unwrap().unwrap();
-                        format!("counter: {}", val)
-                    }
+                .service(web::resource("/test/").to(|ses: Session| async move {
+                    let val: usize = ses.get("counter").unwrap().unwrap();
+                    format!("counter: {}", val)
                 })),
         )
         .await;
@@ -505,11 +495,9 @@ mod tests {
         let mut app = test::init_service(
             App::new()
                 .wrap(CookieSession::signed(&[0; 32]).secure(false).expires_in(60))
-                .service(web::resource("/").to(|ses: Session| {
-                    async move {
-                        let _ = ses.set("counter", 100);
-                        "test"
-                    }
+                .service(web::resource("/").to(|ses: Session| async move {
+                    let _ = ses.set("counter", 100);
+                    "test"
                 }))
                 .service(
                     web::resource("/test/")
