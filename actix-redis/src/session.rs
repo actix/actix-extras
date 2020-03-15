@@ -13,7 +13,7 @@ use actix_web::{error, Error, HttpMessage};
 use futures::future::{ok, Future, Ready};
 use rand::{distributions::Alphanumeric, rngs::OsRng, Rng};
 use redis_async::resp::RespValue;
-use time::{self, Duration};
+use time::{self, Duration, OffsetDateTime};
 
 use crate::redis::{Command, RedisActor};
 
@@ -351,8 +351,8 @@ impl Inner {
     fn remove_cookie<B>(&self, res: &mut ServiceResponse<B>) -> Result<(), Error> {
         let mut cookie = Cookie::named(self.name.clone());
         cookie.set_value("");
-        cookie.set_max_age(Duration::seconds(0));
-        cookie.set_expires(time::now() - Duration::days(365));
+        cookie.set_max_age(Duration::zero());
+        cookie.set_expires(OffsetDateTime::now() - Duration::days(365));
 
         let val = HeaderValue::from_str(&cookie.to_string())
             .map_err(error::ErrorInternalServerError)?;
@@ -632,7 +632,7 @@ mod test {
             .into_iter()
             .find(|c| c.name() == "test-session")
             .unwrap();
-        assert_ne!(time::now().tm_year, cookie_4.expires().map(|t| t.tm_year).unwrap());
+        assert_ne!(OffsetDateTime::now().year(), cookie_4.expires().map(|t| t.year()).unwrap());
 
         // Step 10: GET index, including session cookie #2 in request
         //   - set-cookie actix-session will be in response (session cookie #3)
