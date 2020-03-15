@@ -522,7 +522,7 @@ impl CookieIdentityPolicy {
         self.max_age_time(Duration::seconds(seconds))
     }
 
-    /// Sets the `max-age` field in the session cookie being built with `chrono::Duration`.
+    /// Sets the `max-age` field in the session cookie being built with `time::Duration`.
     pub fn max_age_time(mut self, value: Duration) -> CookieIdentityPolicy {
         Rc::get_mut(&mut self.0).unwrap().max_age = Some(value);
         self
