@@ -74,7 +74,6 @@ jobs:
         if: matrix.version == 'stable' && (github.ref == 'master' || github.event_name == 'pull_request')
         uses: codecov/codecov-action@v1
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
           file: cobertura.xml
 
       - name: Clear the cargo caches
