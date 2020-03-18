@@ -623,8 +623,8 @@ mod tests {
     use actix_web::{error, web, App, Error, HttpResponse};
 
     const COOKIE_KEY_MASTER: [u8; 32] = [0; 32];
-    const COOKIE_NAME: &'static str = "actix_auth";
-    const COOKIE_LOGIN: &'static str = "test";
+    const COOKIE_NAME: &str = "actix_auth";
+    const COOKIE_LOGIN: &str = "test";
 
     #[actix_rt::test]
     async fn test_identity() {
@@ -790,7 +790,7 @@ mod tests {
         let key: Vec<u8> = COOKIE_KEY_MASTER
             .iter()
             .chain([1, 0, 0, 0].iter())
-            .map(|e| *e)
+            .copied()
             .collect();
         jar.private(&Key::from_master(&key)).add(Cookie::new(
             COOKIE_NAME,
@@ -846,7 +846,7 @@ mod tests {
         let key: Vec<u8> = COOKIE_KEY_MASTER
             .iter()
             .chain([1, 0, 0, 0].iter())
-            .map(|e| *e)
+            .copied()
             .collect();
         let cookie = cookies
             .private(&Key::from_master(&key))

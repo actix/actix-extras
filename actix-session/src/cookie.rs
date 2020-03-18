@@ -403,8 +403,7 @@ mod tests {
         assert!(response
             .response()
             .cookies()
-            .find(|c| c.name() == "actix-session")
-            .is_some());
+            .any(|c| c.name() == "actix-session"));
     }
 
     #[actix_rt::test]
@@ -424,8 +423,7 @@ mod tests {
         assert!(response
             .response()
             .cookies()
-            .find(|c| c.name() == "actix-session")
-            .is_some());
+            .any(|c| c.name() == "actix-session"));
     }
 
     #[actix_rt::test]
@@ -445,8 +443,7 @@ mod tests {
         assert!(response
             .response()
             .cookies()
-            .find(|c| c.name() == "actix-session")
-            .is_some());
+            .any(|c| c.name() == "actix-session"));
     }
 
     #[actix_rt::test]
