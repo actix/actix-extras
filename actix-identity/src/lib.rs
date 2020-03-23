@@ -53,7 +53,7 @@ use std::task::{Context, Poll};
 use std::time::SystemTime;
 
 use actix_service::{Service, Transform};
-use futures::future::{ok, FutureExt, LocalBoxFuture, Ready};
+use futures_util::future::{ok, FutureExt, LocalBoxFuture, Ready};
 use serde::{Deserialize, Serialize};
 use time::Duration;
 
@@ -522,7 +522,7 @@ impl CookieIdentityPolicy {
         self.max_age_time(Duration::seconds(seconds))
     }
 
-    /// Sets the `max-age` field in the session cookie being built with `chrono::Duration`.
+    /// Sets the `max-age` field in the session cookie being built with `time::Duration`.
     pub fn max_age_time(mut self, value: Duration) -> CookieIdentityPolicy {
         Rc::get_mut(&mut self.0).unwrap().max_age = Some(value);
         self
@@ -623,8 +623,8 @@ mod tests {
     use actix_web::{error, web, App, Error, HttpResponse};
 
     const COOKIE_KEY_MASTER: [u8; 32] = [0; 32];
-    const COOKIE_NAME: &'static str = "actix_auth";
-    const COOKIE_LOGIN: &'static str = "test";
+    const COOKIE_NAME: &str = "actix_auth";
+    const COOKIE_LOGIN: &str = "test";
 
     #[actix_rt::test]
     async fn test_identity() {
@@ -790,7 +790,7 @@ mod tests {
         let key: Vec<u8> = COOKIE_KEY_MASTER
             .iter()
             .chain([1, 0, 0, 0].iter())
-            .map(|e| *e)
+            .copied()
             .collect();
         jar.private(&Key::from_master(&key)).add(Cookie::new(
             COOKIE_NAME,
@@ -846,7 +846,7 @@ mod tests {
         let key: Vec<u8> = COOKIE_KEY_MASTER
             .iter()
             .chain([1, 0, 0, 0].iter())
-            .map(|e| *e)
+            .copied()
             .collect();
         let cookie = cookies
             .private(&Key::from_master(&key))
@@ -1085,7 +1085,7 @@ mod tests {
 
     #[actix_rt::test]
     async fn test_borrowed_mut_error() {
-        use futures::future::{lazy, ok, Ready};
+        use futures_util::future::{lazy, ok, Ready};
 
         struct Ident;
         impl IdentityPolicy for Ident {

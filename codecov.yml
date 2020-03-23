@@ -1,0 +1,5 @@
+ignore: # ignore codecoverage on following paths
+  - "**/examples"
+  - ".github"
+  - "**/*.md"
+  - "**/*.toml"
