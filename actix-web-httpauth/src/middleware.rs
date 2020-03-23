@@ -1,14 +1,15 @@
 //! HTTP Authentication middleware.
 
+use std::cell::RefCell;
 use std::marker::PhantomData;
 use std::pin::Pin;
+use std::rc::Rc;
 use std::sync::Arc;
 
 use actix_service::{Service, Transform};
 use actix_web::dev::{ServiceRequest, ServiceResponse};
 use actix_web::Error;
 use futures::future::{self, Future, FutureExt, LocalBoxFuture, TryFutureExt};
-use futures::lock::Mutex;
 use futures::task::{Context, Poll};
 
 use crate::extractors::{basic, bearer, AuthExtractor};
@@ -138,7 +139,7 @@ where
 
     fn new_transform(&self, service: S) -> Self::Future {
         future::ok(AuthenticationMiddleware {
-            service: Arc::new(Mutex::new(service)),
+            service: Rc::new(RefCell::new(service)),
             process_fn: self.process_fn.clone(),
             _extractor: PhantomData,
         })
@@ -150,7 +151,7 @@ pub struct AuthenticationMiddleware<S, F, T>
 where
     T: AuthExtractor,
 {
-    service: Arc<Mutex<S>>,
+    service: Rc<RefCell<S>>,
     process_fn: Arc<F>,
     _extractor: PhantomData<T>,
 }
@@ -170,22 +171,18 @@ where
     type Future = LocalBoxFuture<'static, Result<ServiceResponse<B>, Error>>;
 
     fn poll_ready(&mut self, ctx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        self.service
-            .try_lock()
-            .expect("AuthenticationMiddleware was called already")
-            .poll_ready(ctx)
+        self.service.borrow_mut().poll_ready(ctx)
     }
 
     fn call(&mut self, req: Self::Request) -> Self::Future {
+        let srv = self.service.clone();
         let process_fn = self.process_fn.clone();
-        // Note: cloning the mutex, not the service itself
-        let inner = self.service.clone();
 
         async move {
             let credentials = Extract::<T>::new(&req).await.ok();
             let req = process_fn(req, credentials).await?;
-            let mut service = inner.lock().await;
-            service.call(req).await
+            let fut = { srv.borrow_mut().call(req) };
+            fut.await
         }
         .boxed_local()
     }
