@@ -42,6 +42,7 @@ impl RedisSession {
             secure: false,
             max_age: Some(Duration::days(7)),
             same_site: None,
+            http_only: Some(true),
         }))
     }
 
@@ -86,6 +87,12 @@ impl RedisSession {
     /// Set custom cookie SameSite
     pub fn cookie_same_site(mut self, same_site: SameSite) -> Self {
         Rc::get_mut(&mut self.0).unwrap().same_site = Some(same_site);
+        self
+    }
+
+    /// Set custom cookie HttpOnly policy
+    pub fn cookie_http_only(mut self, http_only: bool) -> Self {
+        Rc::get_mut(&mut self.0).unwrap().http_only = Some(http_only);
         self
     }
 
@@ -205,6 +212,7 @@ struct Inner {
     secure: bool,
     max_age: Option<Duration>,
     same_site: Option<SameSite>,
+    http_only: Option<bool>,
 }
 
 impl Inner {
@@ -278,7 +286,7 @@ impl Inner {
             let mut cookie = Cookie::new(self.name.clone(), value.clone());
             cookie.set_path(self.path.clone());
             cookie.set_secure(self.secure);
-            cookie.set_http_only(true);
+            cookie.set_http_only(self.http_only.unwrap_or(true));
 
             if let Some(ref domain) = self.domain {
                 cookie.set_domain(domain.clone());
