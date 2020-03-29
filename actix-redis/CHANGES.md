@@ -1,5 +1,10 @@
 # Changes
 
+## [Unreleased]
+
+* Added `cookie_http_only` functionality to RedisSession builder, setting this
+  to false allows JavaScript to access cookies. Defaults to true.
+
 ## [0.9.0-alpha.1]
 
 * Update `actix` to 0.10.0-alpha.2
