@@ -21,7 +21,7 @@ actix-web = { version = "^2.0", default_features = false }
 actix-service = "1.0"
 futures = "0.3"
 bytes = "0.5"
-base64 = "0.11"
+base64 = "0.12"
 
 [dev-dependencies]
 actix-rt = "1.0"
