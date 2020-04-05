@@ -289,7 +289,7 @@ where
                         .insert(IdentityItem { id, changed: false });
 
                     // https://github.com/actix/actix-web/issues/1263
-                    let fut = { srv.borrow_mut().call(req) };
+                    let fut = srv.borrow_mut().call(req);
                     let mut res = fut.await?;
                     let id = res.request().extensions_mut().remove::<IdentityItem>();
 
