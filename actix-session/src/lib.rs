@@ -182,8 +182,22 @@ impl Session {
 
     /// Adds the given key-value pairs to the session on the request.
     ///
-    /// Values that match keys already existing on the session will be overwritten. The values in
-    /// the key-value pairs should be serialized into JSON.
+    /// Values that match keys already existing on the session will be overwritten. Values should
+    /// already be JSON serialized.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use actix_session::Session;
+    /// # use actix_web::test;
+    /// #
+    /// let mut req = test::TestRequest::default().to_srv_request();
+    ///
+    /// Session::set_session(
+    ///     vec![("counter".to_string(), serde_json::to_string(&0).unwrap())].into_iter(),
+    ///     &mut req,
+    /// );
+    /// ```
     pub fn set_session(
         data: impl Iterator<Item = (String, String)>,
         req: &mut ServiceRequest,
