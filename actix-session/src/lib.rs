@@ -180,6 +180,24 @@ impl Session {
         }
     }
 
+    /// Adds the given key-value pairs to the session on the request.
+    ///
+    /// Values that match keys already existing on the session will be overwritten. Values should
+    /// already be JSON serialized.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use actix_session::Session;
+    /// # use actix_web::test;
+    /// #
+    /// let mut req = test::TestRequest::default().to_srv_request();
+    ///
+    /// Session::set_session(
+    ///     vec![("counter".to_string(), serde_json::to_string(&0).unwrap())].into_iter(),
+    ///     &mut req,
+    /// );
+    /// ```
     pub fn set_session(
         data: impl Iterator<Item = (String, String)>,
         req: &mut ServiceRequest,
@@ -258,7 +276,7 @@ mod tests {
         let mut req = test::TestRequest::default().to_srv_request();
 
         Session::set_session(
-            vec![("key".to_string(), "\"value\"".to_string())].into_iter(),
+            vec![("key".to_string(), serde_json::to_string("value").unwrap())].into_iter(),
             &mut req,
         );
         let session = Session::get_session(&mut *req.extensions_mut());
@@ -279,13 +297,13 @@ mod tests {
         let mut req = test::TestRequest::default().to_srv_request();
 
         Session::set_session(
-            vec![("key".to_string(), "\"value\"".to_string())].into_iter(),
+            vec![("key".to_string(), serde_json::to_string(&true).unwrap())].into_iter(),
             &mut req,
         );
 
         let session = req.get_session();
-        let res = session.get::<String>("key").unwrap();
-        assert_eq!(res, Some("value".to_string()));
+        let res = session.get("key").unwrap();
+        assert_eq!(res, Some(true));
     }
 
     #[test]
@@ -293,13 +311,13 @@ mod tests {
         let mut req = test::TestRequest::default().to_srv_request();
 
         Session::set_session(
-            vec![("key".to_string(), "\"value\"".to_string())].into_iter(),
+            vec![("key".to_string(), serde_json::to_string(&10).unwrap())].into_iter(),
             &mut req,
         );
 
         let session = req.head_mut().get_session();
-        let res = session.get::<String>("key").unwrap();
-        assert_eq!(res, Some("value".to_string()));
+        let res = session.get::<u32>("key").unwrap();
+        assert_eq!(res, Some(10));
     }
 
     #[test]
