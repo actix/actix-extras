@@ -3,6 +3,7 @@ members = [
   "actix-cors",
   "actix-identity",
   "actix-protobuf",
+  "actix-protobuf/examples/prost-example",
   "actix-redis",
   "actix-session",
   "actix-web-httpauth",
