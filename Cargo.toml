@@ -8,4 +8,6 @@ members = [
   "actix-redis/examples/basic",
   "actix-session",
   "actix-web-httpauth",
+  "actix-web-httpauth/examples/middleware",
+  "actix-web-httpauth/examples/middleware-closure",
 ]

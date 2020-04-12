@@ -1,0 +1,12 @@
+[package]
+name = "actix-web-httpauth-middleware-example"
+version = "0.4.1"
+authors = ["Nikolay Kim <fafhrd91@gmail.com>"]
+description = "Middleware example for actix-web-httpauth"
+license = "MIT/Apache-2.0"
+edition = "2018"
+
+[dependencies]
+actix-rt = "1.0"
+actix-web = { version = "^2.0", default_features = false }
+actix-web-httpauth = { path = "../.." }
