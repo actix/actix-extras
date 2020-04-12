@@ -4,6 +4,8 @@ members = [
   "actix-identity",
   "actix-protobuf",
   "actix-redis",
+  "actix-redis/examples/authentication",
+  "actix-redis/examples/basic",
   "actix-session",
   "actix-web-httpauth",
 ]

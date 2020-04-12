@@ -1,0 +1,14 @@
+[package]
+name = "actix-redis-basic-example"
+version = "0.9.0-alpha.1"
+authors = ["Nikolay Kim <fafhrd91@gmail.com>"]
+description = "Basic example for actix-redis"
+license = "MIT/Apache-2.0"
+edition = "2018"
+
+[dependencies]
+actix-redis = { path = "../.." }
+actix-rt = "1.0.0"
+actix-session = "0.4.0-alpha.1"
+actix-web = "3.0.0-alpha.1"
+env_logger = "0.7"
