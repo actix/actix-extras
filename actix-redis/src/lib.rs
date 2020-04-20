@@ -9,13 +9,13 @@
 //!
 #[macro_use]
 extern crate log;
-#[macro_use]
 extern crate redis_async;
 #[macro_use]
 extern crate derive_more;
 
 mod redis;
 pub use redis::{Command, RedisActor};
+pub mod command;
 
 #[cfg(feature = "web")]
 mod session;

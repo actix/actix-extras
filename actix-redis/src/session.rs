@@ -12,10 +12,10 @@ use actix_web::http::header::{self, HeaderValue};
 use actix_web::{error, Error, HttpMessage};
 use futures::future::{ok, Future, Ready};
 use rand::{distributions::Alphanumeric, rngs::OsRng, Rng};
-use redis_async::resp::RespValue;
 use time::{self, Duration, OffsetDateTime};
 
-use crate::redis::{Command, RedisActor};
+use crate::command::{del, get, set};
+use crate::redis::RedisActor;
 
 /// Use redis as session storage.
 ///
@@ -34,7 +34,7 @@ impl RedisSession {
         RedisSession(Rc::new(Inner {
             key: Key::from_master(key),
             cache_keygen: Box::new(|key: &str| format!("session:{}", &key)),
-            ttl: "7200".to_owned(),
+            ttl: 7200,
             addr: RedisActor::start(addr),
             name: "actix-session".to_owned(),
             path: "/".to_owned(),
@@ -47,8 +47,8 @@ impl RedisSession {
     }
 
     /// Set time to live in seconds for session value
-    pub fn ttl(mut self, ttl: u32) -> Self {
-        Rc::get_mut(&mut self.0).unwrap().ttl = format!("{}", ttl);
+    pub fn ttl(mut self, ttl: i64) -> Self {
+        Rc::get_mut(&mut self.0).unwrap().ttl = ttl;
         self
     }
 
@@ -204,7 +204,7 @@ where
 struct Inner {
     key: Key,
     cache_keygen: Box<dyn Fn(&str) -> String>,
-    ttl: String,
+    ttl: i64,
     addr: Addr<RedisActor>,
     name: String,
     path: String,
@@ -228,31 +228,14 @@ impl Inner {
                     if let Some(cookie) = jar.signed(&self.key).get(&self.name) {
                         let value = cookie.value().to_owned();
                         let cachekey = (self.cache_keygen)(&cookie.value());
-                        return match self
-                            .addr
-                            .send(Command(resp_array!["GET", cachekey]))
-                            .await
-                        {
+                        return match self.addr.send(get(cachekey)).await {
                             Err(e) => Err(Error::from(e)),
                             Ok(res) => match res {
                                 Ok(val) => {
-                                    match val {
-                                        RespValue::Error(err) => {
-                                            return Err(
-                                                error::ErrorInternalServerError(err),
-                                            );
+                                    if let Some(val) = val {
+                                        if let Ok(val) = serde_json::from_slice(&val) {
+                                            return Ok(Some((val, value)));
                                         }
-                                        RespValue::SimpleString(s) => {
-                                            if let Ok(val) = serde_json::from_str(&s) {
-                                                return Ok(Some((val, value)));
-                                            }
-                                        }
-                                        RespValue::BulkString(s) => {
-                                            if let Ok(val) = serde_json::from_slice(&s) {
-                                                return Ok(Some((val, value)));
-                                            }
-                                        }
-                                        _ => (),
                                     }
                                     Ok(None)
                                 }
@@ -312,28 +295,21 @@ impl Inner {
         let state: HashMap<_, _> = state.collect();
         match serde_json::to_string(&state) {
             Err(e) => Err(e.into()),
-            Ok(body) => {
-                match self
-                    .addr
-                    .send(Command(resp_array!["SET", cachekey, body, "EX", &self.ttl]))
-                    .await
-                {
-                    Err(e) => Err(Error::from(e)),
-                    Ok(redis_result) => match redis_result {
-                        Ok(_) => {
-                            if let Some(jar) = jar {
-                                for cookie in jar.delta() {
-                                    let val =
-                                        HeaderValue::from_str(&cookie.to_string())?;
-                                    res.headers_mut().append(header::SET_COOKIE, val);
-                                }
+            Ok(body) => match self.addr.send(set(cachekey, body).ex(self.ttl)).await {
+                Err(e) => Err(Error::from(e)),
+                Ok(redis_result) => match redis_result {
+                    Ok(_) => {
+                        if let Some(jar) = jar {
+                            for cookie in jar.delta() {
+                                let val = HeaderValue::from_str(&cookie.to_string())?;
+                                res.headers_mut().append(header::SET_COOKIE, val);
                             }
-                            Ok(res)
                         }
-                        Err(err) => Err(error::ErrorInternalServerError(err)),
-                    },
-                }
-            }
+                        Ok(res)
+                    }
+                    Err(err) => Err(error::ErrorInternalServerError(err)),
+                },
+            },
         }
     }
 
@@ -341,17 +317,14 @@ impl Inner {
     async fn clear_cache(&self, key: String) -> Result<(), Error> {
         let cachekey = (self.cache_keygen)(&key);
 
-        match self.addr.send(Command(resp_array!["DEL", cachekey])).await {
+        match self.addr.send(del(cachekey)).await {
             Err(e) => Err(Error::from(e)),
-            Ok(res) => {
-                match res {
-                    // redis responds with number of deleted records
-                    Ok(RespValue::Integer(x)) if x > 0 => Ok(()),
-                    _ => Err(error::ErrorInternalServerError(
-                        "failed to remove session from cache",
-                    )),
-                }
-            }
+            Ok(res) => match res {
+                Ok(x) if x > 0 => Ok(()),
+                _ => Err(error::ErrorInternalServerError(
+                    "failed to remove session from cache",
+                )),
+            },
         }
     }
 

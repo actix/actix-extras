@@ -13,6 +13,7 @@ use tokio::io::{split, WriteHalf};
 use tokio::net::TcpStream;
 use tokio_util::codec::FramedRead;
 
+use crate::command::RedisCommand;
 use crate::Error;
 
 /// Command for send data to Redis
@@ -141,6 +142,34 @@ impl Handler<Command> for RedisActor {
 
         Box::pin(rx.map(|res| match res {
             Ok(res) => res,
+            Err(_) => Err(Error::Disconnected),
+        }))
+    }
+}
+
+impl<T> Handler<T> for RedisActor
+where
+    T: RedisCommand + Message<Result = Result<<T as RedisCommand>::Output, Error>>,
+    T::Output: Send + 'static,
+{
+    type Result = ResponseFuture<Result<T::Output, Error>>;
+
+    fn handle(&mut self, msg: T, _: &mut Self::Context) -> Self::Result {
+        let (tx, rx) = oneshot::channel();
+        if let Some(ref mut cell) = self.cell {
+            self.queue.push_back(tx);
+            let msg = msg.serialize();
+            cell.write(msg);
+        } else {
+            let _ = tx.send(Err(Error::NotConnected));
+        }
+
+        Box::pin(rx.map(|res| match res {
+            Ok(Ok(resp)) => match T::deserialize(resp) {
+                Ok(output) => Ok(output),
+                Err(e) => Err(Error::Redis(RespError::RESP(e.message, e.resp))),
+            },
+            Ok(Err(e)) => Err(e),
             Err(_) => Err(Error::Disconnected),
         }))
     }
