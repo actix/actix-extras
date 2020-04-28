@@ -1,5 +1,5 @@
-use super::{DeserializeError, RedisCommand};
-use crate::Error;
+use super::{DeserializeError, RedisClusterCommand, RedisCommand};
+use crate::{slot::slot, Error};
 
 use actix::Message;
 use redis_async::{resp::RespValue, resp_array};
@@ -32,6 +32,12 @@ impl RedisCommand for Get {
             BulkString(s) => Ok(Some(s)),
             resp => Err(DeserializeError::new("invalid response to GET", resp)),
         }
+    }
+}
+
+impl RedisClusterCommand for Get {
+    fn slot(&self) -> Result<u16, Vec<u16>> {
+        Ok(slot(&self.key))
     }
 }
 

@@ -13,9 +13,13 @@ extern crate redis_async;
 #[macro_use]
 extern crate derive_more;
 
-mod redis;
-pub use redis::{Command, RedisActor};
+mod cluster;
 pub mod command;
+mod redis;
+pub mod slot;
+
+pub use cluster::RedisClusterActor;
+pub use redis::{Command, RedisActor};
 
 #[cfg(feature = "web")]
 mod session;
@@ -29,6 +33,8 @@ pub use session::RedisSession;
 pub enum Error {
     #[display(fmt = "Redis error {}", _0)]
     Redis(redis_async::error::Error),
+    #[display(fmt = "Redis Cluster: Different slots")]
+    DifferentSlots(Vec<u16>),
     /// Receiving message during reconnecting
     #[display(fmt = "Redis: Not connected")]
     NotConnected,
@@ -39,6 +45,23 @@ pub enum Error {
 
 #[cfg(feature = "web")]
 impl actix_web::ResponseError for Error {}
+
+/// The range of the slots served by a node
+#[derive(Clone, Debug)]
+pub struct Slots {
+    pub start: u16,
+    pub end: u16,
+    /// IP address, port, id of nodes serving the slots.
+    /// The first entry corresponds to the master node.
+    pub nodes: Vec<(String, i64, Option<String>)>,
+}
+
+impl Slots {
+    // Address of the master node in `addr:port` format.
+    fn master_addr(&self) -> String {
+        format!("{}:{}", self.nodes[0].0, self.nodes[0].1)
+    }
+}
 
 // re-export
 pub use redis_async::error::Error as RespError;

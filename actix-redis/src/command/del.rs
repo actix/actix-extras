@@ -1,5 +1,5 @@
-use super::{DeserializeError, RedisCommand};
-use crate::Error;
+use super::{DeserializeError, RedisClusterCommand, RedisCommand};
+use crate::{slot::slot_keys, Error};
 
 use actix::Message;
 use redis_async::resp::RespValue;
@@ -42,6 +42,12 @@ impl RedisCommand for Del {
             Integer(num) => Ok(num),
             resp => Err(DeserializeError::new("invalid response to DEL", resp)),
         }
+    }
+}
+
+impl RedisClusterCommand for Del {
+    fn slot(&self) -> Result<u16, Vec<u16>> {
+        slot_keys(self.keys.iter())
     }
 }
 

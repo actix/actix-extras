@@ -1,5 +1,5 @@
-use super::{DeserializeError, RedisCommand};
-use crate::Error;
+use super::{DeserializeError, RedisClusterCommand, RedisCommand};
+use crate::{slot::slot, Error};
 
 use actix::Message;
 use redis_async::resp::RespValue;
@@ -107,6 +107,12 @@ impl RedisCommand for Set {
             SimpleString(s) if s == "OK" => Ok(true),
             resp => Err(DeserializeError::new("invalid response to SET", resp)),
         }
+    }
+}
+
+impl RedisClusterCommand for Set {
+    fn slot(&self) -> Result<u16, Vec<u16>> {
+        Ok(slot(&self.key))
     }
 }
 
