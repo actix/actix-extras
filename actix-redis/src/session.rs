@@ -14,6 +14,7 @@ use futures::future::{ok, Future, Ready};
 use rand::{distributions::Alphanumeric, rngs::OsRng, Rng};
 use time::{self, Duration, OffsetDateTime};
 
+use crate::cluster::RedisClusterActor;
 use crate::command::{del, get, set};
 use crate::redis::RedisActor;
 
@@ -24,13 +25,13 @@ use crate::redis::RedisActor;
 /// session, When this value is changed, all session data is lost.
 ///
 /// Constructor panics if key length is less than 32 bytes.
-pub struct RedisSession(Rc<Inner>);
+pub struct RedisSession<R: Actor = RedisActor>(Rc<Inner<R>>);
 
-impl RedisSession {
+impl RedisSession<RedisActor> {
     /// Create new redis session backend
     ///
     /// * `addr` - address of the redis server
-    pub fn new<S: Into<String>>(addr: S, key: &[u8]) -> RedisSession {
+    pub fn new<S: Into<String>>(addr: S, key: &[u8]) -> Self {
         RedisSession(Rc::new(Inner {
             key: Key::from_master(key),
             cache_keygen: Box::new(|key: &str| format!("session:{}", &key)),
@@ -45,7 +46,30 @@ impl RedisSession {
             http_only: Some(true),
         }))
     }
+}
 
+impl RedisSession<RedisClusterActor> {
+    /// Create new redis session backend with Redis Cluster
+    ///
+    /// * `addr` - address of the redis server
+    pub fn new_cluster<S: Into<String>>(addr: S, key: &[u8]) -> Self {
+        RedisSession(Rc::new(Inner {
+            key: Key::from_master(key),
+            cache_keygen: Box::new(|key: &str| format!("session:{}", &key)),
+            ttl: 7200,
+            addr: RedisClusterActor::start(addr),
+            name: "actix-session".to_owned(),
+            path: "/".to_owned(),
+            domain: None,
+            secure: false,
+            max_age: Some(Duration::days(7)),
+            same_site: None,
+            http_only: Some(true),
+        }))
+    }
+}
+
+impl<R: Actor> RedisSession<R> {
     /// Set time to live in seconds for session value
     pub fn ttl(mut self, ttl: i64) -> Self {
         Rc::get_mut(&mut self.0).unwrap().ttl = ttl;
@@ -103,109 +127,17 @@ impl RedisSession {
     }
 }
 
-impl<S, B> Transform<S> for RedisSession
-where
-    S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error>
-        + 'static,
-    S::Future: 'static,
-    B: 'static,
-{
-    type Request = ServiceRequest;
-    type Response = ServiceResponse<B>;
-    type Error = S::Error;
-    type InitError = ();
-    type Transform = RedisSessionMiddleware<S>;
-    type Future = Ready<Result<Self::Transform, Self::InitError>>;
-
-    fn new_transform(&self, service: S) -> Self::Future {
-        ok(RedisSessionMiddleware {
-            service: Rc::new(RefCell::new(service)),
-            inner: self.0.clone(),
-        })
-    }
-}
-
 /// Cookie session middleware
-pub struct RedisSessionMiddleware<S: 'static> {
+pub struct RedisSessionMiddleware<S: 'static, R: Actor> {
     service: Rc<RefCell<S>>,
-    inner: Rc<Inner>,
+    inner: Rc<Inner<R>>,
 }
 
-impl<S, B> Service for RedisSessionMiddleware<S>
-where
-    S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error>
-        + 'static,
-    S::Future: 'static,
-    B: 'static,
-{
-    type Request = ServiceRequest;
-    type Response = ServiceResponse<B>;
-    type Error = Error;
-    #[allow(clippy::type_complexity)]
-    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>>>>;
-
-    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        self.service.borrow_mut().poll_ready(cx)
-    }
-
-    fn call(&mut self, mut req: ServiceRequest) -> Self::Future {
-        let mut srv = self.service.clone();
-        let inner = self.inner.clone();
-
-        Box::pin(async move {
-            let state = inner.load(&req).await?;
-            let value = if let Some((state, value)) = state {
-                Session::set_session(state.into_iter(), &mut req);
-                Some(value)
-            } else {
-                None
-            };
-
-            let mut res = srv.call(req).await?;
-
-            match Session::get_changes(&mut res) {
-                (SessionStatus::Unchanged, None) => Ok(res),
-                (SessionStatus::Unchanged, Some(state)) => {
-                    if value.is_none() {
-                        // implies the session is new
-                        inner.update(res, state, value).await
-                    } else {
-                        Ok(res)
-                    }
-                }
-                (SessionStatus::Changed, Some(state)) => {
-                    inner.update(res, state, value).await
-                }
-                (SessionStatus::Purged, Some(_)) => {
-                    if let Some(val) = value {
-                        inner.clear_cache(val).await?;
-                        match inner.remove_cookie(&mut res) {
-                            Ok(_) => Ok(res),
-                            Err(_err) => Err(error::ErrorInternalServerError(_err)),
-                        }
-                    } else {
-                        Err(error::ErrorInternalServerError("unexpected"))
-                    }
-                }
-                (SessionStatus::Renewed, Some(state)) => {
-                    if let Some(val) = value {
-                        inner.clear_cache(val).await?;
-                        inner.update(res, state, None).await
-                    } else {
-                        inner.update(res, state, None).await
-                    }
-                }
-                (_, None) => unreachable!(),
-            }
-        })
-    }
-}
-
-struct Inner {
+struct Inner<R: Actor> {
     key: Key,
     cache_keygen: Box<dyn Fn(&str) -> String>,
     ttl: i64,
-    addr: Addr<RedisActor>,
+    addr: Addr<R>,
     name: String,
     path: String,
     domain: Option<String>,
@@ -215,133 +147,256 @@ struct Inner {
     http_only: Option<bool>,
 }
 
-impl Inner {
-    async fn load(
-        &self,
-        req: &ServiceRequest,
-    ) -> Result<Option<(HashMap<String, String>, String)>, Error> {
-        if let Ok(cookies) = req.cookies() {
-            for cookie in cookies.iter() {
-                if cookie.name() == self.name {
+macro_rules! impl_methods {
+    ($R:ty) => {
+        impl<S, B> Transform<S> for RedisSession<$R>
+        where
+            S: Service<
+                    Request = ServiceRequest,
+                    Response = ServiceResponse<B>,
+                    Error = Error,
+                > + 'static,
+            S::Future: 'static,
+            B: 'static,
+        {
+            type Request = ServiceRequest;
+            type Response = ServiceResponse<B>;
+            type Error = S::Error;
+            type InitError = ();
+            type Transform = RedisSessionMiddleware<S, $R>;
+            type Future = Ready<Result<Self::Transform, Self::InitError>>;
+
+            fn new_transform(&self, service: S) -> Self::Future {
+                ok(RedisSessionMiddleware {
+                    service: Rc::new(RefCell::new(service)),
+                    inner: self.0.clone(),
+                })
+            }
+        }
+
+        impl<S, B> Service for RedisSessionMiddleware<S, $R>
+        where
+            S: Service<
+                    Request = ServiceRequest,
+                    Response = ServiceResponse<B>,
+                    Error = Error,
+                > + 'static,
+            S::Future: 'static,
+            B: 'static,
+        {
+            type Request = ServiceRequest;
+            type Response = ServiceResponse<B>;
+            type Error = Error;
+            #[allow(clippy::type_complexity)]
+            type Future =
+                Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>>>>;
+
+            fn poll_ready(
+                &mut self,
+                cx: &mut Context<'_>,
+            ) -> Poll<Result<(), Self::Error>> {
+                self.service.borrow_mut().poll_ready(cx)
+            }
+
+            fn call(&mut self, mut req: ServiceRequest) -> Self::Future {
+                let mut srv = self.service.clone();
+                let inner = self.inner.clone();
+
+                Box::pin(async move {
+                    let state = inner.load(&req).await?;
+                    let value = if let Some((state, value)) = state {
+                        Session::set_session(state.into_iter(), &mut req);
+                        Some(value)
+                    } else {
+                        None
+                    };
+
+                    let mut res = srv.call(req).await?;
+
+                    match Session::get_changes(&mut res) {
+                        (SessionStatus::Unchanged, None) => Ok(res),
+                        (SessionStatus::Unchanged, Some(state)) => {
+                            if value.is_none() {
+                                // implies the session is new
+                                inner.update(res, state, value).await
+                            } else {
+                                Ok(res)
+                            }
+                        }
+                        (SessionStatus::Changed, Some(state)) => {
+                            inner.update(res, state, value).await
+                        }
+                        (SessionStatus::Purged, Some(_)) => {
+                            if let Some(val) = value {
+                                inner.clear_cache(val).await?;
+                                match inner.remove_cookie(&mut res) {
+                                    Ok(_) => Ok(res),
+                                    Err(_err) => {
+                                        Err(error::ErrorInternalServerError(_err))
+                                    }
+                                }
+                            } else {
+                                Err(error::ErrorInternalServerError("unexpected"))
+                            }
+                        }
+                        (SessionStatus::Renewed, Some(state)) => {
+                            if let Some(val) = value {
+                                inner.clear_cache(val).await?;
+                                inner.update(res, state, None).await
+                            } else {
+                                inner.update(res, state, None).await
+                            }
+                        }
+                        (_, None) => unreachable!(),
+                    }
+                })
+            }
+        }
+
+        impl Inner<$R> {
+            async fn load(
+                &self,
+                req: &ServiceRequest,
+            ) -> Result<Option<(HashMap<String, String>, String)>, Error> {
+                if let Ok(cookies) = req.cookies() {
+                    for cookie in cookies.iter() {
+                        if cookie.name() == self.name {
+                            let mut jar = CookieJar::new();
+                            jar.add_original(cookie.clone());
+                            if let Some(cookie) = jar.signed(&self.key).get(&self.name) {
+                                let value = cookie.value().to_owned();
+                                let cachekey = (self.cache_keygen)(&cookie.value());
+                                return match self.addr.send(get(cachekey)).await {
+                                    Err(e) => Err(Error::from(e)),
+                                    Ok(res) => match res {
+                                        Ok(val) => {
+                                            if let Some(val) = val {
+                                                if let Ok(val) =
+                                                    serde_json::from_slice(&val)
+                                                {
+                                                    return Ok(Some((val, value)));
+                                                }
+                                            }
+                                            Ok(None)
+                                        }
+                                        Err(err) => {
+                                            Err(error::ErrorInternalServerError(err))
+                                        }
+                                    },
+                                };
+                            } else {
+                                return Ok(None);
+                            }
+                        }
+                    }
+                }
+                Ok(None)
+            }
+
+            async fn update<B>(
+                &self,
+                mut res: ServiceResponse<B>,
+                state: impl Iterator<Item = (String, String)>,
+                value: Option<String>,
+            ) -> Result<ServiceResponse<B>, Error> {
+                let (value, jar) = if let Some(value) = value {
+                    (value, None)
+                } else {
+                    let value: String = iter::repeat(())
+                        .map(|()| OsRng.sample(Alphanumeric))
+                        .take(32)
+                        .collect();
+
+                    // prepare session id cookie
+                    let mut cookie = Cookie::new(self.name.clone(), value.clone());
+                    cookie.set_path(self.path.clone());
+                    cookie.set_secure(self.secure);
+                    cookie.set_http_only(self.http_only.unwrap_or(true));
+
+                    if let Some(ref domain) = self.domain {
+                        cookie.set_domain(domain.clone());
+                    }
+
+                    if let Some(max_age) = self.max_age {
+                        cookie.set_max_age(max_age);
+                    }
+
+                    if let Some(same_site) = self.same_site {
+                        cookie.set_same_site(same_site);
+                    }
+
+                    // set cookie
                     let mut jar = CookieJar::new();
-                    jar.add_original(cookie.clone());
-                    if let Some(cookie) = jar.signed(&self.key).get(&self.name) {
-                        let value = cookie.value().to_owned();
-                        let cachekey = (self.cache_keygen)(&cookie.value());
-                        return match self.addr.send(get(cachekey)).await {
+                    jar.signed(&self.key).add(cookie);
+
+                    (value, Some(jar))
+                };
+
+                let cachekey = (self.cache_keygen)(&value);
+
+                let state: HashMap<_, _> = state.collect();
+                match serde_json::to_string(&state) {
+                    Err(e) => Err(e.into()),
+                    Ok(body) => {
+                        match self.addr.send(set(cachekey, body).ex(self.ttl)).await {
                             Err(e) => Err(Error::from(e)),
-                            Ok(res) => match res {
-                                Ok(val) => {
-                                    if let Some(val) = val {
-                                        if let Ok(val) = serde_json::from_slice(&val) {
-                                            return Ok(Some((val, value)));
+                            Ok(redis_result) => match redis_result {
+                                Ok(_) => {
+                                    if let Some(jar) = jar {
+                                        for cookie in jar.delta() {
+                                            let val = HeaderValue::from_str(
+                                                &cookie.to_string(),
+                                            )?;
+                                            res.headers_mut()
+                                                .append(header::SET_COOKIE, val);
                                         }
                                     }
-                                    Ok(None)
+                                    Ok(res)
                                 }
                                 Err(err) => Err(error::ErrorInternalServerError(err)),
                             },
-                        };
-                    } else {
-                        return Ok(None);
+                        }
                     }
                 }
             }
-        }
-        Ok(None)
-    }
 
-    async fn update<B>(
-        &self,
-        mut res: ServiceResponse<B>,
-        state: impl Iterator<Item = (String, String)>,
-        value: Option<String>,
-    ) -> Result<ServiceResponse<B>, Error> {
-        let (value, jar) = if let Some(value) = value {
-            (value, None)
-        } else {
-            let value: String = iter::repeat(())
-                .map(|()| OsRng.sample(Alphanumeric))
-                .take(32)
-                .collect();
+            /// removes cache entry
+            async fn clear_cache(&self, key: String) -> Result<(), Error> {
+                let cachekey = (self.cache_keygen)(&key);
 
-            // prepare session id cookie
-            let mut cookie = Cookie::new(self.name.clone(), value.clone());
-            cookie.set_path(self.path.clone());
-            cookie.set_secure(self.secure);
-            cookie.set_http_only(self.http_only.unwrap_or(true));
-
-            if let Some(ref domain) = self.domain {
-                cookie.set_domain(domain.clone());
+                match self.addr.send(del(cachekey)).await {
+                    Err(e) => Err(Error::from(e)),
+                    Ok(res) => match res {
+                        Ok(x) if x > 0 => Ok(()),
+                        _ => Err(error::ErrorInternalServerError(
+                            "failed to remove session from cache",
+                        )),
+                    },
+                }
             }
 
-            if let Some(max_age) = self.max_age {
-                cookie.set_max_age(max_age);
+            /// invalidates session cookie
+            fn remove_cookie<B>(
+                &self,
+                res: &mut ServiceResponse<B>,
+            ) -> Result<(), Error> {
+                let mut cookie = Cookie::named(self.name.clone());
+                cookie.set_value("");
+                cookie.set_max_age(Duration::zero());
+                cookie.set_expires(OffsetDateTime::now() - Duration::days(365));
+
+                let val = HeaderValue::from_str(&cookie.to_string())
+                    .map_err(error::ErrorInternalServerError)?;
+                res.headers_mut().append(header::SET_COOKIE, val);
+
+                Ok(())
             }
-
-            if let Some(same_site) = self.same_site {
-                cookie.set_same_site(same_site);
-            }
-
-            // set cookie
-            let mut jar = CookieJar::new();
-            jar.signed(&self.key).add(cookie);
-
-            (value, Some(jar))
-        };
-
-        let cachekey = (self.cache_keygen)(&value);
-
-        let state: HashMap<_, _> = state.collect();
-        match serde_json::to_string(&state) {
-            Err(e) => Err(e.into()),
-            Ok(body) => match self.addr.send(set(cachekey, body).ex(self.ttl)).await {
-                Err(e) => Err(Error::from(e)),
-                Ok(redis_result) => match redis_result {
-                    Ok(_) => {
-                        if let Some(jar) = jar {
-                            for cookie in jar.delta() {
-                                let val = HeaderValue::from_str(&cookie.to_string())?;
-                                res.headers_mut().append(header::SET_COOKIE, val);
-                            }
-                        }
-                        Ok(res)
-                    }
-                    Err(err) => Err(error::ErrorInternalServerError(err)),
-                },
-            },
         }
-    }
-
-    /// removes cache entry
-    async fn clear_cache(&self, key: String) -> Result<(), Error> {
-        let cachekey = (self.cache_keygen)(&key);
-
-        match self.addr.send(del(cachekey)).await {
-            Err(e) => Err(Error::from(e)),
-            Ok(res) => match res {
-                Ok(x) if x > 0 => Ok(()),
-                _ => Err(error::ErrorInternalServerError(
-                    "failed to remove session from cache",
-                )),
-            },
-        }
-    }
-
-    /// invalidates session cookie
-    fn remove_cookie<B>(&self, res: &mut ServiceResponse<B>) -> Result<(), Error> {
-        let mut cookie = Cookie::named(self.name.clone());
-        cookie.set_value("");
-        cookie.set_max_age(Duration::zero());
-        cookie.set_expires(OffsetDateTime::now() - Duration::days(365));
-
-        let val = HeaderValue::from_str(&cookie.to_string())
-            .map_err(error::ErrorInternalServerError)?;
-        res.headers_mut().append(header::SET_COOKIE, val);
-
-        Ok(())
-    }
+    };
 }
+
+impl_methods!(RedisActor);
+impl_methods!(RedisClusterActor);
 
 #[cfg(test)]
 mod test {
@@ -418,6 +473,39 @@ mod test {
 
     #[actix_rt::test]
     async fn test_workflow() {
+        let srv = test::start(|| {
+            App::new()
+                .wrap(
+                    RedisSession::new("127.0.0.1:6379", &[0; 32])
+                        .cookie_name("test-session"),
+                )
+                .wrap(middleware::Logger::default())
+                .service(resource("/").route(get().to(index)))
+                .service(resource("/do_something").route(post().to(do_something)))
+                .service(resource("/login").route(post().to(login)))
+                .service(resource("/logout").route(post().to(logout)))
+        });
+        test_workflow_helper(srv).await;
+    }
+
+    #[actix_rt::test]
+    async fn test_workflow_cluster() {
+        let srv_cluster = test::start(|| {
+            App::new()
+                .wrap(
+                    RedisSession::new_cluster("127.0.0.1:7000", &[0; 32])
+                        .cookie_name("test-session"),
+                )
+                .wrap(middleware::Logger::default())
+                .service(resource("/").route(get().to(index)))
+                .service(resource("/do_something").route(post().to(do_something)))
+                .service(resource("/login").route(post().to(login)))
+                .service(resource("/logout").route(post().to(logout)))
+        });
+        test_workflow_helper(srv_cluster).await;
+    }
+
+    async fn test_workflow_helper(srv: test::TestServer) {
         // Step 1:  GET index
         //   - set-cookie actix-session will be in response (session cookie #1)
         //   - response should be: {"counter": 0, "user_id": None}
@@ -447,19 +535,6 @@ mod test {
         // Step 10: GET index, including session cookie #2 in request
         //   - set-cookie actix-session will be in response (session cookie #3)
         //   - response should be: {"counter": 0, "user_id": None}
-
-        let srv = test::start(|| {
-            App::new()
-                .wrap(
-                    RedisSession::new("127.0.0.1:6379", &[0; 32])
-                        .cookie_name("test-session"),
-                )
-                .wrap(middleware::Logger::default())
-                .service(resource("/").route(get().to(index)))
-                .service(resource("/do_something").route(post().to(do_something)))
-                .service(resource("/login").route(post().to(login)))
-                .service(resource("/logout").route(post().to(logout)))
-        });
 
         // Step 1:  GET index
         //   - set-cookie actix-session will be in response (session cookie #1)
