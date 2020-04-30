@@ -67,12 +67,39 @@ jobs:
           command: check
           args: --all --bins --examples --tests
 
+      - name: Launch docker-compose
+        run: |
+          docker-compose up -d
+          host="$(
+            docker ps -q -f name=redis0 |
+            xargs docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}'
+          )"
+          while !  printf "cluster info\\n quit\n" | curl -v telnet://${host}:16379 | grep cluster_state:ok; do
+            sleep 0.3
+          done
+
+      - name: Override /etc/resolv.conf
+        run: |
+          consul_ip="$(
+            docker ps -q -f name=consul |
+            xargs docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}'
+          )"
+          sudo mv /etc/resolv.conf /etc/resolv.conf.bak
+          echo "nameserver ${consul_ip}" | sudo tee /etc/resolv.conf
+          while test -z "$(dig +short redis.service.dc1.consul)"; do
+            sleep 0.3
+          done
+
       - name: tests
         uses: actions-rs/cargo@v1
         timeout-minutes: 40
         with:
           command: test
           args: --all --all-features --no-fail-fast -- --nocapture
+
+      - name: Revert /etc/resolv.conf
+        run: sudo mv -f /etc/resolv.conf.bak /etc/resolv.conf
+        if: always()
 
       - name: Generate coverage file
         if: matrix.version == 'stable' && (github.ref == 'master' || github.event_name == 'pull_request')

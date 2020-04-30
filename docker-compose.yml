@@ -1,0 +1,17 @@
+version: '2'
+services:
+  redis0:
+    image: idein/redis-cluster-down
+  redis1:
+    image: idein/redis-cluster-down
+  redis2:
+    image: idein/redis-cluster-down
+  redis3:
+    image: idein/redis-cluster-down
+  redis4:
+    image: idein/redis-cluster-down
+  redis5:
+    image: idein/redis-cluster-down
+  consul:
+    image: idein/redis-cluster-down
+    command: consul

@@ -40,6 +40,29 @@ jobs:
           profile: minimal
           override: true
 
+      - name: Launch docker-compose
+        run: |
+          docker-compose up -d
+          host="$(
+            docker ps -q -f name=redis0 |
+            xargs docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}'
+          )"
+          while !  printf "cluster info\\n quit\n" | curl -v telnet://${host}:16379 | grep cluster_state:ok; do
+            sleep 0.3
+          done
+
+      - name: Override /etc/resolv.conf
+        run: |
+          consul_ip="$(
+            docker ps -q -f name=consul |
+            xargs docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}'
+          )"
+          sudo mv /etc/resolv.conf /etc/resolv.conf.bak
+          echo "nameserver ${consul_ip}" | sudo tee /etc/resolv.conf
+          while test -z "$(dig +short redis.service.dc1.consul)"; do
+            sleep 0.3
+          done
+
       - name: tests (1.39.0)
         if: matrix.version == '1.39.0'
         uses: actions-rs/cargo@v1
@@ -51,3 +74,7 @@ jobs:
                 --package=actix-redis
                 --package=actix-web-httpauth
                 --all-features --no-fail-fast -- --nocapture
+
+      - name: Revert /etc/resolv.conf
+        run: sudo mv -f /etc/resolv.conf.bak /etc/resolv.conf
+        if: always()
