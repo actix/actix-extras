@@ -3,13 +3,17 @@
 mod asking;
 mod cluster_slots;
 mod del;
+mod echo;
 mod get;
+mod ping;
 mod set;
 
 pub use asking::{asking, Asking};
 pub use cluster_slots::{cluster_slots, ClusterSlots};
 pub use del::{del, del_multiple, Del};
+pub use echo::{echo, Echo};
 pub use get::{get, Get};
+pub use ping::{ping, ping_message, Ping};
 pub use set::{set, Set};
 
 use redis_async::resp::RespValue;
