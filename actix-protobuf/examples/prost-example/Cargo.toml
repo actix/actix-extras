@@ -1,6 +1,6 @@
 [package]
 name = "prost-example"
-version = "0.5.1"
+version = "0.6.0-alpha.0"
 edition = "2018"
 authors = ["kingxsp <jin.hb.zh@outlook.com>", "Yuki Okushi <huyuumi.dev@gmail.com>"]
 
@@ -8,9 +8,9 @@ authors = ["kingxsp <jin.hb.zh@outlook.com>", "Yuki Okushi <huyuumi.dev@gmail.co
 bytes = "0.5"
 env_logger = "*"
 
-prost = "0.6.0"
-prost-derive = "0.6.0"
+prost = "0.6.1"
+prost-derive = "0.6.1"
 
-actix-rt = "1"
-actix-web = "2"
+actix-rt = "1.1.1"
+actix-web = "3.0.0-alpha.1"
 actix-protobuf = { path="../../" }
