@@ -360,7 +360,7 @@ impl Inner {
         let mut cookie = Cookie::named(self.name.clone());
         cookie.set_value("");
         cookie.set_max_age(Duration::zero());
-        cookie.set_expires(OffsetDateTime::now() - Duration::days(365));
+        cookie.set_expires(OffsetDateTime::now_utc() - Duration::days(365));
 
         let val = HeaderValue::from_str(&cookie.to_string())
             .map_err(error::ErrorInternalServerError)?;
@@ -638,7 +638,7 @@ mod test {
             .find(|c| c.name() == "test-session")
             .unwrap();
         assert_ne!(
-            OffsetDateTime::now().year(),
+            OffsetDateTime::now_utc().year(),
             cookie_4.expires().map(|t| t.year()).unwrap()
         );
 
