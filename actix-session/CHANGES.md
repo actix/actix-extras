@@ -1,5 +1,9 @@
 # Changes
 
+## unreleased
+
+* Minimum supported Rust version(MSRV) is now 1.40.0.
+
 ## [0.4.0-alpha.1] - 2020-03-14
 
 * Update the `time` dependency to 0.2.7

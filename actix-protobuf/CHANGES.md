@@ -1,5 +1,9 @@
 # Changes
 
+## unreleased (for alpha version)
+
+* Minimum supported Rust version(MSRV) is now 1.40.0.
+
 ## 0.5.1 (2019-02-17)
 
 * Move repository to actix-extras

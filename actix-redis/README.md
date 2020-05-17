@@ -13,7 +13,7 @@
 * [API Documentation](https://actix.rs/actix-extras/actix_redis/)
 * [Chat on gitter](https://gitter.im/actix/actix)
 * Cargo package: [actix-redis](https://crates.io/crates/actix-redis)
-* Minimum supported Rust version: 1.39 or later
+* Minimum supported Rust version: 1.40 or later
 
 ## Redis session backend
 

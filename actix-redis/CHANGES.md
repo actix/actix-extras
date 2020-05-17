@@ -11,6 +11,8 @@
 
 * Update `tokio-util` to 0.3
 
+* Minimum supported Rust version(MSRV) is now 1.40.0.
+
 ## [0.9.0-alpha.1]
 
 * Update `actix` to 0.10.0-alpha.2
