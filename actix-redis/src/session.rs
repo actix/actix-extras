@@ -20,7 +20,7 @@ use crate::redis::{Command, RedisActor};
 /// Use redis as session storage.
 ///
 /// You need to pass an address of the redis server and random value to the
-/// constructor of `RedisSessionBackend`. This is private key for cookie
+/// constructor of `RedisSession`. This is private key for cookie
 /// session, When this value is changed, all session data is lost.
 ///
 /// Constructor panics if key length is less than 32 bytes.
