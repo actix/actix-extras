@@ -2,10 +2,14 @@
 
 ## [Unreleased]
 
-* Added `cookie_http_only` functionality to RedisSession builder, setting this
+* Add `cookie_http_only` functionality to RedisSession builder, setting this
   to false allows JavaScript to access cookies. Defaults to true.
 
-* Changed type of parameter of ttl method to u32.
+* Change type of parameter of ttl method to u32.
+
+* Update `actix` to 0.10.0-alpha.3
+
+* Update `tokio-util` to 0.3
 
 ## [0.9.0-alpha.1]
 

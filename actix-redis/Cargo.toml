@@ -24,7 +24,7 @@ default = ["web"]
 web = ["actix-http/actors", "actix-service", "actix-web", "actix-session/cookie-session", "rand", "serde", "serde_json"]
 
 [dependencies]
-actix = "0.10.0-alpha.2"
+actix = "0.10.0-alpha.3"
 actix-utils = "1.0.3"
 
 log = "0.4.6"
@@ -35,11 +35,11 @@ redis-async = "0.6.1"
 actix-rt = "1.0.0"
 time = "0.2.9"
 tokio = "0.2.6"
-tokio-util = "0.2.0"
+tokio-util = "0.3.0"
 
 # actix-session
-actix-web = { version = "3.0.0-alpha.1", optional = true }
-actix-http = { version = "2.0.0-alpha.2", optional = true }
+actix-web = { version = "3.0.0-alpha.2", optional = true }
+actix-http = { version = "2.0.0-alpha.3", optional = true }
 actix-service = { version = "1.0.0", optional = true }
 actix-session = { version = "0.4.0-alpha.1", optional = true }
 rand = { version = "0.7.0", optional = true }

@@ -27,7 +27,7 @@ impl Message for Command {
 pub struct RedisActor {
     addr: String,
     backoff: ExponentialBackoff,
-    cell: Option<actix::io::FramedWrite<WriteHalf<TcpStream>, RespCodec>>,
+    cell: Option<actix::io::FramedWrite<RespValue, WriteHalf<TcpStream>, RespCodec>>,
     queue: VecDeque<oneshot::Sender<Result<RespValue, Error>>>,
 }
 
