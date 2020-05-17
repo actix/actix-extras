@@ -1,5 +1,9 @@
 # Changes
 
+## [0.8.2] 2020-05-17
+
+* Pin `redis-async` version to use `tokio-util` 0.2
+
 ## [0.8.1] 2020-02-18
 
 * Move `env_logger` dependency to dev-dependencies and update to 0.7

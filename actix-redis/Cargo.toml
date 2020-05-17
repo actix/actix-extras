@@ -1,6 +1,6 @@
 [package]
 name = "actix-redis"
-version = "0.8.1"
+version = "0.8.2"
 authors = ["Nikolay Kim <fafhrd91@gmail.com>"]
 description = "Redis integration for actix framework"
 license = "MIT/Apache-2.0"
@@ -31,7 +31,7 @@ log = "0.4.6"
 backoff = "0.1.5"
 derive_more = "0.99.2"
 futures = "0.3.1"
-redis-async = "0.6.1"
+redis-async = "=0.6.2"
 actix-rt = "1.0.0"
 time = "0.1.42"
 tokio = "0.2.6"
