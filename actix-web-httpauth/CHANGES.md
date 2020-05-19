@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
   - Update the `base64` dependency to 0.12
+  - AuthenticationError's status code is preserved when converting to a ResponseError
 
 ## [0.4.1] - 2020-02-19
   - Move repository to actix-extras
