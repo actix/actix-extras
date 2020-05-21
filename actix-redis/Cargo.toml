@@ -30,7 +30,7 @@ actix-utils = "1.0.3"
 log = "0.4.6"
 backoff = "0.1.5"
 derive_more = "0.99.2"
-futures = "0.3.1"
+futures-util = { version = "0.3.5", default-features = false }
 redis-async = "0.6.1"
 actix-rt = "1.0.0"
 time = "0.2.9"

@@ -1,5 +1,9 @@
 # Changes
 
+## unreleased
+
+* Minimize `futures` dependency
+
 ## [0.9.0-alpha.2]
 
 * Add `cookie_http_only` functionality to RedisSession builder, setting this
