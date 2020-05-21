@@ -2,7 +2,7 @@
 
 use actix_web::dev::ServiceRequest;
 use actix_web::Error;
-use futures::future::Future;
+use std::future::Future;
 
 pub mod basic;
 pub mod bearer;

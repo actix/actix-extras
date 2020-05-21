@@ -6,7 +6,7 @@ use std::default::Default;
 use actix_web::dev::{Payload, ServiceRequest};
 use actix_web::http::header::Header;
 use actix_web::{FromRequest, HttpRequest};
-use futures::future;
+use futures_util::future::{ready, Ready};
 
 use super::config::AuthExtractorConfig;
 use super::errors::AuthenticationError;
@@ -104,14 +104,14 @@ impl BearerAuth {
 
 impl FromRequest for BearerAuth {
     type Config = Config;
-    type Future = future::Ready<Result<Self, Self::Error>>;
+    type Future = Ready<Result<Self, Self::Error>>;
     type Error = AuthenticationError<bearer::Bearer>;
 
     fn from_request(
         req: &HttpRequest,
         _payload: &mut Payload,
     ) -> <Self as FromRequest>::Future {
-        future::ready(
+        ready(
             authorization::Authorization::<authorization::Bearer>::parse(req)
                 .map(|auth| BearerAuth(auth.into_scheme()))
                 .map_err(|_| {
@@ -127,11 +127,11 @@ impl FromRequest for BearerAuth {
 }
 
 impl AuthExtractor for BearerAuth {
-    type Future = future::Ready<Result<Self, Self::Error>>;
+    type Future = Ready<Result<Self, Self::Error>>;
     type Error = AuthenticationError<bearer::Bearer>;
 
     fn from_service_request(req: &ServiceRequest) -> Self::Future {
-        future::ready(
+        ready(
             authorization::Authorization::<authorization::Bearer>::parse(req)
                 .map(|auth| BearerAuth(auth.into_scheme()))
                 .map_err(|_| {
