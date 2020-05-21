@@ -5,7 +5,7 @@ use std::borrow::Cow;
 use actix_web::dev::{Payload, ServiceRequest};
 use actix_web::http::header::Header;
 use actix_web::{FromRequest, HttpRequest};
-use futures::future;
+use futures_util::future::{ready, Ready};
 
 use super::config::AuthExtractorConfig;
 use super::errors::AuthenticationError;
@@ -104,7 +104,7 @@ impl BasicAuth {
 }
 
 impl FromRequest for BasicAuth {
-    type Future = future::Ready<Result<Self, Self::Error>>;
+    type Future = Ready<Result<Self, Self::Error>>;
     type Config = Config;
     type Error = AuthenticationError<Challenge>;
 
@@ -112,7 +112,7 @@ impl FromRequest for BasicAuth {
         req: &HttpRequest,
         _: &mut Payload,
     ) -> <Self as FromRequest>::Future {
-        future::ready(
+        ready(
             Authorization::<Basic>::parse(req)
                 .map(|auth| BasicAuth(auth.into_scheme()))
                 .map_err(|_| {
@@ -131,10 +131,10 @@ impl FromRequest for BasicAuth {
 
 impl AuthExtractor for BasicAuth {
     type Error = AuthenticationError<Challenge>;
-    type Future = future::Ready<Result<Self, Self::Error>>;
+    type Future = Ready<Result<Self, Self::Error>>;
 
     fn from_service_request(req: &ServiceRequest) -> Self::Future {
-        future::ready(
+        ready(
             Authorization::<Basic>::parse(req)
                 .map(|auth| BasicAuth(auth.into_scheme()))
                 .map_err(|_| {
