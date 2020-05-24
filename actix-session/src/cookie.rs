@@ -254,7 +254,10 @@ impl CookieSession {
         self
     }
 
-    /// Controls if the session cookie is sent for all sessions, or only sessions with data. Default is `false`.
+    /// When true, prevents adding session cookies to responses until
+    /// the session contains data. Default is `false`.
+    /// 
+    /// Useful when trying to comply with laws that require consent for setting cookies.
     pub fn lazy(mut self, value: bool) -> CookieSession {
         Rc::get_mut(&mut self.0).unwrap().lazy = value;
         self
@@ -448,7 +451,7 @@ mod tests {
                     let _ = ses.set("counter", 100);
                     "counting"
                 }))
-                .service(web::resource("/").to(|ses: Session| async move {
+                .service(web::resource("/").to(|_ses: Session| async move {
                     "test"
                 })),
         )
