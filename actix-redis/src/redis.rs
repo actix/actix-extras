@@ -6,7 +6,7 @@ use actix::prelude::*;
 use actix_utils::oneshot;
 use backoff::backoff::Backoff;
 use backoff::ExponentialBackoff;
-use futures::FutureExt;
+use futures_util::FutureExt;
 use redis_async::error::Error as RespError;
 use redis_async::resp::{RespCodec, RespValue};
 use tokio::io::{split, WriteHalf};
@@ -27,7 +27,7 @@ impl Message for Command {
 pub struct RedisActor {
     addr: String,
     backoff: ExponentialBackoff,
-    cell: Option<actix::io::FramedWrite<WriteHalf<TcpStream>, RespCodec>>,
+    cell: Option<actix::io::FramedWrite<RespValue, WriteHalf<TcpStream>, RespCodec>>,
     queue: VecDeque<oneshot::Sender<Result<RespValue, Error>>>,
 }
 

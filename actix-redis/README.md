@@ -13,14 +13,14 @@
 * [API Documentation](https://actix.rs/actix-extras/actix_redis/)
 * [Chat on gitter](https://gitter.im/actix/actix)
 * Cargo package: [actix-redis](https://crates.io/crates/actix-redis)
-* Minimum supported Rust version: 1.39 or later
+* Minimum supported Rust version: 1.40 or later
 
 ## Redis session backend
 
 Use redis as session storage.
 
 You need to pass an address of the redis server and random value to the
-constructor of `RedisSessionBackend`. This is private key for cookie session,
+constructor of `RedisSession`. This is private key for cookie session,
 When this value is changed, all session data is lost.
 
 Note that whatever you write into your session is visible by the user (but not modifiable).
@@ -30,7 +30,7 @@ Constructor panics if key length is less than 32 bytes.
 ```rust
 use actix_web::{App, HttpServer, web, middleware};
 use actix_web::middleware::session::SessionStorage;
-use actix_redis::RedisSessionBackend;
+use actix_redis::RedisSession;
 
 #[actix_rt::main]
 async fn main() -> std::io::Result {
@@ -39,7 +39,7 @@ async fn main() -> std::io::Result {
         .middleware(middleware::Logger::default())
         // cookie session middleware
         .middleware(SessionStorage::new(
-            RedisSessionBackend::new("127.0.0.1:6379", &[0; 32])
+            RedisSession::new("127.0.0.1:6379", &[0; 32])
         ))
         // register simple route, handle all methods
         .service(web::resource("/").to(index))

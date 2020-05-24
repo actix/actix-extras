@@ -8,7 +8,7 @@
 
 > Protobuf support for actix-web framework.
 
-* Minimum supported Rust version: 1.39.0 or later
+* Minimum supported Rust version: 1.40.0 or later
 
 ## Example
 

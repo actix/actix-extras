@@ -10,7 +10,7 @@ use actix_web::cookie::{Cookie, CookieJar, Key, SameSite};
 use actix_web::dev::{ServiceRequest, ServiceResponse};
 use actix_web::http::header::{self, HeaderValue};
 use actix_web::{error, Error, HttpMessage};
-use futures::future::{ok, Future, Ready};
+use futures_util::future::{ok, Future, Ready};
 use rand::{distributions::Alphanumeric, rngs::OsRng, Rng};
 use redis_async::resp::RespValue;
 use time::{self, Duration, OffsetDateTime};
@@ -20,7 +20,7 @@ use crate::redis::{Command, RedisActor};
 /// Use redis as session storage.
 ///
 /// You need to pass an address of the redis server and random value to the
-/// constructor of `RedisSessionBackend`. This is private key for cookie
+/// constructor of `RedisSession`. This is private key for cookie
 /// session, When this value is changed, all session data is lost.
 ///
 /// Constructor panics if key length is less than 32 bytes.
@@ -360,7 +360,7 @@ impl Inner {
         let mut cookie = Cookie::named(self.name.clone());
         cookie.set_value("");
         cookie.set_max_age(Duration::zero());
-        cookie.set_expires(OffsetDateTime::now() - Duration::days(365));
+        cookie.set_expires(OffsetDateTime::now_utc() - Duration::days(365));
 
         let val = HeaderValue::from_str(&cookie.to_string())
             .map_err(error::ErrorInternalServerError)?;
@@ -638,7 +638,7 @@ mod test {
             .find(|c| c.name() == "test-session")
             .unwrap();
         assert_ne!(
-            OffsetDateTime::now().year(),
+            OffsetDateTime::now_utc().year(),
             cookie_4.expires().map(|t| t.year()).unwrap()
         );
 

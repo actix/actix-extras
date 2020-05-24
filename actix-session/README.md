@@ -16,4 +16,4 @@
 * [API Documentation](https://docs.rs/actix-session/)
 * [Chat on gitter](https://gitter.im/actix/actix)
 * Cargo package: [actix-session](https://crates.io/crates/actix-session)
-* Minimum supported Rust version: 1.34 or later
+* Minimum supported Rust version: 1.40 or later

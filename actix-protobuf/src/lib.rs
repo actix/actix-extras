@@ -15,8 +15,8 @@ use actix_web::dev::{HttpResponseBuilder, Payload};
 use actix_web::error::{Error, PayloadError, ResponseError};
 use actix_web::http::header::{CONTENT_LENGTH, CONTENT_TYPE};
 use actix_web::{FromRequest, HttpMessage, HttpRequest, HttpResponse, Responder};
-use futures::future::{ready, FutureExt, LocalBoxFuture, Ready};
-use futures::StreamExt;
+use futures_util::future::{ready, FutureExt, LocalBoxFuture, Ready};
+use futures_util::StreamExt;
 
 #[derive(Debug, Display)]
 pub enum ProtoBufPayloadError {

@@ -57,4 +57,26 @@ impl<C: 'static + Challenge> ResponseError for AuthenticationError<C> {
             .set(WwwAuthenticate(self.challenge.clone()))
             .finish()
     }
+
+    fn status_code(&self) -> StatusCode {
+        self.status_code
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::headers::www_authenticate::basic::Basic;
+    use actix_web::Error;
+
+    #[test]
+    fn test_status_code_is_preserved_across_error_conversions() {
+        let ae: AuthenticationError<Basic> = AuthenticationError::new(Basic::default());
+        let expected = ae.status_code;
+
+        // Converting the AuthenticationError into a ResponseError should preserve the status code.
+        let e = Error::from(ae);
+        let re = e.as_response_error();
+        assert_eq!(expected, re.status_code());
+    }
 }

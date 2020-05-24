@@ -1,5 +1,6 @@
 //! HTTP Authentication middleware.
 
+use std::future::Future;
 use std::marker::PhantomData;
 use std::pin::Pin;
 use std::sync::Arc;
@@ -7,9 +8,9 @@ use std::sync::Arc;
 use actix_service::{Service, Transform};
 use actix_web::dev::{ServiceRequest, ServiceResponse};
 use actix_web::Error;
-use futures::future::{self, Future, FutureExt, LocalBoxFuture, TryFutureExt};
-use futures::lock::Mutex;
-use futures::task::{Context, Poll};
+use futures_util::future::{self, FutureExt, LocalBoxFuture, TryFutureExt};
+use futures_util::lock::Mutex;
+use futures_util::task::{Context, Poll};
 
 use crate::extractors::{basic, bearer, AuthExtractor};
 
@@ -239,7 +240,7 @@ where
             .f
             .as_mut()
             .expect("Extraction future should be initialized at this point");
-        let credentials = futures::ready!(Future::poll(f.as_mut(), ctx))?;
+        let credentials = futures_util::ready!(Future::poll(f.as_mut(), ctx))?;
 
         let req = self.req.take().expect("Extract future was polled twice!");
         Poll::Ready(Ok((req, credentials)))
