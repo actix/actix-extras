@@ -55,7 +55,6 @@ struct CookieSessionInner {
     name: String,
     path: String,
     domain: Option<String>,
-    lazy: bool,
     secure: bool,
     http_only: bool,
     max_age: Option<Duration>,
@@ -71,7 +70,6 @@ impl CookieSessionInner {
             name: "actix-session".to_owned(),
             path: "/".to_owned(),
             domain: None,
-            lazy: false,
             secure: true,
             http_only: true,
             max_age: None,
@@ -86,11 +84,6 @@ impl CookieSessionInner {
         state: impl Iterator<Item = (String, String)>,
     ) -> Result<(), Error> {
         let state: HashMap<String, String> = state.collect();
-
-        if self.lazy && state.is_empty() {
-            return Ok(());
-        }
-
         let value =
             serde_json::to_string(&state).map_err(CookieSessionError::Serialize)?;
         if value.len() > 4064 {
@@ -251,15 +244,6 @@ impl CookieSession {
     /// Sets the `domain` field in the session cookie being built.
     pub fn domain<S: Into<String>>(mut self, value: S) -> CookieSession {
         Rc::get_mut(&mut self.0).unwrap().domain = Some(value.into());
-        self
-    }
-
-    /// When true, prevents adding session cookies to responses until
-    /// the session contains data. Default is `false`.
-    /// 
-    /// Useful when trying to comply with laws that require consent for setting cookies.
-    pub fn lazy(mut self, value: bool) -> CookieSession {
-        Rc::get_mut(&mut self.0).unwrap().lazy = value;
         self
     }
 
@@ -436,37 +420,6 @@ mod tests {
 
         let request = test::TestRequest::get().to_request();
         let response = app.call(request).await.unwrap();
-        assert!(response
-            .response()
-            .cookies()
-            .any(|c| c.name() == "actix-session"));
-    }
-
-    #[actix_rt::test]
-    async fn lazy_cookie() {
-        let mut app = test::init_service(
-            App::new()
-                .wrap(CookieSession::signed(&[0; 32]).secure(false).lazy(true))
-                .service(web::resource("/count").to(|ses: Session| async move {
-                    let _ = ses.set("counter", 100);
-                    "counting"
-                }))
-                .service(web::resource("/").to(|_ses: Session| async move {
-                    "test"
-                })),
-        )
-        .await;
-
-        let request = test::TestRequest::get().to_request();
-        let response = app.call(request).await.unwrap();
-        assert!(response
-            .response()
-            .cookies()
-            .count() == 0);
-
-        let request = test::TestRequest::with_uri("/count").to_request();
-        let response = app.call(request).await.unwrap();
-
         assert!(response
             .response()
             .cookies()
