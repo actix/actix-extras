@@ -246,3 +246,73 @@ where
         Poll::Ready(Ok((req, credentials)))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use actix_web::test::TestRequest;
+    use actix_service::{into_service, Service};
+    use futures_util::join;
+    use crate::extractors::bearer::BearerAuth;
+    use actix_web::error;
+
+
+    /// This is a test for https://github.com/actix/actix-extras/issues/10
+    #[actix_rt::test]
+    async fn test_middleware_panic() {
+        let mut middleware = AuthenticationMiddleware {
+            service: Arc::new(Mutex::new(into_service(|_: ServiceRequest| {
+                async move {
+                    actix_rt::time::delay_for(std::time::Duration::from_secs(1)).await;
+                    Err::<ServiceResponse, _>(error::ErrorBadRequest("error"))
+                }}))),
+            process_fn: Arc::new(|req, _: BearerAuth| async {
+                Ok(req) }),
+            _extractor: PhantomData,
+        };
+
+        let req = TestRequest::with_header("Authorization", "Bearer 1").to_srv_request();
+
+        let f = middleware.call(req);
+
+        let res = futures_util::future::lazy(|cx| middleware.poll_ready(cx) );
+
+
+        assert!(join!(f, res).0.is_err());
+    }
+
+    /// This is a test for https://github.com/actix/actix-extras/issues/10
+    #[actix_rt::test]
+    async fn test_middleware_panic_several_orders() {
+        let mut middleware = AuthenticationMiddleware {
+            service: Arc::new(Mutex::new(into_service(|_: ServiceRequest| {
+                async move {
+                    actix_rt::time::delay_for(std::time::Duration::from_secs(1)).await;
+                    Err::<ServiceResponse, _>(error::ErrorBadRequest("error"))
+                }}))),
+            process_fn: Arc::new(|req, _: BearerAuth| async {
+                Ok(req) }),
+            _extractor: PhantomData,
+        };
+
+        let req = TestRequest::with_header("Authorization", "Bearer 1").to_srv_request();
+
+        let f1 = middleware.call(req);
+
+        let req = TestRequest::with_header("Authorization", "Bearer 1").to_srv_request();
+
+        let f2 = middleware.call(req);
+
+        let req = TestRequest::with_header("Authorization", "Bearer 1").to_srv_request();
+
+        let f3 = middleware.call(req);
+
+        let res = futures_util::future::lazy(|cx| middleware.poll_ready(cx));
+
+        let result = join!(f1, f2, f3, res);
+
+        assert!(result.0.is_err());
+        assert!(result.1.is_err());
+        assert!(result.2.is_err());
+    }
+}
