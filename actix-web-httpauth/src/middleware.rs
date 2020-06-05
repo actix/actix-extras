@@ -1,15 +1,16 @@
 //! HTTP Authentication middleware.
 
+use std::cell::RefCell;
 use std::future::Future;
 use std::marker::PhantomData;
 use std::pin::Pin;
+use std::rc::Rc;
 use std::sync::Arc;
 
 use actix_service::{Service, Transform};
 use actix_web::dev::{ServiceRequest, ServiceResponse};
 use actix_web::Error;
 use futures_util::future::{self, FutureExt, LocalBoxFuture, TryFutureExt};
-use futures_util::lock::Mutex;
 use futures_util::task::{Context, Poll};
 
 use crate::extractors::{basic, bearer, AuthExtractor};
@@ -142,7 +143,7 @@ where
 
     fn new_transform(&self, service: S) -> Self::Future {
         future::ok(AuthenticationMiddleware {
-            service: Arc::new(Mutex::new(service)),
+            service: Rc::new(RefCell::new(service)),
             process_fn: self.process_fn.clone(),
             _extractor: PhantomData,
         })
@@ -154,7 +155,7 @@ pub struct AuthenticationMiddleware<S, F, T>
 where
     T: AuthExtractor,
 {
-    service: Arc<Mutex<S>>,
+    service: Rc<RefCell<S>>,
     process_fn: Arc<F>,
     _extractor: PhantomData<T>,
 }
@@ -181,21 +182,22 @@ where
         ctx: &mut Context<'_>,
     ) -> Poll<Result<(), Self::Error>> {
         self.service
-            .try_lock()
-            .expect("AuthenticationMiddleware was called already")
+            .borrow_mut()
             .poll_ready(ctx)
     }
 
     fn call(&mut self, req: Self::Request) -> Self::Future {
         let process_fn = self.process_fn.clone();
-        // Note: cloning the mutex, not the service itself
-        let inner = self.service.clone();
+
+        let service = Rc::clone(&self.service);
 
         async move {
             let (req, credentials) = Extract::<T>::new(req).await?;
             let req = process_fn(req, credentials).await?;
-            let mut service = inner.lock().await;
-            service.call(req).await
+            // It is important that `borrow_mut()` and `.await` are on
+            // separate lines, or else a panic occurs.
+            let fut = service.borrow_mut().call(req);
+            fut.await
         }
         .boxed_local()
     }
@@ -261,7 +263,7 @@ mod tests {
     #[actix_rt::test]
     async fn test_middleware_panic() {
         let mut middleware = AuthenticationMiddleware {
-            service: Arc::new(Mutex::new(into_service(|_: ServiceRequest| {
+            service: Rc::new(RefCell::new(into_service(|_: ServiceRequest| {
                 async move {
                     actix_rt::time::delay_for(std::time::Duration::from_secs(1)).await;
                     Err::<ServiceResponse, _>(error::ErrorBadRequest("error"))
@@ -285,7 +287,7 @@ mod tests {
     #[actix_rt::test]
     async fn test_middleware_panic_several_orders() {
         let mut middleware = AuthenticationMiddleware {
-            service: Arc::new(Mutex::new(into_service(|_: ServiceRequest| {
+            service: Rc::new(RefCell::new(into_service(|_: ServiceRequest| {
                 async move {
                     actix_rt::time::delay_for(std::time::Duration::from_secs(1)).await;
                     Err::<ServiceResponse, _>(error::ErrorBadRequest("error"))
