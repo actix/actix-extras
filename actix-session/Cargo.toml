@@ -17,12 +17,10 @@ path = "src/lib.rs"
 
 [features]
 default = ["cookie-session"]
-
-# sessions feature, session require "ring" crate and c compiler
 cookie-session = ["actix-web/secure-cookies"]
 
 [dependencies]
-actix-web = "3.0.0-alpha.1"
+actix-web = { version = "3.0.0-alpha.1", default_features = false }
 actix-service = "1.0.1"
 bytes = "0.5.3"
 derive_more = "0.99.2"
