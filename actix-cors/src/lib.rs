@@ -1,11 +1,16 @@
-#![allow(clippy::borrow_interior_mutable_const, clippy::type_complexity)]
-//! Cross-origin resource sharing (CORS) for Actix applications
+//! Cross-Origin Resource Sharing (CORS) middleware for actix-web.
 //!
-//! CORS middleware could be used with application and with resource.
-//! Cors middleware could be used as parameter for `App::wrap()`,
-//! `Resource::wrap()` or `Scope::wrap()` methods.
+//! This middleware can be applied to both applications and resources.
+//! Once built, [`CorsFactory`](struct.CorsFactory.html) can be used as a
+//! parameter for actix-web `App::wrap()`, `Resource::wrap()` or
+//! `Scope::wrap()` methods.
+//!
+//! This CORS middleware automatically handles `OPTIONS` preflight requests.
 //!
 //! # Example
+//!
+//! In this example a custom CORS middleware is registered for the
+//! "/index.html" endpoint.
 //!
 //! ```rust
 //! use actix_cors::Cors;
@@ -35,10 +40,10 @@
 //!     Ok(())
 //! }
 //! ```
-//! In this example custom *CORS* middleware get registered for "/index.html"
-//! endpoint.
-//!
-//! Cors middleware automatically handle *OPTIONS* preflight request.
+
+#![allow(clippy::borrow_interior_mutable_const, clippy::type_complexity)]
+#![deny(missing_docs, missing_debug_implementations)]
+
 use std::collections::HashSet;
 use std::convert::TryFrom;
 use std::iter::FromIterator;
@@ -54,7 +59,7 @@ use actix_web::HttpResponse;
 use derive_more::Display;
 use futures_util::future::{ok, Either, FutureExt, LocalBoxFuture, Ready};
 
-/// A set of errors that can occur during processing CORS
+/// A set of errors that can occur as a result of processing CORS.
 #[derive(Debug, Display)]
 pub enum CorsError {
     /// The HTTP request header `Origin` is required but was not provided
@@ -144,15 +149,14 @@ impl<T> AllOrSome<T> {
     }
 }
 
-/// Structure that follows the builder pattern for building `Cors` middleware
-/// structs.
+/// Builder for `CorsFactory` middleware.
 ///
-/// To construct a cors:
+/// To construct a [`CorsFactory`](struct.CorsFactory.html):
 ///
-///   1. Call [`Cors::build`](struct.Cors.html#method.build) to start building.
-///   2. Use any of the builder methods to set fields in the backend.
-/// 3. Call [finish](struct.Cors.html#method.finish) to retrieve the
-/// constructed backend.
+/// 1. Call [`Cors::new()`](struct.Cors.html#method.new) to start building.
+/// 2. Use any of the builder methods to customize CORS behavior.
+/// 3. Call [`finish()`](struct.Cors.html#method.finish) to retrieve the
+///    middleware.
 ///
 /// # Example
 ///
@@ -161,13 +165,13 @@ impl<T> AllOrSome<T> {
 /// use actix_web::http::header;
 ///
 /// let cors = Cors::new()
-///     .allowed_origin("https://www.rust-lang.org/")
+///     .allowed_origin("https://www.rust-lang.org")
 ///     .allowed_methods(vec!["GET", "POST"])
 ///     .allowed_headers(vec![header::AUTHORIZATION, header::ACCEPT])
 ///     .allowed_header(header::CONTENT_TYPE)
 ///     .max_age(3600);
 /// ```
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct Cors {
     cors: Option<Inner>,
     methods: bool,
@@ -176,7 +180,7 @@ pub struct Cors {
 }
 
 impl Cors {
-    /// Build a new CORS middleware instance
+    /// Return a new builder.
     pub fn new() -> Cors {
         Cors {
             cors: Some(Inner {
@@ -197,7 +201,7 @@ impl Cors {
         }
     }
 
-    /// Build a new CORS default middleware
+    /// Build a CORS middleware with default settings.
     pub fn default() -> CorsFactory {
         let inner = Inner {
             origins: AllOrSome::default(),
@@ -227,21 +231,22 @@ impl Cors {
         }
     }
 
-    /// Add an origin that are allowed to make requests.
-    /// Will be verified against the `Origin` request header.
+    /// Add an origin that is allowed to make requests.
     ///
-    /// When `All` is set, and `send_wildcard` is set, "*" will be sent in
-    /// the `Access-Control-Allow-Origin` response header. Otherwise, the
-    /// client's `Origin` request header will be echoed back in the
-    /// `Access-Control-Allow-Origin` response header.
-    ///
-    /// When `Some` is set, the client's `Origin` request header will be
-    /// checked in a case-sensitive manner.
+    /// By default, requests from all origins are accepted by CORS logic.
+    /// This method allows to specify a finite set of origins to verify the
+    /// value of the `Origin` request header.
     ///
     /// This is the `list of origins` in the
     /// [Resource Processing Model](https://www.w3.org/TR/cors/#resource-processing-model).
     ///
-    /// Defaults to `All`.
+    /// When this list is set, the client's `Origin` request header will be
+    /// checked in a case-sensitive manner.
+    ///
+    /// When all origins are allowed and `send_wildcard` is set, "*" will be
+    /// sent in the `Access-Control-Allow-Origin` response header.
+    /// If `send_wildcard` is not set, the client's `Origin` request header
+    /// will be echoed back in the `Access-Control-Allow-Origin` response header.
     ///
     /// Builder panics if supplied origin is not valid uri.
     pub fn allowed_origin(mut self, origin: &str) -> Cors {
@@ -263,8 +268,7 @@ impl Cors {
         self
     }
 
-    /// Set a list of methods which the allowed origins are allowed to access
-    /// for requests.
+    /// Set a list of methods which allowed origins can perform.
     ///
     /// This is the `list of methods` in the
     /// [Resource Processing Model](https://www.w3.org/TR/cors/#resource-processing-model).
@@ -293,7 +297,7 @@ impl Cors {
         self
     }
 
-    /// Set an allowed header
+    /// Set an allowed header.
     pub fn allowed_header<H>(mut self, header: H) -> Cors
     where
         HeaderName: TryFrom<H>,
@@ -452,10 +456,10 @@ impl Cors {
         self
     }
 
-    /// Disable *preflight* request support.
+    /// Disable support for preflight requests.
     ///
-    /// When enabled cors middleware automatically handles *OPTIONS* request.
-    /// This is useful application level middleware.
+    /// When enabled CORS middleware automatically handles `OPTIONS` requests.
+    /// This is useful for application level middleware.
     ///
     /// By default *preflight* support is enabled.
     pub fn disable_preflight(mut self) -> Cors {
@@ -465,7 +469,7 @@ impl Cors {
         self
     }
 
-    /// Construct cors middleware
+    /// Construct CORS middleware.
     pub fn finish(self) -> CorsFactory {
         let mut slf = if !self.methods {
             self.allowed_methods(vec![
@@ -523,10 +527,11 @@ fn cors<'a>(
     parts.as_mut()
 }
 
-/// `Middleware` for Cross-origin resource sharing support
+/// Middleware for Cross-Origin Resource Sharing support.
 ///
-/// The Cors struct contains the settings for CORS requests to be validated and
+/// This struct contains the settings for CORS requests to be validated and
 /// for responses to be generated.
+#[derive(Debug)]
 pub struct CorsFactory {
     inner: Rc<Inner>,
 }
@@ -552,16 +557,17 @@ where
     }
 }
 
-/// `Middleware` for Cross-origin resource sharing support
+/// Service wrapper for Cross-Origin Resource Sharing support.
 ///
-/// The Cors struct contains the settings for CORS requests to be validated and
+/// This struct contains the settings for CORS requests to be validated and
 /// for responses to be generated.
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct CorsMiddleware<S> {
     service: S,
     inner: Rc<Inner>,
 }
 
+#[derive(Debug)]
 struct Inner {
     methods: HashSet<Method>,
     origins: AllOrSome<HashSet<String>>,
