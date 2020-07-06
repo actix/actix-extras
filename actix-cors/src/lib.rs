@@ -1,4 +1,3 @@
-#![allow(clippy::borrow_interior_mutable_const, clippy::type_complexity)]
 //! Cross-origin resource sharing (CORS) for Actix applications
 //!
 //! CORS middleware could be used with application and with resource.
