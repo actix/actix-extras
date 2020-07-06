@@ -144,10 +144,10 @@ impl<T: Message + Default> Responder for ProtoBuf<T> {
             self.0
                 .encode(&mut buf)
                 .map_err(|e| Error::from(ProtoBufPayloadError::Serialize(e)))
-                .and_then(|()| {
-                    Ok(HttpResponse::Ok()
+                .map(|()| {
+                    HttpResponse::Ok()
                         .content_type("application/protobuf")
-                        .body(buf))
+                        .body(buf)
                 }),
         )
     }

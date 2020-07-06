@@ -203,15 +203,13 @@ impl CookieSessionInner {
 /// use actix_session::CookieSession;
 /// use actix_web::{web, App, HttpResponse, HttpServer};
 ///
-/// fn main() {
-///     let app = App::new().wrap(
-///         CookieSession::signed(&[0; 32])
-///             .domain("www.rust-lang.org")
-///             .name("actix_session")
-///             .path("/")
-///             .secure(true))
-///         .service(web::resource("/").to(|| HttpResponse::Ok()));
-/// }
+/// let app = App::new().wrap(
+///     CookieSession::signed(&[0; 32])
+///         .domain("www.rust-lang.org")
+///         .name("actix_session")
+///         .path("/")
+///         .secure(true))
+///     .service(web::resource("/").to(|| HttpResponse::Ok()));
 /// ```
 pub struct CookieSession(Rc<CookieSessionInner>);
 
@@ -256,7 +254,7 @@ impl CookieSession {
 
     /// When true, prevents adding session cookies to responses until
     /// the session contains data. Default is `false`.
-    /// 
+    ///
     /// Useful when trying to comply with laws that require consent for setting cookies.
     pub fn lazy(mut self, value: bool) -> CookieSession {
         Rc::get_mut(&mut self.0).unwrap().lazy = value;
@@ -451,18 +449,13 @@ mod tests {
                     let _ = ses.set("counter", 100);
                     "counting"
                 }))
-                .service(web::resource("/").to(|_ses: Session| async move {
-                    "test"
-                })),
+                .service(web::resource("/").to(|_ses: Session| async move { "test" })),
         )
         .await;
 
         let request = test::TestRequest::get().to_request();
         let response = app.call(request).await.unwrap();
-        assert!(response
-            .response()
-            .cookies()
-            .count() == 0);
+        assert!(response.response().cookies().count() == 0);
 
         let request = test::TestRequest::with_uri("/count").to_request();
         let response = app.call(request).await.unwrap();

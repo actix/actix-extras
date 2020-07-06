@@ -276,7 +276,8 @@ mod tests {
         let mut req = test::TestRequest::default().to_srv_request();
 
         Session::set_session(
-            vec![("key".to_string(), serde_json::to_string("value").unwrap())].into_iter(),
+            vec![("key".to_string(), serde_json::to_string("value").unwrap())]
+                .into_iter(),
             &mut req,
         );
         let session = Session::get_session(&mut *req.extensions_mut());

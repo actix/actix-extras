@@ -46,6 +46,9 @@
 //!         .service(web::resource("/logout.html").to(logout));
 //! }
 //! ```
+
+#![allow(clippy::needless_doctest_main)]
+
 use std::cell::RefCell;
 use std::future::Future;
 use std::rc::Rc;
@@ -200,14 +203,12 @@ pub trait IdentityPolicy: Sized + 'static {
 /// use actix_web::App;
 /// use actix_identity::{CookieIdentityPolicy, IdentityService};
 ///
-/// fn main() {
-///     let app = App::new().wrap(IdentityService::new(
-///         // <- create identity middleware
-///         CookieIdentityPolicy::new(&[0; 32])    // <- create cookie session backend
-///               .name("auth-cookie")
-///               .secure(false),
-///     ));
-/// }
+/// let app = App::new().wrap(IdentityService::new(
+///     // <- create identity middleware
+///     CookieIdentityPolicy::new(&[0; 32])    // <- create cookie session backend
+///           .name("auth-cookie")
+///           .secure(false),
+/// ));
 /// ```
 pub struct IdentityService<T> {
     backend: Rc<T>,
@@ -427,16 +428,12 @@ impl CookieIdentityInner {
         let value: CookieValue = serde_json::from_str(cookie.value()).ok()?;
         let now = SystemTime::now();
         if let Some(visit_deadline) = self.visit_deadline {
-            if now.duration_since(value.visit_timestamp?).ok()?
-                > visit_deadline
-            {
+            if now.duration_since(value.visit_timestamp?).ok()? > visit_deadline {
                 return None;
             }
         }
         if let Some(login_deadline) = self.login_deadline {
-            if now.duration_since(value.login_timestamp?).ok()?
-                > login_deadline
-            {
+            if now.duration_since(value.login_timestamp?).ok()? > login_deadline {
                 return None;
             }
         }
@@ -469,16 +466,14 @@ impl CookieIdentityInner {
 /// use actix_web::App;
 /// use actix_identity::{CookieIdentityPolicy, IdentityService};
 ///
-/// fn main() {
-///     let app = App::new().wrap(IdentityService::new(
-///         // <- create identity middleware
-///         CookieIdentityPolicy::new(&[0; 32])  // <- construct cookie policy
-///                .domain("www.rust-lang.org")
-///                .name("actix_auth")
-///                .path("/")
-///                .secure(true),
-///     ));
-/// }
+/// let app = App::new().wrap(IdentityService::new(
+///     // <- create identity middleware
+///     CookieIdentityPolicy::new(&[0; 32])  // <- construct cookie policy
+///            .domain("www.rust-lang.org")
+///            .name("actix_auth")
+///            .path("/")
+///            .secure(true),
+/// ));
 /// ```
 pub struct CookieIdentityPolicy(Rc<CookieIdentityInner>);
 
@@ -557,11 +552,7 @@ impl IdentityPolicy for CookieIdentityPolicy {
 
     fn from_request(&self, req: &mut ServiceRequest) -> Self::Future {
         ok(self.0.load(req).map(
-            |CookieValue {
-                 identity,
-                 login_timestamp,
-                 ..
-             }| {
+            |CookieValue { identity, login_timestamp, .. }| {
                 if self.0.requires_oob_data() {
                     req.extensions_mut()
                         .insert(CookieIdentityExtention { login_timestamp });
@@ -761,14 +752,12 @@ mod tests {
                 )
                 .secure(false)
                 .name(COOKIE_NAME))))
-                .service(web::resource("/").to(|id: Identity| {
-                    async move {
-                        let identity = id.identity();
-                        if identity.is_none() {
-                            id.remember(COOKIE_LOGIN.to_string())
-                        }
-                        web::Json(identity)
+                .service(web::resource("/").to(|id: Identity| async move {
+                    let identity = id.identity();
+                    if identity.is_none() {
+                        id.remember(COOKIE_LOGIN.to_string())
                     }
+                    web::Json(identity)
                 })),
         )
         .await
@@ -822,12 +811,14 @@ mod tests {
         assert_eq!(cookie.value(), identity);
     }
 
+    #[allow(clippy::enum_variant_names)]
     enum LoginTimestampCheck {
         NoTimestamp,
         NewTimestamp,
         OldTimestamp(SystemTime),
     }
 
+    #[allow(clippy::enum_variant_names)]
     enum VisitTimeStampCheck {
         NoTimestamp,
         NewTimestamp,
@@ -1108,12 +1099,12 @@ mod tests {
 
         let mut srv = IdentityServiceMiddleware {
             backend: Rc::new(Ident),
-            service: Rc::new(RefCell::new(into_service(|_: ServiceRequest| {
-                async move {
+            service: Rc::new(RefCell::new(into_service(
+                |_: ServiceRequest| async move {
                     actix_rt::time::delay_for(std::time::Duration::from_secs(100)).await;
                     Err::<ServiceResponse, _>(error::ErrorBadRequest("error"))
-                }
-            }))),
+                },
+            ))),
         };
 
         let mut srv2 = srv.clone();
