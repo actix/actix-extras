@@ -1,6 +1,6 @@
 [package]
 name = "actix-protobuf"
-version = "0.5.1"
+version = "0.6.0-alpha.1"
 edition = "2018"
 authors = ["kingxsp <jin.hb.zh@outlook.com>", "Yuki Okushi <huyuumi.dev@gmail.com>"]
 description = "Protobuf support for actix-web framework."
@@ -21,7 +21,7 @@ futures-util = { version = "0.3.5", default-features = false }
 derive_more = "0.99"
 
 actix-rt = "1"
-actix-web = { version = "2", default_features = false }
+actix-web = { version = "3.0.0-alpha.3", default_features = false }
 
 prost = "0.6.0"
 
