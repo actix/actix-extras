@@ -9,10 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * Minimum supported Rust version(MSRV) is now 1.40.0.
 
-## [unreleased]
+## [0.4.2] - 2020-07-08
   - Update the `base64` dependency to 0.12
   - AuthenticationError's status code is preserved when converting to a ResponseError
   - Minimize `futures` dependency
+  - Fix panic on `AuthenticationMiddleware` [#69]
+
+[#69]: https://github.com/actix/actix-web-httpauth/pull/69
 
 ## [0.4.1] - 2020-02-19
   - Move repository to actix-extras
