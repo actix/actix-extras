@@ -13,6 +13,7 @@ use actix_web::{error, Error, HttpMessage};
 use futures_util::future::{ok, Future, Ready};
 use rand::{distributions::Alphanumeric, rngs::OsRng, Rng};
 use redis_async::resp::RespValue;
+use redis_async::resp_array;
 use time::{self, Duration, OffsetDateTime};
 
 use crate::redis::{Command, RedisActor};
