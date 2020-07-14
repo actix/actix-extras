@@ -7,6 +7,7 @@ use actix_utils::oneshot;
 use backoff::backoff::Backoff;
 use backoff::ExponentialBackoff;
 use futures_util::FutureExt;
+use log::{error, info, warn};
 use redis_async::error::Error as RespError;
 use redis_async::resp::{RespCodec, RespValue};
 use tokio::io::{split, WriteHalf};

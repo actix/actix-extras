@@ -1,11 +1,9 @@
-#[macro_use]
-extern crate serde_derive;
-
 use actix_redis::RedisSession;
 use actix_session::Session;
 use actix_web::{
     cookie, middleware, web, App, Error, HttpResponse, HttpServer, Responder,
 };
+use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize)]
 struct Credentials {
