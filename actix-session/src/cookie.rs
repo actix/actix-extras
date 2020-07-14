@@ -67,7 +67,7 @@ impl CookieSessionInner {
     fn new(key: &[u8], security: CookieSecurity) -> CookieSessionInner {
         CookieSessionInner {
             security,
-            key: Key::from_master(key),
+            key: Key::derive_from(key),
             name: "actix-session".to_owned(),
             path: "/".to_owned(),
             domain: None,

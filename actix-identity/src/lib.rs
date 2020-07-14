@@ -341,8 +341,8 @@ impl CookieIdentityInner {
     fn new(key: &[u8]) -> CookieIdentityInner {
         let key_v2: Vec<u8> = key.iter().chain([1, 0, 0, 0].iter()).cloned().collect();
         CookieIdentityInner {
-            key: Key::from_master(key),
-            key_v2: Key::from_master(&key_v2),
+            key: Key::derive_from(key),
+            key_v2: Key::derive_from(&key_v2),
             name: "actix-identity".to_owned(),
             path: "/".to_owned(),
             domain: None,
@@ -765,7 +765,7 @@ mod tests {
 
     fn legacy_login_cookie(identity: &'static str) -> Cookie<'static> {
         let mut jar = CookieJar::new();
-        jar.private(&Key::from_master(&COOKIE_KEY_MASTER))
+        jar.private(&Key::derive_from(&COOKIE_KEY_MASTER))
             .add(Cookie::new(COOKIE_NAME, identity));
         jar.get(COOKIE_NAME).unwrap().clone()
     }
@@ -781,7 +781,7 @@ mod tests {
             .chain([1, 0, 0, 0].iter())
             .copied()
             .collect();
-        jar.private(&Key::from_master(&key)).add(Cookie::new(
+        jar.private(&Key::derive_from(&key)).add(Cookie::new(
             COOKIE_NAME,
             serde_json::to_string(&CookieValue {
                 identity: identity.to_string(),
@@ -805,7 +805,7 @@ mod tests {
             cookies.add(Cookie::parse(cookie.to_str().unwrap().to_string()).unwrap());
         }
         let cookie = cookies
-            .private(&Key::from_master(&COOKIE_KEY_MASTER))
+            .private(&Key::derive_from(&COOKIE_KEY_MASTER))
             .get(COOKIE_NAME)
             .unwrap();
         assert_eq!(cookie.value(), identity);
@@ -840,7 +840,7 @@ mod tests {
             .copied()
             .collect();
         let cookie = cookies
-            .private(&Key::from_master(&key))
+            .private(&Key::derive_from(&key))
             .get(COOKIE_NAME)
             .unwrap();
         let cv: CookieValue = serde_json::from_str(cookie.value()).unwrap();

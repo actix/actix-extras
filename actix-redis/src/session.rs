@@ -32,7 +32,7 @@ impl RedisSession {
     /// * `addr` - address of the redis server
     pub fn new<S: Into<String>>(addr: S, key: &[u8]) -> RedisSession {
         RedisSession(Rc::new(Inner {
-            key: Key::from_master(key),
+            key: Key::derive_from(key),
             cache_keygen: Box::new(|key: &str| format!("session:{}", &key)),
             ttl: "7200".to_owned(),
             addr: RedisActor::start(addr),
