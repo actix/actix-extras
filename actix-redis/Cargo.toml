@@ -28,7 +28,7 @@ actix = "0.10.0-alpha.3"
 actix-utils = "1.0.3"
 
 log = "0.4.6"
-backoff = "0.1.5"
+backoff = "0.2.1"
 derive_more = "0.99.2"
 futures-util = { version = "0.3.5", default-features = false }
 redis-async = "0.6.1"
