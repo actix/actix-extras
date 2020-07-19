@@ -8,3 +8,6 @@ members = [
   "actix-session",
   "actix-web-httpauth",
 ]
+
+[patch.crates-io]
+actix-session = { path = "actix-session" }

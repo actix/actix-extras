@@ -272,14 +272,12 @@ mod tests {
     impl PartialEq for ProtoBufPayloadError {
         fn eq(&self, other: &ProtoBufPayloadError) -> bool {
             match *self {
-                ProtoBufPayloadError::Overflow => match *other {
-                    ProtoBufPayloadError::Overflow => true,
-                    _ => false,
-                },
-                ProtoBufPayloadError::ContentType => match *other {
-                    ProtoBufPayloadError::ContentType => true,
-                    _ => false,
-                },
+                ProtoBufPayloadError::Overflow => {
+                    matches!(*other, ProtoBufPayloadError::Overflow)
+                }
+                ProtoBufPayloadError::ContentType => {
+                    matches!(*other, ProtoBufPayloadError::ContentType)
+                }
                 _ => false,
             }
         }
