@@ -1,6 +1,11 @@
 name: CI (macOS)
 
-on: [push, pull_request]
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches:
+      - master
 
 jobs:
   build_and_test:
@@ -60,5 +65,5 @@ jobs:
 
       - name: Clear the cargo caches
         run: |
-          which cargo-cache || cargo install cargo-cache --no-default-features --features ci-autoclean
+          cargo install cargo-cache --no-default-features --features ci-autoclean
           cargo-cache
