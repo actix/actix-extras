@@ -7,9 +7,7 @@ pub mod basic;
 pub mod bearer;
 
 /// Authentication challenge for `WWW-Authenticate` header.
-pub trait Challenge:
-    IntoHeaderValue + Debug + Display + Clone + Send + Sync
-{
+pub trait Challenge: IntoHeaderValue + Debug + Display + Clone + Send + Sync {
     /// Converts the challenge into a bytes suitable for HTTP transmission.
     fn to_bytes(&self) -> Bytes;
 }

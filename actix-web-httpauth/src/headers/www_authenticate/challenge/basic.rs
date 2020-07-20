@@ -5,9 +5,7 @@ use std::default::Default;
 use std::fmt;
 use std::str;
 
-use actix_web::http::header::{
-    HeaderValue, IntoHeaderValue, InvalidHeaderValue,
-};
+use actix_web::http::header::{HeaderValue, IntoHeaderValue, InvalidHeaderValue};
 use bytes::{BufMut, Bytes, BytesMut};
 
 use super::Challenge;
@@ -120,9 +118,7 @@ mod tests {
 
     #[test]
     fn test_plain_into_header_value() {
-        let challenge = Basic {
-            realm: None,
-        };
+        let challenge = Basic { realm: None };
 
         let value = challenge.try_into();
         assert!(value.is_ok());
