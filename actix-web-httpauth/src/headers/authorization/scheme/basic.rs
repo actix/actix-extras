@@ -2,9 +2,7 @@ use std::borrow::Cow;
 use std::fmt;
 use std::str;
 
-use actix_web::http::header::{
-    HeaderValue, IntoHeaderValue, InvalidHeaderValue,
-};
+use actix_web::http::header::{HeaderValue, IntoHeaderValue, InvalidHeaderValue};
 use bytes::{BufMut, BytesMut};
 
 use crate::headers::authorization::errors::ParseError;
@@ -80,10 +78,7 @@ impl Scheme for Basic {
                 }
             })?;
 
-        Ok(Basic {
-            user_id,
-            password,
-        })
+        Ok(Basic { user_id, password })
     }
 }
 
@@ -133,8 +128,7 @@ mod tests {
 
     #[test]
     fn test_parse_header() {
-        let value =
-            HeaderValue::from_static("Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==");
+        let value = HeaderValue::from_static("Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==");
         let scheme = Basic::parse(&value);
 
         assert!(scheme.is_ok());

@@ -81,8 +81,7 @@ impl<S: Scheme> Header for Authorization<S> {
     }
 
     fn parse<T: HttpMessage>(msg: &T) -> Result<Self, ParseError> {
-        let header =
-            msg.headers().get(AUTHORIZATION).ok_or(ParseError::Header)?;
+        let header = msg.headers().get(AUTHORIZATION).ok_or(ParseError::Header)?;
         let scheme = S::parse(header).map_err(|_| ParseError::Header)?;
 
         Ok(Authorization(scheme))

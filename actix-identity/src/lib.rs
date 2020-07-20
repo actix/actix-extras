@@ -552,7 +552,11 @@ impl IdentityPolicy for CookieIdentityPolicy {
 
     fn from_request(&self, req: &mut ServiceRequest) -> Self::Future {
         ok(self.0.load(req).map(
-            |CookieValue { identity, login_timestamp, .. }| {
+            |CookieValue {
+                 identity,
+                 login_timestamp,
+                 ..
+             }| {
                 if self.0.requires_oob_data() {
                     req.extensions_mut()
                         .insert(CookieIdentityExtention { login_timestamp });

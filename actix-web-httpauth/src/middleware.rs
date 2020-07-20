@@ -124,11 +124,8 @@ where
 
 impl<S, B, T, F, O> Transform<S> for HttpAuthentication<T, F>
 where
-    S: Service<
-            Request = ServiceRequest,
-            Response = ServiceResponse<B>,
-            Error = Error,
-        > + 'static,
+    S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error>
+        + 'static,
     S::Future: 'static,
     F: Fn(ServiceRequest, T) -> O + 'static,
     O: Future<Output = Result<ServiceRequest, Error>> + 'static,
@@ -162,11 +159,8 @@ where
 
 impl<S, B, F, T, O> Service for AuthenticationMiddleware<S, F, T>
 where
-    S: Service<
-            Request = ServiceRequest,
-            Response = ServiceResponse<B>,
-            Error = Error,
-        > + 'static,
+    S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error>
+        + 'static,
     S::Future: 'static,
     F: Fn(ServiceRequest, T) -> O + 'static,
     O: Future<Output = Result<ServiceRequest, Error>> + 'static,
@@ -177,13 +171,8 @@ where
     type Error = S::Error;
     type Future = LocalBoxFuture<'static, Result<ServiceResponse<B>, Error>>;
 
-    fn poll_ready(
-        &mut self,
-        ctx: &mut Context<'_>,
-    ) -> Poll<Result<(), Self::Error>> {
-        self.service
-            .borrow_mut()
-            .poll_ready(ctx)
+    fn poll_ready(&mut self, ctx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+        self.service.borrow_mut().poll_ready(ctx)
     }
 
     fn call(&mut self, req: Self::Request) -> Self::Future {
@@ -227,13 +216,9 @@ where
 {
     type Output = Result<(ServiceRequest, T), Error>;
 
-    fn poll(
-        mut self: Pin<&mut Self>,
-        ctx: &mut Context<'_>,
-    ) -> Poll<Self::Output> {
+    fn poll(mut self: Pin<&mut Self>, ctx: &mut Context<'_>) -> Poll<Self::Output> {
         if self.f.is_none() {
-            let req =
-                self.req.as_ref().expect("Extract future was polled twice!");
+            let req = self.req.as_ref().expect("Extract future was polled twice!");
             let f = T::from_service_request(req).map_err(Into::into);
             self.f = Some(f.boxed_local());
         }
@@ -252,24 +237,23 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use actix_web::test::TestRequest;
-    use actix_service::{into_service, Service};
-    use futures_util::join;
     use crate::extractors::bearer::BearerAuth;
+    use actix_service::{into_service, Service};
     use actix_web::error;
-
+    use actix_web::test::TestRequest;
+    use futures_util::join;
 
     /// This is a test for https://github.com/actix/actix-extras/issues/10
     #[actix_rt::test]
     async fn test_middleware_panic() {
         let mut middleware = AuthenticationMiddleware {
-            service: Rc::new(RefCell::new(into_service(|_: ServiceRequest| {
-                async move {
+            service: Rc::new(RefCell::new(into_service(
+                |_: ServiceRequest| async move {
                     actix_rt::time::delay_for(std::time::Duration::from_secs(1)).await;
                     Err::<ServiceResponse, _>(error::ErrorBadRequest("error"))
-                }}))),
-            process_fn: Arc::new(|req, _: BearerAuth| async {
-                Ok(req) }),
+                },
+            ))),
+            process_fn: Arc::new(|req, _: BearerAuth| async { Ok(req) }),
             _extractor: PhantomData,
         };
 
@@ -277,8 +261,7 @@ mod tests {
 
         let f = middleware.call(req);
 
-        let res = futures_util::future::lazy(|cx| middleware.poll_ready(cx) );
-
+        let res = futures_util::future::lazy(|cx| middleware.poll_ready(cx));
 
         assert!(join!(f, res).0.is_err());
     }
@@ -287,13 +270,13 @@ mod tests {
     #[actix_rt::test]
     async fn test_middleware_panic_several_orders() {
         let mut middleware = AuthenticationMiddleware {
-            service: Rc::new(RefCell::new(into_service(|_: ServiceRequest| {
-                async move {
+            service: Rc::new(RefCell::new(into_service(
+                |_: ServiceRequest| async move {
                     actix_rt::time::delay_for(std::time::Duration::from_secs(1)).await;
                     Err::<ServiceResponse, _>(error::ErrorBadRequest("error"))
-                }}))),
-            process_fn: Arc::new(|req, _: BearerAuth| async {
-                Ok(req) }),
+                },
+            ))),
+            process_fn: Arc::new(|req, _: BearerAuth| async { Ok(req) }),
             _extractor: PhantomData,
         };
 

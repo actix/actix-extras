@@ -29,9 +29,7 @@ impl fmt::Display for ParseError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let display = match self {
             ParseError::Invalid => "Invalid header value".to_string(),
-            ParseError::MissingScheme => {
-                "Missing authorization scheme".to_string()
-            }
+            ParseError::MissingScheme => "Missing authorization scheme".to_string(),
             ParseError::MissingField(_) => "Missing header field".to_string(),
             ParseError::ToStrError(e) => e.to_string(),
             ParseError::Base64DecodeError(e) => e.to_string(),

@@ -2,9 +2,7 @@ use std::borrow::Cow;
 use std::fmt;
 use std::str;
 
-use actix_web::http::header::{
-    HeaderValue, IntoHeaderValue, InvalidHeaderValue,
-};
+use actix_web::http::header::{HeaderValue, IntoHeaderValue, InvalidHeaderValue};
 use bytes::{BufMut, Bytes, BytesMut};
 
 use super::super::Challenge;

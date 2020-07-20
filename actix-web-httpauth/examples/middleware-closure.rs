@@ -5,8 +5,7 @@ use actix_web_httpauth::middleware::HttpAuthentication;
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
-        let auth =
-            HttpAuthentication::basic(|req, _credentials| async { Ok(req) });
+        let auth = HttpAuthentication::basic(|req, _credentials| async { Ok(req) });
         App::new()
             .wrap(middleware::Logger::default())
             .wrap(auth)
