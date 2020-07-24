@@ -4,7 +4,6 @@
 
 > A collection of additional crates supporting the [actix] and [actix-web] frameworks.
 
-
 ## Crates
 
 | Crate                |                                                                                                                                                                                                                      |                                                                  |
