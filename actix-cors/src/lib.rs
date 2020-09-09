@@ -272,7 +272,6 @@ impl Cors {
         self
     }
 
-
     /// Add an predicate function that will be called on each request if client's `Origin`
     /// request header wasn't covered by any existing `allowed_origin` rules.
     ///
@@ -657,6 +656,8 @@ impl Inner {
                         })
                 {
                     Some(origin.clone())
+                } else if self.origins_fns.iter().any(|origin_fn| (origin_fn.f)(req)) {
+                    Some(req.headers().get(&header::ORIGIN).unwrap().clone())
                 } else {
                     Some(self.origins_str.as_ref().unwrap().clone())
                 }
@@ -1244,7 +1245,8 @@ mod tests {
         let mut cors = Cors::new()
             .allowed_origin("https://www.example.com")
             .allowed_origin_fn(|req| {
-                req.headers.get(header::ORIGIN)
+                req.headers
+                    .get(header::ORIGIN)
                     .unwrap()
                     .to_str()
                     .unwrap()
@@ -1263,7 +1265,8 @@ mod tests {
 
         assert_eq!(
             "https://www.unknown.com",
-            resp.headers().get(header::ACCESS_CONTROL_ALLOW_ORIGIN)
+            resp.headers()
+                .get(header::ACCESS_CONTROL_ALLOW_ORIGIN)
                 .unwrap()
                 .to_str()
                 .unwrap()
