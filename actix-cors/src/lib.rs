@@ -272,6 +272,12 @@ impl Cors {
         self
     }
 
+
+    /// Add an predicate function that will be called on each request if client's `Origin`
+    /// request header wasn't covered by any existing `allowed_origin` rules.
+    ///
+    /// If function returned `true`, client's `Origin` request header will be
+    /// echoed back in the `Access-Control-Allow-Origin` response header.
     pub fn allowed_origin_fn(mut self, f: fn(req: &RequestHead) -> bool) -> Cors {
         if let Some(cors) = cors(&mut self.cors, &self.error) {
             cors.origins_fns.push(OriginFn { f });
