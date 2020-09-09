@@ -617,12 +617,7 @@ impl Inner {
                     AllOrSome::Some(ref allowed_origins) => allowed_origins
                         .get(origin)
                         .map(|_| ())
-                        .or_else(|| {
-                            self.origins_fns
-                                .iter()
-                                .find(|origin_fn| (origin_fn.f)(req))
-                                .map(|_| ())
-                        })
+                        .or_else(|| if self.validate_origin_fn(req) { Some(()) } else { None })
                         .ok_or_else(|| CorsError::OriginNotAllowed),
                 };
             }
@@ -633,6 +628,12 @@ impl Inner {
                 _ => Err(CorsError::MissingOrigin),
             }
         }
+    }
+
+    fn validate_origin_fn(&self, req: &RequestHead) -> bool {
+        self.origins_fns
+            .iter()
+            .any(|origin_fn| (origin_fn.f)(req))
     }
 
     fn access_control_allow_origin(&self, req: &RequestHead) -> Option<HeaderValue> {
@@ -656,7 +657,7 @@ impl Inner {
                         })
                 {
                     Some(origin.clone())
-                } else if self.origins_fns.iter().any(|origin_fn| (origin_fn.f)(req)) {
+                } else if self.validate_origin_fn(req) {
                     Some(req.headers().get(&header::ORIGIN).unwrap().clone())
                 } else {
                     Some(self.origins_str.as_ref().unwrap().clone())
