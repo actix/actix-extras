@@ -50,6 +50,8 @@ use std::iter::FromIterator;
 use std::rc::Rc;
 use std::task::{Context, Poll};
 
+use core::fmt;
+
 use actix_service::{Service, Transform};
 use actix_web::dev::{RequestHead, ServiceRequest, ServiceResponse};
 use actix_web::error::{Error, ResponseError, Result};
@@ -186,6 +188,7 @@ impl Cors {
             cors: Some(Inner {
                 origins: AllOrSome::All,
                 origins_str: None,
+                origins_fns: Vec::new(),
                 methods: HashSet::new(),
                 headers: AllOrSome::All,
                 expose_hdrs: None,
@@ -206,6 +209,7 @@ impl Cors {
         let inner = Inner {
             origins: AllOrSome::default(),
             origins_str: None,
+            origins_fns: Vec::new(),
             methods: HashSet::from_iter(
                 vec![
                     Method::GET,
@@ -268,14 +272,9 @@ impl Cors {
         self
     }
 
-    pub fn allowed_origin_fn(mut self, f: OriginFn) -> Cors {
+    pub fn allowed_origin_fn(mut self, f: fn(req: &RequestHead) -> bool) -> Cors {
         if let Some(cors) = cors(&mut self.cors, &self.error) {
-            if cors.origins.is_all() {
-                cors.origins = AllOrSome::Some(HashSet::new());
-            }
-            if let AllOrSome::Some(ref mut origins) = cors.origins {
-                origins.insert(f);
-            }
+            cors.origins_fns.push(OriginFn { f });
         }
         self
     }
@@ -579,12 +578,20 @@ pub struct CorsMiddleware<S> {
     inner: Rc<Inner>,
 }
 
-type OriginFn = fn(req: &RequestHead) -> bool;
+struct OriginFn {
+    f: fn(req: &RequestHead) -> bool,
+}
+
+impl fmt::Debug for OriginFn {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        return write!(f, "origin_fn");
+    }
+}
 
 #[derive(Debug)]
 struct Inner {
     methods: HashSet<Method>,
-    origins: AllOrSome<HashSet<StringOrFn>>,
+    origins: AllOrSome<HashSet<String>>,
     origins_fns: Vec<OriginFn>,
     origins_str: Option<HeaderValue>,
     headers: AllOrSome<HashSet<HeaderName>>,
@@ -604,8 +611,13 @@ impl Inner {
                     AllOrSome::All => Ok(()),
                     AllOrSome::Some(ref allowed_origins) => allowed_origins
                         .get(origin)
-                        .or_else(|| self.origins_fns.iter().find(|f| (f)(11)))
                         .map(|_| ())
+                        .or_else(|| {
+                            self.origins_fns
+                                .iter()
+                                .find(|origin_fn| (origin_fn.f)(req))
+                                .map(|_| ())
+                        })
                         .ok_or_else(|| CorsError::OriginNotAllowed),
                 };
             }
