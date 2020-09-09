@@ -268,6 +268,18 @@ impl Cors {
         self
     }
 
+    pub fn allowed_origin_fn(mut self, f: OriginFn) -> Cors {
+        if let Some(cors) = cors(&mut self.cors, &self.error) {
+            if cors.origins.is_all() {
+                cors.origins = AllOrSome::Some(HashSet::new());
+            }
+            if let AllOrSome::Some(ref mut origins) = cors.origins {
+                origins.insert(f);
+            }
+        }
+        self
+    }
+
     /// Set a list of methods which allowed origins can perform.
     ///
     /// This is the `list of methods` in the
@@ -567,10 +579,13 @@ pub struct CorsMiddleware<S> {
     inner: Rc<Inner>,
 }
 
+type OriginFn = fn(req: &RequestHead) -> bool;
+
 #[derive(Debug)]
 struct Inner {
     methods: HashSet<Method>,
-    origins: AllOrSome<HashSet<String>>,
+    origins: AllOrSome<HashSet<StringOrFn>>,
+    origins_fns: Vec<OriginFn>,
     origins_str: Option<HeaderValue>,
     headers: AllOrSome<HashSet<HeaderName>>,
     expose_hdrs: Option<String>,
@@ -589,6 +604,7 @@ impl Inner {
                     AllOrSome::All => Ok(()),
                     AllOrSome::Some(ref allowed_origins) => allowed_origins
                         .get(origin)
+                        .or_else(|| self.origins_fns.iter().find(|f| (f)(11)))
                         .map(|_| ())
                         .ok_or_else(|| CorsError::OriginNotAllowed),
                 };
