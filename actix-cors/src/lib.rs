@@ -1238,4 +1238,35 @@ mod tests {
                 .as_bytes()
         );
     }
+
+    #[actix_rt::test]
+    async fn test_allowed_origin_fn() {
+        let mut cors = Cors::new()
+            .allowed_origin("https://www.example.com")
+            .allowed_origin_fn(|req| {
+                req.headers.get(header::ORIGIN)
+                    .unwrap()
+                    .to_str()
+                    .unwrap()
+                    .contains("unknown")
+            })
+            .finish()
+            .new_transform(test::ok_service())
+            .await
+            .unwrap();
+
+        let req = TestRequest::with_header("Origin", "https://www.unknown.com")
+            .method(Method::GET)
+            .to_srv_request();
+
+        let resp = test::call_service(&mut cors, req).await;
+
+        assert_eq!(
+            "https://www.unknown.com",
+            resp.headers().get(header::ACCESS_CONTROL_ALLOW_ORIGIN)
+                .unwrap()
+                .to_str()
+                .unwrap()
+        );
+    }
 }
