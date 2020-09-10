@@ -66,7 +66,7 @@ use futures_util::future::{ok, Either, FutureExt, LocalBoxFuture, Ready};
 pub enum CorsError {
     /// The HTTP request header `Origin` is required but was not provided
     #[display(
-    fmt = "The HTTP request header `Origin` is required but was not provided"
+        fmt = "The HTTP request header `Origin` is required but was not provided"
     )]
     MissingOrigin,
     /// The HTTP request header `Origin` could not be parsed correctly.
@@ -75,18 +75,18 @@ pub enum CorsError {
     /// The request header `Access-Control-Request-Method` is required but is
     /// missing
     #[display(
-    fmt = "The request header `Access-Control-Request-Method` is required but is missing"
+        fmt = "The request header `Access-Control-Request-Method` is required but is missing"
     )]
     MissingRequestMethod,
     /// The request header `Access-Control-Request-Method` has an invalid value
     #[display(
-    fmt = "The request header `Access-Control-Request-Method` has an invalid value"
+        fmt = "The request header `Access-Control-Request-Method` has an invalid value"
     )]
     BadRequestMethod,
     /// The request header `Access-Control-Request-Headers`  has an invalid
     /// value
     #[display(
-    fmt = "The request header `Access-Control-Request-Headers`  has an invalid value"
+        fmt = "The request header `Access-Control-Request-Headers`  has an invalid value"
     )]
     BadRequestHeaders,
     /// Origin is not allowed to make this request
@@ -220,7 +220,7 @@ impl Cors {
                     Method::PATCH,
                     Method::DELETE,
                 ]
-                    .into_iter(),
+                .into_iter(),
             ),
             headers: AllOrSome::All,
             expose_hdrs: None,
@@ -291,10 +291,10 @@ impl Cors {
     ///
     /// Defaults to `[GET, HEAD, POST, OPTIONS, PUT, PATCH, DELETE]`
     pub fn allowed_methods<U, M>(mut self, methods: U) -> Cors
-        where
-            U: IntoIterator<Item=M>,
-            Method: TryFrom<M>,
-            <Method as TryFrom<M>>::Error: Into<HttpError>,
+    where
+        U: IntoIterator<Item = M>,
+        Method: TryFrom<M>,
+        <Method as TryFrom<M>>::Error: Into<HttpError>,
     {
         self.methods = true;
         if let Some(cors) = cors(&mut self.cors, &self.error) {
@@ -315,9 +315,9 @@ impl Cors {
 
     /// Set an allowed header.
     pub fn allowed_header<H>(mut self, header: H) -> Cors
-        where
-            HeaderName: TryFrom<H>,
-            <HeaderName as TryFrom<H>>::Error: Into<HttpError>,
+    where
+        HeaderName: TryFrom<H>,
+        <HeaderName as TryFrom<H>>::Error: Into<HttpError>,
     {
         if let Some(cors) = cors(&mut self.cors, &self.error) {
             match HeaderName::try_from(header) {
@@ -347,10 +347,10 @@ impl Cors {
     ///
     /// Defaults to `All`.
     pub fn allowed_headers<U, H>(mut self, headers: U) -> Cors
-        where
-            U: IntoIterator<Item=H>,
-            HeaderName: TryFrom<H>,
-            <HeaderName as TryFrom<H>>::Error: Into<HttpError>,
+    where
+        U: IntoIterator<Item = H>,
+        HeaderName: TryFrom<H>,
+        <HeaderName as TryFrom<H>>::Error: Into<HttpError>,
     {
         if let Some(cors) = cors(&mut self.cors, &self.error) {
             for h in headers {
@@ -382,10 +382,10 @@ impl Cors {
     ///
     /// This defaults to an empty set.
     pub fn expose_headers<U, H>(mut self, headers: U) -> Cors
-        where
-            U: IntoIterator<Item=H>,
-            HeaderName: TryFrom<H>,
-            <HeaderName as TryFrom<H>>::Error: Into<HttpError>,
+    where
+        U: IntoIterator<Item = H>,
+        HeaderName: TryFrom<H>,
+        <HeaderName as TryFrom<H>>::Error: Into<HttpError>,
     {
         for h in headers {
             match HeaderName::try_from(h) {
@@ -553,10 +553,10 @@ pub struct CorsFactory {
 }
 
 impl<S, B> Transform<S> for CorsFactory
-    where
-        S: Service<Request=ServiceRequest, Response=ServiceResponse<B>, Error=Error>,
-        S::Future: 'static,
-        B: 'static,
+where
+    S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
+    S::Future: 'static,
+    B: 'static,
 {
     type Request = ServiceRequest;
     type Response = ServiceResponse<B>;
@@ -617,7 +617,13 @@ impl Inner {
                     AllOrSome::Some(ref allowed_origins) => allowed_origins
                         .get(origin)
                         .map(|_| ())
-                        .or_else(|| if self.validate_origin_fn(req) { Some(()) } else { None })
+                        .or_else(|| {
+                            if self.validate_origin_fn(req) {
+                                Some(())
+                            } else {
+                                None
+                            }
+                        })
                         .ok_or_else(|| CorsError::OriginNotAllowed),
                 };
             }
@@ -631,9 +637,7 @@ impl Inner {
     }
 
     fn validate_origin_fn(&self, req: &RequestHead) -> bool {
-        self.origins_fns
-            .iter()
-            .any(|origin_fn| (origin_fn.f)(req))
+        self.origins_fns.iter().any(|origin_fn| (origin_fn.f)(req))
     }
 
     fn access_control_allow_origin(&self, req: &RequestHead) -> Option<HeaderValue> {
@@ -649,12 +653,12 @@ impl Inner {
             }
             AllOrSome::Some(ref origins) => {
                 if let Some(origin) =
-                req.headers()
-                    .get(&header::ORIGIN)
-                    .filter(|o| match o.to_str() {
-                        Ok(os) => origins.contains(os),
-                        _ => false,
-                    })
+                    req.headers()
+                        .get(&header::ORIGIN)
+                        .filter(|o| match o.to_str() {
+                            Ok(os) => origins.contains(os),
+                            _ => false,
+                        })
                 {
                     Some(origin.clone())
                 } else if self.validate_origin_fn(req) {
@@ -688,11 +692,11 @@ impl Inner {
             AllOrSome::All => Ok(()),
             AllOrSome::Some(ref allowed_headers) => {
                 if let Some(hdr) =
-                req.headers().get(&header::ACCESS_CONTROL_REQUEST_HEADERS)
+                    req.headers().get(&header::ACCESS_CONTROL_REQUEST_HEADERS)
                 {
                     if let Ok(headers) = hdr.to_str() {
                         #[allow(clippy::mutable_key_type)] // FIXME: revisit here
-                            let mut hdrs = HashSet::new();
+                        let mut hdrs = HashSet::new();
                         for hdr in headers.split(',') {
                             match HeaderName::try_from(hdr.trim()) {
                                 Ok(hdr) => hdrs.insert(hdr),
@@ -718,10 +722,10 @@ impl Inner {
 }
 
 impl<S, B> Service for CorsMiddleware<S>
-    where
-        S: Service<Request=ServiceRequest, Response=ServiceResponse<B>, Error=Error>,
-        S::Future: 'static,
-        B: 'static,
+where
+    S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
+    S::Future: 'static,
+    B: 'static,
 {
     type Request = ServiceRequest;
     type Response = ServiceResponse<B>;
@@ -755,10 +759,10 @@ impl<S, B> Service for CorsMiddleware<S>
                             .fold(String::new(), |s, v| s + "," + v.as_str())
                             .as_str()[1..],
                     )
-                        .unwrap(),
+                    .unwrap(),
                 )
             } else if let Some(hdr) =
-            req.headers().get(&header::ACCESS_CONTROL_REQUEST_HEADERS)
+                req.headers().get(&header::ACCESS_CONTROL_REQUEST_HEADERS)
             {
                 Some(hdr.clone())
             } else {
@@ -816,7 +820,7 @@ impl<S, B> Service for CorsMiddleware<S>
                     if has_origin {
                         let mut res = res?;
                         if let Some(origin) =
-                        inner.access_control_allow_origin(res.request().head())
+                            inner.access_control_allow_origin(res.request().head())
                         {
                             res.headers_mut()
                                 .insert(header::ACCESS_CONTROL_ALLOW_ORIGIN, origin);
@@ -836,7 +840,7 @@ impl<S, B> Service for CorsMiddleware<S>
                         }
                         if inner.vary_header {
                             let value = if let Some(hdr) =
-                            res.headers_mut().get(&header::VARY)
+                                res.headers_mut().get(&header::VARY)
                             {
                                 let mut val: Vec<u8> =
                                     Vec::with_capacity(hdr.as_bytes().len() + 8);
@@ -853,7 +857,7 @@ impl<S, B> Service for CorsMiddleware<S>
                         res
                     }
                 }
-                    .boxed_local(),
+                .boxed_local(),
             )
         }
     }
@@ -1258,7 +1262,6 @@ mod tests {
             .await
             .unwrap();
 
-
         let req = TestRequest::with_header("Origin", "https://www.unknown.com")
             .method(Method::GET)
             .to_srv_request();
@@ -1274,7 +1277,6 @@ mod tests {
                 .unwrap()
         );
     }
-
 
     #[actix_rt::test]
     async fn test_not_allowed_origin_fn() {
@@ -1293,7 +1295,6 @@ mod tests {
             .await
             .unwrap();
 
-
         let req = TestRequest::with_header("Origin", "https://www.known.com")
             .method(Method::GET)
             .to_srv_request();
@@ -1302,8 +1303,7 @@ mod tests {
 
         assert_eq!(
             None,
-            resp.headers()
-                .get(header::ACCESS_CONTROL_ALLOW_ORIGIN)
+            resp.headers().get(header::ACCESS_CONTROL_ALLOW_ORIGIN)
         );
     }
 }
