@@ -4,6 +4,7 @@
 
 * Minimum supported Rust version(MSRV) is now 1.40.0.
 * Implement the Debug trait on all public types.
+* Implement `allowed_origin_fn` builder method.
 
 ## [0.3.0-alpha.1] - 2020-03-11
 
