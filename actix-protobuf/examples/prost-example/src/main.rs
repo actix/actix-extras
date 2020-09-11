@@ -1,13 +1,12 @@
-#[macro_use]
-extern crate prost_derive;
-
 use actix_protobuf::*;
 use actix_web::*;
+use prost_derive::Message;
 
 #[derive(Clone, PartialEq, Message)]
 pub struct MyObj {
     #[prost(int32, tag = "1")]
     pub number: i32,
+
     #[prost(string, tag = "2")]
     pub name: String,
 }
@@ -17,7 +16,7 @@ async fn index(msg: ProtoBuf<MyObj>) -> Result<HttpResponse> {
     HttpResponse::Ok().protobuf(msg.0) // <- send response
 }
 
-#[actix_rt::main]
+#[actix_web::main]
 async fn main() -> std::io::Result<()> {
     std::env::set_var("RUST_LOG", "actix_web=debug,actix_server=info");
     env_logger::init();
