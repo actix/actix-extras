@@ -1,31 +1,28 @@
 # Changes
 
 ## Unreleased - 2020-xx-xx
+
+
+## 0.9.0 - 2020-09-11
 * Update `actix-web` dependency to 3.0.0.
 * Minimize `futures` dependency.
 
-## [0.9.0-alpha.2]
 
+## 0.9.0-alpha.2 - 2020-05-17
 * Add `cookie_http_only` functionality to RedisSession builder, setting this
   to false allows JavaScript to access cookies. Defaults to true.
-
 * Change type of parameter of ttl method to u32.
-
 * Update `actix` to 0.10.0-alpha.3
-
 * Update `tokio-util` to 0.3
-
 * Minimum supported Rust version(MSRV) is now 1.40.0.
 
-## [0.9.0-alpha.1]
 
+## 0.9.0-alpha.1 - 2020-03-28
 * Update `actix` to 0.10.0-alpha.2
-
 * Update `actix-session` to 0.4.0-alpha.1
-
 * Update `actix-web` to 3.0.0-alpha.1
-
 * Update `time` to 0.2.9
+
 
 ## [0.8.1] 2020-02-18
 
