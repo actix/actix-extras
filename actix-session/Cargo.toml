@@ -1,10 +1,10 @@
 [package]
 name = "actix-session"
-version = "0.4.0-alpha.1"
+version = "0.4.0"
 authors = ["Nikolay Kim <fafhrd91@gmail.com>"]
-description = "Session for actix-web framework."
+description = "Sessions for Actix web"
 readme = "README.md"
-keywords = ["http", "web", "framework", "async", "futures"]
+keywords = ["http", "web", "framework", "async", "session"]
 homepage = "https://actix.rs"
 repository = "https://github.com/actix/actix-web.git"
 documentation = "https://docs.rs/actix-session/"
