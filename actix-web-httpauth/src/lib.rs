@@ -15,11 +15,7 @@
 //! [extractors]: https://actix.rs/docs/extractors/
 //! [middleware]: ./middleware/
 
-#![deny(bare_trait_objects)]
-#![deny(missing_docs)]
-#![deny(nonstandard_style)]
-#![deny(rust_2018_idioms)]
-#![deny(unused)]
+#![deny(bare_trait_objects, missing_docs, nonstandard_style, rust_2018_idioms)]
 #![deny(clippy::all)]
 
 pub mod extractors;

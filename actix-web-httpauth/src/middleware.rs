@@ -107,7 +107,7 @@ where
     ///         Ok(req)
     ///     } else {
     ///         let config = req.app_data::<Config>()
-    ///             .map(|data| data.get_ref().clone())
+    ///             .map(|data| data.clone())
     ///             .unwrap_or_else(Default::default)
     ///             .scope("urn:example:channel=HBO&urn:example:rating=G,PG-13");
     ///
