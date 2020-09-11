@@ -42,7 +42,7 @@
 //! ```
 
 #![allow(clippy::borrow_interior_mutable_const, clippy::type_complexity)]
-#![deny(missing_docs, missing_debug_implementations)]
+#![deny(missing_docs, missing_debug_implementations, rust_2018_idioms)]
 
 use std::collections::HashSet;
 use std::convert::TryFrom;
@@ -695,7 +695,7 @@ where
         LocalBoxFuture<'static, Result<Self::Response, Error>>,
     >;
 
-    fn poll_ready(&mut self, cx: &mut Context) -> Poll<Result<(), Self::Error>> {
+    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         self.service.poll_ready(cx)
     }
 

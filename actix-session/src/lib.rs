@@ -41,6 +41,9 @@
 //!         .await
 //! }
 //! ```
+
+#![deny(rust_2018_idioms)]
+
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
