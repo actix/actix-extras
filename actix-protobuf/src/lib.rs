@@ -241,7 +241,7 @@ impl<T: Message + Default + 'static> Future for ProtoBufMessage<T> {
                     }
                 }
 
-                return Ok(<T>::decode(&mut body)?);
+                Ok(<T>::decode(&mut body)?)
             }
             .boxed_local(),
         );

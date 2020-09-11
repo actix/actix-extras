@@ -590,7 +590,7 @@ impl Inner {
                     AllOrSome::Some(ref allowed_origins) => allowed_origins
                         .get(origin)
                         .map(|_| ())
-                        .ok_or_else(|| CorsError::OriginNotAllowed),
+                        .ok_or(CorsError::OriginNotAllowed),
                 };
             }
             Err(CorsError::BadOrigin)
@@ -638,7 +638,7 @@ impl Inner {
                         .methods
                         .get(&method)
                         .map(|_| ())
-                        .ok_or_else(|| CorsError::MethodNotAllowed);
+                        .ok_or(CorsError::MethodNotAllowed);
                 }
             }
             Err(CorsError::BadRequestMethod)
@@ -1072,6 +1072,7 @@ mod tests {
                 .collect::<Vec<&str>>();
 
             for h in exposed_headers {
+                #[allow(clippy::needless_collect)]
                 assert!(headers.contains(&h.as_str()));
             }
         }
