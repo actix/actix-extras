@@ -2,6 +2,7 @@
 
 ## Unreleased - 2020-xx-xx
 * Update `actix-web` dependency to 3.0.0.
+* Update `actix-utils` dependency to 2.0.0.
 * Minimize `futures` dependency.
 
 ## [0.9.0-alpha.2]
