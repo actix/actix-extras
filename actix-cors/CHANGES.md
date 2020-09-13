@@ -1,13 +1,13 @@
 # Changes
 
 ## Unreleased - 2020-xx-xx
+* Implement `allowed_origin_fn` builder method.
 
 
 ## 0.3.0 - 2020-09-11
 * Update `actix-web` dependency to 3.0.0.
 * Minimum supported Rust version (MSRV) is now 1.42.0.
 * Implement the Debug trait on all public types.
-* Implement `allowed_origin_fn` builder method.
 
 
 ## 0.3.0-alpha.1 - 2020-03-11
