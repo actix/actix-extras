@@ -50,7 +50,7 @@ use std::iter::FromIterator;
 use std::rc::Rc;
 use std::task::{Context, Poll};
 
-use core::fmt;
+use std::fmt;
 
 use actix_service::{Service, Transform};
 use actix_web::dev::{RequestHead, ServiceRequest, ServiceResponse};
