@@ -42,7 +42,7 @@
 //! ```
 
 #![allow(clippy::borrow_interior_mutable_const, clippy::type_complexity)]
-#![deny(missing_docs, missing_debug_implementations)]
+#![deny(missing_docs, missing_debug_implementations, rust_2018_idioms)]
 
 use std::collections::HashSet;
 use std::convert::TryFrom;
@@ -624,7 +624,7 @@ impl Inner {
                                 None
                             }
                         })
-                        .ok_or_else(|| CorsError::OriginNotAllowed),
+                        .ok_or(CorsError::OriginNotAllowed),
                 };
             }
             Err(CorsError::BadOrigin)
@@ -678,7 +678,7 @@ impl Inner {
                         .methods
                         .get(&method)
                         .map(|_| ())
-                        .ok_or_else(|| CorsError::MethodNotAllowed);
+                        .ok_or(CorsError::MethodNotAllowed);
                 }
             }
             Err(CorsError::BadRequestMethod)
@@ -735,7 +735,7 @@ where
         LocalBoxFuture<'static, Result<Self::Response, Error>>,
     >;
 
-    fn poll_ready(&mut self, cx: &mut Context) -> Poll<Result<(), Self::Error>> {
+    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         self.service.poll_ready(cx)
     }
 
@@ -1112,6 +1112,7 @@ mod tests {
                 .collect::<Vec<&str>>();
 
             for h in exposed_headers {
+                #[allow(clippy::needless_collect)]
                 assert!(headers.contains(&h.as_str()));
             }
         }

@@ -1,10 +1,10 @@
 [package]
 name = "actix-session"
-version = "0.4.0-alpha.1"
+version = "0.4.0"
 authors = ["Nikolay Kim <fafhrd91@gmail.com>"]
-description = "Session for actix-web framework."
+description = "Sessions for Actix web"
 readme = "README.md"
-keywords = ["http", "web", "framework", "async", "futures"]
+keywords = ["http", "web", "framework", "async", "session"]
 homepage = "https://actix.rs"
 repository = "https://github.com/actix/actix-web.git"
 documentation = "https://docs.rs/actix-session/"
@@ -20,8 +20,8 @@ default = ["cookie-session"]
 cookie-session = ["actix-web/secure-cookies"]
 
 [dependencies]
-actix-web = { version = "3.0.0-alpha.1", default_features = false }
-actix-service = "1.0.1"
+actix-web = { version = "3.0.0", default_features = false }
+actix-service = "1.0.6"
 bytes = "0.5.3"
 derive_more = "0.99.2"
 futures-util = { version = "0.3.4", default-features = false }
@@ -30,4 +30,4 @@ serde_json = "1.0"
 time = { version = "0.2.7", default-features = false, features = ["std"] }
 
 [dev-dependencies]
-actix-rt = "1.0.0"
+actix-rt = "1"

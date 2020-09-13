@@ -1,10 +1,13 @@
 [package]
 name = "actix-web-httpauth"
-version = "0.4.2"
-authors = ["svartalf <self@svartalf.info>", "Yuki Okushi <huyuumi.dev@gmail.com>"]
-description = "HTTP authentication schemes for actix-web"
+version = "0.5.0"
+authors = [
+    "svartalf <self@svartalf.info>",
+    "Yuki Okushi <huyuumi.dev@gmail.com>",
+]
+description = "HTTP authentication schemes for Actix web"
 readme = "README.md"
-keywords = ["http", "web", "framework"]
+keywords = ["http", "web", "framework", "authentication", "security"]
 homepage = "https://github.com/actix/actix-extras"
 repository = "https://github.com/actix/actix-extras.git"
 documentation = "https://docs.rs/actix-web-httpauth/"
@@ -17,15 +20,11 @@ name = "actix_web_httpauth"
 path = "src/lib.rs"
 
 [dependencies]
-actix-web = { version = "^2.0", default_features = false }
-actix-service = "1.0"
+actix-web = { version = "3.0.0", default_features = false }
+actix-service = "1.0.6"
 futures-util = { version = "0.3", default-features = false }
 bytes = "0.5"
 base64 = "0.12"
 
 [dev-dependencies]
-actix-rt = "1.0"
-
-[features]
-default = []
-nightly = [] # leave it for compatibility
+actix-rt = "1"

@@ -2,15 +2,16 @@
 name = "prost-example"
 version = "0.5.1"
 edition = "2018"
-authors = ["kingxsp <jin.hb.zh@outlook.com>", "Yuki Okushi <huyuumi.dev@gmail.com>"]
+authors = [
+    "kingxsp <jin.hb.zh@outlook.com>",
+    "Yuki Okushi <huyuumi.dev@gmail.com>"
+]
 
 [dependencies]
-bytes = "0.5"
-env_logger = "*"
+actix-web = "3.0.0"
+actix-protobuf = { path = "../../" }
 
+bytes = "0.5"
+env_logger = "0.7"
 prost = "0.6.0"
 prost-derive = "0.6.0"
-
-actix-rt = "1"
-actix-web = "3.0.0-alpha.3"
-actix-protobuf = { path="../../" }
