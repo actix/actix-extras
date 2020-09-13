@@ -1,3 +1,5 @@
+#![deny(rust_2018_idioms)]
+
 use derive_more::Display;
 use std::fmt;
 use std::future::Future;
@@ -78,7 +80,7 @@ impl<T: Message> fmt::Debug for ProtoBuf<T>
 where
     T: fmt::Debug,
 {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "ProtoBuf: {:?}", self.0)
     }
 }
@@ -87,7 +89,7 @@ impl<T: Message> fmt::Display for ProtoBuf<T>
 where
     T: fmt::Display,
 {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Display::fmt(&self.0, f)
     }
 }
@@ -239,7 +241,7 @@ impl<T: Message + Default + 'static> Future for ProtoBufMessage<T> {
                     }
                 }
 
-                return Ok(<T>::decode(&mut body)?);
+                Ok(<T>::decode(&mut body)?)
             }
             .boxed_local(),
         );

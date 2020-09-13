@@ -48,6 +48,7 @@
 //! ```
 
 #![allow(clippy::needless_doctest_main)]
+#![deny(rust_2018_idioms)]
 
 use std::cell::RefCell;
 use std::future::Future;
@@ -274,7 +275,7 @@ where
     type Error = Error;
     type Future = LocalBoxFuture<'static, Result<Self::Response, Self::Error>>;
 
-    fn poll_ready(&mut self, cx: &mut Context) -> Poll<Result<(), Self::Error>> {
+    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         self.service.borrow_mut().poll_ready(cx)
     }
 
@@ -424,7 +425,7 @@ impl CookieIdentityInner {
         })
     }
 
-    fn parse(&self, cookie: Cookie) -> Option<CookieValue> {
+    fn parse(&self, cookie: Cookie<'_>) -> Option<CookieValue> {
         let value: CookieValue = serde_json::from_str(cookie.value()).ok()?;
         let now = SystemTime::now();
         if let Some(visit_deadline) = self.visit_deadline {

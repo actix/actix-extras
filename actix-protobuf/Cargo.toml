@@ -1,11 +1,14 @@
 [package]
 name = "actix-protobuf"
-version = "0.6.0-alpha.1"
+version = "0.6.0"
 edition = "2018"
-authors = ["kingxsp <jin.hb.zh@outlook.com>", "Yuki Okushi <huyuumi.dev@gmail.com>"]
-description = "Protobuf support for actix-web framework."
+authors = [
+    "kingxsp <jin.hb.zh@outlook.com>",
+    "Yuki Okushi <huyuumi.dev@gmail.com>"
+]
+description = "Protobuf support for Actix web"
 readme = "README.md"
-keywords = ["actix"]
+keywords = ["actix", "protobuf", "protocol", "rpc"]
 homepage = "https://github.com/actix/actix-extras"
 repository = "https://github.com/actix/actix-extras.git"
 license = "MIT OR Apache-2.0"
@@ -16,13 +19,11 @@ name = "actix_protobuf"
 path = "src/lib.rs"
 
 [dependencies]
+actix-web = { version = "3.0.0", default_features = false }
+actix-rt = "1.1.1"
 bytes = "0.5"
 futures-util = { version = "0.3.5", default-features = false }
 derive_more = "0.99"
-
-actix-rt = "1"
-actix-web = { version = "3.0.0-alpha.3", default_features = false }
-
 prost = "0.6.0"
 
 [dev-dependencies]

@@ -1,11 +1,11 @@
 [package]
 name = "actix-redis"
-version = "0.9.0-alpha.2"
+version = "0.9.1"
 authors = ["Nikolay Kim <fafhrd91@gmail.com>"]
-description = "Redis integration for actix framework"
+description = "Redis integration for Actix web"
 license = "MIT OR Apache-2.0"
 readme = "README.md"
-keywords = ["web", "redis", "async", "actix", "tokio"]
+keywords = ["actix", "redis", "async", "session"]
 homepage = "https://github.com/actix/actix-extras"
 repository = "https://github.com/actix/actix-extras.git"
 documentation = "https://docs.rs/actix-redis/"
@@ -21,27 +21,35 @@ path = "src/lib.rs"
 default = ["web"]
 
 # actix-web integration
-web = ["actix-http/actors", "actix-service", "actix-web", "actix-session/cookie-session", "rand", "serde", "serde_json"]
+web = [
+    "actix-http/actors",
+    "actix-service",
+    "actix-web",
+    "actix-session/cookie-session",
+    "rand",
+    "serde",
+    "serde_json"
+]
 
 [dependencies]
-actix = "0.10.0-alpha.3"
-actix-utils = "1.0.3"
+actix = "0.10.0"
+actix-utils = "2.0.0"
 
 log = "0.4.6"
 backoff = "0.2.1"
 derive_more = "0.99.2"
 futures-util = { version = "0.3.5", default-features = false }
-redis-async = "0.6.1"
-actix-rt = "1.0.0"
+redis-async = "0.6.3"
+actix-rt = "1.1.1"
 time = "0.2.9"
 tokio = "0.2.6"
 tokio-util = "0.3.0"
 
 # actix-session
-actix-web = { version = "3.0.0-alpha.2", default_features = false, optional = true }
-actix-http = { version = "2.0.0-alpha.3", optional = true }
-actix-service = { version = "1.0.0", optional = true }
-actix-session = { version = "0.4.0-alpha.1", optional = true }
+actix-web = { version = "3.0.0", default_features = false, optional = true }
+actix-http = { version = "2.0.0", optional = true }
+actix-service = { version = "1.0.6", optional = true }
+actix-session = { version = "0.4.0", optional = true }
 rand = { version = "0.7.0", optional = true }
 serde = { version = "1.0.101", optional = true }
 serde_json = { version = "1.0.40", optional = true }
