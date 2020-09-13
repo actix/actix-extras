@@ -588,7 +588,7 @@ struct OriginFn {
 }
 
 impl fmt::Debug for OriginFn {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         return write!(f, "origin_fn");
     }
 }
