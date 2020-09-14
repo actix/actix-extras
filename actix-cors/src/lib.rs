@@ -589,7 +589,7 @@ struct OriginFn {
 
 impl fmt::Debug for OriginFn {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        return write!(f, "origin_fn");
+        write!(f, "origin_fn")
     }
 }
 
