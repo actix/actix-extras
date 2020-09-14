@@ -618,7 +618,7 @@ impl Inner {
                         .get(origin)
                         .map(|_| ())
                         .or_else(|| {
-                            if self.validate_origin_fn(req) {
+                            if self.validate_origin_fns(req) {
                                 Some(())
                             } else {
                                 None
@@ -636,7 +636,7 @@ impl Inner {
         }
     }
 
-    fn validate_origin_fn(&self, req: &RequestHead) -> bool {
+    fn validate_origin_fns(&self, req: &RequestHead) -> bool {
         self.origins_fns.iter().any(|origin_fn| (origin_fn.f)(req))
     }
 
@@ -661,7 +661,7 @@ impl Inner {
                         })
                 {
                     Some(origin.clone())
-                } else if self.validate_origin_fn(req) {
+                } else if self.validate_origin_fns(req) {
                     Some(req.headers().get(&header::ORIGIN).unwrap().clone())
                 } else {
                     Some(self.origins_str.as_ref().unwrap().clone())
