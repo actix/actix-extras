@@ -49,7 +49,6 @@ use std::convert::TryFrom;
 use std::iter::FromIterator;
 use std::rc::Rc;
 use std::task::{Context, Poll};
-
 use std::fmt;
 
 use actix_service::{Service, Transform};
