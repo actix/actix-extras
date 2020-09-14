@@ -272,7 +272,7 @@ impl Cors {
         self
     }
 
-    /// Add an predicate function that will be called on each request if client's `Origin`
+    /// Add a predicate function that will be called on each request if client's `Origin`
     /// request header wasn't covered by any existing `allowed_origin` rules.
     ///
     /// If function returned `true`, client's `Origin` request header will be
