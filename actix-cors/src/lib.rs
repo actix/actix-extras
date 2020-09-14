@@ -46,10 +46,10 @@
 
 use std::collections::HashSet;
 use std::convert::TryFrom;
+use std::fmt;
 use std::iter::FromIterator;
 use std::rc::Rc;
 use std::task::{Context, Poll};
-use std::fmt;
 
 use actix_service::{Service, Transform};
 use actix_web::dev::{RequestHead, ServiceRequest, ServiceResponse};
@@ -1262,20 +1262,39 @@ mod tests {
             .await
             .unwrap();
 
-        let req = TestRequest::with_header("Origin", "https://www.unknown.com")
-            .method(Method::GET)
-            .to_srv_request();
+        {
+            let req = TestRequest::with_header("Origin", "https://www.example.com")
+                .method(Method::GET)
+                .to_srv_request();
 
-        let resp = test::call_service(&mut cors, req).await;
+            let resp = test::call_service(&mut cors, req).await;
 
-        assert_eq!(
-            "https://www.unknown.com",
-            resp.headers()
-                .get(header::ACCESS_CONTROL_ALLOW_ORIGIN)
-                .unwrap()
-                .to_str()
-                .unwrap()
-        );
+            assert_eq!(
+                "https://www.example.com",
+                resp.headers()
+                    .get(header::ACCESS_CONTROL_ALLOW_ORIGIN)
+                    .unwrap()
+                    .to_str()
+                    .unwrap()
+            );
+        }
+
+        {
+            let req = TestRequest::with_header("Origin", "https://www.unknown.com")
+                .method(Method::GET)
+                .to_srv_request();
+
+            let resp = test::call_service(&mut cors, req).await;
+
+            assert_eq!(
+                "https://www.unknown.com",
+                resp.headers()
+                    .get(header::ACCESS_CONTROL_ALLOW_ORIGIN)
+                    .unwrap()
+                    .to_str()
+                    .unwrap()
+            );
+        }
     }
 
     #[actix_rt::test]
@@ -1295,15 +1314,34 @@ mod tests {
             .await
             .unwrap();
 
-        let req = TestRequest::with_header("Origin", "https://www.known.com")
-            .method(Method::GET)
-            .to_srv_request();
+        {
+            let req = TestRequest::with_header("Origin", "https://www.example.com")
+                .method(Method::GET)
+                .to_srv_request();
 
-        let resp = test::call_service(&mut cors, req).await;
+            let resp = test::call_service(&mut cors, req).await;
 
-        assert_eq!(
-            None,
-            resp.headers().get(header::ACCESS_CONTROL_ALLOW_ORIGIN)
-        );
+            assert_eq!(
+                "https://www.example.com",
+                resp.headers()
+                    .get(header::ACCESS_CONTROL_ALLOW_ORIGIN)
+                    .unwrap()
+                    .to_str()
+                    .unwrap()
+            );
+        }
+
+        {
+            let req = TestRequest::with_header("Origin", "https://www.known.com")
+                .method(Method::GET)
+                .to_srv_request();
+
+            let resp = test::call_service(&mut cors, req).await;
+
+            assert_eq!(
+                None,
+                resp.headers().get(header::ACCESS_CONTROL_ALLOW_ORIGIN)
+            );
+        }
     }
 }
