@@ -1,7 +1,7 @@
 # Changes
 
 ## Unreleased - 2020-xx-xx
-* Add method to set HttpOnly flag on cookie identity.
+* Add method to set HttpOnly flag on cookie identity. [#102]
 
 
 ## 0.3.0 - 2020-09-11
@@ -25,3 +25,8 @@
 
 ## 0.1.0 - 2019-06-xx
 * Move identity middleware to separate crate
+
+
+<!-- PR Links -->
+
+[#102]: https://github.com/actix/actix-extras/pull/102
