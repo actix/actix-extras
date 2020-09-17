@@ -25,6 +25,13 @@
 //!         .wrap(
 //!             Cors::new() // <- Construct CORS middleware builder
 //!               .allowed_origin("https://www.rust-lang.org/")
+//!               .allowed_origin_fn(|req| {
+//!                   req.headers
+//!                       .get(header::ORIGIN)
+//!                       .map(HeaderValue::as_bytes)
+//!                       .filter(|b| b.ends_with(&b".rust-lang.org"[..]))
+//!                       .is_some()
+//!               })
 //!               .allowed_methods(vec!["GET", "POST"])
 //!               .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
 //!               .allowed_header(http::header::CONTENT_TYPE)
@@ -251,6 +258,10 @@ impl Cors {
     /// If `send_wildcard` is not set, the client's `Origin` request header
     /// will be echoed back in the `Access-Control-Allow-Origin` response header.
     ///
+    /// If the origin of the request doesn't match any allowed origins and
+    /// `allowed_origin_fn` is set, the `allowed_origin_fn` will be used
+    /// to determinate allowed origins.
+    ///
     /// Builder panics if supplied origin is not valid uri.
     pub fn allowed_origin(mut self, origin: &str) -> Cors {
         if let Some(cors) = cors(&mut self.cors, &self.error) {
@@ -271,13 +282,14 @@ impl Cors {
         self
     }
 
-    /// Add a predicate function that will be called on each request after origin
-    /// whitelist checks when client's `Origin` request header wasn't covered by any
-    /// existing `allowed_origin` rules.
+    /// Determinate allowed origins by processing requests which didn't match any origins
+    /// specified in the `allowed_origin`.
     ///
-    /// Function must return `true` or `false`. If function returned `true`, client's
-    /// `Origin` request header will be echoed back in the `Access-Control-Allow-Origin`
-    /// response header.
+    /// The function will receive a `RequestHead` of each request, which can be used
+    /// to determine whether it should be allowed or not.
+    ///
+    /// If the function returns `true`, the client's `Origin` request header will be echoed
+    /// back into the `Access-Control-Allow-Origin` response header.
     pub fn allowed_origin_fn(mut self, f: fn(req: &RequestHead) -> bool) -> Cors {
         if let Some(cors) = cors(&mut self.cors, &self.error) {
             cors.origins_fns.push(OriginFn { f });
