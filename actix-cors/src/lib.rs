@@ -1254,10 +1254,9 @@ mod tests {
             .allowed_origin_fn(|req| {
                 req.headers
                     .get(header::ORIGIN)
-                    .unwrap()
-                    .to_str()
-                    .unwrap()
-                    .contains("unknown")
+                    .map(HeaderValue::as_bytes)
+                    .filter(|b| b.ends_with(b".unknown.com"))
+                    .is_some()
             })
             .finish()
             .new_transform(test::ok_service())
@@ -1306,10 +1305,9 @@ mod tests {
             .allowed_origin_fn(|req| {
                 req.headers
                     .get(header::ORIGIN)
-                    .unwrap()
-                    .to_str()
-                    .unwrap()
-                    .contains("unknown")
+                    .map(HeaderValue::as_bytes)
+                    .filter(|b| b.ends_with(b".unknown.com"))
+                    .is_some()
             })
             .finish()
             .new_transform(test::ok_service())
