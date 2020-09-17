@@ -27,9 +27,9 @@
 //!               .allowed_origin("https://www.rust-lang.org/")
 //!               .allowed_origin_fn(|req| {
 //!                   req.headers
-//!                       .get(header::ORIGIN)
-//!                       .map(HeaderValue::as_bytes)
-//!                       .filter(|b| b.ends_with(&b".rust-lang.org"[..]))
+//!                       .get(http::header::ORIGIN)
+//!                       .map(http::HeaderValue::as_bytes)
+//!                       .filter(|b| b.ends_with(b".rust-lang.org"))
 //!                       .is_some()
 //!               })
 //!               .allowed_methods(vec!["GET", "POST"])
@@ -258,8 +258,8 @@ impl Cors {
     /// If `send_wildcard` is not set, the client's `Origin` request header
     /// will be echoed back in the `Access-Control-Allow-Origin` response header.
     ///
-    /// If the origin of the request doesn't match any allowed origins and
-    /// `allowed_origin_fn` is set, the `allowed_origin_fn` will be used
+    /// If the origin of the request doesn't match any allowed origins and at least
+    /// one `allowed_origin_fn` function is set, these functions will be used
     /// to determinate allowed origins.
     ///
     /// Builder panics if supplied origin is not valid uri.
