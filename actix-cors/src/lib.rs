@@ -1300,12 +1300,10 @@ mod tests {
             let resp = test::call_service(&mut cors, req).await;
 
             assert_eq!(
-                "https://www.unknown.com",
+                Some(&b"https://www.unknown.com"[..]),
                 resp.headers()
                     .get(header::ACCESS_CONTROL_ALLOW_ORIGIN)
-                    .unwrap()
-                    .to_str()
-                    .unwrap()
+                    .map(HeaderValue::as_bytes)
             );
         }
     }
@@ -1334,12 +1332,10 @@ mod tests {
             let resp = test::call_service(&mut cors, req).await;
 
             assert_eq!(
-                "https://www.example.com",
+                Some(&b"https://www.example.com"[..]),
                 resp.headers()
                     .get(header::ACCESS_CONTROL_ALLOW_ORIGIN)
-                    .unwrap()
-                    .to_str()
-                    .unwrap()
+                    .map(HeaderValue::as_bytes)
             );
         }
 
