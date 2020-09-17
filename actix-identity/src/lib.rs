@@ -47,7 +47,6 @@
 //! }
 //! ```
 
-#![allow(clippy::needless_doctest_main)]
 #![deny(rust_2018_idioms)]
 
 use std::cell::RefCell;
@@ -319,6 +318,7 @@ struct CookieIdentityInner {
     domain: Option<String>,
     secure: bool,
     max_age: Option<Duration>,
+    http_only: Option<bool>,
     same_site: Option<SameSite>,
     visit_deadline: Option<Duration>,
     login_deadline: Option<Duration>,
@@ -327,14 +327,16 @@ struct CookieIdentityInner {
 #[derive(Deserialize, Serialize, Debug)]
 struct CookieValue {
     identity: String,
+
     #[serde(skip_serializing_if = "Option::is_none")]
     login_timestamp: Option<SystemTime>,
+
     #[serde(skip_serializing_if = "Option::is_none")]
     visit_timestamp: Option<SystemTime>,
 }
 
 #[derive(Debug)]
-struct CookieIdentityExtention {
+struct CookieIdentityExtension {
     login_timestamp: Option<SystemTime>,
 }
 
@@ -349,6 +351,7 @@ impl CookieIdentityInner {
             domain: None,
             secure: true,
             max_age: None,
+            http_only: None,
             same_site: None,
             visit_deadline: None,
             login_deadline: None,
@@ -380,6 +383,10 @@ impl CookieIdentityInner {
 
         if let Some(max_age) = self.max_age {
             cookie.set_max_age(max_age);
+        }
+
+        if let Some(http_only) = self.http_only {
+            cookie.set_http_only(http_only);
         }
 
         if let Some(same_site) = self.same_site {
@@ -524,6 +531,12 @@ impl CookieIdentityPolicy {
         self
     }
 
+    /// Sets the `http_only` field in the session cookie being built.
+    pub fn http_only(mut self, http_only: bool) -> Self {
+        Rc::get_mut(&mut self.0).unwrap().http_only = Some(http_only);
+        self
+    }
+
     /// Sets the `same_site` field in the session cookie being built.
     pub fn same_site(mut self, same_site: SameSite) -> Self {
         Rc::get_mut(&mut self.0).unwrap().same_site = Some(same_site);
@@ -560,7 +573,7 @@ impl IdentityPolicy for CookieIdentityPolicy {
              }| {
                 if self.0.requires_oob_data() {
                     req.extensions_mut()
-                        .insert(CookieIdentityExtention { login_timestamp });
+                        .insert(CookieIdentityExtension { login_timestamp });
                 }
                 identity
             },
@@ -586,7 +599,7 @@ impl IdentityPolicy for CookieIdentityPolicy {
         } else if self.0.always_update_cookie() && id.is_some() {
             let visit_timestamp = SystemTime::now();
             let login_timestamp = if self.0.requires_oob_data() {
-                let CookieIdentityExtention {
+                let CookieIdentityExtension {
                     login_timestamp: lt,
                 } = res.request().extensions_mut().remove().unwrap();
                 lt
@@ -711,6 +724,37 @@ mod tests {
         assert!(resp.headers().contains_key(header::SET_COOKIE));
         let c = resp.response().cookies().next().unwrap().to_owned();
         assert_eq!(duration, c.max_age().unwrap());
+    }
+
+    #[actix_rt::test]
+    async fn test_http_only_same_site() {
+        let mut srv = test::init_service(
+            App::new()
+                .wrap(IdentityService::new(
+                    CookieIdentityPolicy::new(&COOKIE_KEY_MASTER)
+                        .domain("www.rust-lang.org")
+                        .name(COOKIE_NAME)
+                        .path("/")
+                        .http_only(true)
+                        .same_site(SameSite::None),
+                ))
+                .service(web::resource("/login").to(|id: Identity| {
+                    id.remember("test".to_string());
+                    HttpResponse::Ok()
+                })),
+        )
+        .await;
+
+        let resp =
+            test::call_service(&mut srv, TestRequest::with_uri("/login").to_request())
+                .await;
+
+        assert_eq!(resp.status(), StatusCode::OK);
+        assert!(resp.headers().contains_key(header::SET_COOKIE));
+
+        let c = resp.response().cookies().next().unwrap().to_owned();
+        assert!(c.http_only().unwrap());
+        assert_eq!(SameSite::None, c.same_site().unwrap());
     }
 
     #[actix_rt::test]
