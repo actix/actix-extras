@@ -1,6 +1,6 @@
 [package]
 name = "actix-identity"
-version = "0.3.0"
+version = "0.3.1"
 authors = ["Nikolay Kim <fafhrd91@gmail.com>"]
 description = "Identity service for Actix web"
 readme = "README.md"
