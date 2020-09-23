@@ -2,6 +2,7 @@
 
 ## Unreleased - 2020-xx-xx
 * Implement `allowed_origin_fn` builder method.
+* Use `TryInto` instead of `TryFrom` where applicable to bypass orphan rule
 
 
 ## 0.3.0 - 2020-09-11
