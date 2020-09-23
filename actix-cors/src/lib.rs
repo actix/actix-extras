@@ -879,8 +879,29 @@ where
 mod tests {
     use actix_service::{fn_service, Transform};
     use actix_web::test::{self, TestRequest};
+    use std::convert::Infallible;
 
     use super::*;
+
+    #[actix_rt::test]
+    async fn allowed_header_tryfrom() {
+        let _cors = Cors::new().allowed_header("Content-Type");
+    }
+
+    #[actix_rt::test]
+    async fn allowed_header_tryinto() {
+        struct ContentType;
+
+        impl TryInto<HeaderName> for ContentType {
+            type Error = Infallible;
+
+            fn try_into(self) -> Result<HeaderName, Self::Error> {
+                Ok(HeaderName::from_static("content-type"))
+            }
+        }
+
+        let _cors = Cors::new().allowed_header(ContentType);
+    }
 
     #[actix_rt::test]
     #[should_panic(expected = "Credentials are allowed, but the Origin is set to")]
