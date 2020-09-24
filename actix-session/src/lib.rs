@@ -197,12 +197,12 @@ impl Session {
     /// let mut req = test::TestRequest::default().to_srv_request();
     ///
     /// Session::set_session(
-    ///     vec![("counter".to_string(), serde_json::to_string(&0).unwrap())].into_iter(),
+    ///     vec![("counter".to_string(), serde_json::to_string(&0).unwrap())],
     ///     &mut req,
     /// );
     /// ```
     pub fn set_session(
-        data: impl Iterator<Item = (String, String)>,
+        data: impl IntoIterator<Item = (String, String)>,
         req: &mut ServiceRequest,
     ) {
         let session = Session::get_session(&mut *req.extensions_mut());
@@ -279,8 +279,7 @@ mod tests {
         let mut req = test::TestRequest::default().to_srv_request();
 
         Session::set_session(
-            vec![("key".to_string(), serde_json::to_string("value").unwrap())]
-                .into_iter(),
+            vec![("key".to_string(), serde_json::to_string("value").unwrap())],
             &mut req,
         );
         let session = Session::get_session(&mut *req.extensions_mut());
@@ -301,7 +300,7 @@ mod tests {
         let mut req = test::TestRequest::default().to_srv_request();
 
         Session::set_session(
-            vec![("key".to_string(), serde_json::to_string(&true).unwrap())].into_iter(),
+            vec![("key".to_string(), serde_json::to_string(&true).unwrap())],
             &mut req,
         );
 
@@ -315,7 +314,7 @@ mod tests {
         let mut req = test::TestRequest::default().to_srv_request();
 
         Session::set_session(
-            vec![("key".to_string(), serde_json::to_string(&10).unwrap())].into_iter(),
+            vec![("key".to_string(), serde_json::to_string(&10).unwrap())],
             &mut req,
         );
 

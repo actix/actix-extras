@@ -1,6 +1,7 @@
 # Changes
 
 ## Unreleased - 2020-xx-xx
+* `Session::set_session` takes a `IntoIterator` instead of `Iterator`
 
 
 ## 0.4.0 - 2020-09-11

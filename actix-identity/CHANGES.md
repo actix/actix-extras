@@ -1,6 +1,9 @@
 # Changes
 
 ## Unreleased - 2020-xx-xx
+
+
+## 0.3.1 - 2020-09-20
 * Add method to set HttpOnly flag on cookie identity. [#102]
 
 

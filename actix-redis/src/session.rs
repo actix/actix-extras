@@ -156,7 +156,7 @@ where
         Box::pin(async move {
             let state = inner.load(&req).await?;
             let value = if let Some((state, value)) = state {
-                Session::set_session(state.into_iter(), &mut req);
+                Session::set_session(state, &mut req);
                 Some(value)
             } else {
                 None

@@ -356,7 +356,7 @@ where
         let inner = self.inner.clone();
         let (is_new, state) = self.inner.load(&req);
         let prolong_expiration = self.inner.expires_in.is_some();
-        Session::set_session(state.into_iter(), &mut req);
+        Session::set_session(state, &mut req);
 
         let fut = self.service.call(req);
 
