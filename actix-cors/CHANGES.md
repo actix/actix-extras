@@ -2,7 +2,9 @@
 
 ## Unreleased - 2020-xx-xx
 * Implement `allowed_origin_fn` builder method.
-* Use `TryInto` instead of `TryFrom` where applicable to bypass orphan rule
+* Use `TryInto` instead of `TryFrom` where applicable. [#106]
+
+[#106]: https://github.com/actix/actix-extras/pull/106
 
 
 ## 0.3.0 - 2020-09-11
