@@ -1,0 +1,26 @@
+[package]
+name = "tracing-actix-web"
+version = "0.1.0"
+authors = ["Luca Palmieri <rust@lpalmieri.com>"]
+edition = "2018"
+
+license = "MIT/Apache-2.0"
+
+repository = "https://github.com/LukeMathWalker/tracing-actix-web"
+documentation = "https://docs.rs/tracing-actix-web/"
+readme = "README.md"
+
+description = "Structured logging middleware for actix-web."
+
+keywords = ["http", "actix-web", "tracing", "logging"]
+categories = ["asynchronous", "web-programming"]
+
+[dependencies]
+actix-web = "2"
+tracing = "0.1.19"
+tracing-futures = "0.2.4"
+futures = "0.3.5"
+
+[dev-dependencies]
+tracing-subscriber = { version = "0.2.12", features = ["registry", "env-filter"] }
+tracing-bunyan-formatter = "0.1.6"
