@@ -1,6 +1,6 @@
 [package]
 name = "tracing-actix-web"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Luca Palmieri <rust@lpalmieri.com>"]
 edition = "2018"
 
@@ -20,6 +20,7 @@ actix-web = "2"
 tracing = "0.1.19"
 tracing-futures = "0.2.4"
 futures = "0.3.5"
+uuid = { version = "0.8.1", features = ["v4"] }
 
 [dev-dependencies]
 tracing-subscriber = { version = "0.2.12", features = ["registry", "env-filter"] }

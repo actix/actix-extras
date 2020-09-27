@@ -23,6 +23,7 @@ use std::future::Future;
 use std::pin::Pin;
 use tracing::Span;
 use tracing_futures::Instrument;
+use uuid::Uuid;
 
 /// `TracingLogger` is a middleware to log request and response info in a structured format.
 ///
@@ -136,6 +137,7 @@ where
             request_path = %req.path(),
             user_agent = %user_agent,
             client_ip_address = %req.connection_info().remote().unwrap_or(""),
+            request_id = %Uuid::new_v4(),
             status_code = tracing::field::Empty,
         );
         let fut = self.service.call(req);
