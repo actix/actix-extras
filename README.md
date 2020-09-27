@@ -5,6 +5,8 @@
  </strong>
 </div>
 
+<br/>
+
 `tracing-actix-web` provides [`TracingLogger`], a middleware to log request and response info when using the [`actix-web`] framework.
 
 [`TracingLogger`] is designed as a drop-in replacement of [`actix-web`]'s [`Logger`].
