@@ -22,12 +22,15 @@ Add `tracing-actix-web` to your dependencies:
 ```toml
 [dependencies]
 # ...
-tracing-actix-web = "0.1"
+tracing-actix-web = "0.2"
 ```
 If you are using [`cargo-edit`](https://github.com/killercup/cargo-edit), run
 ```bash
 cargo add tracing-actix-web
 ```
+
+`tracing-actix-web` `0.2.x` depends on `actix-web` `3.x.x`.  
+If you are using `actix-web` `2.x.x` use `tracing-actix-web` `0.1.x`.
 
 ## Usage example
 
@@ -75,8 +78,8 @@ fn main() {
 }
 ```
 
-[`TracingLogger`]: https://docs.rs/tracing-actix-web/0.1.0/tracing-actix-web/#struct.TracingLogger.html
+[`TracingLogger`]: https://docs.rs/tracing-actix-web/0.2.0/tracing-actix-web/#struct.TracingLogger.html
 [`actix-web`]: https://docs.rs/actix-web
-[`Logger`]: https://docs.rs/actix-web/2.0.0/actix_web/middleware/struct.Logger.html
+[`Logger`]: https://docs.rs/actix-web/3.0.0/actix_web/middleware/struct.Logger.html
 [`log`]: https://docs.rs/log
 [`tracing`]: https://docs.rs/tracing

@@ -1,6 +1,6 @@
 [package]
 name = "tracing-actix-web"
-version = "0.1.2-alpha.0"
+version = "0.2.0"
 authors = ["Luca Palmieri <rust@lpalmieri.com>"]
 edition = "2018"
 
@@ -16,7 +16,7 @@ keywords = ["http", "actix-web", "tracing", "logging"]
 categories = ["asynchronous", "web-programming"]
 
 [dependencies]
-actix-web = "2"
+actix-web = "3"
 tracing = "0.1.19"
 tracing-futures = "0.2.4"
 futures = "0.3.5"

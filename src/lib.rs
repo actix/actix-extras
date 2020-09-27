@@ -12,7 +12,7 @@
 //!
 //! [`TracingLogger`]: #struct.TracingLogger.html
 //! [`actix-web`]: https://docs.rs/actix-web
-//! [`Logger`]: https://docs.rs/actix-web/2.0.0/actix_web/middleware/struct.Logger.html
+//! [`Logger`]: https://docs.rs/actix-web/3.0.2/actix_web/middleware/struct.Logger.html
 //! [`log`]: https://docs.rs/log
 //! [`tracing`]: https://docs.rs/tracing
 use actix_web::dev::{Service, ServiceRequest, ServiceResponse, Transform};
@@ -83,7 +83,7 @@ use uuid::Uuid;
 /// ```
 ///
 /// [`actix-web`]: https://docs.rs/actix-web
-/// [`Logger`]: https://docs.rs/actix-web/2.0.0/actix_web/middleware/struct.Logger.html
+/// [`Logger`]: https://docs.rs/actix-web/3.0.2/actix_web/middleware/struct.Logger.html
 /// [`log`]: https://docs.rs/log
 /// [`tracing`]: https://docs.rs/tracing
 pub struct TracingLogger;
@@ -136,7 +136,7 @@ where
             "Request",
             request_path = %req.path(),
             user_agent = %user_agent,
-            client_ip_address = %req.connection_info().remote().unwrap_or(""),
+            client_ip_address = %req.connection_info().realip_remote_addr().unwrap_or(""),
             request_id = %Uuid::new_v4(),
             status_code = tracing::field::Empty,
         );
