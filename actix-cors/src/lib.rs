@@ -1,4 +1,4 @@
-//! Cross-Origin Resource Sharing (CORS) middleware for actix-web.
+//! Cross-Origin Resource Sharing (CORS) controls for Actix web.
 //!
 //! This middleware can be applied to both applications and resources.
 //! Once built, [`CorsFactory`](struct.CorsFactory.html) can be used as a

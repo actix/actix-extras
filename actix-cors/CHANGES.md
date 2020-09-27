@@ -1,9 +1,13 @@
 # Changes
 
 ## Unreleased - 2020-xx-xx
-* Implement `allowed_origin_fn` builder method.
+
+
+## 0.4.0 - 2020-09-27
+* Implement `allowed_origin_fn` builder method. [#93]
 * Use `TryInto` instead of `TryFrom` where applicable. [#106]
 
+[#93]: https://github.com/actix/actix-extras/pull/93
 [#106]: https://github.com/actix/actix-extras/pull/106
 
 
