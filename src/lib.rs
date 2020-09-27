@@ -10,7 +10,7 @@
 //! logging: all request information is captured as a machine-parsable set of key-value pairs.
 //! It also enables propagation of context information to children spans.
 //!
-//! [`TracingLogger`]: #struct.TracingLogger.html
+//! [`TracingLogger`]: struct.TracingLogger.html
 //! [`actix-web`]: https://docs.rs/actix-web
 //! [`Logger`]: https://docs.rs/actix-web/3.0.2/actix_web/middleware/struct.Logger.html
 //! [`log`]: https://docs.rs/log
