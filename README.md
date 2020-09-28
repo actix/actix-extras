@@ -78,7 +78,7 @@ fn main() {
 }
 ```
 
-[`TracingLogger`]: https://docs.rs/tracing-actix-web/0.2.0/tracing-actix-web/struct.TracingLogger.html
+[`TracingLogger`]: https://docs.rs/tracing-actix-web/0.2.1/tracing-actix-web/struct.TracingLogger.html
 [`actix-web`]: https://docs.rs/actix-web
 [`Logger`]: https://docs.rs/actix-web/3.0.0/actix_web/middleware/struct.Logger.html
 [`log`]: https://docs.rs/log
