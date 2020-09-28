@@ -1133,6 +1133,7 @@ mod tests {
             resp.headers().get(header::VARY).unwrap().as_bytes()
         );
 
+        #[allow(clippy::needless_collect)]
         {
             let headers = resp
                 .headers()
@@ -1145,7 +1146,6 @@ mod tests {
                 .collect::<Vec<&str>>();
 
             for h in exposed_headers {
-                #[allow(clippy::needless_collect)]
                 assert!(headers.contains(&h.as_str()));
             }
         }

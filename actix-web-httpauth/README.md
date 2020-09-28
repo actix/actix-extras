@@ -1,22 +1,29 @@
 # actix-web-httpauth
 
+> HTTP authentication schemes for [actix-web](https://github.com/actix/actix-web).
+
 [![crates.io](https://img.shields.io/crates/v/actix-web-httpauth)](https://crates.io/crates/actix-web-httpauth)
 [![Documentation](https://docs.rs/actix-web-httpauth/badge.svg)](https://docs.rs/actix-web-httpauth)
-[![Dependency Status](https://deps.rs/crate/actix-web-httpauth/0.4.2/status.svg)](https://deps.rs/crate/actix-web-httpauth/0.4.2)
+[![Dependency Status](https://deps.rs/crate/actix-web-httpauth/0.5.0/status.svg)](https://deps.rs/crate/actix-web-httpauth/0.5.0)
 ![Apache 2.0 or MIT licensed](https://img.shields.io/crates/l/actix-web-httpauth)
-[![Join the chat at https://gitter.im/actix/actix](https://badges.gitter.im/actix/actix.svg)](https://gitter.im/actix/actix?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Join the chat at https://gitter.im/actix/actix-web](https://badges.gitter.im/actix/actix-web.svg)](https://gitter.im/actix/actix-web?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-> HTTP authentication schemes for [actix-web](https://github.com/actix/actix-web) framework.
 
-Provides:
- * typed [Authorization] and [WWW-Authenticate] headers
- * [extractors] for an [Authorization] header
- * [middleware] for easier authorization checking
+## Features
+- Typed [Authorization] and [WWW-Authenticate] headers
+- [Extractors] for authorization headers
+- [Middleware] for easier authorization checking
 
-All supported schemas are actix [Extractors](https://docs.rs/actix-web/2.0.0/actix_web/trait.FromRequest.html),
-and can be used both in the middlewares and request handlers.
+All supported schemas can be used in both middleware and request handlers.
 
-## Supported schemes
+## Supported Schemes
+- [HTTP Basic](https://tools.ietf.org/html/rfc7617)
+- [OAuth Bearer](https://tools.ietf.org/html/rfc6750)
 
- * [Basic](https://tools.ietf.org/html/rfc7617)
- * [Bearer](https://tools.ietf.org/html/rfc6750)
+
+<!-- LINKS -->
+
+[Authorization]: https://docs.rs/actix-web-httpauth/*/actix_web_httpauth/headers/authorization/index.html
+[WWW-Authenticate]: https://docs.rs/actix-web-httpauth/*/actix_web_httpauth/headers/www_authenticate/index.html
+[Extractors]: https://actix.rs/docs/extractors/
+[Middleware]: https://docs.rs/actix-web-httpauth/*/actix_web_httpauth/middleware/index.html

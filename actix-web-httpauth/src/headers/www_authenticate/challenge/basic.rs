@@ -96,7 +96,7 @@ impl fmt::Display for Basic {
         let bytes = self.to_bytes();
         let repr = str::from_utf8(&bytes)
             // Should not happen since challenges are crafted manually
-            // from `&'static str`'s and Strings
+            // from a `&'static str` or `String`
             .map_err(|_| fmt::Error)?;
 
         f.write_str(repr)
