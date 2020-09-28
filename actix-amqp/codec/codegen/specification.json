@@ -1,0 +1,1234 @@
+[
+  {
+    "name": "role",
+    "class": "restricted",
+    "source": "boolean",
+    "choice": [
+      {
+        "name": "sender",
+        "value": "false"
+      },
+      {
+        "name": "receiver",
+        "value": "true"
+      }
+    ]
+  },
+  {
+    "name": "sender-settle-mode",
+    "class": "restricted",
+    "source": "ubyte",
+    "choice": [
+      {
+        "name": "unsettled",
+        "value": "0"
+      },
+      {
+        "name": "settled",
+        "value": "1"
+      },
+      {
+        "name": "mixed",
+        "value": "2"
+      }
+    ]
+  },
+  {
+    "name": "receiver-settle-mode",
+    "class": "restricted",
+    "source": "ubyte",
+    "choice": [
+      {
+        "name": "first",
+        "value": "0"
+      },
+      {
+        "name": "second",
+        "value": "1"
+      }
+    ]
+  },
+  {
+    "name": "handle",
+    "class": "restricted",
+    "source": "uint"
+  },
+  {
+    "name": "seconds",
+    "class": "restricted",
+    "source": "uint"
+  },
+  {
+    "name": "milliseconds",
+    "class": "restricted",
+    "source": "uint"
+  },
+  {
+    "name": "delivery-tag",
+    "class": "restricted",
+    "source": "binary"
+  },
+  {
+    "name": "sequence-no",
+    "class": "restricted",
+    "source": "uint"
+  },
+  {
+    "name": "delivery-number",
+    "class": "restricted",
+    "source": "sequence-no"
+  },
+  {
+    "name": "transfer-number",
+    "class": "restricted",
+    "source": "sequence-no"
+  },
+  {
+    "name": "message-format",
+    "class": "restricted",
+    "source": "uint"
+  },
+  {
+    "name": "ietf-language-tag",
+    "class": "restricted",
+    "source": "symbol"
+  },
+  {
+    "name": "fields",
+    "class": "restricted",
+    "source": "map"
+  },
+  {
+    "name": "error",
+    "class": "composite",
+    "source": "list",
+    "descriptor": {
+      "name": "amqp:error:list",
+      "code": "0x00000000:0x0000001d"
+    },
+    "field": [
+      {
+        "name": "condition",
+        "type": "symbol",
+        "requires": "error-condition",
+        "mandatory": "true"
+      },
+      {
+        "name": "description",
+        "type": "string"
+      },
+      {
+        "name": "info",
+        "type": "fields"
+      }
+    ]
+  },
+  {
+    "name": "amqp-error",
+    "class": "restricted",
+    "source": "symbol",
+    "provides": "error-condition",
+    "choice": [
+      {
+        "name": "internal-error",
+        "value": "amqp:internal-error"
+      },
+      {
+        "name": "not-found",
+        "value": "amqp:not-found"
+      },
+      {
+        "name": "unauthorized-access",
+        "value": "amqp:unauthorized-access"
+      },
+      {
+        "name": "decode-error",
+        "value": "amqp:decode-error"
+      },
+      {
+        "name": "resource-limit-exceeded",
+        "value": "amqp:resource-limit-exceeded"
+      },
+      {
+        "name": "not-allowed",
+        "value": "amqp:not-allowed"
+      },
+      {
+        "name": "invalid-field",
+        "value": "amqp:invalid-field"
+      },
+      {
+        "name": "not-implemented",
+        "value": "amqp:not-implemented"
+      },
+      {
+        "name": "resource-locked",
+        "value": "amqp:resource-locked"
+      },
+      {
+        "name": "precondition-failed",
+        "value": "amqp:precondition-failed"
+      },
+      {
+        "name": "resource-deleted",
+        "value": "amqp:resource-deleted"
+      },
+      {
+        "name": "illegal-state",
+        "value": "amqp:illegal-state"
+      },
+      {
+        "name": "frame-size-too-small",
+        "value": "amqp:frame-size-too-small"
+      }
+    ]
+  },
+  {
+    "name": "connection-error",
+    "class": "restricted",
+    "source": "symbol",
+    "provides": "error-condition",
+    "choice": [
+      {
+        "name": "connection-forced",
+        "value": "amqp:connection:forced"
+      },
+      {
+        "name": "framing-error",
+        "value": "amqp:connection:framing-error"
+      },
+      {
+        "name": "redirect",
+        "value": "amqp:connection:redirect"
+      }
+    ]
+  },
+  {
+    "name": "session-error",
+    "class": "restricted",
+    "source": "symbol",
+    "provides": "error-condition",
+    "choice": [
+      {
+        "name": "window-violation",
+        "value": "amqp:session:window-violation"
+      },
+      {
+        "name": "errant-link",
+        "value": "amqp:session:errant-link"
+      },
+      {
+        "name": "handle-in-use",
+        "value": "amqp:session:handle-in-use"
+      },
+      {
+        "name": "unattached-handle",
+        "value": "amqp:session:unattached-handle"
+      }
+    ]
+  },
+  {
+    "name": "link-error",
+    "class": "restricted",
+    "source": "symbol",
+    "provides": "error-condition",
+    "choice": [
+      {
+        "name": "detach-forced",
+        "value": "amqp:link:detach-forced"
+      },
+      {
+        "name": "transfer-limit-exceeded",
+        "value": "amqp:link:transfer-limit-exceeded"
+      },
+      {
+        "name": "message-size-exceeded",
+        "value": "amqp:link:message-size-exceeded"
+      },
+      {
+        "name": "redirect",
+        "value": "amqp:link:redirect"
+      },
+      {
+        "name": "stolen",
+        "value": "amqp:link:stolen"
+      }
+    ]
+  },
+  {
+    "name": "open",
+    "class": "composite",
+    "source": "list",
+    "provides": "frame",
+    "descriptor": {
+      "name": "amqp:open:list",
+      "code": "0x00000000:0x00000010"
+    },
+    "field": [
+      {
+        "name": "container-id",
+        "type": "string",
+        "mandatory": "true"
+      },
+      {
+        "name": "hostname",
+        "type": "string"
+      },
+      {
+        "name": "max-frame-size",
+        "type": "uint",
+        "default": "4294967295"
+      },
+      {
+        "name": "channel-max",
+        "type": "ushort",
+        "default": "65535"
+      },
+      {
+        "name": "idle-time-out",
+        "type": "milliseconds"
+      },
+      {
+        "name": "outgoing-locales",
+        "type": "ietf-language-tag",
+        "multiple": "true"
+      },
+      {
+        "name": "incoming-locales",
+        "type": "ietf-language-tag",
+        "multiple": "true"
+      },
+      {
+        "name": "offered-capabilities",
+        "type": "symbol",
+        "multiple": "true"
+      },
+      {
+        "name": "desired-capabilities",
+        "type": "symbol",
+        "multiple": "true"
+      },
+      {
+        "name": "properties",
+        "type": "fields"
+      }
+    ]
+  },
+  {
+    "name": "begin",
+    "class": "composite",
+    "source": "list",
+    "provides": "frame",
+    "descriptor": {
+      "name": "amqp:begin:list",
+      "code": "0x00000000:0x00000011"
+    },
+    "field": [
+      {
+        "name": "remote-channel",
+        "type": "ushort"
+      },
+      {
+        "name": "next-outgoing-id",
+        "type": "transfer-number",
+        "mandatory": "true"
+      },
+      {
+        "name": "incoming-window",
+        "type": "uint",
+        "mandatory": "true"
+      },
+      {
+        "name": "outgoing-window",
+        "type": "uint",
+        "mandatory": "true"
+      },
+      {
+        "name": "handle-max",
+        "type": "handle",
+        "default": "4294967295"
+      },
+      {
+        "name": "offered-capabilities",
+        "type": "symbol",
+        "multiple": "true"
+      },
+      {
+        "name": "desired-capabilities",
+        "type": "symbol",
+        "multiple": "true"
+      },
+      {
+        "name": "properties",
+        "type": "fields"
+      }
+    ]
+  },
+  {
+    "name": "attach",
+    "class": "composite",
+    "source": "list",
+    "provides": "frame",
+    "descriptor": {
+      "name": "amqp:attach:list",
+      "code": "0x00000000:0x00000012"
+    },
+    "field": [
+      {
+        "name": "name",
+        "type": "string",
+        "mandatory": "true"
+      },
+      {
+        "name": "handle",
+        "type": "handle",
+        "mandatory": "true"
+      },
+      {
+        "name": "role",
+        "type": "role",
+        "mandatory": "true"
+      },
+      {
+        "name": "snd-settle-mode",
+        "type": "sender-settle-mode",
+        "default": "mixed"
+      },
+      {
+        "name": "rcv-settle-mode",
+        "type": "receiver-settle-mode",
+        "default": "first"
+      },
+      {
+        "name": "source",
+        "type": "*",
+        "requires": "source"
+      },
+      {
+        "name": "target",
+        "type": "*",
+        "requires": "target"
+      },
+      {
+        "name": "unsettled",
+        "type": "map"
+      },
+      {
+        "name": "incomplete-unsettled",
+        "type": "boolean",
+        "default": "false"
+      },
+      {
+        "name": "initial-delivery-count",
+        "type": "sequence-no"
+      },
+      {
+        "name": "max-message-size",
+        "type": "ulong"
+      },
+      {
+        "name": "offered-capabilities",
+        "type": "symbol",
+        "multiple": "true"
+      },
+      {
+        "name": "desired-capabilities",
+        "type": "symbol",
+        "multiple": "true"
+      },
+      {
+        "name": "properties",
+        "type": "fields"
+      }
+    ]
+  },
+  {
+    "name": "flow",
+    "class": "composite",
+    "source": "list",
+    "provides": "frame",
+    "descriptor": {
+      "name": "amqp:flow:list",
+      "code": "0x00000000:0x00000013"
+    },
+    "field": [
+      {
+        "name": "next-incoming-id",
+        "type": "transfer-number"
+      },
+      {
+        "name": "incoming-window",
+        "type": "uint",
+        "mandatory": "true"
+      },
+      {
+        "name": "next-outgoing-id",
+        "type": "transfer-number",
+        "mandatory": "true"
+      },
+      {
+        "name": "outgoing-window",
+        "type": "uint",
+        "mandatory": "true"
+      },
+      {
+        "name": "handle",
+        "type": "handle"
+      },
+      {
+        "name": "delivery-count",
+        "type": "sequence-no"
+      },
+      {
+        "name": "link-credit",
+        "type": "uint"
+      },
+      {
+        "name": "available",
+        "type": "uint"
+      },
+      {
+        "name": "drain",
+        "type": "boolean",
+        "default": "false"
+      },
+      {
+        "name": "echo",
+        "type": "boolean",
+        "default": "false"
+      },
+      {
+        "name": "properties",
+        "type": "fields"
+      }
+    ]
+  },
+  {
+    "name": "transfer",
+    "class": "composite",
+    "source": "list",
+    "provides": "frame",
+    "descriptor": {
+      "name": "amqp:transfer:list",
+      "code": "0x00000000:0x00000014"
+    },
+    "field": [
+      {
+        "name": "handle",
+        "type": "handle",
+        "mandatory": "true"
+      },
+      {
+        "name": "delivery-id",
+        "type": "delivery-number"
+      },
+      {
+        "name": "delivery-tag",
+        "type": "delivery-tag"
+      },
+      {
+        "name": "message-format",
+        "type": "message-format"
+      },
+      {
+        "name": "settled",
+        "type": "boolean"
+      },
+      {
+        "name": "more",
+        "type": "boolean",
+        "default": "false"
+      },
+      {
+        "name": "rcv-settle-mode",
+        "type": "receiver-settle-mode"
+      },
+      {
+        "name": "state",
+        "type": "*",
+        "requires": "delivery-state"
+      },
+      {
+        "name": "resume",
+        "type": "boolean",
+        "default": "false"
+      },
+      {
+        "name": "aborted",
+        "type": "boolean",
+        "default": "false"
+      },
+      {
+        "name": "batchable",
+        "type": "boolean",
+        "default": "false"
+      }
+    ]
+  },
+  {
+    "name": "disposition",
+    "class": "composite",
+    "source": "list",
+    "provides": "frame",
+    "descriptor": {
+      "name": "amqp:disposition:list",
+      "code": "0x00000000:0x00000015"
+    },
+    "field": [
+      {
+        "name": "role",
+        "type": "role",
+        "mandatory": "true"
+      },
+      {
+        "name": "first",
+        "type": "delivery-number",
+        "mandatory": "true"
+      },
+      {
+        "name": "last",
+        "type": "delivery-number"
+      },
+      {
+        "name": "settled",
+        "type": "boolean",
+        "default": "false"
+      },
+      {
+        "name": "state",
+        "type": "*",
+        "requires": "delivery-state"
+      },
+      {
+        "name": "batchable",
+        "type": "boolean",
+        "default": "false"
+      }
+    ]
+  },
+  {
+    "name": "detach",
+    "class": "composite",
+    "source": "list",
+    "provides": "frame",
+    "descriptor": {
+      "name": "amqp:detach:list",
+      "code": "0x00000000:0x00000016"
+    },
+    "field": [
+      {
+        "name": "handle",
+        "type": "handle",
+        "mandatory": "true"
+      },
+      {
+        "name": "closed",
+        "type": "boolean",
+        "default": "false"
+      },
+      {
+        "name": "error",
+        "type": "error"
+      }
+    ]
+  },
+  {
+    "name": "end",
+    "class": "composite",
+    "source": "list",
+    "provides": "frame",
+    "descriptor": {
+      "name": "amqp:end:list",
+      "code": "0x00000000:0x00000017"
+    },
+    "field": [{
+      "name": "error",
+      "type": "error"
+    }]
+  },
+  {
+    "name": "close",
+    "class": "composite",
+    "source": "list",
+    "provides": "frame",
+    "descriptor": {
+      "name": "amqp:close:list",
+      "code": "0x00000000:0x00000018"
+    },
+    "field": [{
+      "name": "error",
+      "type": "error"
+    }]
+  },
+  {
+    "name": "sasl-code",
+    "class": "restricted",
+    "source": "ubyte",
+    "choice": [
+      {
+        "name": "ok",
+        "value": "0"
+      },
+      {
+        "name": "auth",
+        "value": "1"
+      },
+      {
+        "name": "sys",
+        "value": "2"
+      },
+      {
+        "name": "sys-perm",
+        "value": "3"
+      },
+      {
+        "name": "sys-temp",
+        "value": "4"
+      }
+    ]
+  },
+  {
+    "name": "sasl-mechanisms",
+    "class": "composite",
+    "source": "list",
+    "provides": "sasl-frame-body",
+    "descriptor": {
+      "name": "amqp:sasl-mechanisms:list",
+      "code": "0x00000000:0x00000040"
+    },
+    "field": [{
+      "name": "sasl-server-mechanisms",
+      "type": "symbol",
+      "multiple": "true",
+      "mandatory": "true"
+    }]
+  },
+  {
+    "name": "sasl-init",
+    "class": "composite",
+    "source": "list",
+    "provides": "sasl-frame-body",
+    "descriptor": {
+      "name": "amqp:sasl-init:list",
+      "code": "0x00000000:0x00000041"
+    },
+    "field": [
+      {
+        "name": "mechanism",
+        "type": "symbol",
+        "mandatory": "true"
+      },
+      {
+        "name": "initial-response",
+        "type": "binary"
+      },
+      {
+        "name": "hostname",
+        "type": "string"
+      }
+    ]
+  },
+  {
+    "name": "sasl-challenge",
+    "class": "composite",
+    "source": "list",
+    "provides": "sasl-frame-body",
+    "descriptor": {
+      "name": "amqp:sasl-challenge:list",
+      "code": "0x00000000:0x00000042"
+    },
+    "field": [{
+      "name": "challenge",
+      "type": "binary",
+      "mandatory": "true"
+    }]
+  },
+  {
+    "name": "sasl-response",
+    "class": "composite",
+    "source": "list",
+    "provides": "sasl-frame-body",
+    "descriptor": {
+      "name": "amqp:sasl-response:list",
+      "code": "0x00000000:0x00000043"
+    },
+    "field": [{
+      "name": "response",
+      "type": "binary",
+      "mandatory": "true"
+    }]
+  },
+  {
+    "name": "sasl-outcome",
+    "class": "composite",
+    "source": "list",
+    "provides": "sasl-frame-body",
+    "descriptor": {
+      "name": "amqp:sasl-outcome:list",
+      "code": "0x00000000:0x00000044"
+    },
+    "field": [
+      {
+        "name": "code",
+        "type": "sasl-code",
+        "mandatory": "true"
+      },
+      {
+        "name": "additional-data",
+        "type": "binary"
+      }
+    ]
+  },
+  {
+    "name": "terminus-durability",
+    "class": "restricted",
+    "source": "uint",
+    "choice": [
+      {
+        "name": "none",
+        "value": "0"
+      },
+      {
+        "name": "configuration",
+        "value": "1"
+      },
+      {
+        "name": "unsettled-state",
+        "value": "2"
+      }
+    ]
+  },
+  {
+    "name": "terminus-expiry-policy",
+    "class": "restricted",
+    "source": "symbol",
+    "choice": [
+      {
+        "name": "link-detach",
+        "value": "link-detach"
+      },
+      {
+        "name": "session-end",
+        "value": "session-end"
+      },
+      {
+        "name": "connection-close",
+        "value": "connection-close"
+      },
+      {
+        "name": "never",
+        "value": "never"
+      }
+    ]
+  },
+  {
+    "name": "node-properties",
+    "class": "restricted",
+    "source": "fields"
+  },
+  {
+    "name": "filter-set",
+    "class": "restricted",
+    "source": "map"
+  },
+  {
+    "name": "source",
+    "class": "composite",
+    "source": "list",
+    "provides": "source",
+    "descriptor": {
+      "name": "amqp:source:list",
+      "code": "0x00000000:0x00000028"
+    },
+    "field": [
+      {
+        "name": "address",
+        "type": "*",
+        "requires": "address"
+      },
+      {
+        "name": "durable",
+        "type": "terminus-durability",
+        "default": "none"
+      },
+      {
+        "name": "expiry-policy",
+        "type": "terminus-expiry-policy",
+        "default": "session-end"
+      },
+      {
+        "name": "timeout",
+        "type": "seconds",
+        "default": "0"
+      },
+      {
+        "name": "dynamic",
+        "type": "boolean",
+        "default": "false"
+      },
+      {
+        "name": "dynamic-node-properties",
+        "type": "node-properties"
+      },
+      {
+        "name": "distribution-mode",
+        "type": "symbol",
+        "requires": "distribution-mode"
+      },
+      {
+        "name": "filter",
+        "type": "filter-set"
+      },
+      {
+        "name": "default-outcome",
+        "type": "*",
+        "requires": "outcome"
+      },
+      {
+        "name": "outcomes",
+        "type": "symbol",
+        "multiple": "true"
+      },
+      {
+        "name": "capabilities",
+        "type": "symbol",
+        "multiple": "true"
+      }
+    ]
+  },
+  {
+    "name": "target",
+    "class": "composite",
+    "source": "list",
+    "provides": "target",
+    "descriptor": {
+      "name": "amqp:target:list",
+      "code": "0x00000000:0x00000029"
+    },
+    "field": [
+      {
+        "name": "address",
+        "type": "*",
+        "requires": "address"
+      },
+      {
+        "name": "durable",
+        "type": "terminus-durability",
+        "default": "none"
+      },
+      {
+        "name": "expiry-policy",
+        "type": "terminus-expiry-policy",
+        "default": "session-end"
+      },
+      {
+        "name": "timeout",
+        "type": "seconds",
+        "default": "0"
+      },
+      {
+        "name": "dynamic",
+        "type": "boolean",
+        "default": "false"
+      },
+      {
+        "name": "dynamic-node-properties",
+        "type": "node-properties"
+      },
+      {
+        "name": "capabilities",
+        "type": "symbol",
+        "multiple": "true"
+      }
+    ]
+  },
+  {
+    "name": "annotations",
+    "class": "restricted",
+    "source": "map"
+  },
+  {
+    "name": "message-id-ulong",
+    "class": "restricted",
+    "source": "ulong",
+    "provides": "message-id"
+  },
+  {
+    "name": "message-id-uuid",
+    "class": "restricted",
+    "source": "uuid",
+    "provides": "message-id"
+  },
+  {
+    "name": "message-id-binary",
+    "class": "restricted",
+    "source": "binary",
+    "provides": "message-id"
+  },
+  {
+    "name": "message-id-string",
+    "class": "restricted",
+    "source": "string",
+    "provides": "message-id"
+  },
+  {
+    "name": "address",
+    "class": "restricted",
+    "source": "string",
+    "provides": "address"
+  },
+  {
+    "name": "header",
+    "class": "composite",
+    "source": "list",
+    "provides": "section",
+    "descriptor": {
+      "name": "amqp:header:list",
+      "code": "0x00000000:0x00000070"
+    },
+    "field": [
+      {
+        "name": "durable",
+        "type": "boolean",
+        "default": "false"
+      },
+      {
+        "name": "priority",
+        "type": "ubyte",
+        "default": "4"
+      },
+      {
+        "name": "ttl",
+        "type": "milliseconds"
+      },
+      {
+        "name": "first-acquirer",
+        "type": "boolean",
+        "default": "false"
+      },
+      {
+        "name": "delivery-count",
+        "type": "uint",
+        "default": "0"
+      }
+    ]
+  },
+  {
+    "name": "delivery-annotations",
+    "class": "restricted",
+    "source": "annotations",
+    "provides": "section",
+    "descriptor": {
+      "name": "amqp:delivery-annotations:map",
+      "code": "0x00000000:0x00000071"
+    }
+  },
+  {
+    "name": "message-annotations",
+    "class": "restricted",
+    "source": "annotations",
+    "provides": "section",
+    "descriptor": {
+      "name": "amqp:message-annotations:map",
+      "code": "0x00000000:0x00000072"
+    }
+  },
+  {
+    "name": "application-properties",
+    "class": "restricted",
+    "source": "string-variant-map",
+    "provides": "section",
+    "descriptor": {
+      "name": "amqp:application-properties:map",
+      "code": "0x00000000:0x00000074"
+    }
+  },
+  {
+    "name": "data",
+    "class": "restricted",
+    "source": "binary",
+    "provides": "section",
+    "descriptor": {
+      "name": "amqp:data:binary",
+      "code": "0x00000000:0x00000075"
+    }
+  },
+  {
+    "name": "amqp-sequence",
+    "class": "restricted",
+    "source": "list",
+    "provides": "section",
+    "descriptor": {
+      "name": "amqp:amqp-sequence:list",
+      "code": "0x00000000:0x00000076"
+    }
+  },
+  {
+    "name": "amqp-value",
+    "class": "restricted",
+    "source": "*",
+    "provides": "section",
+    "descriptor": {
+      "name": "amqp:amqp-value:*",
+      "code": "0x00000000:0x00000077"
+    }
+  },
+  {
+    "name": "footer",
+    "class": "restricted",
+    "source": "annotations",
+    "provides": "section",
+    "descriptor": {
+      "name": "amqp:footer:map",
+      "code": "0x00000000:0x00000078"
+    }
+  },
+  {
+    "name": "properties",
+    "class": "composite",
+    "source": "list",
+    "provides": "section",
+    "descriptor": {
+      "name": "amqp:properties:list",
+      "code": "0x00000000:0x00000073"
+    },
+    "field": [
+      {
+        "name": "message-id",
+        "type": "*",
+        "requires": "message-id"
+      },
+      {
+        "name": "user-id",
+        "type": "binary"
+      },
+      {
+        "name": "to",
+        "type": "*",
+        "requires": "address"
+      },
+      {
+        "name": "subject",
+        "type": "string"
+      },
+      {
+        "name": "reply-to",
+        "type": "*",
+        "requires": "address"
+      },
+      {
+        "name": "correlation-id",
+        "type": "*",
+        "requires": "message-id"
+      },
+      {
+        "name": "content-type",
+        "type": "symbol"
+      },
+      {
+        "name": "content-encoding",
+        "type": "symbol"
+      },
+      {
+        "name": "absolute-expiry-time",
+        "type": "timestamp"
+      },
+      {
+        "name": "creation-time",
+        "type": "timestamp"
+      },
+      {
+        "name": "group-id",
+        "type": "string"
+      },
+      {
+        "name": "group-sequence",
+        "type": "sequence-no"
+      },
+      {
+        "name": "reply-to-group-id",
+        "type": "string"
+      }
+    ]
+  },
+  {
+    "name": "received",
+    "class": "composite",
+    "source": "list",
+    "provides": "delivery-state",
+    "descriptor": {
+      "name": "amqp:received:list",
+      "code": "0x00000000:0x00000023"
+    },
+    "field": [
+      {
+        "name": "section-number",
+        "type": "uint",
+        "mandatory": "true"
+      },
+      {
+        "name": "section-offset",
+        "type": "ulong",
+        "mandatory": "true"
+      }
+    ]
+  },
+  {
+    "name": "accepted",
+    "class": "composite",
+    "source": "list",
+    "provides": "delivery-state, outcome",
+    "descriptor": {
+      "name": "amqp:accepted:list",
+      "code": "0x00000000:0x00000024"
+    }
+  },
+  {
+    "name": "rejected",
+    "class": "composite",
+    "source": "list",
+    "provides": "delivery-state, outcome",
+    "descriptor": {
+      "name": "amqp:rejected:list",
+      "code": "0x00000000:0x00000025"
+    },
+    "field": [{
+      "name": "error",
+      "type": "error"
+    }]
+  },
+  {
+    "name": "released",
+    "class": "composite",
+    "source": "list",
+    "provides": "delivery-state, outcome",
+    "descriptor": {
+      "name": "amqp:released:list",
+      "code": "0x00000000:0x00000026"
+    }
+  },
+  {
+    "name": "modified",
+    "class": "composite",
+    "source": "list",
+    "provides": "delivery-state, outcome",
+    "descriptor": {
+      "name": "amqp:modified:list",
+      "code": "0x00000000:0x00000027"
+    },
+    "field": [
+      {
+        "name": "delivery-failed",
+        "type": "boolean"
+      },
+      {
+        "name": "undeliverable-here",
+        "type": "boolean"
+      },
+      {
+        "name": "message-annotations",
+        "type": "fields"
+      }
+    ]
+  }
+]

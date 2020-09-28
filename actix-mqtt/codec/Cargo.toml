@@ -1,0 +1,21 @@
+[package]
+name = "mqtt-codec"
+version = "0.3.0"
+authors = [
+    "Max Gortman <mgortman@microsoft.com>",
+    "Nikolay Kim <fafhrd91@gmail.com>",
+    "Flier Lu <flier.lu@gmail.com>",
+]
+description = "MQTT v3.1.1 Codec"
+documentation = "https://docs.rs/mqtt-codec"
+repository = "https://github.com/actix/actix-mqtt.git"
+readme = "README.md"
+keywords = ["MQTT", "IoT", "messaging"]
+license = "MIT/Apache-2.0"
+edition = "2018"
+
+[dependencies]
+bitflags = "1.0"
+bytes = "0.5.2"
+bytestring = "0.1.0"
+actix-codec = "0.2.0"

@@ -1,0 +1,35 @@
+[package]
+name = "actix-amqp"
+version = "0.1.4"
+authors = ["Nikolay Kim <fafhrd91@gmail.com>"]
+description = "AMQP 1.0 Client/Server framework"
+documentation = "https://docs.rs/actix-amqp"
+repository = "https://github.com/actix/actix-extras.git"
+categories = ["network-programming"]
+keywords = ["AMQP", "IoT", "messaging"]
+license = "MIT OR Apache-2.0"
+edition = "2018"
+
+[dependencies]
+amqp-codec = "0.1.0"
+actix-codec = "0.2.0"
+actix-service = "1.0.1"
+actix-connect = "1.0.1"
+actix-router = "0.2.2"
+actix-utils = "1.0.4"
+actix-rt = "1.0.0"
+bytes = "0.5.3"
+bytestring = "0.1.2"
+derive_more = "0.99.2"
+either = "1.5.3"
+futures = "0.3.1"
+fxhash = "0.2.1"
+http = "0.2.0"
+log = "0.4"
+pin-project = "0.4.6"
+uuid = { version = "0.8", features = ["v4"] }
+slab = "0.4"
+
+[dev-dependencies]
+env_logger = "0.6"
+actix-testing = "1.0.0"

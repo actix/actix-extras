@@ -1,0 +1,38 @@
+[package]
+name = "actix-mqtt"
+version = "0.2.3"
+authors = ["Nikolay Kim <fafhrd91@gmail.com>"]
+description = "MQTT v3.1.1 Client/Server framework"
+documentation = "https://docs.rs/actix-mqtt"
+repository = "https://github.com/actix/actix-extras.git"
+categories = ["network-programming"]
+keywords = ["MQTT", "IoT", "messaging"]
+license = "MIT OR Apache-2.0"
+edition = "2018"
+
+[dependencies]
+mqtt-codec = "0.3.0"
+actix-codec = "0.2.0"
+actix-service = "1.0.1"
+actix-utils = "1.0.4"
+actix-router = "0.2.2"
+actix-ioframe = "0.4.1"
+actix-rt = "1.0.0"
+
+derive_more = "0.99.2"
+bytes = "0.5.3"
+either = "1.5.2"
+futures = "0.3.1"
+pin-project = "0.4.6"
+log = "0.4"
+bytestring = "0.1.2"
+serde = "1.0"
+serde_json = "1.0"
+uuid = { version = "0.8", features = ["v4"] }
+
+[dev-dependencies]
+env_logger = "0.6"
+actix-connect = "1.0.1"
+actix-server = "1.0.0"
+actix-testing = "1.0.0"
+actix-rt = "1.0.0"
