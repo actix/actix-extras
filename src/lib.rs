@@ -46,6 +46,7 @@ use uuid::Uuid;
 /// use actix_web::App;
 /// use tracing::{Subscriber, subscriber::set_global_default};
 /// use tracing_actix_web::TracingLogger;
+/// use tracing_log::LogTracer;
 /// use tracing_bunyan_formatter::{BunyanFormattingLayer, JsonStorageLayer};
 /// use tracing_subscriber::{layer::SubscriberExt, EnvFilter, Registry};
 ///

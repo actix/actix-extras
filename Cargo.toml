@@ -25,3 +25,4 @@ uuid = { version = "0.8.1", features = ["v4"] }
 [dev-dependencies]
 tracing-subscriber = { version = "0.2.12", features = ["registry", "env-filter"] }
 tracing-bunyan-formatter = "0.1.6"
+tracing-log = "0.1.1"
