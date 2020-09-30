@@ -290,9 +290,14 @@ impl Cors {
     ///
     /// If the function returns `true`, the client's `Origin` request header will be echoed
     /// back into the `Access-Control-Allow-Origin` response header.
-    pub fn allowed_origin_fn(mut self, f: fn(req: &RequestHead) -> bool) -> Cors {
+    pub fn allowed_origin_fn<F>(mut self, f: F) -> Cors
+    where
+        F: (Fn(&RequestHead) -> bool) + 'static,
+    {
         if let Some(cors) = cors(&mut self.cors, &self.error) {
-            cors.origins_fns.push(OriginFn { f });
+            cors.origins_fns.push(OriginFn {
+                boxed_fn: Box::new(f),
+            });
         }
         self
     }
@@ -597,7 +602,7 @@ pub struct CorsMiddleware<S> {
 }
 
 struct OriginFn {
-    f: fn(req: &RequestHead) -> bool,
+    boxed_fn: Box<dyn Fn(&RequestHead) -> bool>,
 }
 
 impl fmt::Debug for OriginFn {
@@ -650,7 +655,9 @@ impl Inner {
     }
 
     fn validate_origin_fns(&self, req: &RequestHead) -> bool {
-        self.origins_fns.iter().any(|origin_fn| (origin_fn.f)(req))
+        self.origins_fns
+            .iter()
+            .any(|origin_fn| (origin_fn.boxed_fn)(req))
     }
 
     fn access_control_allow_origin(&self, req: &RequestHead) -> Option<HeaderValue> {
