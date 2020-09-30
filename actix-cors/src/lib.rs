@@ -296,7 +296,7 @@ impl Cors {
     {
         if let Some(cors) = cors(&mut self.cors, &self.error) {
             cors.origins_fns.push(OriginFn {
-                foxed_fn: Box::new(f),
+                boxed_fn: Box::new(f),
             });
         }
         self
@@ -602,7 +602,7 @@ pub struct CorsMiddleware<S> {
 }
 
 struct OriginFn {
-    foxed_fn: Box<dyn Fn(&RequestHead) -> bool>,
+    boxed_fn: Box<dyn Fn(&RequestHead) -> bool>,
 }
 
 impl fmt::Debug for OriginFn {
@@ -657,7 +657,7 @@ impl Inner {
     fn validate_origin_fns(&self, req: &RequestHead) -> bool {
         self.origins_fns
             .iter()
-            .any(|origin_fn| (origin_fn.foxed_fn)(req))
+            .any(|origin_fn| (origin_fn.boxed_fn)(req))
     }
 
     fn access_control_allow_origin(&self, req: &RequestHead) -> Option<HeaderValue> {
