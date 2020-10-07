@@ -889,6 +889,7 @@ mod tests {
     use std::convert::Infallible;
 
     use super::*;
+    use regex::bytes::Regex;
 
     #[actix_rt::test]
     async fn allowed_header_tryfrom() {
@@ -1295,6 +1296,56 @@ mod tests {
                     .get(header::ORIGIN)
                     .map(HeaderValue::as_bytes)
                     .filter(|b| b.ends_with(b".unknown.com"))
+                    .is_some()
+            })
+            .finish()
+            .new_transform(test::ok_service())
+            .await
+            .unwrap();
+
+        {
+            let req = TestRequest::with_header("Origin", "https://www.example.com")
+                .method(Method::GET)
+                .to_srv_request();
+
+            let resp = test::call_service(&mut cors, req).await;
+
+            assert_eq!(
+                "https://www.example.com",
+                resp.headers()
+                    .get(header::ACCESS_CONTROL_ALLOW_ORIGIN)
+                    .unwrap()
+                    .to_str()
+                    .unwrap()
+            );
+        }
+
+        {
+            let req = TestRequest::with_header("Origin", "https://www.unknown.com")
+                .method(Method::GET)
+                .to_srv_request();
+
+            let resp = test::call_service(&mut cors, req).await;
+
+            assert_eq!(
+                Some(&b"https://www.unknown.com"[..]),
+                resp.headers()
+                    .get(header::ACCESS_CONTROL_ALLOW_ORIGIN)
+                    .map(HeaderValue::as_bytes)
+            );
+        }
+    }
+
+    #[actix_rt::test]
+    async fn test_allowed_origin_fn_with_environment() {
+        let regex = Regex::new("https:.+\\.unknown\\.com").unwrap();
+        let mut cors = Cors::new()
+            .allowed_origin("https://www.example.com")
+            .allowed_origin_fn(move |req| {
+                req.headers
+                    .get(header::ORIGIN)
+                    .map(HeaderValue::as_bytes)
+                    .filter(|b| regex.is_match(b))
                     .is_some()
             })
             .finish()
