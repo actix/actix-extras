@@ -1,6 +1,7 @@
 # Changes
 
 ## Unreleased - 2020-xx-xx
+* Improve `allowed_origin_fn` to allow using of closures. [#110]
 
 
 ## 0.4.0 - 2020-09-27
@@ -9,7 +10,7 @@
 
 [#93]: https://github.com/actix/actix-extras/pull/93
 [#106]: https://github.com/actix/actix-extras/pull/106
-
+[#110]: https://github.com/actix/actix-extras/pull/110
 
 ## 0.3.0 - 2020-09-11
 * Update `actix-web` dependency to 3.0.0.
