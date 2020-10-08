@@ -246,20 +246,20 @@ mod test {
         assert_eq!(
             &b"*"[..],
             resp.headers()
-                .get(&header::ACCESS_CONTROL_ALLOW_ORIGIN)
+                .get(header::ACCESS_CONTROL_ALLOW_ORIGIN)
                 .unwrap()
                 .as_bytes()
         );
         assert_eq!(
             &b"3600"[..],
             resp.headers()
-                .get(&header::ACCESS_CONTROL_MAX_AGE)
+                .get(header::ACCESS_CONTROL_MAX_AGE)
                 .unwrap()
                 .as_bytes()
         );
         let hdr = resp
             .headers()
-            .get(&header::ACCESS_CONTROL_ALLOW_HEADERS)
+            .get(header::ACCESS_CONTROL_ALLOW_HEADERS)
             .unwrap()
             .to_str()
             .unwrap();
