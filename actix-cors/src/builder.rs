@@ -115,10 +115,16 @@ impl Cors {
     /// `allowed_origin_fn` function is set, these functions will be used to determinate
     /// allowed origins.
     ///
-    /// Builder panics if supplied origin is not valid uri.
+    /// # Panics
+    ///
+    /// * If supplied origin is not valid uri, or
+    /// * If supplied origin is a wildcard (`*`). [`Cors::send_wildcard`] should be used instead.
     ///
     /// [Fetch Standard]: https://fetch.spec.whatwg.org/#origin-header
     pub fn allowed_origin(mut self, origin: &str) -> Cors {
+        assert!(origin != "*", "Wildcard in allowed_origin is not allowed. \
+        Please use send_wildcard() instead.");
+
         if let Some(cors) = cors(&mut self.cors, &self.error) {
             match TryInto::<Uri>::try_into(origin) {
                 Ok(_) => {
