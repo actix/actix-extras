@@ -1,8 +1,10 @@
 # Changes
 
 ## Unreleased - 2020-xx-xx
+* Disallow `*` in `Cors::allowed_origin` by panicking. [#114].
 
-* Disallow `*` in `Cors::allowed_origin` by panicking. [#112].
+[#114]: https://github.com/actix/actix-extras/pull/114
+
 
 ## 0.4.1 - 2020-10-07
 * Allow closures to be used with `allowed_origin_fn`. [#110]

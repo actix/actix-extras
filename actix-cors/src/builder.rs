@@ -124,8 +124,7 @@ impl Cors {
     pub fn allowed_origin(mut self, origin: &str) -> Cors {
         assert!(
             origin != "*",
-            "Wildcard in allowed_origin is not allowed. \
-        Please use send_wildcard() instead."
+            "Wildcard in `allowed_origin` is not allowed. Use `send_wildcard`."
         );
 
         if let Some(cors) = cors(&mut self.cors, &self.error) {
