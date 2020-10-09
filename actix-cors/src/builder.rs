@@ -122,8 +122,11 @@ impl Cors {
     ///
     /// [Fetch Standard]: https://fetch.spec.whatwg.org/#origin-header
     pub fn allowed_origin(mut self, origin: &str) -> Cors {
-        assert!(origin != "*", "Wildcard in allowed_origin is not allowed. \
-        Please use send_wildcard() instead.");
+        assert!(
+            origin != "*",
+            "Wildcard in allowed_origin is not allowed. \
+        Please use send_wildcard() instead."
+        );
 
         if let Some(cors) = cors(&mut self.cors, &self.error) {
             match TryInto::<Uri>::try_into(origin) {

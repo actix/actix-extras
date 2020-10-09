@@ -10,7 +10,6 @@ use regex::bytes::Regex;
 
 use actix_cors::Cors;
 
-
 #[actix_rt::test]
 #[should_panic]
 async fn test_wildcard_origin() {
