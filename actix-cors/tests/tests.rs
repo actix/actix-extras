@@ -11,6 +11,17 @@ use regex::bytes::Regex;
 use actix_cors::Cors;
 
 #[actix_rt::test]
+#[should_panic]
+async fn test_wildcard_origin() {
+    Cors::new()
+        .allowed_origin("*")
+        .finish()
+        .new_transform(test::ok_service())
+        .await
+        .unwrap();
+}
+
+#[actix_rt::test]
 async fn test_not_allowed_origin_fn() {
     let mut cors = Cors::new()
         .allowed_origin("https://www.example.com")
