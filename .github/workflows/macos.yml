@@ -20,7 +20,7 @@ jobs:
     runs-on: macos-latest
 
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@main
 
       - name: Install ${{ matrix.version }}
         uses: actions-rs/toolchain@v1
@@ -28,24 +28,6 @@ jobs:
           toolchain: ${{ matrix.version }}-x86_64-apple-darwin
           profile: minimal
           override: true
-
-      - name: Generate Cargo.lock
-        uses: actions-rs/cargo@v1
-        with:
-          command: generate-lockfile
-      - name: Cache cargo dirs
-        uses: actions/cache@v2
-        with:
-          path:
-            ~/.cargo/registry
-            ~/.cargo/git
-            ~/.cargo/bin
-          key: ${{ matrix.version }}-x86_64-apple-darwin-gnu-cargo-trimmed-${{ hashFiles('**/Cargo.lock') }}
-      - name: Cache cargo build
-        uses: actions/cache@v2
-        with:
-          path: target
-          key: ${{ matrix.version }}-x86_64-apple-darwin-cargo-build-trimmed-${{ hashFiles('**/Cargo.lock') }}
 
       - name: check build
         uses: actions-rs/cargo@v1
@@ -62,8 +44,3 @@ jobs:
                 --package=actix-protobuf
                 --package=actix-web-httpauth
                 --all-features --no-fail-fast -- --nocapture
-
-      - name: Clear the cargo caches
-        run: |
-          cargo install cargo-cache --no-default-features --features ci-autoclean
-          cargo-cache

@@ -11,7 +11,7 @@ jobs:
     if: github.repository == 'actix/actix-extras'
 
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@main
 
       - name: Install Rust
         uses: actions-rs/toolchain@v1
