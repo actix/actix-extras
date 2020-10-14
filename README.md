@@ -25,6 +25,7 @@ These crates are provided by the community.
 | Crate              |                                                                                                                                                                                                                                                                                                                                            |                                                                                 |
 | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------- |
 | [actix-limitation] | [![crates.io](https://img.shields.io/crates/v/actix-limitation)](https://crates.io/crates/actix-limitation) [![Documentation](https://docs.rs/actix-limitation/badge.svg)](https://docs.rs/actix-limitation) [![dependency status](https://deps.rs/crate/actix-limitation/0.1.4/status.svg)](https://deps.rs/crate/actix-limitation/0.1.4) | Rate limiting using a fixed window counter for arbitrary keys, backed by Redis. |
+| [actix-casbin] | [![crates.io](https://img.shields.io/crates/v/actix-casbin)](https://crates.io/crates/actix-casbin) [![Documentation](https://docs.rs/actix-casbin/badge.svg)](https://docs.rs/actix-casbin) [![dependency status](https://deps.rs/crate/actix-casbin/0.4.2/status.svg)](https://deps.rs/crate/actix-casbin/0.4.2) | An authorization library that supports access control models like ACL, RBAC & ABAC. |
 
 To add a crate to this list, submit a pull request.
 
@@ -40,3 +41,4 @@ To add a crate to this list, submit a pull request.
 [actix-session]: actix-session
 [actix-web-httpauth]: actix-web-httpauth
 [actix-limitation]: https://crates.io/crates/actix-limitation
+[actix-casbin]: https://github.com/casbin-rs/actix-casbin
