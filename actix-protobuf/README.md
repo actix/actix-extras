@@ -30,7 +30,7 @@ async fn index(msg: ProtoBuf<MyObj>) -> Result<HttpResponse> {
 }
 ```
 
-See [here](https://github.com/actix/actix-protobuf/tree/master/examples/prost-example) for the complete example.
+See [here](https://github.com/actix/actix-extras/tree/master/actix-protobuf/examples/prost-example) for the complete example.
 
 ## License
 
