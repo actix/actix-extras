@@ -64,5 +64,5 @@ mod middleware;
 pub use all_or_some::AllOrSome;
 pub use builder::{Cors, CorsFactory};
 pub use error::CorsError;
-use inner::{cors, Inner, OriginFn};
+use inner::{Inner, OriginFn};
 pub use middleware::CorsMiddleware;

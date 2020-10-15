@@ -7,7 +7,18 @@ use actix_web::{
 };
 use futures_util::future::{ok, Ready};
 
-use crate::{cors, AllOrSome, CorsMiddleware, Inner, OriginFn};
+use crate::{AllOrSome, CorsMiddleware, Inner, OriginFn};
+
+pub(crate) fn cors<'a>(
+    parts: &'a mut Option<Inner>,
+    err: &Option<http::Error>,
+) -> Option<&'a mut Inner> {
+    if err.is_some() {
+        return None;
+    }
+
+    parts.as_mut()
+}
 
 /// Builder for CORS middleware.
 ///
@@ -50,7 +61,7 @@ impl Cors {
                 origins_str: None,
                 origins_fns: Vec::new(),
                 methods: HashSet::new(),
-                headers: AllOrSome::All,
+                allowed_headers: AllOrSome::All,
                 expose_headers: None,
                 max_age: None,
                 preflight: true,
@@ -82,7 +93,7 @@ impl Cors {
                 ]
                 .into_iter(),
             ),
-            headers: AllOrSome::All,
+            allowed_headers: AllOrSome::All,
             expose_headers: None,
             max_age: None,
             preflight: true,
@@ -213,11 +224,11 @@ impl Cors {
         if let Some(cors) = cors(&mut self.cors, &self.error) {
             match header.try_into() {
                 Ok(method) => {
-                    if cors.headers.is_all() {
-                        cors.headers = AllOrSome::Some(HashSet::new());
+                    if cors.allowed_headers.is_all() {
+                        cors.allowed_headers = AllOrSome::Some(HashSet::new());
                     }
 
-                    if let AllOrSome::Some(ref mut headers) = cors.headers {
+                    if let AllOrSome::Some(ref mut headers) = cors.allowed_headers {
                         headers.insert(method);
                     }
                 }
@@ -249,10 +260,10 @@ impl Cors {
             for h in headers {
                 match h.try_into() {
                     Ok(method) => {
-                        if cors.headers.is_all() {
-                            cors.headers = AllOrSome::Some(HashSet::new());
+                        if cors.allowed_headers.is_all() {
+                            cors.allowed_headers = AllOrSome::Some(HashSet::new());
                         }
-                        if let AllOrSome::Some(ref mut headers) = cors.headers {
+                        if let AllOrSome::Some(ref mut headers) = cors.allowed_headers {
                             headers.insert(method);
                         }
                     }

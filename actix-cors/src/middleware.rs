@@ -49,71 +49,67 @@ where
     }
 
     fn call(&mut self, req: ServiceRequest) -> Self::Future {
-        if self.inner.preflight && Method::OPTIONS == *req.method() {
-            if let Err(e) = self
+        if self.inner.preflight && req.method() == Method::OPTIONS {
+            if let Err(err) = self
                 .inner
                 .validate_origin(req.head())
                 .and_then(|_| self.inner.validate_allowed_method(req.head()))
                 .and_then(|_| self.inner.validate_allowed_headers(req.head()))
             {
-                return Either::Left(ok(req.error_response(e)));
+                return Either::Left(ok(req.error_response(err)));
             }
 
-            // allowed headers
-            let headers = if let Some(headers) = self.inner.headers.as_ref() {
-                Some(
-                    headers
+            let allowed_headers =
+                if let Some(headers) = self.inner.allowed_headers.as_ref() {
+                    let header_list = &headers
                         .iter()
-                        .fold(String::new(), |s, v| s + "," + v.as_str())
-                        .as_str()[1..]
-                        .try_into()
-                        .unwrap(),
-                )
-            } else if let Some(hdr) =
-                req.headers().get(header::ACCESS_CONTROL_REQUEST_HEADERS)
-            {
-                Some(hdr.clone())
-            } else {
-                None
-            };
+                        .fold(String::new(), |s, v| s + "," + v.as_str());
 
-            let res = HttpResponse::Ok()
-                .if_some(self.inner.max_age.as_ref(), |max_age, resp| {
-                    let _ = resp.header(
-                        header::ACCESS_CONTROL_MAX_AGE,
-                        format!("{}", max_age).as_str(),
-                    );
-                })
-                .if_some(headers, |headers, resp| {
-                    let _ = resp.header(header::ACCESS_CONTROL_ALLOW_HEADERS, headers);
-                })
-                .if_some(
-                    self.inner.access_control_allow_origin(req.head()),
-                    |origin, resp| {
-                        let _ = resp.header(header::ACCESS_CONTROL_ALLOW_ORIGIN, origin);
-                    },
-                )
-                .if_true(self.inner.supports_credentials, |resp| {
-                    resp.header(header::ACCESS_CONTROL_ALLOW_CREDENTIALS, "true");
-                })
-                .header(
-                    header::ACCESS_CONTROL_ALLOW_METHODS,
-                    &self
-                        .inner
-                        .methods
-                        .iter()
-                        .fold(String::new(), |s, v| s + "," + v.as_str())
-                        .as_str()[1..],
-                )
-                .finish()
-                .into_body();
+                    Some(HeaderValue::from_str(&header_list[1..]).unwrap())
+                } else if let Some(hdr) =
+                    req.headers().get(header::ACCESS_CONTROL_REQUEST_HEADERS)
+                {
+                    Some(hdr.clone())
+                } else {
+                    None
+                };
 
-            Either::Left(ok(req.into_response(res)))
+            let allowed_methods = &self
+                .inner
+                .methods
+                .iter()
+                .fold(String::new(), |s, v| s + "," + v.as_str());
+
+            let mut res = HttpResponse::Ok();
+
+            if let Some(max_age) = self.inner.max_age {
+                res.header(header::ACCESS_CONTROL_MAX_AGE, max_age.to_string());
+            }
+
+            if let Some(headers) = allowed_headers {
+                res.header(header::ACCESS_CONTROL_ALLOW_HEADERS, headers);
+            }
+
+            if let Some(origin) = self.inner.access_control_allow_origin(req.head()) {
+                res.header(header::ACCESS_CONTROL_ALLOW_ORIGIN, origin);
+            }
+
+            if self.inner.supports_credentials {
+                res.header(header::ACCESS_CONTROL_ALLOW_CREDENTIALS, "true");
+            }
+
+            res.header(header::ACCESS_CONTROL_ALLOW_METHODS, &allowed_methods[1..]);
+
+            let res = res.finish();
+            let res = res.into_body();
+            let res = req.into_response(res);
+
+            Either::Left(ok(res))
         } else {
             if req.headers().contains_key(header::ORIGIN) {
                 // Only check requests with a origin header.
-                if let Err(e) = self.inner.validate_origin(req.head()) {
-                    return Either::Left(ok(req.error_response(e)));
+                if let Err(err) = self.inner.validate_origin(req.head()) {
+                    return Either::Left(ok(req.error_response(err)));
                 }
             }
 
@@ -167,5 +163,29 @@ where
                 .boxed_local(),
             )
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use actix_web::{dev::Transform, http::Method, test};
+
+    use super::*;
+    use crate::Cors;
+
+    #[actix_rt::test]
+    async fn test_options_no_origin() {
+        let mut cors = Cors::new()
+            // .allowed_origin("http://localhost:8080")
+            .finish()
+            .new_transform(test::ok_service())
+            .await
+            .unwrap();
+
+        let req = test::TestRequest::default()
+            .method(Method::OPTIONS)
+            .to_srv_request();
+
+        cors.call(req).await.unwrap();
     }
 }
