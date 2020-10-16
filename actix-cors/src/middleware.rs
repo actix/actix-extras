@@ -21,6 +21,7 @@ use crate::Inner;
 ///
 /// This struct contains the settings for CORS requests to be validated and for responses to
 /// be generated.
+#[doc(hidden)]
 #[derive(Debug, Clone)]
 pub struct CorsMiddleware<S> {
     pub(crate) service: S,
