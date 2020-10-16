@@ -2,8 +2,10 @@
 
 ## Unreleased - 2020-xx-xx
 * Disallow `*` in `Cors::allowed_origin` by panicking. [#114].
+* Hide `CorsMiddleware` from rustdocs. [#118].
 
 [#114]: https://github.com/actix/actix-extras/pull/114
+[#118]: https://github.com/actix/actix-extras/pull/118
 
 
 ## 0.4.1 - 2020-10-07
