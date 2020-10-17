@@ -1,4 +1,4 @@
-use std::{collections::HashSet, convert::TryFrom, convert::TryInto, fmt};
+use std::{collections::HashSet, convert::TryFrom, convert::TryInto, fmt, rc::Rc};
 
 use actix_web::{
     dev::RequestHead,
@@ -11,8 +11,9 @@ use actix_web::{
 
 use crate::{AllOrSome, CorsError};
 
+#[derive(Clone)]
 pub(crate) struct OriginFn {
-    pub(crate) boxed_fn: Box<dyn Fn(&RequestHead) -> bool>,
+    pub(crate) boxed_fn: Rc<dyn Fn(&RequestHead) -> bool>,
 }
 
 impl fmt::Debug for OriginFn {
@@ -31,11 +32,13 @@ fn header_value_try_into_method(hdr: &HeaderValue) -> Option<Method> {
 #[derive(Debug)]
 pub(crate) struct Inner {
     pub(crate) methods: HashSet<Method>,
-    pub(crate) origins: AllOrSome<HashSet<String>>,
+
+    // BUG: AllOrSome predicate skips function checks when set to All
+    pub(crate) allowed_origins: AllOrSome<HashSet<String>>,
     pub(crate) origins_fns: Vec<OriginFn>,
-    pub(crate) origins_str: Option<HeaderValue>,
+
     pub(crate) allowed_headers: AllOrSome<HashSet<HeaderName>>,
-    pub(crate) expose_headers: Option<String>,
+    pub(crate) expose_headers: AllOrSome<HashSet<HeaderName>>,
     pub(crate) max_age: Option<usize>,
     pub(crate) preflight: bool,
     pub(crate) send_wildcard: bool,
@@ -46,7 +49,7 @@ pub(crate) struct Inner {
 impl Inner {
     pub(crate) fn validate_origin(&self, req: &RequestHead) -> Result<(), CorsError> {
         // return early if all origins are allowed or get ref to allowed origins set
-        let allowed_origins = match &self.origins {
+        let allowed_origins = match &self.allowed_origins {
             AllOrSome::All => return Ok(()),
             AllOrSome::Some(allowed_origins) => allowed_origins,
         };
@@ -84,7 +87,7 @@ impl Inner {
     ) -> Option<HeaderValue> {
         let origin = req.headers().get(header::ORIGIN);
 
-        match self.origins {
+        match self.allowed_origins {
             AllOrSome::All => {
                 if self.send_wildcard {
                     Some(HeaderValue::from_static("*"))
@@ -103,7 +106,18 @@ impl Inner {
                 } else if self.validate_origin_fns(req) {
                     Some(origin.unwrap().clone())
                 } else {
-                    Some(self.origins_str.as_ref().unwrap().clone())
+                    let allowed_origins_str = self
+                        .allowed_origins
+                        .as_ref()
+                        .unwrap()
+                        .clone()
+                        .into_iter()
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                        .try_into()
+                        .unwrap();
+
+                    Some(allowed_origins_str)
                 }
             }
         }
@@ -205,9 +219,8 @@ mod test {
     #[actix_rt::test]
     #[should_panic(expected = "OriginNotAllowed")]
     async fn test_validate_not_allowed_origin() {
-        let cors = Cors::new()
+        let cors = Cors::default()
             .allowed_origin("https://www.example.com")
-            .finish()
             .new_transform(test::ok_service())
             .await
             .unwrap();
@@ -223,13 +236,12 @@ mod test {
 
     #[actix_rt::test]
     async fn test_preflight() {
-        let mut cors = Cors::new()
+        let mut cors = Cors::default()
             .send_wildcard()
             .max_age(3600)
             .allowed_methods(vec![Method::GET, Method::OPTIONS, Method::POST])
             .allowed_headers(vec![header::AUTHORIZATION, header::ACCEPT])
             .allowed_header(header::CONTENT_TYPE)
-            .finish()
             .new_transform(test::ok_service())
             .await
             .unwrap();

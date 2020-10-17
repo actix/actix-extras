@@ -3,21 +3,18 @@ use actix_web::{http::header, web, App, HttpServer};
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    pretty_env_logger::init();
+
     HttpServer::new(move || {
         App::new()
             .wrap(
-                Cors::new()
+                Cors::default()
                     // add specific origin to allowed origin list
-                    // .allowed_origin("http://project.local:8080")
+                    .allowed_origin("http://project.local:8080")
                     // allow any port on localhost
-                    // .allowed_origin_fn(|origin_hdr, _req_head| {
                     .allowed_origin_fn(|req_head| {
-                        // origin_hdr.as_bytes().starts_with(b"http://localhost")
-
-                        // a manual alternative
                         // unwrapping is acceptable on the origin header since this function is
                         // only called when it exists
-
                         req_head
                             .headers()
                             .get(header::ORIGIN)
@@ -34,9 +31,7 @@ async fn main() -> std::io::Result<()> {
                     // set list of headers that are safe to expose
                     .expose_headers(&[header::CONTENT_DISPOSITION])
                     // set CORS rules ttl
-                    .max_age(3600)
-                    // build CORS middleware
-                    .finish(),
+                    .max_age(3600),
             )
             .default_service(web::to(|| async { "Hello world!" }))
     })

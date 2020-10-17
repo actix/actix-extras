@@ -13,9 +13,8 @@ use actix_cors::Cors;
 #[actix_rt::test]
 #[should_panic]
 async fn test_wildcard_origin() {
-    Cors::new()
+    Cors::default()
         .allowed_origin("*")
-        .finish()
         .new_transform(test::ok_service())
         .await
         .unwrap();
@@ -23,7 +22,7 @@ async fn test_wildcard_origin() {
 
 #[actix_rt::test]
 async fn test_not_allowed_origin_fn() {
-    let mut cors = Cors::new()
+    let mut cors = Cors::default()
         .allowed_origin("https://www.example.com")
         .allowed_origin_fn(|req| {
             req.headers
@@ -32,7 +31,6 @@ async fn test_not_allowed_origin_fn() {
                 .filter(|b| b.ends_with(b".unknown.com"))
                 .is_some()
         })
-        .finish()
         .new_transform(test::ok_service())
         .await
         .unwrap();
@@ -68,7 +66,7 @@ async fn test_not_allowed_origin_fn() {
 
 #[actix_rt::test]
 async fn test_allowed_origin_fn() {
-    let mut cors = Cors::new()
+    let mut cors = Cors::default()
         .allowed_origin("https://www.example.com")
         .allowed_origin_fn(|req| {
             req.headers
@@ -77,7 +75,6 @@ async fn test_allowed_origin_fn() {
                 .filter(|b| b.ends_with(b".unknown.com"))
                 .is_some()
         })
-        .finish()
         .new_transform(test::ok_service())
         .await
         .unwrap();
@@ -114,7 +111,7 @@ async fn test_allowed_origin_fn() {
 #[actix_rt::test]
 async fn test_allowed_origin_fn_with_environment() {
     let regex = Regex::new("https:.+\\.unknown\\.com").unwrap();
-    let mut cors = Cors::new()
+    let mut cors = Cors::default()
         .allowed_origin("https://www.example.com")
         .allowed_origin_fn(move |req| {
             req.headers
@@ -123,7 +120,6 @@ async fn test_allowed_origin_fn_with_environment() {
                 .filter(|b| regex.is_match(b))
                 .is_some()
         })
-        .finish()
         .new_transform(test::ok_service())
         .await
         .unwrap();
@@ -159,11 +155,10 @@ async fn test_allowed_origin_fn_with_environment() {
 
 #[actix_rt::test]
 async fn test_multiple_origins_preflight() {
-    let mut cors = Cors::new()
+    let mut cors = Cors::default()
         .allowed_origin("https://example.com")
         .allowed_origin("https://example.org")
         .allowed_methods(vec![Method::GET])
-        .finish()
         .new_transform(test::ok_service())
         .await
         .unwrap();
@@ -199,11 +194,10 @@ async fn test_multiple_origins_preflight() {
 
 #[actix_rt::test]
 async fn test_multiple_origins() {
-    let mut cors = Cors::new()
+    let mut cors = Cors::default()
         .allowed_origin("https://example.com")
         .allowed_origin("https://example.org")
         .allowed_methods(vec![Method::GET])
-        .finish()
         .new_transform(test::ok_service())
         .await
         .unwrap();
@@ -238,7 +232,7 @@ async fn test_multiple_origins() {
 #[actix_rt::test]
 async fn test_response() {
     let exposed_headers = vec![header::AUTHORIZATION, header::ACCEPT];
-    let mut cors = Cors::new()
+    let mut cors = Cors::default()
         .send_wildcard()
         .disable_preflight()
         .max_age(3600)
@@ -246,7 +240,6 @@ async fn test_response() {
         .allowed_headers(exposed_headers.clone())
         .expose_headers(exposed_headers.clone())
         .allowed_header(header::CONTENT_TYPE)
-        .finish()
         .new_transform(test::ok_service())
         .await
         .unwrap();
@@ -286,7 +279,7 @@ async fn test_response() {
     }
 
     let exposed_headers = vec![header::AUTHORIZATION, header::ACCEPT];
-    let mut cors = Cors::new()
+    let mut cors = Cors::default()
         .send_wildcard()
         .disable_preflight()
         .max_age(3600)
@@ -294,7 +287,6 @@ async fn test_response() {
         .allowed_headers(exposed_headers.clone())
         .expose_headers(exposed_headers.clone())
         .allowed_header(header::CONTENT_TYPE)
-        .finish()
         .new_transform(fn_service(|req: ServiceRequest| {
             ok(req.into_response(
                 HttpResponse::Ok().header(header::VARY, "Accept").finish(),
@@ -311,11 +303,10 @@ async fn test_response() {
         resp.headers().get(header::VARY).unwrap().as_bytes()
     );
 
-    let mut cors = Cors::new()
+    let mut cors = Cors::default()
         .disable_vary_header()
         .allowed_origin("https://www.example.com")
         .allowed_origin("https://www.google.com")
-        .finish()
         .new_transform(test::ok_service())
         .await
         .unwrap();
@@ -338,9 +329,8 @@ async fn test_response() {
 
 #[actix_rt::test]
 async fn test_validate_origin() {
-    let mut cors = Cors::new()
+    let mut cors = Cors::default()
         .allowed_origin("https://www.example.com")
-        .finish()
         .new_transform(test::ok_service())
         .await
         .unwrap();
@@ -355,9 +345,8 @@ async fn test_validate_origin() {
 
 #[actix_rt::test]
 async fn test_no_origin_response() {
-    let mut cors = Cors::new()
+    let mut cors = Cors::default()
         .disable_preflight()
-        .finish()
         .new_transform(test::ok_service())
         .await
         .unwrap();
@@ -384,8 +373,7 @@ async fn test_no_origin_response() {
 
 #[actix_rt::test]
 async fn validate_origin_allows_all_origins() {
-    let mut cors = Cors::new()
-        .finish()
+    let mut cors = Cors::permissive()
         .new_transform(test::ok_service())
         .await
         .unwrap();

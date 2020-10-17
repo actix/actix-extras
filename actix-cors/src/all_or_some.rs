@@ -26,11 +26,19 @@ impl<T> AllOrSome<T> {
         !self.is_all()
     }
 
-    /// Returns &T.
+    /// Provides a shared reference to `T` if variant is `Some`.
     pub fn as_ref(&self) -> Option<&T> {
         match *self {
             AllOrSome::All => None,
             AllOrSome::Some(ref t) => Some(t),
+        }
+    }
+
+    /// Provides a mutable reference to `T` if variant is `Some`.
+    pub fn as_mut(&mut self) -> Option<&mut T> {
+        match *self {
+            AllOrSome::All => None,
+            AllOrSome::Some(ref mut t) => Some(t),
         }
     }
 }

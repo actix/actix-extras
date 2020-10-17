@@ -15,7 +15,7 @@ use actix_web::{
 };
 use futures_util::future::{ok, Either, FutureExt as _, LocalBoxFuture, Ready};
 
-use crate::Inner;
+use crate::{AllOrSome, Inner};
 
 /// Service wrapper for Cross-Origin Resource Sharing support.
 ///
@@ -130,10 +130,18 @@ where
                                 .insert(header::ACCESS_CONTROL_ALLOW_ORIGIN, origin);
                         };
 
-                        if let Some(ref expose) = inner.expose_headers {
+                        if let AllOrSome::Some(ref expose) = inner.expose_headers {
+                            let expose_str = expose
+                                .iter()
+                                .map(|hdr| hdr.to_string())
+                                .collect::<Vec<_>>()
+                                .join(", ")
+                                .try_into()
+                                .unwrap();
+
                             res.headers_mut().insert(
                                 header::ACCESS_CONTROL_EXPOSE_HEADERS,
-                                expose.as_str().try_into().unwrap(),
+                                expose_str,
                             );
                         }
                         if inner.supports_credentials {
@@ -175,9 +183,8 @@ mod tests {
 
     #[actix_rt::test]
     async fn test_options_no_origin() {
-        let mut cors = Cors::new()
+        let mut cors = Cors::default()
             // .allowed_origin("http://localhost:8080")
-            .finish()
             .new_transform(test::ok_service())
             .await
             .unwrap();

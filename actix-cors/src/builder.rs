@@ -5,19 +5,20 @@ use actix_web::{
     error::{Error, Result},
     http::{self, header::HeaderName, Error as HttpError, Method, Uri},
 };
-use futures_util::future::{ok, Ready};
+use futures_util::future::{self, Ready};
+use log::error;
 
 use crate::{AllOrSome, CorsMiddleware, Inner, OriginFn};
 
 pub(crate) fn cors<'a>(
-    parts: &'a mut Option<Inner>,
+    inner: &'a mut Rc<Inner>,
     err: &Option<http::Error>,
 ) -> Option<&'a mut Inner> {
     if err.is_some() {
         return None;
     }
 
-    parts.as_mut()
+    Rc::get_mut(inner)
 }
 
 /// Builder for CORS middleware.
@@ -34,76 +35,50 @@ pub(crate) fn cors<'a>(
 /// use actix_cors::{Cors, CorsFactory};
 /// use actix_web::http::header;
 ///
-/// let cors = Cors::new()
+/// let cors = Cors::default()
 ///     .allowed_origin("https://www.rust-lang.org")
 ///     .allowed_methods(vec!["GET", "POST"])
 ///     .allowed_headers(vec![header::AUTHORIZATION, header::ACCEPT])
 ///     .allowed_header(header::CONTENT_TYPE)
-///     .max_age(3600)
-///     .finish();
+///     .max_age(3600);
 ///
 /// // `cors` can now be used in `App::wrap`.
 /// ```
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct Cors {
-    cors: Option<Inner>,
-    methods: bool,
+    inner: Rc<Inner>,
     error: Option<http::Error>,
-    expose_headers: HashSet<HeaderName>,
 }
 
 impl Cors {
-    /// Return a new builder.
-    pub fn new() -> Cors {
-        Cors {
-            cors: Some(Inner {
-                origins: AllOrSome::All,
-                origins_str: None,
-                origins_fns: Vec::new(),
-                methods: HashSet::new(),
-                allowed_headers: AllOrSome::All,
-                expose_headers: None,
-                max_age: None,
-                preflight: true,
-                send_wildcard: false,
-                supports_credentials: false,
-                vary_header: true,
-            }),
-            methods: false,
-            error: None,
-            expose_headers: HashSet::new(),
-        }
-    }
-
-    /// Build a CORS middleware with default settings.
-    pub fn default() -> CorsFactory {
+    /// A very permissive set of default for quick development. Not recommended for production use.
+    pub fn permissive() -> Self {
         let inner = Inner {
-            origins: AllOrSome::default(),
-            origins_str: None,
-            origins_fns: Vec::new(),
-            methods: HashSet::from_iter(
-                vec![
-                    Method::GET,
-                    Method::HEAD,
-                    Method::POST,
-                    Method::OPTIONS,
-                    Method::PUT,
-                    Method::PATCH,
-                    Method::DELETE,
-                ]
-                .into_iter(),
-            ),
+            methods: HashSet::from_iter(vec![
+                Method::GET,
+                Method::POST,
+                Method::PUT,
+                Method::DELETE,
+                Method::HEAD,
+                Method::OPTIONS,
+                Method::CONNECT,
+                Method::PATCH,
+                Method::TRACE,
+            ]),
+            allowed_origins: AllOrSome::All,
+            origins_fns: Vec::with_capacity(4),
             allowed_headers: AllOrSome::All,
-            expose_headers: None,
+            expose_headers: AllOrSome::Some(HashSet::with_capacity(8)),
             max_age: None,
             preflight: true,
             send_wildcard: false,
-            supports_credentials: false,
+            supports_credentials: true,
             vary_header: true,
         };
 
-        CorsFactory {
+        Cors {
             inner: Rc::new(inner),
+            error: None,
         }
     }
 
@@ -138,14 +113,15 @@ impl Cors {
             "Wildcard in `allowed_origin` is not allowed. Use `send_wildcard`."
         );
 
-        if let Some(cors) = cors(&mut self.cors, &self.error) {
+        if let Some(cors) = cors(&mut self.inner, &self.error) {
             match TryInto::<Uri>::try_into(origin) {
                 Ok(_) => {
-                    if cors.origins.is_all() {
-                        cors.origins = AllOrSome::Some(HashSet::new());
+                    if cors.allowed_origins.is_all() {
+                        cors.allowed_origins =
+                            AllOrSome::Some(HashSet::with_capacity(8));
                     }
 
-                    if let AllOrSome::Some(ref mut origins) = cors.origins {
+                    if let Some(origins) = cors.allowed_origins.as_mut() {
                         origins.insert(origin.to_owned());
                     }
                 }
@@ -171,9 +147,9 @@ impl Cors {
     where
         F: (Fn(&RequestHead) -> bool) + 'static,
     {
-        if let Some(cors) = cors(&mut self.cors, &self.error) {
+        if let Some(cors) = cors(&mut self.inner, &self.error) {
             cors.origins_fns.push(OriginFn {
-                boxed_fn: Box::new(f),
+                boxed_fn: Rc::new(f),
             });
         }
 
@@ -194,8 +170,7 @@ impl Cors {
         M: TryInto<Method>,
         <M as TryInto<Method>>::Error: Into<HttpError>,
     {
-        self.methods = true;
-        if let Some(cors) = cors(&mut self.cors, &self.error) {
+        if let Some(cors) = cors(&mut self.inner, &self.error) {
             for m in methods {
                 match m.try_into() {
                     Ok(method) => {
@@ -221,11 +196,12 @@ impl Cors {
         H: TryInto<HeaderName>,
         <H as TryInto<HeaderName>>::Error: Into<HttpError>,
     {
-        if let Some(cors) = cors(&mut self.cors, &self.error) {
+        if let Some(cors) = cors(&mut self.inner, &self.error) {
             match header.try_into() {
                 Ok(method) => {
                     if cors.allowed_headers.is_all() {
-                        cors.allowed_headers = AllOrSome::Some(HashSet::new());
+                        cors.allowed_headers =
+                            AllOrSome::Some(HashSet::with_capacity(8));
                     }
 
                     if let AllOrSome::Some(ref mut headers) = cors.allowed_headers {
@@ -256,12 +232,13 @@ impl Cors {
         H: TryInto<HeaderName>,
         <H as TryInto<HeaderName>>::Error: Into<HttpError>,
     {
-        if let Some(cors) = cors(&mut self.cors, &self.error) {
+        if let Some(cors) = cors(&mut self.inner, &self.error) {
             for h in headers {
                 match h.try_into() {
                     Ok(method) => {
                         if cors.allowed_headers.is_all() {
-                            cors.allowed_headers = AllOrSome::Some(HashSet::new());
+                            cors.allowed_headers =
+                                AllOrSome::Some(HashSet::with_capacity(8));
                         }
                         if let AllOrSome::Some(ref mut headers) = cors.allowed_headers {
                             headers.insert(method);
@@ -294,7 +271,11 @@ impl Cors {
         for h in headers {
             match h.try_into() {
                 Ok(method) => {
-                    self.expose_headers.insert(method);
+                    if let Some(cors) = cors(&mut self.inner, &self.error) {
+                        if let Some(headers) = cors.expose_headers.as_mut() {
+                            headers.insert(method);
+                        };
+                    }
                 }
                 Err(e) => {
                     self.error = Some(e.into());
@@ -314,7 +295,7 @@ impl Cors {
     ///
     /// [Fetch Standard CORS protocol]: https://fetch.spec.whatwg.org/#http-cors-protocol
     pub fn max_age(mut self, max_age: usize) -> Cors {
-        if let Some(cors) = cors(&mut self.cors, &self.error) {
+        if let Some(cors) = cors(&mut self.inner, &self.error) {
             cors.max_age = Some(max_age)
         }
 
@@ -333,7 +314,7 @@ impl Cors {
     ///
     /// Defaults to `false`.
     pub fn send_wildcard(mut self) -> Cors {
-        if let Some(cors) = cors(&mut self.cors, &self.error) {
+        if let Some(cors) = cors(&mut self.inner, &self.error) {
             cors.send_wildcard = true
         }
 
@@ -356,7 +337,7 @@ impl Cors {
     ///
     /// [Fetch Standard CORS protocol]: https://fetch.spec.whatwg.org/#http-cors-protocol
     pub fn supports_credentials(mut self) -> Cors {
-        if let Some(cors) = cors(&mut self.cors, &self.error) {
+        if let Some(cors) = cors(&mut self.inner, &self.error) {
             cors.supports_credentials = true
         }
 
@@ -374,7 +355,7 @@ impl Cors {
     ///
     /// By default, `Vary` header support is enabled.
     pub fn disable_vary_header(mut self) -> Cors {
-        if let Some(cors) = cors(&mut self.cors, &self.error) {
+        if let Some(cors) = cors(&mut self.inner, &self.error) {
             cors.vary_header = false
         }
 
@@ -388,71 +369,40 @@ impl Cors {
     ///
     /// By default *preflight* support is enabled.
     pub fn disable_preflight(mut self) -> Cors {
-        if let Some(cors) = cors(&mut self.cors, &self.error) {
+        if let Some(cors) = cors(&mut self.inner, &self.error) {
             cors.preflight = false
         }
 
         self
     }
+}
 
-    /// Construct CORS middleware.
-    pub fn finish(self) -> CorsFactory {
-        let mut this = if !self.methods {
-            self.allowed_methods(vec![
-                Method::GET,
-                Method::HEAD,
-                Method::POST,
-                Method::OPTIONS,
-                Method::PUT,
-                Method::PATCH,
-                Method::DELETE,
-            ])
-        } else {
-            self
+impl Default for Cors {
+    /// A restrictive set of defaults.
+    ///
+    /// No allowed origins, methods or headers exposed.
+    fn default() -> Cors {
+        let inner = Inner {
+            methods: HashSet::with_capacity(8),
+            allowed_origins: AllOrSome::Some(HashSet::with_capacity(8)),
+            origins_fns: Vec::with_capacity(4),
+            allowed_headers: AllOrSome::All,
+            expose_headers: AllOrSome::Some(HashSet::with_capacity(8)),
+            max_age: Some(60),
+            preflight: true,
+            send_wildcard: false,
+            supports_credentials: false,
+            vary_header: true,
         };
 
-        if let Some(e) = this.error.take() {
-            panic!("{}", e);
-        }
-
-        let mut cors = this.cors.take().expect("cannot reuse CorsBuilder");
-
-        if cors.supports_credentials && cors.send_wildcard && cors.origins.is_all() {
-            panic!("Credentials are allowed, but the Origin is set to \"*\"");
-        }
-
-        if let AllOrSome::Some(ref origins) = cors.origins {
-            let s = origins
-                .iter()
-                .fold(String::new(), |s, v| format!("{}, {}", s, v));
-            cors.origins_str = Some(s[2..].try_into().unwrap());
-        }
-
-        if !this.expose_headers.is_empty() {
-            cors.expose_headers = Some(
-                this.expose_headers
-                    .iter()
-                    .fold(String::new(), |s, v| format!("{}, {}", s, v.as_str()))[2..]
-                    .to_owned(),
-            );
-        }
-
-        CorsFactory {
-            inner: Rc::new(cors),
+        Cors {
+            inner: Rc::new(inner),
+            error: None,
         }
     }
 }
 
-/// Middleware for Cross-Origin Resource Sharing support.
-///
-/// This struct contains the settings for CORS requests to be validated and for responses to
-/// be generated.
-#[derive(Debug)]
-pub struct CorsFactory {
-    inner: Rc<Inner>,
-}
-
-impl<S, B> Transform<S> for CorsFactory
+impl<S, B> Transform<S> for Cors
 where
     S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
     S::Future: 'static,
@@ -466,10 +416,42 @@ where
     type Future = Ready<Result<Self::Transform, Self::InitError>>;
 
     fn new_transform(&self, service: S) -> Self::Future {
-        ok(CorsMiddleware {
-            service,
-            inner: Rc::clone(&self.inner),
-        })
+        if let Some(ref err) = self.error {
+            error!("{}", err);
+            return future::err(());
+        }
+
+        let inner = Rc::clone(&self.inner);
+
+        if inner.supports_credentials
+            && inner.send_wildcard
+            && inner.allowed_origins.is_all()
+        {
+            error!("Illegal combination of CORS options: credentials can not be supported when all \
+                    origins are allowed and `send_wildcard` is enabled.");
+            return future::err(());
+        }
+
+        // TODO: re-implement parameter baking
+        // if let AllOrSome::Some(ref origins) = this.allowed_origins {
+        //     // let s = origins
+        //     //     .iter()
+        //     //     .fold(String::new(), |s, v| format!("{}, {}", s, v));
+
+        //     Rc::get_mut(&mut this).unwrap().allowed_origins =
+        //         Some(s[2..].try_into().unwrap());
+        // }
+
+        // if !this.expose_headers.is_empty() {
+        //     this.expose_headers = Some(
+        //         this.expose_headers
+        //             .iter()
+        //             .fold(String::new(), |s, v| format!("{}, {}", s, v.as_str()))[2..]
+        //             .to_owned(),
+        //     );
+        // }
+
+        future::ok(CorsMiddleware { service, inner })
     }
 }
 
@@ -486,13 +468,20 @@ mod test {
     use super::*;
 
     #[test]
-    #[should_panic(expected = "Credentials are allowed, but the Origin is set to")]
-    fn cors_validates_illegal_allow_credentials() {
-        let _cors = Cors::new().supports_credentials().send_wildcard().finish();
+    fn illegal_allow_credentials() {
+        // using the permissive defaults (all origins allowed) and adding send_wildcard
+        // and supports_credentials should error on construction
+
+        assert!(Cors::permissive()
+            .supports_credentials()
+            .send_wildcard()
+            .new_transform(test::ok_service())
+            .into_inner()
+            .is_err());
     }
 
     #[actix_rt::test]
-    async fn default() {
+    async fn restrictive_defaults() {
         let mut cors = Cors::default()
             .new_transform(test::ok_service())
             .await
@@ -507,7 +496,7 @@ mod test {
 
     #[actix_rt::test]
     async fn allowed_header_try_from() {
-        let _cors = Cors::new().allowed_header("Content-Type");
+        let _cors = Cors::default().allowed_header("Content-Type");
     }
 
     #[actix_rt::test]
@@ -522,6 +511,6 @@ mod test {
             }
         }
 
-        let _cors = Cors::new().allowed_header(ContentType);
+        let _cors = Cors::default().allowed_header(ContentType);
     }
 }
