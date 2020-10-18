@@ -6,17 +6,13 @@ use derive_more::{Display, Error};
 #[derive(Debug, Clone, Display, Error)]
 #[non_exhaustive]
 pub enum CorsError {
-    /// Allowed origin parameter must not be wildcard (`*`).
-    #[display(fmt = "Allowed origin parameter must not be wildcard (`*`).")]
+    /// Allowed origin argument must not be wildcard (`*`).
+    #[display(fmt = "`allowed_origin` argument must not be wildcard (`*`).")]
     WildcardOrigin,
 
     /// Request header `Origin` is required but was not provided.
     #[display(fmt = "Request header `Origin` is required but was not provided.")]
     MissingOrigin,
-
-    /// Request header `Origin` could not be parsed correctly.
-    #[display(fmt = "Request header `Origin` could not be parsed correctly.")]
-    BadOrigin,
 
     /// Request header `Access-Control-Request-Method` is required but is missing.
     #[display(

@@ -61,11 +61,12 @@ pub(crate) struct Inner {
     pub(crate) vary_header: bool,
 }
 
-static EMPTY_ORIGIN_SET: Lazy<HashSet<HeaderValue>> = Lazy::new(|| HashSet::new());
+static EMPTY_ORIGIN_SET: Lazy<HashSet<HeaderValue>> = Lazy::new(HashSet::new);
 
 impl Inner {
     pub(crate) fn validate_origin(&self, req: &RequestHead) -> Result<(), CorsError> {
         // return early if all origins are allowed or get ref to allowed origins set
+        #[allow(clippy::mutable_key_type)]
         let allowed_origins = match &self.allowed_origins {
             AllOrSome::All if self.allowed_origins_fns.is_empty() => return Ok(()),
             AllOrSome::Some(allowed_origins) => allowed_origins,
