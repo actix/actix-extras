@@ -60,7 +60,7 @@ mod error;
 mod inner;
 mod middleware;
 
-pub use all_or_some::AllOrSome;
+use all_or_some::AllOrSome;
 pub use builder::Cors;
 pub use error::CorsError;
 use inner::{Inner, OriginFn};

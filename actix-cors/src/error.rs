@@ -4,7 +4,12 @@ use derive_more::{Display, Error};
 
 /// Errors that can occur when processing CORS guarded requests.
 #[derive(Debug, Clone, Display, Error)]
+#[non_exhaustive]
 pub enum CorsError {
+    /// Allowed origin parameter must not be wildcard (`*`).
+    #[display(fmt = "Allowed origin parameter must not be wildcard (`*`).")]
+    WildcardOrigin,
+
     /// Request header `Origin` is required but was not provided.
     #[display(fmt = "Request header `Origin` is required but was not provided.")]
     MissingOrigin,

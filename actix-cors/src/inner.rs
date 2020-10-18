@@ -124,6 +124,8 @@ impl Inner {
         }
     }
 
+    /// Use in preflight checks and therefore operates on header list in
+    /// `Access-Control-Request-Headers` not the actual header set.
     pub(crate) fn validate_allowed_method(
         &self,
         req: &RequestHead,
@@ -222,7 +224,6 @@ mod test {
     }
 
     #[actix_rt::test]
-    #[should_panic(expected = "OriginNotAllowed")]
     async fn test_validate_not_allowed_origin() {
         let cors = Cors::default()
             .allowed_origin("https://www.example.com")
@@ -230,13 +231,14 @@ mod test {
             .await
             .unwrap();
 
-        let req = TestRequest::with_header("Origin", "https://www.unknown.com")
-            .method(Method::GET)
+        let req = TestRequest::get()
+            .header(header::ORIGIN, "https://www.unknown.com")
+            .header(header::ACCESS_CONTROL_REQUEST_HEADERS, "DNT")
             .to_srv_request();
 
-        cors.inner.validate_origin(req.head()).unwrap();
-        cors.inner.validate_allowed_method(req.head()).unwrap();
-        cors.inner.validate_allowed_headers(req.head()).unwrap();
+        assert!(cors.inner.validate_origin(req.head()).is_err());
+        assert!(cors.inner.validate_allowed_method(req.head()).is_err());
+        assert!(cors.inner.validate_allowed_headers(req.head()).is_err());
     }
 
     #[actix_rt::test]

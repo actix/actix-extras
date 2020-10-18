@@ -2,10 +2,18 @@
 
 ## Unreleased - 2020-xx-xx
 * Disallow `*` in `Cors::allowed_origin` by panicking. [#114].
-* Hide `CorsMiddleware` from rustdocs. [#118].
+* Hide `CorsMiddleware` from docs. [#118].
+* `CorsFactory` is removed. [#119]
+* The `impl Default` constructor is now overly-restrictive. [#119]
+* Added `Cors::permissive()` constructor that allows anything. [#119]
+* Adds methods for each property to reset to a permissive state. (`allow_any_origin`, `expose_any_header`, etc.) [#119]
+* Errors are now propagated with `Transform::InitError` instead of panicking. [#119]
+* Fixes bug where allowed origin functions are not called if `allowed_origins` is All. [#119]
+* `AllOrSome` is no longer public. [#119]
 
 [#114]: https://github.com/actix/actix-extras/pull/114
 [#118]: https://github.com/actix/actix-extras/pull/118
+[#119]: https://github.com/actix/actix-extras/pull/119
 
 
 ## 0.4.1 - 2020-10-07

@@ -22,6 +22,7 @@ impl<T> AllOrSome<T> {
     }
 
     /// Returns whether this is a `Some` variant.
+    #[allow(dead_code)]
     pub fn is_some(&self) -> bool {
         !self.is_all()
     }

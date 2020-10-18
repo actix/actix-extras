@@ -4,17 +4,18 @@ use actix_web::{
     dev::{RequestHead, Service, ServiceRequest, ServiceResponse, Transform},
     error::{Error, Result},
     http::{self, header::HeaderName, Error as HttpError, HeaderValue, Method, Uri},
+    Either,
 };
 use futures_util::future::{self, Ready};
 use log::error;
 use once_cell::sync::Lazy;
 use tinyvec::tiny_vec;
 
-use crate::{AllOrSome, CorsMiddleware, Inner, OriginFn};
+use crate::{AllOrSome, CorsError, CorsMiddleware, Inner, OriginFn};
 
 pub(crate) fn cors<'a>(
     inner: &'a mut Rc<Inner>,
-    err: &Option<http::Error>,
+    err: &Option<Either<http::Error, CorsError>>,
 ) -> Option<&'a mut Inner> {
     if err.is_some() {
         return None;
@@ -39,14 +40,19 @@ static ALL_METHODS_SET: Lazy<HashSet<Method>> = Lazy::new(|| {
 
 /// Builder for CORS middleware.
 ///
-/// To construct a CORS middleware:
+/// To construct a CORS middleware, call [`Cors::default()`] to create a blank, restrictive builder.
+/// Then use any of the builder methods to customize CORS behavior.
 ///
-/// 1. Call [`Cors::new()`] to start building.
-/// 2. Use any of the builder methods to customize CORS behavior.
-/// 3. Call [`Cors::finish()`] to build the middleware.
+/// The alternative [`Cors::permissive()`] constructor is available for local development, allowing
+/// all origins and headers, etc. **The permissive constructor should not be used in production.**
+///
+/// # Errors
+/// Errors surface in the middleware initialization phase. This means that, if you have logs enabled
+/// in Actix Web (using `env_logger` or other crate that exposes logs from the `log` crate), error
+/// messages will outline what is wrong with the CORS configuration in the server logs and the
+/// server will fail to start up or serve requests.
 ///
 /// # Example
-///
 /// ```rust
 /// use actix_cors::Cors;
 /// use actix_web::http::header;
@@ -63,7 +69,7 @@ static ALL_METHODS_SET: Lazy<HashSet<Method>> = Lazy::new(|| {
 #[derive(Debug)]
 pub struct Cors {
     inner: Rc<Inner>,
-    error: Option<http::Error>,
+    error: Option<Either<http::Error, CorsError>>,
 }
 
 impl Cors {
@@ -127,20 +133,19 @@ impl Cors {
     /// `allowed_origin_fn` function is set, these functions will be used to determinate
     /// allowed origins.
     ///
-    /// # Panics
-    ///
-    /// * If supplied origin is not valid uri, or
-    /// * If supplied origin is a wildcard (`*`). [`Cors::send_wildcard`] should be used instead.
+    /// # Initialization Errors
+    /// - If supplied origin is not valid uri
+    /// - If supplied origin is a wildcard (`*`). [`Cors::send_wildcard`] should be used instead.
     ///
     /// [Fetch Standard]: https://fetch.spec.whatwg.org/#origin-header
     pub fn allowed_origin(mut self, origin: &str) -> Cors {
-        assert!(
-            origin != "*",
-            "Wildcard in `allowed_origin` is not allowed. Use `send_wildcard`."
-        );
-
         if let Some(cors) = cors(&mut self.inner, &self.error) {
             match TryInto::<Uri>::try_into(origin) {
+                Ok(_) if origin == "*" => {
+                    error!("Wildcard in `allowed_origin` is not allowed. Use `send_wildcard`.");
+                    self.error = Some(Either::B(CorsError::WildcardOrigin));
+                }
+
                 Ok(_) => {
                     if cors.allowed_origins.is_all() {
                         cors.allowed_origins =
@@ -154,8 +159,8 @@ impl Cors {
                     }
                 }
 
-                Err(e) => {
-                    self.error = Some(e.into());
+                Err(err) => {
+                    self.error = Some(Either::A(err.into()));
                 }
             }
         }
@@ -216,8 +221,8 @@ impl Cors {
                         cors.allowed_methods.insert(method);
                     }
 
-                    Err(e) => {
-                        self.error = Some(e.into());
+                    Err(err) => {
+                        self.error = Some(Either::A(err.into()));
                         break;
                     }
                 }
@@ -259,7 +264,7 @@ impl Cors {
                     }
                 }
 
-                Err(e) => self.error = Some(e.into()),
+                Err(err) => self.error = Some(Either::A(err.into())),
             }
         }
 
@@ -295,8 +300,8 @@ impl Cors {
                             headers.insert(method);
                         }
                     }
-                    Err(e) => {
-                        self.error = Some(e.into());
+                    Err(err) => {
+                        self.error = Some(Either::A(err.into()));
                         break;
                     }
                 }
@@ -343,8 +348,8 @@ impl Cors {
                         }
                     }
                 }
-                Err(e) => {
-                    self.error = Some(e.into());
+                Err(err) => {
+                    self.error = Some(Either::A(err.into()));
                     break;
                 }
             }
@@ -398,8 +403,8 @@ impl Cors {
     ///
     /// Defaults to `false`.
     ///
-    /// Builder panics during `finish` if credentials are allowed, but the Origin is set to `*`.
-    /// This is not allowed by the CORS protocol.
+    /// A server initialization error will occur if credentials are allowed, but the Origin is set
+    /// to send wildcards (`*`); this is not allowed by the CORS protocol.
     ///
     /// [Fetch Standard CORS protocol]: https://fetch.spec.whatwg.org/#http-cors-protocol
     pub fn supports_credentials(mut self) -> Cors {
@@ -491,7 +496,11 @@ where
 
     fn new_transform(&self, service: S) -> Self::Future {
         if let Some(ref err) = self.error {
-            error!("{}", err);
+            match err {
+                Either::A(err) => error!("{}", err),
+                Either::B(err) => error!("{}", err),
+            }
+
             return future::err(());
         }
 
