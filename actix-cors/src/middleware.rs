@@ -16,7 +16,7 @@ use actix_web::{
 use futures_util::future::{ok, Either, FutureExt as _, LocalBoxFuture, Ready};
 use log::debug;
 
-use crate::{AllOrSome, Inner};
+use crate::Inner;
 
 /// Service wrapper for Cross-Origin Resource Sharing support.
 ///
@@ -39,44 +39,38 @@ impl<S> CorsMiddleware<S> {
             return req.error_response(err);
         }
 
-        let allowed_headers = if let Some(headers) = inner.allowed_headers.as_ref() {
-            let header_list = &headers
-                .iter()
-                .fold(String::new(), |s, v| s + "," + v.as_str());
-
-            Some(HeaderValue::from_str(&header_list[1..]).unwrap())
-        } else if let Some(hdr) =
-            req.headers().get(header::ACCESS_CONTROL_REQUEST_HEADERS)
-        {
-            Some(hdr.clone())
-        } else {
-            None
-        };
-
-        let allowed_methods = inner
-            .methods
-            .iter()
-            .fold(String::new(), |s, v| s + "," + v.as_str());
-
         let mut res = HttpResponse::Ok();
-
-        if let Some(max_age) = inner.max_age {
-            res.header(header::ACCESS_CONTROL_MAX_AGE, max_age.to_string());
-        }
-
-        if let Some(headers) = allowed_headers {
-            res.header(header::ACCESS_CONTROL_ALLOW_HEADERS, headers);
-        }
 
         if let Some(origin) = inner.access_control_allow_origin(req.head()) {
             res.header(header::ACCESS_CONTROL_ALLOW_ORIGIN, origin);
         }
 
-        if inner.supports_credentials {
-            res.header(header::ACCESS_CONTROL_ALLOW_CREDENTIALS, "true");
+        if let Some(ref allowed_methods) = inner.allowed_methods_baked {
+            res.header(
+                header::ACCESS_CONTROL_ALLOW_METHODS,
+                allowed_methods.clone(),
+            );
         }
 
-        res.header(header::ACCESS_CONTROL_ALLOW_METHODS, &allowed_methods[1..]);
+        if let Some(ref headers) = inner.allowed_headers_baked {
+            res.header(header::ACCESS_CONTROL_ALLOW_HEADERS, headers.clone());
+        } else if let Some(headers) =
+            req.headers().get(header::ACCESS_CONTROL_REQUEST_HEADERS)
+        {
+            // all headers allowed, return
+            res.header(header::ACCESS_CONTROL_ALLOW_HEADERS, headers.clone());
+        }
+
+        if inner.supports_credentials {
+            res.header(
+                header::ACCESS_CONTROL_ALLOW_CREDENTIALS,
+                HeaderValue::from_static("true"),
+            );
+        }
+
+        if let Some(max_age) = inner.max_age {
+            res.header(header::ACCESS_CONTROL_MAX_AGE, max_age.to_string());
+        }
 
         let res = res.finish();
         let res = res.into_body();
@@ -92,17 +86,9 @@ impl<S> CorsMiddleware<S> {
                 .insert(header::ACCESS_CONTROL_ALLOW_ORIGIN, origin);
         };
 
-        if let AllOrSome::Some(ref expose) = inner.expose_headers {
-            let expose_str = expose
-                .iter()
-                .map(|hdr| hdr.to_string())
-                .collect::<Vec<_>>()
-                .join(", ")
-                .try_into()
-                .unwrap();
-
+        if let Some(ref expose) = inner.expose_headers_baked {
             res.headers_mut()
-                .insert(header::ACCESS_CONTROL_EXPOSE_HEADERS, expose_str);
+                .insert(header::ACCESS_CONTROL_EXPOSE_HEADERS, expose.clone());
         }
 
         if inner.supports_credentials {

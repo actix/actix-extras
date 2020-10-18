@@ -3,10 +3,11 @@ use std::{collections::HashSet, convert::TryInto, iter::FromIterator, rc::Rc};
 use actix_web::{
     dev::{RequestHead, Service, ServiceRequest, ServiceResponse, Transform},
     error::{Error, Result},
-    http::{self, header::HeaderName, Error as HttpError, Method, Uri},
+    http::{self, header::HeaderName, Error as HttpError, HeaderValue, Method, Uri},
 };
 use futures_util::future::{self, Ready};
 use log::error;
+use once_cell::sync::Lazy;
 use tinyvec::tiny_vec;
 
 use crate::{AllOrSome, CorsMiddleware, Inner, OriginFn};
@@ -21,6 +22,20 @@ pub(crate) fn cors<'a>(
 
     Rc::get_mut(inner)
 }
+
+static ALL_METHODS_SET: Lazy<HashSet<Method>> = Lazy::new(|| {
+    HashSet::from_iter(vec![
+        Method::GET,
+        Method::POST,
+        Method::PUT,
+        Method::DELETE,
+        Method::HEAD,
+        Method::OPTIONS,
+        Method::CONNECT,
+        Method::PATCH,
+        Method::TRACE,
+    ])
+});
 
 /// Builder for CORS middleware.
 ///
@@ -53,24 +68,23 @@ pub struct Cors {
 
 impl Cors {
     /// A very permissive set of default for quick development. Not recommended for production use.
+    ///
+    /// *All* origins, methods, request headers and exposed headers allowed. Credentials supported.
+    /// Max age 1 hour. Does not send wildcard.
     pub fn permissive() -> Self {
         let inner = Inner {
-            methods: HashSet::from_iter(vec![
-                Method::GET,
-                Method::POST,
-                Method::PUT,
-                Method::DELETE,
-                Method::HEAD,
-                Method::OPTIONS,
-                Method::CONNECT,
-                Method::PATCH,
-                Method::TRACE,
-            ]),
             allowed_origins: AllOrSome::All,
             allowed_origins_fns: tiny_vec![],
+
+            allowed_methods: ALL_METHODS_SET.clone(),
+            allowed_methods_baked: None,
+
             allowed_headers: AllOrSome::All,
-            expose_headers: AllOrSome::Some(HashSet::with_capacity(8)),
-            max_age: None,
+            allowed_headers_baked: None,
+
+            expose_headers: AllOrSome::All,
+            expose_headers_baked: None,
+            max_age: Some(3600),
             preflight: true,
             send_wildcard: false,
             supports_credentials: true,
@@ -170,6 +184,17 @@ impl Cors {
         self
     }
 
+    /// Resets allowed methods list to all methods.
+    ///
+    /// See [`Cors::allowed_methods`] for more info on allowed methods.
+    pub fn allow_any_method(mut self) -> Cors {
+        if let Some(cors) = cors(&mut self.inner, &self.error) {
+            cors.allowed_methods = ALL_METHODS_SET.clone();
+        }
+
+        self
+    }
+
     /// Set a list of methods which allowed origins can perform.
     ///
     /// These will be sent in the `Access-Control-Allow-Methods` response header as specified in
@@ -188,7 +213,7 @@ impl Cors {
             for m in methods {
                 match m.try_into() {
                     Ok(method) => {
-                        cors.methods.insert(method);
+                        cors.allowed_methods.insert(method);
                     }
 
                     Err(e) => {
@@ -202,9 +227,20 @@ impl Cors {
         self
     }
 
-    /// Add an allowed header.
+    /// Resets allowed request header list to a state where any origin is accepted.
     ///
-    /// See `Cors::allowed_headers()` for details.
+    /// See [`Cors::allowed_headers`] for more info on allowed request headers.
+    pub fn allow_any_header(mut self) -> Cors {
+        if let Some(cors) = cors(&mut self.inner, &self.error) {
+            cors.allowed_origins = AllOrSome::All;
+        }
+
+        self
+    }
+
+    /// Add an allowed request header.
+    ///
+    /// See [`Cors::allowed_headers`] for more info on allowed request headers.
     pub fn allowed_header<H>(mut self, header: H) -> Cors
     where
         H: TryInto<HeaderName>,
@@ -230,7 +266,7 @@ impl Cors {
         self
     }
 
-    /// Set a list of header field names which can be used when this resource is accessed by
+    /// Set a list of request header field names which can be used when this resource is accessed by
     /// allowed origins.
     ///
     /// If `All` is set, whatever is requested by the client in `Access-Control-Request-Headers`
@@ -254,6 +290,7 @@ impl Cors {
                             cors.allowed_headers =
                                 AllOrSome::Some(HashSet::with_capacity(8));
                         }
+
                         if let AllOrSome::Some(ref mut headers) = cors.allowed_headers {
                             headers.insert(method);
                         }
@@ -264,6 +301,17 @@ impl Cors {
                     }
                 }
             }
+        }
+
+        self
+    }
+
+    /// Resets exposed response header list to a state where any header is accepted.
+    ///
+    /// See [`Cors::expose_headers`] for more info on exposed response headers.
+    pub fn expose_any_header(mut self) -> Cors {
+        if let Some(cors) = cors(&mut self.inner, &self.error) {
+            cors.allowed_origins = AllOrSome::All;
         }
 
         self
@@ -284,11 +332,15 @@ impl Cors {
     {
         for h in headers {
             match h.try_into() {
-                Ok(method) => {
+                Ok(header) => {
                     if let Some(cors) = cors(&mut self.inner, &self.error) {
-                        if let Some(headers) = cors.expose_headers.as_mut() {
-                            headers.insert(method);
-                        };
+                        if cors.expose_headers.is_all() {
+                            cors.expose_headers =
+                                AllOrSome::Some(HashSet::with_capacity(8));
+                        }
+                        if let AllOrSome::Some(ref mut headers) = cors.expose_headers {
+                            headers.insert(header);
+                        }
                     }
                 }
                 Err(e) => {
@@ -301,16 +353,16 @@ impl Cors {
         self
     }
 
-    /// Set a maximum time for which this CORS request maybe cached.
+    /// Set a maximum time (in seconds) for which this CORS request maybe cached.
     /// This value is set as the `Access-Control-Max-Age` header as specified in
     /// the [Fetch Standard CORS protocol].
     ///
-    /// This defaults to `None` (unset).
+    /// Pass a number (of seconds) or use None to disable sending max age header.
     ///
     /// [Fetch Standard CORS protocol]: https://fetch.spec.whatwg.org/#http-cors-protocol
-    pub fn max_age(mut self, max_age: usize) -> Cors {
+    pub fn max_age(mut self, max_age: impl Into<Option<usize>>) -> Cors {
         if let Some(cors) = cors(&mut self.inner, &self.error) {
-            cors.max_age = Some(max_age)
+            cors.max_age = max_age.into()
         }
 
         self
@@ -392,17 +444,25 @@ impl Cors {
 }
 
 impl Default for Cors {
-    /// A restrictive set of defaults.
+    /// A restrictive (security paranoid) set of defaults.
     ///
-    /// No allowed origins, methods or headers exposed.
+    /// *No* allowed origins, methods, request headers or exposed headers. Credentials
+    /// not supported. No max age (will use browser's default).
     fn default() -> Cors {
         let inner = Inner {
-            methods: HashSet::with_capacity(8),
             allowed_origins: AllOrSome::Some(HashSet::with_capacity(8)),
             allowed_origins_fns: tiny_vec![],
-            allowed_headers: AllOrSome::All,
+
+            allowed_methods: HashSet::with_capacity(8),
+            allowed_methods_baked: None,
+
+            allowed_headers: AllOrSome::Some(HashSet::with_capacity(8)),
+            allowed_headers_baked: None,
+
             expose_headers: AllOrSome::Some(HashSet::with_capacity(8)),
-            max_age: Some(60),
+            expose_headers_baked: None,
+
+            max_age: None,
             preflight: true,
             send_wildcard: false,
             supports_credentials: false,
@@ -435,7 +495,7 @@ where
             return future::err(());
         }
 
-        let inner = Rc::clone(&self.inner);
+        let mut inner = Rc::clone(&self.inner);
 
         if inner.supports_credentials
             && inner.send_wildcard
@@ -446,27 +506,52 @@ where
             return future::err(());
         }
 
-        // TODO: re-implement parameter baking
-        // if let AllOrSome::Some(ref origins) = this.allowed_origins {
-        //     // let s = origins
-        //     //     .iter()
-        //     //     .fold(String::new(), |s, v| format!("{}, {}", s, v));
+        // bake allowed headers value if Some and not empty
+        match inner.allowed_headers.as_ref() {
+            Some(header_set) if !header_set.is_empty() => {
+                let allowed_headers_str = intersperse_header_values(header_set);
+                Rc::make_mut(&mut inner).allowed_headers_baked =
+                    Some(allowed_headers_str);
+            }
+            _ => {}
+        }
 
-        //     Rc::get_mut(&mut this).unwrap().allowed_origins =
-        //         Some(s[2..].try_into().unwrap());
-        // }
+        // bake allowed methods value if not empty
+        if !inner.allowed_methods.is_empty() {
+            let allowed_methods_str = intersperse_header_values(&inner.allowed_methods);
+            Rc::make_mut(&mut inner).allowed_methods_baked = Some(allowed_methods_str);
+        }
 
-        // if !this.expose_headers.is_empty() {
-        //     this.expose_headers = Some(
-        //         this.expose_headers
-        //             .iter()
-        //             .fold(String::new(), |s, v| format!("{}, {}", s, v.as_str()))[2..]
-        //             .to_owned(),
-        //     );
-        // }
+        // bake exposed headers value if Some and not empty
+        match inner.expose_headers.as_ref() {
+            Some(header_set) if !header_set.is_empty() => {
+                let expose_headers_str = intersperse_header_values(header_set);
+                Rc::make_mut(&mut inner).expose_headers_baked = Some(expose_headers_str);
+            }
+            _ => {}
+        }
 
         future::ok(CorsMiddleware { service, inner })
     }
+}
+
+/// Only call when values are guaranteed to be valid header values and set is not empty.
+fn intersperse_header_values<T>(val_set: &HashSet<T>) -> HeaderValue
+where
+    T: AsRef<str>,
+{
+    val_set
+        .iter()
+        .fold(String::with_capacity(32), |mut acc, val| {
+            acc.push_str(", ");
+            acc.push_str(val.as_ref());
+            acc
+        })
+        // set is not empty so string will always have leading ", " to trim
+        [2..]
+        .try_into()
+        // all method names are valid header values
+        .unwrap()
 }
 
 #[cfg(test)]

@@ -39,16 +39,21 @@ fn header_value_try_into_method(hdr: &HeaderValue) -> Option<Method> {
         .and_then(|meth| Method::try_from(meth).ok())
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub(crate) struct Inner {
-    pub(crate) methods: HashSet<Method>,
-
-    // FIXME: AllOrSome predicate skips function checks when set to All
     pub(crate) allowed_origins: AllOrSome<HashSet<HeaderValue>>,
     pub(crate) allowed_origins_fns: TinyVec<[OriginFn; 4]>,
 
+    pub(crate) allowed_methods: HashSet<Method>,
+    pub(crate) allowed_methods_baked: Option<HeaderValue>,
+
     pub(crate) allowed_headers: AllOrSome<HashSet<HeaderName>>,
+    pub(crate) allowed_headers_baked: Option<HeaderValue>,
+
+    /// `All` will echo back `Access-Control-Request-Header` list.
     pub(crate) expose_headers: AllOrSome<HashSet<HeaderName>>,
+    pub(crate) expose_headers_baked: Option<HeaderValue>,
+
     pub(crate) max_age: Option<usize>,
     pub(crate) preflight: bool,
     pub(crate) send_wildcard: bool,
@@ -131,7 +136,7 @@ impl Inner {
 
         match request_method {
             // method valid and allowed
-            Some(Some(method)) if self.methods.contains(&method) => Ok(()),
+            Some(Some(method)) if self.allowed_methods.contains(&method) => Ok(()),
 
             // method valid but not allowed
             Some(Some(_)) => Err(CorsError::MethodNotAllowed),
