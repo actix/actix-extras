@@ -32,7 +32,7 @@ pub(crate) fn cors<'a>(
 /// # Example
 ///
 /// ```rust
-/// use actix_cors::{Cors, CorsFactory};
+/// use actix_cors::Cors;
 /// use actix_web::http::header;
 ///
 /// let cors = Cors::default()
@@ -80,6 +80,17 @@ impl Cors {
             inner: Rc::new(inner),
             error: None,
         }
+    }
+
+    /// Resets allowed origin list to a state where any origin is accepted.
+    ///
+    /// See [`Cors::allowed_origin`] for more info on allowed origins.
+    pub fn allow_any_origin(mut self) -> Cors {
+        if let Some(cors) = cors(&mut self.inner, &self.error) {
+            cors.allowed_origins = AllOrSome::All;
+        }
+
+        self
     }
 
     /// Add an origin that is allowed to make requests.
@@ -491,7 +502,7 @@ mod test {
             .to_srv_request();
 
         let resp = test::call_service(&mut cors, req).await;
-        assert_eq!(resp.status(), StatusCode::OK);
+        assert_eq!(resp.status(), StatusCode::BAD_REQUEST);
     }
 
     #[actix_rt::test]

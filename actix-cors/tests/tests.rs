@@ -10,6 +10,10 @@ use regex::bytes::Regex;
 
 use actix_cors::Cors;
 
+fn val_as_str(val: &HeaderValue) -> &str {
+    val.to_str().unwrap()
+}
+
 #[actix_rt::test]
 #[should_panic]
 async fn test_wildcard_origin() {
@@ -89,8 +93,7 @@ async fn test_allowed_origin_fn() {
         "https://www.example.com",
         resp.headers()
             .get(header::ACCESS_CONTROL_ALLOW_ORIGIN)
-            .unwrap()
-            .to_str()
+            .map(val_as_str)
             .unwrap()
     );
 
@@ -134,8 +137,7 @@ async fn test_allowed_origin_fn_with_environment() {
         "https://www.example.com",
         resp.headers()
             .get(header::ACCESS_CONTROL_ALLOW_ORIGIN)
-            .unwrap()
-            .to_str()
+            .map(val_as_str)
             .unwrap()
     );
 
@@ -170,11 +172,10 @@ async fn test_multiple_origins_preflight() {
 
     let resp = test::call_service(&mut cors, req).await;
     assert_eq!(
-        &b"https://example.com"[..],
+        Some(&b"https://example.com"[..]),
         resp.headers()
             .get(header::ACCESS_CONTROL_ALLOW_ORIGIN)
-            .unwrap()
-            .as_bytes()
+            .map(HeaderValue::as_bytes)
     );
 
     let req = TestRequest::with_header("Origin", "https://example.org")
@@ -184,11 +185,10 @@ async fn test_multiple_origins_preflight() {
 
     let resp = test::call_service(&mut cors, req).await;
     assert_eq!(
-        &b"https://example.org"[..],
+        Some(&b"https://example.org"[..]),
         resp.headers()
             .get(header::ACCESS_CONTROL_ALLOW_ORIGIN)
-            .unwrap()
-            .as_bytes()
+            .map(HeaderValue::as_bytes)
     );
 }
 
@@ -208,11 +208,10 @@ async fn test_multiple_origins() {
 
     let resp = test::call_service(&mut cors, req).await;
     assert_eq!(
-        &b"https://example.com"[..],
+        Some(&b"https://example.com"[..]),
         resp.headers()
             .get(header::ACCESS_CONTROL_ALLOW_ORIGIN)
-            .unwrap()
-            .as_bytes()
+            .map(HeaderValue::as_bytes)
     );
 
     let req = TestRequest::with_header("Origin", "https://example.org")
@@ -221,11 +220,10 @@ async fn test_multiple_origins() {
 
     let resp = test::call_service(&mut cors, req).await;
     assert_eq!(
-        &b"https://example.org"[..],
+        Some(&b"https://example.org"[..]),
         resp.headers()
             .get(header::ACCESS_CONTROL_ALLOW_ORIGIN)
-            .unwrap()
-            .as_bytes()
+            .map(HeaderValue::as_bytes)
     );
 }
 
@@ -233,6 +231,7 @@ async fn test_multiple_origins() {
 async fn test_response() {
     let exposed_headers = vec![header::AUTHORIZATION, header::ACCEPT];
     let mut cors = Cors::default()
+        .allow_any_origin()
         .send_wildcard()
         .disable_preflight()
         .max_age(3600)
@@ -247,18 +246,16 @@ async fn test_response() {
     let req = TestRequest::with_header("Origin", "https://www.example.com")
         .method(Method::OPTIONS)
         .to_srv_request();
-
     let resp = test::call_service(&mut cors, req).await;
     assert_eq!(
-        &b"*"[..],
+        Some(&b"*"[..]),
         resp.headers()
             .get(header::ACCESS_CONTROL_ALLOW_ORIGIN)
-            .unwrap()
-            .as_bytes()
+            .map(HeaderValue::as_bytes)
     );
     assert_eq!(
-        &b"Origin"[..],
-        resp.headers().get(header::VARY).unwrap().as_bytes()
+        Some(&b"Origin"[..]),
+        resp.headers().get(header::VARY).map(HeaderValue::as_bytes)
     );
 
     #[allow(clippy::needless_collect)]
@@ -266,13 +263,13 @@ async fn test_response() {
         let headers = resp
             .headers()
             .get(header::ACCESS_CONTROL_EXPOSE_HEADERS)
-            .unwrap()
-            .to_str()
+            .map(val_as_str)
             .unwrap()
             .split(',')
             .map(|s| s.trim())
             .collect::<Vec<&str>>();
 
+        // TODO: use HashSet subset check
         for h in exposed_headers {
             assert!(headers.contains(&h.as_str()));
         }
@@ -280,6 +277,7 @@ async fn test_response() {
 
     let exposed_headers = vec![header::AUTHORIZATION, header::ACCEPT];
     let mut cors = Cors::default()
+        .allow_any_origin()
         .send_wildcard()
         .disable_preflight()
         .max_age(3600)
@@ -288,23 +286,25 @@ async fn test_response() {
         .expose_headers(exposed_headers.clone())
         .allowed_header(header::CONTENT_TYPE)
         .new_transform(fn_service(|req: ServiceRequest| {
-            ok(req.into_response(
-                HttpResponse::Ok().header(header::VARY, "Accept").finish(),
-            ))
+            ok(req.into_response({
+                HttpResponse::Ok().header(header::VARY, "Accept").finish()
+            }))
         }))
         .await
         .unwrap();
+
     let req = TestRequest::with_header("Origin", "https://www.example.com")
         .method(Method::OPTIONS)
         .to_srv_request();
     let resp = test::call_service(&mut cors, req).await;
     assert_eq!(
-        &b"Accept, Origin"[..],
-        resp.headers().get(header::VARY).unwrap().as_bytes()
+        Some(&b"Accept, Origin"[..]),
+        resp.headers().get(header::VARY).map(HeaderValue::as_bytes)
     );
 
     let mut cors = Cors::default()
         .disable_vary_header()
+        .allowed_methods(vec!["POST"])
         .allowed_origin("https://www.example.com")
         .allowed_origin("https://www.google.com")
         .new_transform(test::ok_service())
@@ -316,15 +316,11 @@ async fn test_response() {
         .header(header::ACCESS_CONTROL_REQUEST_METHOD, "POST")
         .to_srv_request();
     let resp = test::call_service(&mut cors, req).await;
-
     let origins_str = resp
         .headers()
         .get(header::ACCESS_CONTROL_ALLOW_ORIGIN)
-        .unwrap()
-        .to_str()
-        .unwrap();
-
-    assert_eq!("https://www.example.com", origins_str);
+        .map(val_as_str);
+    assert_eq!(Some("https://www.example.com"), origins_str);
 }
 
 #[actix_rt::test]
@@ -345,7 +341,7 @@ async fn test_validate_origin() {
 
 #[actix_rt::test]
 async fn test_no_origin_response() {
-    let mut cors = Cors::default()
+    let mut cors = Cors::permissive()
         .disable_preflight()
         .new_transform(test::ok_service())
         .await
@@ -363,11 +359,10 @@ async fn test_no_origin_response() {
         .to_srv_request();
     let resp = test::call_service(&mut cors, req).await;
     assert_eq!(
-        &b"https://www.example.com"[..],
+        Some(&b"https://www.example.com"[..]),
         resp.headers()
             .get(header::ACCESS_CONTROL_ALLOW_ORIGIN)
-            .unwrap()
-            .as_bytes()
+            .map(HeaderValue::as_bytes)
     );
 }
 

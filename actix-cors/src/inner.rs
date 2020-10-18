@@ -210,11 +210,15 @@ mod test {
 
     use actix_web::{
         dev::Transform,
-        http::{header, Method, StatusCode},
+        http::{header, HeaderValue, Method, StatusCode},
         test::{self, TestRequest},
     };
 
     use crate::Cors;
+
+    fn val_as_str(val: &HeaderValue) -> &str {
+        val.to_str().unwrap()
+    }
 
     #[actix_rt::test]
     #[should_panic(expected = "OriginNotAllowed")]
@@ -237,6 +241,7 @@ mod test {
     #[actix_rt::test]
     async fn test_preflight() {
         let mut cors = Cors::default()
+            .allow_any_origin()
             .send_wildcard()
             .max_age(3600)
             .allowed_methods(vec![Method::GET, Method::OPTIONS, Method::POST])
@@ -275,24 +280,22 @@ mod test {
 
         let resp = test::call_service(&mut cors, req).await;
         assert_eq!(
-            &b"*"[..],
+            Some(&b"*"[..]),
             resp.headers()
                 .get(header::ACCESS_CONTROL_ALLOW_ORIGIN)
-                .unwrap()
-                .as_bytes()
+                .map(HeaderValue::as_bytes)
         );
         assert_eq!(
-            &b"3600"[..],
+            Some(&b"3600"[..]),
             resp.headers()
                 .get(header::ACCESS_CONTROL_MAX_AGE)
-                .unwrap()
-                .as_bytes()
+                .map(HeaderValue::as_bytes)
         );
+
         let hdr = resp
             .headers()
             .get(header::ACCESS_CONTROL_ALLOW_HEADERS)
-            .unwrap()
-            .to_str()
+            .map(val_as_str)
             .unwrap();
         assert!(hdr.contains("authorization"));
         assert!(hdr.contains("accept"));

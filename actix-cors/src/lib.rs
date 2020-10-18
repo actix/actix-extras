@@ -22,7 +22,7 @@
 //! #[actix_web::main]
 //! async fn main() -> std::io::Result<()> {
 //!     HttpServer::new(|| {
-//!         let cors = Cors::new()
+//!         let cors = Cors::default()
 //!               .allowed_origin("https://www.rust-lang.org/")
 //!               .allowed_origin_fn(|req| {
 //!                   req.headers
@@ -34,8 +34,7 @@
 //!               .allowed_methods(vec!["GET", "POST"])
 //!               .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
 //!               .allowed_header(http::header::CONTENT_TYPE)
-//!               .max_age(3600)
-//!               .finish();
+//!               .max_age(3600);
 //!
 //!         App::new()
 //!             .wrap(cors)
