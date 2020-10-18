@@ -7,6 +7,7 @@ use actix_web::{
 };
 use futures_util::future::{self, Ready};
 use log::error;
+use tinyvec::tiny_vec;
 
 use crate::{AllOrSome, CorsMiddleware, Inner, OriginFn};
 
@@ -66,7 +67,7 @@ impl Cors {
                 Method::TRACE,
             ]),
             allowed_origins: AllOrSome::All,
-            origins_fns: Vec::with_capacity(4),
+            allowed_origins_fns: tiny_vec![],
             allowed_headers: AllOrSome::All,
             expose_headers: AllOrSome::Some(HashSet::with_capacity(8)),
             max_age: None,
@@ -133,7 +134,9 @@ impl Cors {
                     }
 
                     if let Some(origins) = cors.allowed_origins.as_mut() {
-                        origins.insert(origin.to_owned());
+                        // any uri is a valid header value
+                        let hv = origin.try_into().unwrap();
+                        origins.insert(hv);
                     }
                 }
 
@@ -159,7 +162,7 @@ impl Cors {
         F: (Fn(&RequestHead) -> bool) + 'static,
     {
         if let Some(cors) = cors(&mut self.inner, &self.error) {
-            cors.origins_fns.push(OriginFn {
+            cors.allowed_origins_fns.push(OriginFn {
                 boxed_fn: Rc::new(f),
             });
         }
@@ -396,7 +399,7 @@ impl Default for Cors {
         let inner = Inner {
             methods: HashSet::with_capacity(8),
             allowed_origins: AllOrSome::Some(HashSet::with_capacity(8)),
-            origins_fns: Vec::with_capacity(4),
+            allowed_origins_fns: tiny_vec![],
             allowed_headers: AllOrSome::All,
             expose_headers: AllOrSome::Some(HashSet::with_capacity(8)),
             max_age: Some(60),

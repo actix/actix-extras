@@ -80,15 +80,13 @@ impl<S> CorsMiddleware<S> {
 
         let res = res.finish();
         let res = res.into_body();
-        let res = req.into_response(res);
-
-        res
+        req.into_response(res)
     }
 
     fn augment_response<B>(
         inner: &Inner,
         mut res: ServiceResponse<B>,
-    ) -> Result<ServiceResponse<B>, Error> {
+    ) -> ServiceResponse<B> {
         if let Some(origin) = inner.access_control_allow_origin(res.request().head()) {
             res.headers_mut()
                 .insert(header::ACCESS_CONTROL_ALLOW_ORIGIN, origin);
@@ -128,7 +126,7 @@ impl<S> CorsMiddleware<S> {
             res.headers_mut().insert(header::VARY, value);
         }
 
-        Ok(res)
+        res
     }
 }
 
@@ -176,7 +174,7 @@ where
 
                 if origin.is_some() {
                     let res = res?;
-                    Self::augment_response(&inner, res)
+                    Ok(Self::augment_response(&inner, res))
                 } else {
                     res
                 }
@@ -190,23 +188,47 @@ where
 
 #[cfg(test)]
 mod tests {
-    use actix_web::{dev::Transform, http::Method, test};
+    use actix_web::{
+        dev::Transform,
+        test::{self, TestRequest},
+    };
 
     use super::*;
     use crate::Cors;
 
     #[actix_rt::test]
     async fn test_options_no_origin() {
+        // Tests case where allowed_origins is All but there are validate functions to run incase.
+        // In this case, origins are only allowed when the DNT header is sent.
+
         let mut cors = Cors::default()
-            // .allowed_origin("http://localhost:8080")
+            .allow_any_origin()
+            .allowed_origin_fn(|req_head| req_head.headers().contains_key(header::DNT))
             .new_transform(test::ok_service())
             .await
             .unwrap();
 
-        let req = test::TestRequest::default()
-            .method(Method::OPTIONS)
+        let req = TestRequest::get()
+            .header(header::ORIGIN, "http://example.com")
             .to_srv_request();
+        let res = cors.call(req).await.unwrap();
+        assert_eq!(
+            None,
+            res.headers()
+                .get(header::ACCESS_CONTROL_ALLOW_ORIGIN)
+                .map(HeaderValue::as_bytes)
+        );
 
-        cors.call(req).await.unwrap();
+        let req = TestRequest::get()
+            .header(header::ORIGIN, "http://example.com")
+            .header(header::DNT, "1")
+            .to_srv_request();
+        let res = cors.call(req).await.unwrap();
+        assert_eq!(
+            Some(&b"http://example.com"[..]),
+            res.headers()
+                .get(header::ACCESS_CONTROL_ALLOW_ORIGIN)
+                .map(HeaderValue::as_bytes)
+        );
     }
 }

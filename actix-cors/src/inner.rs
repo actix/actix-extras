@@ -8,12 +8,22 @@ use actix_web::{
         Method,
     },
 };
+use once_cell::sync::Lazy;
+use tinyvec::TinyVec;
 
 use crate::{AllOrSome, CorsError};
 
 #[derive(Clone)]
 pub(crate) struct OriginFn {
     pub(crate) boxed_fn: Rc<dyn Fn(&RequestHead) -> bool>,
+}
+
+impl Default for OriginFn {
+    /// Dummy default for use in tiny_vec. Do not use.
+    fn default() -> Self {
+        let boxed_fn: Rc<dyn Fn(&_) -> _> = Rc::new(|_req_head| false);
+        Self { boxed_fn }
+    }
 }
 
 impl fmt::Debug for OriginFn {
@@ -33,9 +43,9 @@ fn header_value_try_into_method(hdr: &HeaderValue) -> Option<Method> {
 pub(crate) struct Inner {
     pub(crate) methods: HashSet<Method>,
 
-    // BUG: AllOrSome predicate skips function checks when set to All
-    pub(crate) allowed_origins: AllOrSome<HashSet<String>>,
-    pub(crate) origins_fns: Vec<OriginFn>,
+    // FIXME: AllOrSome predicate skips function checks when set to All
+    pub(crate) allowed_origins: AllOrSome<HashSet<HeaderValue>>,
+    pub(crate) allowed_origins_fns: TinyVec<[OriginFn; 4]>,
 
     pub(crate) allowed_headers: AllOrSome<HashSet<HeaderName>>,
     pub(crate) expose_headers: AllOrSome<HashSet<HeaderName>>,
@@ -46,18 +56,22 @@ pub(crate) struct Inner {
     pub(crate) vary_header: bool,
 }
 
+static EMPTY_ORIGIN_SET: Lazy<HashSet<HeaderValue>> = Lazy::new(|| HashSet::new());
+
 impl Inner {
     pub(crate) fn validate_origin(&self, req: &RequestHead) -> Result<(), CorsError> {
         // return early if all origins are allowed or get ref to allowed origins set
         let allowed_origins = match &self.allowed_origins {
-            AllOrSome::All => return Ok(()),
+            AllOrSome::All if self.allowed_origins_fns.is_empty() => return Ok(()),
             AllOrSome::Some(allowed_origins) => allowed_origins,
+            // only function origin validators are defined
+            _ => &EMPTY_ORIGIN_SET,
         };
 
         // get origin header and try to parse as string
-        match req.headers().get(header::ORIGIN).map(|hdr| hdr.to_str()) {
+        match req.headers().get(header::ORIGIN) {
             // origin header exists and is a string
-            Some(Ok(origin)) => {
+            Some(origin) => {
                 if allowed_origins.contains(origin) || self.validate_origin_fns(req) {
                     Ok(())
                 } else {
@@ -65,22 +79,21 @@ impl Inner {
                 }
             }
 
-            // origin header is not a string
-            Some(Err(_)) => Err(CorsError::BadOrigin),
-
             // origin header is missing
-            // in our model, it's required for OPTIONS request which is why this is not unreachable
+            // note: with our implementation, the origin header is required for OPTIONS request or
+            // else this would be unreachable
             None => Err(CorsError::MissingOrigin),
         }
     }
 
     /// Accepts origin if _ANY_ functions return true.
     pub(crate) fn validate_origin_fns(&self, req: &RequestHead) -> bool {
-        self.origins_fns
+        self.allowed_origins_fns
             .iter()
             .any(|origin_fn| (origin_fn.boxed_fn)(req))
     }
 
+    /// Only called if origin exists and always after it's validated.
     pub(crate) fn access_control_allow_origin(
         &self,
         req: &RequestHead,
@@ -91,34 +104,17 @@ impl Inner {
             AllOrSome::All => {
                 if self.send_wildcard {
                     Some(HeaderValue::from_static("*"))
-                } else if let Some(origin) = origin {
-                    Some(origin.clone())
                 } else {
-                    None
+                    // see note below about why `.cloned()` is correct
+                    origin.cloned()
                 }
             }
 
-            AllOrSome::Some(ref origins) => {
-                if let Some(origin) = origin
-                    .filter(|&o| matches!(o.to_str(), Ok(os) if origins.contains(os)))
-                {
-                    Some(origin.clone())
-                } else if self.validate_origin_fns(req) {
-                    Some(origin.unwrap().clone())
-                } else {
-                    let allowed_origins_str = self
-                        .allowed_origins
-                        .as_ref()
-                        .unwrap()
-                        .clone()
-                        .into_iter()
-                        .collect::<Vec<_>>()
-                        .join(", ")
-                        .try_into()
-                        .unwrap();
-
-                    Some(allowed_origins_str)
-                }
+            AllOrSome::Some(_) => {
+                // since origin (if it exists) is known to be allowed if this method is called
+                // then cloning the option is all that is required to be used as an echoed back
+                // header value (or omitted if None)
+                origin.cloned()
             }
         }
     }

@@ -8,6 +8,8 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .wrap(
+                // default settings are overly restrictive to reduce chance of
+                // misconfiguration leading to security concerns
                 Cors::default()
                     // add specific origin to allowed origin list
                     .allowed_origin("http://project.local:8080")
