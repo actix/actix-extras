@@ -1,15 +1,12 @@
 //! Cross-Origin Resource Sharing (CORS) controls for Actix Web.
 //!
-//! This middleware can be applied to both applications and resources. Once built,
-//! [`CorsFactory`] can be used as a parameter for actix-web `App::wrap()`,
+//! This middleware can be applied to both applications and resources. Once built, a
+//! [`Cors`] builder can be used as an argument for Actix Web's `App::wrap()`,
 //! `Scope::wrap()`, or `Resource::wrap()` methods.
 //!
 //! This CORS middleware automatically handles `OPTIONS` preflight requests.
 //!
 //! # Example
-//!
-//! In this example a custom CORS middleware is registered for the "/index.html" endpoint.
-//!
 //! ```rust,no_run
 //! use actix_cors::Cors;
 //! use actix_web::{get, http, web, App, HttpRequest, HttpResponse, HttpServer};
