@@ -21,12 +21,8 @@
 //!     HttpServer::new(|| {
 //!         let cors = Cors::default()
 //!               .allowed_origin("https://www.rust-lang.org/")
-//!               .allowed_origin_fn(|req| {
-//!                   req.headers
-//!                       .get(http::header::ORIGIN)
-//!                       .map(http::HeaderValue::as_bytes)
-//!                       .filter(|b| b.ends_with(b".rust-lang.org"))
-//!                       .is_some()
+//!               .allowed_origin_fn(|origin, _req_head| {
+//!                   origin.as_bytes().ends_with(b".rust-lang.org")
 //!               })
 //!               .allowed_methods(vec!["GET", "POST"])
 //!               .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])

@@ -15,13 +15,13 @@ use crate::{AllOrSome, CorsError};
 
 #[derive(Clone)]
 pub(crate) struct OriginFn {
-    pub(crate) boxed_fn: Rc<dyn Fn(&RequestHead) -> bool>,
+    pub(crate) boxed_fn: Rc<dyn Fn(&HeaderValue, &RequestHead) -> bool>,
 }
 
 impl Default for OriginFn {
     /// Dummy default for use in tiny_vec. Do not use.
     fn default() -> Self {
-        let boxed_fn: Rc<dyn Fn(&_) -> _> = Rc::new(|_req_head| false);
+        let boxed_fn: Rc<dyn Fn(&_, &_) -> _> = Rc::new(|_origin, _req_head| false);
         Self { boxed_fn }
     }
 }
@@ -78,7 +78,9 @@ impl Inner {
         match req.headers().get(header::ORIGIN) {
             // origin header exists and is a string
             Some(origin) => {
-                if allowed_origins.contains(origin) || self.validate_origin_fns(req) {
+                if allowed_origins.contains(origin)
+                    || self.validate_origin_fns(origin, req)
+                {
                     Ok(())
                 } else {
                     Err(CorsError::OriginNotAllowed)
@@ -92,11 +94,11 @@ impl Inner {
         }
     }
 
-    /// Accepts origin if _ANY_ functions return true.
-    pub(crate) fn validate_origin_fns(&self, req: &RequestHead) -> bool {
+    /// Accepts origin if _ANY_ functions return true. Only called when Origin exists.
+    fn validate_origin_fns(&self, origin: &HeaderValue, req: &RequestHead) -> bool {
         self.allowed_origins_fns
             .iter()
-            .any(|origin_fn| (origin_fn.boxed_fn)(req))
+            .any(|origin_fn| (origin_fn.boxed_fn)(origin, req))
     }
 
     /// Only called if origin exists and always after it's validated.

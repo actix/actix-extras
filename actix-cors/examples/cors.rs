@@ -14,15 +14,18 @@ async fn main() -> std::io::Result<()> {
                     // add specific origin to allowed origin list
                     .allowed_origin("http://project.local:8080")
                     // allow any port on localhost
-                    .allowed_origin_fn(|req_head| {
+                    .allowed_origin_fn(|origin, _req_head| {
+                        origin.as_bytes().starts_with(b"http://localhost")
+
+                        // manual alternative:
                         // unwrapping is acceptable on the origin header since this function is
                         // only called when it exists
-                        req_head
-                            .headers()
-                            .get(header::ORIGIN)
-                            .unwrap()
-                            .as_bytes()
-                            .starts_with(b"http://localhost")
+                        // req_head
+                        //     .headers()
+                        //     .get(header::ORIGIN)
+                        //     .unwrap()
+                        //     .as_bytes()
+                        //     .starts_with(b"http://localhost")
                     })
                     // set allowed methods list
                     .allowed_methods(vec!["GET", "POST"])

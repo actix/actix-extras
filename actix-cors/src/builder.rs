@@ -13,7 +13,9 @@ use tinyvec::tiny_vec;
 
 use crate::{AllOrSome, CorsError, CorsMiddleware, Inner, OriginFn};
 
-pub(crate) fn cors<'a>(
+/// Convenience for getting mut refs to inner. Cleaner than `Rc::get_mut`.
+/// Additionally, always causes first error (if any) to be reported during initialization.
+fn cors<'a>(
     inner: &'a mut Rc<Inner>,
     err: &Option<Either<http::Error, CorsError>>,
 ) -> Option<&'a mut Inner> {
@@ -178,7 +180,7 @@ impl Cors {
     /// into the `Access-Control-Allow-Origin` response header.
     pub fn allowed_origin_fn<F>(mut self, f: F) -> Cors
     where
-        F: (Fn(&RequestHead) -> bool) + 'static,
+        F: (Fn(&HeaderValue, &RequestHead) -> bool) + 'static,
     {
         if let Some(cors) = cors(&mut self.inner, &self.error) {
             cors.allowed_origins_fns.push(OriginFn {

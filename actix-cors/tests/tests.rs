@@ -28,7 +28,9 @@ async fn test_wildcard_origin() {
 async fn test_not_allowed_origin_fn() {
     let mut cors = Cors::default()
         .allowed_origin("https://www.example.com")
-        .allowed_origin_fn(|req| {
+        .allowed_origin_fn(|origin, req| {
+            assert_eq!(&origin, req.headers.get(header::ORIGIN).unwrap());
+
             req.headers
                 .get(header::ORIGIN)
                 .map(HeaderValue::as_bytes)
@@ -72,7 +74,9 @@ async fn test_not_allowed_origin_fn() {
 async fn test_allowed_origin_fn() {
     let mut cors = Cors::default()
         .allowed_origin("https://www.example.com")
-        .allowed_origin_fn(|req| {
+        .allowed_origin_fn(|origin, req| {
+            assert_eq!(&origin, req.headers.get(header::ORIGIN).unwrap());
+
             req.headers
                 .get(header::ORIGIN)
                 .map(HeaderValue::as_bytes)
@@ -114,9 +118,12 @@ async fn test_allowed_origin_fn() {
 #[actix_rt::test]
 async fn test_allowed_origin_fn_with_environment() {
     let regex = Regex::new("https:.+\\.unknown\\.com").unwrap();
+
     let mut cors = Cors::default()
         .allowed_origin("https://www.example.com")
-        .allowed_origin_fn(move |req| {
+        .allowed_origin_fn(move |origin, req| {
+            assert_eq!(&origin, req.headers.get(header::ORIGIN).unwrap());
+
             req.headers
                 .get(header::ORIGIN)
                 .map(HeaderValue::as_bytes)
