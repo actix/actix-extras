@@ -1,7 +1,10 @@
 # Changes
 
 ## Unreleased - 2020-xx-xx
-* Disallow `*` in `Cors::allowed_origin` by panicking. [#114].
+
+
+## 0.5.0 - 2020-10-19
+* Disallow `*` in `Cors::allowed_origin`. [#114].
 * Hide `CorsMiddleware` from docs. [#118].
 * `CorsFactory` is removed. [#119]
 * The `impl Default` constructor is now overly-restrictive. [#119]
