@@ -189,7 +189,11 @@ mod tests {
 
         let mut cors = Cors::default()
             .allow_any_origin()
-            .allowed_origin_fn(|req_head| req_head.headers().contains_key(header::DNT))
+            .allowed_origin_fn(|origin, req_head| {
+                assert_eq!(&origin, req_head.headers.get(header::ORIGIN).unwrap());
+
+                req_head.headers().contains_key(header::DNT)
+            })
             .new_transform(test::ok_service())
             .await
             .unwrap();
