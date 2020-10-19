@@ -1,30 +1,29 @@
-use std::{collections::HashSet, convert::TryInto, fmt};
+use std::{collections::HashSet, convert::TryFrom, convert::TryInto, fmt, rc::Rc};
 
 use actix_web::{
     dev::RequestHead,
     error::Result,
     http::{
-        self,
         header::{self, HeaderName, HeaderValue},
         Method,
     },
 };
+use once_cell::sync::Lazy;
+use tinyvec::TinyVec;
 
 use crate::{AllOrSome, CorsError};
 
-pub(crate) fn cors<'a>(
-    parts: &'a mut Option<Inner>,
-    err: &Option<http::Error>,
-) -> Option<&'a mut Inner> {
-    if err.is_some() {
-        return None;
-    }
-
-    parts.as_mut()
+#[derive(Clone)]
+pub(crate) struct OriginFn {
+    pub(crate) boxed_fn: Rc<dyn Fn(&RequestHead) -> bool>,
 }
 
-pub(crate) struct OriginFn {
-    pub(crate) boxed_fn: Box<dyn Fn(&RequestHead) -> bool>,
+impl Default for OriginFn {
+    /// Dummy default for use in tiny_vec. Do not use.
+    fn default() -> Self {
+        let boxed_fn: Rc<dyn Fn(&_) -> _> = Rc::new(|_req_head| false);
+        Self { boxed_fn }
+    }
 }
 
 impl fmt::Debug for OriginFn {
@@ -33,14 +32,28 @@ impl fmt::Debug for OriginFn {
     }
 }
 
-#[derive(Debug)]
+/// Try to parse header value as HTTP method.
+fn header_value_try_into_method(hdr: &HeaderValue) -> Option<Method> {
+    hdr.to_str()
+        .ok()
+        .and_then(|meth| Method::try_from(meth).ok())
+}
+
+#[derive(Debug, Clone)]
 pub(crate) struct Inner {
-    pub(crate) methods: HashSet<Method>,
-    pub(crate) origins: AllOrSome<HashSet<String>>,
-    pub(crate) origins_fns: Vec<OriginFn>,
-    pub(crate) origins_str: Option<HeaderValue>,
-    pub(crate) headers: AllOrSome<HashSet<HeaderName>>,
-    pub(crate) expose_headers: Option<String>,
+    pub(crate) allowed_origins: AllOrSome<HashSet<HeaderValue>>,
+    pub(crate) allowed_origins_fns: TinyVec<[OriginFn; 4]>,
+
+    pub(crate) allowed_methods: HashSet<Method>,
+    pub(crate) allowed_methods_baked: Option<HeaderValue>,
+
+    pub(crate) allowed_headers: AllOrSome<HashSet<HeaderName>>,
+    pub(crate) allowed_headers_baked: Option<HeaderValue>,
+
+    /// `All` will echo back `Access-Control-Request-Header` list.
+    pub(crate) expose_headers: AllOrSome<HashSet<HeaderName>>,
+    pub(crate) expose_headers_baked: Option<HeaderValue>,
+
     pub(crate) max_age: Option<usize>,
     pub(crate) preflight: bool,
     pub(crate) send_wildcard: bool,
@@ -48,90 +61,94 @@ pub(crate) struct Inner {
     pub(crate) vary_header: bool,
 }
 
+static EMPTY_ORIGIN_SET: Lazy<HashSet<HeaderValue>> = Lazy::new(HashSet::new);
+
 impl Inner {
     pub(crate) fn validate_origin(&self, req: &RequestHead) -> Result<(), CorsError> {
-        if let Some(hdr) = req.headers().get(header::ORIGIN) {
-            if let Ok(origin) = hdr.to_str() {
-                return match self.origins {
-                    AllOrSome::All => Ok(()),
-                    AllOrSome::Some(ref allowed_origins) => allowed_origins
-                        .get(origin)
-                        .map(|_| ())
-                        .or_else(|| {
-                            if self.validate_origin_fns(req) {
-                                Some(())
-                            } else {
-                                None
-                            }
-                        })
-                        .ok_or(CorsError::OriginNotAllowed),
-                };
+        // return early if all origins are allowed or get ref to allowed origins set
+        #[allow(clippy::mutable_key_type)]
+        let allowed_origins = match &self.allowed_origins {
+            AllOrSome::All if self.allowed_origins_fns.is_empty() => return Ok(()),
+            AllOrSome::Some(allowed_origins) => allowed_origins,
+            // only function origin validators are defined
+            _ => &EMPTY_ORIGIN_SET,
+        };
+
+        // get origin header and try to parse as string
+        match req.headers().get(header::ORIGIN) {
+            // origin header exists and is a string
+            Some(origin) => {
+                if allowed_origins.contains(origin) || self.validate_origin_fns(req) {
+                    Ok(())
+                } else {
+                    Err(CorsError::OriginNotAllowed)
+                }
             }
-            Err(CorsError::BadOrigin)
-        } else {
-            match self.origins {
-                AllOrSome::All => Ok(()),
-                _ => Err(CorsError::MissingOrigin),
-            }
+
+            // origin header is missing
+            // note: with our implementation, the origin header is required for OPTIONS request or
+            // else this would be unreachable
+            None => Err(CorsError::MissingOrigin),
         }
     }
 
+    /// Accepts origin if _ANY_ functions return true.
     pub(crate) fn validate_origin_fns(&self, req: &RequestHead) -> bool {
-        self.origins_fns
+        self.allowed_origins_fns
             .iter()
             .any(|origin_fn| (origin_fn.boxed_fn)(req))
     }
 
+    /// Only called if origin exists and always after it's validated.
     pub(crate) fn access_control_allow_origin(
         &self,
         req: &RequestHead,
     ) -> Option<HeaderValue> {
-        match self.origins {
+        let origin = req.headers().get(header::ORIGIN);
+
+        match self.allowed_origins {
             AllOrSome::All => {
                 if self.send_wildcard {
                     Some(HeaderValue::from_static("*"))
-                } else if let Some(origin) = req.headers().get(header::ORIGIN) {
-                    Some(origin.clone())
                 } else {
-                    None
+                    // see note below about why `.cloned()` is correct
+                    origin.cloned()
                 }
             }
-            AllOrSome::Some(ref origins) => {
-                if let Some(origin) =
-                    req.headers()
-                        .get(header::ORIGIN)
-                        .filter(|o| match o.to_str() {
-                            Ok(os) => origins.contains(os),
-                            _ => false,
-                        })
-                {
-                    Some(origin.clone())
-                } else if self.validate_origin_fns(req) {
-                    Some(req.headers().get(header::ORIGIN).unwrap().clone())
-                } else {
-                    Some(self.origins_str.as_ref().unwrap().clone())
-                }
+
+            AllOrSome::Some(_) => {
+                // since origin (if it exists) is known to be allowed if this method is called
+                // then cloning the option is all that is required to be used as an echoed back
+                // header value (or omitted if None)
+                origin.cloned()
             }
         }
     }
 
+    /// Use in preflight checks and therefore operates on header list in
+    /// `Access-Control-Request-Headers` not the actual header set.
     pub(crate) fn validate_allowed_method(
         &self,
         req: &RequestHead,
     ) -> Result<(), CorsError> {
-        if let Some(hdr) = req.headers().get(header::ACCESS_CONTROL_REQUEST_METHOD) {
-            if let Ok(meth) = hdr.to_str() {
-                if let Ok(method) = meth.try_into() {
-                    return self
-                        .methods
-                        .get(&method)
-                        .map(|_| ())
-                        .ok_or(CorsError::MethodNotAllowed);
-                }
-            }
-            Err(CorsError::BadRequestMethod)
-        } else {
-            Err(CorsError::MissingRequestMethod)
+        // extract access control header and try to parse as method
+        let request_method = req
+            .headers()
+            .get(header::ACCESS_CONTROL_REQUEST_METHOD)
+            .map(header_value_try_into_method);
+
+        match request_method {
+            // method valid and allowed
+            Some(Some(method)) if self.allowed_methods.contains(&method) => Ok(()),
+
+            // method valid but not allowed
+            Some(Some(_)) => Err(CorsError::MethodNotAllowed),
+
+            // method invalid
+            Some(_) => Err(CorsError::BadRequestMethod),
+
+            // method missing
+            None => Err(CorsError::MissingRequestMethod),
         }
     }
 
@@ -139,34 +156,54 @@ impl Inner {
         &self,
         req: &RequestHead,
     ) -> Result<(), CorsError> {
-        match self.headers {
-            AllOrSome::All => Ok(()),
-            AllOrSome::Some(ref allowed_headers) => {
-                if let Some(hdr) =
-                    req.headers().get(header::ACCESS_CONTROL_REQUEST_HEADERS)
-                {
-                    if let Ok(headers) = hdr.to_str() {
-                        #[allow(clippy::mutable_key_type)] // FIXME: revisit here
-                        let mut validated_headers = HashSet::new();
-                        for hdr in headers.split(',') {
-                            match hdr.trim().try_into() {
-                                Ok(hdr) => validated_headers.insert(hdr),
-                                Err(_) => return Err(CorsError::BadRequestHeaders),
-                            };
-                        }
-                        // `Access-Control-Request-Headers` must contain 1 or more `field-name`
-                        if !validated_headers.is_empty() {
-                            if !validated_headers.is_subset(allowed_headers) {
-                                return Err(CorsError::HeadersNotAllowed);
-                            }
-                            return Ok(());
-                        }
-                    }
-                    Err(CorsError::BadRequestHeaders)
-                } else {
-                    Ok(())
+        // return early if all headers are allowed or get ref to allowed origins set
+        #[allow(clippy::mutable_key_type)]
+        let allowed_headers = match &self.allowed_headers {
+            AllOrSome::All => return Ok(()),
+            AllOrSome::Some(allowed_headers) => allowed_headers,
+        };
+
+        // extract access control header as string
+        // header format should be comma separated header names
+        let request_headers = req
+            .headers()
+            .get(header::ACCESS_CONTROL_REQUEST_HEADERS)
+            .map(|hdr| hdr.to_str());
+
+        match request_headers {
+            // header list is valid string
+            Some(Ok(headers)) => {
+                // the set is ephemeral we take care not to mutate the
+                // inserted keys so this lint exception is acceptable
+                #[allow(clippy::mutable_key_type)]
+                let mut request_headers = HashSet::with_capacity(8);
+
+                // try to convert each header name in the comma-separated list
+                for hdr in headers.split(',') {
+                    match hdr.trim().try_into() {
+                        Ok(hdr) => request_headers.insert(hdr),
+                        Err(_) => return Err(CorsError::BadRequestHeaders),
+                    };
                 }
+
+                // header list must contain 1 or more header name
+                if request_headers.is_empty() {
+                    return Err(CorsError::BadRequestHeaders);
+                }
+
+                // request header list must be a subset of allowed headers
+                if !request_headers.is_subset(allowed_headers) {
+                    return Err(CorsError::HeadersNotAllowed);
+                }
+
+                Ok(())
             }
+
+            // header list is not a string
+            Some(Err(_)) => Err(CorsError::BadRequestHeaders),
+
+            // header list missing
+            None => Ok(()),
         }
     }
 }
@@ -177,40 +214,43 @@ mod test {
 
     use actix_web::{
         dev::Transform,
-        http::{header, Method, StatusCode},
+        http::{header, HeaderValue, Method, StatusCode},
         test::{self, TestRequest},
     };
 
     use crate::Cors;
 
+    fn val_as_str(val: &HeaderValue) -> &str {
+        val.to_str().unwrap()
+    }
+
     #[actix_rt::test]
-    #[should_panic(expected = "OriginNotAllowed")]
     async fn test_validate_not_allowed_origin() {
-        let cors = Cors::new()
+        let cors = Cors::default()
             .allowed_origin("https://www.example.com")
-            .finish()
             .new_transform(test::ok_service())
             .await
             .unwrap();
 
-        let req = TestRequest::with_header("Origin", "https://www.unknown.com")
-            .method(Method::GET)
+        let req = TestRequest::get()
+            .header(header::ORIGIN, "https://www.unknown.com")
+            .header(header::ACCESS_CONTROL_REQUEST_HEADERS, "DNT")
             .to_srv_request();
 
-        cors.inner.validate_origin(req.head()).unwrap();
-        cors.inner.validate_allowed_method(req.head()).unwrap();
-        cors.inner.validate_allowed_headers(req.head()).unwrap();
+        assert!(cors.inner.validate_origin(req.head()).is_err());
+        assert!(cors.inner.validate_allowed_method(req.head()).is_err());
+        assert!(cors.inner.validate_allowed_headers(req.head()).is_err());
     }
 
     #[actix_rt::test]
     async fn test_preflight() {
-        let mut cors = Cors::new()
+        let mut cors = Cors::default()
+            .allow_any_origin()
             .send_wildcard()
             .max_age(3600)
             .allowed_methods(vec![Method::GET, Method::OPTIONS, Method::POST])
             .allowed_headers(vec![header::AUTHORIZATION, header::ACCEPT])
             .allowed_header(header::CONTENT_TYPE)
-            .finish()
             .new_transform(test::ok_service())
             .await
             .unwrap();
@@ -244,24 +284,22 @@ mod test {
 
         let resp = test::call_service(&mut cors, req).await;
         assert_eq!(
-            &b"*"[..],
+            Some(&b"*"[..]),
             resp.headers()
                 .get(header::ACCESS_CONTROL_ALLOW_ORIGIN)
-                .unwrap()
-                .as_bytes()
+                .map(HeaderValue::as_bytes)
         );
         assert_eq!(
-            &b"3600"[..],
+            Some(&b"3600"[..]),
             resp.headers()
                 .get(header::ACCESS_CONTROL_MAX_AGE)
-                .unwrap()
-                .as_bytes()
+                .map(HeaderValue::as_bytes)
         );
+
         let hdr = resp
             .headers()
             .get(header::ACCESS_CONTROL_ALLOW_HEADERS)
-            .unwrap()
-            .to_str()
+            .map(val_as_str)
             .unwrap();
         assert!(hdr.contains("authorization"));
         assert!(hdr.contains("accept"));

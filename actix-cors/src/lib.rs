@@ -1,15 +1,12 @@
 //! Cross-Origin Resource Sharing (CORS) controls for Actix Web.
 //!
-//! This middleware can be applied to both applications and resources. Once built,
-//! [`CorsFactory`] can be used as a parameter for actix-web `App::wrap()`,
+//! This middleware can be applied to both applications and resources. Once built, a
+//! [`Cors`] builder can be used as an argument for Actix Web's `App::wrap()`,
 //! `Scope::wrap()`, or `Resource::wrap()` methods.
 //!
 //! This CORS middleware automatically handles `OPTIONS` preflight requests.
 //!
 //! # Example
-//!
-//! In this example a custom CORS middleware is registered for the "/index.html" endpoint.
-//!
 //! ```rust,no_run
 //! use actix_cors::Cors;
 //! use actix_web::{get, http, web, App, HttpRequest, HttpResponse, HttpServer};
@@ -22,7 +19,7 @@
 //! #[actix_web::main]
 //! async fn main() -> std::io::Result<()> {
 //!     HttpServer::new(|| {
-//!         let cors = Cors::new()
+//!         let cors = Cors::default()
 //!               .allowed_origin("https://www.rust-lang.org/")
 //!               .allowed_origin_fn(|req| {
 //!                   req.headers
@@ -34,8 +31,7 @@
 //!               .allowed_methods(vec!["GET", "POST"])
 //!               .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
 //!               .allowed_header(http::header::CONTENT_TYPE)
-//!               .max_age(3600)
-//!               .finish();
+//!               .max_age(3600);
 //!
 //!         App::new()
 //!             .wrap(cors)
@@ -61,8 +57,8 @@ mod error;
 mod inner;
 mod middleware;
 
-pub use all_or_some::AllOrSome;
-pub use builder::{Cors, CorsFactory};
+use all_or_some::AllOrSome;
+pub use builder::Cors;
 pub use error::CorsError;
-use inner::{cors, Inner, OriginFn};
+use inner::{Inner, OriginFn};
 pub use middleware::CorsMiddleware;

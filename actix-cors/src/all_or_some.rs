@@ -1,5 +1,5 @@
 /// An enum signifying that some of type `T` is allowed, or `All` (anything is allowed).
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum AllOrSome<T> {
     /// Everything is allowed. Usually equivalent to the `*` value.
     All,
@@ -22,15 +22,24 @@ impl<T> AllOrSome<T> {
     }
 
     /// Returns whether this is a `Some` variant.
+    #[allow(dead_code)]
     pub fn is_some(&self) -> bool {
         !self.is_all()
     }
 
-    /// Returns &T.
+    /// Provides a shared reference to `T` if variant is `Some`.
     pub fn as_ref(&self) -> Option<&T> {
         match *self {
             AllOrSome::All => None,
             AllOrSome::Some(ref t) => Some(t),
+        }
+    }
+
+    /// Provides a mutable reference to `T` if variant is `Some`.
+    pub fn as_mut(&mut self) -> Option<&mut T> {
+        match *self {
+            AllOrSome::All => None,
+            AllOrSome::Some(ref mut t) => Some(t),
         }
     }
 }
