@@ -41,6 +41,7 @@ Add a `Subscriber` implementation to output logs to the console.
 use actix_web::middleware::Logger;
 use actix_web::App;
 use tracing::{Subscriber, subscriber::set_global_default};
+use tracing_log::LogTracer;
 use tracing_actix_web::TracingLogger;
 use tracing_bunyan_formatter::{BunyanFormattingLayer, JsonStorageLayer};
 use tracing_subscriber::{layer::SubscriberExt, EnvFilter, Registry};
@@ -78,7 +79,7 @@ fn main() {
 }
 ```
 
-[`TracingLogger`]: https://docs.rs/tracing-actix-web/0.2.1/tracing-actix-web/struct.TracingLogger.html
+[`TracingLogger`]: https://docs.rs/tracing-actix-web/0.2.1/tracing_actix_web/struct.TracingLogger.html
 [`actix-web`]: https://docs.rs/actix-web
 [`Logger`]: https://docs.rs/actix-web/3.0.0/actix_web/middleware/struct.Logger.html
 [`log`]: https://docs.rs/log
