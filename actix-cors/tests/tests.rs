@@ -404,6 +404,5 @@ async fn test_allow_any_origin_any_method_any_header() {
         .to_srv_request();
 
     let resp = test::call_service(&mut cors, req).await;
-    dbg!(&resp);
     assert_eq!(resp.status(), StatusCode::OK);
 }
