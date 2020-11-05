@@ -1,7 +1,7 @@
 # Changes
 
 ## Unreleased - 2020-xx-xx
-
+* Fix `allow_any_header` method, now set the correct field
 
 ## 0.5.0 - 2020-10-19
 * Disallow `*` in `Cors::allowed_origin`. [#114].
