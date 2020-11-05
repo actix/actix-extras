@@ -234,12 +234,12 @@ impl Cors {
         self
     }
 
-    /// Resets allowed request header list to a state where any origin is accepted.
+    /// Resets allowed request header list to a state where any header is accepted.
     ///
     /// See [`Cors::allowed_headers`] for more info on allowed request headers.
     pub fn allow_any_header(mut self) -> Cors {
         if let Some(cors) = cors(&mut self.inner, &self.error) {
-            cors.allowed_origins = AllOrSome::All;
+            cors.allowed_headers = AllOrSome::All;
         }
 
         self
