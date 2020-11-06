@@ -2,10 +2,10 @@ extern crate actix;
 extern crate actix_broker;
 extern crate actix_web;
 
-use std::io;
 use actix::prelude::*;
 use actix_broker::{Broker, BrokerSubscribe, SystemBroker};
 use actix_web::{web, App, Error, HttpRequest, HttpResponse, HttpServer};
+use std::io;
 
 #[derive(Clone, Debug, Message)]
 #[rtype(result = "()")]
@@ -35,15 +35,16 @@ async fn index(_req: HttpRequest) -> Result<HttpResponse, Error> {
 }
 
 #[actix_web::main]
-async fn main() ->io::Result<()> {
+async fn main() -> io::Result<()> {
     TestActor.start();
 
-    HttpServer::new(||
-        App::new().service(web::scope("/")
-            .service(web::resource("")
-                .route(web::get().to(index)))))
-        .bind("127.0.0.1:8080")
-        .unwrap()
-        .run()
-        .await
+    HttpServer::new(|| {
+        App::new().service(
+            web::scope("/").service(web::resource("").route(web::get().to(index))),
+        )
+    })
+    .bind("127.0.0.1:8080")
+    .unwrap()
+    .run()
+    .await
 }
