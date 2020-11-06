@@ -1,5 +1,6 @@
 [workspace]
 members = [
+  "actix-broker",
   "actix-cors",
   "actix-identity",
   "actix-protobuf",
