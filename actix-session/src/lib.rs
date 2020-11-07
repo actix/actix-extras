@@ -44,7 +44,7 @@
 
 #![deny(rust_2018_idioms)]
 
-use std::cell::{RefCell, Ref};
+use std::cell::{Ref, RefCell};
 use std::collections::HashMap;
 use std::rc::Rc;
 
