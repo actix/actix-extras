@@ -138,6 +138,15 @@ impl Session {
         }
     }
 
+    /// Get all `key-value` data from the session.
+    pub fn get_all(&self) -> Result<Option<HashMap<String, String>>, Error> {
+        if let Some(session_map) = self.0.borrow().state {
+            Ok(Some(session_map))
+        } else {
+            Ok(None)
+        }
+    }
+
     /// Set a `value` from the session.
     pub fn set<T: Serialize>(&self, key: &str, value: T) -> Result<(), Error> {
         let mut inner = self.0.borrow_mut();
