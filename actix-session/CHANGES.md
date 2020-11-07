@@ -2,6 +2,7 @@
 
 ## Unreleased - 2020-xx-xx
 * `Session::set_session` takes a `IntoIterator` instead of `Iterator`
+* Added a `get_all` method to `Session` which returns all session key-value data
 
 
 ## 0.4.0 - 2020-09-11

@@ -44,7 +44,7 @@
 
 #![deny(rust_2018_idioms)]
 
-use std::cell::RefCell;
+use std::cell::{RefCell, Ref};
 use std::collections::HashMap;
 use std::rc::Rc;
 
@@ -136,6 +136,11 @@ impl Session {
         } else {
             Ok(None)
         }
+    }
+
+    /// Get all `key-value` data from the session.
+    pub fn get_all(&self) -> Ref<'_, HashMap<String, String>> {
+        Ref::map(self.0.borrow(), |inner| &inner.state)
     }
 
     /// Set a `value` from the session.
