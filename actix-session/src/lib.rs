@@ -138,6 +138,15 @@ impl Session {
         }
     }
 
+    /// Get all `key-value` data from the session.
+    pub fn get_all(&self, key: &str) -> Result<Option<T>, Error> {
+        let ref state_map = self.0.borrow().state;
+        if state_map.is_empty() {
+            Ok(None)
+        }
+        Ok(Some(state_map))
+    }
+
     /// Set a `value` from the session.
     pub fn set<T: Serialize>(&self, key: &str, value: T) -> Result<(), Error> {
         let mut inner = self.0.borrow_mut();
