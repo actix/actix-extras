@@ -2,7 +2,7 @@
 
 ## Unreleased - 2020-xx-xx
 * `Session::set_session` takes a `IntoIterator` instead of `Iterator`
-
+* Added `get_all()` function to `Session` which returns all session data in a `Hashmap<String, String>`
 
 ## 0.4.0 - 2020-09-11
 * Update `actix-web` dependency to 3.0.0.
