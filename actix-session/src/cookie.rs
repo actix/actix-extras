@@ -136,6 +136,7 @@ impl CookieSessionInner {
     /// invalidates session cookie
     fn remove_cookie<B>(&self, res: &mut ServiceResponse<B>) -> Result<(), Error> {
         let mut cookie = Cookie::named(self.name.clone());
+        cookie.set_path(self.path.clone());
         cookie.set_value("");
         cookie.set_max_age(Duration::zero());
         cookie.set_expires(OffsetDateTime::now_utc() - Duration::days(365));
