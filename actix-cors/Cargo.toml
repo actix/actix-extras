@@ -1,6 +1,6 @@
 [package]
 name = "actix-cors"
-version = "0.5.2"
+version = "0.5.3"
 authors = [
     "Nikolay Kim <fafhrd91@gmail.com>",
     "Rob Ede <robjtede@icloud.com>",
@@ -20,7 +20,7 @@ path = "src/lib.rs"
 
 [dependencies]
 actix-web = { version = "3.0.0", default-features = false }
-derive_more = "0.99.2"
+derive_more = "0.99.5"
 futures-util = { version = "0.3.7", default-features = false }
 log = "0.4"
 once_cell = "1"
