@@ -670,6 +670,7 @@
 <span id="667">667</span>
 <span id="668">668</span>
 <span id="669">669</span>
+<span id="670">670</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">cell</span>::<span class="ident">RefCell</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">pin</span>::<span class="ident">Pin</span>;
@@ -894,51 +895,56 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">req</span>: <span class="kw-2">&amp;</span><span class="ident">ServiceRequest</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">String</span><span class="op">&gt;</span>, <span class="ident">String</span>)<span class="op">&gt;</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">cookies</span>) <span class="op">=</span> <span class="ident">req</span>.<span class="ident">cookies</span>() {
-            <span class="kw">for</span> <span class="ident">cookie</span> <span class="kw">in</span> <span class="ident">cookies</span>.<span class="ident">iter</span>() {
-                <span class="kw">if</span> <span class="ident">cookie</span>.<span class="ident">name</span>() <span class="op">=</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">name</span> {
-                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">jar</span> <span class="op">=</span> <span class="ident">CookieJar</span>::<span class="ident">new</span>();
-                    <span class="ident">jar</span>.<span class="ident">add_original</span>(<span class="ident">cookie</span>.<span class="ident">clone</span>());
-                    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">cookie</span>) <span class="op">=</span> <span class="ident">jar</span>.<span class="ident">signed</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">key</span>).<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">name</span>) {
-                        <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">cookie</span>.<span class="ident">value</span>().<span class="ident">to_owned</span>();
-                        <span class="kw">let</span> <span class="ident">cachekey</span> <span class="op">=</span> (<span class="self">self</span>.<span class="ident">cache_keygen</span>)(<span class="kw-2">&amp;</span><span class="ident">cookie</span>.<span class="ident">value</span>());
-                        <span class="kw">return</span> <span class="kw">match</span> <span class="self">self</span>
-                            .<span class="ident">addr</span>
-                            .<span class="ident">send</span>(<span class="ident">Command</span>(<span class="macro">resp_array</span><span class="macro">!</span>[<span class="string">&quot;GET&quot;</span>, <span class="ident">cachekey</span>]))
-                            .<span class="ident">await</span>
-                        {
-                            <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">from</span>(<span class="ident">e</span>)),
-                            <span class="prelude-val">Ok</span>(<span class="ident">res</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">res</span> {
-                                <span class="prelude-val">Ok</span>(<span class="ident">val</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                                    <span class="kw">match</span> <span class="ident">val</span> {
-                                        <span class="ident">RespValue</span>::<span class="ident">Error</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                                            <span class="kw">return</span> <span class="prelude-val">Err</span>(
-                                                <span class="ident">error</span>::<span class="ident">ErrorInternalServerError</span>(<span class="ident">err</span>),
-                                            );
-                                        }
-                                        <span class="ident">RespValue</span>::<span class="ident">SimpleString</span>(<span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                                            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">val</span>) <span class="op">=</span> <span class="ident">serde_json</span>::<span class="ident">from_str</span>(<span class="kw-2">&amp;</span><span class="ident">s</span>) {
-                                                <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>((<span class="ident">val</span>, <span class="ident">value</span>)));
-                                            }
-                                        }
-                                        <span class="ident">RespValue</span>::<span class="ident">BulkString</span>(<span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                                            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">val</span>) <span class="op">=</span> <span class="ident">serde_json</span>::<span class="ident">from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">s</span>) {
-                                                <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>((<span class="ident">val</span>, <span class="ident">value</span>)));
-                                            }
-                                        }
-                                        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> (),
-                                    }
-                                    <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>)
-                                }
-                                <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">error</span>::<span class="ident">ErrorInternalServerError</span>(<span class="ident">err</span>)),
-                            },
-                        };
-                    } <span class="kw">else</span> {
-                        <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
-                    }
+        <span class="comment">// wrapped in block to avoid holding `Ref` (from `req.cookies`) across await point</span>
+        <span class="kw">let</span> (<span class="ident">value</span>, <span class="ident">cache_key</span>) <span class="op">=</span> {
+            <span class="kw">let</span> <span class="ident">cookies</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">cookies</span>) <span class="op">=</span> <span class="ident">req</span>.<span class="ident">cookies</span>() {
+                <span class="ident">cookies</span>
+            } <span class="kw">else</span> {
+                <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
+            };
+
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">cookie</span>) <span class="op">=</span>
+                <span class="ident">cookies</span>.<span class="ident">iter</span>().<span class="ident">find</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">cookie</span><span class="op">|</span> <span class="ident">cookie</span>.<span class="ident">name</span>() <span class="op">=</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">name</span>)
+            {
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">jar</span> <span class="op">=</span> <span class="ident">CookieJar</span>::<span class="ident">new</span>();
+                <span class="ident">jar</span>.<span class="ident">add_original</span>(<span class="ident">cookie</span>.<span class="ident">clone</span>());
+
+                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">cookie</span>) <span class="op">=</span> <span class="ident">jar</span>.<span class="ident">signed</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">key</span>).<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">name</span>) {
+                    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">cookie</span>.<span class="ident">value</span>().<span class="ident">to_owned</span>();
+                    <span class="kw">let</span> <span class="ident">cache_key</span> <span class="op">=</span> (<span class="self">self</span>.<span class="ident">cache_keygen</span>)(<span class="kw-2">&amp;</span><span class="ident">cookie</span>.<span class="ident">value</span>());
+                    (<span class="ident">value</span>, <span class="ident">cache_key</span>)
+                } <span class="kw">else</span> {
+                    <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
+                }
+            } <span class="kw">else</span> {
+                <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
+            }
+        };
+
+        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="self">self</span>
+            .<span class="ident">addr</span>
+            .<span class="ident">send</span>(<span class="ident">Command</span>(<span class="macro">resp_array</span><span class="macro">!</span>[<span class="string">&quot;GET&quot;</span>, <span class="ident">cache_key</span>]))
+            .<span class="ident">await</span><span class="question-mark">?</span>;
+
+        <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="ident">res</span>.<span class="ident">map_err</span>(<span class="ident">error</span>::<span class="ident">ErrorInternalServerError</span>)<span class="question-mark">?</span>;
+
+        <span class="kw">match</span> <span class="ident">val</span> {
+            <span class="ident">RespValue</span>::<span class="ident">Error</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">error</span>::<span class="ident">ErrorInternalServerError</span>(<span class="ident">err</span>));
+            }
+            <span class="ident">RespValue</span>::<span class="ident">SimpleString</span>(<span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">val</span>) <span class="op">=</span> <span class="ident">serde_json</span>::<span class="ident">from_str</span>(<span class="kw-2">&amp;</span><span class="ident">s</span>) {
+                    <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>((<span class="ident">val</span>, <span class="ident">value</span>)));
                 }
             }
+            <span class="ident">RespValue</span>::<span class="ident">BulkString</span>(<span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">val</span>) <span class="op">=</span> <span class="ident">serde_json</span>::<span class="ident">from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">s</span>) {
+                    <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>((<span class="ident">val</span>, <span class="ident">value</span>)));
+                }
+            }
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {}
         }
+
         <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>)
     }
 
@@ -981,41 +987,37 @@
             (<span class="ident">value</span>, <span class="prelude-val">Some</span>(<span class="ident">jar</span>))
         };
 
-        <span class="kw">let</span> <span class="ident">cachekey</span> <span class="op">=</span> (<span class="self">self</span>.<span class="ident">cache_keygen</span>)(<span class="kw-2">&amp;</span><span class="ident">value</span>);
+        <span class="kw">let</span> <span class="ident">cache_key</span> <span class="op">=</span> (<span class="self">self</span>.<span class="ident">cache_keygen</span>)(<span class="kw-2">&amp;</span><span class="ident">value</span>);
 
         <span class="kw">let</span> <span class="ident">state</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="kw">_</span>, <span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">state</span>.<span class="ident">collect</span>();
-        <span class="kw">match</span> <span class="ident">serde_json</span>::<span class="ident">to_string</span>(<span class="kw-2">&amp;</span><span class="ident">state</span>) {
-            <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>.<span class="ident">into</span>()),
-            <span class="prelude-val">Ok</span>(<span class="ident">body</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">match</span> <span class="self">self</span>
-                    .<span class="ident">addr</span>
-                    .<span class="ident">send</span>(<span class="ident">Command</span>(<span class="macro">resp_array</span><span class="macro">!</span>[<span class="string">&quot;SET&quot;</span>, <span class="ident">cachekey</span>, <span class="ident">body</span>, <span class="string">&quot;EX&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">ttl</span>]))
-                    .<span class="ident">await</span>
-                {
-                    <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">from</span>(<span class="ident">e</span>)),
-                    <span class="prelude-val">Ok</span>(<span class="ident">redis_result</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">redis_result</span> {
-                        <span class="prelude-val">Ok</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">jar</span>) <span class="op">=</span> <span class="ident">jar</span> {
-                                <span class="kw">for</span> <span class="ident">cookie</span> <span class="kw">in</span> <span class="ident">jar</span>.<span class="ident">delta</span>() {
-                                    <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span>
-                                        <span class="ident">HeaderValue</span>::<span class="ident">from_str</span>(<span class="kw-2">&amp;</span><span class="ident">cookie</span>.<span class="ident">to_string</span>())<span class="question-mark">?</span>;
-                                    <span class="ident">res</span>.<span class="ident">headers_mut</span>().<span class="ident">append</span>(<span class="ident">header</span>::<span class="ident">SET_COOKIE</span>, <span class="ident">val</span>);
-                                }
-                            }
-                            <span class="prelude-val">Ok</span>(<span class="ident">res</span>)
-                        }
-                        <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">error</span>::<span class="ident">ErrorInternalServerError</span>(<span class="ident">err</span>)),
-                    },
-                }
+
+        <span class="kw">let</span> <span class="ident">body</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">serde_json</span>::<span class="ident">to_string</span>(<span class="kw-2">&amp;</span><span class="ident">state</span>) {
+            <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>.<span class="ident">into</span>()),
+            <span class="prelude-val">Ok</span>(<span class="ident">body</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">body</span>,
+        };
+
+        <span class="kw">let</span> <span class="ident">cmd</span> <span class="op">=</span> <span class="ident">Command</span>(<span class="macro">resp_array</span><span class="macro">!</span>[<span class="string">&quot;SET&quot;</span>, <span class="ident">cache_key</span>, <span class="ident">body</span>, <span class="string">&quot;EX&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">ttl</span>]);
+
+        <span class="self">self</span>.<span class="ident">addr</span>
+            .<span class="ident">send</span>(<span class="ident">cmd</span>)
+            .<span class="ident">await</span><span class="question-mark">?</span>
+            .<span class="ident">map_err</span>(<span class="ident">error</span>::<span class="ident">ErrorInternalServerError</span>)<span class="question-mark">?</span>;
+
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">jar</span>) <span class="op">=</span> <span class="ident">jar</span> {
+            <span class="kw">for</span> <span class="ident">cookie</span> <span class="kw">in</span> <span class="ident">jar</span>.<span class="ident">delta</span>() {
+                <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="ident">HeaderValue</span>::<span class="ident">from_str</span>(<span class="kw-2">&amp;</span><span class="ident">cookie</span>.<span class="ident">to_string</span>())<span class="question-mark">?</span>;
+                <span class="ident">res</span>.<span class="ident">headers_mut</span>().<span class="ident">append</span>(<span class="ident">header</span>::<span class="ident">SET_COOKIE</span>, <span class="ident">val</span>);
             }
         }
+
+        <span class="prelude-val">Ok</span>(<span class="ident">res</span>)
     }
 
     <span class="doccomment">/// removes cache entry</span>
     <span class="ident">async</span> <span class="kw">fn</span> <span class="ident">clear_cache</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">cachekey</span> <span class="op">=</span> (<span class="self">self</span>.<span class="ident">cache_keygen</span>)(<span class="kw-2">&amp;</span><span class="ident">key</span>);
+        <span class="kw">let</span> <span class="ident">cache_key</span> <span class="op">=</span> (<span class="self">self</span>.<span class="ident">cache_keygen</span>)(<span class="kw-2">&amp;</span><span class="ident">key</span>);
 
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">addr</span>.<span class="ident">send</span>(<span class="ident">Command</span>(<span class="macro">resp_array</span><span class="macro">!</span>[<span class="string">&quot;DEL&quot;</span>, <span class="ident">cachekey</span>])).<span class="ident">await</span> {
+        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">addr</span>.<span class="ident">send</span>(<span class="ident">Command</span>(<span class="macro">resp_array</span><span class="macro">!</span>[<span class="string">&quot;DEL&quot;</span>, <span class="ident">cache_key</span>])).<span class="ident">await</span> {
             <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">from</span>(<span class="ident">e</span>)),
             <span class="prelude-val">Ok</span>(<span class="ident">res</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">match</span> <span class="ident">res</span> {
@@ -1118,7 +1120,7 @@
     }
 
     <span class="attribute">#[<span class="ident">actix_rt</span>::<span class="ident">test</span>]</span>
-    <span class="ident">async</span> <span class="kw">fn</span> <span class="ident">test_workflow</span>() {
+    <span class="ident">async</span> <span class="kw">fn</span> <span class="ident">test_session_workflow</span>() {
         <span class="comment">// Step 1:  GET index</span>
         <span class="comment">//   - set-cookie actix-session will be in response (session cookie #1)</span>
         <span class="comment">//   - response should be: {&quot;counter&quot;: 0, &quot;user_id&quot;: None}</span>
