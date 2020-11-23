@@ -3,6 +3,10 @@
 ## Unreleased - 2020-xx-xx
 
 
+## 0.5.3 - 2020-11-19
+* Fix version spec for `derive_more` dependency.
+
+
 ## 0.5.2 - 2020-11-15
 * Ensure `tinyvec` is using the correct features.
 * Bump `futures-util` minimum version to `0.3.7` to avoid `RUSTSEC-2020-0059`.
