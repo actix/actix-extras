@@ -7,24 +7,25 @@ use std::pin::Pin;
 use std::rc::Rc;
 use std::sync::Arc;
 
-use actix_service::{Service, Transform};
-use actix_web::dev::{ServiceRequest, ServiceResponse};
-use actix_web::Error;
-use futures_util::future::{self, FutureExt, LocalBoxFuture, TryFutureExt};
-use futures_util::task::{Context, Poll};
+use actix_web::{
+    dev::{Service, ServiceRequest, ServiceResponse, Transform},
+    Error,
+};
+use futures_util::{
+    future::{self, FutureExt as _, LocalBoxFuture, TryFutureExt as _},
+    ready,
+    task::{Context, Poll},
+};
 
 use crate::extractors::{basic, bearer, AuthExtractor};
 
 /// Middleware for checking HTTP authentication.
 ///
-/// If there is no `Authorization` header in the request,
-/// this middleware returns an error immediately,
-/// without calling the `F` callback.
+/// If there is no `Authorization` header in the request, this middleware returns an error
+/// immediately, without calling the `F` callback.
 ///
-/// Otherwise, it will pass both the request and
-/// the parsed credentials into it.
-/// In case of successful validation `F` callback
-/// is required to return the `ServiceRequest` back.
+/// Otherwise, it will pass both the request and the parsed credentials into it. In case of
+/// successful validation `F` callback is required to return the `ServiceRequest` back.
 #[derive(Debug, Clone)]
 pub struct HttpAuthentication<T, F>
 where
@@ -40,8 +41,7 @@ where
     F: Fn(ServiceRequest, T) -> O,
     O: Future<Output = Result<ServiceRequest, Error>>,
 {
-    /// Construct `HttpAuthentication` middleware
-    /// with the provided auth extractor `T` and
+    /// Construct `HttpAuthentication` middleware with the provided auth extractor `T` and
     /// validation callback `F`.
     pub fn with_fn(process_fn: F) -> HttpAuthentication<T, F> {
         HttpAuthentication {
@@ -56,21 +56,18 @@ where
     F: Fn(ServiceRequest, basic::BasicAuth) -> O,
     O: Future<Output = Result<ServiceRequest, Error>>,
 {
-    /// Construct `HttpAuthentication` middleware for the HTTP "Basic"
-    /// authentication scheme.
+    /// Construct `HttpAuthentication` middleware for the HTTP "Basic" authentication scheme.
     ///
-    /// ## Example
+    /// # Example
     ///
     /// ```
     /// # use actix_web::Error;
     /// # use actix_web::dev::ServiceRequest;
     /// # use actix_web_httpauth::middleware::HttpAuthentication;
     /// # use actix_web_httpauth::extractors::basic::BasicAuth;
-    /// // In this example validator returns immediately,
-    /// // but since it is required to return anything
-    /// // that implements `IntoFuture` trait,
-    /// // it can be extended to query database
-    /// // or to do something else in a async manner.
+    /// // In this example validator returns immediately, but since it is required to return
+    /// // anything that implements `IntoFuture` trait, it can be extended to query database or to
+    /// // do something else in a async manner.
     /// async fn validator(
     ///     req: ServiceRequest,
     ///     credentials: BasicAuth,
@@ -91,10 +88,9 @@ where
     F: Fn(ServiceRequest, bearer::BearerAuth) -> O,
     O: Future<Output = Result<ServiceRequest, Error>>,
 {
-    /// Construct `HttpAuthentication` middleware for the HTTP "Bearer"
-    /// authentication scheme.
+    /// Construct `HttpAuthentication` middleware for the HTTP "Bearer" authentication scheme.
     ///
-    /// ## Example
+    /// # Example
     ///
     /// ```
     /// # use actix_web::Error;
@@ -176,15 +172,22 @@ where
     }
 
     fn call(&mut self, req: Self::Request) -> Self::Future {
-        let process_fn = self.process_fn.clone();
+        let process_fn = Arc::clone(&self.process_fn);
 
         let service = Rc::clone(&self.service);
 
         async move {
-            let (req, credentials) = Extract::<T>::new(req).await?;
+            let (req, credentials) = match Extract::<T>::new(req).await {
+                Ok(req) => req,
+                Err((err, req)) => {
+                    return Ok(req.error_response(err));
+                }
+            };
+
+            // TODO: alter to remove ? operator; an error response is required for downstream
+            // middleware to do their thing (eg. cors adding headers)
             let req = process_fn(req, credentials).await?;
-            // It is important that `borrow_mut()` and `.await` are on
-            // separate lines, or else a panic occurs.
+            // Ensure `borrow_mut()` and `.await` are on separate lines or else a panic occurs.
             let fut = service.borrow_mut().call(req);
             fut.await
         }
@@ -214,7 +217,7 @@ where
     T::Future: 'static,
     T::Error: 'static,
 {
-    type Output = Result<(ServiceRequest, T), Error>;
+    type Output = Result<(ServiceRequest, T), (Error, ServiceRequest)>;
 
     fn poll(mut self: Pin<&mut Self>, ctx: &mut Context<'_>) -> Poll<Self::Output> {
         if self.f.is_none() {
@@ -227,7 +230,14 @@ where
             .f
             .as_mut()
             .expect("Extraction future should be initialized at this point");
-        let credentials = futures_util::ready!(Future::poll(f.as_mut(), ctx))?;
+
+        let credentials = ready!(f.as_mut().poll(ctx)).map_err(|err| {
+            (
+                err,
+                // returning request allows a proper error response to be created
+                self.req.take().expect("Extract future was polled twice!"),
+            )
+        })?;
 
         let req = self.req.take().expect("Extract future was polled twice!");
         Poll::Ready(Ok((req, credentials)))
