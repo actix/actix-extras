@@ -1,6 +1,6 @@
 use std::str;
 
-use bytes::BytesMut;
+use actix_web::web::BytesMut;
 
 enum State {
     YieldStr,
@@ -55,7 +55,7 @@ pub fn put_quoted(buf: &mut BytesMut, value: &str) {
 mod tests {
     use std::str;
 
-    use bytes::BytesMut;
+    use actix_web::web::BytesMut;
 
     use super::put_quoted;
 
