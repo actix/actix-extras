@@ -58,7 +58,7 @@
 <span class="kw">mod</span> <span class="ident">redis</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">redis</span>::{<span class="ident">Command</span>, <span class="ident">RedisActor</span>};
 
-<span class="kw">use</span> <span class="ident">derive_more</span>::{<span class="ident">Display</span>, <span class="ident">From</span>};
+<span class="kw">use</span> <span class="ident">derive_more</span>::{<span class="ident">Display</span>, <span class="ident">Error</span>, <span class="ident">From</span>};
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;web&quot;</span>)]</span>
 <span class="kw">mod</span> <span class="ident">session</span>;
@@ -68,7 +68,7 @@
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">session</span>::<span class="ident">RedisSession</span>;
 
 <span class="doccomment">/// General purpose actix redis error</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Display</span>, <span class="ident">From</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Display</span>, <span class="ident">Error</span>, <span class="ident">From</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span> {
     <span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;Redis error {}&quot;</span>, <span class="ident">_0</span>)]</span>
     <span class="ident">Redis</span>(<span class="ident">redis_async</span>::<span class="ident">error</span>::<span class="ident">Error</span>),
