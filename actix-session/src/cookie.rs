@@ -398,8 +398,8 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use actix_web::web::Bytes;
     use actix_web::{test, web, App};
-    use bytes::Bytes;
 
     #[actix_rt::test]
     async fn cookie_session() {

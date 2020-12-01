@@ -8,7 +8,6 @@ use std::pin::Pin;
 use std::task;
 use std::task::Poll;
 
-use bytes::BytesMut;
 use prost::DecodeError as ProtoBufDecodeError;
 use prost::EncodeError as ProtoBufEncodeError;
 use prost::Message;
@@ -16,6 +15,7 @@ use prost::Message;
 use actix_web::dev::{HttpResponseBuilder, Payload};
 use actix_web::error::{Error, PayloadError, ResponseError};
 use actix_web::http::header::{CONTENT_LENGTH, CONTENT_TYPE};
+use actix_web::web::BytesMut;
 use actix_web::{FromRequest, HttpMessage, HttpRequest, HttpResponse, Responder};
 use futures_util::future::{ready, FutureExt, LocalBoxFuture, Ready};
 use futures_util::StreamExt;

@@ -22,7 +22,6 @@ cookie-session = ["actix-web/secure-cookies"]
 [dependencies]
 actix-web = { version = "3.0.0", default_features = false }
 actix-service = "1.0.6"
-bytes = "0.5.3"
 derive_more = "0.99.2"
 futures-util = { version = "0.3.4", default-features = false }
 serde = "1.0"
