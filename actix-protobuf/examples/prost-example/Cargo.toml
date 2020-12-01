@@ -11,7 +11,6 @@ authors = [
 actix-web = "3.0.0"
 actix-protobuf = { path = "../../" }
 
-bytes = "0.5"
 env_logger = "0.7"
 prost = "0.6.0"
 prost-derive = "0.6.0"

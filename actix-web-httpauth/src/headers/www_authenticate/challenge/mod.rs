@@ -1,7 +1,7 @@
 use std::fmt::{Debug, Display};
 
 use actix_web::http::header::IntoHeaderValue;
-use bytes::Bytes;
+use actix_web::web::Bytes;
 
 pub mod basic;
 pub mod bearer;
