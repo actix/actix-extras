@@ -1,3 +1,5 @@
+comment: false
+
 ignore: # ignore codecoverage on following paths
   - "**/examples"
   - ".github"
