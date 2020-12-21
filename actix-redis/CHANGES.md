@@ -2,7 +2,6 @@
 
 ## Unreleased - 2020-xx-xx
 
-
 ## 0.9.1 - 2020-09-12
 * Enforce minimum redis-async version of 0.6.3 to workaround breaking patch change.
 
