@@ -3,7 +3,7 @@ use std::fmt;
 use std::str;
 
 use actix_web::http::header::{HeaderValue, IntoHeaderValue, InvalidHeaderValue};
-use bytes::{BufMut, Bytes, BytesMut};
+use actix_web::web::{BufMut, Bytes, BytesMut};
 
 use super::super::Challenge;
 use super::{BearerBuilder, Error};

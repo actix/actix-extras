@@ -12,7 +12,7 @@
 mod redis;
 pub use redis::{Command, RedisActor};
 
-use derive_more::{Display, From};
+use derive_more::{Display, Error, From};
 
 #[cfg(feature = "web")]
 mod session;
@@ -22,7 +22,7 @@ pub use actix_web::cookie::SameSite;
 pub use session::RedisSession;
 
 /// General purpose actix redis error
-#[derive(Debug, Display, From)]
+#[derive(Debug, Display, Error, From)]
 pub enum Error {
     #[display(fmt = "Redis error {}", _0)]
     Redis(redis_async::error::Error),

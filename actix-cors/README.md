@@ -3,9 +3,9 @@
 > Cross-origin resource sharing (CORS) for Actix Web.
 
 [![crates.io](https://img.shields.io/crates/v/actix-cors)](https://crates.io/crates/actix-cors)
-[![Documentation](https://docs.rs/actix-cors/badge.svg?version=0.5.0)](https://docs.rs/actix-cors/0.5.0)
+[![Documentation](https://docs.rs/actix-cors/badge.svg?version=0.5.3)](https://docs.rs/actix-cors/0.5.3)
 ![Apache 2.0 or MIT licensed](https://img.shields.io/crates/l/actix-cors)
-[![Dependency Status](https://deps.rs/crate/actix-cors/0.5.0/status.svg)](https://deps.rs/crate/actix-cors/0.5.0)
+[![Dependency Status](https://deps.rs/crate/actix-cors/0.5.3/status.svg)](https://deps.rs/crate/actix-cors/0.5.3)
 [![Join the chat at https://gitter.im/actix/actix-web](https://badges.gitter.im/actix/actix-web.svg)](https://gitter.im/actix/actix-web?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 ## Documentation & Resources

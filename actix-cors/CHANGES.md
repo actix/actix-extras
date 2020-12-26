@@ -3,6 +3,21 @@
 ## Unreleased - 2020-xx-xx
 
 
+## 0.5.3 - 2020-11-19
+* Fix version spec for `derive_more` dependency.
+
+
+## 0.5.2 - 2020-11-15
+* Ensure `tinyvec` is using the correct features.
+* Bump `futures-util` minimum version to `0.3.7` to avoid `RUSTSEC-2020-0059`.
+
+
+## 0.5.1 - 2020-11-05
+* Fix `allow_any_header` method, now set the correct field. [#121]
+
+[#121]: https://github.com/actix/actix-extras/pull/121
+
+
 ## 0.5.0 - 2020-10-19
 * Disallow `*` in `Cors::allowed_origin`. [#114].
 * Hide `CorsMiddleware` from docs. [#118].

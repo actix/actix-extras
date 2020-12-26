@@ -2,6 +2,7 @@
 
 ## Unreleased - 2020-xx-xx
 * `Session::set_session` takes a `IntoIterator` instead of `Iterator`
+* Fix calls to `session.purge()` from paths other than the one specified in the cookie
 
 
 ## 0.4.0 - 2020-09-11

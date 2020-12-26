@@ -10,4 +10,5 @@ members = [
 ]
 
 [patch.crates-io]
+actix-cors = { path = "actix-cors" }
 actix-session = { path = "actix-session" }
