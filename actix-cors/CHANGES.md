@@ -2,6 +2,7 @@
 
 ## Unreleased - 2020-xx-xx
 
+* Fix `expose_any_header` method, now set the correct field.
 
 ## 0.5.3 - 2020-11-19
 * Fix version spec for `derive_more` dependency.

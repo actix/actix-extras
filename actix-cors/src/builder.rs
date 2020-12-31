@@ -318,7 +318,7 @@ impl Cors {
     /// See [`Cors::expose_headers`] for more info on exposed response headers.
     pub fn expose_any_header(mut self) -> Cors {
         if let Some(cors) = cors(&mut self.inner, &self.error) {
-            cors.allowed_origins = AllOrSome::All;
+            cors.expose_headers = AllOrSome::All;
         }
 
         self
