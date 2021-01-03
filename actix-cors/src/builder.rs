@@ -173,8 +173,8 @@ impl Cors {
     /// Determinate allowed origins by processing requests which didn't match any origins specified
     /// in the `allowed_origin`.
     ///
-    /// The function will receive a `RequestHead` of each request, which can be used to determine
-    /// whether it should be allowed or not.
+    /// The function will receive two parameters, the Origin header value, and the `RequestHead` of
+    /// each request, which can be used to determine whether to allow the request or not.
     ///
     /// If the function returns `true`, the client's `Origin` request header will be echoed back
     /// into the `Access-Control-Allow-Origin` response header.
