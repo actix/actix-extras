@@ -3,7 +3,9 @@
 ## Unreleased - 2020-xx-xx
 * `Session::set_session` takes a `IntoIterator` instead of `Iterator`
 * Fix calls to `session.purge()` from paths other than the one specified in the cookie
-
+* Update `actix-web` dependency to 4.0.0-beta-1
+* Update `actix-service` dependency to 2.0.0-beta.2
+* Update `future-util` dependency to 0.3.9
 
 ## 0.4.0 - 2020-09-11
 * Update `actix-web` dependency to 3.0.0.
