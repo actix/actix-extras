@@ -552,7 +552,7 @@ mod tests {
             .expires()
             .expect("Expiration is set");
 
-        actix_rt::time::delay_for(std::time::Duration::from_secs(1)).await;
+        actix_rt::time::sleep(std::time::Duration::from_secs(1)).await;
 
         let request = test::TestRequest::with_uri("/test/").to_request();
         let response = app.call(request).await.unwrap();

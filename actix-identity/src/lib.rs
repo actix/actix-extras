@@ -223,15 +223,13 @@ impl<T> IdentityService<T> {
     }
 }
 
-impl<S, T, B> Transform<S> for IdentityService<T>
+impl<S, T, B> Transform<S, ServiceRequest> for IdentityService<T>
 where
-    S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error>
-        + 'static,
+    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
     S::Future: 'static,
     T: IdentityPolicy,
     B: 'static,
 {
-    type Request = ServiceRequest;
     type Response = ServiceResponse<B>;
     type Error = Error;
     type InitError = ();
@@ -261,15 +259,13 @@ impl<S, T> Clone for IdentityServiceMiddleware<S, T> {
     }
 }
 
-impl<S, T, B> Service for IdentityServiceMiddleware<S, T>
+impl<S, T, B> Service<ServiceRequest> for IdentityServiceMiddleware<S, T>
 where
     B: 'static,
-    S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error>
-        + 'static,
+    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
     S::Future: 'static,
     T: IdentityPolicy,
 {
-    type Request = ServiceRequest;
     type Response = ServiceResponse<B>;
     type Error = Error;
     type Future = LocalBoxFuture<'static, Result<Self::Response, Self::Error>>;
@@ -790,7 +786,7 @@ mod tests {
     >(
         f: F,
     ) -> impl actix_service::Service<
-        Request = actix_http::Request,
+        actix_http::Request,
         Response = ServiceResponse<actix_web::body::Body>,
         Error = Error,
     > {
@@ -1150,7 +1146,7 @@ mod tests {
             backend: Rc::new(Ident),
             service: Rc::new(RefCell::new(into_service(
                 |_: ServiceRequest| async move {
-                    actix_rt::time::delay_for(std::time::Duration::from_secs(100)).await;
+                    actix_rt::time::sleep(std::time::Duration::from_secs(100)).await;
                     Err::<ServiceResponse, _>(error::ErrorBadRequest("error"))
                 },
             ))),
@@ -1161,7 +1157,7 @@ mod tests {
         actix_rt::spawn(async move {
             let _ = srv2.call(req).await;
         });
-        actix_rt::time::delay_for(std::time::Duration::from_millis(50)).await;
+        actix_rt::time::sleep(std::time::Duration::from_millis(50)).await;
 
         let _ = lazy(|cx| srv.poll_ready(cx)).await;
     }

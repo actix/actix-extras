@@ -121,13 +121,12 @@ type CorsMiddlewareServiceFuture<B> = Either<
     LocalBoxFuture<'static, Result<ServiceResponse<B>, Error>>,
 >;
 
-impl<S, B> Service for CorsMiddleware<S>
+impl<S, B> Service<ServiceRequest> for CorsMiddleware<S>
 where
-    S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
+    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
     S::Future: 'static,
     B: 'static,
 {
-    type Request = ServiceRequest;
     type Response = ServiceResponse<B>;
     type Error = Error;
     type Future = CorsMiddlewareServiceFuture<B>;

@@ -118,16 +118,14 @@ where
     }
 }
 
-impl<S, B, T, F, O> Transform<S> for HttpAuthentication<T, F>
+impl<S, B, T, F, O> Transform<S, ServiceRequest> for HttpAuthentication<T, F>
 where
-    S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error>
-        + 'static,
+    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
     S::Future: 'static,
     F: Fn(ServiceRequest, T) -> O + 'static,
     O: Future<Output = Result<ServiceRequest, Error>> + 'static,
     T: AuthExtractor + 'static,
 {
-    type Request = ServiceRequest;
     type Response = ServiceResponse<B>;
     type Error = Error;
     type Transform = AuthenticationMiddleware<S, F, T>;
@@ -153,16 +151,14 @@ where
     _extractor: PhantomData<T>,
 }
 
-impl<S, B, F, T, O> Service for AuthenticationMiddleware<S, F, T>
+impl<S, B, F, T, O> Service<ServiceRequest> for AuthenticationMiddleware<S, F, T>
 where
-    S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error>
-        + 'static,
+    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
     S::Future: 'static,
     F: Fn(ServiceRequest, T) -> O + 'static,
     O: Future<Output = Result<ServiceRequest, Error>> + 'static,
     T: AuthExtractor + 'static,
 {
-    type Request = ServiceRequest;
     type Response = ServiceResponse<B>;
     type Error = S::Error;
     type Future = LocalBoxFuture<'static, Result<ServiceResponse<B>, Error>>;
@@ -171,7 +167,7 @@ where
         self.service.borrow_mut().poll_ready(ctx)
     }
 
-    fn call(&mut self, req: Self::Request) -> Self::Future {
+    fn call(&mut self, req: ServiceRequest) -> Self::Future {
         let process_fn = Arc::clone(&self.process_fn);
 
         let service = Rc::clone(&self.service);
@@ -251,7 +247,8 @@ mod tests {
     use actix_service::{into_service, Service};
     use actix_web::error;
     use actix_web::test::TestRequest;
-    use futures_util::join;
+    use futures_util::future::join;
+    use futures_util::future::join4;
 
     /// This is a test for https://github.com/actix/actix-extras/issues/10
     #[actix_rt::test]
@@ -259,7 +256,7 @@ mod tests {
         let mut middleware = AuthenticationMiddleware {
             service: Rc::new(RefCell::new(into_service(
                 |_: ServiceRequest| async move {
-                    actix_rt::time::delay_for(std::time::Duration::from_secs(1)).await;
+                    actix_rt::time::sleep(std::time::Duration::from_secs(1)).await;
                     Err::<ServiceResponse, _>(error::ErrorBadRequest("error"))
                 },
             ))),
@@ -273,7 +270,7 @@ mod tests {
 
         let res = futures_util::future::lazy(|cx| middleware.poll_ready(cx));
 
-        assert!(join!(f, res).0.is_err());
+        assert!(join(f, res).await.0.is_err());
     }
 
     /// This is a test for https://github.com/actix/actix-extras/issues/10
@@ -282,7 +279,7 @@ mod tests {
         let mut middleware = AuthenticationMiddleware {
             service: Rc::new(RefCell::new(into_service(
                 |_: ServiceRequest| async move {
-                    actix_rt::time::delay_for(std::time::Duration::from_secs(1)).await;
+                    actix_rt::time::sleep(std::time::Duration::from_secs(1)).await;
                     Err::<ServiceResponse, _>(error::ErrorBadRequest("error"))
                 },
             ))),
@@ -304,7 +301,7 @@ mod tests {
 
         let res = futures_util::future::lazy(|cx| middleware.poll_ready(cx));
 
-        let result = join!(f1, f2, f3, res);
+        let result = join4(f1, f2, f3, res).await;
 
         assert!(result.0.is_err());
         assert!(result.1.is_err());

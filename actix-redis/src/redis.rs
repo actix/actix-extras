@@ -3,9 +3,9 @@ use std::io;
 
 use actix::actors::resolver::{Connect, Resolver};
 use actix::prelude::*;
-use actix_utils::oneshot;
 use backoff::backoff::Backoff;
 use backoff::ExponentialBackoff;
+use futures_channel::oneshot;
 use futures_util::FutureExt;
 use log::{error, info, warn};
 use redis_async::error::Error as RespError;

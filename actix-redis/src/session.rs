@@ -65,7 +65,7 @@ impl RedisSession {
         self
     }
 
-    /// Set custom cookie domain
+    /// Set custom cookie domain:
     pub fn cookie_domain(mut self, domain: &str) -> Self {
         Rc::get_mut(&mut self.0).unwrap().domain = Some(domain.to_owned());
         self
@@ -104,14 +104,12 @@ impl RedisSession {
     }
 }
 
-impl<S, B> Transform<S> for RedisSession
+impl<S, B> Transform<S, ServiceRequest> for RedisSession
 where
-    S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error>
-        + 'static,
+    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
     S::Future: 'static,
     B: 'static,
 {
-    type Request = ServiceRequest;
     type Response = ServiceResponse<B>;
     type Error = S::Error;
     type InitError = ();
@@ -132,14 +130,12 @@ pub struct RedisSessionMiddleware<S: 'static> {
     inner: Rc<Inner>,
 }
 
-impl<S, B> Service for RedisSessionMiddleware<S>
+impl<S, B> Service<ServiceRequest> for RedisSessionMiddleware<S>
 where
-    S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error>
-        + 'static,
+    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
     S::Future: 'static,
     B: 'static,
 {
-    type Request = ServiceRequest;
     type Response = ServiceResponse<B>;
     type Error = Error;
     #[allow(clippy::type_complexity)]
@@ -283,11 +279,11 @@ impl Inner {
         let (value, jar) = if let Some(value) = value {
             (value, None)
         } else {
-            let value: String = iter::repeat(())
+            let bytes = iter::repeat(())
                 .map(|()| OsRng.sample(Alphanumeric))
                 .take(32)
                 .collect();
-
+            let value = String::from_utf8(bytes).unwrap_or_default();
             // prepare session id cookie
             let mut cookie = Cookie::new(self.name.clone(), value.clone());
             cookie.set_path(self.path.clone());
