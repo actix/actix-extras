@@ -13,6 +13,7 @@ mod cmd;
 mod error;
 mod redis;
 
+#[doc(hidden)]
 pub use cmd::Command;
 pub use error::Error;
 pub use redis::RedisActor;
