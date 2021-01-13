@@ -14,15 +14,8 @@ use tokio::io::{split, WriteHalf};
 use tokio::net::TcpStream;
 use tokio_util::codec::FramedRead;
 
+use crate::Command;
 use crate::Error;
-
-/// Command for send data to Redis
-#[derive(Debug)]
-pub struct Command(pub RespValue);
-
-impl Message for Command {
-    type Result = Result<RespValue, Error>;
-}
 
 /// Redis comminucation actor
 pub struct RedisActor {
@@ -128,6 +121,10 @@ impl StreamHandler<Result<RespValue, RespError>> for RedisActor {
             }
         }
     }
+}
+
+impl Message for Command {
+    type Result = Result<RespValue, Error>;
 }
 
 impl Handler<Command> for RedisActor {

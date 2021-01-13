@@ -13,10 +13,9 @@ use actix_web::{error, Error, HttpMessage};
 use futures_util::future::{ok, Future, Ready};
 use rand::{distributions::Alphanumeric, rngs::OsRng, Rng};
 use redis_async::resp::RespValue;
-use redis_async::resp_array;
 use time::{self, Duration, OffsetDateTime};
 
-use crate::redis::{Command, RedisActor};
+use crate::{redis_cmd, RedisActor};
 
 /// Use redis as session storage.
 ///
@@ -247,10 +246,7 @@ impl Inner {
             }
         };
 
-        let res = self
-            .addr
-            .send(Command(resp_array!["GET", cache_key]))
-            .await?;
+        let res = self.addr.send(redis_cmd!["GET", cache_key]).await?;
 
         let val = res.map_err(error::ErrorInternalServerError)?;
 
@@ -322,7 +318,7 @@ impl Inner {
             Ok(body) => body,
         };
 
-        let cmd = Command(resp_array!["SET", cache_key, body, "EX", &self.ttl]);
+        let cmd = redis_cmd!["SET", cache_key, body, "EX", &self.ttl];
 
         self.addr
             .send(cmd)
@@ -343,7 +339,7 @@ impl Inner {
     async fn clear_cache(&self, key: String) -> Result<(), Error> {
         let cache_key = (self.cache_keygen)(&key);
 
-        match self.addr.send(Command(resp_array!["DEL", cache_key])).await {
+        match self.addr.send(redis_cmd!["DEL", cache_key]).await {
             Err(e) => Err(Error::from(e)),
             Ok(res) => {
                 match res {
