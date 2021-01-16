@@ -30,5 +30,6 @@ futures-util = { version = "0.3.7", default_features = false }
 pin-project-lite = "0.2"
 
 [dev-dependencies]
+actix-cors = { path = "../actix-cors" }
 actix-rt = "2.0.0-beta.2"
 futures-util = "0.3.7"

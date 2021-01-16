@@ -341,10 +341,8 @@ where
                             .insert(IdentityItem { id, changed: false });
                         let fut = service.call(req);
                         let backend = backend.take().expect(EXPECT_MSG);
-                        self.as_mut().set(IdentityMiddlewareFuture::Service {
-                            fut,
-                            backend,
-                        });
+                        self.as_mut()
+                            .set(IdentityMiddlewareFuture::Service { fut, backend });
                         self.poll(cx)
                     }
                     Err(e) => Poll::Ready(Ok(req.error_response(e))),
