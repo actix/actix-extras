@@ -11,3 +11,5 @@ guide/build/
 *.pid
 *.sock
 *~
+
+.idea

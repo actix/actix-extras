@@ -1,17 +1,15 @@
 //! HTTP Authentication middleware.
 
-use std::cell::RefCell;
 use std::future::Future;
 use std::marker::PhantomData;
 use std::pin::Pin;
 use std::rc::Rc;
-use std::sync::Arc;
+use std::task::{Context, Poll};
 
 use actix_service::{Service, Transform};
 use actix_web::dev::{ServiceRequest, ServiceResponse};
 use actix_web::Error;
-use futures_util::future::{self, FutureExt, LocalBoxFuture, TryFutureExt};
-use futures_util::task::{Context, Poll};
+use futures_core::{future::LocalBoxFuture, ready};
 
 use crate::extractors::{basic, bearer, AuthExtractor};
 
@@ -30,14 +28,14 @@ pub struct HttpAuthentication<T, F>
 where
     T: AuthExtractor,
 {
-    process_fn: Arc<F>,
+    process_fn: F,
     _extractor: PhantomData<T>,
 }
 
 impl<T, F, O> HttpAuthentication<T, F>
 where
     T: AuthExtractor,
-    F: Fn(ServiceRequest, T) -> O,
+    F: Fn(ServiceRequest, T) -> O + Clone,
     O: Future<Output = Result<ServiceRequest, Error>>,
 {
     /// Construct `HttpAuthentication` middleware
@@ -45,7 +43,7 @@ where
     /// validation callback `F`.
     pub fn with_fn(process_fn: F) -> HttpAuthentication<T, F> {
         HttpAuthentication {
-            process_fn: Arc::new(process_fn),
+            process_fn,
             _extractor: PhantomData,
         }
     }
@@ -53,7 +51,7 @@ where
 
 impl<F, O> HttpAuthentication<basic::BasicAuth, F>
 where
-    F: Fn(ServiceRequest, basic::BasicAuth) -> O,
+    F: Fn(ServiceRequest, basic::BasicAuth) -> O + Clone,
     O: Future<Output = Result<ServiceRequest, Error>>,
 {
     /// Construct `HttpAuthentication` middleware for the HTTP "Basic"
@@ -88,7 +86,7 @@ where
 
 impl<F, O> HttpAuthentication<bearer::BearerAuth, F>
 where
-    F: Fn(ServiceRequest, bearer::BearerAuth) -> O,
+    F: Fn(ServiceRequest, bearer::BearerAuth) -> O + Clone,
     O: Future<Output = Result<ServiceRequest, Error>>,
 {
     /// Construct `HttpAuthentication` middleware for the HTTP "Bearer"
@@ -122,114 +120,153 @@ where
     }
 }
 
-impl<S, B, T, F, O> Transform<S> for HttpAuthentication<T, F>
+impl<S, B, T, F, O> Transform<S, ServiceRequest> for HttpAuthentication<T, F>
 where
-    S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error>
-        + 'static,
+    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
     S::Future: 'static,
-    F: Fn(ServiceRequest, T) -> O + 'static,
+    F: Fn(ServiceRequest, T) -> O + Clone + 'static,
     O: Future<Output = Result<ServiceRequest, Error>> + 'static,
     T: AuthExtractor + 'static,
 {
-    type Request = ServiceRequest;
     type Response = ServiceResponse<B>;
     type Error = Error;
     type Transform = AuthenticationMiddleware<S, F, T>;
     type InitError = ();
-    type Future = future::Ready<Result<Self::Transform, Self::InitError>>;
+    type Future = LocalBoxFuture<'static, Result<Self::Transform, Self::InitError>>;
 
     fn new_transform(&self, service: S) -> Self::Future {
-        future::ok(AuthenticationMiddleware {
-            service: Rc::new(RefCell::new(service)),
-            process_fn: self.process_fn.clone(),
-            _extractor: PhantomData,
+        let process_fn = self.process_fn.clone();
+        Box::pin(async move {
+            Ok(AuthenticationMiddleware {
+                service: Rc::new(service),
+                process_fn,
+                _extractor: PhantomData,
+            })
         })
     }
 }
 
 #[doc(hidden)]
-pub struct AuthenticationMiddleware<S, F, T>
-where
-    T: AuthExtractor,
-{
-    service: Rc<RefCell<S>>,
-    process_fn: Arc<F>,
+pub struct AuthenticationMiddleware<S, F, T> {
+    service: Rc<S>,
+    process_fn: F,
     _extractor: PhantomData<T>,
 }
 
-impl<S, B, F, T, O> Service for AuthenticationMiddleware<S, F, T>
+impl<S, B, F, T, O> Service<ServiceRequest> for AuthenticationMiddleware<S, F, T>
 where
-    S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error>
-        + 'static,
+    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
     S::Future: 'static,
-    F: Fn(ServiceRequest, T) -> O + 'static,
+    F: Fn(ServiceRequest, T) -> O + Clone + 'static,
     O: Future<Output = Result<ServiceRequest, Error>> + 'static,
     T: AuthExtractor + 'static,
 {
-    type Request = ServiceRequest;
     type Response = ServiceResponse<B>;
     type Error = S::Error;
-    type Future = LocalBoxFuture<'static, Result<ServiceResponse<B>, Error>>;
+    type Future = AuthFuture<S, B, F, T, O>;
 
-    fn poll_ready(&mut self, ctx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        self.service.borrow_mut().poll_ready(ctx)
-    }
+    actix_service::forward_ready!(service);
 
-    fn call(&mut self, req: Self::Request) -> Self::Future {
-        let process_fn = self.process_fn.clone();
-
-        let service = Rc::clone(&self.service);
-
-        async move {
-            let (req, credentials) = Extract::<T>::new(req).await?;
-            let req = process_fn(req, credentials).await?;
-            // It is important that `borrow_mut()` and `.await` are on
-            // separate lines, or else a panic occurs.
-            let fut = service.borrow_mut().call(req);
-            fut.await
+    fn call(&self, req: ServiceRequest) -> Self::Future {
+        AuthFuture::Extract {
+            extract: Extract::<T>::new(req),
+            func: self.process_fn.clone(),
+            service: Some(Rc::clone(&self.service)),
         }
-        .boxed_local()
     }
 }
 
-struct Extract<T> {
-    req: Option<ServiceRequest>,
-    f: Option<LocalBoxFuture<'static, Result<T, Error>>>,
-    _extractor: PhantomData<fn() -> T>,
-}
-
-impl<T> Extract<T> {
-    pub fn new(req: ServiceRequest) -> Self {
+pin_project_lite::pin_project! {
+    #[project = AuthFutureProj]
+    #[doc(hidden)]
+    pub enum AuthFuture<S, B, F, T, O>
+    where
+        T: AuthExtractor,
+        F: Fn(ServiceRequest, T) -> O,
+        O: Future,
+        S: Service<ServiceRequest, Response = ServiceResponse<B>>
+    {
         Extract {
-            req: Some(req),
-            f: None,
-            _extractor: PhantomData,
+            #[pin]
+            extract: Extract<T>,
+            func: F,
+            service: Option<Rc<S>>,
+        },
+        Process {
+            #[pin]
+            fut: O,
+            service: Rc<S>,
+        },
+        ServiceCall {
+            #[pin]
+            fut: S::Future
         }
     }
 }
 
-impl<T> Future for Extract<T>
+impl<S, B, F, T, O> Future for AuthFuture<S, B, F, T, O>
 where
     T: AuthExtractor,
-    T::Future: 'static,
-    T::Error: 'static,
+    T: 'static,
+    F: Fn(ServiceRequest, T) -> O,
+    O: Future<Output = Result<ServiceRequest, Error>>,
+    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
 {
+    type Output = Result<ServiceResponse<B>, Error>;
+
+    fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+        match self.as_mut().project() {
+            AuthFutureProj::Extract {
+                extract,
+                func,
+                service,
+            } => {
+                let (req, credentials) = ready!(extract.poll(cx))?;
+                let fut = func(req, credentials);
+                let service = service.take().expect("Future polled after finish");
+                self.as_mut().set(AuthFuture::Process { fut, service });
+                self.poll(cx)
+            }
+            AuthFutureProj::Process { fut, service } => {
+                let req = ready!(fut.poll(cx))?;
+                let fut = service.call(req);
+                self.as_mut().set(AuthFuture::ServiceCall { fut });
+                self.poll(cx)
+            }
+            AuthFutureProj::ServiceCall { fut } => fut.poll(cx),
+        }
+    }
+}
+
+pin_project_lite::pin_project! {
+    #[doc(hidden)]
+    pub struct Extract<T: AuthExtractor> {
+        req: Option<ServiceRequest>,
+        #[pin]
+        fut: T::Future,
+    }
+}
+
+impl<T: AuthExtractor> Extract<T> {
+    fn new(req: ServiceRequest) -> Self {
+        let fut = T::from_service_request(&req);
+        Extract {
+            req: Some(req),
+            fut,
+        }
+    }
+}
+
+impl<T: AuthExtractor> Future for Extract<T> {
     type Output = Result<(ServiceRequest, T), Error>;
 
-    fn poll(mut self: Pin<&mut Self>, ctx: &mut Context<'_>) -> Poll<Self::Output> {
-        if self.f.is_none() {
-            let req = self.req.as_ref().expect("Extract future was polled twice!");
-            let f = T::from_service_request(req).map_err(Into::into);
-            self.f = Some(f.boxed_local());
-        }
-
-        let f = self
-            .f
-            .as_mut()
-            .expect("Extraction future should be initialized at this point");
-        let credentials = futures_util::ready!(Future::poll(f.as_mut(), ctx))?;
-
-        let req = self.req.take().expect("Extract future was polled twice!");
+    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+        let this = self.project();
+        let credentials = ready!(this.fut.poll(cx)).map_err(Into::into)?;
+        let req = this
+            .req
+            .take()
+            .expect("Extract future was polled after finish!");
         Poll::Ready(Ok((req, credentials)))
     }
 }
@@ -239,21 +276,20 @@ mod tests {
     use super::*;
     use crate::extractors::bearer::BearerAuth;
     use actix_service::{into_service, Service};
-    use actix_web::error;
-    use actix_web::test::TestRequest;
+    use actix_web::http::StatusCode;
+    use actix_web::test::{init_service, TestRequest};
+    use actix_web::{error, web, App};
     use futures_util::join;
 
     /// This is a test for https://github.com/actix/actix-extras/issues/10
     #[actix_rt::test]
     async fn test_middleware_panic() {
-        let mut middleware = AuthenticationMiddleware {
-            service: Rc::new(RefCell::new(into_service(
-                |_: ServiceRequest| async move {
-                    actix_rt::time::delay_for(std::time::Duration::from_secs(1)).await;
-                    Err::<ServiceResponse, _>(error::ErrorBadRequest("error"))
-                },
-            ))),
-            process_fn: Arc::new(|req, _: BearerAuth| async { Ok(req) }),
+        let middleware = AuthenticationMiddleware {
+            service: Rc::new(into_service(|_: ServiceRequest| async move {
+                actix_rt::time::sleep(std::time::Duration::from_secs(1)).await;
+                Err::<ServiceResponse, _>(error::ErrorBadRequest("error"))
+            })),
+            process_fn: |req, _: BearerAuth| async { Ok(req) },
             _extractor: PhantomData,
         };
 
@@ -269,14 +305,12 @@ mod tests {
     /// This is a test for https://github.com/actix/actix-extras/issues/10
     #[actix_rt::test]
     async fn test_middleware_panic_several_orders() {
-        let mut middleware = AuthenticationMiddleware {
-            service: Rc::new(RefCell::new(into_service(
-                |_: ServiceRequest| async move {
-                    actix_rt::time::delay_for(std::time::Duration::from_secs(1)).await;
-                    Err::<ServiceResponse, _>(error::ErrorBadRequest("error"))
-                },
-            ))),
-            process_fn: Arc::new(|req, _: BearerAuth| async { Ok(req) }),
+        let middleware = AuthenticationMiddleware {
+            service: Rc::new(into_service(|_: ServiceRequest| async move {
+                actix_rt::time::sleep(std::time::Duration::from_secs(1)).await;
+                Err::<ServiceResponse, _>(error::ErrorBadRequest("error"))
+            })),
+            process_fn: |req, _: BearerAuth| async { Ok(req) },
             _extractor: PhantomData,
         };
 
@@ -299,5 +333,64 @@ mod tests {
         assert!(result.0.is_err());
         assert!(result.1.is_err());
         assert!(result.2.is_err());
+    }
+
+    #[actix_rt::test]
+    async fn test_middleware_closure_clone() {
+        let state = std::rc::Rc::new(321usize);
+        let auth = HttpAuthentication::bearer(move |req, _| {
+            let state = state.clone();
+            async move {
+                assert_eq!(321usize, *state);
+                Ok(req)
+            }
+        });
+
+        let app = init_service(
+            App::new()
+                .wrap(auth.clone())
+                .service(web::resource("/test").to(|| async { "ok" })),
+        )
+        .await;
+
+        let req = TestRequest::with_uri("/test")
+            .header("Authorization", "Bearer 1")
+            .to_request();
+
+        let res = app.call(req).await.unwrap();
+        assert_eq!(StatusCode::OK, res.status());
+    }
+
+    #[test]
+    fn test_middleware_closure_thread_safety() {
+        let state = std::sync::Arc::new(321usize);
+        let auth = HttpAuthentication::bearer(move |req, _| {
+            let state = state.clone();
+            async move {
+                assert_eq!(321usize, *state);
+                Ok(req)
+            }
+        });
+
+        let auth_clone = auth.clone();
+        std::thread::spawn(move || {
+            actix_rt::System::new("test_middleware").block_on(async {
+                let app = init_service(
+                    App::new()
+                        .wrap(auth_clone)
+                        .service(web::resource("/test").to(|| async { "ok" })),
+                )
+                .await;
+
+                let req = TestRequest::with_uri("/test")
+                    .header("Authorization", "Bearer 1")
+                    .to_request();
+
+                let res = app.call(req).await.unwrap();
+                assert_eq!(StatusCode::OK, res.status());
+            })
+        })
+        .join()
+        .unwrap();
     }
 }

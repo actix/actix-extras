@@ -52,7 +52,7 @@ use actix_web::dev::{
     Extensions, Payload, RequestHead, ServiceRequest, ServiceResponse,
 };
 use actix_web::{Error, FromRequest, HttpMessage, HttpRequest};
-use futures_util::future::{ok, Ready};
+use futures_util::future::{ready, Ready};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
@@ -264,7 +264,7 @@ impl FromRequest for Session {
 
     #[inline]
     fn from_request(req: &HttpRequest, _: &mut Payload) -> Self::Future {
-        ok(Session::get_session(&mut *req.extensions_mut()))
+        ready(Ok(Session::get_session(&mut *req.extensions_mut())))
     }
 }
 

@@ -6,7 +6,7 @@ use actix_web::{
     http::{self, header::HeaderName, Error as HttpError, HeaderValue, Method, Uri},
     Either,
 };
-use futures_util::future::{self, Ready};
+use futures_core::future::LocalBoxFuture;
 use log::error;
 use once_cell::sync::Lazy;
 use tinyvec::tiny_vec;
@@ -26,6 +26,7 @@ fn cors<'a>(
     Rc::get_mut(inner)
 }
 
+// TODO: remove global static. It's not necessary.
 static ALL_METHODS_SET: Lazy<HashSet<Method>> = Lazy::new(|| {
     HashSet::from_iter(vec![
         Method::GET,
@@ -145,7 +146,7 @@ impl Cors {
             match TryInto::<Uri>::try_into(origin) {
                 Ok(_) if origin == "*" => {
                     error!("Wildcard in `allowed_origin` is not allowed. Use `send_wildcard`.");
-                    self.error = Some(Either::B(CorsError::WildcardOrigin));
+                    self.error = Some(Either::Right(CorsError::WildcardOrigin));
                 }
 
                 Ok(_) => {
@@ -162,7 +163,7 @@ impl Cors {
                 }
 
                 Err(err) => {
-                    self.error = Some(Either::A(err.into()));
+                    self.error = Some(Either::Left(err.into()));
                 }
             }
         }
@@ -224,7 +225,7 @@ impl Cors {
                     }
 
                     Err(err) => {
-                        self.error = Some(Either::A(err.into()));
+                        self.error = Some(Either::Left(err.into()));
                         break;
                     }
                 }
@@ -266,7 +267,7 @@ impl Cors {
                     }
                 }
 
-                Err(err) => self.error = Some(Either::A(err.into())),
+                Err(err) => self.error = Some(Either::Left(err.into())),
             }
         }
 
@@ -303,7 +304,7 @@ impl Cors {
                         }
                     }
                     Err(err) => {
-                        self.error = Some(Either::A(err.into()));
+                        self.error = Some(Either::Left(err.into()));
                         break;
                     }
                 }
@@ -351,7 +352,7 @@ impl Cors {
                     }
                 }
                 Err(err) => {
-                    self.error = Some(Either::A(err.into()));
+                    self.error = Some(Either::Left(err.into()));
                     break;
                 }
             }
@@ -483,27 +484,26 @@ impl Default for Cors {
     }
 }
 
-impl<S, B> Transform<S> for Cors
+impl<S, B> Transform<S, ServiceRequest> for Cors
 where
-    S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
+    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
     S::Future: 'static,
     B: 'static,
 {
-    type Request = ServiceRequest;
     type Response = ServiceResponse<B>;
     type Error = Error;
-    type InitError = ();
     type Transform = CorsMiddleware<S>;
-    type Future = Ready<Result<Self::Transform, Self::InitError>>;
+    type InitError = ();
+    type Future = LocalBoxFuture<'static, Result<Self::Transform, Self::InitError>>;
 
     fn new_transform(&self, service: S) -> Self::Future {
         if let Some(ref err) = self.error {
             match err {
-                Either::A(err) => error!("{}", err),
-                Either::B(err) => error!("{}", err),
+                Either::Left(err) => error!("{}", err),
+                Either::Right(err) => error!("{}", err),
             }
 
-            return future::err(());
+            return Box::pin(async { Err(()) });
         }
 
         let mut inner = Rc::clone(&self.inner);
@@ -514,7 +514,7 @@ where
         {
             error!("Illegal combination of CORS options: credentials can not be supported when all \
                     origins are allowed and `send_wildcard` is enabled.");
-            return future::err(());
+            return Box::pin(async { Err(()) });
         }
 
         // bake allowed headers value if Some and not empty
@@ -542,7 +542,7 @@ where
             _ => {}
         }
 
-        future::ok(CorsMiddleware { service, inner })
+        Box::pin(async { Ok(CorsMiddleware { service, inner }) })
     }
 }
 
@@ -577,8 +577,8 @@ mod test {
 
     use super::*;
 
-    #[test]
-    fn illegal_allow_credentials() {
+    #[actix_rt::test]
+    async fn illegal_allow_credentials() {
         // using the permissive defaults (all origins allowed) and adding send_wildcard
         // and supports_credentials should error on construction
 
@@ -586,7 +586,7 @@ mod test {
             .supports_credentials()
             .send_wildcard()
             .new_transform(test::ok_service())
-            .into_inner()
+            .await
             .is_err());
     }
 

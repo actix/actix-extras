@@ -1,5 +1,7 @@
 use std::{
     convert::TryInto,
+    future::Future,
+    pin::Pin,
     rc::Rc,
     task::{Context, Poll},
 };
@@ -13,7 +15,7 @@ use actix_web::{
     },
     HttpResponse,
 };
-use futures_util::future::{ok, Either, FutureExt as _, LocalBoxFuture, Ready};
+use futures_core::ready;
 use log::debug;
 
 use crate::Inner;
@@ -76,100 +78,132 @@ impl<S> CorsMiddleware<S> {
         let res = res.into_body();
         req.into_response(res)
     }
-
-    fn augment_response<B>(
-        inner: &Inner,
-        mut res: ServiceResponse<B>,
-    ) -> ServiceResponse<B> {
-        if let Some(origin) = inner.access_control_allow_origin(res.request().head()) {
-            res.headers_mut()
-                .insert(header::ACCESS_CONTROL_ALLOW_ORIGIN, origin);
-        };
-
-        if let Some(ref expose) = inner.expose_headers_baked {
-            res.headers_mut()
-                .insert(header::ACCESS_CONTROL_EXPOSE_HEADERS, expose.clone());
-        }
-
-        if inner.supports_credentials {
-            res.headers_mut().insert(
-                header::ACCESS_CONTROL_ALLOW_CREDENTIALS,
-                HeaderValue::from_static("true"),
-            );
-        }
-
-        if inner.vary_header {
-            let value = match res.headers_mut().get(header::VARY) {
-                Some(hdr) => {
-                    let mut val: Vec<u8> = Vec::with_capacity(hdr.len() + 8);
-                    val.extend(hdr.as_bytes());
-                    val.extend(b", Origin");
-                    val.try_into().unwrap()
-                }
-                None => HeaderValue::from_static("Origin"),
-            };
-
-            res.headers_mut().insert(header::VARY, value);
-        }
-
-        res
-    }
 }
 
-type CorsMiddlewareServiceFuture<B> = Either<
-    Ready<Result<ServiceResponse<B>, Error>>,
-    LocalBoxFuture<'static, Result<ServiceResponse<B>, Error>>,
->;
-
-impl<S, B> Service for CorsMiddleware<S>
+impl<S, B> Service<ServiceRequest> for CorsMiddleware<S>
 where
-    S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
+    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
     S::Future: 'static,
     B: 'static,
 {
-    type Request = ServiceRequest;
     type Response = ServiceResponse<B>;
     type Error = Error;
-    type Future = CorsMiddlewareServiceFuture<B>;
+    type Future = CorsMiddlewareFuture<S::Future, B>;
 
-    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+    fn poll_ready(&self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         self.service.poll_ready(cx)
     }
 
-    fn call(&mut self, req: ServiceRequest) -> Self::Future {
+    fn call(&self, req: ServiceRequest) -> Self::Future {
         if self.inner.preflight && req.method() == Method::OPTIONS {
             let inner = Rc::clone(&self.inner);
             let res = Self::handle_preflight(&inner, req);
-            Either::Left(ok(res))
+            CorsMiddlewareFuture::Response { res: Some(res) }
         } else {
-            let origin = req.headers().get(header::ORIGIN).cloned();
+            let have_origin = req.headers().contains_key(header::ORIGIN);
 
-            if origin.is_some() {
+            if have_origin {
                 // Only check requests with a origin header.
                 if let Err(err) = self.inner.validate_origin(req.head()) {
                     debug!("origin validation failed; inner service is not called");
-                    return Either::Left(ok(req.error_response(err)));
+                    return CorsMiddlewareFuture::Response {
+                        res: Some(req.error_response(err)),
+                    };
                 }
             }
 
             let inner = Rc::clone(&self.inner);
             let fut = self.service.call(req);
 
-            let res = async move {
-                let res = fut.await;
-
-                if origin.is_some() {
-                    let res = res?;
-                    Ok(Self::augment_response(&inner, res))
-                } else {
-                    res
-                }
+            CorsMiddlewareFuture::Future {
+                fut,
+                inner,
+                have_origin,
             }
-            .boxed_local();
-
-            Either::Right(res)
         }
     }
+}
+
+pin_project_lite::pin_project! {
+    #[project = CorsProj]
+    pub enum CorsMiddlewareFuture<F, B> {
+        Response {
+            res: Option<ServiceResponse<B>>
+        },
+        Future {
+            #[pin]
+            fut: F,
+            inner: Rc<Inner>,
+            have_origin: bool
+        }
+    }
+}
+
+impl<F, B> Future for CorsMiddlewareFuture<F, B>
+where
+    F: Future<Output = Result<ServiceResponse<B>, Error>>,
+{
+    type Output = F::Output;
+
+    fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+        match self.as_mut().project() {
+            CorsProj::Response { res } => Poll::Ready(Ok(res
+                .take()
+                .expect("CorsMiddlewareFuture polled after finish"))),
+            CorsProj::Future {
+                fut,
+                inner,
+                have_origin,
+            } => {
+                let res = ready!(fut.poll(cx));
+                let res = if *have_origin {
+                    let res = res?;
+                    Ok(augment_response(&*inner, res))
+                } else {
+                    res
+                };
+                Poll::Ready(res)
+            }
+        }
+    }
+}
+
+fn augment_response<B>(
+    inner: &Inner,
+    mut res: ServiceResponse<B>,
+) -> ServiceResponse<B> {
+    if let Some(origin) = inner.access_control_allow_origin(res.request().head()) {
+        res.headers_mut()
+            .insert(header::ACCESS_CONTROL_ALLOW_ORIGIN, origin);
+    };
+
+    if let Some(ref expose) = inner.expose_headers_baked {
+        res.headers_mut()
+            .insert(header::ACCESS_CONTROL_EXPOSE_HEADERS, expose.clone());
+    }
+
+    if inner.supports_credentials {
+        res.headers_mut().insert(
+            header::ACCESS_CONTROL_ALLOW_CREDENTIALS,
+            HeaderValue::from_static("true"),
+        );
+    }
+
+    if inner.vary_header {
+        let value = match res.headers_mut().get(header::VARY) {
+            Some(hdr) => {
+                let mut val: Vec<u8> = Vec::with_capacity(hdr.len() + 8);
+                val.extend(hdr.as_bytes());
+                val.extend(b", Origin");
+                val.try_into().unwrap()
+            }
+            None => HeaderValue::from_static("Origin"),
+        };
+
+        res.headers_mut().insert(header::VARY, value);
+    }
+
+    res
 }
 
 #[cfg(test)]
@@ -187,7 +221,7 @@ mod tests {
         // Tests case where allowed_origins is All but there are validate functions to run incase.
         // In this case, origins are only allowed when the DNT header is sent.
 
-        let mut cors = Cors::default()
+        let cors = Cors::default()
             .allow_any_origin()
             .allowed_origin_fn(|origin, req_head| {
                 assert_eq!(&origin, req_head.headers.get(header::ORIGIN).unwrap());

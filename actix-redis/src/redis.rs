@@ -1,17 +1,15 @@
 use std::collections::VecDeque;
 use std::io;
 
-use actix::actors::resolver::{Connect, Resolver};
 use actix::prelude::*;
-use actix_utils::oneshot;
 use backoff::backoff::Backoff;
 use backoff::ExponentialBackoff;
-use futures_util::FutureExt;
 use log::{error, info, warn};
 use redis_async::error::Error as RespError;
 use redis_async::resp::{RespCodec, RespValue};
 use tokio::io::{split, WriteHalf};
 use tokio::net::TcpStream;
+use tokio::sync::oneshot;
 use tokio_util::codec::FramedRead;
 
 use crate::Error;
@@ -24,7 +22,7 @@ impl Message for Command {
     type Result = Result<RespValue, Error>;
 }
 
-/// Redis comminucation actor
+/// Redis communication actor
 pub struct RedisActor {
     addr: String,
     backoff: ExponentialBackoff,
@@ -53,44 +51,43 @@ impl Actor for RedisActor {
     type Context = Context<Self>;
 
     fn started(&mut self, ctx: &mut Context<Self>) {
-        Resolver::from_registry()
-            .send(Connect::host(self.addr.as_str()))
-            .into_actor(self)
-            .map(|res, act, ctx| match res {
-                Ok(res) => match res {
-                    Ok(stream) => {
-                        info!("Connected to redis server: {}", act.addr);
+        let addr = self.addr.clone();
+        async move {
+            let addr = tokio::net::lookup_host(addr).await?;
 
-                        let (r, w) = split(stream);
+            let addr = addr.last().ok_or(io::Error::new(
+                io::ErrorKind::AddrNotAvailable,
+                "SocketAddr not found",
+            ))?;
 
-                        // configure write side of the connection
-                        let framed = actix::io::FramedWrite::new(w, RespCodec, ctx);
-                        act.cell = Some(framed);
+            tokio::net::TcpStream::connect(addr).await
+        }
+        .into_actor(self)
+        .map(|res, act, ctx| match res {
+            Ok(stream) => {
+                info!("Connected to redis server: {}", act.addr);
 
-                        // read side of the connection
-                        ctx.add_stream(FramedRead::new(r, RespCodec));
+                let (r, w) = split(stream);
 
-                        act.backoff.reset();
-                    }
-                    Err(err) => {
-                        error!("Can not connect to redis server: {}", err);
-                        // re-connect with backoff time.
-                        // we stop current context, supervisor will restart it.
-                        if let Some(timeout) = act.backoff.next_backoff() {
-                            ctx.run_later(timeout, |_, ctx| ctx.stop());
-                        }
-                    }
-                },
-                Err(err) => {
-                    error!("Can not connect to redis server: {}", err);
-                    // re-connect with backoff time.
-                    // we stop current context, supervisor will restart it.
-                    if let Some(timeout) = act.backoff.next_backoff() {
-                        ctx.run_later(timeout, |_, ctx| ctx.stop());
-                    }
+                // configure write side of the connection
+                let framed = actix::io::FramedWrite::new(w, RespCodec, ctx);
+                act.cell = Some(framed);
+
+                // read side of the connection
+                ctx.add_stream(FramedRead::new(r, RespCodec));
+
+                act.backoff.reset();
+            }
+            Err(err) => {
+                error!("Can not connect to redis server: {}", err);
+                // re-connect with backoff time.
+                // we stop current context, supervisor will restart it.
+                if let Some(timeout) = act.backoff.next_backoff() {
+                    ctx.run_later(timeout, |_, ctx| ctx.stop());
                 }
-            })
-            .wait(ctx);
+            }
+        })
+        .wait(ctx);
     }
 }
 
@@ -140,9 +137,6 @@ impl Handler<Command> for RedisActor {
             let _ = tx.send(Err(Error::NotConnected));
         }
 
-        Box::pin(rx.map(|res| match res {
-            Ok(res) => res,
-            Err(_) => Err(Error::Disconnected),
-        }))
+        Box::pin(async move { rx.await.map_err(|_| Error::Disconnected)? })
     }
 }

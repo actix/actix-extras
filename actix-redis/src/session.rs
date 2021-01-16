@@ -1,5 +1,3 @@
-use std::cell::RefCell;
-use std::pin::Pin;
 use std::task::{Context, Poll};
 use std::{collections::HashMap, iter, rc::Rc};
 
@@ -10,7 +8,7 @@ use actix_web::cookie::{Cookie, CookieJar, Key, SameSite};
 use actix_web::dev::{ServiceRequest, ServiceResponse};
 use actix_web::http::header::{self, HeaderValue};
 use actix_web::{error, Error, HttpMessage};
-use futures_util::future::{ok, Future, Ready};
+use futures_core::future::LocalBoxFuture;
 use rand::{distributions::Alphanumeric, rngs::OsRng, Rng};
 use redis_async::resp::RespValue;
 use redis_async::resp_array;
@@ -104,53 +102,51 @@ impl RedisSession {
     }
 }
 
-impl<S, B> Transform<S> for RedisSession
+impl<S, B> Transform<S, ServiceRequest> for RedisSession
 where
-    S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error>
-        + 'static,
+    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
     S::Future: 'static,
     B: 'static,
 {
-    type Request = ServiceRequest;
     type Response = ServiceResponse<B>;
     type Error = S::Error;
-    type InitError = ();
     type Transform = RedisSessionMiddleware<S>;
-    type Future = Ready<Result<Self::Transform, Self::InitError>>;
+    type InitError = ();
+    type Future = LocalBoxFuture<'static, Result<Self::Transform, Self::InitError>>;
 
     fn new_transform(&self, service: S) -> Self::Future {
-        ok(RedisSessionMiddleware {
-            service: Rc::new(RefCell::new(service)),
-            inner: self.0.clone(),
+        let inner = self.0.clone();
+        Box::pin(async {
+            Ok(RedisSessionMiddleware {
+                service: Rc::new(service),
+                inner,
+            })
         })
     }
 }
 
 /// Cookie session middleware
 pub struct RedisSessionMiddleware<S: 'static> {
-    service: Rc<RefCell<S>>,
+    service: Rc<S>,
     inner: Rc<Inner>,
 }
 
-impl<S, B> Service for RedisSessionMiddleware<S>
+impl<S, B> Service<ServiceRequest> for RedisSessionMiddleware<S>
 where
-    S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error>
-        + 'static,
+    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
     S::Future: 'static,
     B: 'static,
 {
-    type Request = ServiceRequest;
     type Response = ServiceResponse<B>;
     type Error = Error;
-    #[allow(clippy::type_complexity)]
-    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>>>>;
+    type Future = LocalBoxFuture<'static, Result<Self::Response, Self::Error>>;
 
-    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        self.service.borrow_mut().poll_ready(cx)
+    fn poll_ready(&self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+        self.service.poll_ready(cx)
     }
 
-    fn call(&mut self, mut req: ServiceRequest) -> Self::Future {
-        let mut srv = self.service.clone();
+    fn call(&self, mut req: ServiceRequest) -> Self::Future {
+        let srv = self.service.clone();
         let inner = self.inner.clone();
 
         Box::pin(async move {
@@ -278,10 +274,11 @@ impl Inner {
         let (value, jar) = if let Some(value) = value {
             (value, None)
         } else {
-            let value: String = iter::repeat(())
+            let value = iter::repeat(())
                 .map(|()| OsRng.sample(Alphanumeric))
                 .take(32)
-                .collect();
+                .collect::<Vec<_>>();
+            let value = String::from_utf8(value).unwrap_or_default();
 
             // prepare session id cookie
             let mut cookie = Cookie::new(self.name.clone(), value.clone());

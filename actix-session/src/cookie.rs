@@ -15,9 +15,14 @@
 //! The constructors take a key as an argument. This is the private key
 //! for cookie session - when this value is changed, all session data is lost.
 
-use std::collections::HashMap;
-use std::rc::Rc;
-use std::task::{Context, Poll};
+use std::{
+    collections::HashMap,
+    future::Future,
+    marker::PhantomData,
+    pin::Pin,
+    rc::Rc,
+    task::{Context, Poll},
+};
 
 use actix_service::{Service, Transform};
 use actix_web::cookie::{Cookie, CookieJar, Key, SameSite};
@@ -25,7 +30,8 @@ use actix_web::dev::{ServiceRequest, ServiceResponse};
 use actix_web::http::{header::SET_COOKIE, HeaderValue};
 use actix_web::{Error, HttpMessage, ResponseError};
 use derive_more::{Display, From};
-use futures_util::future::{ok, FutureExt, LocalBoxFuture, Ready};
+use futures_core::{future::LocalBoxFuture, ready};
+
 use serde_json::error::Error as JsonError;
 use time::{Duration, OffsetDateTime};
 
@@ -305,24 +311,21 @@ impl CookieSession {
     }
 }
 
-impl<S, B: 'static> Transform<S> for CookieSession
+impl<S, B: 'static> Transform<S, ServiceRequest> for CookieSession
 where
-    S: Service<Request = ServiceRequest, Response = ServiceResponse<B>>,
+    S: Service<ServiceRequest, Response = ServiceResponse<B>> + 'static,
     S::Future: 'static,
     S::Error: 'static,
 {
-    type Request = ServiceRequest;
     type Response = ServiceResponse<B>;
     type Error = S::Error;
-    type InitError = ();
     type Transform = CookieSessionMiddleware<S>;
-    type Future = Ready<Result<Self::Transform, Self::InitError>>;
+    type InitError = ();
+    type Future = LocalBoxFuture<'static, Result<Self::Transform, Self::InitError>>;
 
     fn new_transform(&self, service: S) -> Self::Future {
-        ok(CookieSessionMiddleware {
-            service,
-            inner: self.0.clone(),
-        })
+        let inner = self.0.clone();
+        Box::pin(async { Ok(CookieSessionMiddleware { service, inner }) })
     }
 }
 
@@ -332,18 +335,17 @@ pub struct CookieSessionMiddleware<S> {
     inner: Rc<CookieSessionInner>,
 }
 
-impl<S, B: 'static> Service for CookieSessionMiddleware<S>
+impl<S, B: 'static> Service<ServiceRequest> for CookieSessionMiddleware<S>
 where
-    S: Service<Request = ServiceRequest, Response = ServiceResponse<B>>,
+    S: Service<ServiceRequest, Response = ServiceResponse<B>>,
     S::Future: 'static,
     S::Error: 'static,
 {
-    type Request = ServiceRequest;
     type Response = ServiceResponse<B>;
     type Error = S::Error;
-    type Future = LocalBoxFuture<'static, Result<Self::Response, Self::Error>>;
+    type Future = CookieSessionMiddlewareFuture<S::Future, B>;
 
-    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+    fn poll_ready(&self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         self.service.poll_ready(cx)
     }
 
@@ -352,7 +354,7 @@ where
     /// session state changes, then set-cookie is returned in response.  As
     /// a user logs out, call session.purge() to set SessionStatus accordingly
     /// and this will trigger removal of the session cookie in the response.
-    fn call(&mut self, mut req: ServiceRequest) -> Self::Future {
+    fn call(&self, mut req: ServiceRequest) -> Self::Future {
         let inner = self.inner.clone();
         let (is_new, state) = self.inner.load(&req);
         let prolong_expiration = self.inner.expires_in.is_some();
@@ -360,37 +362,62 @@ where
 
         let fut = self.service.call(req);
 
-        async move {
-            fut.await.map(|mut res| {
-                match Session::get_changes(&mut res) {
-                    (SessionStatus::Changed, Some(state))
-                    | (SessionStatus::Renewed, Some(state)) => {
-                        res.checked_expr(|res| inner.set_cookie(res, state))
-                    }
-                    (SessionStatus::Unchanged, Some(state)) if prolong_expiration => {
-                        res.checked_expr(|res| inner.set_cookie(res, state))
-                    }
-                    (SessionStatus::Unchanged, _) =>
-                    // set a new session cookie upon first request (new client)
-                    {
-                        if is_new {
-                            let state: HashMap<String, String> = HashMap::new();
-                            res.checked_expr(|res| {
-                                inner.set_cookie(res, state.into_iter())
-                            })
-                        } else {
-                            res
-                        }
-                    }
-                    (SessionStatus::Purged, _) => {
-                        let _ = inner.remove_cookie(&mut res);
-                        res
-                    }
-                    _ => res,
-                }
-            })
+        CookieSessionMiddlewareFuture {
+            fut,
+            inner,
+            is_new,
+            prolong_expiration,
+            _body: PhantomData,
         }
-        .boxed_local()
+    }
+}
+
+pin_project_lite::pin_project! {
+    pub struct CookieSessionMiddlewareFuture<F, B> {
+        #[pin]
+        fut: F,
+        inner: Rc<CookieSessionInner>,
+        is_new: bool,
+        prolong_expiration: bool,
+        _body: PhantomData<B>
+    }
+}
+
+impl<F, E, B> Future for CookieSessionMiddlewareFuture<F, B>
+where
+    F: Future<Output = Result<ServiceResponse<B>, E>>,
+{
+    type Output = F::Output;
+
+    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+        let mut this = self.project();
+        let mut res = ready!(this.fut.as_mut().poll(cx))?;
+        let res = match Session::get_changes(&mut res) {
+            (SessionStatus::Changed, Some(state))
+            | (SessionStatus::Renewed, Some(state)) => {
+                res.checked_expr(|res| this.inner.set_cookie(res, state))
+            }
+            (SessionStatus::Unchanged, Some(state)) if *this.prolong_expiration => {
+                res.checked_expr(|res| this.inner.set_cookie(res, state))
+            }
+            (SessionStatus::Unchanged, _) =>
+            // set a new session cookie upon first request (new client)
+            {
+                if *this.is_new {
+                    let state: HashMap<String, String> = HashMap::new();
+                    res.checked_expr(|res| this.inner.set_cookie(res, state.into_iter()))
+                } else {
+                    res
+                }
+            }
+            (SessionStatus::Purged, _) => {
+                let _ = this.inner.remove_cookie(&mut res);
+                res
+            }
+            _ => res,
+        };
+
+        Poll::Ready(Ok(res))
     }
 }
 
@@ -402,7 +429,7 @@ mod tests {
 
     #[actix_rt::test]
     async fn cookie_session() {
-        let mut app = test::init_service(
+        let app = test::init_service(
             App::new()
                 .wrap(CookieSession::signed(&[0; 32]).secure(false))
                 .service(web::resource("/").to(|ses: Session| async move {
@@ -422,7 +449,7 @@ mod tests {
 
     #[actix_rt::test]
     async fn private_cookie() {
-        let mut app = test::init_service(
+        let app = test::init_service(
             App::new()
                 .wrap(CookieSession::private(&[0; 32]).secure(false))
                 .service(web::resource("/").to(|ses: Session| async move {
@@ -442,7 +469,7 @@ mod tests {
 
     #[actix_rt::test]
     async fn lazy_cookie() {
-        let mut app = test::init_service(
+        let app = test::init_service(
             App::new()
                 .wrap(CookieSession::signed(&[0; 32]).secure(false).lazy(true))
                 .service(web::resource("/count").to(|ses: Session| async move {
@@ -468,7 +495,7 @@ mod tests {
 
     #[actix_rt::test]
     async fn cookie_session_extractor() {
-        let mut app = test::init_service(
+        let app = test::init_service(
             App::new()
                 .wrap(CookieSession::signed(&[0; 32]).secure(false))
                 .service(web::resource("/").to(|ses: Session| async move {
@@ -488,7 +515,7 @@ mod tests {
 
     #[actix_rt::test]
     async fn basics() {
-        let mut app = test::init_service(
+        let app = test::init_service(
             App::new()
                 .wrap(
                     CookieSession::signed(&[0; 32])
@@ -523,13 +550,13 @@ mod tests {
         let request = test::TestRequest::with_uri("/test/")
             .cookie(cookie)
             .to_request();
-        let body = test::read_response(&mut app, request).await;
+        let body = test::read_response(&app, request).await;
         assert_eq!(body, Bytes::from_static(b"counter: 100"));
     }
 
     #[actix_rt::test]
     async fn prolong_expiration() {
-        let mut app = test::init_service(
+        let app = test::init_service(
             App::new()
                 .wrap(CookieSession::signed(&[0; 32]).secure(false).expires_in(60))
                 .service(web::resource("/").to(|ses: Session| async move {
@@ -553,7 +580,7 @@ mod tests {
             .expires()
             .expect("Expiration is set");
 
-        actix_rt::time::delay_for(std::time::Duration::from_secs(1)).await;
+        actix_rt::time::sleep(std::time::Duration::from_secs(1)).await;
 
         let request = test::TestRequest::with_uri("/test/").to_request();
         let response = app.call(request).await.unwrap();

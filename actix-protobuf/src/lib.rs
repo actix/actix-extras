@@ -1,24 +1,24 @@
 #![deny(rust_2018_idioms)]
 
-use derive_more::Display;
-use std::fmt;
-use std::future::Future;
-use std::ops::{Deref, DerefMut};
-use std::pin::Pin;
-use std::task;
-use std::task::Poll;
-
-use bytes::BytesMut;
-use prost::DecodeError as ProtoBufDecodeError;
-use prost::EncodeError as ProtoBufEncodeError;
-use prost::Message;
+use std::{
+    fmt,
+    future::Future,
+    marker::PhantomData,
+    ops::{Deref, DerefMut},
+    pin::Pin,
+    task::{Context, Poll},
+};
 
 use actix_web::dev::{HttpResponseBuilder, Payload};
 use actix_web::error::{Error, PayloadError, ResponseError};
 use actix_web::http::header::{CONTENT_LENGTH, CONTENT_TYPE};
 use actix_web::{FromRequest, HttpMessage, HttpRequest, HttpResponse, Responder};
-use futures_util::future::{ready, FutureExt, LocalBoxFuture, Ready};
-use futures_util::StreamExt;
+use bytes::BytesMut;
+use derive_more::Display;
+use futures_core::{ready, Stream};
+use prost::DecodeError as ProtoBufDecodeError;
+use prost::EncodeError as ProtoBufEncodeError;
+use prost::Message;
 
 #[derive(Debug, Display)]
 pub enum ProtoBufPayloadError {
@@ -118,7 +118,7 @@ where
 {
     type Config = ProtoBufConfig;
     type Error = Error;
-    type Future = LocalBoxFuture<'static, Result<Self, Error>>;
+    type Future = ProtoBufFuture<T>;
 
     #[inline]
     fn from_request(req: &HttpRequest, payload: &mut Payload) -> Self::Future {
@@ -126,41 +126,53 @@ where
             .app_data::<ProtoBufConfig>()
             .map(|c| c.limit)
             .unwrap_or(262_144);
-        ProtoBufMessage::new(req, payload)
-            .limit(limit)
-            .map(move |res| match res {
-                Err(e) => Err(e.into()),
-                Ok(item) => Ok(ProtoBuf(item)),
-            })
-            .boxed_local()
+
+        ProtoBufFuture {
+            fut: ProtoBufMessage::new(req, payload).limit(limit),
+        }
+    }
+}
+
+pin_project_lite::pin_project! {
+    pub struct ProtoBufFuture<T>
+    where
+        T: Message,
+        T: Default
+    {
+        #[pin]
+        fut: ProtoBufMessage<T>
+    }
+}
+
+impl<T: Message + Default + 'static> Future for ProtoBufFuture<T> {
+    type Output = Result<ProtoBuf<T>, Error>;
+
+    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+        let res = ready!(self.project().fut.poll(cx))?;
+        Poll::Ready(Ok(ProtoBuf(res)))
     }
 }
 
 impl<T: Message + Default> Responder for ProtoBuf<T> {
-    type Error = Error;
-    type Future = Ready<Result<HttpResponse, Error>>;
-
-    fn respond_to(self, _: &HttpRequest) -> Self::Future {
+    fn respond_to(self, _: &HttpRequest) -> HttpResponse {
         let mut buf = Vec::new();
-        ready(
-            self.0
-                .encode(&mut buf)
-                .map_err(|e| Error::from(ProtoBufPayloadError::Serialize(e)))
-                .map(|()| {
-                    HttpResponse::Ok()
-                        .content_type("application/protobuf")
-                        .body(buf)
-                }),
-        )
+        match self.0.encode(&mut buf) {
+            Ok(()) => HttpResponse::Ok()
+                .content_type("application/protobuf")
+                .body(buf),
+            Err(e) => {
+                HttpResponse::from_error(ProtoBufPayloadError::Serialize(e).into())
+            }
+        }
     }
 }
 
 pub struct ProtoBufMessage<T: Message + Default> {
     limit: usize,
     length: Option<usize>,
-    stream: Option<Payload>,
-    err: Option<ProtoBufPayloadError>,
-    fut: Option<LocalBoxFuture<'static, Result<T, ProtoBufPayloadError>>>,
+    buf: BytesMut,
+    res: Result<Payload, Option<ProtoBufPayloadError>>,
+    _msg: PhantomData<T>,
 }
 
 impl<T: Message + Default> ProtoBufMessage<T> {
@@ -170,12 +182,14 @@ impl<T: Message + Default> ProtoBufMessage<T> {
             return ProtoBufMessage {
                 limit: 262_144,
                 length: None,
-                stream: None,
-                fut: None,
-                err: Some(ProtoBufPayloadError::ContentType),
+                buf: BytesMut::new(),
+                res: Err(Some(ProtoBufPayloadError::ContentType)),
+                _msg: PhantomData,
             };
         }
 
+        // Notice limit is not check against length here. ProtoBufMessage::limit is
+        // always called after new and length/limit check happens there.
         let mut len = None;
         if let Some(l) = req.headers().get(CONTENT_LENGTH) {
             if let Ok(s) = l.to_str() {
@@ -188,64 +202,53 @@ impl<T: Message + Default> ProtoBufMessage<T> {
         ProtoBufMessage {
             limit: 262_144,
             length: len,
-            stream: Some(payload.take()),
-            fut: None,
-            err: None,
+            buf: BytesMut::with_capacity(8192),
+            res: Ok(payload.take()),
+            _msg: PhantomData,
         }
     }
 
     /// Change max size of payload. By default max size is 256Kb
     pub fn limit(mut self, limit: usize) -> Self {
+        if let Some(len) = self.length {
+            if len > limit {
+                self.res = Err(Some(ProtoBufPayloadError::Overflow));
+            }
+        }
         self.limit = limit;
         self
     }
 }
 
+impl<T: Message + Default + 'static> Unpin for ProtoBufMessage<T> {}
+
 impl<T: Message + Default + 'static> Future for ProtoBufMessage<T> {
     type Output = Result<T, ProtoBufPayloadError>;
 
-    fn poll(
-        mut self: Pin<&mut Self>,
-        task: &mut task::Context<'_>,
-    ) -> Poll<Self::Output> {
-        if let Some(ref mut fut) = self.fut {
-            return Pin::new(fut).poll(task);
-        }
-
-        if let Some(err) = self.err.take() {
-            return Poll::Ready(Err(err));
-        }
-
-        let limit = self.limit;
-        if let Some(len) = self.length.take() {
-            if len > limit {
-                return Poll::Ready(Err(ProtoBufPayloadError::Overflow));
+    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+        let this = self.get_mut();
+        let mut stream = match this.res.as_mut() {
+            Ok(stream) => Pin::new(stream),
+            Err(e) => {
+                return Poll::Ready(Err(e
+                    .take()
+                    .expect("ProtoBufMessage polled after finished")))
             }
-        }
+        };
 
-        let mut stream = self
-            .stream
-            .take()
-            .expect("ProtoBufMessage could not be used second time");
-
-        self.fut = Some(
-            async move {
-                let mut body = BytesMut::with_capacity(8192);
-
-                while let Some(item) = stream.next().await {
+        loop {
+            match ready!(stream.as_mut().poll_next(cx)) {
+                Some(item) => {
                     let chunk = item?;
-                    if (body.len() + chunk.len()) > limit {
-                        return Err(ProtoBufPayloadError::Overflow);
+                    if (this.buf.len() + chunk.len()) > this.limit {
+                        return Poll::Ready(Err(ProtoBufPayloadError::Overflow));
                     } else {
-                        body.extend_from_slice(&chunk);
+                        this.buf.extend_from_slice(&chunk);
                     }
                 }
-
-                Ok(<T>::decode(&mut body)?)
+                None => return Poll::Ready(Ok(<T>::decode(&mut this.buf)?)),
             }
-            .boxed_local(),
-        );
-        self.poll(task)
+        }
     }
 }
 

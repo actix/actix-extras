@@ -40,7 +40,7 @@ fn header_value_try_into_method(hdr: &HeaderValue) -> Option<Method> {
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct Inner {
+pub struct Inner {
     pub(crate) allowed_origins: AllOrSome<HashSet<HeaderValue>>,
     pub(crate) allowed_origins_fns: TinyVec<[OriginFn; 4]>,
 

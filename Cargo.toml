@@ -11,3 +11,13 @@ members = [
 
 [patch.crates-io]
 actix-session = { path = "actix-session" }
+
+actix-router = { git = "https://github.com/actix/actix-net.git", branch = "feat/immutable" }
+actix-server = { git = "https://github.com/actix/actix-net.git", branch = "feat/immutable" }
+actix-service = { git = "https://github.com/actix/actix-net.git", branch = "feat/immutable" }
+actix-tls = { git = "https://github.com/actix/actix-net.git", branch = "feat/immutable" }
+actix-utils = { git = "https://github.com/actix/actix-net.git", branch = "feat/immutable" }
+
+actix-http = { git = "https://github.com/actix/actix-web.git", branch = "feat/immutable" }
+awc = { git = "https://github.com/actix/actix-web.git", branch = "feat/immutable" }
+actix-web = { git = "https://github.com/actix/actix-web.git", branch = "feat/immutable" }

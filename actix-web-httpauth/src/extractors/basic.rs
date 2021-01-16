@@ -104,9 +104,9 @@ impl BasicAuth {
 }
 
 impl FromRequest for BasicAuth {
+    type Error = AuthenticationError<Challenge>;
     type Future = Ready<Result<Self, Self::Error>>;
     type Config = Config;
-    type Error = AuthenticationError<Challenge>;
 
     fn from_request(
         req: &HttpRequest,

@@ -104,8 +104,8 @@ impl BearerAuth {
 
 impl FromRequest for BearerAuth {
     type Config = Config;
-    type Future = Ready<Result<Self, Self::Error>>;
     type Error = AuthenticationError<bearer::Bearer>;
+    type Future = Ready<Result<Self, Self::Error>>;
 
     fn from_request(
         req: &HttpRequest,
@@ -127,8 +127,8 @@ impl FromRequest for BearerAuth {
 }
 
 impl AuthExtractor for BearerAuth {
-    type Future = Ready<Result<Self, Self::Error>>;
     type Error = AuthenticationError<bearer::Bearer>;
+    type Future = Ready<Result<Self, Self::Error>>;
 
     fn from_service_request(req: &ServiceRequest) -> Self::Future {
         ready(

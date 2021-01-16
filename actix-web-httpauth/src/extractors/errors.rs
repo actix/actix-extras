@@ -51,15 +51,15 @@ impl<C: Challenge> fmt::Display for AuthenticationError<C> {
 impl<C: 'static + Challenge> Error for AuthenticationError<C> {}
 
 impl<C: 'static + Challenge> ResponseError for AuthenticationError<C> {
+    fn status_code(&self) -> StatusCode {
+        self.status_code
+    }
+
     fn error_response(&self) -> HttpResponse {
         HttpResponse::build(self.status_code)
             // TODO: Get rid of the `.clone()`
             .set(WwwAuthenticate(self.challenge.clone()))
             .finish()
-    }
-
-    fn status_code(&self) -> StatusCode {
-        self.status_code
     }
 }
 
