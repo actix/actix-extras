@@ -592,7 +592,7 @@ mod test {
 
     #[actix_rt::test]
     async fn restrictive_defaults() {
-        let mut cors = Cors::default()
+        let cors = Cors::default()
             .new_transform(test::ok_service())
             .await
             .unwrap();
@@ -600,7 +600,7 @@ mod test {
         let req = TestRequest::with_header("Origin", "https://www.example.com")
             .to_srv_request();
 
-        let resp = test::call_service(&mut cors, req).await;
+        let resp = test::call_service(&cors, req).await;
         assert_eq!(resp.status(), StatusCode::BAD_REQUEST);
     }
 

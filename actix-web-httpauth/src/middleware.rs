@@ -384,5 +384,7 @@ mod tests {
         })
         .join()
         .unwrap();
+
+        drop(auth);
     }
 }

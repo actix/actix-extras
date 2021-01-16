@@ -57,10 +57,9 @@ impl Actor for RedisActor {
         async move {
             let addr = tokio::net::lookup_host(addr).await?;
 
-            let addr = addr.last().ok_or(io::Error::new(
-                io::ErrorKind::AddrNotAvailable,
-                "SocketAddr not found",
-            ))?;
+            let addr = addr.last().ok_or_else(|| {
+                io::Error::new(io::ErrorKind::AddrNotAvailable, "SocketAddr not found")
+            })?;
 
             tokio::net::TcpStream::connect(addr).await
         }

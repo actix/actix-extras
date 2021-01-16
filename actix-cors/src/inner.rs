@@ -264,7 +264,7 @@ mod test {
 
         assert!(cors.inner.validate_allowed_method(req.head()).is_err());
         assert!(cors.inner.validate_allowed_headers(req.head()).is_err());
-        let resp = test::call_service(&mut cors, req).await;
+        let resp = test::call_service(&cors, req).await;
         assert_eq!(resp.status(), StatusCode::BAD_REQUEST);
 
         let req = TestRequest::with_header("Origin", "https://www.example.com")
@@ -284,7 +284,7 @@ mod test {
             .method(Method::OPTIONS)
             .to_srv_request();
 
-        let resp = test::call_service(&mut cors, req).await;
+        let resp = test::call_service(&cors, req).await;
         assert_eq!(
             Some(&b"*"[..]),
             resp.headers()
@@ -328,7 +328,7 @@ mod test {
             .method(Method::OPTIONS)
             .to_srv_request();
 
-        let resp = test::call_service(&mut cors, req).await;
+        let resp = test::call_service(&cors, req).await;
         assert_eq!(resp.status(), StatusCode::OK);
     }
 }

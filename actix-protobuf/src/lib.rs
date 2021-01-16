@@ -133,22 +133,19 @@ where
     }
 }
 
-pin_project_lite::pin_project! {
-    pub struct ProtoBufFuture<T>
-    where
-        T: Message,
-        T: Default
-    {
-        #[pin]
-        fut: ProtoBufMessage<T>
-    }
+pub struct ProtoBufFuture<T>
+where
+    T: Message,
+    T: Default,
+{
+    fut: ProtoBufMessage<T>,
 }
 
 impl<T: Message + Default + 'static> Future for ProtoBufFuture<T> {
     type Output = Result<ProtoBuf<T>, Error>;
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
-        let res = ready!(self.project().fut.poll(cx))?;
+        let res = ready!(Pin::new(&mut self.get_mut().fut).poll(cx))?;
         Poll::Ready(Ok(ProtoBuf(res)))
     }
 }
