@@ -10,6 +10,7 @@ members = [
 ]
 
 [patch.crates-io]
+actix-cors = { path = "actix-cors" }
 actix-session = { path = "actix-session" }
 
 actix-router = { git = "https://github.com/actix/actix-net.git", branch = "feat/immutable" }

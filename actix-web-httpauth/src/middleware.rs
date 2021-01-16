@@ -15,14 +15,11 @@ use crate::extractors::{basic, bearer, AuthExtractor};
 
 /// Middleware for checking HTTP authentication.
 ///
-/// If there is no `Authorization` header in the request,
-/// this middleware returns an error immediately,
-/// without calling the `F` callback.
+/// If there is no `Authorization` header in the request, this middleware returns an error
+/// immediately, without calling the `F` callback.
 ///
-/// Otherwise, it will pass both the request and
-/// the parsed credentials into it.
-/// In case of successful validation `F` callback
-/// is required to return the `ServiceRequest` back.
+/// Otherwise, it will pass both the request and the parsed credentials into it. In case of
+/// successful validation `F` callback is required to return the `ServiceRequest` back.
 #[derive(Debug, Clone)]
 pub struct HttpAuthentication<T, F>
 where
@@ -38,8 +35,7 @@ where
     F: Fn(ServiceRequest, T) -> O + Clone,
     O: Future<Output = Result<ServiceRequest, Error>>,
 {
-    /// Construct `HttpAuthentication` middleware
-    /// with the provided auth extractor `T` and
+    /// Construct `HttpAuthentication` middleware with the provided auth extractor `T` and
     /// validation callback `F`.
     pub fn with_fn(process_fn: F) -> HttpAuthentication<T, F> {
         HttpAuthentication {
@@ -54,21 +50,18 @@ where
     F: Fn(ServiceRequest, basic::BasicAuth) -> O + Clone,
     O: Future<Output = Result<ServiceRequest, Error>>,
 {
-    /// Construct `HttpAuthentication` middleware for the HTTP "Basic"
-    /// authentication scheme.
+    /// Construct `HttpAuthentication` middleware for the HTTP "Basic" authentication scheme.
     ///
-    /// ## Example
+    /// # Example
     ///
     /// ```
     /// # use actix_web::Error;
     /// # use actix_web::dev::ServiceRequest;
     /// # use actix_web_httpauth::middleware::HttpAuthentication;
     /// # use actix_web_httpauth::extractors::basic::BasicAuth;
-    /// // In this example validator returns immediately,
-    /// // but since it is required to return anything
-    /// // that implements `IntoFuture` trait,
-    /// // it can be extended to query database
-    /// // or to do something else in a async manner.
+    /// // In this example validator returns immediately, but since it is required to return
+    /// // anything that implements `IntoFuture` trait, it can be extended to query database or to
+    /// // do something else in a async manner.
     /// async fn validator(
     ///     req: ServiceRequest,
     ///     credentials: BasicAuth,
@@ -89,10 +82,9 @@ where
     F: Fn(ServiceRequest, bearer::BearerAuth) -> O + Clone,
     O: Future<Output = Result<ServiceRequest, Error>>,
 {
-    /// Construct `HttpAuthentication` middleware for the HTTP "Bearer"
-    /// authentication scheme.
+    /// Construct `HttpAuthentication` middleware for the HTTP "Bearer" authentication scheme.
     ///
-    /// ## Example
+    /// # Example
     ///
     /// ```
     /// # use actix_web::Error;

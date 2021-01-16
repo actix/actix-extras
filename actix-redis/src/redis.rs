@@ -35,8 +35,10 @@ impl RedisActor {
     pub fn start<S: Into<String>>(addr: S) -> Addr<RedisActor> {
         let addr = addr.into();
 
-        let mut backoff = ExponentialBackoff::default();
-        backoff.max_elapsed_time = None;
+        let backoff = ExponentialBackoff {
+            max_elapsed_time: None,
+            ..Default::default()
+        };
 
         Supervisor::start(|_| RedisActor {
             addr,

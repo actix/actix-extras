@@ -174,8 +174,8 @@ impl Cors {
     /// Determinate allowed origins by processing requests which didn't match any origins specified
     /// in the `allowed_origin`.
     ///
-    /// The function will receive a `RequestHead` of each request, which can be used to determine
-    /// whether it should be allowed or not.
+    /// The function will receive two parameters, the Origin header value, and the `RequestHead` of
+    /// each request, which can be used to determine whether to allow the request or not.
     ///
     /// If the function returns `true`, the client's `Origin` request header will be echoed back
     /// into the `Access-Control-Allow-Origin` response header.
@@ -235,12 +235,12 @@ impl Cors {
         self
     }
 
-    /// Resets allowed request header list to a state where any origin is accepted.
+    /// Resets allowed request header list to a state where any header is accepted.
     ///
     /// See [`Cors::allowed_headers`] for more info on allowed request headers.
     pub fn allow_any_header(mut self) -> Cors {
         if let Some(cors) = cors(&mut self.inner, &self.error) {
-            cors.allowed_origins = AllOrSome::All;
+            cors.allowed_headers = AllOrSome::All;
         }
 
         self
@@ -319,7 +319,7 @@ impl Cors {
     /// See [`Cors::expose_headers`] for more info on exposed response headers.
     pub fn expose_any_header(mut self) -> Cors {
         if let Some(cors) = cors(&mut self.inner, &self.error) {
-            cors.allowed_origins = AllOrSome::All;
+            cors.expose_headers = AllOrSome::All;
         }
 
         self

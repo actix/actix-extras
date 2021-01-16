@@ -386,3 +386,23 @@ async fn validate_origin_allows_all_origins() {
     let resp = test::call_service(&mut cors, req).await;
     assert_eq!(resp.status(), StatusCode::OK);
 }
+
+#[actix_rt::test]
+async fn test_allow_any_origin_any_method_any_header() {
+    let mut cors = Cors::default()
+        .allow_any_origin()
+        .allow_any_method()
+        .allow_any_header()
+        .new_transform(test::ok_service())
+        .await
+        .unwrap();
+
+    let req = TestRequest::with_header(header::ACCESS_CONTROL_REQUEST_METHOD, "POST")
+        .header(header::ACCESS_CONTROL_REQUEST_HEADERS, "content-type")
+        .header(header::ORIGIN, "https://www.example.com")
+        .method(Method::OPTIONS)
+        .to_srv_request();
+
+    let resp = test::call_service(&mut cors, req).await;
+    assert_eq!(resp.status(), StatusCode::OK);
+}
