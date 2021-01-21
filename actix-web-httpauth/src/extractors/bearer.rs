@@ -2,6 +2,7 @@
 
 use std::borrow::Cow;
 use std::default::Default;
+use std::marker::PhantomData;
 
 use actix_web::dev::{Payload, ServiceRequest};
 use actix_web::http::header::Header;
@@ -9,7 +10,7 @@ use actix_web::{FromRequest, HttpRequest};
 use futures_util::future::{ready, Ready};
 
 use super::config::AuthExtractorConfig;
-use super::errors::AuthenticationError;
+use super::errors::{AuthenticationError, CompleteErrorResponse, DefaultErrorResponse};
 use super::AuthExtractor;
 use crate::headers::authorization;
 use crate::headers::www_authenticate::bearer;
@@ -93,19 +94,19 @@ impl AuthExtractorConfig for Config {
 /// }
 /// ```
 #[derive(Debug, Clone)]
-pub struct BearerAuth(authorization::Bearer);
+pub struct BearerAuth<B: CompleteErrorResponse = DefaultErrorResponse>(authorization::Bearer, PhantomData<B>);
 
-impl BearerAuth {
+impl<B: CompleteErrorResponse> BearerAuth<B> {
     /// Returns bearer token provided by client.
     pub fn token(&self) -> &str {
         self.0.token()
     }
 }
 
-impl FromRequest for BearerAuth {
+impl<B: CompleteErrorResponse> FromRequest for BearerAuth<B> {
     type Config = Config;
     type Future = Ready<Result<Self, Self::Error>>;
-    type Error = AuthenticationError<bearer::Bearer>;
+    type Error = AuthenticationError<bearer::Bearer, B>;
 
     fn from_request(
         req: &HttpRequest,
@@ -113,7 +114,7 @@ impl FromRequest for BearerAuth {
     ) -> <Self as FromRequest>::Future {
         ready(
             authorization::Authorization::<authorization::Bearer>::parse(req)
-                .map(|auth| BearerAuth(auth.into_scheme()))
+                .map(|auth| BearerAuth(auth.into_scheme(), PhantomData))
                 .map_err(|_| {
                     let bearer = req
                         .app_data::<Self::Config>()
@@ -126,14 +127,15 @@ impl FromRequest for BearerAuth {
     }
 }
 
-impl AuthExtractor for BearerAuth {
+impl<B: CompleteErrorResponse> AuthExtractor for BearerAuth<B> {
     type Future = Ready<Result<Self, Self::Error>>;
-    type Error = AuthenticationError<bearer::Bearer>;
+    type Error = AuthenticationError<bearer::Bearer, B>;
+    type CompleteResponse = B;
 
     fn from_service_request(req: &ServiceRequest) -> Self::Future {
         ready(
             authorization::Authorization::<authorization::Bearer>::parse(req)
-                .map(|auth| BearerAuth(auth.into_scheme()))
+                .map(|auth| BearerAuth(auth.into_scheme(), PhantomData))
                 .map_err(|_| {
                     let bearer = req
                         .app_data::<Config>()
@@ -147,7 +149,7 @@ impl AuthExtractor for BearerAuth {
 }
 
 /// Extended error customization for HTTP `Bearer` auth.
-impl AuthenticationError<bearer::Bearer> {
+impl<B: CompleteErrorResponse> AuthenticationError<bearer::Bearer, B> {
     /// Attach `Error` to the current Authentication error.
     ///
     /// Error status code will be changed to the one provided by the `kind`

@@ -1,30 +1,68 @@
 use std::error::Error;
 use std::fmt;
+use std::marker::PhantomData;
 
 use actix_web::http::StatusCode;
-use actix_web::{HttpResponse, ResponseError};
+use actix_web::{HttpResponse, ResponseError, dev::HttpResponseBuilder};
 
 use crate::headers::www_authenticate::Challenge;
 use crate::headers::www_authenticate::WwwAuthenticate;
+
+/// Complete the error response, used to override the response of AuthenticationError
+///
+/// # Example
+///
+/// ```
+/// struct MyErrorResponse {}
+/// impl CompleteResponse for MyErrorResponse {
+///   fn complete_response(builder: &mut HttpResponseBuilder) -> HttpResponse {
+///     builder.message_body("Unauthorized")
+///   }
+/// }
+///
+///
+/// type MyBasicAuth = BasicAuth<ApiErrorResponse>;
+///
+/// #[get("/api/")]
+/// fn api_index(credential: MyBasicAuth) -> impl Responder {
+///   debug!("Hello, {}", credential.user_id());
+///   Response::Ok().json(ApiStatus::Ok)
+/// }
+/// ```
+pub trait CompleteErrorResponse: 'static + std::fmt::Debug {
+    /// Modify the response builder and complete the response
+    /// e.g. `builder.finish()`
+    fn complete_response(builder: &mut HttpResponseBuilder) -> HttpResponse;
+}
+
+#[derive(Debug)]
+pub struct DefaultErrorResponse {}
+impl CompleteErrorResponse for DefaultErrorResponse {
+    fn complete_response(builder: &mut HttpResponseBuilder) -> HttpResponse {
+        builder.finish()
+    }
+}
 
 /// Authentication error returned by authentication extractors.
 ///
 /// Different extractors may extend `AuthenticationError` implementation
 /// in order to provide access to inner challenge fields.
 #[derive(Debug)]
-pub struct AuthenticationError<C: Challenge> {
+pub struct AuthenticationError<C: Challenge, B: CompleteErrorResponse> {
     challenge: C,
     status_code: StatusCode,
+    _builder: PhantomData<B>,
 }
 
-impl<C: Challenge> AuthenticationError<C> {
+impl<C: Challenge, B: CompleteErrorResponse> AuthenticationError<C, B> {
     /// Creates new authentication error from the provided `challenge`.
     ///
     /// By default returned error will resolve into the `HTTP 401` status code.
-    pub fn new(challenge: C) -> AuthenticationError<C> {
+    pub fn new(challenge: C) -> AuthenticationError<C, B> {
         AuthenticationError {
             challenge,
             status_code: StatusCode::UNAUTHORIZED,
+            _builder: PhantomData,
         }
     }
 
@@ -42,20 +80,21 @@ impl<C: Challenge> AuthenticationError<C> {
     }
 }
 
-impl<C: Challenge> fmt::Display for AuthenticationError<C> {
+impl<C: Challenge, B: CompleteErrorResponse> fmt::Display for AuthenticationError<C, B> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Display::fmt(&self.status_code, f)
     }
 }
 
-impl<C: 'static + Challenge> Error for AuthenticationError<C> {}
+impl<C: 'static + Challenge, B: CompleteErrorResponse> Error for AuthenticationError<C, B> {}
 
-impl<C: 'static + Challenge> ResponseError for AuthenticationError<C> {
+impl<C: 'static + Challenge, B: CompleteErrorResponse> ResponseError for AuthenticationError<C, B> {
     fn error_response(&self) -> HttpResponse {
-        HttpResponse::build(self.status_code)
-            // TODO: Get rid of the `.clone()`
-            .set(WwwAuthenticate(self.challenge.clone()))
-            .finish()
+        B::complete_response(
+            HttpResponse::build(self.status_code)
+                // TODO: Get rid of the `.clone()`
+                .set(WwwAuthenticate(self.challenge.clone()))
+        )
     }
 
     fn status_code(&self) -> StatusCode {

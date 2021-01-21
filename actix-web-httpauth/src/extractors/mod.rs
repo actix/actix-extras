@@ -9,8 +9,8 @@ pub mod bearer;
 mod config;
 mod errors;
 
-pub use self::config::AuthExtractorConfig;
-pub use self::errors::AuthenticationError;
+pub use self::config::{AuthExtractorConfig, TypedConfig};
+pub use self::errors::{AuthenticationError, CompleteErrorResponse};
 
 /// Trait implemented by types that can extract
 /// HTTP authentication scheme credentials from the request.
@@ -27,6 +27,9 @@ pub trait AuthExtractor: Sized {
 
     /// Future that resolves into extracted credentials type.
     type Future: Future<Output = Result<Self, Self::Error>>;
+
+    /// The associated CompleteErrorResponse hint
+    type CompleteResponse: CompleteErrorResponse;
 
     /// Parse the authentication credentials from the actix' `ServiceRequest`.
     fn from_service_request(req: &ServiceRequest) -> Self::Future;

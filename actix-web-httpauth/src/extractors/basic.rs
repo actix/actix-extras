@@ -1,6 +1,7 @@
 //! Extractor for the "Basic" HTTP Authentication Scheme
 
 use std::borrow::Cow;
+use std::marker::PhantomData;
 
 use actix_web::dev::{Payload, ServiceRequest};
 use actix_web::http::header::Header;
@@ -8,7 +9,7 @@ use actix_web::{FromRequest, HttpRequest};
 use futures_util::future::{ready, Ready};
 
 use super::config::AuthExtractorConfig;
-use super::errors::AuthenticationError;
+use super::errors::{AuthenticationError, CompleteErrorResponse, DefaultErrorResponse};
 use super::AuthExtractor;
 use crate::headers::authorization::{Authorization, Basic};
 use crate::headers::www_authenticate::basic::Basic as Challenge;
@@ -89,9 +90,9 @@ impl AuthExtractorConfig for Config {
 /// [`Config`]: ./struct.Config.html
 /// [app data]: https://docs.rs/actix-web/1.0.0-beta.5/actix_web/struct.App.html#method.data
 #[derive(Debug, Clone)]
-pub struct BasicAuth(Basic);
+pub struct BasicAuth<B: CompleteErrorResponse = DefaultErrorResponse>(Basic, PhantomData<B>);
 
-impl BasicAuth {
+impl<B: CompleteErrorResponse> BasicAuth<B> {
     /// Returns client's user-ID.
     pub fn user_id(&self) -> &Cow<'static, str> {
         &self.0.user_id()
@@ -103,10 +104,16 @@ impl BasicAuth {
     }
 }
 
-impl FromRequest for BasicAuth {
+impl<B: CompleteErrorResponse> From<BasicAuth<B>> for PhantomData<B> {
+    fn from(auth: BasicAuth<B>) -> Self {
+        auth.1
+    }
+}
+
+impl<B: CompleteErrorResponse> FromRequest for BasicAuth<B> {
     type Future = Ready<Result<Self, Self::Error>>;
     type Config = Config;
-    type Error = AuthenticationError<Challenge>;
+    type Error = AuthenticationError<Challenge, B>;
 
     fn from_request(
         req: &HttpRequest,
@@ -114,7 +121,7 @@ impl FromRequest for BasicAuth {
     ) -> <Self as FromRequest>::Future {
         ready(
             Authorization::<Basic>::parse(req)
-                .map(|auth| BasicAuth(auth.into_scheme()))
+                .map(|auth| BasicAuth(auth.into_scheme(), PhantomData))
                 .map_err(|_| {
                     // TODO: debug! the original error
                     let challenge = req
@@ -129,14 +136,15 @@ impl FromRequest for BasicAuth {
     }
 }
 
-impl AuthExtractor for BasicAuth {
-    type Error = AuthenticationError<Challenge>;
+impl<B: CompleteErrorResponse> AuthExtractor for BasicAuth<B> {
+    type Error = AuthenticationError<Challenge, B>;
     type Future = Ready<Result<Self, Self::Error>>;
+    type CompleteResponse = B;
 
     fn from_service_request(req: &ServiceRequest) -> Self::Future {
         ready(
             Authorization::<Basic>::parse(req)
-                .map(|auth| BasicAuth(auth.into_scheme()))
+                .map(|auth| BasicAuth(auth.into_scheme(), PhantomData))
                 .map_err(|_| {
                     // TODO: debug! the original error
                     let challenge = req

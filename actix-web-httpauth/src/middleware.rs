@@ -17,7 +17,7 @@ use futures_util::{
     task::{Context, Poll},
 };
 
-use crate::extractors::{basic, bearer, AuthExtractor};
+use crate::extractors::{basic, bearer, AuthExtractor, CompleteErrorResponse};
 
 /// Middleware for checking HTTP authentication.
 ///
@@ -51,9 +51,9 @@ where
     }
 }
 
-impl<F, O> HttpAuthentication<basic::BasicAuth, F>
+impl<F, O, B: CompleteErrorResponse> HttpAuthentication<basic::BasicAuth<B>, F>
 where
-    F: Fn(ServiceRequest, basic::BasicAuth) -> O,
+    F: Fn(ServiceRequest, basic::BasicAuth<B>) -> O,
     O: Future<Output = Result<ServiceRequest, Error>>,
 {
     /// Construct `HttpAuthentication` middleware for the HTTP "Basic" authentication scheme.
@@ -83,9 +83,9 @@ where
     }
 }
 
-impl<F, O> HttpAuthentication<bearer::BearerAuth, F>
+impl<F, O, B: CompleteErrorResponse> HttpAuthentication<bearer::BearerAuth<B>, F>
 where
-    F: Fn(ServiceRequest, bearer::BearerAuth) -> O,
+    F: Fn(ServiceRequest, bearer::BearerAuth<B>) -> O,
     O: Future<Output = Result<ServiceRequest, Error>>,
 {
     /// Construct `HttpAuthentication` middleware for the HTTP "Bearer" authentication scheme.
