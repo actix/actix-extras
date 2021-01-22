@@ -171,14 +171,15 @@ impl<T: AuthExtractorConfig> ResponseError for AuthenticationError<T> {
 
 #[cfg(test)]
 mod tests {
+    use super::super::basic::Config as BasicConfig;
     use super::*;
     use crate::headers::www_authenticate::basic::Basic;
-    use super::super::basic::Config as BasicConfig;
     use actix_web::Error;
 
     #[test]
     fn test_status_code_is_preserved_across_error_conversions() {
-        let ae: AuthenticationError<BasicConfig> = AuthenticationError::new2(Basic::default());
+        let ae: AuthenticationError<BasicConfig> =
+            AuthenticationError::new2(Basic::default());
         let expected = ae.status_code;
 
         // Converting the AuthenticationError into a ResponseError should preserve the status code.

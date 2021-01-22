@@ -1,12 +1,14 @@
 use actix_web::{middleware, web, App, HttpServer};
 
-use actix_web_httpauth::middleware::HttpAuthentication;
 use actix_web_httpauth::extractors::BasicAuth;
+use actix_web_httpauth::middleware::HttpAuthentication;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
-        let auth = HttpAuthentication::with_fn(|req, _credentials: BasicAuth| async { Ok(req) });
+        let auth = HttpAuthentication::with_fn(|req, _credentials: BasicAuth| async {
+            Ok(req)
+        });
         App::new()
             .wrap(middleware::Logger::default())
             .wrap(auth)
