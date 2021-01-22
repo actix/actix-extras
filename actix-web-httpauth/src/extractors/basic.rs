@@ -104,12 +104,6 @@ impl<B: CompleteErrorResponse> BasicAuth<B> {
     pub fn password(&self) -> Option<&Cow<'static, str>> {
         self.0.password()
     }
-} 
-
-impl<B: CompleteErrorResponse> From<BasicAuth<B>> for PhantomData<B> {
-    fn from(auth: BasicAuth<B>) -> Self {
-        auth.1
-    }
 }
 
 impl<B: CompleteErrorResponse> FromRequest for BasicAuth<B> {

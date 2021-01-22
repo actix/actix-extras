@@ -148,9 +148,9 @@ impl<B: CompleteErrorResponse> AuthenticationError<Config<B>> {
     }
 
     /// Attach error description to the current Authentication error.
-    pub fn with_error_description<D>(mut self, desc: D) -> Self
+    pub fn with_error_description<T>(mut self, desc: T) -> Self
     where
-        D: Into<Cow<'static, str>>,
+        T: Into<Cow<'static, str>>,
     {
         self.challenge_mut().error_description = Some(desc.into());
         self
@@ -159,9 +159,9 @@ impl<B: CompleteErrorResponse> AuthenticationError<Config<B>> {
     /// Attach error URI to the current Authentication error.
     ///
     /// It is up to implementor to provide properly formed absolute URI.
-    pub fn with_error_uri<D>(mut self, uri: D) -> Self
+    pub fn with_error_uri<T>(mut self, uri: T) -> Self
     where
-        D: Into<Cow<'static, str>>,
+        T: Into<Cow<'static, str>>,
     {
         self.challenge_mut().error_uri = Some(uri.into());
         self

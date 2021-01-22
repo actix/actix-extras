@@ -1,15 +1,14 @@
-// use std::marker::PhantomData;
+use std::fmt::Debug;
 
 use super::AuthenticationError;
-use crate::headers::www_authenticate::Challenge;
 use super::CompleteErrorResponse;
-// use super::AuthExtractor;
+use crate::headers::www_authenticate::Challenge;
 
 /// Trait implemented for types that provides configuration
 /// for the authentication [extractors].
 ///
 /// [extractors]: ./trait.AuthExtractor.html
-pub trait AuthExtractorConfig: 'static + std::fmt::Debug + std::clone::Clone + std::default::Default {
+pub trait AuthExtractorConfig: 'static + Debug + Clone + Default {
     /// Associated challenge type.
     type Inner: Challenge;
 
