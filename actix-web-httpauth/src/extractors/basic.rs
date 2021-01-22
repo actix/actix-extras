@@ -79,7 +79,7 @@ impl<B: CompleteErrorResponse> AuthExtractorConfig for Config<B> {
 ///
 /// ```
 /// use actix_web::{web, App};
-/// use actix_web_httpauth::extractors::basic::{BasicAuth, Config};
+/// use actix_web_httpauth::extractors::basic::BasicAuth;
 ///
 /// async fn index(auth: BasicAuth) -> String {
 ///     format!("Hello, {}!", auth.user_id())
@@ -87,7 +87,7 @@ impl<B: CompleteErrorResponse> AuthExtractorConfig for Config<B> {
 ///
 /// fn main() {
 ///     let app = App::new()
-///         .data(Config::default().realm("Restricted area"))
+///         .data(<BasicAuth>::default_config().realm("Restricted area"))
 ///         .service(web::resource("/index.html").route(web::get().to(index)));
 /// }
 /// ```
@@ -109,6 +109,11 @@ impl<B: CompleteErrorResponse> BasicAuth<B> {
     /// Returns client's password.
     pub fn password(&self) -> Option<&Cow<'static, str>> {
         self.0.password()
+    }
+
+    /// Returns the default BasicAuth configuraion
+    pub fn default_config() -> <Self as FromRequest>::Config {
+        <Self as FromRequest>::Config::default()
     }
 }
 

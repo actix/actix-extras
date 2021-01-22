@@ -81,7 +81,7 @@ impl<B: CompleteErrorResponse> AuthExtractorConfig for Config<B> {
 ///
 /// ```
 /// use actix_web::{web, App};
-/// use actix_web_httpauth::extractors::bearer::{BearerAuth, Config};
+/// use actix_web_httpauth::extractors::bearer::BearerAuth;
 ///
 /// async fn index(auth: BearerAuth) -> String {
 ///     format!("Hello, {}!", auth.token())
@@ -90,7 +90,7 @@ impl<B: CompleteErrorResponse> AuthExtractorConfig for Config<B> {
 /// fn main() {
 ///     let app = App::new()
 ///         .data(
-///             Config::default()
+///             <BearerAuth>::default_config()
 ///                 .realm("Restricted area")
 ///                 .scope("email photo"),
 ///         )
@@ -107,6 +107,11 @@ impl<B: CompleteErrorResponse> BearerAuth<B> {
     /// Returns bearer token provided by client.
     pub fn token(&self) -> &str {
         self.0.token()
+    }
+
+    /// Returns the default bearer configuraion
+    pub fn default_config() -> <Self as FromRequest>::Config {
+        <Self as FromRequest>::Config::default()
     }
 }
 

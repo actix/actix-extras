@@ -10,6 +10,9 @@ mod errors;
 pub use self::config::AuthExtractorConfig;
 pub use self::errors::{AuthenticationError, CompleteErrorResponse};
 
+pub use basic::BasicAuth;
+pub use bearer::BearerAuth;
+
 /// Trait implemented by types that can extract
 /// HTTP authentication scheme credentials from the request.
 ///

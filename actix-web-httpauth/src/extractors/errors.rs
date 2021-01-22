@@ -17,20 +17,26 @@ use super::{AuthExtractor, AuthExtractorConfig};
 /// # Example
 ///
 /// ```
+/// use actix_web::get;
+/// use actix_web::{Responder, HttpResponse, dev::HttpResponseBuilder};
+/// use actix_web_httpauth::extractors::basic::BasicAuth;
+/// use actix_web_httpauth::extractors::CompleteErrorResponse;
+///
+/// #[derive(Debug, Clone, Default)]
 /// struct MyErrorResponse {}
-/// impl CompleteResponse for MyErrorResponse {
+/// impl CompleteErrorResponse for MyErrorResponse {
 ///   fn complete_response(builder: &mut HttpResponseBuilder) -> HttpResponse {
-///     builder.message_body("Unauthorized")
+///     builder.body("Unauthorized")
 ///   }
 /// }
 ///
 ///
-/// type MyBasicAuth = BasicAuth<ApiErrorResponse>;
+/// type MyBasicAuth = BasicAuth<MyErrorResponse>;
 ///
-/// #[get("/api/")]
-/// fn api_index(credential: MyBasicAuth) -> impl Responder {
-///   debug!("Hello, {}", credential.user_id());
-///   Response::Ok().json(ApiStatus::Ok)
+/// #[get("/")]
+/// async fn api_index(credential: MyBasicAuth) -> impl Responder {
+///   HttpResponse::Ok()
+///     .body(format!("Hello, {}", credential.user_id()))
 /// }
 /// ```
 pub trait CompleteErrorResponse: 'static + fmt::Debug + Clone + Default {
@@ -167,11 +173,12 @@ impl<T: AuthExtractorConfig> ResponseError for AuthenticationError<T> {
 mod tests {
     use super::*;
     use crate::headers::www_authenticate::basic::Basic;
+    use super::super::basic::Config as BasicConfig;
     use actix_web::Error;
 
     #[test]
     fn test_status_code_is_preserved_across_error_conversions() {
-        let ae: AuthenticationError<Basic> = AuthenticationError::new(Basic::default());
+        let ae: AuthenticationError<BasicConfig> = AuthenticationError::new2(Basic::default());
         let expected = ae.status_code;
 
         // Converting the AuthenticationError into a ResponseError should preserve the status code.
