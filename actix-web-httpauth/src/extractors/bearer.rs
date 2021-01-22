@@ -18,15 +18,15 @@ pub use crate::headers::www_authenticate::bearer::Error;
 
 /// [BearerAuth](./struct/BearerAuth.html) extractor configuration.
 #[derive(Debug, Clone, Default)]
-pub struct Config(bearer::Bearer);
+pub struct Config<B: CompleteErrorResponse = DefaultErrorResponse>( bearer::Bearer, PhantomData<B> );
 
-impl Config {
+impl<B: CompleteErrorResponse> Config<B> {
     /// Set challenge `scope` attribute.
     ///
     /// The `"scope"` attribute is a space-delimited list of case-sensitive
     /// scope values indicating the required scope of the access token for
     /// accessing the requested resource.
-    pub fn scope<T: Into<Cow<'static, str>>>(mut self, value: T) -> Config {
+    pub fn scope<T: Into<Cow<'static, str>>>(mut self, value: T) -> Self {
         self.0.scope = Some(value.into());
         self
     }
@@ -35,20 +35,21 @@ impl Config {
     ///
     /// The "realm" attribute indicates the scope of protection in the manner
     /// described in HTTP/1.1 [RFC2617](https://tools.ietf.org/html/rfc2617#section-1.2).
-    pub fn realm<T: Into<Cow<'static, str>>>(mut self, value: T) -> Config {
+    pub fn realm<T: Into<Cow<'static, str>>>(mut self, value: T) -> Self {
         self.0.realm = Some(value.into());
         self
     }
 }
 
-impl AsRef<bearer::Bearer> for Config {
+impl<B: CompleteErrorResponse> AsRef<bearer::Bearer> for Config<B> {
     fn as_ref(&self) -> &bearer::Bearer {
         &self.0
     }
 }
 
-impl AuthExtractorConfig for Config {
+impl<B: CompleteErrorResponse> AuthExtractorConfig for Config<B> {
     type Inner = bearer::Bearer;
+    type Builder = B;
 
     fn into_inner(self) -> Self::Inner {
         self.0
@@ -104,9 +105,9 @@ impl<B: CompleteErrorResponse> BearerAuth<B> {
 }
 
 impl<B: CompleteErrorResponse> FromRequest for BearerAuth<B> {
-    type Config = Config;
+    type Config = Config<B>;
     type Future = Ready<Result<Self, Self::Error>>;
-    type Error = AuthenticationError<bearer::Bearer, B>;
+    type Error = AuthenticationError<Self::Config>;
 
     fn from_request(
         req: &HttpRequest,
@@ -116,40 +117,26 @@ impl<B: CompleteErrorResponse> FromRequest for BearerAuth<B> {
             authorization::Authorization::<authorization::Bearer>::parse(req)
                 .map(|auth| BearerAuth(auth.into_scheme(), PhantomData))
                 .map_err(|_| {
-                    let bearer = req
-                        .app_data::<Self::Config>()
-                        .map(|config| config.0.clone())
-                        .unwrap_or_else(Default::default);
-
-                    AuthenticationError::new(bearer)
+                    AuthenticationError::default(req)
                 }),
         )
     }
 }
 
 impl<B: CompleteErrorResponse> AuthExtractor for BearerAuth<B> {
-    type Future = Ready<Result<Self, Self::Error>>;
-    type Error = AuthenticationError<bearer::Bearer, B>;
-    type CompleteResponse = B;
-
     fn from_service_request(req: &ServiceRequest) -> Self::Future {
         ready(
             authorization::Authorization::<authorization::Bearer>::parse(req)
                 .map(|auth| BearerAuth(auth.into_scheme(), PhantomData))
                 .map_err(|_| {
-                    let bearer = req
-                        .app_data::<Config>()
-                        .map(|config| config.0.clone())
-                        .unwrap_or_else(Default::default);
-
-                    AuthenticationError::new(bearer)
+                    AuthenticationError::default2(req)
                 }),
         )
     }
 }
 
 /// Extended error customization for HTTP `Bearer` auth.
-impl<B: CompleteErrorResponse> AuthenticationError<bearer::Bearer, B> {
+impl<B: CompleteErrorResponse> AuthenticationError<Config<B>> {
     /// Attach `Error` to the current Authentication error.
     ///
     /// Error status code will be changed to the one provided by the `kind`
@@ -161,9 +148,9 @@ impl<B: CompleteErrorResponse> AuthenticationError<bearer::Bearer, B> {
     }
 
     /// Attach error description to the current Authentication error.
-    pub fn with_error_description<T>(mut self, desc: T) -> Self
+    pub fn with_error_description<D>(mut self, desc: D) -> Self
     where
-        T: Into<Cow<'static, str>>,
+        D: Into<Cow<'static, str>>,
     {
         self.challenge_mut().error_description = Some(desc.into());
         self
@@ -172,9 +159,9 @@ impl<B: CompleteErrorResponse> AuthenticationError<bearer::Bearer, B> {
     /// Attach error URI to the current Authentication error.
     ///
     /// It is up to implementor to provide properly formed absolute URI.
-    pub fn with_error_uri<T>(mut self, uri: T) -> Self
+    pub fn with_error_uri<D>(mut self, uri: D) -> Self
     where
-        T: Into<Cow<'static, str>>,
+        D: Into<Cow<'static, str>>,
     {
         self.challenge_mut().error_uri = Some(uri.into());
         self

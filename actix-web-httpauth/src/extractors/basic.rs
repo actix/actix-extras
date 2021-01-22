@@ -2,6 +2,7 @@
 
 use std::borrow::Cow;
 use std::marker::PhantomData;
+use std::default::Default;
 
 use actix_web::dev::{Payload, ServiceRequest};
 use actix_web::http::header::Header;
@@ -21,14 +22,14 @@ use crate::headers::www_authenticate::basic::Basic as Challenge;
 /// [`WWW-Authenticate`]:
 /// ../../headers/www_authenticate/struct.WwwAuthenticate.html
 #[derive(Debug, Clone, Default)]
-pub struct Config(Challenge);
+pub struct Config<B: CompleteErrorResponse = DefaultErrorResponse>(Challenge, PhantomData<B>);
 
-impl Config {
+impl<B: CompleteErrorResponse> Config<B> {
     /// Set challenge `realm` attribute.
     ///
     /// The "realm" attribute indicates the scope of protection in the manner
     /// described in HTTP/1.1 [RFC2617](https://tools.ietf.org/html/rfc2617#section-1.2).
-    pub fn realm<T>(mut self, value: T) -> Config
+    pub fn realm<T>(mut self, value: T) -> Self
     where
         T: Into<Cow<'static, str>>,
     {
@@ -37,14 +38,15 @@ impl Config {
     }
 }
 
-impl AsRef<Challenge> for Config {
+impl<B: CompleteErrorResponse> AsRef<Challenge> for Config<B> {
     fn as_ref(&self) -> &Challenge {
         &self.0
     }
 }
 
-impl AuthExtractorConfig for Config {
+impl<B: CompleteErrorResponse> AuthExtractorConfig for Config<B> {
     type Inner = Challenge;
+    type Builder = B;
 
     fn into_inner(self) -> Self::Inner {
         self.0
@@ -102,7 +104,7 @@ impl<B: CompleteErrorResponse> BasicAuth<B> {
     pub fn password(&self) -> Option<&Cow<'static, str>> {
         self.0.password()
     }
-}
+} 
 
 impl<B: CompleteErrorResponse> From<BasicAuth<B>> for PhantomData<B> {
     fn from(auth: BasicAuth<B>) -> Self {
@@ -112,8 +114,8 @@ impl<B: CompleteErrorResponse> From<BasicAuth<B>> for PhantomData<B> {
 
 impl<B: CompleteErrorResponse> FromRequest for BasicAuth<B> {
     type Future = Ready<Result<Self, Self::Error>>;
-    type Config = Config;
-    type Error = AuthenticationError<Challenge, B>;
+    type Config = Config<B>;
+    type Error = AuthenticationError<Self::Config>;
 
     fn from_request(
         req: &HttpRequest,
@@ -123,37 +125,19 @@ impl<B: CompleteErrorResponse> FromRequest for BasicAuth<B> {
             Authorization::<Basic>::parse(req)
                 .map(|auth| BasicAuth(auth.into_scheme(), PhantomData))
                 .map_err(|_| {
-                    // TODO: debug! the original error
-                    let challenge = req
-                        .app_data::<Self::Config>()
-                        .map(|config| config.0.clone())
-                        // TODO: Add trace! about `Default::default` call
-                        .unwrap_or_else(Default::default);
-
-                    AuthenticationError::new(challenge)
+                    AuthenticationError::default(req)
                 }),
         )
     }
 }
 
 impl<B: CompleteErrorResponse> AuthExtractor for BasicAuth<B> {
-    type Error = AuthenticationError<Challenge, B>;
-    type Future = Ready<Result<Self, Self::Error>>;
-    type CompleteResponse = B;
-
     fn from_service_request(req: &ServiceRequest) -> Self::Future {
         ready(
             Authorization::<Basic>::parse(req)
                 .map(|auth| BasicAuth(auth.into_scheme(), PhantomData))
                 .map_err(|_| {
-                    // TODO: debug! the original error
-                    let challenge = req
-                        .app_data::<Config>()
-                        .map(|config| config.0.clone())
-                        // TODO: Add trace! about `Default::default` call
-                        .unwrap_or_else(Default::default);
-
-                    AuthenticationError::new(challenge)
+                    AuthenticationError::default2(req)
                 }),
         )
     }

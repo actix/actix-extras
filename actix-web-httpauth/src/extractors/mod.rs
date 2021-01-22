@@ -1,15 +1,13 @@
 //! Type-safe authentication information extractors
 
 use actix_web::dev::ServiceRequest;
-use actix_web::Error;
-use std::future::Future;
 
 pub mod basic;
 pub mod bearer;
 mod config;
 mod errors;
 
-pub use self::config::{AuthExtractorConfig, TypedConfig};
+pub use self::config::AuthExtractorConfig;
 pub use self::errors::{AuthenticationError, CompleteErrorResponse};
 
 /// Trait implemented by types that can extract
@@ -21,15 +19,7 @@ pub use self::errors::{AuthenticationError, CompleteErrorResponse};
 ///
 /// You will not need it unless you want to implement your own
 /// authentication scheme.
-pub trait AuthExtractor: Sized {
-    /// The associated error which can be returned.
-    type Error: Into<Error>;
-
-    /// Future that resolves into extracted credentials type.
-    type Future: Future<Output = Result<Self, Self::Error>>;
-
-    /// The associated CompleteErrorResponse hint
-    type CompleteResponse: CompleteErrorResponse;
+pub trait AuthExtractor: Sized + actix_web::FromRequest {
 
     /// Parse the authentication credentials from the actix' `ServiceRequest`.
     fn from_service_request(req: &ServiceRequest) -> Self::Future;
