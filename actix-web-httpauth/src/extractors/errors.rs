@@ -102,7 +102,7 @@ impl<T: AuthExtractorConfig> AuthenticationError<T> {
         let challenge = req
             .borrow()
             .app_data::<T>()
-            .map(|config| config.clone())
+            .cloned()
             // TODO: Add trace! about `Default::default` call
             .unwrap_or_else(Default::default);
 
@@ -115,7 +115,7 @@ impl<T: AuthExtractorConfig> AuthenticationError<T> {
         let challenge = req
             .borrow()
             .app_data::<T>()
-            .map(|config| config.clone())
+            .cloned()
             // TODO: Add trace! about `Default::default` call
             .unwrap_or_else(Default::default);
 

@@ -2,8 +2,10 @@
 
 ## Unreleased - 2020-xx-xx
 * Correct error handling when extracting auth details from request. [#128]
+* Breaking change to core traits and structs, enabling customized error handling. [#152]
 
 [#128]: https://github.com/actix/actix-web-httpauth/pull/128
+[#152]: https://github.com/actix/actix-web-httpauth/pull/152
 
 
 ## 0.5.0 - 2020-09-11
