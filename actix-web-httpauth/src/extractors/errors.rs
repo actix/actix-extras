@@ -1,9 +1,12 @@
+use std::borrow::Borrow;
 use std::error::Error;
 use std::fmt;
-use std::borrow::Borrow;
 
 use actix_web::http::StatusCode;
-use actix_web::{HttpRequest, HttpResponse, ResponseError, FromRequest, dev::HttpResponseBuilder, dev::ServiceRequest};
+use actix_web::{
+    dev::HttpResponseBuilder, dev::ServiceRequest, FromRequest, HttpRequest,
+    HttpResponse, ResponseError,
+};
 
 use crate::headers::www_authenticate::WwwAuthenticate;
 
@@ -86,12 +89,12 @@ impl<T: AuthExtractorConfig> AuthenticationError<T> {
     }
 }
 
-
 impl<T: AuthExtractorConfig> AuthenticationError<T> {
     /// Create new authentication error based on the configuration in req
     pub fn default<R: Borrow<HttpRequest>>(req: R) -> Self {
         // TODO: debug! the original error
-        let challenge = req.borrow()
+        let challenge = req
+            .borrow()
             .app_data::<T>()
             .map(|config| config.clone())
             // TODO: Add trace! about `Default::default` call
@@ -103,7 +106,8 @@ impl<T: AuthExtractorConfig> AuthenticationError<T> {
     /// Create new authentication error based on the configuration in req
     pub fn default2<R: Borrow<ServiceRequest>>(req: R) -> Self {
         // TODO: debug! the original error
-        let challenge = req.borrow()
+        let challenge = req
+            .borrow()
             .app_data::<T>()
             .map(|config| config.clone())
             // TODO: Add trace! about `Default::default` call
@@ -113,12 +117,26 @@ impl<T: AuthExtractorConfig> AuthenticationError<T> {
     }
 
     /// Create new authentication error based on the configuration in req
-    pub fn default_hinted<R: Borrow<HttpRequest>, F, A: AuthExtractor + FromRequest<Error = Self, Future = F, Config = T>>(req: R, _: &A) -> Self {
+    pub fn default_hinted<
+        R: Borrow<HttpRequest>,
+        F,
+        A: AuthExtractor + FromRequest<Error = Self, Future = F, Config = T>,
+    >(
+        req: R,
+        _: &A,
+    ) -> Self {
         Self::default(req)
     }
 
     /// Create new authentication error based on the configuration in req
-    pub fn default_hinted2<R: Borrow<ServiceRequest>, F, A: AuthExtractor + FromRequest<Error = Self, Future = F, Config = T>>(req: R, _: &A) -> Self {
+    pub fn default_hinted2<
+        R: Borrow<ServiceRequest>,
+        F,
+        A: AuthExtractor + FromRequest<Error = Self, Future = F, Config = T>,
+    >(
+        req: R,
+        _: &A,
+    ) -> Self {
         Self::default2(req)
     }
 }
@@ -136,7 +154,7 @@ impl<T: AuthExtractorConfig> ResponseError for AuthenticationError<T> {
         <T as AuthExtractorConfig>::Builder::complete_response(
             HttpResponse::build(self.status_code)
                 // TODO: Get rid of the `.clone()`
-                .set(WwwAuthenticate(self.challenge.clone()))
+                .set(WwwAuthenticate(self.challenge.clone())),
         )
     }
 

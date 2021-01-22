@@ -18,7 +18,10 @@ pub use crate::headers::www_authenticate::bearer::Error;
 
 /// [BearerAuth](./struct/BearerAuth.html) extractor configuration.
 #[derive(Debug, Clone, Default)]
-pub struct Config<B: CompleteErrorResponse = DefaultErrorResponse>( bearer::Bearer, PhantomData<B> );
+pub struct Config<B: CompleteErrorResponse = DefaultErrorResponse>(
+    bearer::Bearer,
+    PhantomData<B>,
+);
 
 impl<B: CompleteErrorResponse> Config<B> {
     /// Set challenge `scope` attribute.
@@ -95,7 +98,10 @@ impl<B: CompleteErrorResponse> AuthExtractorConfig for Config<B> {
 /// }
 /// ```
 #[derive(Debug, Clone)]
-pub struct BearerAuth<B: CompleteErrorResponse = DefaultErrorResponse>(authorization::Bearer, PhantomData<B>);
+pub struct BearerAuth<B: CompleteErrorResponse = DefaultErrorResponse>(
+    authorization::Bearer,
+    PhantomData<B>,
+);
 
 impl<B: CompleteErrorResponse> BearerAuth<B> {
     /// Returns bearer token provided by client.
@@ -116,9 +122,7 @@ impl<B: CompleteErrorResponse> FromRequest for BearerAuth<B> {
         ready(
             authorization::Authorization::<authorization::Bearer>::parse(req)
                 .map(|auth| BearerAuth(auth.into_scheme(), PhantomData))
-                .map_err(|_| {
-                    AuthenticationError::default(req)
-                }),
+                .map_err(|_| AuthenticationError::default(req)),
         )
     }
 }
@@ -128,9 +132,7 @@ impl<B: CompleteErrorResponse> AuthExtractor for BearerAuth<B> {
         ready(
             authorization::Authorization::<authorization::Bearer>::parse(req)
                 .map(|auth| BearerAuth(auth.into_scheme(), PhantomData))
-                .map_err(|_| {
-                    AuthenticationError::default2(req)
-                }),
+                .map_err(|_| AuthenticationError::default2(req)),
         )
     }
 }

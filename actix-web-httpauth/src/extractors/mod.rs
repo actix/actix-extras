@@ -20,7 +20,6 @@ pub use self::errors::{AuthenticationError, CompleteErrorResponse};
 /// You will not need it unless you want to implement your own
 /// authentication scheme.
 pub trait AuthExtractor: Sized + actix_web::FromRequest {
-
     /// Parse the authentication credentials from the actix' `ServiceRequest`.
     fn from_service_request(req: &ServiceRequest) -> Self::Future;
 }

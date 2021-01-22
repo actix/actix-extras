@@ -1,8 +1,8 @@
 //! Extractor for the "Basic" HTTP Authentication Scheme
 
 use std::borrow::Cow;
-use std::marker::PhantomData;
 use std::default::Default;
+use std::marker::PhantomData;
 
 use actix_web::dev::{Payload, ServiceRequest};
 use actix_web::http::header::Header;
@@ -22,7 +22,10 @@ use crate::headers::www_authenticate::basic::Basic as Challenge;
 /// [`WWW-Authenticate`]:
 /// ../../headers/www_authenticate/struct.WwwAuthenticate.html
 #[derive(Debug, Clone, Default)]
-pub struct Config<B: CompleteErrorResponse = DefaultErrorResponse>(Challenge, PhantomData<B>);
+pub struct Config<B: CompleteErrorResponse = DefaultErrorResponse>(
+    Challenge,
+    PhantomData<B>,
+);
 
 impl<B: CompleteErrorResponse> Config<B> {
     /// Set challenge `realm` attribute.
@@ -92,7 +95,10 @@ impl<B: CompleteErrorResponse> AuthExtractorConfig for Config<B> {
 /// [`Config`]: ./struct.Config.html
 /// [app data]: https://docs.rs/actix-web/1.0.0-beta.5/actix_web/struct.App.html#method.data
 #[derive(Debug, Clone)]
-pub struct BasicAuth<B: CompleteErrorResponse = DefaultErrorResponse>(Basic, PhantomData<B>);
+pub struct BasicAuth<B: CompleteErrorResponse = DefaultErrorResponse>(
+    Basic,
+    PhantomData<B>,
+);
 
 impl<B: CompleteErrorResponse> BasicAuth<B> {
     /// Returns client's user-ID.
@@ -118,9 +124,7 @@ impl<B: CompleteErrorResponse> FromRequest for BasicAuth<B> {
         ready(
             Authorization::<Basic>::parse(req)
                 .map(|auth| BasicAuth(auth.into_scheme(), PhantomData))
-                .map_err(|_| {
-                    AuthenticationError::default(req)
-                }),
+                .map_err(|_| AuthenticationError::default(req)),
         )
     }
 }
@@ -130,9 +134,7 @@ impl<B: CompleteErrorResponse> AuthExtractor for BasicAuth<B> {
         ready(
             Authorization::<Basic>::parse(req)
                 .map(|auth| BasicAuth(auth.into_scheme(), PhantomData))
-                .map_err(|_| {
-                    AuthenticationError::default2(req)
-                }),
+                .map_err(|_| AuthenticationError::default2(req)),
         )
     }
 }
