@@ -55,9 +55,7 @@ impl Actor for RedisActor {
     fn started(&mut self, ctx: &mut Context<Self>) {
         let addr = self.addr.clone();
         async move {
-            let addr = tokio::net::lookup_host(addr).await?;
-
-            let addr = addr.last().ok_or_else(|| {
+            let addr = tokio::net::lookup_host(addr).await?.last().ok_or_else(|| {
                 io::Error::new(io::ErrorKind::AddrNotAvailable, "SocketAddr not found")
             })?;
 

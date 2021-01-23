@@ -255,7 +255,7 @@ pub trait ProtoBufResponseBuilder {
 
 impl ProtoBufResponseBuilder for HttpResponseBuilder {
     fn protobuf<T: Message>(&mut self, value: T) -> Result<HttpResponse, Error> {
-        self.header(CONTENT_TYPE, "application/protobuf");
+        self.insert_header((CONTENT_TYPE, "application/protobuf"));
 
         let mut body = Vec::new();
         value
@@ -313,16 +313,16 @@ mod tests {
         let protobuf = ProtoBufMessage::<MyObject>::new(&req, &mut pl).await;
         assert_eq!(protobuf.err().unwrap(), ProtoBufPayloadError::ContentType);
 
-        let (req, mut pl) =
-            TestRequest::with_header(header::CONTENT_TYPE, "application/text")
-                .to_http_parts();
+        let (req, mut pl) = TestRequest::default()
+            .insert_header((header::CONTENT_TYPE, "application/text"))
+            .to_http_parts();
         let protobuf = ProtoBufMessage::<MyObject>::new(&req, &mut pl).await;
         assert_eq!(protobuf.err().unwrap(), ProtoBufPayloadError::ContentType);
 
-        let (req, mut pl) =
-            TestRequest::with_header(header::CONTENT_TYPE, "application/protobuf")
-                .header(header::CONTENT_LENGTH, "10000")
-                .to_http_parts();
+        let (req, mut pl) = TestRequest::default()
+            .insert_header((header::CONTENT_TYPE, "application/protobuf"))
+            .insert_header((header::CONTENT_LENGTH, "10000"))
+            .to_http_parts();
         let protobuf = ProtoBufMessage::<MyObject>::new(&req, &mut pl)
             .limit(100)
             .await;

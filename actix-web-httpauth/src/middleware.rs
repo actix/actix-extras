@@ -285,7 +285,9 @@ mod tests {
             _extractor: PhantomData,
         };
 
-        let req = TestRequest::with_header("Authorization", "Bearer 1").to_srv_request();
+        let req = TestRequest::default()
+            .insert_header(("Authorization", "Bearer 1"))
+            .to_srv_request();
 
         let f = middleware.call(req);
 
@@ -306,15 +308,21 @@ mod tests {
             _extractor: PhantomData,
         };
 
-        let req = TestRequest::with_header("Authorization", "Bearer 1").to_srv_request();
+        let req = TestRequest::default()
+            .insert_header(("Authorization", "Bearer 1"))
+            .to_srv_request();
 
         let f1 = middleware.call(req);
 
-        let req = TestRequest::with_header("Authorization", "Bearer 1").to_srv_request();
+        let req = TestRequest::default()
+            .insert_header(("Authorization", "Bearer 1"))
+            .to_srv_request();
 
         let f2 = middleware.call(req);
 
-        let req = TestRequest::with_header("Authorization", "Bearer 1").to_srv_request();
+        let req = TestRequest::default()
+            .insert_header(("Authorization", "Bearer 1"))
+            .to_srv_request();
 
         let f3 = middleware.call(req);
 
@@ -346,7 +354,7 @@ mod tests {
         .await;
 
         let req = TestRequest::with_uri("/test")
-            .header("Authorization", "Bearer 1")
+            .insert_header(("Authorization", "Bearer 1"))
             .to_request();
 
         let res = app.call(req).await.unwrap();
@@ -375,7 +383,7 @@ mod tests {
                 .await;
 
                 let req = TestRequest::with_uri("/test")
-                    .header("Authorization", "Bearer 1")
+                    .insert_header(("Authorization", "Bearer 1"))
                     .to_request();
 
                 let res = app.call(req).await.unwrap();

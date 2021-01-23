@@ -1,8 +1,6 @@
-use actix_web::error::ParseError;
 use actix_web::http::header::{
-    Header, HeaderName, HeaderValue, IntoHeaderValue, WWW_AUTHENTICATE,
+    HeaderName, HeaderValue, IntoHeaderPair, IntoHeaderValue, WWW_AUTHENTICATE,
 };
-use actix_web::HttpMessage;
 
 use super::Challenge;
 
@@ -14,20 +12,10 @@ use super::Challenge;
 #[derive(Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default, Clone)]
 pub struct WwwAuthenticate<C: Challenge>(pub C);
 
-impl<C: Challenge> Header for WwwAuthenticate<C> {
-    fn name() -> HeaderName {
-        WWW_AUTHENTICATE
-    }
-
-    fn parse<T: HttpMessage>(_msg: &T) -> Result<Self, ParseError> {
-        unimplemented!()
-    }
-}
-
-impl<C: Challenge> IntoHeaderValue for WwwAuthenticate<C> {
+impl<C: Challenge> IntoHeaderPair for WwwAuthenticate<C> {
     type Error = <C as IntoHeaderValue>::Error;
 
-    fn try_into(self) -> Result<HeaderValue, <Self as IntoHeaderValue>::Error> {
-        self.0.try_into()
+    fn try_into_header_pair(self) -> Result<(HeaderName, HeaderValue), Self::Error> {
+        self.0.try_into_value().map(|v| (WWW_AUTHENTICATE, v))
     }
 }

@@ -91,8 +91,8 @@ impl<S: Scheme> Header for Authorization<S> {
 impl<S: Scheme> IntoHeaderValue for Authorization<S> {
     type Error = <S as IntoHeaderValue>::Error;
 
-    fn try_into(self) -> Result<HeaderValue, <Self as IntoHeaderValue>::Error> {
-        self.0.try_into()
+    fn try_into_value(self) -> Result<HeaderValue, <Self as IntoHeaderValue>::Error> {
+        self.0.try_into_value()
     }
 }
 

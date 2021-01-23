@@ -42,7 +42,8 @@ async fn test_not_allowed_origin_fn() {
         .unwrap();
 
     {
-        let req = TestRequest::with_header("Origin", "https://www.example.com")
+        let req = TestRequest::default()
+            .insert_header(("Origin", "https://www.example.com"))
             .method(Method::GET)
             .to_srv_request();
 
@@ -57,7 +58,8 @@ async fn test_not_allowed_origin_fn() {
     }
 
     {
-        let req = TestRequest::with_header("Origin", "https://www.known.com")
+        let req = TestRequest::default()
+            .insert_header(("Origin", "https://www.known.com"))
             .method(Method::GET)
             .to_srv_request();
 
@@ -87,7 +89,8 @@ async fn test_allowed_origin_fn() {
         .await
         .unwrap();
 
-    let req = TestRequest::with_header("Origin", "https://www.example.com")
+    let req = TestRequest::default()
+        .insert_header(("Origin", "https://www.example.com"))
         .method(Method::GET)
         .to_srv_request();
 
@@ -101,7 +104,8 @@ async fn test_allowed_origin_fn() {
             .unwrap()
     );
 
-    let req = TestRequest::with_header("Origin", "https://www.unknown.com")
+    let req = TestRequest::default()
+        .insert_header(("Origin", "https://www.unknown.com"))
         .method(Method::GET)
         .to_srv_request();
 
@@ -134,7 +138,8 @@ async fn test_allowed_origin_fn_with_environment() {
         .await
         .unwrap();
 
-    let req = TestRequest::with_header("Origin", "https://www.example.com")
+    let req = TestRequest::default()
+        .insert_header(("Origin", "https://www.example.com"))
         .method(Method::GET)
         .to_srv_request();
 
@@ -148,7 +153,8 @@ async fn test_allowed_origin_fn_with_environment() {
             .unwrap()
     );
 
-    let req = TestRequest::with_header("Origin", "https://www.unknown.com")
+    let req = TestRequest::default()
+        .insert_header(("Origin", "https://www.unknown.com"))
         .method(Method::GET)
         .to_srv_request();
 
@@ -172,8 +178,9 @@ async fn test_multiple_origins_preflight() {
         .await
         .unwrap();
 
-    let req = TestRequest::with_header("Origin", "https://example.com")
-        .header(header::ACCESS_CONTROL_REQUEST_METHOD, "GET")
+    let req = TestRequest::default()
+        .insert_header(("Origin", "https://example.com"))
+        .insert_header((header::ACCESS_CONTROL_REQUEST_METHOD, "GET"))
         .method(Method::OPTIONS)
         .to_srv_request();
 
@@ -185,8 +192,9 @@ async fn test_multiple_origins_preflight() {
             .map(HeaderValue::as_bytes)
     );
 
-    let req = TestRequest::with_header("Origin", "https://example.org")
-        .header(header::ACCESS_CONTROL_REQUEST_METHOD, "GET")
+    let req = TestRequest::default()
+        .insert_header(("Origin", "https://example.org"))
+        .insert_header((header::ACCESS_CONTROL_REQUEST_METHOD, "GET"))
         .method(Method::OPTIONS)
         .to_srv_request();
 
@@ -209,7 +217,8 @@ async fn test_multiple_origins() {
         .await
         .unwrap();
 
-    let req = TestRequest::with_header("Origin", "https://example.com")
+    let req = TestRequest::default()
+        .insert_header(("Origin", "https://example.com"))
         .method(Method::GET)
         .to_srv_request();
 
@@ -221,7 +230,8 @@ async fn test_multiple_origins() {
             .map(HeaderValue::as_bytes)
     );
 
-    let req = TestRequest::with_header("Origin", "https://example.org")
+    let req = TestRequest::default()
+        .insert_header(("Origin", "https://example.org"))
         .method(Method::GET)
         .to_srv_request();
 
@@ -250,7 +260,8 @@ async fn test_response() {
         .await
         .unwrap();
 
-    let req = TestRequest::with_header("Origin", "https://www.example.com")
+    let req = TestRequest::default()
+        .insert_header(("Origin", "https://www.example.com"))
         .method(Method::OPTIONS)
         .to_srv_request();
     let resp = test::call_service(&cors, req).await;
@@ -294,13 +305,16 @@ async fn test_response() {
         .allowed_header(header::CONTENT_TYPE)
         .new_transform(fn_service(|req: ServiceRequest| {
             ok(req.into_response({
-                HttpResponse::Ok().header(header::VARY, "Accept").finish()
+                HttpResponse::Ok()
+                    .insert_header((header::VARY, "Accept"))
+                    .finish()
             }))
         }))
         .await
         .unwrap();
 
-    let req = TestRequest::with_header("Origin", "https://www.example.com")
+    let req = TestRequest::default()
+        .insert_header(("Origin", "https://www.example.com"))
         .method(Method::OPTIONS)
         .to_srv_request();
     let resp = test::call_service(&cors, req).await;
@@ -318,9 +332,10 @@ async fn test_response() {
         .await
         .unwrap();
 
-    let req = TestRequest::with_header("Origin", "https://www.example.com")
+    let req = TestRequest::default()
+        .insert_header(("Origin", "https://www.example.com"))
         .method(Method::OPTIONS)
-        .header(header::ACCESS_CONTROL_REQUEST_METHOD, "POST")
+        .insert_header((header::ACCESS_CONTROL_REQUEST_METHOD, "POST"))
         .to_srv_request();
     let resp = test::call_service(&cors, req).await;
     let origins_str = resp
@@ -338,7 +353,8 @@ async fn test_validate_origin() {
         .await
         .unwrap();
 
-    let req = TestRequest::with_header("Origin", "https://www.example.com")
+    let req = TestRequest::default()
+        .insert_header(("Origin", "https://www.example.com"))
         .method(Method::GET)
         .to_srv_request();
 
@@ -361,7 +377,8 @@ async fn test_no_origin_response() {
         .get(header::ACCESS_CONTROL_ALLOW_ORIGIN)
         .is_none());
 
-    let req = TestRequest::with_header("Origin", "https://www.example.com")
+    let req = TestRequest::default()
+        .insert_header(("Origin", "https://www.example.com"))
         .method(Method::OPTIONS)
         .to_srv_request();
     let resp = test::call_service(&cors, req).await;
@@ -380,8 +397,9 @@ async fn validate_origin_allows_all_origins() {
         .await
         .unwrap();
 
-    let req =
-        TestRequest::with_header("Origin", "https://www.example.com").to_srv_request();
+    let req = TestRequest::default()
+        .insert_header(("Origin", "https://www.example.com"))
+        .to_srv_request();
 
     let resp = test::call_service(&cors, req).await;
     assert_eq!(resp.status(), StatusCode::OK);
@@ -397,9 +415,10 @@ async fn test_allow_any_origin_any_method_any_header() {
         .await
         .unwrap();
 
-    let req = TestRequest::with_header(header::ACCESS_CONTROL_REQUEST_METHOD, "POST")
-        .header(header::ACCESS_CONTROL_REQUEST_HEADERS, "content-type")
-        .header(header::ORIGIN, "https://www.example.com")
+    let req = TestRequest::default()
+        .insert_header((header::ACCESS_CONTROL_REQUEST_METHOD, "POST"))
+        .insert_header((header::ACCESS_CONTROL_REQUEST_HEADERS, "content-type"))
+        .insert_header((header::ORIGIN, "https://www.example.com"))
         .method(Method::OPTIONS)
         .to_srv_request();
 

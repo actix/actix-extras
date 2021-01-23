@@ -97,7 +97,7 @@ impl fmt::Display for Basic {
 impl IntoHeaderValue for Basic {
     type Error = InvalidHeaderValue;
 
-    fn try_into(self) -> Result<HeaderValue, <Self as IntoHeaderValue>::Error> {
+    fn try_into_value(self) -> Result<HeaderValue, <Self as IntoHeaderValue>::Error> {
         let mut credentials = BytesMut::with_capacity(
             self.user_id.len()
                 + 1 // ':'
@@ -187,7 +187,7 @@ mod tests {
             password: Some("open sesame".into()),
         };
 
-        let result = basic.try_into();
+        let result = basic.try_into_value();
         assert!(result.is_ok());
         assert_eq!(
             result.unwrap(),

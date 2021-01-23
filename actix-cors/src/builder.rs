@@ -597,7 +597,8 @@ mod test {
             .await
             .unwrap();
 
-        let req = TestRequest::with_header("Origin", "https://www.example.com")
+        let req = TestRequest::default()
+            .insert_header(("Origin", "https://www.example.com"))
             .to_srv_request();
 
         let resp = test::call_service(&cors, req).await;

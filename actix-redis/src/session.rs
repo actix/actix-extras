@@ -1,4 +1,3 @@
-use std::task::{Context, Poll};
 use std::{collections::HashMap, iter, rc::Rc};
 
 use actix::prelude::*;
@@ -141,9 +140,7 @@ where
     type Error = Error;
     type Future = LocalBoxFuture<'static, Result<Self::Response, Self::Error>>;
 
-    fn poll_ready(&self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        self.service.poll_ready(cx)
-    }
+    actix_service::forward_ready!(service);
 
     fn call(&self, mut req: ServiceRequest) -> Self::Future {
         let srv = self.service.clone();
@@ -394,7 +391,7 @@ mod test {
             .unwrap_or(Some(0))
             .unwrap_or(0);
 
-        Ok(HttpResponse::Ok().json(IndexResponse { user_id, counter }))
+        Ok(HttpResponse::Ok().json(&IndexResponse { user_id, counter }))
     }
 
     async fn do_something(session: Session) -> Result<HttpResponse> {
@@ -405,7 +402,7 @@ mod test {
             .map_or(1, |inner| inner + 1);
         session.set("counter", counter)?;
 
-        Ok(HttpResponse::Ok().json(IndexResponse { user_id, counter }))
+        Ok(HttpResponse::Ok().json(&IndexResponse { user_id, counter }))
     }
 
     #[derive(Deserialize)]
@@ -426,7 +423,7 @@ mod test {
             .unwrap_or(Some(0))
             .unwrap_or(0);
 
-        Ok(HttpResponse::Ok().json(IndexResponse {
+        Ok(HttpResponse::Ok().json(&IndexResponse {
             user_id: Some(id),
             counter,
         }))
