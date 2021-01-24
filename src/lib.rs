@@ -89,13 +89,12 @@ use uuid::Uuid;
 /// [`tracing`]: https://docs.rs/tracing
 pub struct TracingLogger;
 
-impl<S, B> Transform<S> for TracingLogger
+impl<S, B> Transform<S, ServiceRequest> for TracingLogger
 where
-    S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
+    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
     S::Future: 'static,
     B: 'static,
 {
-    type Request = ServiceRequest;
     type Response = ServiceResponse<B>;
     type Error = Error;
     type Transform = TracingLoggerMiddleware<S>;
@@ -158,13 +157,12 @@ impl std::fmt::Display for RequestId {
     }
 }
 
-impl<S, B> Service for TracingLoggerMiddleware<S>
+impl<S, B> Service<ServiceRequest> for TracingLoggerMiddleware<S>
 where
-    S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
+    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
     S::Future: 'static,
     B: 'static,
 {
-    type Request = ServiceRequest;
     type Response = ServiceResponse<B>;
     type Error = Error;
     type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>>>>;
