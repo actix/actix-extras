@@ -374,7 +374,7 @@ mod tests {
 
         let auth_clone = auth.clone();
         std::thread::spawn(move || {
-            actix_rt::System::new("test_middleware").block_on(async {
+            actix_rt::System::new().block_on(async {
                 let app = init_service(
                     App::new()
                         .wrap(auth_clone)

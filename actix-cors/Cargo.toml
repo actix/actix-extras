@@ -29,7 +29,7 @@ tinyvec = "1.0.0"
 
 [dev-dependencies]
 actix-service = "2.0.0-beta.2"
-actix-rt = "2.0.0-beta.2"
+actix-rt = "2.0.0-beta.3"
 futures-util = { version = "0.3.7", default-features = false }
 pretty_env_logger = "0.4"
 regex = "1.4"
