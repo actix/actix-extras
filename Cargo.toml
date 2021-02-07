@@ -13,15 +13,7 @@ members = [
 actix-cors = { path = "actix-cors" }
 actix-session = { path = "actix-session" }
 
-actix-router = { git = "https://github.com/actix/actix-net.git" }
-actix-server = { git = "https://github.com/actix/actix-net.git" }
-actix-service = { git = "https://github.com/actix/actix-net.git" }
-actix-tls = { git = "https://github.com/actix/actix-net.git" }
-actix-utils = { git = "https://github.com/actix/actix-net.git" }
-actix-macros = { git = "https://github.com/actix/actix-net.git" }
-
-actix-http = { git = "https://github.com/actix/actix-web.git", branch = "feat/immutable" }
-awc = { git = "https://github.com/actix/actix-web.git", branch = "feat/immutable" }
-actix-web = { git = "https://github.com/actix/actix-web.git", branch = "feat/immutable" }
-actix-web-codegen = { git = "https://github.com/actix/actix-web.git", branch = "feat/immutable" }
-actix = { git = "https://github.com/actix/actix.git", branch = "feat/actix-rt-2" }
+actix-http = { git = "https://github.com/actix/actix-web.git" }
+awc = { git = "https://github.com/actix/actix-web.git" }
+actix-web = { git = "https://github.com/actix/actix-web.git" }
+actix-web-codegen = { git = "https://github.com/actix/actix-web.git" }

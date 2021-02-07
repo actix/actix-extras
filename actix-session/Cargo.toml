@@ -21,7 +21,7 @@ cookie-session = ["actix-web/secure-cookies"]
 
 [dependencies]
 actix-web = { version = "4.0.0-beta.1", default_features = false }
-actix-service = "2.0.0-beta.2"
+actix-service = "2.0.0-beta.4"
 
 bytes = "1"
 derive_more = "0.99.2"
@@ -33,4 +33,4 @@ serde_json = "1.0"
 time = { version = "0.2.7", default-features = false, features = ["std"] }
 
 [dev-dependencies]
-actix-rt = "2.0.0-beta.3"
+actix-rt = "2"

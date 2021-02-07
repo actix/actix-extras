@@ -32,9 +32,9 @@ web = [
 ]
 
 [dependencies]
-actix = { version = "0.11.0-beta.1", default-features = false }
-actix-rt = "2.0.0-beta.3"
-actix-utils = "3.0.0-beta.1"
+actix = { version = "0.11.0-beta.2", default-features = false }
+actix-rt = "2"
+actix-utils = "3.0.0-beta.2"
 
 log = "0.4.6"
 backoff = "0.2.1"
