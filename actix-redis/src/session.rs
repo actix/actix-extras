@@ -240,12 +240,12 @@ impl Inner {
             }
         };
 
-        let res = self
+        let val = self
             .addr
             .send(Command(resp_array!["GET", cache_key]))
-            .await?;
-
-        let val = res.map_err(error::ErrorInternalServerError)?;
+            .await
+            .map_err(error::ErrorInternalServerError)?
+            .map_err(error::ErrorInternalServerError)?;
 
         match val {
             RespValue::Error(err) => {
@@ -320,7 +320,8 @@ impl Inner {
 
         self.addr
             .send(cmd)
-            .await?
+            .await
+            .map_err(error::ErrorInternalServerError)?
             .map_err(error::ErrorInternalServerError)?;
 
         if let Some(jar) = jar {
@@ -337,17 +338,18 @@ impl Inner {
     async fn clear_cache(&self, key: String) -> Result<(), Error> {
         let cache_key = (self.cache_keygen)(&key);
 
-        match self.addr.send(Command(resp_array!["DEL", cache_key])).await {
-            Err(e) => Err(Error::from(e)),
-            Ok(res) => {
-                match res {
-                    // redis responds with number of deleted records
-                    Ok(RespValue::Integer(x)) if x > 0 => Ok(()),
-                    _ => Err(error::ErrorInternalServerError(
-                        "failed to remove session from cache",
-                    )),
-                }
-            }
+        let res = self
+            .addr
+            .send(Command(resp_array!["DEL", cache_key]))
+            .await
+            .map_err(error::ErrorInternalServerError)?;
+
+        match res {
+            // redis responds with number of deleted records
+            Ok(RespValue::Integer(x)) if x > 0 => Ok(()),
+            _ => Err(error::ErrorInternalServerError(
+                "failed to remove session from cache",
+            )),
         }
     }
 

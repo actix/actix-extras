@@ -12,8 +12,3 @@ members = [
 [patch.crates-io]
 actix-cors = { path = "actix-cors" }
 actix-session = { path = "actix-session" }
-
-actix-http = { git = "https://github.com/actix/actix-web.git" }
-awc = { git = "https://github.com/actix/actix-web.git" }
-actix-web = { git = "https://github.com/actix/actix-web.git" }
-actix-web-codegen = { git = "https://github.com/actix/actix-web.git" }
