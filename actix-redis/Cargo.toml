@@ -22,6 +22,7 @@ default = ["web"]
 
 # actix-web integration
 web = [
+    "actix-http",
     "actix-service",
     "actix-web",
     "actix-session/cookie-session",
