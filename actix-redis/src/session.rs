@@ -81,8 +81,8 @@ impl RedisSession {
 
     /// Set custom cookie max-age
     /// Use `None` for session-only cookies
-    pub fn cookie_max_age(mut self, max_age: Option<Duration>) -> Self {
-        Rc::get_mut(&mut self.0).unwrap().max_age = max_age;
+    pub fn cookie_max_age(mut self, max_age: impl Into<Option<Duration>>) -> Self {
+        Rc::get_mut(&mut self.0).unwrap().max_age = max_age.into();
         self
     }
 
