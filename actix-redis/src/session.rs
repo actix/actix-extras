@@ -80,8 +80,9 @@ impl RedisSession {
     }
 
     /// Set custom cookie max-age
-    pub fn cookie_max_age(mut self, max_age: Duration) -> Self {
-        Rc::get_mut(&mut self.0).unwrap().max_age = Some(max_age);
+    /// Use `None` for session-only cookies
+    pub fn cookie_max_age(mut self, max_age: impl Into<Option<Duration>>) -> Self {
+        Rc::get_mut(&mut self.0).unwrap().max_age = max_age.into();
         self
     }
 
@@ -450,6 +451,7 @@ mod test {
         // Step 1:  GET index
         //   - set-cookie actix-session will be in response (session cookie #1)
         //   - response should be: {"counter": 0, "user_id": None}
+        //   - cookie should have default max-age of 7 days
         // Step 2:  GET index, including session cookie #1 in request
         //   - set-cookie will *not* be in response
         //   - response should be: {"counter": 0, "user_id": None}
@@ -510,6 +512,7 @@ mod test {
                 counter: 0
             }
         );
+        assert_eq!(cookie_1.max_age(), Some(Duration::days(7)));
 
         // Step 2:  GET index, including session cookie #1 in request
         //   - set-cookie will *not* be in response
@@ -666,5 +669,34 @@ mod test {
             .find(|c| c.name() == "test-session")
             .unwrap();
         assert_ne!(cookie_5.value(), cookie_2.value());
+    }
+
+    #[actix_rt::test]
+    async fn test_max_age_session_only() {
+        //
+        // Test that removing max_age results in a session-only cookie
+        //
+        let srv = test::start(|| {
+            App::new()
+                .wrap(
+                    RedisSession::new("127.0.0.1:6379", &[0; 32])
+                        .cookie_name("test-session")
+                        .cookie_max_age(None),
+                )
+                .wrap(middleware::Logger::default())
+                .service(resource("/").route(get().to(index)))
+        });
+
+        let req = srv.get("/").send();
+        let resp = req.await.unwrap();
+        let cookie = resp
+            .cookies()
+            .unwrap()
+            .clone()
+            .into_iter()
+            .find(|c| c.name() == "test-session")
+            .unwrap();
+
+        assert_eq!(cookie.max_age(), None);
     }
 }
