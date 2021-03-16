@@ -235,8 +235,8 @@ mod test {
             .unwrap();
 
         let req = TestRequest::get()
-            .header(header::ORIGIN, "https://www.unknown.com")
-            .header(header::ACCESS_CONTROL_REQUEST_HEADERS, "DNT")
+            .insert_header((header::ORIGIN, "https://www.unknown.com"))
+            .insert_header((header::ACCESS_CONTROL_REQUEST_HEADERS, "DNT"))
             .to_srv_request();
 
         assert!(cors.inner.validate_origin(req.head()).is_err());
@@ -257,34 +257,37 @@ mod test {
             .await
             .unwrap();
 
-        let req = TestRequest::with_header("Origin", "https://www.example.com")
+        let req = TestRequest::default()
             .method(Method::OPTIONS)
-            .header(header::ACCESS_CONTROL_REQUEST_HEADERS, "X-Not-Allowed")
+            .insert_header(("Origin", "https://www.example.com"))
+            .insert_header((header::ACCESS_CONTROL_REQUEST_HEADERS, "X-Not-Allowed"))
             .to_srv_request();
 
         assert!(cors.inner.validate_allowed_method(req.head()).is_err());
         assert!(cors.inner.validate_allowed_headers(req.head()).is_err());
-        let resp = test::call_service(&mut cors, req).await;
+        let resp = test::call_service(&cors, req).await;
         assert_eq!(resp.status(), StatusCode::BAD_REQUEST);
 
-        let req = TestRequest::with_header("Origin", "https://www.example.com")
-            .header(header::ACCESS_CONTROL_REQUEST_METHOD, "put")
+        let req = TestRequest::default()
             .method(Method::OPTIONS)
+            .insert_header(("Origin", "https://www.example.com"))
+            .insert_header((header::ACCESS_CONTROL_REQUEST_METHOD, "put"))
             .to_srv_request();
 
         assert!(cors.inner.validate_allowed_method(req.head()).is_err());
         assert!(cors.inner.validate_allowed_headers(req.head()).is_ok());
 
-        let req = TestRequest::with_header("Origin", "https://www.example.com")
-            .header(header::ACCESS_CONTROL_REQUEST_METHOD, "POST")
-            .header(
+        let req = TestRequest::default()
+            .method(Method::OPTIONS)
+            .insert_header(("Origin", "https://www.example.com"))
+            .insert_header((header::ACCESS_CONTROL_REQUEST_METHOD, "POST"))
+            .insert_header((
                 header::ACCESS_CONTROL_REQUEST_HEADERS,
                 "AUTHORIZATION,ACCEPT",
-            )
-            .method(Method::OPTIONS)
+            ))
             .to_srv_request();
 
-        let resp = test::call_service(&mut cors, req).await;
+        let resp = test::call_service(&cors, req).await;
         assert_eq!(
             Some(&b"*"[..]),
             resp.headers()
@@ -319,16 +322,17 @@ mod test {
 
         Rc::get_mut(&mut cors.inner).unwrap().preflight = false;
 
-        let req = TestRequest::with_header("Origin", "https://www.example.com")
-            .header(header::ACCESS_CONTROL_REQUEST_METHOD, "POST")
-            .header(
+        let req = TestRequest::default()
+            .method(Method::OPTIONS)
+            .insert_header(("Origin", "https://www.example.com"))
+            .insert_header((header::ACCESS_CONTROL_REQUEST_METHOD, "POST"))
+            .insert_header((
                 header::ACCESS_CONTROL_REQUEST_HEADERS,
                 "AUTHORIZATION,ACCEPT",
-            )
-            .method(Method::OPTIONS)
+            ))
             .to_srv_request();
 
-        let resp = test::call_service(&mut cors, req).await;
+        let resp = test::call_service(&cors, req).await;
         assert_eq!(resp.status(), StatusCode::OK);
     }
 }

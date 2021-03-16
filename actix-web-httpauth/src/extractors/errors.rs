@@ -54,7 +54,7 @@ impl<C: 'static + Challenge> ResponseError for AuthenticationError<C> {
     fn error_response(&self) -> HttpResponse {
         HttpResponse::build(self.status_code)
             // TODO: Get rid of the `.clone()`
-            .set(WwwAuthenticate(self.challenge.clone()))
+            .insert_header(WwwAuthenticate(self.challenge.clone()))
             .finish()
     }
 

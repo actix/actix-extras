@@ -26,7 +26,7 @@ async fn test_wildcard_origin() {
 
 #[actix_rt::test]
 async fn test_not_allowed_origin_fn() {
-    let mut cors = Cors::default()
+    let cors = Cors::default()
         .allowed_origin("https://www.example.com")
         .allowed_origin_fn(|origin, req| {
             assert_eq!(&origin, req.headers.get(header::ORIGIN).unwrap());
@@ -42,11 +42,11 @@ async fn test_not_allowed_origin_fn() {
         .unwrap();
 
     {
-        let req = TestRequest::with_header("Origin", "https://www.example.com")
-            .method(Method::GET)
+        let req = TestRequest::get()
+            .insert_header(("Origin", "https://www.example.com"))
             .to_srv_request();
 
-        let resp = test::call_service(&mut cors, req).await;
+        let resp = test::call_service(&cors, req).await;
 
         assert_eq!(
             Some(&b"https://www.example.com"[..]),
@@ -57,11 +57,11 @@ async fn test_not_allowed_origin_fn() {
     }
 
     {
-        let req = TestRequest::with_header("Origin", "https://www.known.com")
-            .method(Method::GET)
+        let req = TestRequest::get()
+            .insert_header(("Origin", "https://www.known.com"))
             .to_srv_request();
 
-        let resp = test::call_service(&mut cors, req).await;
+        let resp = test::call_service(&cors, req).await;
 
         assert_eq!(
             None,
@@ -72,7 +72,7 @@ async fn test_not_allowed_origin_fn() {
 
 #[actix_rt::test]
 async fn test_allowed_origin_fn() {
-    let mut cors = Cors::default()
+    let cors = Cors::default()
         .allowed_origin("https://www.example.com")
         .allowed_origin_fn(|origin, req| {
             assert_eq!(&origin, req.headers.get(header::ORIGIN).unwrap());
@@ -87,11 +87,11 @@ async fn test_allowed_origin_fn() {
         .await
         .unwrap();
 
-    let req = TestRequest::with_header("Origin", "https://www.example.com")
-        .method(Method::GET)
+    let req = TestRequest::get()
+        .insert_header(("Origin", "https://www.example.com"))
         .to_srv_request();
 
-    let resp = test::call_service(&mut cors, req).await;
+    let resp = test::call_service(&cors, req).await;
 
     assert_eq!(
         "https://www.example.com",
@@ -101,11 +101,11 @@ async fn test_allowed_origin_fn() {
             .unwrap()
     );
 
-    let req = TestRequest::with_header("Origin", "https://www.unknown.com")
-        .method(Method::GET)
+    let req = TestRequest::get()
+        .insert_header(("Origin", "https://www.unknown.com"))
         .to_srv_request();
 
-    let resp = test::call_service(&mut cors, req).await;
+    let resp = test::call_service(&cors, req).await;
 
     assert_eq!(
         Some(&b"https://www.unknown.com"[..]),
@@ -119,7 +119,7 @@ async fn test_allowed_origin_fn() {
 async fn test_allowed_origin_fn_with_environment() {
     let regex = Regex::new("https:.+\\.unknown\\.com").unwrap();
 
-    let mut cors = Cors::default()
+    let cors = Cors::default()
         .allowed_origin("https://www.example.com")
         .allowed_origin_fn(move |origin, req| {
             assert_eq!(&origin, req.headers.get(header::ORIGIN).unwrap());
@@ -134,11 +134,11 @@ async fn test_allowed_origin_fn_with_environment() {
         .await
         .unwrap();
 
-    let req = TestRequest::with_header("Origin", "https://www.example.com")
-        .method(Method::GET)
+    let req = TestRequest::get()
+        .insert_header(("Origin", "https://www.example.com"))
         .to_srv_request();
 
-    let resp = test::call_service(&mut cors, req).await;
+    let resp = test::call_service(&cors, req).await;
 
     assert_eq!(
         "https://www.example.com",
@@ -148,11 +148,11 @@ async fn test_allowed_origin_fn_with_environment() {
             .unwrap()
     );
 
-    let req = TestRequest::with_header("Origin", "https://www.unknown.com")
-        .method(Method::GET)
+    let req = TestRequest::get()
+        .insert_header(("Origin", "https://www.unknown.com"))
         .to_srv_request();
 
-    let resp = test::call_service(&mut cors, req).await;
+    let resp = test::call_service(&cors, req).await;
 
     assert_eq!(
         Some(&b"https://www.unknown.com"[..]),
@@ -164,7 +164,7 @@ async fn test_allowed_origin_fn_with_environment() {
 
 #[actix_rt::test]
 async fn test_multiple_origins_preflight() {
-    let mut cors = Cors::default()
+    let cors = Cors::default()
         .allowed_origin("https://example.com")
         .allowed_origin("https://example.org")
         .allowed_methods(vec![Method::GET])
@@ -172,12 +172,13 @@ async fn test_multiple_origins_preflight() {
         .await
         .unwrap();
 
-    let req = TestRequest::with_header("Origin", "https://example.com")
-        .header(header::ACCESS_CONTROL_REQUEST_METHOD, "GET")
+    let req = TestRequest::default()
+        .insert_header(("Origin", "https://example.com"))
+        .insert_header((header::ACCESS_CONTROL_REQUEST_METHOD, "GET"))
         .method(Method::OPTIONS)
         .to_srv_request();
 
-    let resp = test::call_service(&mut cors, req).await;
+    let resp = test::call_service(&cors, req).await;
     assert_eq!(
         Some(&b"https://example.com"[..]),
         resp.headers()
@@ -185,12 +186,13 @@ async fn test_multiple_origins_preflight() {
             .map(HeaderValue::as_bytes)
     );
 
-    let req = TestRequest::with_header("Origin", "https://example.org")
-        .header(header::ACCESS_CONTROL_REQUEST_METHOD, "GET")
+    let req = TestRequest::default()
+        .insert_header(("Origin", "https://example.org"))
+        .insert_header((header::ACCESS_CONTROL_REQUEST_METHOD, "GET"))
         .method(Method::OPTIONS)
         .to_srv_request();
 
-    let resp = test::call_service(&mut cors, req).await;
+    let resp = test::call_service(&cors, req).await;
     assert_eq!(
         Some(&b"https://example.org"[..]),
         resp.headers()
@@ -201,7 +203,7 @@ async fn test_multiple_origins_preflight() {
 
 #[actix_rt::test]
 async fn test_multiple_origins() {
-    let mut cors = Cors::default()
+    let cors = Cors::default()
         .allowed_origin("https://example.com")
         .allowed_origin("https://example.org")
         .allowed_methods(vec![Method::GET])
@@ -209,11 +211,11 @@ async fn test_multiple_origins() {
         .await
         .unwrap();
 
-    let req = TestRequest::with_header("Origin", "https://example.com")
-        .method(Method::GET)
+    let req = TestRequest::get()
+        .insert_header(("Origin", "https://example.com"))
         .to_srv_request();
 
-    let resp = test::call_service(&mut cors, req).await;
+    let resp = test::call_service(&cors, req).await;
     assert_eq!(
         Some(&b"https://example.com"[..]),
         resp.headers()
@@ -221,11 +223,11 @@ async fn test_multiple_origins() {
             .map(HeaderValue::as_bytes)
     );
 
-    let req = TestRequest::with_header("Origin", "https://example.org")
-        .method(Method::GET)
+    let req = TestRequest::get()
+        .insert_header(("Origin", "https://example.org"))
         .to_srv_request();
 
-    let resp = test::call_service(&mut cors, req).await;
+    let resp = test::call_service(&cors, req).await;
     assert_eq!(
         Some(&b"https://example.org"[..]),
         resp.headers()
@@ -237,7 +239,7 @@ async fn test_multiple_origins() {
 #[actix_rt::test]
 async fn test_response() {
     let exposed_headers = vec![header::AUTHORIZATION, header::ACCEPT];
-    let mut cors = Cors::default()
+    let cors = Cors::default()
         .allow_any_origin()
         .send_wildcard()
         .disable_preflight()
@@ -250,10 +252,11 @@ async fn test_response() {
         .await
         .unwrap();
 
-    let req = TestRequest::with_header("Origin", "https://www.example.com")
+    let req = TestRequest::default()
+        .insert_header(("Origin", "https://www.example.com"))
         .method(Method::OPTIONS)
         .to_srv_request();
-    let resp = test::call_service(&mut cors, req).await;
+    let resp = test::call_service(&cors, req).await;
     assert_eq!(
         Some(&b"*"[..]),
         resp.headers()
@@ -283,7 +286,7 @@ async fn test_response() {
     }
 
     let exposed_headers = vec![header::AUTHORIZATION, header::ACCEPT];
-    let mut cors = Cors::default()
+    let cors = Cors::default()
         .allow_any_origin()
         .send_wildcard()
         .disable_preflight()
@@ -294,22 +297,25 @@ async fn test_response() {
         .allowed_header(header::CONTENT_TYPE)
         .new_transform(fn_service(|req: ServiceRequest| {
             ok(req.into_response({
-                HttpResponse::Ok().header(header::VARY, "Accept").finish()
+                HttpResponse::Ok()
+                    .insert_header((header::VARY, "Accept"))
+                    .finish()
             }))
         }))
         .await
         .unwrap();
 
-    let req = TestRequest::with_header("Origin", "https://www.example.com")
+    let req = TestRequest::default()
+        .insert_header(("Origin", "https://www.example.com"))
         .method(Method::OPTIONS)
         .to_srv_request();
-    let resp = test::call_service(&mut cors, req).await;
+    let resp = test::call_service(&cors, req).await;
     assert_eq!(
         Some(&b"Accept, Origin"[..]),
         resp.headers().get(header::VARY).map(HeaderValue::as_bytes)
     );
 
-    let mut cors = Cors::default()
+    let cors = Cors::default()
         .disable_vary_header()
         .allowed_methods(vec!["POST"])
         .allowed_origin("https://www.example.com")
@@ -318,11 +324,12 @@ async fn test_response() {
         .await
         .unwrap();
 
-    let req = TestRequest::with_header("Origin", "https://www.example.com")
+    let req = TestRequest::default()
+        .insert_header(("Origin", "https://www.example.com"))
         .method(Method::OPTIONS)
-        .header(header::ACCESS_CONTROL_REQUEST_METHOD, "POST")
+        .insert_header((header::ACCESS_CONTROL_REQUEST_METHOD, "POST"))
         .to_srv_request();
-    let resp = test::call_service(&mut cors, req).await;
+    let resp = test::call_service(&cors, req).await;
     let origins_str = resp
         .headers()
         .get(header::ACCESS_CONTROL_ALLOW_ORIGIN)
@@ -332,39 +339,40 @@ async fn test_response() {
 
 #[actix_rt::test]
 async fn test_validate_origin() {
-    let mut cors = Cors::default()
+    let cors = Cors::default()
         .allowed_origin("https://www.example.com")
         .new_transform(test::ok_service())
         .await
         .unwrap();
 
-    let req = TestRequest::with_header("Origin", "https://www.example.com")
-        .method(Method::GET)
+    let req = TestRequest::get()
+        .insert_header(("Origin", "https://www.example.com"))
         .to_srv_request();
 
-    let resp = test::call_service(&mut cors, req).await;
+    let resp = test::call_service(&cors, req).await;
     assert_eq!(resp.status(), StatusCode::OK);
 }
 
 #[actix_rt::test]
 async fn test_no_origin_response() {
-    let mut cors = Cors::permissive()
+    let cors = Cors::permissive()
         .disable_preflight()
         .new_transform(test::ok_service())
         .await
         .unwrap();
 
     let req = TestRequest::default().method(Method::GET).to_srv_request();
-    let resp = test::call_service(&mut cors, req).await;
+    let resp = test::call_service(&cors, req).await;
     assert!(resp
         .headers()
         .get(header::ACCESS_CONTROL_ALLOW_ORIGIN)
         .is_none());
 
-    let req = TestRequest::with_header("Origin", "https://www.example.com")
+    let req = TestRequest::default()
+        .insert_header(("Origin", "https://www.example.com"))
         .method(Method::OPTIONS)
         .to_srv_request();
-    let resp = test::call_service(&mut cors, req).await;
+    let resp = test::call_service(&cors, req).await;
     assert_eq!(
         Some(&b"https://www.example.com"[..]),
         resp.headers()
@@ -375,21 +383,22 @@ async fn test_no_origin_response() {
 
 #[actix_rt::test]
 async fn validate_origin_allows_all_origins() {
-    let mut cors = Cors::permissive()
+    let cors = Cors::permissive()
         .new_transform(test::ok_service())
         .await
         .unwrap();
 
-    let req =
-        TestRequest::with_header("Origin", "https://www.example.com").to_srv_request();
+    let req = TestRequest::default()
+        .insert_header(("Origin", "https://www.example.com"))
+        .to_srv_request();
 
-    let resp = test::call_service(&mut cors, req).await;
+    let resp = test::call_service(&cors, req).await;
     assert_eq!(resp.status(), StatusCode::OK);
 }
 
 #[actix_rt::test]
 async fn test_allow_any_origin_any_method_any_header() {
-    let mut cors = Cors::default()
+    let cors = Cors::default()
         .allow_any_origin()
         .allow_any_method()
         .allow_any_header()
@@ -397,12 +406,13 @@ async fn test_allow_any_origin_any_method_any_header() {
         .await
         .unwrap();
 
-    let req = TestRequest::with_header(header::ACCESS_CONTROL_REQUEST_METHOD, "POST")
-        .header(header::ACCESS_CONTROL_REQUEST_HEADERS, "content-type")
-        .header(header::ORIGIN, "https://www.example.com")
+    let req = TestRequest::default()
+        .insert_header((header::ACCESS_CONTROL_REQUEST_METHOD, "POST"))
+        .insert_header((header::ACCESS_CONTROL_REQUEST_HEADERS, "content-type"))
+        .insert_header((header::ORIGIN, "https://www.example.com"))
         .method(Method::OPTIONS)
         .to_srv_request();
 
-    let resp = test::call_service(&mut cors, req).await;
+    let resp = test::call_service(&cors, req).await;
     assert_eq!(resp.status(), StatusCode::OK);
 }

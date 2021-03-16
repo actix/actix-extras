@@ -42,34 +42,34 @@ impl<S> CorsMiddleware<S> {
         let mut res = HttpResponse::Ok();
 
         if let Some(origin) = inner.access_control_allow_origin(req.head()) {
-            res.header(header::ACCESS_CONTROL_ALLOW_ORIGIN, origin);
+            res.insert_header((header::ACCESS_CONTROL_ALLOW_ORIGIN, origin));
         }
 
         if let Some(ref allowed_methods) = inner.allowed_methods_baked {
-            res.header(
+            res.insert_header((
                 header::ACCESS_CONTROL_ALLOW_METHODS,
                 allowed_methods.clone(),
-            );
+            ));
         }
 
         if let Some(ref headers) = inner.allowed_headers_baked {
-            res.header(header::ACCESS_CONTROL_ALLOW_HEADERS, headers.clone());
+            res.insert_header((header::ACCESS_CONTROL_ALLOW_HEADERS, headers.clone()));
         } else if let Some(headers) =
             req.headers().get(header::ACCESS_CONTROL_REQUEST_HEADERS)
         {
             // all headers allowed, return
-            res.header(header::ACCESS_CONTROL_ALLOW_HEADERS, headers.clone());
+            res.insert_header((header::ACCESS_CONTROL_ALLOW_HEADERS, headers.clone()));
         }
 
         if inner.supports_credentials {
-            res.header(
+            res.insert_header((
                 header::ACCESS_CONTROL_ALLOW_CREDENTIALS,
                 HeaderValue::from_static("true"),
-            );
+            ));
         }
 
         if let Some(max_age) = inner.max_age {
-            res.header(header::ACCESS_CONTROL_MAX_AGE, max_age.to_string());
+            res.insert_header((header::ACCESS_CONTROL_MAX_AGE, max_age.to_string()));
         }
 
         let res = res.finish();
@@ -121,22 +121,21 @@ type CorsMiddlewareServiceFuture<B> = Either<
     LocalBoxFuture<'static, Result<ServiceResponse<B>, Error>>,
 >;
 
-impl<S, B> Service for CorsMiddleware<S>
+impl<S, B> Service<ServiceRequest> for CorsMiddleware<S>
 where
-    S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
+    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
     S::Future: 'static,
     B: 'static,
 {
-    type Request = ServiceRequest;
     type Response = ServiceResponse<B>;
     type Error = Error;
     type Future = CorsMiddlewareServiceFuture<B>;
 
-    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+    fn poll_ready(&self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         self.service.poll_ready(cx)
     }
 
-    fn call(&mut self, req: ServiceRequest) -> Self::Future {
+    fn call(&self, req: ServiceRequest) -> Self::Future {
         if self.inner.preflight && req.method() == Method::OPTIONS {
             let inner = Rc::clone(&self.inner);
             let res = Self::handle_preflight(&inner, req);
@@ -187,7 +186,7 @@ mod tests {
         // Tests case where allowed_origins is All but there are validate functions to run incase.
         // In this case, origins are only allowed when the DNT header is sent.
 
-        let mut cors = Cors::default()
+        let cors = Cors::default()
             .allow_any_origin()
             .allowed_origin_fn(|origin, req_head| {
                 assert_eq!(&origin, req_head.headers.get(header::ORIGIN).unwrap());
@@ -199,7 +198,7 @@ mod tests {
             .unwrap();
 
         let req = TestRequest::get()
-            .header(header::ORIGIN, "http://example.com")
+            .insert_header((header::ORIGIN, "http://example.com"))
             .to_srv_request();
         let res = cors.call(req).await.unwrap();
         assert_eq!(
@@ -210,8 +209,8 @@ mod tests {
         );
 
         let req = TestRequest::get()
-            .header(header::ORIGIN, "http://example.com")
-            .header(header::DNT, "1")
+            .insert_header((header::ORIGIN, "http://example.com"))
+            .insert_header((header::DNT, "1"))
             .to_srv_request();
         let res = cors.call(req).await.unwrap();
         assert_eq!(

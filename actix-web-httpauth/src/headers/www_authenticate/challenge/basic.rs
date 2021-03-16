@@ -25,7 +25,7 @@ use crate::utils;
 ///     let challenge = Basic::with_realm("Restricted area");
 ///
 ///     HttpResponse::Unauthorized()
-///         .set(WwwAuthenticate(challenge))
+///         .insert_header(WwwAuthenticate(challenge))
 ///         .finish()
 /// }
 /// ```
@@ -106,7 +106,7 @@ impl fmt::Display for Basic {
 impl IntoHeaderValue for Basic {
     type Error = InvalidHeaderValue;
 
-    fn try_into(self) -> Result<HeaderValue, <Self as IntoHeaderValue>::Error> {
+    fn try_into_value(self) -> Result<HeaderValue, <Self as IntoHeaderValue>::Error> {
         HeaderValue::from_maybe_shared(self.to_bytes())
     }
 }
@@ -120,7 +120,7 @@ mod tests {
     fn test_plain_into_header_value() {
         let challenge = Basic { realm: None };
 
-        let value = challenge.try_into();
+        let value = challenge.try_into_value();
         assert!(value.is_ok());
         let value = value.unwrap();
         assert_eq!(value, "Basic");
@@ -132,7 +132,7 @@ mod tests {
             realm: Some("Restricted area".into()),
         };
 
-        let value = challenge.try_into();
+        let value = challenge.try_into_value();
         assert!(value.is_ok());
         let value = value.unwrap();
         assert_eq!(value, "Basic realm=\"Restricted area\"");

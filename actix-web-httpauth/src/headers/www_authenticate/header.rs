@@ -27,7 +27,7 @@ impl<C: Challenge> Header for WwwAuthenticate<C> {
 impl<C: Challenge> IntoHeaderValue for WwwAuthenticate<C> {
     type Error = <C as IntoHeaderValue>::Error;
 
-    fn try_into(self) -> Result<HeaderValue, <Self as IntoHeaderValue>::Error> {
-        self.0.try_into()
+    fn try_into_value(self) -> Result<HeaderValue, <Self as IntoHeaderValue>::Error> {
+        self.0.try_into_value()
     }
 }
