@@ -1,150 +1,98 @@
 use std::collections::VecDeque;
-use std::io;
+use std::net::SocketAddr;
 
-use actix::actors::resolver::{Connect, Resolver};
-use actix::prelude::*;
-use backoff::backoff::Backoff;
-use backoff::ExponentialBackoff;
-use futures_channel::oneshot;
-use futures_util::FutureExt;
-use log::{error, info, warn};
-use redis_async::error::Error as RespError;
-use redis_async::resp::{RespCodec, RespValue};
-use tokio::io::{split, WriteHalf};
-use tokio::net::TcpStream;
-use tokio_util::codec::FramedRead;
+use redis_async::client::{paired_connect, PairedConnection};
+use redis_async::resp::RespValue;
+use tokio::sync::Mutex;
+use trust_dns_resolver::config::{ResolverConfig, ResolverOpts};
+use trust_dns_resolver::TokioAsyncResolver as AsyncResolver;
 
 use crate::Error;
 
-/// Command for send data to Redis
-#[derive(Debug)]
-pub struct Command(pub RespValue);
-
-impl Message for Command {
-    type Result = Result<RespValue, Error>;
-}
-
-/// Redis comminucation actor
-pub struct RedisActor {
+pub struct RedisClient {
     addr: String,
-    backoff: ExponentialBackoff,
-    cell: Option<actix::io::FramedWrite<RespValue, WriteHalf<TcpStream>, RespCodec>>,
-    queue: VecDeque<oneshot::Sender<Result<RespValue, Error>>>,
+    connection: Mutex<Option<PairedConnection>>,
 }
 
-impl RedisActor {
-    /// Start new `Supervisor` with `RedisActor`.
-    pub fn start<S: Into<String>>(addr: S) -> Addr<RedisActor> {
-        let addr = addr.into();
+impl RedisClient {
+    pub fn new(addr: impl Into<String>) -> Self {
+        Self {
+            addr: addr.into(),
+            connection: Mutex::new(None),
+        }
+    }
 
-        let backoff = ExponentialBackoff {
-            max_elapsed_time: None,
-            ..Default::default()
-        };
+    async fn get_connection(&self) -> Result<PairedConnection, Error> {
+        let mut connection = self.connection.lock().await;
+        if let Some(ref connection) = *connection {
+            return Ok(connection.clone());
+        }
 
-        Supervisor::start(|_| RedisActor {
-            addr,
-            cell: None,
-            backoff,
-            queue: VecDeque::new(),
+        let mut addrs = resolve(&self.addr).await?;
+        loop {
+            // try to connect
+            let socket_addr = addrs.pop_front().ok_or_else(|| {
+                log::warn!("Cannot connect to {}.", self.addr);
+                Error::NotConnected
+            })?;
+            match paired_connect(socket_addr).await {
+                Ok(conn) => {
+                    *connection = Some(conn.clone());
+                    return Ok(conn);
+                }
+                Err(err) => log::warn!(
+                    "Attempt to connect to {} as {} failed: {}.",
+                    self.addr,
+                    socket_addr,
+                    err
+                ),
+            }
+        }
+    }
+
+    pub async fn send(&self, req: RespValue) -> Result<RespValue, Error> {
+        let res = self.get_connection().await?.send(req).await?;
+        Ok(res)
+    }
+}
+
+fn parse_addr(addr: &str, default_port: u16) -> Option<(&str, u16)> {
+    // split the string by ':' and convert the second part to u16
+    let mut parts_iter = addr.splitn(2, ':');
+    let host = parts_iter.next()?;
+    let port_str = parts_iter.next().unwrap_or("");
+    let port: u16 = port_str.parse().unwrap_or(default_port);
+    Some((host, port))
+}
+
+async fn resolve(addr: &str) -> Result<VecDeque<SocketAddr>, Error> {
+    // try to parse as a regular SocketAddr first
+    if let Ok(addr) = addr.parse::<SocketAddr>() {
+        let mut addrs = VecDeque::new();
+        addrs.push_back(addr);
+        return Ok(addrs);
+    }
+
+    let (host, port) = parse_addr(addr, 6379).ok_or(Error::InvalidAddress)?;
+
+    // we need to do dns resolution
+    let resolver = AsyncResolver::tokio_from_system_conf()
+        .or_else(|err| {
+            log::warn!("Cannot create system DNS resolver: {}", err);
+            AsyncResolver::tokio(ResolverConfig::default(), ResolverOpts::default())
         })
-    }
-}
+        .map_err(|err| {
+            log::error!("Cannot create DNS resolver: {}", err);
+            Error::ResolveError
+        })?;
 
-impl Actor for RedisActor {
-    type Context = Context<Self>;
+    let addrs = resolver
+        .lookup_ip(host)
+        .await
+        .map_err(|_| Error::ResolveError)?
+        .into_iter()
+        .map(|ip| SocketAddr::new(ip, port))
+        .collect();
 
-    fn started(&mut self, ctx: &mut Context<Self>) {
-        Resolver::from_registry()
-            .send(Connect::host(self.addr.as_str()))
-            .into_actor(self)
-            .map(|res, act, ctx| match res {
-                Ok(res) => match res {
-                    Ok(stream) => {
-                        info!("Connected to redis server: {}", act.addr);
-
-                        let (r, w) = split(stream);
-
-                        // configure write side of the connection
-                        let framed = actix::io::FramedWrite::new(w, RespCodec, ctx);
-                        act.cell = Some(framed);
-
-                        // read side of the connection
-                        ctx.add_stream(FramedRead::new(r, RespCodec));
-
-                        act.backoff.reset();
-                    }
-                    Err(err) => {
-                        error!("Can not connect to redis server: {}", err);
-                        // re-connect with backoff time.
-                        // we stop current context, supervisor will restart it.
-                        if let Some(timeout) = act.backoff.next_backoff() {
-                            ctx.run_later(timeout, |_, ctx| ctx.stop());
-                        }
-                    }
-                },
-                Err(err) => {
-                    error!("Can not connect to redis server: {}", err);
-                    // re-connect with backoff time.
-                    // we stop current context, supervisor will restart it.
-                    if let Some(timeout) = act.backoff.next_backoff() {
-                        ctx.run_later(timeout, |_, ctx| ctx.stop());
-                    }
-                }
-            })
-            .wait(ctx);
-    }
-}
-
-impl Supervised for RedisActor {
-    fn restarting(&mut self, _: &mut Self::Context) {
-        self.cell.take();
-        for tx in self.queue.drain(..) {
-            let _ = tx.send(Err(Error::Disconnected));
-        }
-    }
-}
-
-impl actix::io::WriteHandler<io::Error> for RedisActor {
-    fn error(&mut self, err: io::Error, _: &mut Self::Context) -> Running {
-        warn!("Redis connection dropped: {} error: {}", self.addr, err);
-        Running::Stop
-    }
-}
-
-impl StreamHandler<Result<RespValue, RespError>> for RedisActor {
-    fn handle(&mut self, msg: Result<RespValue, RespError>, ctx: &mut Self::Context) {
-        match msg {
-            Err(e) => {
-                if let Some(tx) = self.queue.pop_front() {
-                    let _ = tx.send(Err(e.into()));
-                }
-                ctx.stop();
-            }
-            Ok(val) => {
-                if let Some(tx) = self.queue.pop_front() {
-                    let _ = tx.send(Ok(val));
-                }
-            }
-        }
-    }
-}
-
-impl Handler<Command> for RedisActor {
-    type Result = ResponseFuture<Result<RespValue, Error>>;
-
-    fn handle(&mut self, msg: Command, _: &mut Self::Context) -> Self::Result {
-        let (tx, rx) = oneshot::channel();
-        if let Some(ref mut cell) = self.cell {
-            self.queue.push_back(tx);
-            cell.write(msg.0);
-        } else {
-            let _ = tx.send(Err(Error::NotConnected));
-        }
-
-        Box::pin(rx.map(|res| match res {
-            Ok(res) => res,
-            Err(_) => Err(Error::Disconnected),
-        }))
-    }
+    Ok(addrs)
 }

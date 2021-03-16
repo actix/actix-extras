@@ -31,18 +31,17 @@ web = [
 ]
 
 [dependencies]
-actix = { version = "0.11.0-beta.1", features = ["resolver"] }
-
 log = "0.4.6"
-backoff = "0.2.1"
 derive_more = "0.99.2"
 futures-util = { version = "0.3.7", default-features = false }
 futures-channel = { version = "0.3.5", default-features = false }
-redis-async = { version = "0.8", default-features = false, features = ["tokio10"] }
+redis-async = "0.9"
 time = "0.2.23"
 actix-rt = "2"
 tokio = "1"
 tokio-util = "0.6"
+
+trust-dns-resolver = { version = "0.20.0", default-features = false, features = ["tokio-runtime", "system-config"] }
 
 # actix-session
 actix-web = { version = "4.0.0-beta.4", default_features = false, optional = true }

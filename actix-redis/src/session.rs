@@ -3,7 +3,6 @@ use std::pin::Pin;
 use std::task::{Context, Poll};
 use std::{collections::HashMap, iter, rc::Rc};
 
-use actix::prelude::*;
 use actix_service::{Service, Transform};
 use actix_session::{Session, SessionStatus};
 use actix_web::cookie::{Cookie, CookieJar, Key, SameSite};
@@ -16,7 +15,7 @@ use redis_async::resp::RespValue;
 use redis_async::resp_array;
 use time::{self, Duration, OffsetDateTime};
 
-use crate::redis::{Command, RedisActor};
+use crate::redis::RedisClient;
 
 /// Use redis as session storage.
 ///
@@ -36,7 +35,7 @@ impl RedisSession {
             key: Key::derive_from(key),
             cache_keygen: Box::new(|key: &str| format!("session:{}", &key)),
             ttl: "7200".to_owned(),
-            addr: RedisActor::start(addr),
+            redis_client: RedisClient::new(addr),
             name: "actix-session".to_owned(),
             path: "/".to_owned(),
             domain: None,
@@ -211,7 +210,7 @@ struct Inner {
     key: Key,
     cache_keygen: Box<dyn Fn(&str) -> String>,
     ttl: String,
-    addr: Addr<RedisActor>,
+    redis_client: RedisClient,
     name: String,
     path: String,
     domain: Option<String>,
@@ -252,13 +251,10 @@ impl Inner {
             }
         };
 
-        let res = self
-            .addr
-            .send(Command(resp_array!["GET", cache_key]))
-            .await
-            .map_err(error::ErrorInternalServerError)?;
-
-        let val = res.map_err(error::ErrorInternalServerError)?;
+        let val = self
+            .redis_client
+            .send(resp_array!["GET", cache_key])
+            .await?;
 
         match val {
             RespValue::Error(err) => {
@@ -329,13 +325,9 @@ impl Inner {
             Ok(body) => body,
         };
 
-        let cmd = Command(resp_array!["SET", cache_key, body, "EX", &self.ttl]);
-
-        self.addr
-            .send(cmd)
-            .await
-            .map_err(error::ErrorInternalServerError)?
-            .map_err(error::ErrorInternalServerError)?;
+        self.redis_client
+            .send(resp_array!["SET", cache_key, body, "EX", &self.ttl])
+            .await?;
 
         if let Some(jar) = jar {
             for cookie in jar.delta() {
@@ -352,13 +344,12 @@ impl Inner {
         let cache_key = (self.cache_keygen)(&key);
 
         match self
-            .addr
-            .send(Command(resp_array!["DEL", cache_key]))
-            .await
-            .map_err(error::ErrorInternalServerError)?
+            .redis_client
+            .send(resp_array!["DEL", cache_key])
+            .await?
         {
             // redis responds with number of deleted records
-            Ok(RespValue::Integer(x)) if x > 0 => Ok(()),
+            RespValue::Integer(x) if x > 0 => Ok(()),
             _ => Err(error::ErrorInternalServerError(
                 "failed to remove session from cache",
             )),
