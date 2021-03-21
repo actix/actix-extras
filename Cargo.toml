@@ -16,7 +16,7 @@ keywords = ["http", "actix-web", "tracing", "logging"]
 categories = ["asynchronous", "web-programming"]
 
 [dependencies]
-actix-web = "4.0.0-beta.3"
+actix-web = "4.0.0-beta.4"
 tracing = "0.1.19"
 tracing-futures = "0.2.4"
 futures = "0.3.5"
