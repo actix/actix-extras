@@ -32,7 +32,7 @@
 //!         || App::new()
 //!             // create cookie based session middleware
 //!             .wrap(CookieSession::signed(&[0; 32]).secure(false))
-//!             .service(web::to(|| HttpResponse::Ok())))
+//!             .default_service(web::to(|| HttpResponse::Ok())))
 //!         .bind(("127.0.0.1", 8080))?
 //!         .run()
 //!         .await
