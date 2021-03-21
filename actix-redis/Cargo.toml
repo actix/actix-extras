@@ -1,8 +1,8 @@
 [package]
 name = "actix-redis"
-version = "0.9.1"
+version = "0.9.2"
 authors = ["Nikolay Kim <fafhrd91@gmail.com>"]
-description = "Redis integration for Actix web"
+description = "Redis integration for Actix and session store for Actix Web"
 license = "MIT OR Apache-2.0"
 readme = "README.md"
 keywords = ["actix", "redis", "async", "session"]

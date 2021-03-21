@@ -1,10 +1,15 @@
 # Changes
 
 ## Unreleased - 2020-xx-xx
+
+
+## 0.9.2 - 2020-xx-xx
 * Implement `std::error::Error` for `Error` [#135]
 * Allow the removal of Max-Age for session-only cookies. [#161]
 
+[#135]: https://github.com/actix/actix-extras/pull/135
 [#161]: https://github.com/actix/actix-extras/pull/161
+
 
 ## 0.9.1 - 2020-09-12
 * Enforce minimum redis-async version of 0.6.3 to workaround breaking patch change.
