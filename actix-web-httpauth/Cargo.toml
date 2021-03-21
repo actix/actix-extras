@@ -22,7 +22,7 @@ path = "src/lib.rs"
 [dependencies]
 actix-web = { version = "3.0.0", default_features = false }
 base64 = "0.13"
-futures-util = { version = "0.3", default-features = false }
+futures-util = { version = "0.3.7", default-features = false }
 
 [dev-dependencies]
 actix-cors = "0.5"
