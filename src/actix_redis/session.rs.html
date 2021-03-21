@@ -703,6 +703,14 @@
 <span id="700">700</span>
 <span id="701">701</span>
 <span id="702">702</span>
+<span id="703">703</span>
+<span id="704">704</span>
+<span id="705">705</span>
+<span id="706">706</span>
+<span id="707">707</span>
+<span id="708">708</span>
+<span id="709">709</span>
+<span id="710">710</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">cell</span>::<span class="ident">RefCell</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">pin</span>::<span class="ident">Pin</span>;
@@ -749,62 +757,70 @@
             <span class="ident">secure</span>: <span class="bool-val">false</span>,
             <span class="ident">max_age</span>: <span class="prelude-val">Some</span>(<span class="ident">Duration</span>::<span class="ident">days</span>(<span class="number">7</span>)),
             <span class="ident">same_site</span>: <span class="prelude-val">None</span>,
-            <span class="ident">http_only</span>: <span class="prelude-val">Some</span>(<span class="bool-val">true</span>),
+            <span class="ident">http_only</span>: <span class="bool-val">true</span>,
         }))
     }
 
-    <span class="doccomment">/// Set time to live in seconds for session value</span>
+    <span class="doccomment">/// Set time to live in seconds for session value.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ttl</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">ttl</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="ident">Rc</span>::<span class="ident">get_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="number">0</span>).<span class="ident">unwrap</span>().<span class="ident">ttl</span> <span class="op">=</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">ttl</span>);
         <span class="self">self</span>
     }
 
-    <span class="doccomment">/// Set custom cookie name for session id</span>
+    <span class="doccomment">/// Set custom cookie name for session ID.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cookie_name</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="ident">Rc</span>::<span class="ident">get_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="number">0</span>).<span class="ident">unwrap</span>().<span class="ident">name</span> <span class="op">=</span> <span class="ident">name</span>.<span class="ident">to_owned</span>();
         <span class="self">self</span>
     }
 
-    <span class="doccomment">/// Set custom cookie path</span>
+    <span class="doccomment">/// Set custom cookie path.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cookie_path</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">path</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="ident">Rc</span>::<span class="ident">get_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="number">0</span>).<span class="ident">unwrap</span>().<span class="ident">path</span> <span class="op">=</span> <span class="ident">path</span>.<span class="ident">to_owned</span>();
         <span class="self">self</span>
     }
 
-    <span class="doccomment">/// Set custom cookie domain</span>
+    <span class="doccomment">/// Set custom cookie domain.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cookie_domain</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">domain</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="ident">Rc</span>::<span class="ident">get_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="number">0</span>).<span class="ident">unwrap</span>().<span class="ident">domain</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">domain</span>.<span class="ident">to_owned</span>());
         <span class="self">self</span>
     }
 
-    <span class="doccomment">/// Set custom cookie secure</span>
+    <span class="doccomment">/// Set custom cookie secure.</span>
+    <span class="doccomment">///</span>
     <span class="doccomment">/// If the `secure` field is set, a cookie will only be transmitted when the</span>
-    <span class="doccomment">/// connection is secure - i.e. `https`</span>
+    <span class="doccomment">/// connection is secure - i.e. `https`.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Default is false.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cookie_secure</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">secure</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="ident">Rc</span>::<span class="ident">get_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="number">0</span>).<span class="ident">unwrap</span>().<span class="ident">secure</span> <span class="op">=</span> <span class="ident">secure</span>;
         <span class="self">self</span>
     }
 
-    <span class="doccomment">/// Set custom cookie max-age</span>
-    <span class="doccomment">/// Use `None` for session-only cookies</span>
+    <span class="doccomment">/// Set custom cookie max-age.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Use `None` for session-only cookies.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cookie_max_age</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">max_age</span>: <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Duration</span><span class="op">&gt;</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="ident">Rc</span>::<span class="ident">get_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="number">0</span>).<span class="ident">unwrap</span>().<span class="ident">max_age</span> <span class="op">=</span> <span class="ident">max_age</span>.<span class="ident">into</span>();
         <span class="self">self</span>
     }
 
-    <span class="doccomment">/// Set custom cookie SameSite</span>
+    <span class="doccomment">/// Set custom cookie `SameSite` attribute.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// By default, the attribute is omitted.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cookie_same_site</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">same_site</span>: <span class="ident">SameSite</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="ident">Rc</span>::<span class="ident">get_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="number">0</span>).<span class="ident">unwrap</span>().<span class="ident">same_site</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">same_site</span>);
         <span class="self">self</span>
     }
 
-    <span class="doccomment">/// Set custom cookie HttpOnly policy</span>
+    <span class="doccomment">/// Set custom cookie `HttpOnly` policy.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Default is true.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cookie_http_only</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">http_only</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="ident">Rc</span>::<span class="ident">get_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="number">0</span>).<span class="ident">unwrap</span>().<span class="ident">http_only</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">http_only</span>);
+        <span class="ident">Rc</span>::<span class="ident">get_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="number">0</span>).<span class="ident">unwrap</span>().<span class="ident">http_only</span> <span class="op">=</span> <span class="ident">http_only</span>;
         <span class="self">self</span>
     }
 
-    <span class="doccomment">/// Set a custom cache key generation strategy, expecting session key as input</span>
+    <span class="doccomment">/// Set a custom cache key generation strategy, expecting session key as input.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cache_keygen</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">keygen</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Fn</span>(<span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="ident">Rc</span>::<span class="ident">get_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="number">0</span>).<span class="ident">unwrap</span>().<span class="ident">cache_keygen</span> <span class="op">=</span> <span class="ident">keygen</span>;
         <span class="self">self</span>
@@ -920,7 +936,7 @@
     <span class="ident">secure</span>: <span class="ident">bool</span>,
     <span class="ident">max_age</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Duration</span><span class="op">&gt;</span>,
     <span class="ident">same_site</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">SameSite</span><span class="op">&gt;</span>,
-    <span class="ident">http_only</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>,
+    <span class="ident">http_only</span>: <span class="ident">bool</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">Inner</span> {
@@ -999,7 +1015,7 @@
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cookie</span> <span class="op">=</span> <span class="ident">Cookie</span>::<span class="ident">new</span>(<span class="self">self</span>.<span class="ident">name</span>.<span class="ident">clone</span>(), <span class="ident">value</span>.<span class="ident">clone</span>());
             <span class="ident">cookie</span>.<span class="ident">set_path</span>(<span class="self">self</span>.<span class="ident">path</span>.<span class="ident">clone</span>());
             <span class="ident">cookie</span>.<span class="ident">set_secure</span>(<span class="self">self</span>.<span class="ident">secure</span>);
-            <span class="ident">cookie</span>.<span class="ident">set_http_only</span>(<span class="self">self</span>.<span class="ident">http_only</span>.<span class="ident">unwrap_or</span>(<span class="bool-val">true</span>));
+            <span class="ident">cookie</span>.<span class="ident">set_http_only</span>(<span class="self">self</span>.<span class="ident">http_only</span>);
 
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">domain</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">domain</span> {
                 <span class="ident">cookie</span>.<span class="ident">set_domain</span>(<span class="ident">domain</span>.<span class="ident">clone</span>());
