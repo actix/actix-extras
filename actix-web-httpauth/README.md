@@ -2,12 +2,15 @@
 
 > HTTP authentication schemes for [actix-web](https://github.com/actix/actix-web).
 
-[![crates.io](https://img.shields.io/crates/v/actix-web-httpauth)](https://crates.io/crates/actix-web-httpauth)
-[![Documentation](https://docs.rs/actix-web-httpauth/badge.svg)](https://docs.rs/actix-web-httpauth)
-[![Dependency Status](https://deps.rs/crate/actix-web-httpauth/0.5.0/status.svg)](https://deps.rs/crate/actix-web-httpauth/0.5.0)
+[![crates.io](https://img.shields.io/crates/v/actix-web-httpauth?label=latest)](https://crates.io/crates/actix-web-httpauth)
+[![Documentation](https://docs.rs/actix-web-httpauth/badge.svg?version=0.5.1)](https://docs.rs/actix-web-httpauth/0.5.1)
 ![Apache 2.0 or MIT licensed](https://img.shields.io/crates/l/actix-web-httpauth)
-[![Join the chat at https://gitter.im/actix/actix-web](https://badges.gitter.im/actix/actix-web.svg)](https://gitter.im/actix/actix-web?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Dependency Status](https://deps.rs/crate/actix-web-httpauth/0.5.1/status.svg)](https://deps.rs/crate/actix-web-httpauth/0.5.1)
 
+## Documentation & Resources
+
+- [API Documentation](https://docs.rs/actix-cors)
+- Minimum Supported Rust Version (MSRV): 1.40.0
 
 ## Features
 - Typed [Authorization] and [WWW-Authenticate] headers
