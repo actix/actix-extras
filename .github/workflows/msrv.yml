@@ -35,24 +35,9 @@ jobs:
           profile: minimal
           override: true
 
-      - name: tests (1.40.0)
-        if: matrix.version == '1.40.0'
+      - name: tests
         uses: actions-rs/cargo@v1
         timeout-minutes: 40
         with:
           command: test
-          args: --package=actix-cors
-                --package=actix-identity
-                --package=actix-redis
-                --package=actix-session
-                --package=actix-web-httpauth
-                --all-features --no-fail-fast -- --nocapture
-
-      - name: tests (1.42.0)
-        if: matrix.version == '1.42.0'
-        uses: actions-rs/cargo@v1
-        timeout-minutes: 40
-        with:
-          command: test
-          args: --package=actix-protobuf
-                --all-features --no-fail-fast -- --nocapture
+          args: --workspace --all-features --no-fail-fast -- --nocapture

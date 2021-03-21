@@ -16,4 +16,4 @@
 * [API Documentation](https://docs.rs/actix-identity/)
 * [Chat on gitter](https://gitter.im/actix/actix)
 * Cargo package: [actix-identity](https://crates.io/crates/actix-identity)
-* Minimum supported Rust version: 1.40 or later
+* Minimum Supported Rust Version (MSRV): 1.42.0

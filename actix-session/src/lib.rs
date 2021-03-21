@@ -1,18 +1,16 @@
-//! User sessions.
+//! Sessions for Actix Web.
 //!
-//! Actix provides a general solution for session management. Session
-//! middlewares could provide different implementations which could
-//! be accessed via general session api.
+//! Provides a general solution for session management. Session middleware could provide different
+//! implementations which could be accessed via general session API.
 //!
-//! By default, only cookie session backend is implemented. Other
-//! backend implementations can be added.
+//! This crate provides a general solution for session management and includes a cookie backend.
+//! Other backend implementations can be built to use persistent or key-value stores, for example.
 //!
-//! In general, you insert a *session* middleware and initialize it
-//! , such as a `CookieSessionBackend`. To access session data,
-//! [*Session*](struct.Session.html) extractor must be used. Session
-//! extractor allows us to get or set session data.
+//! In general, some session middleware, such as a [`CookieSession`] is initialized and applied.
+//! To access session data, the [`Session`] extractor must be used. This extractor allows reading
+//! modifying session data.
 //!
-//! ```rust,no_run
+//! ```no_run
 //! use actix_web::{web, App, HttpServer, HttpResponse, Error};
 //! use actix_session::{Session, CookieSession};
 //!
@@ -20,7 +18,7 @@
 //!     // access session data
 //!     if let Some(count) = session.get::<i32>("counter")? {
 //!         println!("SESSION value: {}", count);
-//!         session.set("counter", count+1)?;
+//!         session.set("counter", count + 1)?;
 //!     } else {
 //!         session.set("counter", 1)?;
 //!     }
@@ -31,12 +29,11 @@
 //! #[actix_rt::main]
 //! async fn main() -> std::io::Result<()> {
 //!     HttpServer::new(
-//!         || App::new().wrap(
-//!               CookieSession::signed(&[0; 32]) // <- create cookie based session middleware
-//!                     .secure(false)
-//!              )
-//!             .service(web::resource("/").to(|| HttpResponse::Ok())))
-//!         .bind("127.0.0.1:59880")?
+//!         || App::new()
+//!             // create cookie based session middleware
+//!             .wrap(CookieSession::signed(&[0; 32]).secure(false))
+//!             .default_service(web::to(|| HttpResponse::Ok())))
+//!         .bind(("127.0.0.1", 8080))?
 //!         .run()
 //!         .await
 //! }
@@ -44,17 +41,14 @@
 
 #![deny(rust_2018_idioms)]
 
-use std::cell::RefCell;
-use std::collections::HashMap;
-use std::rc::Rc;
+use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 use actix_web::dev::{
     Extensions, Payload, RequestHead, ServiceRequest, ServiceResponse,
 };
 use actix_web::{Error, FromRequest, HttpMessage, HttpRequest};
 use futures_util::future::{ok, Ready};
-use serde::de::DeserializeOwned;
-use serde::Serialize;
+use serde::{de::DeserializeOwned, Serialize};
 
 #[cfg(feature = "cookie-session")]
 mod cookie;
@@ -63,16 +57,14 @@ pub use crate::cookie::CookieSession;
 
 /// The high-level interface you use to modify session data.
 ///
-/// Session object could be obtained with
-/// [`UserSession::get_session`](trait.UserSession.html#tymethod.get_session)
-/// method. The `UserSession` trait is implemented for `HttpRequest`, `ServiceRequest`, and
-/// `RequestHead`.
+/// Session object is obtained with [`UserSession::get_session`]. The [`UserSession`] trait is
+/// implemented for `HttpRequest`, `ServiceRequest`, and `RequestHead`.
 ///
-/// ```rust
+/// ```
 /// use actix_session::Session;
-/// use actix_web::*;
+/// use actix_web::Result;
 ///
-/// fn index(session: Session) -> Result<&'static str> {
+/// async fn index(session: Session) -> Result<&'static str> {
 ///     // access session data
 ///     if let Some(count) = session.get::<i32>("counter")? {
 ///         session.set("counter", count + 1)?;
@@ -82,11 +74,10 @@ pub use crate::cookie::CookieSession;
 ///
 ///     Ok("Welcome!")
 /// }
-/// # fn main() {}
 /// ```
 pub struct Session(Rc<RefCell<SessionInner>>);
 
-/// Helper trait that allows to get session
+/// Extraction of a [`Session`] object.
 pub trait UserSession {
     fn get_session(&self) -> Session;
 }
@@ -188,12 +179,10 @@ impl Session {
     /// Values that match keys already existing on the session will be overwritten. Values should
     /// already be JSON serialized.
     ///
-    /// # Example
-    ///
+    /// # Examples
     /// ```
     /// # use actix_session::Session;
     /// # use actix_web::test;
-    /// #
     /// let mut req = test::TestRequest::default().to_srv_request();
     ///
     /// Session::set_session(
