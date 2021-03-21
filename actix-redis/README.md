@@ -11,7 +11,7 @@
 
 - [API Documentation](https://docs.rs/actix-cors)
 - [Example Project](https://github.com/actix/examples/tree/HEAD/session/redis-session)
-- Minimum Supported Rust Version (MSRV): 1.40.0
+- Minimum Supported Rust Version (MSRV): 1.42.0
 
 ## Redis Session Backend
 

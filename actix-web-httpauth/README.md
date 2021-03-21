@@ -10,7 +10,7 @@
 ## Documentation & Resources
 
 - [API Documentation](https://docs.rs/actix-cors)
-- Minimum Supported Rust Version (MSRV): 1.40.0
+- Minimum Supported Rust Version (MSRV): 1.42.0
 
 ## Features
 - Typed [Authorization] and [WWW-Authenticate] headers
