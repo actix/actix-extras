@@ -701,23 +701,12 @@
 <span id="698">698</span>
 <span id="699">699</span>
 <span id="700">700</span>
-<span id="701">701</span>
-<span id="702">702</span>
-<span id="703">703</span>
-<span id="704">704</span>
-<span id="705">705</span>
-<span id="706">706</span>
-<span id="707">707</span>
-<span id="708">708</span>
-<span id="709">709</span>
-<span id="710">710</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">cell</span>::<span class="ident">RefCell</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">pin</span>::<span class="ident">Pin</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">task</span>::{<span class="ident">Context</span>, <span class="ident">Poll</span>};
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections</span>::<span class="ident">HashMap</span>, <span class="ident">iter</span>, <span class="ident">rc</span>::<span class="ident">Rc</span>};
 
-<span class="kw">use</span> <span class="ident">actix</span>::<span class="ident">prelude</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">actix_service</span>::{<span class="ident">Service</span>, <span class="ident">Transform</span>};
 <span class="kw">use</span> <span class="ident">actix_session</span>::{<span class="ident">Session</span>, <span class="ident">SessionStatus</span>};
 <span class="kw">use</span> <span class="ident">actix_web</span>::<span class="ident">cookie</span>::{<span class="ident">Cookie</span>, <span class="ident">CookieJar</span>, <span class="ident">Key</span>, <span class="ident">SameSite</span>};
@@ -730,7 +719,7 @@
 <span class="kw">use</span> <span class="ident">redis_async</span>::<span class="ident">resp_array</span>;
 <span class="kw">use</span> <span class="ident">time</span>::{<span class="self">self</span>, <span class="ident">Duration</span>, <span class="ident">OffsetDateTime</span>};
 
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">redis</span>::{<span class="ident">Command</span>, <span class="ident">RedisActor</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">redis</span>::<span class="ident">RedisClient</span>;
 
 <span class="doccomment">/// Use redis as session storage.</span>
 <span class="doccomment">///</span>
@@ -750,7 +739,7 @@
             <span class="ident">key</span>: <span class="ident">Key</span>::<span class="ident">derive_from</span>(<span class="ident">key</span>),
             <span class="ident">cache_keygen</span>: <span class="ident">Box</span>::<span class="ident">new</span>(<span class="op">|</span><span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">|</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;session:{}&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">key</span>)),
             <span class="ident">ttl</span>: <span class="string">&quot;7200&quot;</span>.<span class="ident">to_owned</span>(),
-            <span class="ident">addr</span>: <span class="ident">RedisActor</span>::<span class="ident">start</span>(<span class="ident">addr</span>),
+            <span class="ident">redis_client</span>: <span class="ident">RedisClient</span>::<span class="ident">new</span>(<span class="ident">addr</span>),
             <span class="ident">name</span>: <span class="string">&quot;actix-session&quot;</span>.<span class="ident">to_owned</span>(),
             <span class="ident">path</span>: <span class="string">&quot;/&quot;</span>.<span class="ident">to_owned</span>(),
             <span class="ident">domain</span>: <span class="prelude-val">None</span>,
@@ -827,14 +816,12 @@
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">B</span><span class="op">&gt;</span> <span class="ident">Transform</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">RedisSession</span>
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">B</span><span class="op">&gt;</span> <span class="ident">Transform</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">ServiceRequest</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">RedisSession</span>
 <span class="kw">where</span>
-    <span class="ident">S</span>: <span class="ident">Service</span><span class="op">&lt;</span><span class="ident">Request</span> <span class="op">=</span> <span class="ident">ServiceRequest</span>, <span class="ident">Response</span> <span class="op">=</span> <span class="ident">ServiceResponse</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>, <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Error</span><span class="op">&gt;</span>
-        <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+    <span class="ident">S</span>: <span class="ident">Service</span><span class="op">&lt;</span><span class="ident">ServiceRequest</span>, <span class="ident">Response</span> <span class="op">=</span> <span class="ident">ServiceResponse</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>, <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Error</span><span class="op">&gt;</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
     <span class="ident">S</span>::<span class="ident">Future</span>: <span class="lifetime">&#39;static</span>,
     <span class="ident">B</span>: <span class="lifetime">&#39;static</span>,
 {
-    <span class="kw">type</span> <span class="ident">Request</span> <span class="op">=</span> <span class="ident">ServiceRequest</span>;
     <span class="kw">type</span> <span class="ident">Response</span> <span class="op">=</span> <span class="ident">ServiceResponse</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>;
     <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">S</span>::<span class="ident">Error</span>;
     <span class="kw">type</span> <span class="ident">InitError</span> <span class="op">=</span> ();
@@ -855,25 +842,23 @@
     <span class="ident">inner</span>: <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Inner</span><span class="op">&gt;</span>,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">B</span><span class="op">&gt;</span> <span class="ident">Service</span> <span class="kw">for</span> <span class="ident">RedisSessionMiddleware</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">B</span><span class="op">&gt;</span> <span class="ident">Service</span><span class="op">&lt;</span><span class="ident">ServiceRequest</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">RedisSessionMiddleware</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="ident">S</span>: <span class="ident">Service</span><span class="op">&lt;</span><span class="ident">Request</span> <span class="op">=</span> <span class="ident">ServiceRequest</span>, <span class="ident">Response</span> <span class="op">=</span> <span class="ident">ServiceResponse</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>, <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Error</span><span class="op">&gt;</span>
-        <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+    <span class="ident">S</span>: <span class="ident">Service</span><span class="op">&lt;</span><span class="ident">ServiceRequest</span>, <span class="ident">Response</span> <span class="op">=</span> <span class="ident">ServiceResponse</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>, <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Error</span><span class="op">&gt;</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
     <span class="ident">S</span>::<span class="ident">Future</span>: <span class="lifetime">&#39;static</span>,
     <span class="ident">B</span>: <span class="lifetime">&#39;static</span>,
 {
-    <span class="kw">type</span> <span class="ident">Request</span> <span class="op">=</span> <span class="ident">ServiceRequest</span>;
     <span class="kw">type</span> <span class="ident">Response</span> <span class="op">=</span> <span class="ident">ServiceResponse</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>;
     <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Error</span>;
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">type_complexity</span>)]</span>
     <span class="kw">type</span> <span class="ident">Future</span> <span class="op">=</span> <span class="ident">Pin</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Response</span>, <span class="self">Self</span>::<span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>;
 
-    <span class="kw">fn</span> <span class="ident">poll_ready</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Context</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Poll</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="self">Self</span>::<span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">poll_ready</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Context</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Poll</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="self">Self</span>::<span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">service</span>.<span class="ident">borrow_mut</span>().<span class="ident">poll_ready</span>(<span class="ident">cx</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">call</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="kw-2">mut</span> <span class="ident">req</span>: <span class="ident">ServiceRequest</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Future</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">srv</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">service</span>.<span class="ident">clone</span>();
+    <span class="kw">fn</span> <span class="ident">call</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw-2">mut</span> <span class="ident">req</span>: <span class="ident">ServiceRequest</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Future</span> {
+        <span class="kw">let</span> <span class="ident">srv</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">service</span>.<span class="ident">clone</span>();
         <span class="kw">let</span> <span class="ident">inner</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">clone</span>();
 
         <span class="ident">Box</span>::<span class="ident">pin</span>(<span class="kw">async</span> <span class="kw">move</span> {
@@ -929,7 +914,7 @@
     <span class="ident">key</span>: <span class="ident">Key</span>,
     <span class="ident">cache_keygen</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Fn</span>(<span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span><span class="op">&gt;</span>,
     <span class="ident">ttl</span>: <span class="ident">String</span>,
-    <span class="ident">addr</span>: <span class="ident">Addr</span><span class="op">&lt;</span><span class="ident">RedisActor</span><span class="op">&gt;</span>,
+    <span class="ident">redis_client</span>: <span class="ident">RedisClient</span>,
     <span class="ident">name</span>: <span class="ident">String</span>,
     <span class="ident">path</span>: <span class="ident">String</span>,
     <span class="ident">domain</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
@@ -970,12 +955,10 @@
             }
         };
 
-        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">addr</span>
-            .<span class="ident">send</span>(<span class="ident">Command</span>(<span class="macro">resp_array</span><span class="macro">!</span>[<span class="string">&quot;GET&quot;</span>, <span class="ident">cache_key</span>]))
+        <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="self">self</span>
+            .<span class="ident">redis_client</span>
+            .<span class="ident">send</span>(<span class="macro">resp_array</span><span class="macro">!</span>[<span class="string">&quot;GET&quot;</span>, <span class="ident">cache_key</span>])
             .<span class="kw">await</span><span class="question-mark">?</span>;
-
-        <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="ident">res</span>.<span class="ident">map_err</span>(<span class="ident">error</span>::<span class="ident">ErrorInternalServerError</span>)<span class="question-mark">?</span>;
 
         <span class="kw">match</span> <span class="ident">val</span> {
             <span class="ident">RespValue</span>::<span class="ident">Error</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> {
@@ -1008,6 +991,7 @@
         } <span class="kw">else</span> {
             <span class="kw">let</span> <span class="ident">value</span>: <span class="ident">String</span> <span class="op">=</span> <span class="ident">iter</span>::<span class="ident">repeat</span>(())
                 .<span class="ident">map</span>(<span class="op">|</span>()<span class="op">|</span> <span class="ident">OsRng</span>.<span class="ident">sample</span>(<span class="ident">Alphanumeric</span>))
+                .<span class="ident">map</span>(<span class="ident">char</span>::<span class="ident">from</span>)
                 .<span class="ident">take</span>(<span class="number">32</span>)
                 .<span class="ident">collect</span>();
 
@@ -1045,12 +1029,9 @@
             <span class="prelude-val">Ok</span>(<span class="ident">body</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">body</span>,
         };
 
-        <span class="kw">let</span> <span class="ident">cmd</span> <span class="op">=</span> <span class="ident">Command</span>(<span class="macro">resp_array</span><span class="macro">!</span>[<span class="string">&quot;SET&quot;</span>, <span class="ident">cache_key</span>, <span class="ident">body</span>, <span class="string">&quot;EX&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">ttl</span>]);
-
-        <span class="self">self</span>.<span class="ident">addr</span>
-            .<span class="ident">send</span>(<span class="ident">cmd</span>)
-            .<span class="kw">await</span><span class="question-mark">?</span>
-            .<span class="ident">map_err</span>(<span class="ident">error</span>::<span class="ident">ErrorInternalServerError</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.<span class="ident">redis_client</span>
+            .<span class="ident">send</span>(<span class="macro">resp_array</span><span class="macro">!</span>[<span class="string">&quot;SET&quot;</span>, <span class="ident">cache_key</span>, <span class="ident">body</span>, <span class="string">&quot;EX&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">ttl</span>])
+            .<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">jar</span>) <span class="op">=</span> <span class="ident">jar</span> {
             <span class="kw">for</span> <span class="ident">cookie</span> <span class="kw">in</span> <span class="ident">jar</span>.<span class="ident">delta</span>() {
@@ -1066,17 +1047,16 @@
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">clear_cache</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">cache_key</span> <span class="op">=</span> (<span class="self">self</span>.<span class="ident">cache_keygen</span>)(<span class="kw-2">&amp;</span><span class="ident">key</span>);
 
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">addr</span>.<span class="ident">send</span>(<span class="ident">Command</span>(<span class="macro">resp_array</span><span class="macro">!</span>[<span class="string">&quot;DEL&quot;</span>, <span class="ident">cache_key</span>])).<span class="kw">await</span> {
-            <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">from</span>(<span class="ident">e</span>)),
-            <span class="prelude-val">Ok</span>(<span class="ident">res</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">match</span> <span class="ident">res</span> {
-                    <span class="comment">// redis responds with number of deleted records</span>
-                    <span class="prelude-val">Ok</span>(<span class="ident">RespValue</span>::<span class="ident">Integer</span>(<span class="ident">x</span>)) <span class="kw">if</span> <span class="ident">x</span> <span class="op">&gt;</span> <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(()),
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">error</span>::<span class="ident">ErrorInternalServerError</span>(
-                        <span class="string">&quot;failed to remove session from cache&quot;</span>,
-                    )),
-                }
-            }
+        <span class="kw">match</span> <span class="self">self</span>
+            .<span class="ident">redis_client</span>
+            .<span class="ident">send</span>(<span class="macro">resp_array</span><span class="macro">!</span>[<span class="string">&quot;DEL&quot;</span>, <span class="ident">cache_key</span>])
+            .<span class="kw">await</span><span class="question-mark">?</span>
+        {
+            <span class="comment">// redis responds with number of deleted records</span>
+            <span class="ident">RespValue</span>::<span class="ident">Integer</span>(<span class="ident">x</span>) <span class="kw">if</span> <span class="ident">x</span> <span class="op">&gt;</span> <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(()),
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">error</span>::<span class="ident">ErrorInternalServerError</span>(
+                <span class="string">&quot;failed to remove session from cache&quot;</span>,
+            )),
         }
     }
 
@@ -1120,7 +1100,7 @@
             .<span class="ident">unwrap_or</span>(<span class="prelude-val">Some</span>(<span class="number">0</span>))
             .<span class="ident">unwrap_or</span>(<span class="number">0</span>);
 
-        <span class="prelude-val">Ok</span>(<span class="ident">HttpResponse</span>::<span class="prelude-val">Ok</span>().<span class="ident">json</span>(<span class="ident">IndexResponse</span> { <span class="ident">user_id</span>, <span class="ident">counter</span> }))
+        <span class="prelude-val">Ok</span>(<span class="ident">HttpResponse</span>::<span class="prelude-val">Ok</span>().<span class="ident">json</span>(<span class="kw-2">&amp;</span><span class="ident">IndexResponse</span> { <span class="ident">user_id</span>, <span class="ident">counter</span> }))
     }
 
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">do_something</span>(<span class="ident">session</span>: <span class="ident">Session</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">HttpResponse</span><span class="op">&gt;</span> {
@@ -1131,7 +1111,7 @@
             .<span class="ident">map_or</span>(<span class="number">1</span>, <span class="op">|</span><span class="ident">inner</span><span class="op">|</span> <span class="ident">inner</span> <span class="op">+</span> <span class="number">1</span>);
         <span class="ident">session</span>.<span class="ident">set</span>(<span class="string">&quot;counter&quot;</span>, <span class="ident">counter</span>)<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="ident">HttpResponse</span>::<span class="prelude-val">Ok</span>().<span class="ident">json</span>(<span class="ident">IndexResponse</span> { <span class="ident">user_id</span>, <span class="ident">counter</span> }))
+        <span class="prelude-val">Ok</span>(<span class="ident">HttpResponse</span>::<span class="prelude-val">Ok</span>().<span class="ident">json</span>(<span class="kw-2">&amp;</span><span class="ident">IndexResponse</span> { <span class="ident">user_id</span>, <span class="ident">counter</span> }))
     }
 
     <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Deserialize</span>)]</span>
@@ -1152,7 +1132,7 @@
             .<span class="ident">unwrap_or</span>(<span class="prelude-val">Some</span>(<span class="number">0</span>))
             .<span class="ident">unwrap_or</span>(<span class="number">0</span>);
 
-        <span class="prelude-val">Ok</span>(<span class="ident">HttpResponse</span>::<span class="prelude-val">Ok</span>().<span class="ident">json</span>(<span class="ident">IndexResponse</span> {
+        <span class="prelude-val">Ok</span>(<span class="ident">HttpResponse</span>::<span class="prelude-val">Ok</span>().<span class="ident">json</span>(<span class="kw-2">&amp;</span><span class="ident">IndexResponse</span> {
             <span class="ident">user_id</span>: <span class="prelude-val">Some</span>(<span class="ident">id</span>),
             <span class="ident">counter</span>,
         }))
