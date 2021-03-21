@@ -22,9 +22,8 @@ default = ["web"]
 
 # actix-web integration
 web = [
-    "actix-http",
-    "actix-service",
-    "actix-web",
+    "actix-web/cookies",
+    "actix-web/secure-cookies",
     "actix-session/cookie-session",
     "rand",
     "serde",
@@ -32,9 +31,10 @@ web = [
 ]
 
 [dependencies]
-actix = { version = "0.11.0-beta.2", default-features = false }
-actix-rt = "2"
-actix-utils = "3.0.0-beta.2"
+actix = { version = "0.11.0", default-features = false }
+actix-rt = { version = "2.1", default-features = false }
+actix-service = "2.0.0-beta.5"
+actix-tls = { version = "3.0.0-beta.4", default-features = false, features = ["connect"] }
 
 log = "0.4.6"
 backoff = "0.2.1"
@@ -42,19 +42,19 @@ derive_more = "0.99.2"
 futures-core = { version = "0.3.7", default-features = false }
 redis2 = { package = "redis", version = "0.19.0", features = ["tokio-comp", "tokio-native-tls-comp"] }
 redis-async = { version = "0.8", default-features = false, features = ["tokio10"] }
-time = ""0.2.23"
+time = "0.2.23"
 tokio = { version = "1", features = ["sync"] }
 tokio-util = "0.6.1"
 
 # actix-session
 actix-web = { version = "4.0.0-beta.3", default_features = false, optional = true }
-actix-http = { version = "3.0.0-beta.3", optional = true }
-actix-service = { version = "2.0.0-beta.4", optional = true }
 actix-session = { version = "0.4.0", optional = true }
 rand = { version = "0.8.0", optional = true }
 serde = { version = "1.0.101", optional = true }
 serde_json = { version = "1.0.40", optional = true }
 
 [dev-dependencies]
+actix-http = "3.0.0-beta.4"
+actix-rt = "2.1"
 env_logger = "0.7"
 serde_derive = "1.0"

@@ -17,11 +17,11 @@ path = "src/lib.rs"
 
 [features]
 default = ["cookie-session"]
-cookie-session = ["actix-web/secure-cookies"]
+cookie-session = ["actix-web/cookies", "actix-web/secure-cookies"]
 
 [dependencies]
-actix-web = { version = "4.0.0-beta.3", default_features = false }
-actix-service = "2.0.0-beta.4"
+actix-web = { version = "4.0.0-beta.4", default_features = false }
+actix-service = "2.0.0-beta.5"
 
 bytes = "1"
 derive_more = "0.99.2"
