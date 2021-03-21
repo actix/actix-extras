@@ -19,7 +19,7 @@ struct User {
 }
 
 impl User {
-    fn authenticate(credentials: Credentials) -> Result<Self, actix_http::Response> {
+    fn authenticate(credentials: Credentials) -> Result<Self, HttpResponse> {
         // TODO: figure out why I keep getting hacked
         if &credentials.password != "hunter2" {
             return Err(HttpResponse::Unauthorized().json("Unauthorized"));
@@ -33,7 +33,7 @@ impl User {
     }
 }
 
-pub fn validate_session(session: &Session) -> Result<i64, actix_http::Response> {
+pub fn validate_session(session: &Session) -> Result<i64, HttpResponse> {
     let user_id: Option<i64> = session.get("user_id").unwrap_or(None);
 
     match user_id {
@@ -49,7 +49,7 @@ pub fn validate_session(session: &Session) -> Result<i64, actix_http::Response> 
 async fn login(
     credentials: web::Json<Credentials>,
     session: Session,
-) -> Result<impl Responder, actix_http::Response> {
+) -> Result<impl Responder, HttpResponse> {
     let credentials = credentials.into_inner();
 
     match User::authenticate(credentials) {

@@ -17,7 +17,7 @@ use actix_web::error::{Error, PayloadError, ResponseError};
 use actix_web::http::header::{CONTENT_LENGTH, CONTENT_TYPE};
 use actix_web::web::BytesMut;
 use actix_web::{FromRequest, HttpMessage, HttpRequest, HttpResponse, Responder};
-use futures_util::future::{ready, FutureExt, LocalBoxFuture, Ready};
+use futures_util::future::{FutureExt, LocalBoxFuture};
 use futures_util::StreamExt;
 
 #[derive(Debug, Display)]
@@ -137,21 +137,16 @@ where
 }
 
 impl<T: Message + Default> Responder for ProtoBuf<T> {
-    type Error = Error;
-    type Future = Ready<Result<HttpResponse, Error>>;
-
-    fn respond_to(self, _: &HttpRequest) -> Self::Future {
+    fn respond_to(self, _: &HttpRequest) -> HttpResponse {
         let mut buf = Vec::new();
-        ready(
-            self.0
-                .encode(&mut buf)
-                .map_err(|e| Error::from(ProtoBufPayloadError::Serialize(e)))
-                .map(|()| {
-                    HttpResponse::Ok()
-                        .content_type("application/protobuf")
-                        .body(buf)
-                }),
-        )
+        match self.0.encode(&mut buf) {
+            Ok(()) => HttpResponse::Ok()
+                .content_type("application/protobuf")
+                .body(buf),
+            Err(err) => HttpResponse::from_error(Error::from(
+                ProtoBufPayloadError::Serialize(err),
+            )),
+        }
     }
 }
 
@@ -255,7 +250,7 @@ pub trait ProtoBufResponseBuilder {
 
 impl ProtoBufResponseBuilder for HttpResponseBuilder {
     fn protobuf<T: Message>(&mut self, value: T) -> Result<HttpResponse, Error> {
-        self.header(CONTENT_TYPE, "application/protobuf");
+        self.append_header((CONTENT_TYPE, "application/protobuf"));
 
         let mut body = Vec::new();
         value
@@ -313,16 +308,16 @@ mod tests {
         let protobuf = ProtoBufMessage::<MyObject>::new(&req, &mut pl).await;
         assert_eq!(protobuf.err().unwrap(), ProtoBufPayloadError::ContentType);
 
-        let (req, mut pl) =
-            TestRequest::with_header(header::CONTENT_TYPE, "application/text")
-                .to_http_parts();
+        let (req, mut pl) = TestRequest::get()
+            .append_header((header::CONTENT_TYPE, "application/text"))
+            .to_http_parts();
         let protobuf = ProtoBufMessage::<MyObject>::new(&req, &mut pl).await;
         assert_eq!(protobuf.err().unwrap(), ProtoBufPayloadError::ContentType);
 
-        let (req, mut pl) =
-            TestRequest::with_header(header::CONTENT_TYPE, "application/protobuf")
-                .header(header::CONTENT_LENGTH, "10000")
-                .to_http_parts();
+        let (req, mut pl) = TestRequest::get()
+            .append_header((header::CONTENT_TYPE, "application/protobuf"))
+            .append_header((header::CONTENT_LENGTH, "10000"))
+            .to_http_parts();
         let protobuf = ProtoBufMessage::<MyObject>::new(&req, &mut pl)
             .limit(100)
             .await;
