@@ -3,7 +3,7 @@
 ## Unreleased - 2020-xx-xx
 
 
-## 0.9.2 - 2020-xx-xx
+## 0.9.2 - 2020-03-21
 * Implement `std::error::Error` for `Error` [#135]
 * Allow the removal of Max-Age for session-only cookies. [#161]
 
