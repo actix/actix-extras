@@ -1,19 +1,15 @@
 # actix-session
 
-[![crates.io](https://img.shields.io/crates/v/actix-session)](https://crates.io/crates/actix-session)
-[![Documentation](https://docs.rs/actix-session/badge.svg)](https://docs.rs/actix-session)
-[![Dependency Status](https://deps.rs/crate/actix-session/0.3.0/status.svg)](https://deps.rs/crate/actix-session/0.3.0)
-[![Build Status](https://travis-ci.org/actix/actix-session.svg?branch=master)](https://travis-ci.org/actix/actix-session)
-[![codecov](https://codecov.io/gh/actix/actix-session/branch/master/graph/badge.svg)](https://codecov.io/gh/actix/actix-session)
+> Sessions for Actix Web.
+
+[![crates.io](https://img.shields.io/crates/v/actix-session?label=latest)](https://crates.io/crates/actix-session)
+[![Documentation](https://docs.rs/actix-session/badge.svg?version=0.4.1)](https://docs.rs/actix-session/0.4.1)
 ![Apache 2.0 or MIT licensed](https://img.shields.io/crates/l/actix-session)
-[![Join the chat at https://gitter.im/actix/actix](https://badges.gitter.im/actix/actix.svg)](https://gitter.im/actix/actix?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Dependency Status](https://deps.rs/crate/actix-session/0.4.1/status.svg)](https://deps.rs/crate/actix-session/0.4.1)
 
-> Session for actix-web framework.
 
-## Documentation & community resources
+## Documentation & Resources
 
-* [User Guide](https://actix.rs/docs/)
-* [API Documentation](https://docs.rs/actix-session/)
-* [Chat on gitter](https://gitter.im/actix/actix)
-* Cargo package: [actix-session](https://crates.io/crates/actix-session)
-* Minimum supported Rust version: 1.40 or later
+- [API Documentation](https://docs.rs/actix-session)
+- [Example Projects](https://github.com/actix/examples/tree/HEAD/session)
+- Minimum Supported Rust Version (MSRV): 1.42.0

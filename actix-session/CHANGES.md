@@ -1,8 +1,14 @@
 # Changes
 
 ## Unreleased - 2020-xx-xx
-* `Session::set_session` takes a `IntoIterator` instead of `Iterator`
-* Fix calls to `session.purge()` from paths other than the one specified in the cookie
+
+
+## 0.4.1 - 2020-03-21
+* `Session::set_session` takes a `IntoIterator` instead of `Iterator`. [#105]
+* Fix calls to `session.purge()` from paths other than the one specified in the cookie. [#129]
+
+[#105]: https://github.com/actix/actix-extras/pull/105
+[#129]: https://github.com/actix/actix-extras/pull/129
 
 
 ## 0.4.0 - 2020-09-11

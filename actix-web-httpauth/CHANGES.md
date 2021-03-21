@@ -1,9 +1,12 @@
 # Changes
 
 ## Unreleased - 2020-xx-xx
+
+
+## 0.5.1 - 2020-03-21
 * Correct error handling when extracting auth details from request. [#128]
 
-[#128]: https://github.com/actix/actix-web-httpauth/pull/128
+[#128]: https://github.com/actix/actix-extras/pull/128
 
 
 ## 0.5.0 - 2020-09-11

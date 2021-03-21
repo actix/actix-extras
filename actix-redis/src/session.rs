@@ -40,61 +40,70 @@ impl RedisSession {
             secure: false,
             max_age: Some(Duration::days(7)),
             same_site: None,
-            http_only: Some(true),
+            http_only: true,
         }))
     }
 
-    /// Set time to live in seconds for session value
+    /// Set time to live in seconds for session value.
     pub fn ttl(mut self, ttl: u32) -> Self {
         Rc::get_mut(&mut self.0).unwrap().ttl = format!("{}", ttl);
         self
     }
 
-    /// Set custom cookie name for session id
+    /// Set custom cookie name for session ID.
     pub fn cookie_name(mut self, name: &str) -> Self {
         Rc::get_mut(&mut self.0).unwrap().name = name.to_owned();
         self
     }
 
-    /// Set custom cookie path
+    /// Set custom cookie path.
     pub fn cookie_path(mut self, path: &str) -> Self {
         Rc::get_mut(&mut self.0).unwrap().path = path.to_owned();
         self
     }
 
-    /// Set custom cookie domain
+    /// Set custom cookie domain.
     pub fn cookie_domain(mut self, domain: &str) -> Self {
         Rc::get_mut(&mut self.0).unwrap().domain = Some(domain.to_owned());
         self
     }
 
-    /// Set custom cookie secure
+    /// Set custom cookie secure.
+    ///
     /// If the `secure` field is set, a cookie will only be transmitted when the
-    /// connection is secure - i.e. `https`
+    /// connection is secure - i.e. `https`.
+    ///
+    /// Default is false.
     pub fn cookie_secure(mut self, secure: bool) -> Self {
         Rc::get_mut(&mut self.0).unwrap().secure = secure;
         self
     }
 
-    /// Set custom cookie max-age
-    pub fn cookie_max_age(mut self, max_age: Duration) -> Self {
-        Rc::get_mut(&mut self.0).unwrap().max_age = Some(max_age);
+    /// Set custom cookie max-age.
+    ///
+    /// Use `None` for session-only cookies.
+    pub fn cookie_max_age(mut self, max_age: impl Into<Option<Duration>>) -> Self {
+        Rc::get_mut(&mut self.0).unwrap().max_age = max_age.into();
         self
     }
 
-    /// Set custom cookie SameSite
+    /// Set custom cookie `SameSite` attribute.
+    ///
+    /// By default, the attribute is omitted.
     pub fn cookie_same_site(mut self, same_site: SameSite) -> Self {
         Rc::get_mut(&mut self.0).unwrap().same_site = Some(same_site);
         self
     }
 
-    /// Set custom cookie HttpOnly policy
+    /// Set custom cookie `HttpOnly` policy.
+    ///
+    /// Default is true.
     pub fn cookie_http_only(mut self, http_only: bool) -> Self {
-        Rc::get_mut(&mut self.0).unwrap().http_only = Some(http_only);
+        Rc::get_mut(&mut self.0).unwrap().http_only = http_only;
         self
     }
 
-    /// Set a custom cache key generation strategy, expecting session key as input
+    /// Set a custom cache key generation strategy, expecting session key as input.
     pub fn cache_keygen(mut self, keygen: Box<dyn Fn(&str) -> String>) -> Self {
         Rc::get_mut(&mut self.0).unwrap().cache_keygen = keygen;
         self
@@ -206,7 +215,7 @@ struct Inner {
     secure: bool,
     max_age: Option<Duration>,
     same_site: Option<SameSite>,
-    http_only: Option<bool>,
+    http_only: bool,
 }
 
 impl Inner {
@@ -286,7 +295,7 @@ impl Inner {
             let mut cookie = Cookie::new(self.name.clone(), value.clone());
             cookie.set_path(self.path.clone());
             cookie.set_secure(self.secure);
-            cookie.set_http_only(self.http_only.unwrap_or(true));
+            cookie.set_http_only(self.http_only);
 
             if let Some(ref domain) = self.domain {
                 cookie.set_domain(domain.clone());
@@ -446,6 +455,7 @@ mod test {
         // Step 1:  GET index
         //   - set-cookie actix-session will be in response (session cookie #1)
         //   - response should be: {"counter": 0, "user_id": None}
+        //   - cookie should have default max-age of 7 days
         // Step 2:  GET index, including session cookie #1 in request
         //   - set-cookie will *not* be in response
         //   - response should be: {"counter": 0, "user_id": None}
@@ -506,6 +516,7 @@ mod test {
                 counter: 0
             }
         );
+        assert_eq!(cookie_1.max_age(), Some(Duration::days(7)));
 
         // Step 2:  GET index, including session cookie #1 in request
         //   - set-cookie will *not* be in response
@@ -662,5 +673,34 @@ mod test {
             .find(|c| c.name() == "test-session")
             .unwrap();
         assert_ne!(cookie_5.value(), cookie_2.value());
+    }
+
+    #[actix_rt::test]
+    async fn test_max_age_session_only() {
+        //
+        // Test that removing max_age results in a session-only cookie
+        //
+        let srv = test::start(|| {
+            App::new()
+                .wrap(
+                    RedisSession::new("127.0.0.1:6379", &[0; 32])
+                        .cookie_name("test-session")
+                        .cookie_max_age(None),
+                )
+                .wrap(middleware::Logger::default())
+                .service(resource("/").route(get().to(index)))
+        });
+
+        let req = srv.get("/").send();
+        let resp = req.await.unwrap();
+        let cookie = resp
+            .cookies()
+            .unwrap()
+            .clone()
+            .into_iter()
+            .find(|c| c.name() == "test-session")
+            .unwrap();
+
+        assert_eq!(cookie.max_age(), None);
     }
 }

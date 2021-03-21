@@ -1,11 +1,4 @@
-//! Redis integration for Actix framework.
-//!
-//! ## Documentation
-//! * [API Documentation (Development)](http://actix.github.io/actix-redis/actix_redis/)
-//! * [API Documentation (Releases)](https://docs.rs/actix-redis/)
-//! * [Chat on gitter](https://gitter.im/actix/actix)
-//! * Cargo package: [actix-redis](https://crates.io/crates/actix-redis)
-//! * Minimum supported Rust version: 1.40.0 or later
+//! Redis integration for Actix and session store for Actix Web.
 
 #![deny(rust_2018_idioms)]
 

@@ -1,19 +1,4 @@
-//! Cookie session.
-//!
-//! [**CookieSession**](struct.CookieSession.html)
-//! uses cookies as session storage. `CookieSession` creates sessions
-//! which are limited to storing fewer than 4000 bytes of data, as the payload
-//! must fit into a single cookie. An internal server error is generated if a
-//! session contains more than 4000 bytes.
-//!
-//! A cookie may have a security policy of *signed* or *private*. Each has
-//! a respective `CookieSession` constructor.
-//!
-//! A *signed* cookie may be viewed but not modified by the client. A *private*
-//! cookie may neither be viewed nor modified by the client.
-//!
-//! The constructors take a key as an argument. This is the private key
-//! for cookie session - when this value is changed, all session data is lost.
+//! Cookie based sessions. See docs for [`CookieSession`].
 
 use std::{
     collections::HashMap,
@@ -186,7 +171,7 @@ impl CookieSessionInner {
 /// than 4000 bytes.
 ///
 /// A cookie may have a security policy of *signed* or *private*. Each has a
-/// respective `CookieSessionBackend` constructor.
+/// respective `CookieSession` constructor.
 ///
 /// A *signed* cookie is stored on the client as plaintext alongside
 /// a signature such that the cookie may be viewed but not modified by the
@@ -204,9 +189,8 @@ impl CookieSessionInner {
 /// By default all cookies are percent encoded, but certain symbols may
 /// cause troubles when reading cookie, if they are not properly percent encoded.
 ///
-/// # Example
-///
-/// ```rust
+/// # Examples
+/// ```
 /// use actix_session::CookieSession;
 /// use actix_web::{web, App, HttpResponse, HttpServer};
 ///
@@ -221,7 +205,7 @@ impl CookieSessionInner {
 pub struct CookieSession(Rc<CookieSessionInner>);
 
 impl CookieSession {
-    /// Construct new *signed* `CookieSessionBackend` instance.
+    /// Construct new *signed* `CookieSession` instance.
     ///
     /// Panics if key length is less than 32 bytes.
     pub fn signed(key: &[u8]) -> CookieSession {
@@ -231,7 +215,7 @@ impl CookieSession {
         )))
     }
 
-    /// Construct new *private* `CookieSessionBackend` instance.
+    /// Construct new *private* `CookieSession` instance.
     ///
     /// Panics if key length is less than 32 bytes.
     pub fn private(key: &[u8]) -> CookieSession {
