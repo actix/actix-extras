@@ -127,7 +127,6 @@ impl Actor for RedisActor {
                     act.backoff.reset();
                 }
                 Err(err) => {
-                    println!("Can not connect to redis server: {}", err);
                     error!("Can not connect to redis server: {}", err);
                     // re-connect with backoff time.
                     // we stop current context, supervisor will restart it.
