@@ -19,7 +19,7 @@ path = "src/lib.rs"
 
 [features]
 default = ["web"]
-native-tls = ["native-tls-crate", "tokio-native-tls"]
+native-tls = ["tokio-native-tls"]
 
 # actix-web integration
 web = [
@@ -54,7 +54,7 @@ rand = { version = "0.8.0", optional = true }
 serde = { version = "1.0.101", optional = true }
 serde_json = { version = "1.0.40", optional = true }
 
-native-tls-crate = { package = "native-tls", optional = true }
+# tls support for redis actor.
 tokio-native-tls = { version = "0.3", optional = true }
 
 [dev-dependencies]
