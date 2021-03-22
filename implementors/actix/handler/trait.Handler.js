@@ -1,3 +1,3 @@
 (function() {var implementors = {};
-implementors["actix_redis"] = [{"text":"impl Debug for Command","synthetic":false,"types":[]},{"text":"impl Debug for Error","synthetic":false,"types":[]}];
+implementors["actix_redis"] = [{"text":"impl Handler&lt;Command&gt; for RedisActor","synthetic":false,"types":[]}];
 if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
