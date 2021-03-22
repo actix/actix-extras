@@ -1,8 +1,4 @@
-use std::{
-    convert::TryInto,
-    rc::Rc,
-    task::{Context, Poll},
-};
+use std::{convert::TryInto, rc::Rc};
 
 use actix_web::{
     dev::{Service, ServiceRequest, ServiceResponse},
@@ -131,9 +127,7 @@ where
     type Error = Error;
     type Future = CorsMiddlewareServiceFuture<B>;
 
-    fn poll_ready(&self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        self.service.poll_ready(cx)
-    }
+    actix_service::forward_ready!(service);
 
     fn call(&self, req: ServiceRequest) -> Self::Future {
         if self.inner.preflight && req.method() == Method::OPTIONS {

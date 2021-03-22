@@ -20,6 +20,7 @@ path = "src/lib.rs"
 
 [dependencies]
 actix-web = { version = "4.0.0-beta.4", default-features = false }
+actix-service = "2.0.0-beta.5"
 derive_more = "0.99.5"
 futures-util = { version = "0.3.7", default-features = false }
 log = "0.4"

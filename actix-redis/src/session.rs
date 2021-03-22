@@ -152,8 +152,8 @@ where
     actix_service::forward_ready!(service);
 
     fn call(&self, mut req: ServiceRequest) -> Self::Future {
-        let srv = self.service.clone();
-        let inner = self.inner.clone();
+        let srv = Rc::clone(&self.service);
+        let inner = Rc::clone(&self.inner);
 
         Box::pin(async move {
             let state = inner.load(&req).await?;

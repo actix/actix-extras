@@ -1,11 +1,6 @@
 //! HTTP Authentication middleware.
 
-use std::cell::RefCell;
-use std::future::Future;
-use std::marker::PhantomData;
-use std::pin::Pin;
-use std::rc::Rc;
-use std::sync::Arc;
+use std::{future::Future, marker::PhantomData, pin::Pin, rc::Rc, sync::Arc};
 
 use actix_web::{
     dev::{Service, ServiceRequest, ServiceResponse, Transform},
@@ -134,7 +129,7 @@ where
 
     fn new_transform(&self, service: S) -> Self::Future {
         future::ok(AuthenticationMiddleware {
-            service: Rc::new(RefCell::new(service)),
+            service: Rc::new(service),
             process_fn: self.process_fn.clone(),
             _extractor: PhantomData,
         })
@@ -146,7 +141,7 @@ pub struct AuthenticationMiddleware<S, F, T>
 where
     T: AuthExtractor,
 {
-    service: Rc<RefCell<S>>,
+    service: Rc<S>,
     process_fn: Arc<F>,
     _extractor: PhantomData<T>,
 }
@@ -163,9 +158,7 @@ where
     type Error = S::Error;
     type Future = LocalBoxFuture<'static, Result<ServiceResponse<B>, Error>>;
 
-    fn poll_ready(&self, ctx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        self.service.borrow_mut().poll_ready(ctx)
-    }
+    actix_service::forward_ready!(service);
 
     fn call(&self, req: ServiceRequest) -> Self::Future {
         let process_fn = Arc::clone(&self.process_fn);
@@ -183,9 +176,8 @@ where
             // TODO: alter to remove ? operator; an error response is required for downstream
             // middleware to do their thing (eg. cors adding headers)
             let req = process_fn(req, credentials).await?;
-            // Ensure `borrow_mut()` and `.await` are on separate lines or else a panic occurs.
-            let fut = service.borrow_mut().call(req);
-            fut.await
+
+            service.call(req).await
         }
         .boxed_local()
     }
@@ -252,12 +244,10 @@ mod tests {
     #[actix_rt::test]
     async fn test_middleware_panic() {
         let middleware = AuthenticationMiddleware {
-            service: Rc::new(RefCell::new(into_service(
-                |_: ServiceRequest| async move {
-                    actix_rt::time::sleep(std::time::Duration::from_secs(1)).await;
-                    Err::<ServiceResponse, _>(error::ErrorBadRequest("error"))
-                },
-            ))),
+            service: Rc::new(into_service(|_: ServiceRequest| async move {
+                actix_rt::time::sleep(std::time::Duration::from_secs(1)).await;
+                Err::<ServiceResponse, _>(error::ErrorBadRequest("error"))
+            })),
             process_fn: Arc::new(|req, _: BearerAuth| async { Ok(req) }),
             _extractor: PhantomData,
         };
@@ -277,12 +267,10 @@ mod tests {
     #[actix_rt::test]
     async fn test_middleware_panic_several_orders() {
         let middleware = AuthenticationMiddleware {
-            service: Rc::new(RefCell::new(into_service(
-                |_: ServiceRequest| async move {
-                    actix_rt::time::sleep(std::time::Duration::from_secs(1)).await;
-                    Err::<ServiceResponse, _>(error::ErrorBadRequest("error"))
-                },
-            ))),
+            service: Rc::new(into_service(|_: ServiceRequest| async move {
+                actix_rt::time::sleep(std::time::Duration::from_secs(1)).await;
+                Err::<ServiceResponse, _>(error::ErrorBadRequest("error"))
+            })),
             process_fn: Arc::new(|req, _: BearerAuth| async { Ok(req) }),
             _extractor: PhantomData,
         };

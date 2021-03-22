@@ -1,8 +1,6 @@
 //! Cookie based sessions. See docs for [`CookieSession`].
 
-use std::collections::HashMap;
-use std::rc::Rc;
-use std::task::{Context, Poll};
+use std::{collections::HashMap, rc::Rc};
 
 use actix_service::{Service, Transform};
 use actix_web::cookie::{Cookie, CookieJar, Key, SameSite};
@@ -326,9 +324,7 @@ where
     type Error = S::Error;
     type Future = LocalBoxFuture<'static, Result<Self::Response, Self::Error>>;
 
-    fn poll_ready(&self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        self.service.poll_ready(cx)
-    }
+    actix_service::forward_ready!(service);
 
     /// On first request, a new session cookie is returned in response, regardless
     /// of whether any session state is set.  With subsequent requests, if the

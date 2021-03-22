@@ -12,7 +12,7 @@
 //! To access current request identity
 //! [**Identity**](struct.Identity.html) extractor should be used.
 //!
-//! ```rust
+//! ```
 //! use actix_web::*;
 //! use actix_identity::{Identity, CookieIdentityPolicy, IdentityService};
 //!
@@ -49,11 +49,7 @@
 
 #![deny(rust_2018_idioms)]
 
-use std::cell::RefCell;
-use std::future::Future;
-use std::rc::Rc;
-use std::task::{Context, Poll};
-use std::time::SystemTime;
+use std::{future::Future, rc::Rc, time::SystemTime};
 
 use actix_service::{Service, Transform};
 use futures_util::future::{ok, FutureExt, LocalBoxFuture, Ready};
@@ -239,22 +235,22 @@ where
     fn new_transform(&self, service: S) -> Self::Future {
         ok(IdentityServiceMiddleware {
             backend: self.backend.clone(),
-            service: Rc::new(RefCell::new(service)),
+            service: Rc::new(service),
         })
     }
 }
 
 #[doc(hidden)]
 pub struct IdentityServiceMiddleware<S, T> {
+    service: Rc<S>,
     backend: Rc<T>,
-    service: Rc<RefCell<S>>,
 }
 
 impl<S, T> Clone for IdentityServiceMiddleware<S, T> {
     fn clone(&self) -> Self {
         Self {
-            backend: self.backend.clone(),
-            service: self.service.clone(),
+            backend: Rc::clone(&self.backend),
+            service: Rc::clone(&self.service),
         }
     }
 }
@@ -270,13 +266,11 @@ where
     type Error = Error;
     type Future = LocalBoxFuture<'static, Result<Self::Response, Self::Error>>;
 
-    fn poll_ready(&self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        self.service.borrow_mut().poll_ready(cx)
-    }
+    actix_service::forward_ready!(service);
 
     fn call(&self, mut req: ServiceRequest) -> Self::Future {
-        let srv = self.service.clone();
-        let backend = self.backend.clone();
+        let srv = Rc::clone(&self.service);
+        let backend = Rc::clone(&self.backend);
         let fut = self.backend.from_request(&mut req);
 
         async move {
@@ -285,9 +279,7 @@ where
                     req.extensions_mut()
                         .insert(IdentityItem { id, changed: false });
 
-                    // https://github.com/actix/actix-web/issues/1263
-                    let fut = srv.borrow_mut().call(req);
-                    let mut res = fut.await?;
+                    let mut res = srv.call(req).await?;
                     let id = res.request().extensions_mut().remove::<IdentityItem>();
 
                     if let Some(id) = id {
@@ -1132,12 +1124,10 @@ mod tests {
 
         let srv = IdentityServiceMiddleware {
             backend: Rc::new(Ident),
-            service: Rc::new(RefCell::new(into_service(
-                |_: ServiceRequest| async move {
-                    actix_rt::time::sleep(std::time::Duration::from_secs(100)).await;
-                    Err::<ServiceResponse, _>(error::ErrorBadRequest("error"))
-                },
-            ))),
+            service: Rc::new(into_service(|_: ServiceRequest| async move {
+                actix_rt::time::sleep(std::time::Duration::from_secs(100)).await;
+                Err::<ServiceResponse, _>(error::ErrorBadRequest("error"))
+            })),
         };
 
         let srv2 = srv.clone();
