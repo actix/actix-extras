@@ -20,6 +20,7 @@ pub enum CookieSessionError {
     /// Size of the serialized session is greater than 4000 bytes.
     #[display(fmt = "Size of the serialized session is greater than 4000 bytes.")]
     Overflow,
+
     /// Fail to serialize session.
     #[display(fmt = "Fail to serialize session")]
     Serialize(JsonError),
