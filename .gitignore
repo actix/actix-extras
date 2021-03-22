@@ -1,6 +1,7 @@
 /target
 **/*.rs.bk
 Cargo.lock
+.idea
 
 guide/build/
 /gh-pages

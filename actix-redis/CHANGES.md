@@ -3,7 +3,7 @@
 ## Unreleased - 2020-xx-xx
 * Update `actix-web` dependency to 4.0.0 beta.
 * Minimum supported Rust version (MSRV) is now 1.46.0.
-
+* Add `native-tls` feature for enabling support for connecting to tls enabled redis-server.
 
 ## 0.9.2 - 2020-03-21
 * Implement `std::error::Error` for `Error` [#135]

@@ -4,7 +4,7 @@ use std::io;
 use actix::prelude::*;
 use actix_rt::net::TcpStream;
 use actix_service::boxed::{service, BoxService};
-use actix_tls::connect::{default_connector, Connect, ConnectError, Connection};
+use actix_tls::connect::{self, Connect, ConnectError, Connection};
 use backoff::backoff::Backoff;
 use backoff::ExponentialBackoff;
 use log::{error, info, warn};
@@ -24,12 +24,22 @@ impl Message for Command {
     type Result = Result<RespValue, Error>;
 }
 
+#[cfg(not(feature = "native-tls"))]
+pub type RedisStream = TcpStream;
+#[cfg(feature = "native-tls")]
+pub type RedisStream = tokio_native_tls::TlsStream<TcpStream>;
+
 /// Redis communication actor
 pub struct RedisActor {
     addr: String,
     connector: BoxService<Connect<String>, Connection<String, TcpStream>, ConnectError>,
+    tls_connector: BoxService<
+        Connection<String, TcpStream>,
+        Connection<String, RedisStream>,
+        io::Error,
+    >,
     backoff: ExponentialBackoff,
-    cell: Option<actix::io::FramedWrite<RespValue, WriteHalf<TcpStream>, RespCodec>>,
+    cell: Option<actix::io::FramedWrite<RespValue, WriteHalf<RedisStream>, RespCodec>>,
     queue: VecDeque<oneshot::Sender<Result<RespValue, Error>>>,
 }
 
@@ -43,9 +53,43 @@ impl RedisActor {
             ..Default::default()
         };
 
+        let connector = service(connect::default_connector());
+
+        #[cfg(not(feature = "native-tls"))]
+        let tls_connector = service(actix_service::fn_service(|req| async { Ok(req) }));
+
+        // TODO: move this tls connector to actix-tls::connect module.
+        #[cfg(feature = "native-tls")]
+        let tls_connector = {
+            let connector = tokio_native_tls::TlsConnector::from(
+                tokio_native_tls::native_tls::TlsConnector::builder()
+                    // TODO: make these flags configurable through session builder.
+                    .danger_accept_invalid_certs(true)
+                    .danger_accept_invalid_hostnames(true)
+                    .use_sni(false)
+                    .build()
+                    .unwrap(),
+            );
+
+            service(actix_service::fn_service(
+                move |req: Connection<String, TcpStream>| {
+                    let (stream, addr) = req.into_parts();
+                    let connector = connector.clone();
+                    async move {
+                        let res = connector
+                            .connect(addr.as_str(), stream)
+                            .await
+                            .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+                        Ok(Connection::from_parts(res, addr))
+                    }
+                },
+            ))
+        };
+
         Supervisor::start(|_| RedisActor {
             addr,
-            connector: service(default_connector()),
+            connector,
+            tls_connector,
             cell: None,
             backoff,
             queue: VecDeque::new(),
@@ -61,9 +105,14 @@ impl Actor for RedisActor {
         self.connector
             .call(req)
             .into_actor(self)
+            .then(|res, act, _| {
+                let fut = res.map(|conn| act.tls_connector.call(conn));
+                async { fut?.await.map_err(ConnectError::Io) }.into_actor(act)
+            })
             .map(|res, act, ctx| match res {
                 Ok(conn) => {
                     let stream = conn.into_parts().0;
+
                     info!("Connected to redis server: {}", act.addr);
 
                     let (r, w) = split(stream);
@@ -78,6 +127,7 @@ impl Actor for RedisActor {
                     act.backoff.reset();
                 }
                 Err(err) => {
+                    println!("Can not connect to redis server: {}", err);
                     error!("Can not connect to redis server: {}", err);
                     // re-connect with backoff time.
                     // we stop current context, supervisor will restart it.
