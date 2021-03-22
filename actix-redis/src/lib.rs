@@ -3,7 +3,7 @@
 #![deny(rust_2018_idioms)]
 
 mod redis;
-pub use redis::RedisClient;
+pub use redis::{Command, RedisActor};
 
 use derive_more::{Display, Error, From};
 
@@ -25,12 +25,6 @@ pub enum Error {
     /// Cancel all waters when connection get dropped
     #[display(fmt = "Redis: Disconnected")]
     Disconnected,
-    /// Invalid address
-    #[display(fmt = "Redis: Invalid address")]
-    InvalidAddress,
-    /// DNS resolve error
-    #[display(fmt = "Redis: DNS resolve error")]
-    ResolveError,
 }
 
 #[cfg(feature = "web")]
