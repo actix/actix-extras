@@ -5,7 +5,7 @@ use actix_redis::{Command, Error, RedisActor, RespValue};
 
 #[actix_rt::test]
 async fn test_error_connect() {
-    let addr = RedisActor::start("rediss://@localhost:54000");
+    let addr = RedisActor::start("rediss://:abcdef@localhost:54000");
     let _addr2 = addr.clone();
 
     let res = addr.send(Command(resp_array!["GET", "test"])).await;
@@ -19,9 +19,7 @@ async fn test_error_connect() {
 async fn test_redis() {
     env_logger::init();
 
-    let addr = RedisActor::start("rediss://@127.0.0.1:6379");
-
-    actix_rt::task::yield_now().await;
+    let addr = RedisActor::start("rediss://:abcdef@127.0.0.1:6379");
 
     let res = addr
         .send(Command(resp_array!["SET", "test", "value"]))

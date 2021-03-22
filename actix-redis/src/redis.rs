@@ -1,20 +1,28 @@
-use std::collections::VecDeque;
-use std::io;
+use std::{
+    collections::VecDeque,
+    future::Future,
+    io,
+    pin::Pin,
+    task::{self, Poll},
+};
 
 use actix::prelude::*;
 use actix_http::http::Uri;
 use actix_rt::net::TcpStream;
 use actix_service::boxed::{service, BoxService};
 use actix_tls::connect::{self, Connect, ConnectError, Connection};
-use backoff::backoff::Backoff;
-use backoff::ExponentialBackoff;
+use actix_web::web::{Buf, BytesMut};
+use backoff::{backoff::Backoff, ExponentialBackoff};
+use futures_core::ready;
 use log::{error, info, warn};
-use redis_async::error::Error as RespError;
-use redis_async::resp::{RespCodec, RespValue};
-use redis_async::resp_array;
-use tokio::io::{split, WriteHalf};
+use redis_async::{
+    error::Error as RespError,
+    resp::{RespCodec, RespValue},
+    resp_array,
+};
+use tokio::io::{split, AsyncWrite, ReadHalf, WriteHalf};
 use tokio::sync::oneshot;
-use tokio_util::codec::FramedRead;
+use tokio_util::codec::{Encoder, FramedRead};
 
 use crate::Error;
 
@@ -133,21 +141,65 @@ impl Actor for RedisActor {
             .then(|res, act, _| {
                 async { res?.await.map_err(ConnectError::Io) }.into_actor(act)
             })
-            .map(|res, act, ctx| match res {
-                Ok(conn) => {
+            .map(|res, act, _| {
+                res.map(|conn| {
                     let stream = conn.into_parts().0;
 
                     info!("Connected to redis server: {}", act.uri);
 
                     let (r, w) = split(stream);
 
-                    // configure write side of the connection
-                    let framed = actix::io::FramedWrite::new(w, RespCodec, ctx);
-                    act.cell = Some(framed);
+                    let auth = match (act.username.as_ref(), act.password.as_ref()) {
+                        (Some(username), Some(password)) => {
+                            Some(resp_array!["AUTH", username, password])
+                        }
+                        (None, Some(password)) => Some(resp_array!["AUTH", password]),
+                        _ => None,
+                    };
 
-                    // read side of the connection
-                    ctx.add_stream(FramedRead::new(r, RespCodec));
+                    (auth, r, w)
+                })
+            })
+            .then(|res, act, _| {
+                async {
+                    let (auth, reader, mut writer) = res?;
 
+                    let mut reader = FramedRead::new(reader, RespCodec);
+
+                    if let Some(value) = auth {
+                        let mut buf = BytesMut::new();
+
+                        RespCodec
+                            .encode(value, &mut buf)
+                            .map_err(ConnectError::Io)?;
+
+                        AuthWriter {
+                            writer: &mut writer,
+                            buf,
+                        }
+                        .await
+                        .map_err(ConnectError::Io)?;
+
+                        let res = AuthReader {
+                            reader: &mut reader,
+                        }
+                        .await
+                        .map_err(|_| ConnectError::Unresolved)?;
+
+                        if let RespValue::Error(_) = res {
+                            return Err(ConnectError::Unresolved);
+                        }
+                    };
+
+                    Ok((reader, writer))
+                }
+                .into_actor(act)
+            })
+            .map(|res, act, ctx| match res {
+                Ok((reader, writer)) => {
+                    let writer = actix::io::FramedWrite::new(writer, RespCodec, ctx);
+                    act.cell = Some(writer);
+                    ctx.add_stream(reader);
                     act.backoff.reset();
                 }
                 Err(err) => {
@@ -160,35 +212,6 @@ impl Actor for RedisActor {
                 }
             })
             .wait(ctx);
-
-        // There is a limitation for this pattern. That is this could not be the first message
-        // get through actor and there could be other message sent too soon to get ahead and
-        // get false alarm of not authenticated.
-        match (self.username.as_ref(), self.password.as_ref()) {
-            (Some(username), Some(password)) => ctx
-                .address()
-                .send(Command(resp_array!["AUTH", username, password]))
-                .into_actor(self)
-                .map(|res, _, _| {
-                    // TODO: handle authentication error.
-                    if let RespValue::Error(e) = res.unwrap().unwrap() {
-                        panic!(e);
-                    }
-                })
-                .spawn(ctx),
-            (None, Some(password)) => ctx
-                .address()
-                .send(Command(resp_array!["AUTH", password]))
-                .into_actor(self)
-                .map(|res, _, _| {
-                    // TODO: handle authentication error.
-                    if let RespValue::Error(e) = res.unwrap().unwrap() {
-                        panic!(e);
-                    }
-                })
-                .spawn(ctx),
-            _ => {}
-        }
     }
 }
 
@@ -239,5 +262,48 @@ impl Handler<Command> for RedisActor {
         }
 
         Box::pin(async move { rx.await.map_err(|_| Error::Disconnected)? })
+    }
+}
+
+pin_project_lite::pin_project! {
+    struct AuthWriter<'a> {
+        #[pin]
+        writer: &'a mut WriteHalf<RedisStream>,
+        buf: BytesMut,
+    }
+}
+
+impl Future for AuthWriter<'_> {
+    type Output = Result<(), io::Error>;
+
+    fn poll(self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<Self::Output> {
+        let mut this = self.project();
+
+        loop {
+            let n = ready!(this.writer.as_mut().poll_write(cx, this.buf.chunk()))?;
+            if n == 0 {
+                return Poll::Ready(Ok(()));
+            } else {
+                this.buf.advance(n);
+            }
+        }
+    }
+}
+
+pin_project_lite::pin_project! {
+    struct AuthReader<'a> {
+        #[pin]
+        reader: &'a mut FramedRead<ReadHalf<RedisStream>, RespCodec>
+    }
+}
+
+impl Future for AuthReader<'_> {
+    type Output = Result<RespValue, Error>;
+
+    fn poll(self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<Self::Output> {
+        match ready!(self.project().reader.poll_next(cx)?) {
+            Some(res) => Poll::Ready(Ok(res)),
+            None => Poll::Ready(Err(Error::Disconnected)),
+        }
     }
 }

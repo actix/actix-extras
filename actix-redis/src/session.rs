@@ -486,7 +486,7 @@ mod test {
         let srv = test::start(|| {
             App::new()
                 .wrap(
-                    RedisSession::new("rediss://@127.0.0.1:6379", &[0; 32])
+                    RedisSession::new("rediss://:abcdef@127.0.0.1:6379", &[0; 32])
                         .cookie_name("test-session"),
                 )
                 .wrap(middleware::Logger::default())
@@ -683,7 +683,7 @@ mod test {
         let srv = test::start(|| {
             App::new()
                 .wrap(
-                    RedisSession::new("rediss://@127.0.0.1:6379", &[0; 32])
+                    RedisSession::new("rediss://:abcdef@127.0.0.1:6379", &[0; 32])
                         .cookie_name("test-session")
                         .cookie_max_age(None),
                 )

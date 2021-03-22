@@ -42,6 +42,7 @@ log = "0.4.6"
 backoff = "0.2.1"
 derive_more = "0.99.2"
 futures-core = { version = "0.3.7", default-features = false }
+pin-project-lite = "0.2.6"
 redis2 = { package = "redis", version = "0.19.0", features = ["tokio-comp", "tokio-native-tls-comp"] }
 redis-async = { version = "0.8", default-features = false, features = ["tokio10"] }
 time = "0.2.23"
