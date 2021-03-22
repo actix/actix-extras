@@ -2,14 +2,16 @@ use std::collections::VecDeque;
 use std::io;
 
 use actix::prelude::*;
+use actix_http::http::Uri;
 use actix_rt::net::TcpStream;
 use actix_service::boxed::{service, BoxService};
-use actix_tls::connect::{default_connector, Connect, ConnectError, Connection};
+use actix_tls::connect::{self, Connect, ConnectError, Connection};
 use backoff::backoff::Backoff;
 use backoff::ExponentialBackoff;
 use log::{error, info, warn};
 use redis_async::error::Error as RespError;
 use redis_async::resp::{RespCodec, RespValue};
+use redis_async::resp_array;
 use tokio::io::{split, WriteHalf};
 use tokio::sync::oneshot;
 use tokio_util::codec::FramedRead;
@@ -24,28 +26,94 @@ impl Message for Command {
     type Result = Result<RespValue, Error>;
 }
 
+#[cfg(not(feature = "native-tls"))]
+pub type RedisStream = TcpStream;
+#[cfg(feature = "native-tls")]
+pub type RedisStream = tokio_native_tls::TlsStream<TcpStream>;
+
 /// Redis communication actor
 pub struct RedisActor {
-    addr: String,
-    connector: BoxService<Connect<String>, Connection<String, TcpStream>, ConnectError>,
+    uri: Uri,
+    port: u16,
+    username: Option<String>,
+    password: Option<String>,
+    connector: BoxService<Connect<Uri>, Connection<Uri, TcpStream>, ConnectError>,
+    tls_connector:
+        BoxService<Connection<Uri, TcpStream>, Connection<Uri, RedisStream>, io::Error>,
     backoff: ExponentialBackoff,
-    cell: Option<actix::io::FramedWrite<RespValue, WriteHalf<TcpStream>, RespCodec>>,
+    cell: Option<actix::io::FramedWrite<RespValue, WriteHalf<RedisStream>, RespCodec>>,
     queue: VecDeque<oneshot::Sender<Result<RespValue, Error>>>,
 }
 
 impl RedisActor {
     /// Start new `Supervisor` with `RedisActor`.
-    pub fn start<S: Into<String>>(addr: S) -> Addr<RedisActor> {
+    pub fn start(addr: impl Into<String>) -> Addr<RedisActor> {
         let addr = addr.into();
+
+        // TODO: return error for preparing uri and connectors
+        let uri = <Uri as std::str::FromStr>::from_str(addr.as_str()).unwrap();
+
+        // this is a lazy way to get username and password from input.
+        // A homebrew extractor can be introduced if reduce dep tree is priority.
+        let url = url::Url::parse(addr.as_str()).unwrap();
+        let username = if url.username() == "" {
+            None
+        } else {
+            Some(url.username().to_owned())
+        };
+
+        let password = url.password().map(ToOwned::to_owned);
+
+        let port = url.port().unwrap_or(6379);
+        let scheme = url.scheme();
+
+        let tls_connector = match scheme {
+            #[cfg(not(feature = "native-tls"))]
+            "redis" => service(actix_service::fn_service(|req| async { Ok(req) })),
+            #[cfg(feature = "native-tls")]
+            "rediss" => {
+                let connector = tokio_native_tls::TlsConnector::from(
+                    tokio_native_tls::native_tls::TlsConnector::builder()
+                        // TODO: make these flags configurable through session builder.
+                        .danger_accept_invalid_certs(true)
+                        .danger_accept_invalid_hostnames(true)
+                        .use_sni(false)
+                        .build()
+                        .unwrap(),
+                );
+
+                service(actix_service::fn_service(
+                    move |req: Connection<Uri, TcpStream>| {
+                        let (stream, addr) = req.into_parts();
+                        let connector = connector.clone();
+                        async move {
+                            let res = connector
+                                .connect(addr.host().unwrap(), stream)
+                                .await
+                                .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+                            Ok(Connection::from_parts(res, addr))
+                        }
+                    },
+                ))
+            }
+            "redis+unix" | "unix" => panic!("unix domain socket is not supported"),
+            _ => panic!("Feature not support"),
+        };
 
         let backoff = ExponentialBackoff {
             max_elapsed_time: None,
             ..Default::default()
         };
 
-        Supervisor::start(|_| RedisActor {
-            addr,
-            connector: service(default_connector()),
+        let connector = service(connect::default_connector());
+
+        Supervisor::start(move |_| RedisActor {
+            uri,
+            port,
+            username,
+            password,
+            connector,
+            tls_connector,
             cell: None,
             backoff,
             queue: VecDeque::new(),
@@ -57,14 +125,19 @@ impl Actor for RedisActor {
     type Context = Context<Self>;
 
     fn started(&mut self, ctx: &mut Context<Self>) {
-        let req = Connect::new(self.addr.to_owned());
+        let req = Connect::new(self.uri.to_owned()).set_port(self.port);
         self.connector
             .call(req)
             .into_actor(self)
+            .map(|res, act, _| res.map(|conn| act.tls_connector.call(conn)))
+            .then(|res, act, _| {
+                async { res?.await.map_err(ConnectError::Io) }.into_actor(act)
+            })
             .map(|res, act, ctx| match res {
                 Ok(conn) => {
                     let stream = conn.into_parts().0;
-                    info!("Connected to redis server: {}", act.addr);
+
+                    info!("Connected to redis server: {}", act.uri);
 
                     let (r, w) = split(stream);
 
@@ -87,6 +160,35 @@ impl Actor for RedisActor {
                 }
             })
             .wait(ctx);
+
+        // There is a limitation for this pattern. That is this could not be the first message
+        // get through actor and there could be other message sent too soon to get ahead and
+        // get false alarm of not authenticated.
+        match (self.username.as_ref(), self.password.as_ref()) {
+            (Some(username), Some(password)) => ctx
+                .address()
+                .send(Command(resp_array!["AUTH", username, password]))
+                .into_actor(self)
+                .map(|res, _, _| {
+                    // TODO: handle authentication error.
+                    if let RespValue::Error(e) = res.unwrap().unwrap() {
+                        panic!(e);
+                    }
+                })
+                .spawn(ctx),
+            (None, Some(password)) => ctx
+                .address()
+                .send(Command(resp_array!["AUTH", password]))
+                .into_actor(self)
+                .map(|res, _, _| {
+                    // TODO: handle authentication error.
+                    if let RespValue::Error(e) = res.unwrap().unwrap() {
+                        panic!(e);
+                    }
+                })
+                .spawn(ctx),
+            _ => {}
+        }
     }
 }
 
@@ -101,7 +203,7 @@ impl Supervised for RedisActor {
 
 impl actix::io::WriteHandler<io::Error> for RedisActor {
     fn error(&mut self, err: io::Error, _: &mut Self::Context) -> Running {
-        warn!("Redis connection dropped: {} error: {}", self.addr, err);
+        warn!("Redis connection dropped: {} error: {}", self.uri, err);
         Running::Stop
     }
 }
