@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["HttpAuthentication","Middleware for checking HTTP authentication."]]});

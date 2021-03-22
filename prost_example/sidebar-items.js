@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["index",""],["main",""]],"struct":[["MyObj",""]]});
