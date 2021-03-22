@@ -1,31 +1,42 @@
 #[macro_use]
 extern crate redis_async;
 
-use actix_redis::{Error, RedisClient, RespValue};
+use actix_redis::{Command, Error, RedisActor, RespValue};
 
 #[actix_rt::test]
 async fn test_error_connect() {
-    let addr = RedisClient::new("localhost:54000");
+    let addr = RedisActor::start("localhost:54000");
+    let _addr2 = addr.clone();
 
-    let res = addr.send(resp_array!["GET", "test"]).await;
+    let res = addr.send(Command(resp_array!["GET", "test"])).await;
     match res {
-        Err(Error::NotConnected) => (),
+        Ok(Err(Error::NotConnected)) => (),
         _ => panic!("Should not happen {:?}", res),
     }
 }
 
 #[actix_rt::test]
-async fn test_redis() -> Result<(), Error> {
+async fn test_redis() {
     env_logger::init();
 
-    let addr = RedisClient::new("127.0.0.1:6379");
+    let addr = RedisActor::start("127.0.0.1:6379");
+    let res = addr
+        .send(Command(resp_array!["SET", "test", "value"]))
+        .await;
 
-    let resp = addr.send(resp_array!["SET", "test", "value"]).await?;
+    match res {
+        Ok(Ok(resp)) => {
+            assert_eq!(resp, RespValue::SimpleString("OK".to_owned()));
 
-    assert_eq!(resp, RespValue::SimpleString("OK".to_owned()));
-
-    let resp = addr.send(resp_array!["GET", "test"]).await?;
-    println!("RESP: {:?}", resp);
-    assert_eq!(resp, RespValue::BulkString((&b"value"[..]).into()));
-    Ok(())
+            let res = addr.send(Command(resp_array!["GET", "test"])).await;
+            match res {
+                Ok(Ok(resp)) => {
+                    println!("RESP: {:?}", resp);
+                    assert_eq!(resp, RespValue::BulkString((&b"value"[..]).into()));
+                }
+                _ => panic!("Should not happen {:?}", res),
+            }
+        }
+        _ => panic!("Should not happen {:?}", res),
+    }
 }

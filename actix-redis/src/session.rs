@@ -1,21 +1,19 @@
-use std::cell::RefCell;
-use std::pin::Pin;
-use std::task::{Context, Poll};
 use std::{collections::HashMap, iter, rc::Rc};
 
+use actix::prelude::*;
 use actix_service::{Service, Transform};
 use actix_session::{Session, SessionStatus};
 use actix_web::cookie::{Cookie, CookieJar, Key, SameSite};
 use actix_web::dev::{ServiceRequest, ServiceResponse};
 use actix_web::http::header::{self, HeaderValue};
 use actix_web::{error, Error, HttpMessage};
-use futures_util::future::{ok, Future, Ready};
+use futures_core::future::LocalBoxFuture;
 use rand::{distributions::Alphanumeric, rngs::OsRng, Rng};
 use redis_async::resp::RespValue;
 use redis_async::resp_array;
 use time::{self, Duration, OffsetDateTime};
 
-use crate::redis::RedisClient;
+use crate::redis::{Command, RedisActor};
 
 /// Use redis as session storage.
 ///
@@ -35,7 +33,7 @@ impl RedisSession {
             key: Key::derive_from(key),
             cache_keygen: Box::new(|key: &str| format!("session:{}", &key)),
             ttl: "7200".to_owned(),
-            redis_client: RedisClient::new(addr),
+            addr: RedisActor::start(addr),
             name: "actix-session".to_owned(),
             path: "/".to_owned(),
             domain: None,
@@ -120,21 +118,24 @@ where
 {
     type Response = ServiceResponse<B>;
     type Error = S::Error;
-    type InitError = ();
     type Transform = RedisSessionMiddleware<S>;
-    type Future = Ready<Result<Self::Transform, Self::InitError>>;
+    type InitError = ();
+    type Future = LocalBoxFuture<'static, Result<Self::Transform, Self::InitError>>;
 
     fn new_transform(&self, service: S) -> Self::Future {
-        ok(RedisSessionMiddleware {
-            service: Rc::new(RefCell::new(service)),
-            inner: self.0.clone(),
+        let inner = self.0.clone();
+        Box::pin(async {
+            Ok(RedisSessionMiddleware {
+                service: Rc::new(service),
+                inner,
+            })
         })
     }
 }
 
 /// Cookie session middleware
 pub struct RedisSessionMiddleware<S: 'static> {
-    service: Rc<RefCell<S>>,
+    service: Rc<S>,
     inner: Rc<Inner>,
 }
 
@@ -146,12 +147,9 @@ where
 {
     type Response = ServiceResponse<B>;
     type Error = Error;
-    #[allow(clippy::type_complexity)]
-    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>>>>;
+    type Future = LocalBoxFuture<'static, Result<Self::Response, Self::Error>>;
 
-    fn poll_ready(&self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        self.service.borrow_mut().poll_ready(cx)
-    }
+    actix_service::forward_ready!(service);
 
     fn call(&self, mut req: ServiceRequest) -> Self::Future {
         let srv = self.service.clone();
@@ -210,7 +208,7 @@ struct Inner {
     key: Key,
     cache_keygen: Box<dyn Fn(&str) -> String>,
     ttl: String,
-    redis_client: RedisClient,
+    addr: Addr<RedisActor>,
     name: String,
     path: String,
     domain: Option<String>,
@@ -252,9 +250,11 @@ impl Inner {
         };
 
         let val = self
-            .redis_client
-            .send(resp_array!["GET", cache_key])
-            .await?;
+            .addr
+            .send(Command(resp_array!["GET", cache_key]))
+            .await
+            .map_err(error::ErrorInternalServerError)?
+            .map_err(error::ErrorInternalServerError)?;
 
         match val {
             RespValue::Error(err) => {
@@ -285,11 +285,11 @@ impl Inner {
         let (value, jar) = if let Some(value) = value {
             (value, None)
         } else {
-            let value: String = iter::repeat(())
+            let value = iter::repeat(())
                 .map(|()| OsRng.sample(Alphanumeric))
-                .map(char::from)
                 .take(32)
-                .collect();
+                .collect::<Vec<_>>();
+            let value = String::from_utf8(value).unwrap_or_default();
 
             // prepare session id cookie
             let mut cookie = Cookie::new(self.name.clone(), value.clone());
@@ -325,9 +325,13 @@ impl Inner {
             Ok(body) => body,
         };
 
-        self.redis_client
-            .send(resp_array!["SET", cache_key, body, "EX", &self.ttl])
-            .await?;
+        let cmd = Command(resp_array!["SET", cache_key, body, "EX", &self.ttl]);
+
+        self.addr
+            .send(cmd)
+            .await
+            .map_err(error::ErrorInternalServerError)?
+            .map_err(error::ErrorInternalServerError)?;
 
         if let Some(jar) = jar {
             for cookie in jar.delta() {
@@ -343,13 +347,15 @@ impl Inner {
     async fn clear_cache(&self, key: String) -> Result<(), Error> {
         let cache_key = (self.cache_keygen)(&key);
 
-        match self
-            .redis_client
-            .send(resp_array!["DEL", cache_key])
-            .await?
-        {
+        let res = self
+            .addr
+            .send(Command(resp_array!["DEL", cache_key]))
+            .await
+            .map_err(error::ErrorInternalServerError)?;
+
+        match res {
             // redis responds with number of deleted records
-            RespValue::Integer(x) if x > 0 => Ok(()),
+            Ok(RespValue::Integer(x)) if x > 0 => Ok(()),
             _ => Err(error::ErrorInternalServerError(
                 "failed to remove session from cache",
             )),
