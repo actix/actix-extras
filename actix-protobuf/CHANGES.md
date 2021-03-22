@@ -1,7 +1,11 @@
 # Changes
 
 ## Unreleased - 2020-xx-xx
+* Bump `prost` version to 0.7. [#144]
+* Update `actix-web` dependency to 4.0.0 beta.
 * Minimum supported Rust version (MSRV) is now 1.46.0.
+
+[#144]: https://github.com/actix/actix-extras/pull/144
 
 
 ## 0.6.0 - 2020-09-11
