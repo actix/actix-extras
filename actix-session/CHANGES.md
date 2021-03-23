@@ -1,8 +1,16 @@
 # Changes
 
 ## Unreleased - 2020-xx-xx
+* Add `Session::entries`. [#???]
+* Rename `Session::{set => insert}` to match standard hash map naming. [#???]
+* Return values from `Session::remove`. [#???]
+* Add `Session::remove_as` deserializing variation. [#???]
+* Simplify `Session::get_changes` now always returning iterator even when empty. [#???]
+* Swap order of arguments on `Session::set_session`. [#???]
 * Update `actix-web` dependency to 4.0.0 beta.
 * Minimum supported Rust version (MSRV) is now 1.46.0.
+
+[#???]: https://github.com/actix/actix-extras/pull/???
 
 
 ## 0.4.1 - 2020-03-21

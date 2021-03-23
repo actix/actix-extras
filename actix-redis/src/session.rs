@@ -157,8 +157,9 @@ where
 
         Box::pin(async move {
             let state = inner.load(&req).await?;
+
             let value = if let Some((state, value)) = state {
-                Session::set_session(state, &mut req);
+                Session::set_session(&mut req, state);
                 Some(value)
             } else {
                 None
@@ -167,8 +168,7 @@ where
             let mut res = srv.call(req).await?;
 
             match Session::get_changes(&mut res) {
-                (SessionStatus::Unchanged, None) => Ok(res),
-                (SessionStatus::Unchanged, Some(state)) => {
+                (SessionStatus::Unchanged, state) => {
                     if value.is_none() {
                         // implies the session is new
                         inner.update(res, state, value).await
@@ -176,10 +176,10 @@ where
                         Ok(res)
                     }
                 }
-                (SessionStatus::Changed, Some(state)) => {
-                    inner.update(res, state, value).await
-                }
-                (SessionStatus::Purged, Some(_)) => {
+
+                (SessionStatus::Changed, state) => inner.update(res, state, value).await,
+
+                (SessionStatus::Purged, _) => {
                     if let Some(val) = value {
                         inner.clear_cache(val).await?;
                         match inner.remove_cookie(&mut res) {
@@ -190,7 +190,8 @@ where
                         Err(error::ErrorInternalServerError("unexpected"))
                     }
                 }
-                (SessionStatus::Renewed, Some(state)) => {
+
+                (SessionStatus::Renewed, state) => {
                     if let Some(val) = value {
                         inner.clear_cache(val).await?;
                         inner.update(res, state, None).await
@@ -198,7 +199,6 @@ where
                         inner.update(res, state, None).await
                     }
                 }
-                (_, None) => unreachable!(),
             }
         })
     }
@@ -343,7 +343,7 @@ impl Inner {
         Ok(res)
     }
 
-    /// removes cache entry
+    /// Removes cache entry.
     async fn clear_cache(&self, key: String) -> Result<(), Error> {
         let cache_key = (self.cache_keygen)(&key);
 
@@ -362,7 +362,7 @@ impl Inner {
         }
     }
 
-    /// invalidates session cookie
+    /// Invalidates session cookie.
     fn remove_cookie<B>(&self, res: &mut ServiceResponse<B>) -> Result<(), Error> {
         let mut cookie = Cookie::named(self.name.clone());
         cookie.set_value("");
@@ -411,7 +411,7 @@ mod test {
             .get::<i32>("counter")
             .unwrap_or(Some(0))
             .map_or(1, |inner| inner + 1);
-        session.set("counter", counter)?;
+        session.insert("counter", &counter)?;
 
         Ok(HttpResponse::Ok().json(&IndexResponse { user_id, counter }))
     }
@@ -426,7 +426,7 @@ mod test {
         session: Session,
     ) -> Result<HttpResponse> {
         let id = user_id.into_inner().user_id;
-        session.set("user_id", &id)?;
+        session.insert("user_id", &id)?;
         session.renew();
 
         let counter: i32 = session
