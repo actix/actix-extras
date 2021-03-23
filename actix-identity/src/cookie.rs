@@ -240,13 +240,13 @@ impl CookieIdentityPolicy {
         self
     }
 
-    /// Sets the `MaxAge` attribute of issued cookies.
+    /// Sets the `Max-Age` attribute of issued cookies.
     pub fn max_age(mut self, value: Duration) -> CookieIdentityPolicy {
         self.inner_mut().max_age = Some(value);
         self
     }
 
-    /// Sets the `MaxAge` attribute of issued cookies with given number of seconds.
+    /// Sets the `Max-Age` attribute of issued cookies with given number of seconds.
     pub fn max_age_secs(self, seconds: i64) -> CookieIdentityPolicy {
         self.max_age(Duration::seconds(seconds))
     }
@@ -282,7 +282,7 @@ impl CookieIdentityPolicy {
     /// Accepts only users who authenticated within the given deadline.
     ///
     /// In other words, invalidate a login after some amount of time, regardless of activity.
-    /// While [`MaxAge`](CookieIdentityPolicy::max_age) is useful in constraining the cookie
+    /// While [`Max-Age`](CookieIdentityPolicy::max_age) is useful in constraining the cookie
     /// lifetime, it could be extended manually; using this feature encodes the deadline directly
     /// into the issued cookies, making it immutable to users.
     ///

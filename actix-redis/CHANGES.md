@@ -7,7 +7,7 @@
 
 ## 0.9.2 - 2020-03-21
 * Implement `std::error::Error` for `Error` [#135]
-* Allow the removal of Max-Age for session-only cookies. [#161]
+* Allow the removal of `Max-Age` for session-only cookies. [#161]
 
 [#135]: https://github.com/actix/actix-extras/pull/135
 [#161]: https://github.com/actix/actix-extras/pull/161
