@@ -174,9 +174,7 @@ impl Session {
 
         if inner.status != SessionStatus::Purged {
             inner.status = SessionStatus::Changed;
-
             let val = serde_json::to_string(&value)?;
-
             inner.state.insert(key.into(), val);
         }
 
