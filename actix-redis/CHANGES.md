@@ -3,6 +3,9 @@
 ## Unreleased - 2020-xx-xx
 * Update `actix-web` dependency to 4.0.0 beta.
 * Minimum supported Rust version (MSRV) is now 1.46.0.
+* Add Authentication to `actix-redis` for connecting redis server protected by username/password. [#167]
+
+[#167]: https://github.com/actix/actix-extras/pull/167
 
 
 ## 0.9.2 - 2020-03-21

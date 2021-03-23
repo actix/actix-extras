@@ -27,7 +27,18 @@ pub struct RedisSession(Rc<Inner>);
 impl RedisSession {
     /// Create new redis session backend
     ///
-    /// * `addr` - address of the redis server
+    /// * `addr` - url for parsing information that needed for connecting to redis server.
+    ///
+    /// # Format:
+    ///
+    /// `<prefix>://<username>:<password>@<host>:<port>`
+    ///
+    /// # Example:
+    ///
+    /// `redis://john:123@127.0.0.1:6379` connect to 127.0.0.1:6379 as john with 123 as password.
+    ///
+    /// `rediss://:abc@localhost` connect to localhost with tls connection on default port(6379).
+    /// with abc as pssword.(No username required by server).
     pub fn new<S: Into<String>>(addr: S, key: &[u8]) -> RedisSession {
         RedisSession(Rc::new(Inner {
             key: Key::derive_from(key),
