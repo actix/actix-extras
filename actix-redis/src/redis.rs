@@ -1,18 +1,21 @@
 use std::{
+    cell::RefCell,
     collections::VecDeque,
     future::Future,
     io,
     pin::Pin,
+    rc::Rc,
     task::{self, Poll},
 };
 
 use actix::prelude::*;
+use actix_codec::{AsyncRead, AsyncWrite, Encoder, Framed, ReadBuf};
 use actix_http::http::Uri;
 use actix_rt::net::TcpStream;
 use actix_service::boxed::{service, BoxService};
 use actix_tls::connect::{self, Connect, ConnectError, Connection};
-use actix_web::web::{Buf, BytesMut};
 use backoff::{backoff::Backoff, ExponentialBackoff};
+use bytes::{Buf, BytesMut};
 use futures_core::ready;
 use log::{error, info, warn};
 use redis_async::{
@@ -20,9 +23,7 @@ use redis_async::{
     resp::{RespCodec, RespValue},
     resp_array,
 };
-use tokio::io::{split, AsyncWrite, ReadHalf, WriteHalf};
 use tokio::sync::oneshot;
-use tokio_util::codec::{Encoder, FramedRead};
 
 use crate::Error;
 
@@ -49,7 +50,7 @@ pub struct RedisActor {
     tls_connector:
         BoxService<Connection<Uri, TcpStream>, Connection<Uri, RedisStream>, io::Error>,
     backoff: ExponentialBackoff,
-    cell: Option<actix::io::FramedWrite<RespValue, WriteHalf<RedisStream>, RespCodec>>,
+    cell: Option<actix::io::FramedWrite<RespValue, RcStream<RedisStream>, RespCodec>>,
     queue: VecDeque<oneshot::Sender<Result<RespValue, Error>>>,
 }
 
@@ -104,7 +105,7 @@ impl RedisActor {
                     },
                 ))
             }
-            "redis+unix" | "unix" => panic!("unix domain socket is not supported"),
+            "redis+unix" | "unix" => panic!("Unix domain socket is not supported"),
             _ => panic!("Feature not support"),
         };
 
@@ -147,8 +148,7 @@ impl Actor for RedisActor {
 
                     info!("Connected to redis server: {}", act.uri);
 
-                    let (r, w) = split(stream);
-
+                    // prepare authentication command.
                     let auth = match (act.username.as_ref(), act.password.as_ref()) {
                         (Some(username), Some(password)) => {
                             Some(resp_array!["AUTH", username, password])
@@ -157,15 +157,21 @@ impl Actor for RedisActor {
                         _ => None,
                     };
 
-                    (auth, r, w)
+                    (auth, stream)
                 })
             })
             .then(|res, act, _| {
                 async {
-                    let (auth, reader, mut writer) = res?;
+                    let (auth, stream) = res?;
 
-                    let mut reader = FramedRead::new(reader, RespCodec);
+                    // split stream and construct stream reader.
+                    let stream = RcStream(Rc::new(RefCell::new(stream)));
+                    let reader = stream.clone();
 
+                    let mut writer = stream.clone();
+                    let mut reader = Framed::new(reader, RespCodec);
+
+                    // do authentication if needed.
                     if let Some(value) = auth {
                         let mut buf = BytesMut::new();
 
@@ -268,7 +274,7 @@ impl Handler<Command> for RedisActor {
 pin_project_lite::pin_project! {
     struct AuthWriter<'a> {
         #[pin]
-        writer: &'a mut WriteHalf<RedisStream>,
+        writer: &'a mut RcStream<RedisStream>,
         buf: BytesMut,
     }
 }
@@ -293,7 +299,7 @@ impl Future for AuthWriter<'_> {
 pin_project_lite::pin_project! {
     struct AuthReader<'a> {
         #[pin]
-        reader: &'a mut FramedRead<ReadHalf<RedisStream>, RespCodec>
+        reader: &'a mut Framed<RcStream<RedisStream>, RespCodec>
     }
 }
 
@@ -305,5 +311,59 @@ impl Future for AuthReader<'_> {
             Some(res) => Poll::Ready(Ok(res)),
             None => Poll::Ready(Err(Error::Disconnected)),
         }
+    }
+}
+
+struct RcStream<Io>(Rc<RefCell<Io>>);
+
+impl<Io> Clone for RcStream<Io> {
+    fn clone(&self) -> Self {
+        Self(self.0.clone())
+    }
+}
+
+impl<Io: AsyncRead + Unpin> AsyncRead for RcStream<Io> {
+    fn poll_read(
+        self: Pin<&mut Self>,
+        cx: &mut task::Context<'_>,
+        buf: &mut ReadBuf<'_>,
+    ) -> Poll<io::Result<()>> {
+        Pin::new(&mut *(*self.0).borrow_mut()).poll_read(cx, buf)
+    }
+}
+
+impl<Io: AsyncWrite + Unpin> AsyncWrite for RcStream<Io> {
+    fn poll_write(
+        self: Pin<&mut Self>,
+        cx: &mut task::Context<'_>,
+        buf: &[u8],
+    ) -> Poll<io::Result<usize>> {
+        Pin::new(&mut *(*self.0).borrow_mut()).poll_write(cx, buf)
+    }
+
+    fn poll_flush(
+        self: Pin<&mut Self>,
+        cx: &mut task::Context<'_>,
+    ) -> Poll<io::Result<()>> {
+        Pin::new(&mut *(*self.0).borrow_mut()).poll_flush(cx)
+    }
+
+    fn poll_shutdown(
+        self: Pin<&mut Self>,
+        cx: &mut task::Context<'_>,
+    ) -> Poll<io::Result<()>> {
+        Pin::new(&mut *(*self.0).borrow_mut()).poll_shutdown(cx)
+    }
+
+    fn poll_write_vectored(
+        self: Pin<&mut Self>,
+        cx: &mut task::Context<'_>,
+        bufs: &[io::IoSlice<'_>],
+    ) -> Poll<io::Result<usize>> {
+        Pin::new(&mut *(*self.0).borrow_mut()).poll_write_vectored(cx, bufs)
+    }
+
+    fn is_write_vectored(&self) -> bool {
+        (&*(*self.0).borrow_mut()).is_write_vectored()
     }
 }
