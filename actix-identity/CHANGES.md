@@ -1,12 +1,18 @@
 # Changes
 
 ## Unreleased - 2020-xx-xx
+* Rename `CookieIdentityPolicy::{max_age => max_age_secs}`. [#???]
+* Rename `CookieIdentityPolicy::{max_age_time => max_age}`. [#???]
 * Update `actix-web` dependency to 4.0.0 beta.
 * Minimum supported Rust version (MSRV) is now 1.46.0.
 
+[#???]: https://github.com/actix/actix-extras/pull/???
+
 
 ## 0.3.1 - 2020-09-20
-* Add method to set HttpOnly flag on cookie identity. [#102]
+* Add method to set `HttpOnly` flag on cookie identity. [#102]
+
+[#102]: https://github.com/actix/actix-extras/pull/102
 
 
 ## 0.3.0 - 2020-09-11
