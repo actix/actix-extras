@@ -197,8 +197,8 @@ impl Session {
 
     /// Remove value from the session and deserialize.
     ///
-    /// Returns None if key was not present in session. Returns T if deserialization succeeds;
-    /// otherwise un-deserialized returns JSON string.
+    /// Returns None if key was not present in session. Returns T if deserialization succeeds,
+    /// otherwise returns un-deserialized JSON string.
     pub fn remove_as<T: DeserializeOwned>(
         &self,
         key: &str,
