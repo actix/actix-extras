@@ -461,8 +461,7 @@ mod test {
         }
     }
 
-    #[actix_rt::test]
-    async fn test_session_workflow() {
+    async fn test_session_workflow(addr: &'static str) {
         // Step 1:  GET index
         //   - set-cookie actix-session will be in response (session cookie #1)
         //   - response should be: {"counter": 0, "user_id": None}
@@ -494,12 +493,9 @@ mod test {
         //   - set-cookie actix-session will be in response (session cookie #3)
         //   - response should be: {"counter": 0, "user_id": None}
 
-        let srv = test::start(|| {
+        let srv = test::start(move || {
             App::new()
-                .wrap(
-                    RedisSession::new("redis://@127.0.0.1:6379", &[0; 32])
-                        .cookie_name("test-session"),
-                )
+                .wrap(RedisSession::new(addr, &[0; 32]).cookie_name("test-session"))
                 .wrap(middleware::Logger::default())
                 .service(resource("/").route(get().to(index)))
                 .service(resource("/do_something").route(post().to(do_something)))
@@ -686,15 +682,14 @@ mod test {
         assert_ne!(cookie_5.value(), cookie_2.value());
     }
 
-    #[actix_rt::test]
-    async fn test_max_age_session_only() {
+    async fn test_max_age_session_only(addr: &'static str) {
         //
         // Test that removing max_age results in a session-only cookie
         //
-        let srv = test::start(|| {
+        let srv = test::start(move || {
             App::new()
                 .wrap(
-                    RedisSession::new("redis://127.0.0.1:6379", &[0; 32])
+                    RedisSession::new(addr, &[0; 32])
                         .cookie_name("test-session")
                         .cookie_max_age(None),
                 )
@@ -714,4 +709,24 @@ mod test {
 
         assert_eq!(cookie.max_age(), None);
     }
+
+    #[actix_rt::test]
+    async fn test_session_workflow_tcp() {
+        test_session_workflow("redis://127.0.0.1:6379").await
+    }
+
+    // #[actix_rt::test]
+    // async fn test_session_workflow_tls() {
+    //     test_session_workflow("rediss://127.0.0.1:6379").await
+    // }
+
+    #[actix_rt::test]
+    async fn test_max_age_session_only_tcp() {
+        test_max_age_session_only("redis://127.0.0.1:6379").await
+    }
+
+    // #[actix_rt::test]
+    // async fn test_max_age_session_only_tls() {
+    //     test_max_age_session_only("rediss://127.0.0.1:6379").await
+    // }
 }

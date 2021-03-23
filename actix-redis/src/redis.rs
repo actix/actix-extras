@@ -117,8 +117,12 @@ impl RedisActor {
                     },
                 ))
             }
+            #[cfg(not(feature = "native-tls"))]
+            "rediss" => {
+                panic!("native-tls feature must enabled for connecting to tls server")
+            }
             "redis+unix" | "unix" => panic!("Unix domain socket is not supported"),
-            _ => panic!("Feature not support"),
+            _ => panic!("Wrong prefix.Address must start with redis:// or rediss://"),
         };
 
         let backoff = ExponentialBackoff {
