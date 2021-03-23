@@ -19,7 +19,7 @@ path = "src/lib.rs"
 
 [features]
 default = ["web"]
-native-tls = ["tokio-native-tls"]
+native-tls = ["tokio-native-tls", "actix-tls/native-tls", "actix-tls/accept"]
 
 # actix-web integration
 web = [

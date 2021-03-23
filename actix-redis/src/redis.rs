@@ -11,11 +11,11 @@ use std::{
 use actix::prelude::*;
 use actix_codec::{AsyncRead, AsyncWrite, Encoder, Framed, ReadBuf};
 use actix_http::http::Uri;
-use actix_rt::net::TcpStream;
+use actix_rt::net::{ActixStream, TcpStream};
 use actix_service::boxed::{service, BoxService};
 use actix_tls::connect::{self, Connect, ConnectError, Connection};
 use backoff::{backoff::Backoff, ExponentialBackoff};
-use bytes::{Buf, BytesMut};
+use bytes::BytesMut;
 use futures_core::ready;
 use log::{error, info, warn};
 use redis_async::{
@@ -23,6 +23,7 @@ use redis_async::{
     resp::{RespCodec, RespValue},
     resp_array,
 };
+use tokio::io::AsyncWriteExt;
 use tokio::sync::oneshot;
 
 use crate::Error;
@@ -35,11 +36,6 @@ impl Message for Command {
     type Result = Result<RespValue, Error>;
 }
 
-#[cfg(not(feature = "native-tls"))]
-pub type RedisStream = TcpStream;
-#[cfg(feature = "native-tls")]
-pub type RedisStream = tokio_native_tls::TlsStream<TcpStream>;
-
 /// Redis communication actor
 pub struct RedisActor {
     uri: Uri,
@@ -47,10 +43,14 @@ pub struct RedisActor {
     username: Option<String>,
     password: Option<String>,
     connector: BoxService<Connect<Uri>, Connection<Uri, TcpStream>, ConnectError>,
-    tls_connector:
-        BoxService<Connection<Uri, TcpStream>, Connection<Uri, RedisStream>, io::Error>,
+    tls_connector: BoxService<
+        Connection<Uri, TcpStream>,
+        Connection<Uri, RcStream<dyn ActixStream>>,
+        io::Error,
+    >,
     backoff: ExponentialBackoff,
-    cell: Option<actix::io::FramedWrite<RespValue, RcStream<RedisStream>, RespCodec>>,
+    cell:
+        Option<actix::io::FramedWrite<RespValue, RcStream<dyn ActixStream>, RespCodec>>,
     queue: VecDeque<oneshot::Sender<Result<RespValue, Error>>>,
 }
 
@@ -77,8 +77,14 @@ impl RedisActor {
         let scheme = url.scheme();
 
         let tls_connector = match scheme {
-            #[cfg(not(feature = "native-tls"))]
-            "redis" => service(actix_service::fn_service(|req| async { Ok(req) })),
+            "redis" => service(actix_service::fn_service(
+                |req: Connection<Uri, TcpStream>| async {
+                    let (stream, addr) = req.into_parts();
+                    let stream = Rc::new(RefCell::new(stream)) as _;
+                    let stream = RcStream(stream);
+                    Ok(Connection::from_parts(stream, addr))
+                },
+            )),
             #[cfg(feature = "native-tls")]
             "rediss" => {
                 let connector = tokio_native_tls::TlsConnector::from(
@@ -96,11 +102,17 @@ impl RedisActor {
                         let (stream, addr) = req.into_parts();
                         let connector = connector.clone();
                         async move {
-                            let res = connector
+                            let stream = connector
                                 .connect(addr.host().unwrap(), stream)
                                 .await
                                 .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
-                            Ok(Connection::from_parts(res, addr))
+                            // this wrapper type is necessary as ActixStream is a trait
+                            // implement on actix-tls's TlsStream types.
+                            let stream =
+                                actix_tls::accept::nativetls::TlsStream::from(stream);
+                            let stream = Rc::new(RefCell::new(stream)) as _;
+                            let stream = RcStream(stream);
+                            Ok(Connection::from_parts(stream, addr))
                         }
                     },
                 ))
@@ -165,11 +177,8 @@ impl Actor for RedisActor {
                     let (auth, stream) = res?;
 
                     // split stream and construct stream reader.
-                    let stream = RcStream(Rc::new(RefCell::new(stream)));
-                    let reader = stream.clone();
-
                     let mut writer = stream.clone();
-                    let mut reader = Framed::new(reader, RespCodec);
+                    let mut reader = Framed::new(stream, RespCodec);
 
                     // do authentication if needed.
                     if let Some(value) = auth {
@@ -179,12 +188,7 @@ impl Actor for RedisActor {
                             .encode(value, &mut buf)
                             .map_err(ConnectError::Io)?;
 
-                        AuthWriter {
-                            writer: &mut writer,
-                            buf,
-                        }
-                        .await
-                        .map_err(ConnectError::Io)?;
+                        writer.write(&mut buf).await.map_err(ConnectError::Io)?;
 
                         let res = AuthReader {
                             reader: &mut reader,
@@ -272,34 +276,9 @@ impl Handler<Command> for RedisActor {
 }
 
 pin_project_lite::pin_project! {
-    struct AuthWriter<'a> {
-        #[pin]
-        writer: &'a mut RcStream<RedisStream>,
-        buf: BytesMut,
-    }
-}
-
-impl Future for AuthWriter<'_> {
-    type Output = Result<(), io::Error>;
-
-    fn poll(self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<Self::Output> {
-        let mut this = self.project();
-
-        loop {
-            let n = ready!(this.writer.as_mut().poll_write(cx, this.buf.chunk()))?;
-            if n == 0 {
-                return Poll::Ready(Ok(()));
-            } else {
-                this.buf.advance(n);
-            }
-        }
-    }
-}
-
-pin_project_lite::pin_project! {
     struct AuthReader<'a> {
         #[pin]
-        reader: &'a mut Framed<RcStream<RedisStream>, RespCodec>
+        reader: &'a mut Framed<RcStream<dyn ActixStream>, RespCodec>
     }
 }
 
@@ -314,15 +293,15 @@ impl Future for AuthReader<'_> {
     }
 }
 
-struct RcStream<Io>(Rc<RefCell<Io>>);
+struct RcStream<Io: ?Sized>(Rc<RefCell<Io>>);
 
-impl<Io> Clone for RcStream<Io> {
+impl<Io: ?Sized> Clone for RcStream<Io> {
     fn clone(&self) -> Self {
         Self(self.0.clone())
     }
 }
 
-impl<Io: AsyncRead + Unpin> AsyncRead for RcStream<Io> {
+impl<Io: AsyncRead + Unpin + ?Sized> AsyncRead for RcStream<Io> {
     fn poll_read(
         self: Pin<&mut Self>,
         cx: &mut task::Context<'_>,
@@ -332,7 +311,7 @@ impl<Io: AsyncRead + Unpin> AsyncRead for RcStream<Io> {
     }
 }
 
-impl<Io: AsyncWrite + Unpin> AsyncWrite for RcStream<Io> {
+impl<Io: AsyncWrite + Unpin + ?Sized> AsyncWrite for RcStream<Io> {
     fn poll_write(
         self: Pin<&mut Self>,
         cx: &mut task::Context<'_>,
