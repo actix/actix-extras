@@ -180,6 +180,7 @@ where
         let request_id = RequestId(Uuid::new_v4());
         let span = tracing::info_span!(
             "Request",
+            http.method = %req.method(),
             request_path = %req.path(),
             user_agent = %user_agent,
             client_ip_address = %req.connection_info().realip_remote_addr().unwrap_or(""),
