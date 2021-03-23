@@ -7,7 +7,6 @@
 
 ## 0.5.1 - 2020-03-21
 * Correct error handling when extracting auth details from request. [#128]
-* Minimum supported Rust version (MSRV) is now 1.46.0.
 
 [#128]: https://github.com/actix/actix-extras/pull/128
 
