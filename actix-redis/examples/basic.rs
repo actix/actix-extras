@@ -9,9 +9,9 @@ async fn index(req: HttpRequest, session: Session) -> Result<impl Responder, Err
     // session
     if let Some(count) = session.get::<i32>("counter")? {
         println!("SESSION value: {}", count);
-        session.set("counter", count + 1)?;
+        session.insert("counter", count + 1)?;
     } else {
-        session.set("counter", 1)?;
+        session.insert("counter", 1)?;
     }
 
     Ok("Welcome!")

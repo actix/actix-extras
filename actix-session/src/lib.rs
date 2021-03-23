@@ -18,9 +18,9 @@
 //!     // access session data
 //!     if let Some(count) = session.get::<i32>("counter")? {
 //!         println!("SESSION value: {}", count);
-//!         session.set("counter", count + 1)?;
+//!         session.insert("counter", count + 1)?;
 //!     } else {
-//!         session.set("counter", 1)?;
+//!         session.insert("counter", 1)?;
 //!     }
 //!
 //!     Ok("Welcome!")
@@ -39,21 +39,27 @@
 //! }
 //! ```
 
-#![deny(rust_2018_idioms)]
+#![deny(rust_2018_idioms, nonstandard_style)]
+#![warn(missing_docs)]
 
-use std::{cell::RefCell, collections::HashMap, rc::Rc};
-
-use actix_web::dev::{
-    Extensions, Payload, RequestHead, ServiceRequest, ServiceResponse,
+use std::{
+    cell::{Ref, RefCell},
+    collections::HashMap,
+    mem,
+    rc::Rc,
 };
-use actix_web::{Error, FromRequest, HttpMessage, HttpRequest};
+
+use actix_web::{
+    dev::{Extensions, Payload, RequestHead, ServiceRequest, ServiceResponse},
+    Error, FromRequest, HttpMessage, HttpRequest,
+};
 use futures_util::future::{ok, Ready};
 use serde::{de::DeserializeOwned, Serialize};
 
 #[cfg(feature = "cookie-session")]
 mod cookie;
 #[cfg(feature = "cookie-session")]
-pub use crate::cookie::CookieSession;
+pub use self::cookie::CookieSession;
 
 /// The high-level interface you use to modify session data.
 ///
@@ -67,9 +73,9 @@ pub use crate::cookie::CookieSession;
 /// async fn index(session: Session) -> Result<&'static str> {
 ///     // access session data
 ///     if let Some(count) = session.get::<i32>("counter")? {
-///         session.set("counter", count + 1)?;
+///         session.insert("counter", count + 1)?;
 ///     } else {
-///         session.set("counter", 1)?;
+///         session.insert("counter", 1)?;
 ///     }
 ///
 ///     Ok("Welcome!")
@@ -79,6 +85,7 @@ pub struct Session(Rc<RefCell<SessionInner>>);
 
 /// Extraction of a [`Session`] object.
 pub trait UserSession {
+    /// Extract the [`Session`] object
     fn get_session(&self) -> Session;
 }
 
@@ -100,13 +107,31 @@ impl UserSession for RequestHead {
     }
 }
 
+/// Status of a [`Session`].
 #[derive(PartialEq, Clone, Debug)]
 pub enum SessionStatus {
+    /// Session has been updated and requires a new persist operation.
     Changed,
+
+    /// Session is flagged for deletion and should be removed from client and server.
+    ///
+    /// Most operations on the session after purge flag is set should have no effect.
     Purged,
+
+    /// Session is flagged for refresh.
+    ///
+    /// For example, when using a backend that has a TTL (time-to-live) expiry on the session entry,
+    /// the session will be refreshed even if no data inside it has changed. The client may also
+    /// be notified of the refresh.
     Renewed,
+
+    /// Session is unchanged from when last seen (if exists).
+    ///
+    /// This state also captures new (previously unissued) sessions such as a user's first
+    /// site visit.
     Unchanged,
 }
+
 impl Default for SessionStatus {
     fn default() -> SessionStatus {
         SessionStatus::Unchanged
@@ -116,7 +141,7 @@ impl Default for SessionStatus {
 #[derive(Default)]
 struct SessionInner {
     state: HashMap<String, String>,
-    pub status: SessionStatus,
+    status: SessionStatus,
 }
 
 impl Session {
@@ -129,37 +154,80 @@ impl Session {
         }
     }
 
-    /// Set a `value` from the session.
-    pub fn set<T: Serialize>(&self, key: &str, value: T) -> Result<(), Error> {
+    /// Get all raw key-value data from the session.
+    ///
+    /// Note that values are JSON encoded.
+    pub fn entries(&self) -> Ref<'_, HashMap<String, String>> {
+        Ref::map(self.0.borrow(), |inner| &inner.state)
+    }
+
+    /// Inserts a key-value pair into the session.
+    ///
+    /// Any serializable value can be used and will be encoded as JSON in session data, hence why
+    /// only a reference to the value is taken.
+    pub fn insert(
+        &self,
+        key: impl Into<String>,
+        value: impl Serialize,
+    ) -> Result<(), Error> {
         let mut inner = self.0.borrow_mut();
+
         if inner.status != SessionStatus::Purged {
             inner.status = SessionStatus::Changed;
-            inner
-                .state
-                .insert(key.to_owned(), serde_json::to_string(&value)?);
+            let val = serde_json::to_string(&value)?;
+            inner.state.insert(key.into(), val);
         }
+
         Ok(())
     }
 
     /// Remove value from the session.
-    pub fn remove(&self, key: &str) {
+    ///
+    /// If present, the JSON encoded value is returned.
+    pub fn remove(&self, key: &str) -> Option<String> {
         let mut inner = self.0.borrow_mut();
+
         if inner.status != SessionStatus::Purged {
             inner.status = SessionStatus::Changed;
-            inner.state.remove(key);
+            return inner.state.remove(key);
         }
+
+        None
+    }
+
+    /// Remove value from the session and deserialize.
+    ///
+    /// Returns None if key was not present in session. Returns T if deserialization succeeds,
+    /// otherwise returns un-deserialized JSON string.
+    pub fn remove_as<T: DeserializeOwned>(
+        &self,
+        key: &str,
+    ) -> Option<Result<T, String>> {
+        self.remove(key)
+            .map(|val_str| match serde_json::from_str(&val_str) {
+                Ok(val) => Ok(val),
+                Err(_err) => {
+                    log::debug!(
+                        "removed value (key: {}) could not be deserialized as {}",
+                        key,
+                        std::any::type_name::<T>()
+                    );
+                    Err(val_str)
+                }
+            })
     }
 
     /// Clear the session.
     pub fn clear(&self) {
         let mut inner = self.0.borrow_mut();
+
         if inner.status != SessionStatus::Purged {
             inner.status = SessionStatus::Changed;
             inner.state.clear()
         }
     }
 
-    /// Removes session, both client and server side.
+    /// Removes session both client and server side.
     pub fn purge(&self) {
         let mut inner = self.0.borrow_mut();
         inner.status = SessionStatus::Purged;
@@ -169,6 +237,7 @@ impl Session {
     /// Renews the session key, assigning existing session state to new key.
     pub fn renew(&self) {
         let mut inner = self.0.borrow_mut();
+
         if inner.status != SessionStatus::Purged {
             inner.status = SessionStatus::Renewed;
         }
@@ -186,35 +255,32 @@ impl Session {
     /// let mut req = test::TestRequest::default().to_srv_request();
     ///
     /// Session::set_session(
-    ///     vec![("counter".to_string(), serde_json::to_string(&0).unwrap())],
     ///     &mut req,
+    ///     vec![("counter".to_string(), serde_json::to_string(&0).unwrap())],
     /// );
     /// ```
     pub fn set_session(
-        data: impl IntoIterator<Item = (String, String)>,
         req: &mut ServiceRequest,
+        data: impl IntoIterator<Item = (String, String)>,
     ) {
         let session = Session::get_session(&mut *req.extensions_mut());
         let mut inner = session.0.borrow_mut();
         inner.state.extend(data);
     }
 
+    /// Returns session status and iterator of key-value pairs of changes.
     pub fn get_changes<B>(
         res: &mut ServiceResponse<B>,
-    ) -> (
-        SessionStatus,
-        Option<impl Iterator<Item = (String, String)>>,
-    ) {
+    ) -> (SessionStatus, impl Iterator<Item = (String, String)>) {
         if let Some(s_impl) = res
             .request()
             .extensions()
             .get::<Rc<RefCell<SessionInner>>>()
         {
-            let state =
-                std::mem::replace(&mut s_impl.borrow_mut().state, HashMap::new());
-            (s_impl.borrow().status.clone(), Some(state.into_iter()))
+            let state = mem::take(&mut s_impl.borrow_mut().state);
+            (s_impl.borrow().status.clone(), state.into_iter())
         } else {
-            (SessionStatus::Unchanged, None)
+            (SessionStatus::Unchanged, HashMap::new().into_iter())
         }
     }
 
@@ -230,21 +296,23 @@ impl Session {
 
 /// Extractor implementation for Session type.
 ///
-/// ```rust
+/// # Examples
+/// ```
 /// # use actix_web::*;
 /// use actix_session::Session;
 ///
-/// fn index(session: Session) -> Result<&'static str> {
+/// #[get("/")]
+/// async fn index(session: Session) -> Result<impl Responder> {
 ///     // access session data
 ///     if let Some(count) = session.get::<i32>("counter")? {
-///         session.set("counter", count + 1)?;
+///         session.insert("counter", count + 1)?;
 ///     } else {
-///         session.set("counter", 1)?;
+///         session.insert("counter", 1)?;
 ///     }
 ///
-///     Ok("Welcome!")
+///     let count = session.get::<i32>("counter")?.unwrap();
+///     Ok(format!("Counter: {}", count))
 /// }
-/// # fn main() {}
 /// ```
 impl FromRequest for Session {
     type Error = Error;
@@ -268,19 +336,19 @@ mod tests {
         let mut req = test::TestRequest::default().to_srv_request();
 
         Session::set_session(
-            vec![("key".to_string(), serde_json::to_string("value").unwrap())],
             &mut req,
+            vec![("key".to_string(), serde_json::to_string("value").unwrap())],
         );
         let session = Session::get_session(&mut *req.extensions_mut());
         let res = session.get::<String>("key").unwrap();
         assert_eq!(res, Some("value".to_string()));
 
-        session.set("key2", "value2".to_string()).unwrap();
+        session.insert("key2", "value2").unwrap();
         session.remove("key");
 
         let mut res = req.into_response(HttpResponse::Ok().finish());
         let (_status, state) = Session::get_changes(&mut res);
-        let changes: Vec<_> = state.unwrap().collect();
+        let changes: Vec<_> = state.collect();
         assert_eq!(changes, [("key2".to_string(), "\"value2\"".to_string())]);
     }
 
@@ -289,8 +357,8 @@ mod tests {
         let mut req = test::TestRequest::default().to_srv_request();
 
         Session::set_session(
-            vec![("key".to_string(), serde_json::to_string(&true).unwrap())],
             &mut req,
+            vec![("key".to_string(), serde_json::to_string(&true).unwrap())],
         );
 
         let session = req.get_session();
@@ -303,8 +371,8 @@ mod tests {
         let mut req = test::TestRequest::default().to_srv_request();
 
         Session::set_session(
-            vec![("key".to_string(), serde_json::to_string(&10).unwrap())],
             &mut req,
+            vec![("key".to_string(), serde_json::to_string(&10).unwrap())],
         );
 
         let session = req.head_mut().get_session();
@@ -328,5 +396,16 @@ mod tests {
         assert_eq!(session.0.borrow().status, SessionStatus::Unchanged);
         session.renew();
         assert_eq!(session.0.borrow().status, SessionStatus::Renewed);
+    }
+
+    #[test]
+    fn session_entries() {
+        let session = Session(Rc::new(RefCell::new(SessionInner::default())));
+        session.insert("test_str", "val").unwrap();
+        session.insert("test_num", 1).unwrap();
+
+        let map = session.entries();
+        map.contains_key("test_str");
+        map.contains_key("test_num");
     }
 }

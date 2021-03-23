@@ -53,7 +53,7 @@ async fn login(
     let credentials = credentials.into_inner();
 
     match User::authenticate(credentials) {
-        Ok(user) => session.set("user_id", user.id).unwrap(),
+        Ok(user) => session.insert("user_id", user.id).unwrap(),
         Err(_) => return Err(HttpResponse::Unauthorized().json("Unauthorized")),
     };
 
