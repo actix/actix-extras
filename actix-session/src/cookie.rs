@@ -8,7 +8,7 @@ use actix_web::dev::{ServiceRequest, ServiceResponse};
 use actix_web::http::{header::SET_COOKIE, HeaderValue};
 use actix_web::{Error, HttpMessage, ResponseError};
 use derive_more::Display;
-use futures_util::future::{ok, FutureExt, LocalBoxFuture, Ready};
+use futures_util::future::{ok, LocalBoxFuture, Ready};
 use serde_json::error::Error as JsonError;
 use time::{Duration, OffsetDateTime};
 
@@ -77,6 +77,7 @@ impl CookieSessionInner {
 
         let value =
             serde_json::to_string(&state).map_err(CookieSessionError::Serialize)?;
+
         if value.len() > 4064 {
             return Err(CookieSessionError::Overflow.into());
         }
@@ -144,6 +145,7 @@ impl CookieSessionInner {
                             jar.private(&self.key).get(&self.name)
                         }
                     };
+
                     if let Some(cookie) = cookie_opt {
                         if let Ok(val) = serde_json::from_str(cookie.value()) {
                             return (false, val);
@@ -152,6 +154,7 @@ impl CookieSessionInner {
                 }
             }
         }
+
         (true, HashMap::new())
     }
 }
@@ -309,7 +312,7 @@ where
     }
 }
 
-/// Cookie session middleware
+/// Cookie based session middleware.
 pub struct CookieSessionMiddleware<S> {
     service: S,
     inner: Rc<CookieSessionInner>,
@@ -336,41 +339,40 @@ where
         let inner = self.inner.clone();
         let (is_new, state) = self.inner.load(&req);
         let prolong_expiration = self.inner.expires_in.is_some();
-        Session::set_session(state, &mut req);
+        Session::set_session(&mut req, state);
 
         let fut = self.service.call(req);
 
-        async move {
-            fut.await.map(|mut res| {
-                match Session::get_changes(&mut res) {
-                    (SessionStatus::Changed, Some(state))
-                    | (SessionStatus::Renewed, Some(state)) => {
-                        res.checked_expr(|res| inner.set_cookie(res, state))
-                    }
-                    (SessionStatus::Unchanged, Some(state)) if prolong_expiration => {
-                        res.checked_expr(|res| inner.set_cookie(res, state))
-                    }
-                    (SessionStatus::Unchanged, _) =>
-                    // set a new session cookie upon first request (new client)
-                    {
-                        if is_new {
-                            let state: HashMap<String, String> = HashMap::new();
-                            res.checked_expr(|res| {
-                                inner.set_cookie(res, state.into_iter())
-                            })
-                        } else {
-                            res
-                        }
-                    }
-                    (SessionStatus::Purged, _) => {
-                        let _ = inner.remove_cookie(&mut res);
+        Box::pin(async move {
+            let mut res = fut.await?;
+
+            let res = match Session::get_changes(&mut res) {
+                (SessionStatus::Changed, state) | (SessionStatus::Renewed, state) => {
+                    res.checked_expr(|res| inner.set_cookie(res, state))
+                }
+
+                (SessionStatus::Unchanged, state) if prolong_expiration => {
+                    res.checked_expr(|res| inner.set_cookie(res, state))
+                }
+
+                // set a new session cookie upon first request (new client)
+                (SessionStatus::Unchanged, _) => {
+                    if is_new {
+                        let state: HashMap<String, String> = HashMap::new();
+                        res.checked_expr(|res| inner.set_cookie(res, state.into_iter()))
+                    } else {
                         res
                     }
-                    _ => res,
                 }
-            })
-        }
-        .boxed_local()
+
+                (SessionStatus::Purged, _) => {
+                    let _ = inner.remove_cookie(&mut res);
+                    res
+                }
+            };
+
+            Ok(res)
+        })
     }
 }
 
@@ -386,7 +388,7 @@ mod tests {
             App::new()
                 .wrap(CookieSession::signed(&[0; 32]).secure(false))
                 .service(web::resource("/").to(|ses: Session| async move {
-                    let _ = ses.set("counter", 100);
+                    let _ = ses.insert("counter", 100);
                     "test"
                 })),
         )
@@ -406,7 +408,7 @@ mod tests {
             App::new()
                 .wrap(CookieSession::private(&[0; 32]).secure(false))
                 .service(web::resource("/").to(|ses: Session| async move {
-                    let _ = ses.set("counter", 100);
+                    let _ = ses.insert("counter", 100);
                     "test"
                 })),
         )
@@ -426,7 +428,7 @@ mod tests {
             App::new()
                 .wrap(CookieSession::signed(&[0; 32]).secure(false).lazy(true))
                 .service(web::resource("/count").to(|ses: Session| async move {
-                    let _ = ses.set("counter", 100);
+                    let _ = ses.insert("counter", 100);
                     "counting"
                 }))
                 .service(web::resource("/").to(|_ses: Session| async move { "test" })),
@@ -452,7 +454,7 @@ mod tests {
             App::new()
                 .wrap(CookieSession::signed(&[0; 32]).secure(false))
                 .service(web::resource("/").to(|ses: Session| async move {
-                    let _ = ses.set("counter", 100);
+                    let _ = ses.insert("counter", 100);
                     "test"
                 })),
         )
@@ -480,7 +482,7 @@ mod tests {
                         .max_age(100),
                 )
                 .service(web::resource("/").to(|ses: Session| async move {
-                    let _ = ses.set("counter", 100);
+                    let _ = ses.insert("counter", 100);
                     "test"
                 }))
                 .service(web::resource("/test/").to(|ses: Session| async move {
@@ -513,7 +515,7 @@ mod tests {
             App::new()
                 .wrap(CookieSession::signed(&[0; 32]).secure(false).expires_in(60))
                 .service(web::resource("/").to(|ses: Session| async move {
-                    let _ = ses.set("counter", 100);
+                    let _ = ses.insert("counter", 100);
                     "test"
                 }))
                 .service(
