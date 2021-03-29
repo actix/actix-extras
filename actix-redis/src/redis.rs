@@ -12,7 +12,10 @@ use actix::prelude::*;
 use actix_codec::{AsyncRead, AsyncWrite, Encoder, Framed, ReadBuf};
 use actix_http::http::Uri;
 use actix_rt::net::{ActixStream, TcpStream};
-use actix_service::boxed::{service, BoxService};
+use actix_service::{
+    boxed::{service, BoxService},
+    fn_service, Service,
+};
 use actix_tls::connect::{self, Connect, ConnectError, Connection};
 use backoff::{backoff::Backoff, ExponentialBackoff};
 use bytes::BytesMut;
@@ -77,50 +80,51 @@ impl RedisActor {
         let scheme = url.scheme();
 
         let tls_connector = match scheme {
-            "redis" => service(actix_service::fn_service(
-                |req: Connection<Uri, TcpStream>| async {
-                    let (stream, addr) = req.into_parts();
-                    let stream = Rc::new(RefCell::new(stream)) as _;
-                    let stream = RcStream(stream);
-                    Ok(Connection::from_parts(stream, addr))
-                },
-            )),
+            "redis" => service(fn_service(|req: Connection<Uri, TcpStream>| async {
+                let (stream, addr) = req.into_parts();
+                let stream = Rc::new(RefCell::new(stream)) as _;
+                let stream = RcStream(stream);
+                Ok(Connection::from_parts(stream, addr))
+            })),
             #[cfg(feature = "native-tls")]
             "rediss" => {
-                let connector = tokio_native_tls::TlsConnector::from(
-                    tokio_native_tls::native_tls::TlsConnector::builder()
-                        // TODO: make these flags configurable through session builder.
-                        .danger_accept_invalid_certs(true)
-                        .danger_accept_invalid_hostnames(true)
-                        .use_sni(false)
-                        .build()
-                        .unwrap(),
-                );
+                use actix_tls::{
+                    accept::native_tls::TlsStream,
+                    connect::ssl::native_tls::{NativetlsConnector, TlsConnector},
+                };
 
-                service(actix_service::fn_service(
-                    move |req: Connection<Uri, TcpStream>| {
-                        let (stream, addr) = req.into_parts();
-                        let connector = connector.clone();
-                        async move {
-                            let stream = connector
-                                .connect(addr.host().unwrap(), stream)
-                                .await
-                                .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
-                            // this wrapper type is necessary as ActixStream is a trait
-                            // implement on actix-tls's TlsStream types.
-                            let stream =
-                                actix_tls::accept::nativetls::TlsStream::from(stream);
-                            let stream = Rc::new(RefCell::new(stream)) as _;
-                            let stream = RcStream(stream);
-                            Ok(Connection::from_parts(stream, addr))
-                        }
-                    },
-                ))
+                // TODO: make these flags configurable through session builder.
+                let connector = TlsConnector::builder()
+                    .danger_accept_invalid_certs(true)
+                    .danger_accept_invalid_hostnames(true)
+                    .use_sni(false)
+                    .build()
+                    .unwrap();
+
+                let connector = NativetlsConnector::new(connector);
+
+                service(fn_service(move |req: Connection<Uri, TcpStream>| {
+                    let fut = connector.call(req);
+                    async move {
+                        let conn = fut
+                            .await
+                            .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+
+                        let (stream, addr) = conn.into_parts();
+
+                        // this wrapper type is necessary as ActixStream is a trait
+                        // implement on actix-tls's native-tls TlsStream type.
+                        let stream = TlsStream::from(stream);
+
+                        let stream = Rc::new(RefCell::new(stream)) as _;
+                        let stream = RcStream(stream);
+
+                        Ok(Connection::from_parts(stream, addr))
+                    }
+                }))
             }
             #[cfg(not(feature = "native-tls"))]
-            "rediss" => {
-                panic!("native-tls feature must enabled for connecting to tls server")
-            }
+            "rediss" => panic!("native-tls feature must be enabled for tls server"),
             "redis+unix" | "unix" => panic!("Unix domain socket is not supported"),
             _ => panic!("Wrong prefix.Address must start with redis:// or rediss://"),
         };
@@ -177,7 +181,8 @@ impl Actor for RedisActor {
                 })
             })
             .then(|res, act, _| {
-                async {
+                let addr = act.uri.clone();
+                async move {
                     let (auth, stream) = res?;
 
                     // split stream and construct stream reader.
@@ -186,6 +191,8 @@ impl Actor for RedisActor {
 
                     // do authentication if needed.
                     if let Some(value) = auth {
+                        info!("Authenticating to redis server: {}", addr);
+
                         let mut buf = BytesMut::new();
 
                         RespCodec
@@ -200,8 +207,12 @@ impl Actor for RedisActor {
                         .await
                         .map_err(|_| ConnectError::Unresolved)?;
 
-                        if let RespValue::Error(_) = res {
-                            return Err(ConnectError::Unresolved);
+                        if let RespValue::Error(err) = res {
+                            error!("Authentication failed with redis server: {}", addr);
+                            return Err(ConnectError::Io(io::Error::new(
+                                io::ErrorKind::Other,
+                                err,
+                            )));
                         }
                     };
 
