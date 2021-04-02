@@ -19,10 +19,10 @@ name = "actix_protobuf"
 path = "src/lib.rs"
 
 [dependencies]
-actix-web = { version = "4.0.0-beta.4", default_features = false }
 actix-rt = "2"
+actix-web = { version = "4.0.0-beta.5", default_features = false }
+derive_more = "0.99.5"
 futures-util = { version = "0.3.7", default-features = false }
-derive_more = "0.99"
 prost = "0.7"
 
 [dev-dependencies]
