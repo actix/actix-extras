@@ -382,7 +382,7 @@ mod test {
     use super::*;
     use actix_session::Session;
     use actix_web::{
-        middleware, test, web,
+        middleware, web,
         web::{get, post, resource},
         App, HttpResponse, Result,
     };
@@ -483,7 +483,7 @@ mod test {
         //   - set-cookie actix-session will be in response (session cookie #3)
         //   - response should be: {"counter": 0, "user_id": None}
 
-        let srv = test::start(|| {
+        let srv = actix_test::start(|| {
             App::new()
                 .wrap(
                     RedisSession::new("127.0.0.1:6379", &[0; 32])
@@ -680,7 +680,7 @@ mod test {
         //
         // Test that removing max_age results in a session-only cookie
         //
-        let srv = test::start(|| {
+        let srv = actix_test::start(|| {
             App::new()
                 .wrap(
                     RedisSession::new("127.0.0.1:6379", &[0; 32])
