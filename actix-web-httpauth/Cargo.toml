@@ -1,6 +1,6 @@
 [package]
 name = "actix-web-httpauth"
-version = "0.5.1"
+version = "0.6.0-beta.1"
 authors = [
     "svartalf <self@svartalf.info>",
     "Yuki Okushi <huyuumi.dev@gmail.com>",
@@ -20,12 +20,12 @@ name = "actix_web_httpauth"
 path = "src/lib.rs"
 
 [dependencies]
-actix-web = { version = "4.0.0-beta.4", default_features = false }
+actix-web = { version = "4.0.0-beta.5", default_features = false }
 actix-service = "2.0.0-beta.5"
 base64 = "0.13"
 futures-util = { version = "0.3.7", default-features = false }
 
 [dev-dependencies]
-actix-cors = "0.5"
+actix-cors = "1.0.0-beta.1"
 actix-rt = "2"
 actix-service = "2.0.0-beta.5"
