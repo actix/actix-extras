@@ -9,7 +9,7 @@
 
 ## Documentation & Resources
 
-- [API Documentation](https://docs.rs/actix-cors)
+- [API Documentation](https://docs.rs/actix-redis)
 - [Example Project](https://github.com/actix/examples/tree/HEAD/session/redis-session)
 - Minimum Supported Rust Version (MSRV): 1.46
 
@@ -26,24 +26,22 @@ Note that whatever you write into your session is visible by the user (but not m
 Constructor panics if key length is less than 32 bytes.
 
 ```rust
-use actix_web::{App, HttpServer, web, middleware};
-use actix_web::middleware::session::SessionStorage;
+use actix_web::{App, HttpServer, middleware::Logger};
+use actix_web::web::{resource, get}
 use actix_redis::RedisSession;
 
-#[actix_rt::main]
-async fn main() -> std::io::Result {
-    HttpServer::new(|| App::new()
-        // enable logger
-        .middleware(middleware::Logger::default())
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
+    HttpServer::new(move || App::new()
         // cookie session middleware
-        .middleware(SessionStorage::new(
-            RedisSession::new("127.0.0.1:6379", &[0; 32])
-        ))
+        .wrap(RedisSession::new("127.0.0.1:6379", &[0; 32]))
+        // enable logger
+        .wrap(Logger::default())
         // register simple route, handle all methods
-        .service(web::resource("/").to(index))
+        .service(resource("/").route(get().to(index)))
     )
-    .bind("0.0.0.0:8080")?
-    .start()
+    .bind("127.0.0.1:8080")?
+    .run()
     .await
 }
 ```
