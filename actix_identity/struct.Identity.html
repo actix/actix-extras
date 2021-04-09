@@ -1,17 +1,17 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="The extractor type to obtain your identity from a request."><meta name="keywords" content="rust, rustlang, rust-lang, Identity"><title>actix_identity::Identity - Rust</title><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../ayu.css" disabled ><script id="default-settings"></script><script src="../storage.js"></script><script src="../crates.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../down-arrow.svg");}</style></head><body class="rustdoc struct"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../actix_identity/index.html'><div class='logo-container rust-logo'><img src='../rust-logo.png' alt='logo'></div></a><p class="location">Struct Identity</p><div class="sidebar-elems"><div class="block items"><a class="sidebar-title" href="#implementations">Methods</a><div class="sidebar-links"><a href="#method.forget">forget</a><a href="#method.identity">identity</a><a href="#method.remember">remember</a></div><a class="sidebar-title" href="#trait-implementations">Trait Implementations</a><div class="sidebar-links"><a href="#impl-Clone">Clone</a><a href="#impl-FromRequest">FromRequest</a></div><a class="sidebar-title" href="#synthetic-implementations">Auto Trait Implementations</a><div class="sidebar-links"><a href="#impl-RefUnwindSafe">!RefUnwindSafe</a><a href="#impl-Send">!Send</a><a href="#impl-Sync">!Sync</a><a href="#impl-Unpin">Unpin</a><a href="#impl-UnwindSafe">!UnwindSafe</a></div><a class="sidebar-title" href="#blanket-implementations">Blanket Implementations</a><div class="sidebar-links"><a href="#impl-Any">Any</a><a href="#impl-Borrow%3CT%3E">Borrow&lt;T&gt;</a><a href="#impl-BorrowMut%3CT%3E">BorrowMut&lt;T&gt;</a><a href="#impl-From%3CT%3E">From&lt;T&gt;</a><a href="#impl-Instrument">Instrument</a><a href="#impl-Into%3CU%3E">Into&lt;U&gt;</a><a href="#impl-Same%3CT%3E">Same&lt;T&gt;</a><a href="#impl-ToOwned">ToOwned</a><a href="#impl-TryFrom%3CU%3E">TryFrom&lt;U&gt;</a><a href="#impl-TryInto%3CU%3E">TryInto&lt;U&gt;</a><a href="#impl-VZip%3CV%3E">VZip&lt;V&gt;</a></div></div><p class="location"><a href="index.html">actix_identity</a></p><div id="sidebar-vars" data-name="Identity" data-ty="struct" data-relpath=""></div><script defer src="sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
-                <a id="settings-menu" href="../settings.html"><img src="../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Struct <a href="index.html">actix_identity</a>::<wbr><a class="struct" href="">Identity</a></span><span class="out-of-band"><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="../src/actix_identity/identity.rs.html#45" title="goto source code">[src]</a></span></h1><div class="docblock type-decl hidden-by-usual-hider"><pre class="rust struct">pub struct Identity(_);</pre></div><div class="docblock"><p>The extractor type to obtain your identity from a request.</p>
+                <a id="settings-menu" href="../settings.html"><img src="../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Struct <a href="index.html">actix_identity</a>::<wbr><a class="struct" href="">Identity</a><button id="copy-path" onclick="copy_path(this)">⎘</button></span><span class="out-of-band"><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="../src/actix_identity/identity.rs.html#45" title="goto source code">[src]</a></span></h1><div class="docblock type-decl hidden-by-usual-hider"><pre class="rust struct">pub struct Identity(_);</pre></div><div class="docblock"><p>The extractor type to obtain your identity from a request.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="kw">use</span> <span class="ident">actix_web</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident">actix_identity</span>::<span class="ident">Identity</span>;
+<span class="kw">use</span> <span class="ident">actix_identity::Identity</span>;
 
 <span class="attribute">#[<span class="ident">get</span>(<span class="string">&quot;/&quot;</span>)]</span>
 <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">index</span>(<span class="ident">id</span>: <span class="ident">Identity</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="ident">Responder</span> {
     <span class="comment">// access request identity</span>
     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">id</span>) <span class="op">=</span> <span class="ident">id</span>.<span class="ident">identity</span>() {
-        <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Welcome! {}&quot;</span>, <span class="ident">id</span>)
+        <span class="macro">format!</span>(<span class="string">&quot;Welcome! {}&quot;</span>, <span class="ident">id</span>)
     } <span class="kw">else</span> {
         <span class="string">&quot;Welcome Anonymous!&quot;</span>.<span class="ident">to_owned</span>()
     }
@@ -22,7 +22,7 @@
     <span class="comment">// remember identity</span>
     <span class="ident">id</span>.<span class="ident">remember</span>(<span class="string">&quot;User1&quot;</span>.<span class="ident">to_owned</span>());
 
-    <span class="ident">HttpResponse</span>::<span class="prelude-val">Ok</span>()
+    <span class="ident">HttpResponse::Ok</span>()
 }
 
 <span class="attribute">#[<span class="ident">post</span>(<span class="string">&quot;/logout&quot;</span>)]</span>
@@ -30,7 +30,7 @@
     <span class="comment">// remove identity</span>
     <span class="ident">id</span>.<span class="ident">forget</span>();
 
-    <span class="ident">HttpResponse</span>::<span class="prelude-val">Ok</span>()
+    <span class="ident">HttpResponse::Ok</span>()
 }</pre></div>
 </div><h2 id="implementations" class="small-section-header">Implementations<a href="#implementations" class="anchor"></a></h2><h3 id="impl" class="impl"><code class="in-band">impl <a class="struct" href="../actix_identity/struct.Identity.html" title="struct actix_identity::Identity">Identity</a></code><a href="#impl" class="anchor"></a><a class="srclink" href="../src/actix_identity/identity.rs.html#47-74" title="goto source code">[src]</a></h3><div class="impl-items"><h4 id="method.identity" class="method"><code>pub fn <a href="#method.identity" class="fnname">identity</a>(&amp;self) -&gt; <a class="enum" href="https://doc.rust-lang.org/nightly/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="struct" href="https://doc.rust-lang.org/nightly/alloc/string/struct.String.html" title="struct alloc::string::String">String</a>&gt;</code><a class="srclink" href="../src/actix_identity/identity.rs.html#50-52" title="goto source code">[src]</a></h4><div class="docblock"><p>Return the claimed identity of the user associated request or <code>None</code> if no identity can be
 found associated with the request.</p>
@@ -41,13 +41,13 @@ found associated with the request.</p>
 </div></div><h3 id="impl-FromRequest" class="impl"><code class="in-band">impl FromRequest for <a class="struct" href="../actix_identity/struct.Identity.html" title="struct actix_identity::Identity">Identity</a></code><a href="#impl-FromRequest" class="anchor"></a><a class="srclink" href="../src/actix_identity/identity.rs.html#92-101" title="goto source code">[src]</a></h3><div class="docblock"><p>Extractor implementation for Identity type.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered">
-<span class="kw">use</span> <span class="ident">actix_identity</span>::<span class="ident">Identity</span>;
+<span class="kw">use</span> <span class="ident">actix_identity::Identity</span>;
 
 <span class="attribute">#[<span class="ident">get</span>(<span class="string">&quot;/&quot;</span>)]</span>
 <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">index</span>(<span class="ident">id</span>: <span class="ident">Identity</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="ident">Responder</span> {
     <span class="comment">// access request identity</span>
     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">id</span>) <span class="op">=</span> <span class="ident">id</span>.<span class="ident">identity</span>() {
-        <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Welcome! {}&quot;</span>, <span class="ident">id</span>)
+        <span class="macro">format!</span>(<span class="string">&quot;Welcome! {}&quot;</span>, <span class="ident">id</span>)
     } <span class="kw">else</span> {
         <span class="string">&quot;Welcome Anonymous!&quot;</span>.<span class="ident">to_owned</span>()
     }

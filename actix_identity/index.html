@@ -1,7 +1,7 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Opinionated request identity service for Actix Web apps."><meta name="keywords" content="rust, rustlang, rust-lang, actix_identity"><title>actix_identity - Rust</title><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../ayu.css" disabled ><script id="default-settings"></script><script src="../storage.js"></script><script src="../crates.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../actix_identity/index.html'><div class='logo-container rust-logo'><img src='../rust-logo.png' alt='logo'></div></a><p class="location">Crate actix_identity</p><div class="block version"><p>Version 0.4.0-beta.1</p></div><div class="sidebar-elems"><a id="all-types" href="all.html"><p>See all actix_identity's items</p></a><div class="block items"><ul><li><a href="#structs">Structs</a></li><li><a href="#traits">Traits</a></li></ul></div><p class="location"></p><div id="sidebar-vars" data-name="actix_identity" data-ty="mod" data-relpath="../"></div></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
-                <a id="settings-menu" href="../settings.html"><img src="../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Crate <a class="mod" href="">actix_identity</a></span><span class="out-of-band"><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="../src/actix_identity/lib.rs.html#1-152" title="goto source code">[src]</a></span></h1><div class="docblock"><p>Opinionated request identity service for Actix Web apps.</p>
+                <a id="settings-menu" href="../settings.html"><img src="../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Crate <a class="mod" href="">actix_identity</a><button id="copy-path" onclick="copy_path(this)">⎘</button></span><span class="out-of-band"><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="../src/actix_identity/lib.rs.html#1-152" title="goto source code">[src]</a></span></h1><div class="docblock"><p>Opinionated request identity service for Actix Web apps.</p>
 <p><a href="../actix_identity/struct.IdentityService.html" title="IdentityService"><code>IdentityService</code></a> middleware can be used with different policies types to store
 identity information.</p>
 <p>A cookie based policy is provided. <a href="../actix_identity/struct.CookieIdentityPolicy.html" title="CookieIdentityPolicy"><code>CookieIdentityPolicy</code></a> uses cookies as identity storage.</p>
@@ -15,7 +15,7 @@ identity information.</p>
 <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">index</span>(<span class="ident">id</span>: <span class="ident">Identity</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
     <span class="comment">// access request identity</span>
     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">id</span>) <span class="op">=</span> <span class="ident">id</span>.<span class="ident">identity</span>() {
-        <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Welcome! {}&quot;</span>, <span class="ident">id</span>)
+        <span class="macro">format!</span>(<span class="string">&quot;Welcome! {}&quot;</span>, <span class="ident">id</span>)
     } <span class="kw">else</span> {
         <span class="string">&quot;Welcome Anonymous!&quot;</span>.<span class="ident">to_owned</span>()
     }
@@ -24,24 +24,24 @@ identity information.</p>
 <span class="attribute">#[<span class="ident">post</span>(<span class="string">&quot;/login&quot;</span>)]</span>
 <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">login</span>(<span class="ident">id</span>: <span class="ident">Identity</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">HttpResponse</span> {
     <span class="ident">id</span>.<span class="ident">remember</span>(<span class="string">&quot;User1&quot;</span>.<span class="ident">to_owned</span>()); <span class="comment">// &lt;- remember identity</span>
-    <span class="ident">HttpResponse</span>::<span class="prelude-val">Ok</span>().<span class="ident">finish</span>()
+    <span class="ident">HttpResponse::Ok</span>().<span class="ident">finish</span>()
 }
 
 <span class="attribute">#[<span class="ident">post</span>(<span class="string">&quot;/logout&quot;</span>)]</span>
 <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">logout</span>(<span class="ident">id</span>: <span class="ident">Identity</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">HttpResponse</span> {
     <span class="ident">id</span>.<span class="ident">forget</span>();                      <span class="comment">// &lt;- remove identity</span>
-    <span class="ident">HttpResponse</span>::<span class="prelude-val">Ok</span>().<span class="ident">finish</span>()
+    <span class="ident">HttpResponse::Ok</span>().<span class="ident">finish</span>()
 }
 
 <span class="comment">// create cookie identity backend</span>
-<span class="kw">let</span> <span class="ident">policy</span> <span class="op">=</span> <span class="ident">CookieIdentityPolicy</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span>[<span class="number">0</span>; <span class="number">32</span>])
+<span class="kw">let</span> <span class="ident">policy</span> <span class="op">=</span> <span class="ident">CookieIdentityPolicy::new</span>(<span class="kw-2">&amp;</span>[<span class="number">0</span>; <span class="number">32</span>])
     .<span class="ident">name</span>(<span class="string">&quot;auth-cookie&quot;</span>)
     .<span class="ident">secure</span>(<span class="bool-val">false</span>);
 
-<span class="kw">let</span> <span class="ident">app</span> <span class="op">=</span> <span class="ident">App</span>::<span class="ident">new</span>()
+<span class="kw">let</span> <span class="ident">app</span> <span class="op">=</span> <span class="ident">App::new</span>()
     <span class="comment">// wrap policy into middleware identity middleware</span>
-    .<span class="ident">wrap</span>(<span class="ident">IdentityService</span>::<span class="ident">new</span>(<span class="ident">policy</span>))
-    .<span class="ident">service</span>(<span class="macro">services</span><span class="macro">!</span>[<span class="ident">index</span>, <span class="ident">login</span>, <span class="ident">logout</span>]);</pre></div>
+    .<span class="ident">wrap</span>(<span class="ident">IdentityService::new</span>(<span class="ident">policy</span>))
+    .<span class="ident">service</span>(<span class="macro">services!</span>[<span class="ident">index</span>, <span class="ident">login</span>, <span class="ident">logout</span>]);</pre></div>
 </div><h2 id="structs" class="section-header"><a href="#structs">Structs</a></h2>
 <table><tr class="module-item"><td><a class="struct" href="struct.CookieIdentityPolicy.html" title="actix_identity::CookieIdentityPolicy struct">CookieIdentityPolicy</a></td><td class="docblock-short"><p>Use cookies for request identity storage.</p>
 </td></tr><tr class="module-item"><td><a class="struct" href="struct.Identity.html" title="actix_identity::Identity struct">Identity</a></td><td class="docblock-short"><p>The extractor type to obtain your identity from a request.</p>

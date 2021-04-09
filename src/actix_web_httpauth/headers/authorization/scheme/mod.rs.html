@@ -17,14 +17,14 @@
 <span id="14">14</span>
 <span id="15">15</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fmt</span>::{<span class="ident">Debug</span>, <span class="ident">Display</span>};
+<span class="kw">use</span> <span class="ident">std::fmt</span>::{<span class="ident">Debug</span>, <span class="ident">Display</span>};
 
-<span class="kw">use</span> <span class="ident">actix_web</span>::<span class="ident">http</span>::<span class="ident">header</span>::{<span class="ident">HeaderValue</span>, <span class="ident">IntoHeaderValue</span>};
+<span class="kw">use</span> <span class="ident">actix_web::http::header</span>::{<span class="ident">HeaderValue</span>, <span class="ident">IntoHeaderValue</span>};
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">basic</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">bearer</span>;
 
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">headers</span>::<span class="ident">authorization</span>::<span class="ident">errors</span>::<span class="ident">ParseError</span>;
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::headers::authorization::errors::ParseError</span>;
 
 <span class="doccomment">/// Authentication scheme for [`Authorization`](./struct.Authorization.html)</span>
 <span class="doccomment">/// header.</span>

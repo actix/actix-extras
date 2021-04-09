@@ -626,18 +626,18 @@
 <span id="625">625</span>
 <span id="626">626</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections</span>::<span class="ident">HashSet</span>, <span class="ident">convert</span>::<span class="ident">TryInto</span>, <span class="ident">iter</span>::<span class="ident">FromIterator</span>, <span class="ident">rc</span>::<span class="ident">Rc</span>};
+<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections::HashSet</span>, <span class="ident">convert::TryInto</span>, <span class="ident">iter::FromIterator</span>, <span class="ident">rc::Rc</span>};
 
 <span class="kw">use</span> <span class="ident">actix_web</span>::{
     <span class="ident">dev</span>::{<span class="ident">RequestHead</span>, <span class="ident">Service</span>, <span class="ident">ServiceRequest</span>, <span class="ident">ServiceResponse</span>, <span class="ident">Transform</span>},
     <span class="ident">error</span>::{<span class="ident">Error</span>, <span class="prelude-ty">Result</span>},
-    <span class="ident">http</span>::{<span class="self">self</span>, <span class="ident">header</span>::<span class="ident">HeaderName</span>, <span class="ident">Error</span> <span class="kw">as</span> <span class="ident">HttpError</span>, <span class="ident">HeaderValue</span>, <span class="ident">Method</span>, <span class="ident">Uri</span>},
+    <span class="ident">http</span>::{<span class="self">self</span>, <span class="ident">header::HeaderName</span>, <span class="ident">Error</span> <span class="kw">as</span> <span class="ident">HttpError</span>, <span class="ident">HeaderValue</span>, <span class="ident">Method</span>, <span class="ident">Uri</span>},
     <span class="ident">Either</span>,
 };
-<span class="kw">use</span> <span class="ident">futures_util</span>::<span class="ident">future</span>::{<span class="self">self</span>, <span class="ident">Ready</span>};
-<span class="kw">use</span> <span class="ident">log</span>::<span class="ident">error</span>;
-<span class="kw">use</span> <span class="ident">once_cell</span>::<span class="ident">sync</span>::<span class="ident">Lazy</span>;
-<span class="kw">use</span> <span class="ident">tinyvec</span>::<span class="ident">tiny_vec</span>;
+<span class="kw">use</span> <span class="ident">futures_util::future</span>::{<span class="self">self</span>, <span class="ident">Ready</span>};
+<span class="kw">use</span> <span class="ident">log::error</span>;
+<span class="kw">use</span> <span class="ident">once_cell::sync::Lazy</span>;
+<span class="kw">use</span> <span class="ident">tinyvec::tiny_vec</span>;
 
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">AllOrSome</span>, <span class="ident">CorsError</span>, <span class="ident">CorsMiddleware</span>, <span class="ident">Inner</span>, <span class="ident">OriginFn</span>};
 
@@ -645,26 +645,26 @@
 <span class="doccomment">/// Additionally, always causes first error (if any) to be reported during initialization.</span>
 <span class="kw">fn</span> <span class="ident">cors</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
     <span class="ident">inner</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Inner</span><span class="op">&gt;</span>,
-    <span class="ident">err</span>: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Either</span><span class="op">&lt;</span><span class="ident">http</span>::<span class="ident">Error</span>, <span class="ident">CorsError</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">err</span>: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Either</span><span class="op">&lt;</span><span class="ident">http::Error</span>, <span class="ident">CorsError</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">Inner</span><span class="op">&gt;</span> {
     <span class="kw">if</span> <span class="ident">err</span>.<span class="ident">is_some</span>() {
         <span class="kw">return</span> <span class="prelude-val">None</span>;
     }
 
-    <span class="ident">Rc</span>::<span class="ident">get_mut</span>(<span class="ident">inner</span>)
+    <span class="ident">Rc::get_mut</span>(<span class="ident">inner</span>)
 }
 
-<span class="kw">static</span> <span class="ident">ALL_METHODS_SET</span>: <span class="ident">Lazy</span><span class="op">&lt;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Method</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Lazy</span>::<span class="ident">new</span>(<span class="op">|</span><span class="op">|</span> {
-    <span class="ident">HashSet</span>::<span class="ident">from_iter</span>(<span class="macro">vec</span><span class="macro">!</span>[
-        <span class="ident">Method</span>::<span class="ident">GET</span>,
-        <span class="ident">Method</span>::<span class="ident">POST</span>,
-        <span class="ident">Method</span>::<span class="ident">PUT</span>,
-        <span class="ident">Method</span>::<span class="ident">DELETE</span>,
-        <span class="ident">Method</span>::<span class="ident">HEAD</span>,
-        <span class="ident">Method</span>::<span class="ident">OPTIONS</span>,
-        <span class="ident">Method</span>::<span class="ident">CONNECT</span>,
-        <span class="ident">Method</span>::<span class="ident">PATCH</span>,
-        <span class="ident">Method</span>::<span class="ident">TRACE</span>,
+<span class="kw">static</span> <span class="ident">ALL_METHODS_SET</span>: <span class="ident">Lazy</span><span class="op">&lt;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Method</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Lazy::new</span>(<span class="op">|</span><span class="op">|</span> {
+    <span class="ident">HashSet::from_iter</span>(<span class="macro">vec!</span>[
+        <span class="ident">Method::GET</span>,
+        <span class="ident">Method::POST</span>,
+        <span class="ident">Method::PUT</span>,
+        <span class="ident">Method::DELETE</span>,
+        <span class="ident">Method::HEAD</span>,
+        <span class="ident">Method::OPTIONS</span>,
+        <span class="ident">Method::CONNECT</span>,
+        <span class="ident">Method::PATCH</span>,
+        <span class="ident">Method::TRACE</span>,
     ])
 });
 
@@ -699,7 +699,7 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Cors</span> {
     <span class="ident">inner</span>: <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Inner</span><span class="op">&gt;</span>,
-    <span class="ident">error</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Either</span><span class="op">&lt;</span><span class="ident">http</span>::<span class="ident">Error</span>, <span class="ident">CorsError</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">error</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Either</span><span class="op">&lt;</span><span class="ident">http::Error</span>, <span class="ident">CorsError</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">Cors</span> {
@@ -709,16 +709,16 @@
     <span class="doccomment">/// Max age 1 hour. Does not send wildcard.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">permissive</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">let</span> <span class="ident">inner</span> <span class="op">=</span> <span class="ident">Inner</span> {
-            <span class="ident">allowed_origins</span>: <span class="ident">AllOrSome</span>::<span class="ident">All</span>,
-            <span class="ident">allowed_origins_fns</span>: <span class="macro">tiny_vec</span><span class="macro">!</span>[],
+            <span class="ident">allowed_origins</span>: <span class="ident">AllOrSome::All</span>,
+            <span class="ident">allowed_origins_fns</span>: <span class="macro">tiny_vec!</span>[],
 
             <span class="ident">allowed_methods</span>: <span class="ident">ALL_METHODS_SET</span>.<span class="ident">clone</span>(),
             <span class="ident">allowed_methods_baked</span>: <span class="prelude-val">None</span>,
 
-            <span class="ident">allowed_headers</span>: <span class="ident">AllOrSome</span>::<span class="ident">All</span>,
+            <span class="ident">allowed_headers</span>: <span class="ident">AllOrSome::All</span>,
             <span class="ident">allowed_headers_baked</span>: <span class="prelude-val">None</span>,
 
-            <span class="ident">expose_headers</span>: <span class="ident">AllOrSome</span>::<span class="ident">All</span>,
+            <span class="ident">expose_headers</span>: <span class="ident">AllOrSome::All</span>,
             <span class="ident">expose_headers_baked</span>: <span class="prelude-val">None</span>,
             <span class="ident">max_age</span>: <span class="prelude-val">Some</span>(<span class="number">3600</span>),
             <span class="ident">preflight</span>: <span class="bool-val">true</span>,
@@ -728,7 +728,7 @@
         };
 
         <span class="ident">Cors</span> {
-            <span class="ident">inner</span>: <span class="ident">Rc</span>::<span class="ident">new</span>(<span class="ident">inner</span>),
+            <span class="ident">inner</span>: <span class="ident">Rc::new</span>(<span class="ident">inner</span>),
             <span class="ident">error</span>: <span class="prelude-val">None</span>,
         }
     }
@@ -738,7 +738,7 @@
     <span class="doccomment">/// See [`Cors::allowed_origin`] for more info on allowed origins.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">allow_any_origin</span>(<span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Cors</span> {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">cors</span>) <span class="op">=</span> <span class="ident">cors</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">inner</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">error</span>) {
-            <span class="ident">cors</span>.<span class="ident">allowed_origins</span> <span class="op">=</span> <span class="ident">AllOrSome</span>::<span class="ident">All</span>;
+            <span class="ident">cors</span>.<span class="ident">allowed_origins</span> <span class="op">=</span> <span class="ident">AllOrSome::All</span>;
         }
 
         <span class="self">self</span>
@@ -770,16 +770,16 @@
     <span class="doccomment">/// [Fetch Standard]: https://fetch.spec.whatwg.org/#origin-header</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">allowed_origin</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">origin</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Cors</span> {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">cors</span>) <span class="op">=</span> <span class="ident">cors</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">inner</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">error</span>) {
-            <span class="kw">match</span> <span class="ident">TryInto</span>::<span class="op">&lt;</span><span class="ident">Uri</span><span class="op">&gt;</span>::<span class="ident">try_into</span>(<span class="ident">origin</span>) {
+            <span class="kw">match</span> <span class="ident">TryInto</span>::<span class="op">&lt;</span><span class="ident">Uri</span><span class="op">&gt;</span><span class="ident">::try_into</span>(<span class="ident">origin</span>) {
                 <span class="prelude-val">Ok</span>(<span class="kw">_</span>) <span class="kw">if</span> <span class="ident">origin</span> <span class="op">=</span><span class="op">=</span> <span class="string">&quot;*&quot;</span> <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Wildcard in `allowed_origin` is not allowed. Use `send_wildcard`.&quot;</span>);
-                    <span class="self">self</span>.<span class="ident">error</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">Either</span>::<span class="ident">Right</span>(<span class="ident">CorsError</span>::<span class="ident">WildcardOrigin</span>));
+                    <span class="macro">error!</span>(<span class="string">&quot;Wildcard in `allowed_origin` is not allowed. Use `send_wildcard`.&quot;</span>);
+                    <span class="self">self</span>.<span class="ident">error</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">Either::Right</span>(<span class="ident">CorsError::WildcardOrigin</span>));
                 }
 
                 <span class="prelude-val">Ok</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="kw">if</span> <span class="ident">cors</span>.<span class="ident">allowed_origins</span>.<span class="ident">is_all</span>() {
                         <span class="ident">cors</span>.<span class="ident">allowed_origins</span> <span class="op">=</span>
-                            <span class="ident">AllOrSome</span>::<span class="prelude-val">Some</span>(<span class="ident">HashSet</span>::<span class="ident">with_capacity</span>(<span class="number">8</span>));
+                            <span class="ident">AllOrSome::Some</span>(<span class="ident">HashSet::with_capacity</span>(<span class="number">8</span>));
                     }
 
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">origins</span>) <span class="op">=</span> <span class="ident">cors</span>.<span class="ident">allowed_origins</span>.<span class="ident">as_mut</span>() {
@@ -790,7 +790,7 @@
                 }
 
                 <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="self">self</span>.<span class="ident">error</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">Either</span>::<span class="ident">Left</span>(<span class="ident">err</span>.<span class="ident">into</span>()));
+                    <span class="self">self</span>.<span class="ident">error</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">Either::Left</span>(<span class="ident">err</span>.<span class="ident">into</span>()));
                 }
             }
         }
@@ -812,7 +812,7 @@
     {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">cors</span>) <span class="op">=</span> <span class="ident">cors</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">inner</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">error</span>) {
             <span class="ident">cors</span>.<span class="ident">allowed_origins_fns</span>.<span class="ident">push</span>(<span class="ident">OriginFn</span> {
-                <span class="ident">boxed_fn</span>: <span class="ident">Rc</span>::<span class="ident">new</span>(<span class="ident">f</span>),
+                <span class="ident">boxed_fn</span>: <span class="ident">Rc::new</span>(<span class="ident">f</span>),
             });
         }
 
@@ -842,7 +842,7 @@
     <span class="kw">where</span>
         <span class="ident">U</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">M</span><span class="op">&gt;</span>,
         <span class="ident">M</span>: <span class="ident">TryInto</span><span class="op">&lt;</span><span class="ident">Method</span><span class="op">&gt;</span>,
-        <span class="op">&lt;</span><span class="ident">M</span> <span class="kw">as</span> <span class="ident">TryInto</span><span class="op">&lt;</span><span class="ident">Method</span><span class="op">&gt;</span><span class="op">&gt;</span>::<span class="ident">Error</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">HttpError</span><span class="op">&gt;</span>,
+        <span class="op">&lt;</span><span class="ident">M</span> <span class="kw">as</span> <span class="ident">TryInto</span><span class="op">&lt;</span><span class="ident">Method</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Error</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">HttpError</span><span class="op">&gt;</span>,
     {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">cors</span>) <span class="op">=</span> <span class="ident">cors</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">inner</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">error</span>) {
             <span class="kw">for</span> <span class="ident">m</span> <span class="kw">in</span> <span class="ident">methods</span> {
@@ -852,7 +852,7 @@
                     }
 
                     <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="self">self</span>.<span class="ident">error</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">Either</span>::<span class="ident">Left</span>(<span class="ident">err</span>.<span class="ident">into</span>()));
+                        <span class="self">self</span>.<span class="ident">error</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">Either::Left</span>(<span class="ident">err</span>.<span class="ident">into</span>()));
                         <span class="kw">break</span>;
                     }
                 }
@@ -867,7 +867,7 @@
     <span class="doccomment">/// See [`Cors::allowed_headers`] for more info on allowed request headers.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">allow_any_header</span>(<span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Cors</span> {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">cors</span>) <span class="op">=</span> <span class="ident">cors</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">inner</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">error</span>) {
-            <span class="ident">cors</span>.<span class="ident">allowed_headers</span> <span class="op">=</span> <span class="ident">AllOrSome</span>::<span class="ident">All</span>;
+            <span class="ident">cors</span>.<span class="ident">allowed_headers</span> <span class="op">=</span> <span class="ident">AllOrSome::All</span>;
         }
 
         <span class="self">self</span>
@@ -879,22 +879,22 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">allowed_header</span><span class="op">&lt;</span><span class="ident">H</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">header</span>: <span class="ident">H</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Cors</span>
     <span class="kw">where</span>
         <span class="ident">H</span>: <span class="ident">TryInto</span><span class="op">&lt;</span><span class="ident">HeaderName</span><span class="op">&gt;</span>,
-        <span class="op">&lt;</span><span class="ident">H</span> <span class="kw">as</span> <span class="ident">TryInto</span><span class="op">&lt;</span><span class="ident">HeaderName</span><span class="op">&gt;</span><span class="op">&gt;</span>::<span class="ident">Error</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">HttpError</span><span class="op">&gt;</span>,
+        <span class="op">&lt;</span><span class="ident">H</span> <span class="kw">as</span> <span class="ident">TryInto</span><span class="op">&lt;</span><span class="ident">HeaderName</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Error</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">HttpError</span><span class="op">&gt;</span>,
     {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">cors</span>) <span class="op">=</span> <span class="ident">cors</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">inner</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">error</span>) {
             <span class="kw">match</span> <span class="ident">header</span>.<span class="ident">try_into</span>() {
                 <span class="prelude-val">Ok</span>(<span class="ident">method</span>) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="kw">if</span> <span class="ident">cors</span>.<span class="ident">allowed_headers</span>.<span class="ident">is_all</span>() {
                         <span class="ident">cors</span>.<span class="ident">allowed_headers</span> <span class="op">=</span>
-                            <span class="ident">AllOrSome</span>::<span class="prelude-val">Some</span>(<span class="ident">HashSet</span>::<span class="ident">with_capacity</span>(<span class="number">8</span>));
+                            <span class="ident">AllOrSome::Some</span>(<span class="ident">HashSet::with_capacity</span>(<span class="number">8</span>));
                     }
 
-                    <span class="kw">if</span> <span class="kw">let</span> <span class="ident">AllOrSome</span>::<span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">headers</span>) <span class="op">=</span> <span class="ident">cors</span>.<span class="ident">allowed_headers</span> {
+                    <span class="kw">if</span> <span class="kw">let</span> <span class="ident">AllOrSome::Some</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">headers</span>) <span class="op">=</span> <span class="ident">cors</span>.<span class="ident">allowed_headers</span> {
                         <span class="ident">headers</span>.<span class="ident">insert</span>(<span class="ident">method</span>);
                     }
                 }
 
-                <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">error</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">Either</span>::<span class="ident">Left</span>(<span class="ident">err</span>.<span class="ident">into</span>())),
+                <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">error</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">Either::Left</span>(<span class="ident">err</span>.<span class="ident">into</span>())),
             }
         }
 
@@ -915,7 +915,7 @@
     <span class="kw">where</span>
         <span class="ident">U</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">H</span><span class="op">&gt;</span>,
         <span class="ident">H</span>: <span class="ident">TryInto</span><span class="op">&lt;</span><span class="ident">HeaderName</span><span class="op">&gt;</span>,
-        <span class="op">&lt;</span><span class="ident">H</span> <span class="kw">as</span> <span class="ident">TryInto</span><span class="op">&lt;</span><span class="ident">HeaderName</span><span class="op">&gt;</span><span class="op">&gt;</span>::<span class="ident">Error</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">HttpError</span><span class="op">&gt;</span>,
+        <span class="op">&lt;</span><span class="ident">H</span> <span class="kw">as</span> <span class="ident">TryInto</span><span class="op">&lt;</span><span class="ident">HeaderName</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Error</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">HttpError</span><span class="op">&gt;</span>,
     {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">cors</span>) <span class="op">=</span> <span class="ident">cors</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">inner</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">error</span>) {
             <span class="kw">for</span> <span class="ident">h</span> <span class="kw">in</span> <span class="ident">headers</span> {
@@ -923,15 +923,15 @@
                     <span class="prelude-val">Ok</span>(<span class="ident">method</span>) <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="kw">if</span> <span class="ident">cors</span>.<span class="ident">allowed_headers</span>.<span class="ident">is_all</span>() {
                             <span class="ident">cors</span>.<span class="ident">allowed_headers</span> <span class="op">=</span>
-                                <span class="ident">AllOrSome</span>::<span class="prelude-val">Some</span>(<span class="ident">HashSet</span>::<span class="ident">with_capacity</span>(<span class="number">8</span>));
+                                <span class="ident">AllOrSome::Some</span>(<span class="ident">HashSet::with_capacity</span>(<span class="number">8</span>));
                         }
 
-                        <span class="kw">if</span> <span class="kw">let</span> <span class="ident">AllOrSome</span>::<span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">headers</span>) <span class="op">=</span> <span class="ident">cors</span>.<span class="ident">allowed_headers</span> {
+                        <span class="kw">if</span> <span class="kw">let</span> <span class="ident">AllOrSome::Some</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">headers</span>) <span class="op">=</span> <span class="ident">cors</span>.<span class="ident">allowed_headers</span> {
                             <span class="ident">headers</span>.<span class="ident">insert</span>(<span class="ident">method</span>);
                         }
                     }
                     <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="self">self</span>.<span class="ident">error</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">Either</span>::<span class="ident">Left</span>(<span class="ident">err</span>.<span class="ident">into</span>()));
+                        <span class="self">self</span>.<span class="ident">error</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">Either::Left</span>(<span class="ident">err</span>.<span class="ident">into</span>()));
                         <span class="kw">break</span>;
                     }
                 }
@@ -946,7 +946,7 @@
     <span class="doccomment">/// See [`Cors::expose_headers`] for more info on exposed response headers.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">expose_any_header</span>(<span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Cors</span> {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">cors</span>) <span class="op">=</span> <span class="ident">cors</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">inner</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">error</span>) {
-            <span class="ident">cors</span>.<span class="ident">expose_headers</span> <span class="op">=</span> <span class="ident">AllOrSome</span>::<span class="ident">All</span>;
+            <span class="ident">cors</span>.<span class="ident">expose_headers</span> <span class="op">=</span> <span class="ident">AllOrSome::All</span>;
         }
 
         <span class="self">self</span>
@@ -963,7 +963,7 @@
     <span class="kw">where</span>
         <span class="ident">U</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">H</span><span class="op">&gt;</span>,
         <span class="ident">H</span>: <span class="ident">TryInto</span><span class="op">&lt;</span><span class="ident">HeaderName</span><span class="op">&gt;</span>,
-        <span class="op">&lt;</span><span class="ident">H</span> <span class="kw">as</span> <span class="ident">TryInto</span><span class="op">&lt;</span><span class="ident">HeaderName</span><span class="op">&gt;</span><span class="op">&gt;</span>::<span class="ident">Error</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">HttpError</span><span class="op">&gt;</span>,
+        <span class="op">&lt;</span><span class="ident">H</span> <span class="kw">as</span> <span class="ident">TryInto</span><span class="op">&lt;</span><span class="ident">HeaderName</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Error</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">HttpError</span><span class="op">&gt;</span>,
     {
         <span class="kw">for</span> <span class="ident">h</span> <span class="kw">in</span> <span class="ident">headers</span> {
             <span class="kw">match</span> <span class="ident">h</span>.<span class="ident">try_into</span>() {
@@ -971,15 +971,15 @@
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">cors</span>) <span class="op">=</span> <span class="ident">cors</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">inner</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">error</span>) {
                         <span class="kw">if</span> <span class="ident">cors</span>.<span class="ident">expose_headers</span>.<span class="ident">is_all</span>() {
                             <span class="ident">cors</span>.<span class="ident">expose_headers</span> <span class="op">=</span>
-                                <span class="ident">AllOrSome</span>::<span class="prelude-val">Some</span>(<span class="ident">HashSet</span>::<span class="ident">with_capacity</span>(<span class="number">8</span>));
+                                <span class="ident">AllOrSome::Some</span>(<span class="ident">HashSet::with_capacity</span>(<span class="number">8</span>));
                         }
-                        <span class="kw">if</span> <span class="kw">let</span> <span class="ident">AllOrSome</span>::<span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">headers</span>) <span class="op">=</span> <span class="ident">cors</span>.<span class="ident">expose_headers</span> {
+                        <span class="kw">if</span> <span class="kw">let</span> <span class="ident">AllOrSome::Some</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">headers</span>) <span class="op">=</span> <span class="ident">cors</span>.<span class="ident">expose_headers</span> {
                             <span class="ident">headers</span>.<span class="ident">insert</span>(<span class="ident">header</span>);
                         }
                     }
                 }
                 <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="self">self</span>.<span class="ident">error</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">Either</span>::<span class="ident">Left</span>(<span class="ident">err</span>.<span class="ident">into</span>()));
+                    <span class="self">self</span>.<span class="ident">error</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">Either::Left</span>(<span class="ident">err</span>.<span class="ident">into</span>()));
                     <span class="kw">break</span>;
                 }
             }
@@ -1085,16 +1085,16 @@
     <span class="doccomment">/// not supported. No max age (will use browser&#39;s default).</span>
     <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Cors</span> {
         <span class="kw">let</span> <span class="ident">inner</span> <span class="op">=</span> <span class="ident">Inner</span> {
-            <span class="ident">allowed_origins</span>: <span class="ident">AllOrSome</span>::<span class="prelude-val">Some</span>(<span class="ident">HashSet</span>::<span class="ident">with_capacity</span>(<span class="number">8</span>)),
-            <span class="ident">allowed_origins_fns</span>: <span class="macro">tiny_vec</span><span class="macro">!</span>[],
+            <span class="ident">allowed_origins</span>: <span class="ident">AllOrSome::Some</span>(<span class="ident">HashSet::with_capacity</span>(<span class="number">8</span>)),
+            <span class="ident">allowed_origins_fns</span>: <span class="macro">tiny_vec!</span>[],
 
-            <span class="ident">allowed_methods</span>: <span class="ident">HashSet</span>::<span class="ident">with_capacity</span>(<span class="number">8</span>),
+            <span class="ident">allowed_methods</span>: <span class="ident">HashSet::with_capacity</span>(<span class="number">8</span>),
             <span class="ident">allowed_methods_baked</span>: <span class="prelude-val">None</span>,
 
-            <span class="ident">allowed_headers</span>: <span class="ident">AllOrSome</span>::<span class="prelude-val">Some</span>(<span class="ident">HashSet</span>::<span class="ident">with_capacity</span>(<span class="number">8</span>)),
+            <span class="ident">allowed_headers</span>: <span class="ident">AllOrSome::Some</span>(<span class="ident">HashSet::with_capacity</span>(<span class="number">8</span>)),
             <span class="ident">allowed_headers_baked</span>: <span class="prelude-val">None</span>,
 
-            <span class="ident">expose_headers</span>: <span class="ident">AllOrSome</span>::<span class="prelude-val">Some</span>(<span class="ident">HashSet</span>::<span class="ident">with_capacity</span>(<span class="number">8</span>)),
+            <span class="ident">expose_headers</span>: <span class="ident">AllOrSome::Some</span>(<span class="ident">HashSet::with_capacity</span>(<span class="number">8</span>)),
             <span class="ident">expose_headers_baked</span>: <span class="prelude-val">None</span>,
 
             <span class="ident">max_age</span>: <span class="prelude-val">None</span>,
@@ -1105,7 +1105,7 @@
         };
 
         <span class="ident">Cors</span> {
-            <span class="ident">inner</span>: <span class="ident">Rc</span>::<span class="ident">new</span>(<span class="ident">inner</span>),
+            <span class="ident">inner</span>: <span class="ident">Rc::new</span>(<span class="ident">inner</span>),
             <span class="ident">error</span>: <span class="prelude-val">None</span>,
         }
     }
@@ -1114,41 +1114,41 @@
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">B</span><span class="op">&gt;</span> <span class="ident">Transform</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">ServiceRequest</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Cors</span>
 <span class="kw">where</span>
     <span class="ident">S</span>: <span class="ident">Service</span><span class="op">&lt;</span><span class="ident">ServiceRequest</span>, <span class="ident">Response</span> <span class="op">=</span> <span class="ident">ServiceResponse</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>, <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Error</span><span class="op">&gt;</span>,
-    <span class="ident">S</span>::<span class="ident">Future</span>: <span class="lifetime">&#39;static</span>,
+    <span class="ident">S::Future</span>: <span class="lifetime">&#39;static</span>,
     <span class="ident">B</span>: <span class="lifetime">&#39;static</span>,
 {
     <span class="kw">type</span> <span class="ident">Response</span> <span class="op">=</span> <span class="ident">ServiceResponse</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>;
     <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Error</span>;
     <span class="kw">type</span> <span class="ident">InitError</span> <span class="op">=</span> ();
     <span class="kw">type</span> <span class="ident">Transform</span> <span class="op">=</span> <span class="ident">CorsMiddleware</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>;
-    <span class="kw">type</span> <span class="ident">Future</span> <span class="op">=</span> <span class="ident">Ready</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Transform</span>, <span class="self">Self</span>::<span class="ident">InitError</span><span class="op">&gt;</span><span class="op">&gt;</span>;
+    <span class="kw">type</span> <span class="ident">Future</span> <span class="op">=</span> <span class="ident">Ready</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::Transform</span>, <span class="self">Self</span><span class="ident">::InitError</span><span class="op">&gt;</span><span class="op">&gt;</span>;
 
-    <span class="kw">fn</span> <span class="ident">new_transform</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">service</span>: <span class="ident">S</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Future</span> {
+    <span class="kw">fn</span> <span class="ident">new_transform</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">service</span>: <span class="ident">S</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Future</span> {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">err</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">error</span> {
             <span class="kw">match</span> <span class="ident">err</span> {
-                <span class="ident">Either</span>::<span class="ident">Left</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">err</span>),
-                <span class="ident">Either</span>::<span class="ident">Right</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">err</span>),
+                <span class="ident">Either::Left</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">error!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">err</span>),
+                <span class="ident">Either::Right</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">error!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">err</span>),
             }
 
-            <span class="kw">return</span> <span class="ident">future</span>::<span class="ident">err</span>(());
+            <span class="kw">return</span> <span class="ident">future::err</span>(());
         }
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">inner</span> <span class="op">=</span> <span class="ident">Rc</span>::<span class="ident">clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">inner</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">inner</span> <span class="op">=</span> <span class="ident">Rc::clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">inner</span>);
 
         <span class="kw">if</span> <span class="ident">inner</span>.<span class="ident">supports_credentials</span>
             <span class="op">&amp;&amp;</span> <span class="ident">inner</span>.<span class="ident">send_wildcard</span>
             <span class="op">&amp;&amp;</span> <span class="ident">inner</span>.<span class="ident">allowed_origins</span>.<span class="ident">is_all</span>()
         {
-            <span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Illegal combination of CORS options: credentials can not be supported when all \
+            <span class="macro">error!</span>(<span class="string">&quot;Illegal combination of CORS options: credentials can not be supported when all \
                     origins are allowed and `send_wildcard` is enabled.&quot;</span>);
-            <span class="kw">return</span> <span class="ident">future</span>::<span class="ident">err</span>(());
+            <span class="kw">return</span> <span class="ident">future::err</span>(());
         }
 
         <span class="comment">// bake allowed headers value if Some and not empty</span>
         <span class="kw">match</span> <span class="ident">inner</span>.<span class="ident">allowed_headers</span>.<span class="ident">as_ref</span>() {
             <span class="prelude-val">Some</span>(<span class="ident">header_set</span>) <span class="kw">if</span> <span class="op">!</span><span class="ident">header_set</span>.<span class="ident">is_empty</span>() <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">allowed_headers_str</span> <span class="op">=</span> <span class="ident">intersperse_header_values</span>(<span class="ident">header_set</span>);
-                <span class="ident">Rc</span>::<span class="ident">make_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">inner</span>).<span class="ident">allowed_headers_baked</span> <span class="op">=</span>
+                <span class="ident">Rc::make_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">inner</span>).<span class="ident">allowed_headers_baked</span> <span class="op">=</span>
                     <span class="prelude-val">Some</span>(<span class="ident">allowed_headers_str</span>);
             }
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {}
@@ -1157,19 +1157,19 @@
         <span class="comment">// bake allowed methods value if not empty</span>
         <span class="kw">if</span> <span class="op">!</span><span class="ident">inner</span>.<span class="ident">allowed_methods</span>.<span class="ident">is_empty</span>() {
             <span class="kw">let</span> <span class="ident">allowed_methods_str</span> <span class="op">=</span> <span class="ident">intersperse_header_values</span>(<span class="kw-2">&amp;</span><span class="ident">inner</span>.<span class="ident">allowed_methods</span>);
-            <span class="ident">Rc</span>::<span class="ident">make_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">inner</span>).<span class="ident">allowed_methods_baked</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">allowed_methods_str</span>);
+            <span class="ident">Rc::make_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">inner</span>).<span class="ident">allowed_methods_baked</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">allowed_methods_str</span>);
         }
 
         <span class="comment">// bake exposed headers value if Some and not empty</span>
         <span class="kw">match</span> <span class="ident">inner</span>.<span class="ident">expose_headers</span>.<span class="ident">as_ref</span>() {
             <span class="prelude-val">Some</span>(<span class="ident">header_set</span>) <span class="kw">if</span> <span class="op">!</span><span class="ident">header_set</span>.<span class="ident">is_empty</span>() <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">expose_headers_str</span> <span class="op">=</span> <span class="ident">intersperse_header_values</span>(<span class="ident">header_set</span>);
-                <span class="ident">Rc</span>::<span class="ident">make_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">inner</span>).<span class="ident">expose_headers_baked</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">expose_headers_str</span>);
+                <span class="ident">Rc::make_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">inner</span>).<span class="ident">expose_headers_baked</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">expose_headers_str</span>);
             }
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {}
         }
 
-        <span class="ident">future</span>::<span class="ident">ok</span>(<span class="ident">CorsMiddleware</span> { <span class="ident">service</span>, <span class="ident">inner</span> })
+        <span class="ident">future::ok</span>(<span class="ident">CorsMiddleware</span> { <span class="ident">service</span>, <span class="ident">inner</span> })
     }
 }
 
@@ -1180,7 +1180,7 @@
 {
     <span class="ident">val_set</span>
         .<span class="ident">iter</span>()
-        .<span class="ident">fold</span>(<span class="ident">String</span>::<span class="ident">with_capacity</span>(<span class="number">32</span>), <span class="op">|</span><span class="kw-2">mut</span> <span class="ident">acc</span>, <span class="ident">val</span><span class="op">|</span> {
+        .<span class="ident">fold</span>(<span class="ident">String::with_capacity</span>(<span class="number">32</span>), <span class="op">|</span><span class="kw-2">mut</span> <span class="ident">acc</span>, <span class="ident">val</span><span class="op">|</span> {
             <span class="ident">acc</span>.<span class="ident">push_str</span>(<span class="string">&quot;, &quot;</span>);
             <span class="ident">acc</span>.<span class="ident">push_str</span>(<span class="ident">val</span>.<span class="ident">as_ref</span>());
             <span class="ident">acc</span>
@@ -1194,10 +1194,10 @@
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">test</span> {
-    <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">convert</span>::{<span class="ident">Infallible</span>, <span class="ident">TryInto</span>};
+    <span class="kw">use</span> <span class="ident">std::convert</span>::{<span class="ident">Infallible</span>, <span class="ident">TryInto</span>};
 
     <span class="kw">use</span> <span class="ident">actix_web</span>::{
-        <span class="ident">dev</span>::<span class="ident">Transform</span>,
+        <span class="ident">dev::Transform</span>,
         <span class="ident">http</span>::{<span class="ident">HeaderName</span>, <span class="ident">StatusCode</span>},
         <span class="ident">test</span>::{<span class="self">self</span>, <span class="ident">TestRequest</span>},
     };
@@ -1209,47 +1209,47 @@
         <span class="comment">// using the permissive defaults (all origins allowed) and adding send_wildcard</span>
         <span class="comment">// and supports_credentials should error on construction</span>
 
-        <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">Cors</span>::<span class="ident">permissive</span>()
+        <span class="macro">assert!</span>(<span class="ident">Cors::permissive</span>()
             .<span class="ident">supports_credentials</span>()
             .<span class="ident">send_wildcard</span>()
-            .<span class="ident">new_transform</span>(<span class="ident">test</span>::<span class="ident">ok_service</span>())
+            .<span class="ident">new_transform</span>(<span class="ident">test::ok_service</span>())
             .<span class="ident">into_inner</span>()
             .<span class="ident">is_err</span>());
     }
 
-    <span class="attribute">#[<span class="ident">actix_rt</span>::<span class="ident">test</span>]</span>
+    <span class="attribute">#[<span class="ident">actix_rt::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">restrictive_defaults</span>() {
-        <span class="kw">let</span> <span class="ident">cors</span> <span class="op">=</span> <span class="ident">Cors</span>::<span class="ident">default</span>()
-            .<span class="ident">new_transform</span>(<span class="ident">test</span>::<span class="ident">ok_service</span>())
+        <span class="kw">let</span> <span class="ident">cors</span> <span class="op">=</span> <span class="ident">Cors::default</span>()
+            .<span class="ident">new_transform</span>(<span class="ident">test::ok_service</span>())
             .<span class="kw">await</span>
             .<span class="ident">unwrap</span>();
 
-        <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="ident">TestRequest</span>::<span class="ident">default</span>()
+        <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="ident">TestRequest::default</span>()
             .<span class="ident">insert_header</span>((<span class="string">&quot;Origin&quot;</span>, <span class="string">&quot;https://www.example.com&quot;</span>))
             .<span class="ident">to_srv_request</span>();
 
-        <span class="kw">let</span> <span class="ident">resp</span> <span class="op">=</span> <span class="ident">test</span>::<span class="ident">call_service</span>(<span class="kw-2">&amp;</span><span class="ident">cors</span>, <span class="ident">req</span>).<span class="kw">await</span>;
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">resp</span>.<span class="ident">status</span>(), <span class="ident">StatusCode</span>::<span class="ident">BAD_REQUEST</span>);
+        <span class="kw">let</span> <span class="ident">resp</span> <span class="op">=</span> <span class="ident">test::call_service</span>(<span class="kw-2">&amp;</span><span class="ident">cors</span>, <span class="ident">req</span>).<span class="kw">await</span>;
+        <span class="macro">assert_eq!</span>(<span class="ident">resp</span>.<span class="ident">status</span>(), <span class="ident">StatusCode::BAD_REQUEST</span>);
     }
 
-    <span class="attribute">#[<span class="ident">actix_rt</span>::<span class="ident">test</span>]</span>
+    <span class="attribute">#[<span class="ident">actix_rt::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">allowed_header_try_from</span>() {
-        <span class="kw">let</span> <span class="ident">_cors</span> <span class="op">=</span> <span class="ident">Cors</span>::<span class="ident">default</span>().<span class="ident">allowed_header</span>(<span class="string">&quot;Content-Type&quot;</span>);
+        <span class="kw">let</span> <span class="ident">_cors</span> <span class="op">=</span> <span class="ident">Cors::default</span>().<span class="ident">allowed_header</span>(<span class="string">&quot;Content-Type&quot;</span>);
     }
 
-    <span class="attribute">#[<span class="ident">actix_rt</span>::<span class="ident">test</span>]</span>
+    <span class="attribute">#[<span class="ident">actix_rt::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">allowed_header_try_into</span>() {
         <span class="kw">struct</span> <span class="ident">ContentType</span>;
 
         <span class="kw">impl</span> <span class="ident">TryInto</span><span class="op">&lt;</span><span class="ident">HeaderName</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">ContentType</span> {
             <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Infallible</span>;
 
-            <span class="kw">fn</span> <span class="ident">try_into</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">HeaderName</span>, <span class="self">Self</span>::<span class="ident">Error</span><span class="op">&gt;</span> {
-                <span class="prelude-val">Ok</span>(<span class="ident">HeaderName</span>::<span class="ident">from_static</span>(<span class="string">&quot;content-type&quot;</span>))
+            <span class="kw">fn</span> <span class="ident">try_into</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">HeaderName</span>, <span class="self">Self</span><span class="ident">::Error</span><span class="op">&gt;</span> {
+                <span class="prelude-val">Ok</span>(<span class="ident">HeaderName::from_static</span>(<span class="string">&quot;content-type&quot;</span>))
             }
         }
 
-        <span class="kw">let</span> <span class="ident">_cors</span> <span class="op">=</span> <span class="ident">Cors</span>::<span class="ident">default</span>().<span class="ident">allowed_header</span>(<span class="ident">ContentType</span>);
+        <span class="kw">let</span> <span class="ident">_cors</span> <span class="op">=</span> <span class="ident">Cors::default</span>().<span class="ident">allowed_header</span>(<span class="ident">ContentType</span>);
     }
 }
 </pre></div>

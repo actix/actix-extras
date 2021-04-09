@@ -25,8 +25,8 @@
 <span id="22">22</span>
 <span id="23">23</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="kw">use</span> <span class="kw">super</span>::<span class="ident">AuthenticationError</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">headers</span>::<span class="ident">www_authenticate</span>::<span class="ident">Challenge</span>;
+<span class="kw">use</span> <span class="kw">super</span><span class="ident">::AuthenticationError</span>;
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::headers::www_authenticate::Challenge</span>;
 
 <span class="doccomment">/// Trait implemented for types that provides configuration</span>
 <span class="doccomment">/// for the authentication [extractors].</span>
@@ -37,15 +37,15 @@
     <span class="kw">type</span> <span class="ident">Inner</span>: <span class="ident">Challenge</span>;
 
     <span class="doccomment">/// Convert the config instance into a HTTP challenge.</span>
-    <span class="kw">fn</span> <span class="ident">into_inner</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Inner</span>;
+    <span class="kw">fn</span> <span class="ident">into_inner</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Inner</span>;
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">AuthenticationError</span><span class="op">&lt;</span><span class="op">&lt;</span><span class="ident">T</span> <span class="kw">as</span> <span class="ident">AuthExtractorConfig</span><span class="op">&gt;</span>::<span class="ident">Inner</span><span class="op">&gt;</span>
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">AuthenticationError</span><span class="op">&lt;</span><span class="op">&lt;</span><span class="ident">T</span> <span class="kw">as</span> <span class="ident">AuthExtractorConfig</span><span class="op">&gt;</span><span class="ident">::Inner</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">T</span>: <span class="ident">AuthExtractorConfig</span>,
 {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">config</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="ident">AuthenticationError</span>::<span class="ident">new</span>(<span class="ident">config</span>.<span class="ident">into_inner</span>())
+        <span class="ident">AuthenticationError::new</span>(<span class="ident">config</span>.<span class="ident">into_inner</span>())
     }
 }
 </pre></div>

@@ -49,15 +49,15 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;web&quot;</span>)]</span>
 <span class="kw">mod</span> <span class="ident">session</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;web&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">actix_web</span>::<span class="ident">cookie</span>::<span class="ident">SameSite</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">actix_web::cookie::SameSite</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;web&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">session</span>::<span class="ident">RedisSession</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">session::RedisSession</span>;
 
 <span class="doccomment">/// General purpose actix redis error</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Display</span>, <span class="ident">Error</span>, <span class="ident">From</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span> {
     <span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;Redis error {}&quot;</span>, <span class="ident">_0</span>)]</span>
-    <span class="ident">Redis</span>(<span class="ident">redis_async</span>::<span class="ident">error</span>::<span class="ident">Error</span>),
+    <span class="ident">Redis</span>(<span class="ident">redis_async::error::Error</span>),
     <span class="doccomment">/// Receiving message during reconnecting</span>
     <span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;Redis: Not connected&quot;</span>)]</span>
     <span class="ident">NotConnected</span>,
@@ -67,11 +67,11 @@
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;web&quot;</span>)]</span>
-<span class="kw">impl</span> <span class="ident">actix_web</span>::<span class="ident">ResponseError</span> <span class="kw">for</span> <span class="ident">Error</span> {}
+<span class="kw">impl</span> <span class="ident">actix_web::ResponseError</span> <span class="kw">for</span> <span class="ident">Error</span> {}
 
 <span class="comment">// re-export</span>
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">redis_async</span>::<span class="ident">error</span>::<span class="ident">Error</span> <span class="kw">as</span> <span class="ident">RespError</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">redis_async</span>::<span class="ident">resp</span>::<span class="ident">RespValue</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">redis_async::error::Error</span> <span class="kw">as</span> <span class="ident">RespError</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">redis_async::resp::RespValue</span>;
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_redis" data-search-js="../../search-index.js"></div>
     <script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script></body></html>

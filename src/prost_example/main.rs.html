@@ -37,7 +37,7 @@
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">actix_protobuf</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">actix_web</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident">prost_derive</span>::<span class="ident">Message</span>;
+<span class="kw">use</span> <span class="ident">prost_derive::Message</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Message</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MyObj</span> {
@@ -49,19 +49,19 @@
 }
 
 <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">index</span>(<span class="ident">msg</span>: <span class="ident">ProtoBuf</span><span class="op">&lt;</span><span class="ident">MyObj</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">HttpResponse</span><span class="op">&gt;</span> {
-    <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;model: {:?}&quot;</span>, <span class="ident">msg</span>);
-    <span class="ident">HttpResponse</span>::<span class="prelude-val">Ok</span>().<span class="ident">protobuf</span>(<span class="ident">msg</span>.<span class="number">0</span>) <span class="comment">// &lt;- send response</span>
+    <span class="macro">println!</span>(<span class="string">&quot;model: {:?}&quot;</span>, <span class="ident">msg</span>);
+    <span class="ident">HttpResponse::Ok</span>().<span class="ident">protobuf</span>(<span class="ident">msg</span>.<span class="number">0</span>) <span class="comment">// &lt;- send response</span>
 }
 
-<span class="attribute">#[<span class="ident">actix_web</span>::<span class="ident">main</span>]</span>
-<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">main</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std</span>::<span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="ident">std</span>::<span class="ident">env</span>::<span class="ident">set_var</span>(<span class="string">&quot;RUST_LOG&quot;</span>, <span class="string">&quot;actix_web=debug,actix_server=info&quot;</span>);
-    <span class="ident">env_logger</span>::<span class="ident">init</span>();
+<span class="attribute">#[<span class="ident">actix_web::main</span>]</span>
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">main</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="ident">std::env::set_var</span>(<span class="string">&quot;RUST_LOG&quot;</span>, <span class="string">&quot;actix_web=debug,actix_server=info&quot;</span>);
+    <span class="ident">env_logger::init</span>();
 
-    <span class="ident">HttpServer</span>::<span class="ident">new</span>(<span class="op">|</span><span class="op">|</span> {
-        <span class="ident">App</span>::<span class="ident">new</span>()
-            .<span class="ident">wrap</span>(<span class="ident">middleware</span>::<span class="ident">Logger</span>::<span class="ident">default</span>())
-            .<span class="ident">service</span>(<span class="ident">web</span>::<span class="ident">resource</span>(<span class="string">&quot;/&quot;</span>).<span class="ident">route</span>(<span class="ident">web</span>::<span class="ident">post</span>().<span class="ident">to</span>(<span class="ident">index</span>)))
+    <span class="ident">HttpServer::new</span>(<span class="op">|</span><span class="op">|</span> {
+        <span class="ident">App::new</span>()
+            .<span class="ident">wrap</span>(<span class="ident">middleware::Logger::default</span>())
+            .<span class="ident">service</span>(<span class="ident">web::resource</span>(<span class="string">&quot;/&quot;</span>).<span class="ident">route</span>(<span class="ident">web::post</span>().<span class="ident">to</span>(<span class="ident">index</span>)))
     })
     .<span class="ident">bind</span>(<span class="string">&quot;127.0.0.1:8081&quot;</span>)<span class="question-mark">?</span>
     .<span class="ident">shutdown_timeout</span>(<span class="number">1</span>)

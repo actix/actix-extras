@@ -56,7 +56,7 @@
 <span id="55">55</span>
 <span id="56">56</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="kw">use</span> <span class="ident">actix_web</span>::{<span class="ident">http</span>::<span class="ident">StatusCode</span>, <span class="ident">HttpResponse</span>, <span class="ident">ResponseError</span>};
+<span class="kw">use</span> <span class="ident">actix_web</span>::{<span class="ident">http::StatusCode</span>, <span class="ident">HttpResponse</span>, <span class="ident">ResponseError</span>};
 
 <span class="kw">use</span> <span class="ident">derive_more</span>::{<span class="ident">Display</span>, <span class="ident">Error</span>};
 
@@ -105,11 +105,11 @@
 
 <span class="kw">impl</span> <span class="ident">ResponseError</span> <span class="kw">for</span> <span class="ident">CorsError</span> {
     <span class="kw">fn</span> <span class="ident">status_code</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">StatusCode</span> {
-        <span class="ident">StatusCode</span>::<span class="ident">BAD_REQUEST</span>
+        <span class="ident">StatusCode::BAD_REQUEST</span>
     }
 
     <span class="kw">fn</span> <span class="ident">error_response</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">HttpResponse</span> {
-        <span class="ident">HttpResponse</span>::<span class="ident">with_body</span>(<span class="ident">StatusCode</span>::<span class="ident">BAD_REQUEST</span>, <span class="self">self</span>.<span class="ident">to_string</span>().<span class="ident">into</span>())
+        <span class="ident">HttpResponse::with_body</span>(<span class="ident">StatusCode::BAD_REQUEST</span>, <span class="self">self</span>.<span class="ident">to_string</span>().<span class="ident">into</span>())
     }
 }
 </pre></div>
