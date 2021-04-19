@@ -1,3 +1,30 @@
+//! Implementation of errors generated when interacting with a [Session][crate::Session]. While
+//! operations on [Session][crate::Session] can fail with [actix_web::Error], these errors can be
+//! downcast to [InsertError].
+//!
+//! # Examples
+//!
+//! ```
+//!     use actix_session::Session;
+//!     use actix_session::error::InsertError;
+//!     use actix_web::ResponseError;
+//!     use actix_web::test;
+//!     use actix_session::UserSession;
+//!
+//!     let mut req = test::TestRequest::default().to_srv_request();
+//!
+//!     Session::set_session(
+//!         &mut req,
+//!         vec![("key".to_string(), r#"{"key":value}"#.to_string())],
+//!     );
+//!
+//!     let session = req.get_session();
+//!     let actix_err = session.get::<String>("key").unwrap_err();
+//!     let downcast: &InsertError<()> = actix_err.as_error().unwrap();
+//!     // If an insert had failed, the value which wasn't insertable would be retrievable here
+//!     println!("{:?}", downcast);
+//! ```
+
 use std::{error::Error as StdError, fmt};
 
 use actix_web::ResponseError;
@@ -16,8 +43,6 @@ impl From<serde_json::Error> for InsertErrorKind {
         InsertErrorKind::Json(e)
     }
 }
-
-impl ResponseError for InsertErrorKind {}
 
 /// Error returned by [`Session::insert`][crate::Session::insert]. Allows access to value that
 /// failed to be inserted.
@@ -51,6 +76,12 @@ impl<T> fmt::Debug for InsertError<T> {
     }
 }
 
+impl<T> From<InsertErrorKind> for InsertError<T> {
+    fn from(error: InsertErrorKind) -> Self {
+        InsertError::<T> { value: None, error }
+    }
+}
+
 impl<T> fmt::Display for InsertError<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Display::fmt(&self.error, f)
@@ -66,3 +97,20 @@ impl<T: fmt::Debug> StdError for InsertError<T> {
 }
 
 impl<T> ResponseError for InsertError<T> {}
+
+/*
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn take_value_once() {
+        InsertError {
+            value: Some("This is text"),
+            error: InsertErrorKind::Json(serde_json::Error{
+                err: (),
+
+            }),
+        }
+    }
+} */
