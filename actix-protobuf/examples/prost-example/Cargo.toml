@@ -8,7 +8,7 @@ authors = [
 ]
 
 [dependencies]
-actix-web = "4.0.0-beta.5"
+actix-web = "4.0.0-beta.6"
 actix-protobuf = { path = "../../" }
 
 env_logger = "0.8"

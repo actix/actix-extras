@@ -2,7 +2,7 @@ use std::error::Error;
 use std::fmt;
 
 use actix_web::http::StatusCode;
-use actix_web::{HttpResponse, ResponseError};
+use actix_web::{body::Body, web::HttpResponse, ResponseError};
 
 use crate::headers::www_authenticate::Challenge;
 use crate::headers::www_authenticate::WwwAuthenticate;
@@ -51,7 +51,7 @@ impl<C: Challenge> fmt::Display for AuthenticationError<C> {
 impl<C: 'static + Challenge> Error for AuthenticationError<C> {}
 
 impl<C: 'static + Challenge> ResponseError for AuthenticationError<C> {
-    fn error_response(&self) -> HttpResponse {
+    fn error_response(&self) -> HttpResponse<Body> {
         HttpResponse::build(self.status_code)
             // TODO: Get rid of the `.clone()`
             .insert_header(WwwAuthenticate(self.challenge.clone()))
