@@ -51,10 +51,9 @@ use std::{
 
 use actix_web::{
     dev::{Extensions, Payload, RequestHead, ServiceRequest, ServiceResponse},
-    error::ErrorInternalServerError,
     Error, FromRequest, HttpMessage, HttpRequest,
 };
-use error::{InsertError, InsertErrorKind};
+use error::{ErrorSource, GetError, InsertError};
 use futures_util::future::{ok, Ready};
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -149,11 +148,10 @@ struct SessionInner {
 
 impl Session {
     /// Get a `value` from the session.
-    pub fn get<T: DeserializeOwned>(&self, key: &str) -> Result<Option<T>, Error> {
+    pub fn get<T: DeserializeOwned>(&self, key: &str) -> Result<Option<T>, GetError> {
         if let Some(s) = self.0.borrow().state.get(key) {
-            let ret = serde_json::from_str(s).map_err(|e| InsertError::<()> {
-                value: None,
-                error: InsertErrorKind::Json(e),
+            let ret = serde_json::from_str(s).map_err(|e| GetError {
+                source: ErrorSource::Json(e),
             })?;
             Ok(Some(ret))
         } else {
@@ -172,17 +170,17 @@ impl Session {
     ///
     /// Any serializable value can be used and will be encoded as JSON in session data, hence why
     /// only a reference to the value is taken.
-    pub fn insert(
+    pub fn insert<T: Serialize>(
         &self,
         key: impl Into<String>,
-        value: impl Serialize + 'static,
-    ) -> Result<(), Error> {
+        value: T,
+    ) -> Result<(), InsertError<T>> {
         let mut inner = self.0.borrow_mut();
 
         if inner.status != SessionStatus::Purged {
             inner.status = SessionStatus::Changed;
             let val = serde_json::to_string(&value).map_err(|e| InsertError {
-                error: InsertErrorKind::Json(e),
+                source: ErrorSource::Json(e),
                 value: Some(value),
             })?;
             inner.state.insert(key.into(), val);
@@ -208,7 +206,8 @@ impl Session {
     /// Remove value from the session and deserialize.
     ///
     /// Returns None if key was not present in session. Returns T if deserialization succeeds,
-    /// otherwise returns un-deserialized JSON string.
+    /// otherwise returns un-deserialized JSON string. If you expect deserialization to fail, see
+    /// [`remove`]
     pub fn remove_as<T: DeserializeOwned>(
         &self,
         key: &str,

@@ -1,29 +1,4 @@
-//! Implementation of errors generated when interacting with a [Session][crate::Session]. While
-//! operations on [Session][crate::Session] can fail with [actix_web::Error], these errors can be
-//! downcast to [InsertError].
-//!
-//! # Examples
-//!
-//! ```
-//!     use actix_session::Session;
-//!     use actix_session::error::InsertError;
-//!     use actix_web::ResponseError;
-//!     use actix_web::test;
-//!     use actix_session::UserSession;
-//!
-//!     let mut req = test::TestRequest::default().to_srv_request();
-//!
-//!     Session::set_session(
-//!         &mut req,
-//!         vec![("key".to_string(), r#"{"key":value}"#.to_string())],
-//!     );
-//!
-//!     let session = req.get_session();
-//!     let actix_err = session.get::<String>("key").unwrap_err();
-//!     let downcast: &InsertError<()> = actix_err.as_error().unwrap();
-//!     // If an insert had failed, the value which wasn't insertable would be retrievable here
-//!     println!("{:?}", downcast);
-//! ```
+//! Implementation of errors generated when interacting with a [Session][crate::Session].
 
 use std::{error::Error as StdError, fmt};
 
@@ -32,15 +7,15 @@ use derive_more::Display;
 
 /// Error returned by [`Session::get`][crate::Session::get]
 #[derive(Debug, Display)]
-pub(crate) enum InsertErrorKind {
+pub(crate) enum ErrorSource {
     /// Is returned in case of a json serilization error
     #[display(fmt = "{}", _0)]
     Json(serde_json::Error),
 }
 
-impl From<serde_json::Error> for InsertErrorKind {
+impl From<serde_json::Error> for ErrorSource {
     fn from(e: serde_json::Error) -> Self {
-        InsertErrorKind::Json(e)
+        ErrorSource::Json(e)
     }
 }
 
@@ -48,7 +23,7 @@ impl From<serde_json::Error> for InsertErrorKind {
 /// failed to be inserted.
 pub struct InsertError<T> {
     pub(crate) value: Option<T>,
-    pub(crate) error: InsertErrorKind,
+    pub(crate) source: ErrorSource,
 }
 
 impl<T> InsertError<T> {
@@ -72,45 +47,50 @@ impl<T> fmt::Debug for InsertError<T> {
             None => dbg.field("value", &None::<()> as _),
         };
 
-        dbg.field("error", &self.error).finish()
-    }
-}
-
-impl<T> From<InsertErrorKind> for InsertError<T> {
-    fn from(error: InsertErrorKind) -> Self {
-        InsertError::<T> { value: None, error }
+        dbg.field("error", &self.source).finish()
     }
 }
 
 impl<T> fmt::Display for InsertError<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Display::fmt(&self.error, f)
+        fmt::Display::fmt(&self.source, f)
     }
 }
 
 impl<T: fmt::Debug> StdError for InsertError<T> {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        Some(match &self.error {
-            InsertErrorKind::Json(err) => err,
+        Some(match &self.source {
+            ErrorSource::Json(err) => err,
         })
     }
 }
 
 impl<T> ResponseError for InsertError<T> {}
 
-/*
-#[cfg(test)]
-mod tests {
-    use super::*;
+/// The error type returned by [`Session::get`][crate::Session::get]
+pub struct GetError {
+    pub(crate) source: ErrorSource,
+}
 
-    #[test]
-    fn take_value_once() {
-        InsertError {
-            value: Some("This is text"),
-            error: InsertErrorKind::Json(serde_json::Error{
-                err: (),
-
-            }),
-        }
+impl fmt::Display for GetError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Display::fmt(&self.source, f)
     }
-} */
+}
+
+impl fmt::Debug for GetError {
+    fn fmt<'a>(&'a self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut dbg = f.debug_struct("SessionGetError");
+        dbg.field("error", &self.source).finish()
+    }
+}
+
+impl StdError for GetError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        Some(match &self.source {
+            ErrorSource::Json(err) => err,
+        })
+    }
+}
+
+impl ResponseError for GetError {}
