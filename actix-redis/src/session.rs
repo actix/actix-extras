@@ -409,7 +409,7 @@ mod test {
             .get::<i32>("counter")
             .unwrap_or(Some(0))
             .map_or(1, |inner| inner + 1);
-        session.insert("counter", &counter)?;
+        session.insert("counter", counter)?;
 
         Ok(HttpResponse::Ok().json(&IndexResponse { user_id, counter }))
     }
@@ -424,7 +424,7 @@ mod test {
         session: Session,
     ) -> Result<HttpResponse> {
         let id = user_id.into_inner().user_id;
-        session.insert("user_id", &id)?;
+        session.insert("user_id", id.clone())?;
         session.renew();
 
         let counter: i32 = session
