@@ -54,11 +54,13 @@ use actix_web::{
     error::ErrorInternalServerError,
     Error, FromRequest, HttpMessage, HttpRequest,
 };
+use error::{InsertError, InsertErrorKind};
 use futures_util::future::{ok, Ready};
 use serde::{de::DeserializeOwned, Serialize};
 
 #[cfg(feature = "cookie-session")]
 mod cookie;
+mod error;
 #[cfg(feature = "cookie-session")]
 pub use self::cookie::CookieSession;
 
@@ -147,11 +149,13 @@ struct SessionInner {
 
 impl Session {
     /// Get a `value` from the session.
-    pub fn get<T: DeserializeOwned>(&self, key: &str) -> Result<Option<T>, Error> {
+    pub fn get<T: DeserializeOwned>(
+        &self,
+        key: &str,
+    ) -> Result<Option<T>, actix_web::Error> {
         if let Some(s) = self.0.borrow().state.get(key) {
-            Ok(Some(
-                serde_json::from_str(s).map_err(ErrorInternalServerError)?,
-            ))
+            let ret = serde_json::from_str(s).map_err(InsertErrorKind::from)?;
+            Ok(Some(ret))
         } else {
             Ok(None)
         }
@@ -171,13 +175,21 @@ impl Session {
     pub fn insert(
         &self,
         key: impl Into<String>,
-        value: impl Serialize,
+        value: impl Serialize + 'static,
     ) -> Result<(), Error> {
         let mut inner = self.0.borrow_mut();
 
         if inner.status != SessionStatus::Purged {
             inner.status = SessionStatus::Changed;
-            let val = serde_json::to_string(&value).map_err(ErrorInternalServerError)?;
+            let val = serde_json::to_string(&value)
+                // TODO: Possibly need to return an InsertError containing the value which caused the error
+                .map_err(
+                    |e|
+                    InsertError {
+                        error: InsertErrorKind::Json(e),
+                        value: Some(value)
+                    }
+                )?;
             inner.state.insert(key.into(), val);
         }
 

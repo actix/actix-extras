@@ -3,19 +3,21 @@ use std::{error::Error as StdError, fmt};
 use actix_web::ResponseError;
 use derive_more::Display;
 
+/// Error returned by [`Session::get`][crate::Session::get]
 #[derive(Debug, Display)]
 pub(crate) enum InsertErrorKind {
+    /// Is returned in case of a json serilization error
     #[display(fmt = "{}", _0)]
     Json(serde_json::Error),
 }
 
-impl Into<actix_web::Error> for InsertErrorKind {
-    fn into(self) -> actix_web::Error {
-        match self {
-            InsertErrorKind::Json(err) => err.into(),
-        }
+impl From<serde_json::Error> for InsertErrorKind {
+    fn from(e: serde_json::Error) -> Self {
+        InsertErrorKind::Json(e)
     }
 }
+
+impl ResponseError for InsertErrorKind {}
 
 /// Error returned by [`Session::insert`][crate::Session::insert]. Allows access to value that
 /// failed to be inserted.
