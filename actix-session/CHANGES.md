@@ -1,6 +1,9 @@
 # Changes
 
 ## Unreleased - 2020-xx-xx
+
+
+## 0.5.0-beta.1 - 2020-04-02
 * Add `Session::entries`. [#170]
 * Rename `Session::{set => insert}` to match standard hash map naming. [#170]
 * Return values from `Session::remove`. [#170]
