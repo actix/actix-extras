@@ -1,86 +1,276 @@
 <h1 align="center">tracing-actix-web</h1>
 <div align="center">
  <strong>
-   Structured logging for actix-web applications.
+   Structured diagnostics for actix-web applications.
  </strong>
 </div>
 
+<br />
+
+<div align="center">
+  <!-- Crates version -->
+  <a href="https://crates.io/crates/tracing-actix-web">
+    <img src="https://img.shields.io/crates/v/tracing-actix-web.svg?style=flat-square"
+    alt="Crates.io version" />
+  </a>
+  <!-- Downloads -->
+  <a href="https://crates.io/crates/tracing-actix-web">
+    <img src="https://img.shields.io/crates/d/tracing-actix-web.svg?style=flat-square"
+      alt="Download" />
+  </a>
+  <!-- docs.rs docs -->
+  <a href="https://docs.rs/tracing-actix-web">
+    <img src="https://img.shields.io/badge/docs-latest-blue.svg?style=flat-square"
+      alt="docs.rs docs" />
+  </a>
+</div>
 <br/>
 
-`tracing-actix-web` provides [`TracingLogger`], a middleware to log request and response info when using the [`actix-web`] framework.
+`tracing-actix-web` provides [`TracingLogger`], a middleware to collect telemetry data from applications built on top of the [`actix-web`] framework.
 
-[`TracingLogger`] is designed as a drop-in replacement of [`actix-web`]'s [`Logger`].
-
-[`Logger`] is built on top of the [`log`] crate: you need to use regular expressions to parse the request information out of the logged message.
-
-[`TracingLogger`] relies on [`tracing`], a modern instrumentation framework for structured logging: all request information is captured as a machine-parsable set of key-value pairs.  
-It also enables propagation of context information to children spans.
-
-## How to install
+# How to install
 
 Add `tracing-actix-web` to your dependencies:
+
 ```toml
 [dependencies]
 # ...
-tracing-actix-web = "0.2"
-```
-If you are using [`cargo-edit`](https://github.com/killercup/cargo-edit), run
-```bash
-cargo add tracing-actix-web
+tracing-actix-web = "0.4.0-beta.1"
+tracing = "0.1"
+actix-web = "4.0.0-beta.6"
 ```
 
-`tracing-actix-web` `0.2.x` depends on `actix-web` `3.x.x`.  
-If you are using `actix-web` `2.x.x` use `tracing-actix-web` `0.1.x`.
+`tracing-actix-web` exposes two feature flags:
 
-## Usage example
+- `opentelemetry_0_13`: attach [OpenTelemetry](https://github.com/open-telemetry/opentelemetry-rust)'s context to the root span;
+- `emit_event_on_error`: emit a [`tracing`] event when request processing fails with an error.
 
-Register `TracingLogger` as a middleware for your application using `.wrap` on `App`.  
-Add a `Subscriber` implementation to output logs to the console.
+They are both enabled by default.
 
-```rust
-use actix_web::middleware::Logger;
-use actix_web::App;
-use tracing::{Subscriber, subscriber::set_global_default};
-use tracing_log::LogTracer;
+`tracing-actix-web` will release `0.4.0`, going out of beta, as soon as `actix-web` releases a stable `4.0.0`.
+
+# Getting started
+
+```rust,compile_fail
+use actix_web::{App, web, HttpServer};
 use tracing_actix_web::TracingLogger;
-use tracing_bunyan_formatter::{BunyanFormattingLayer, JsonStorageLayer};
-use tracing_subscriber::{layer::SubscriberExt, EnvFilter, Registry};
-
-/// Compose multiple layers into a `tracing`'s subscriber.
-pub fn get_subscriber(
-    name: String,
-    env_filter: String
-) -> impl Subscriber + Send + Sync {
-    let env_filter = EnvFilter::try_from_default_env()
-        .unwrap_or(EnvFilter::new(env_filter));
-    let formatting_layer = BunyanFormattingLayer::new(
-        name.into(),
-        std::io::stdout
-    );
-    Registry::default()
-        .with(env_filter)
-        .with(JsonStorageLayer)
-        .with(formatting_layer)
-}
-
-/// Register a subscriber as global default to process span data.
-///
-/// It should only be called once!
-pub fn init_subscriber(subscriber: impl Subscriber + Send + Sync) {
-    LogTracer::init().expect("Failed to set logger");
-    set_global_default(subscriber).expect("Failed to set subscriber");
-}
 
 fn main() {
-    let subscriber = get_subscriber("app".into(), "info".into());
-    init_subscriber(subscriber);
+    // Init your `tracing` subscriber here!
 
-    let app = App::new().wrap(TracingLogger);
+    let server = HttpServer::new(|| {
+        App::new()
+            // Mount `TracingLogger` as a middleware
+            .wrap(TracingLogger::default())
+            .service( /*  */ )
+    });
 }
 ```
 
-[`TracingLogger`]: https://docs.rs/tracing-actix-web/0.2.1/tracing_actix_web/struct.TracingLogger.html
-[`actix-web`]: https://docs.rs/actix-web
-[`Logger`]: https://docs.rs/actix-web/3.0.0/actix_web/middleware/struct.Logger.html
-[`log`]: https://docs.rs/log
+Check out [the examples on GitHub](https://github.com/LukeMathWalker/tracing-actix-web/tree/main/examples) to get a taste of how [`TracingLogger`] can be used to observe and monitor your
+application.  
+
+# `tracing`: who art thou?
+
+[`TracingLogger`] is built on top of [`tracing`], a modern instrumentation framework with
+[a vibrant ecosystem](https://github.com/tokio-rs/tracing#related-crates).
+
+`tracing-actix-web`'s documentation provides a crash course in how to use [`tracing`] to instrument an `actix-web` application.  
+If you want to learn more check out ["Are we observable yet?"](https://www.lpalmieri.com/posts/2020-09-27-zero-to-production-4-are-we-observable-yet/) -
+it provides an in-depth introduction to the crate and the problems it solves within the bigger picture of [observability](https://docs.honeycomb.io/learning-about-observability/).
+
+# The root span
+
+[`tracing::Span`] is the key abstraction in [`tracing`]: it represents a unit of work in your system.  
+A [`tracing::Span`] has a beginning and an end. It can include one or more **child spans** to represent sub-unit
+of works within a larger task.
+
+When your application receives a request, [`TracingLogger`] creates a new span - we call it the **[root span]**.  
+All the spans created _while_ processing the request will be children of the root span.
+
+[`tracing`] empowers us to attach structured properties to a span as a collection of key-value pairs.  
+Those properties can then be queried in a variety of tools (e.g. ElasticSearch, Honeycomb, DataDog) to
+understand what is happening in your system.  
+
+# Customisation via [`RootSpanBuilder`]
+
+Troubleshooting becomes much easier when the root span has a _rich context_ - e.g. you can understand most of what
+happened when processing the request just by looking at the properties attached to the corresponding root span.  
+
+You might have heard of this technique as the [canonical log line pattern](https://stripe.com/blog/canonical-log-lines),
+popularised by Stripe. It is more recently discussed in terms of [high-cardinality events](https://www.honeycomb.io/blog/observability-a-manifesto/)
+by Honeycomb and other vendors in the observability space.
+
+[`TracingLogger`] gives you a chance to use the very same pattern: you can customise the properties attached
+to the root span in order to capture the context relevant to your specific domain.
+
+[`TracingLogger::default`] is equivalent to:
+
+```rust
+use tracing_actix_web::{TracingLogger, DefaultRootSpanBuilder};
+
+// Two ways to initialise TracingLogger with the default root span builder
+let default = TracingLogger::default();
+let another_way = TracingLogger::<DefaultRootSpanBuilder>::new();
+```
+
+We are delegating the construction of the root span to [`DefaultRootSpanBuilder`].  
+[`DefaultRootSpanBuilder`] captures, out of the box, several dimensions that are usually relevant when looking at an HTTP
+API: method, version, route, etc. - check out its documentation for an extensive list.
+
+You can customise the root span by providing your own implementation of the [`RootSpanBuilder`] trait.  
+Let's imagine, for example, that our system cares about a client identifier embedded inside an authorization header.
+We could add a `client_id` property to the root span using a custom builder, `DomainRootSpanBuilder`:
+
+```rust
+use actix_web::dev::{ServiceResponse, ServiceRequest};
+use actix_web::Error;
+use tracing_actix_web::{TracingLogger, DefaultRootSpanBuilder, RootSpanBuilder};
+use tracing::Span;
+
+pub struct DomainRootSpanBuilder;
+
+impl RootSpanBuilder for DomainRootSpanBuilder {
+    fn on_request_start(request: &ServiceRequest) -> Span {
+        let client_id: &str = todo!("Somehow extract it from the authorization header");
+        tracing::info_span!("Request", client_id)
+    }
+
+    fn on_request_end<B>(_span: Span, _outcome: &Result<ServiceResponse<B>, Error>) {}
+}
+
+let custom_middleware = TracingLogger::<DomainRootSpanBuilder>::new();
+```
+
+There is an issue, though: `client_id` is the _only_ property we are capturing.  
+With `DomainRootSpanBuilder`, as it is, we do not get any of that useful HTTP-related information provided by
+[`DefaultRootSpanBuilder`].  
+
+We can do better!
+
+```rust
+use actix_web::dev::{ServiceResponse, ServiceRequest};
+use actix_web::Error;
+use tracing_actix_web::{TracingLogger, DefaultRootSpanBuilder, RootSpanBuilder};
+use tracing::Span;
+
+pub struct DomainRootSpanBuilder;
+
+impl RootSpanBuilder for DomainRootSpanBuilder {
+    fn on_request_start(request: &ServiceRequest) -> Span {
+        let client_id: &str = todo!("Somehow extract it from the authorization header");
+        tracing_actix_web::root_span!(request, client_id)
+    }
+
+    fn on_request_end<B>(span: Span, outcome: &Result<ServiceResponse<B>, Error>) {
+        DefaultRootSpanBuilder::on_request_end(span, outcome);
+    }
+}
+
+let custom_middleware = TracingLogger::<DomainRootSpanBuilder>::new();
+```
+
+[`root_span!`] is a macro provided by `tracing-actix-web`: it creates a new span by combining all the HTTP properties tracked
+by [`DefaultRootSpanBuilder`] with the custom ones you specify when calling it (e.g. `client_id` in our example).  
+
+We need to use a macro because `tracing` requires all the properties attached to a span to be declared upfront, when the span is created.  
+You cannot add new ones afterwards. This makes it extremely fast, but it pushes us to reach for macros when we need some level of
+composition.
+
+# The [`RootSpan`] extractor
+
+It often happens that not all information about a task is known upfront, encoded in the incoming request.  
+You can use the [`RootSpan`] extractor to grab the root span in your handlers and attach more information
+to your root span as it becomes available:
+
+```rust
+use actix_web::dev::{ServiceResponse, ServiceRequest};
+use actix_web::{Error, HttpResponse};
+use tracing_actix_web::{RootSpan, DefaultRootSpanBuilder, RootSpanBuilder};
+use tracing::Span;
+use actix_web::get;
+use tracing_actix_web::RequestId;
+use uuid::Uuid;
+
+#[get("/")]
+async fn handler(root_span: RootSpan) -> HttpResponse {
+    let application_id: &str = todo!("Some domain logic");
+    // Record the property value against the root span
+    root_span.record("application_id", &application_id);
+
+    // [...]
+    # todo!()
+}
+
+pub struct DomainRootSpanBuilder;
+
+impl RootSpanBuilder for DomainRootSpanBuilder {
+    fn on_request_start(request: &ServiceRequest) -> Span {
+        let client_id: &str = todo!("Somehow extract it from the authorization header");
+        // All fields you want to capture must be declared upfront.
+        // If you don't know the value (yet), use tracing's `Empty`
+        tracing_actix_web::root_span!(
+            request,
+            client_id, application_id = tracing::field::Empty
+        )
+    }
+
+    fn on_request_end<B>(span: Span, response: &Result<ServiceResponse<B>, Error>) {
+        DefaultRootSpanBuilder::on_request_end(span, response);
+    }
+}
+```
+
+# The [`RequestId`] extractor
+
+`tracing-actix-web` generates a unique identifier for each incoming request, the **request id**.  
+
+You can extract the request id using the [`RequestId`] extractor:
+
+```rust
+use actix_web::get;
+use tracing_actix_web::RequestId;
+use uuid::Uuid;
+
+#[get("/")]
+async fn index(request_id: RequestId) -> String {
+  format!("{}", request_id)
+}
+```
+
+# OpenTelemetry integration
+
+`tracing-actix-web` follows [OpenTelemetry's semantic convention](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/overview.md#spancontext)
+for field names.  
+Furthermore, if you have not disabled the `opentelemetry_0_13` feature flag, `tracing-actix-web` automatically
+performs trace propagation according to the OpenTelemetry standard.
+It tries to extract the OpenTelemetry context out of the headers of incoming requests and, when it finds one, it sets
+it as the remote context for the current root span.
+
+If you add [`tracing-opentelemetry::OpenTelemetryLayer`](https://docs.rs/tracing-opentelemetry/0.12.0/tracing_opentelemetry/struct.OpenTelemetryLayer.html)
+in your `tracing::Subscriber` you will be able to export the root span (and all its children) as OpenTelemetry spans.
+
+Check out the [relevant example in the GitHub repository](https://github.com/LukeMathWalker/tracing-actix-web/tree/main/examples/opentelemetry) for reference.
+
+You can find an alternative integration of `actix-web` with OpenTelemetry in [`actix-web-opentelemetry`](https://github.com/OutThereLabs/actix-web-opentelemetry)
+- parts of this project were heavily inspired by their implementation. They provide support for metrics
+and instrumentation for the `awc` HTTP client, both out of scope for `tracing-actix-web`.
+
+# License
+
+Licensed under either of <a href="LICENSE-APACHE">Apache License, Version 2.0</a> or <a href="LICENSE-MIT">MIT license</a> at your option.
+
+Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in `tracing-actix-web` by you, as defined in the Apache-2.0 license, shall be
+dual licensed as above, without any additional terms or conditions.
+
+[`TracingLogger`]: https://docs.rs/tracing-actix-web/4.0.0-beta.1/tracing-actix-web/struct.TracingLogger.html
+[`RequestId`]: https://docs.rs/tracing-actix-web/4.0.0-beta.1/tracing-actix-web/struct.RequestId.html
+[`RootSpan`]: https://docs.rs/tracing-actix-web/4.0.0-beta.1/tracing-actix-web/struct.RootSpan.html
+[`RootSpanBuilder`]: https://docs.rs/tracing-actix-web/4.0.0-beta.1/tracing-actix-web/trait.RootSpanBuilder.html
+[`DefaultRootSpanBuilder`]: https://docs.rs/tracing-actix-web/4.0.0-beta.1/tracing-actix-web/struct.DefaultRootSpanBuilder.html
+[`DefaultRootSpanBuilder::default`]: https://docs.rs/tracing-actix-web/4.0.0-beta.1/tracing-actix-web/struct.DefaultRootSpanBuilder.html#method.default
 [`tracing`]: https://docs.rs/tracing
+[`tracing::Span`]: https://docs.rs/tracing/latest/tracing/struct.Span.html
+[`root_span!`]: https://docs.rs/tracing-actix-web/4.0.0-beta.1/tracing-actix-web/macro.root_span.html
+[root span]: https://docs.rs/tracing-actix-web/4.0.0-beta.1/tracing-actix-web/struct.RootSpan.html
+[`actix-web`]: https://docs.rs/actix-web/4.0.0-beta.6/actix_web/index.html

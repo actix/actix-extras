@@ -4,6 +4,7 @@
 //! # How to install
 //!
 //! Add `tracing-actix-web` to your dependencies:
+//!
 //! ```toml
 //! [dependencies]
 //! # ...
@@ -18,6 +19,8 @@
 //! - `emit_event_on_error`: emit a [`tracing`] event when request processing fails with an error.
 //!
 //! They are both enabled by default.
+//!
+//! `tracing-actix-web` will release `0.4.0`, going out of beta, as soon as `actix-web` releases a stable `4.0.0`.
 //!
 //! # Getting started
 //!
@@ -37,7 +40,7 @@
 //! }
 //! ```
 //!
-//! Check out [the examples on GitHub] to get a taste of how [`TracingLogger`] can be used to observe and monitor your
+//! Check out [the examples on GitHub](https://github.com/LukeMathWalker/tracing-actix-web/tree/main/examples) to get a taste of how [`TracingLogger`] can be used to observe and monitor your
 //! application.  
 //!
 //! # `tracing`: who art thou?
@@ -220,7 +223,7 @@
 //! If you add [`tracing-opentelemetry::OpenTelemetryLayer`](https://docs.rs/tracing-opentelemetry/0.12.0/tracing_opentelemetry/struct.OpenTelemetryLayer.html)
 //! in your `tracing::Subscriber` you will be able to export the root span (and all its children) as OpenTelemetry spans.
 //!
-//! Check out the [relevant example in the GitHub repository] for reference.
+//! Check out the [relevant example in the GitHub repository](https://github.com/LukeMathWalker/tracing-actix-web/tree/main/examples/opentelemetry) for reference.
 //!
 //! You can find an alternative integration of `actix-web` with OpenTelemetry in [`actix-web-opentelemetry`](https://github.com/OutThereLabs/actix-web-opentelemetry)
 //! - parts of this project were heavily inspired by their implementation. They provide support for metrics
