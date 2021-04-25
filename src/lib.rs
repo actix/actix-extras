@@ -225,8 +225,8 @@
 //!
 //! Check out the [relevant example in the GitHub repository](https://github.com/LukeMathWalker/tracing-actix-web/tree/main/examples/opentelemetry) for reference.
 //!
-//! You can find an alternative integration of `actix-web` with OpenTelemetry in [`actix-web-opentelemetry`](https://github.com/OutThereLabs/actix-web-opentelemetry)
-//! - parts of this project were heavily inspired by their implementation. They provide support for metrics
+//! You can find an alternative integration of `actix-web` with OpenTelemetry in [`actix-web-opentelemetry`](https://github.com/OutThereLabs/actix-web-opentelemetry).
+//! Parts of this project were heavily inspired by their implementation. They provide support for metrics
 //! and instrumentation for the `awc` HTTP client, both out of scope for `tracing-actix-web`.
 //!
 //! [root span]: crate::RootSpan
