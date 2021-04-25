@@ -1,3 +1,6 @@
+[workspace]
+members = [".", "examples/opentelemetry", "examples/custom-root-span"]
+
 [package]
 name = "tracing-actix-web"
 version = "0.3.0-beta.3"
@@ -15,12 +18,19 @@ description = "Structured logging middleware for actix-web."
 keywords = ["http", "actix-web", "tracing", "logging"]
 categories = ["asynchronous", "web-programming"]
 
+[features]
+default = ["opentelemetry_0_13", "emit_event_on_error"]
+opentelemetry_0_13 = ["opentelemetry", "tracing-opentelemetry"]
+emit_event_on_error = []
+
 [dependencies]
 actix-web = "4.0.0-beta.6"
 tracing = "0.1.19"
 tracing-futures = "0.2.4"
 futures = "0.3.5"
 uuid = { version = "0.8.1", features = ["v4"] }
+opentelemetry = { version = "0.13", optional = true }
+tracing-opentelemetry = { version = "0.12", optional = true }
 
 [dev-dependencies]
 tracing-subscriber = { version = "0.2.12", features = ["registry", "env-filter"] }
