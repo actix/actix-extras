@@ -1,4 +1,4 @@
-use actix_web::{http::StatusCode, HttpResponse, ResponseError};
+use actix_web::{body::Body, http::StatusCode, BaseHttpResponse, HttpResponse, ResponseError};
 
 use derive_more::{Display, Error};
 
@@ -50,7 +50,7 @@ impl ResponseError for CorsError {
         StatusCode::BAD_REQUEST
     }
 
-    fn error_response(&self) -> HttpResponse {
-        HttpResponse::with_body(StatusCode::BAD_REQUEST, self.to_string().into())
+    fn error_response(&self) -> BaseHttpResponse<Body> {
+        BaseHttpResponse::new(self.status_code()).set_body(Body::from(self.to_string()))
     }
 }
