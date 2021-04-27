@@ -12,7 +12,7 @@ use prost::DecodeError as ProtoBufDecodeError;
 use prost::EncodeError as ProtoBufEncodeError;
 use prost::Message;
 
-use actix_web::dev::{HttpResponseBuilder, Payload};
+use actix_web::{BaseHttpResponse, HttpResponseBuilder, dev::{Payload}};
 use actix_web::error::{Error, PayloadError, ResponseError};
 use actix_web::http::header::{CONTENT_LENGTH, CONTENT_TYPE};
 use actix_web::web::BytesMut;
@@ -40,7 +40,7 @@ pub enum ProtoBufPayloadError {
 }
 
 impl ResponseError for ProtoBufPayloadError {
-    fn error_response(&self) -> HttpResponse {
+    fn error_response(&self) -> BaseHttpResponse<actix_web::dev::Body> {
         match *self {
             ProtoBufPayloadError::Overflow => HttpResponse::PayloadTooLarge().into(),
             _ => HttpResponse::BadRequest().into(),
