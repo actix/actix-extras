@@ -3,10 +3,10 @@ use std::{collections::HashMap, iter, rc::Rc};
 use actix::prelude::*;
 use actix_service::{Service, Transform};
 use actix_session::{Session, SessionStatus};
-use actix_web::cookie::{Cookie, CookieJar, Key, SameSite};
+use actix_web::{HttpRequest, cookie::{Cookie, CookieJar, Key, SameSite}};
 use actix_web::dev::{ServiceRequest, ServiceResponse};
 use actix_web::http::header::{self, HeaderValue};
-use actix_web::{error, Error, HttpMessage};
+use actix_web::{error, Error};
 use futures_core::future::LocalBoxFuture;
 use rand::{distributions::Alphanumeric, rngs::OsRng, Rng};
 use redis_async::resp::RespValue;
@@ -156,7 +156,12 @@ where
         let inner = Rc::clone(&self.inner);
 
         Box::pin(async move {
-            let state = inner.load(&req).await?;
+            // TODO: replace into_parts() and then from_parts() into a better method of accessing the inner HttpRequest of the ServiceRequest.
+            let (http_req, payload) =  req.into_parts();
+
+            let state = inner.load(&http_req).await?;
+
+            req = ServiceRequest::from_parts(http_req, payload);
 
             let value = if let Some((state, value)) = state {
                 Session::set_session(&mut req, state);
@@ -221,7 +226,7 @@ struct Inner {
 impl Inner {
     async fn load(
         &self,
-        req: &ServiceRequest,
+        req: &HttpRequest,
     ) -> Result<Option<(HashMap<String, String>, String)>, Error> {
         // wrapped in block to avoid holding `Ref` (from `req.cookies`) across await point
         let (value, cache_key) = {
@@ -311,7 +316,7 @@ impl Inner {
 
             // set cookie
             let mut jar = CookieJar::new();
-            jar.signed(&self.key).add(cookie);
+            jar.signed_mut(&self.key).add(cookie);
 
             (value, Some(jar))
         };
@@ -320,10 +325,8 @@ impl Inner {
 
         let state: HashMap<_, _> = state.collect();
 
-        let body = match serde_json::to_string(&state) {
-            Err(e) => return Err(e.into()),
-            Ok(body) => body,
-        };
+
+        let body = serde_json::to_string(&state).map_err(|err| error::JsonPayloadError::Serialize(err))?;
 
         let cmd = Command(resp_array!["SET", cache_key, body, "EX", &self.ttl]);
 
