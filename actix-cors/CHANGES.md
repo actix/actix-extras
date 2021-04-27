@@ -2,6 +2,10 @@
 
 ## Unreleased - 2021-xx-xx
 
+## 0.6.0-beta.2 - 2021-04-27
+* Update `actix-web` dependency to 4.0.0-beta.6
+* `CorsError.error_response()` now returns `BaseHttpResponse<Body>`
+
 
 ## 0.6.0-beta.1 - 2021-04-02
 * Update `actix-web` dependency to 4.0.0 beta.
