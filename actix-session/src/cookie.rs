@@ -3,7 +3,7 @@
 use std::{collections::HashMap, rc::Rc};
 
 use actix_service::{Service, Transform};
-use actix_web::cookie::{Cookie, CookieJar, Key, SameSite};
+use actix_web::{HttpRequest, cookie::{Cookie, CookieJar, Key, SameSite}};
 use actix_web::dev::{ServiceRequest, ServiceResponse};
 use actix_web::http::{header::SET_COOKIE, HeaderValue};
 use actix_web::{Error, HttpMessage, ResponseError};
@@ -12,7 +12,7 @@ use futures_util::future::{ok, LocalBoxFuture, Ready};
 use serde_json::error::Error as JsonError;
 use time::{Duration, OffsetDateTime};
 
-use crate::{Session, SessionStatus};
+use crate::{Session, SessionStatus, UserSession};
 
 /// Errors that can occur during handling cookie session
 #[derive(Debug, Display)]
@@ -106,8 +106,8 @@ impl CookieSessionInner {
         let mut jar = CookieJar::new();
 
         match self.security {
-            CookieSecurity::Signed => jar.signed(&self.key).add(cookie),
-            CookieSecurity::Private => jar.private(&self.key).add(cookie),
+            CookieSecurity::Signed => jar.signed_mut(&self.key).add(cookie),
+            CookieSecurity::Private => jar.private_mut(&self.key).add(cookie),
         }
 
         for cookie in jar.delta() {
@@ -132,7 +132,7 @@ impl CookieSessionInner {
         Ok(())
     }
 
-    fn load(&self, req: &ServiceRequest) -> (bool, HashMap<String, String>) {
+    fn load(&self, req: &HttpRequest) -> (bool, HashMap<String, String>) {
         if let Ok(cookies) = req.cookies() {
             for cookie in cookies.iter() {
                 if cookie.name() == self.name {
@@ -337,7 +337,10 @@ where
     /// and this will trigger removal of the session cookie in the response.
     fn call(&self, mut req: ServiceRequest) -> Self::Future {
         let inner = self.inner.clone();
-        let (is_new, state) = self.inner.load(&req);
+        // TODO: replace into_parts() and then from_parts() into a better method of accessing the inner HttpRequest of the ServiceRequest.
+        let (http_req, payload) =  req.into_parts();
+        let (is_new, state) = self.inner.load(&http_req);
+        req = ServiceRequest::from_parts(http_req, payload);
         let prolong_expiration = self.inner.expires_in.is_some();
         Session::set_session(&mut req, state);
 
