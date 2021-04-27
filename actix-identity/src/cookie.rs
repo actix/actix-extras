@@ -4,13 +4,7 @@ use futures_util::future::{ready, Ready};
 use serde::{Deserialize, Serialize};
 use time::Duration;
 
-use actix_web::{
-    cookie::{Cookie, CookieJar, Key, SameSite},
-    dev::{ServiceRequest, ServiceResponse},
-    error::{Error, Result},
-    http::header::{self, HeaderValue},
-    HttpMessage,
-};
+use actix_web::{HttpMessage, HttpRequest, cookie::{Cookie, CookieJar, Key, SameSite}, dev::{ServiceRequest, ServiceResponse}, error::{Error, JsonPayloadError, Result}, http::header::{self, HeaderValue}};
 
 use crate::IdentityPolicy;
 
@@ -78,7 +72,7 @@ impl CookieIdentityInner {
         });
 
         let mut cookie =
-            Cookie::new(self.name.clone(), val.unwrap_or_else(|| Ok(String::new()))?);
+            Cookie::new(self.name.clone(), val.unwrap_or_else(|| Ok(String::new())).map_err(|err| JsonPayloadError::Deserialize(err))?);
         cookie.set_path(self.path.clone());
         cookie.set_secure(self.secure);
         cookie.set_http_only(true);
@@ -108,10 +102,10 @@ impl CookieIdentityInner {
         };
 
         if add_cookie {
-            jar.private(&key).add(cookie);
+            jar.private_mut(&key).add(cookie);
         } else {
             jar.add_original(cookie.clone());
-            jar.private(&key).remove(cookie);
+            jar.private_mut(&key).remove(cookie);
         }
 
         for cookie in jar.delta() {
@@ -391,7 +385,7 @@ mod tests {
             .copied()
             .collect();
 
-        jar.private(&Key::derive_from(&key)).add(Cookie::new(
+        jar.private_mut(&Key::derive_from(&key)).add(Cookie::new(
             COOKIE_NAME,
             serde_json::to_string(&CookieValue {
                 identity: identity.to_string(),
@@ -575,7 +569,7 @@ mod tests {
 
     fn legacy_login_cookie(identity: &'static str) -> Cookie<'static> {
         let mut jar = CookieJar::new();
-        jar.private(&Key::derive_from(&COOKIE_KEY_MASTER))
+        jar.private_mut(&Key::derive_from(&COOKIE_KEY_MASTER))
             .add(Cookie::new(COOKIE_NAME, identity));
         jar.get(COOKIE_NAME).unwrap().clone()
     }
