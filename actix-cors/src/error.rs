@@ -1,6 +1,7 @@
-use actix_web::{http::StatusCode, HttpResponse, ResponseError};
+use actix_web::{http::StatusCode, BaseHttpResponse, ResponseError};
 
 use derive_more::{Display, Error};
+use actix_web::body::Body;
 
 /// Errors that can occur when processing CORS guarded requests.
 #[derive(Debug, Clone, Display, Error)]
@@ -50,7 +51,7 @@ impl ResponseError for CorsError {
         StatusCode::BAD_REQUEST
     }
 
-    fn error_response(&self) -> HttpResponse {
-        HttpResponse::with_body(StatusCode::BAD_REQUEST, self.to_string().into())
+    fn error_response(&self) -> BaseHttpResponse<Body> {
+        BaseHttpResponse::with_body(StatusCode::BAD_REQUEST, self.to_string().into())
     }
 }
