@@ -1,6 +1,6 @@
 use crate::{DefaultRootSpanBuilder, RequestId, RootSpan, RootSpanBuilder};
 use actix_web::dev::{Service, ServiceRequest, ServiceResponse, Transform};
-use actix_web::{Error, HttpMessage};
+use actix_web::{Error, HttpMessage, ResponseError};
 use futures::future::{ok, Ready};
 use futures::task::{Context, Poll};
 use std::future::Future;
@@ -143,20 +143,37 @@ where
                 RootSpanType::on_request_end(Span::current(), &outcome);
 
                 #[cfg(feature = "emit_event_on_error")]
-                if let Err(error) = &outcome {
-                    let response_error = error.as_response_error();
-                    let status_code = response_error.status_code();
-                    let error_msg_prefix =
-                        "Error encountered while processing the incoming HTTP request";
-                    if status_code.is_client_error() {
-                        tracing::warn!("{}: {:?}", error_msg_prefix, response_error);
-                    } else {
-                        tracing::error!("{}: {:?}", error_msg_prefix, response_error);
-                    }
+                {
+                    emit_event_on_error(&outcome);
                 }
+
                 outcome
             }
             .instrument(root_span),
         )
+    }
+}
+
+fn emit_event_on_error<B: 'static>(outcome: &Result<ServiceResponse<B>, actix_web::Error>) {
+    match outcome {
+        Ok(response) => {
+            if let Some(err) = response.response().error() {
+                emit_error_event(err.as_response_error())
+            }
+        }
+        Err(error) => {
+            let response_error = error.as_response_error();
+            emit_error_event(response_error)
+        }
+    }
+}
+
+fn emit_error_event(response_error: &dyn ResponseError) {
+    let status_code = response_error.status_code();
+    let error_msg_prefix = "Error encountered while processing the incoming HTTP request";
+    if status_code.is_client_error() {
+        tracing::warn!("{}: {:?}", error_msg_prefix, response_error);
+    } else {
+        tracing::error!("{}: {:?}", error_msg_prefix, response_error);
     }
 }
