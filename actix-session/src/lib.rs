@@ -49,7 +49,11 @@ use std::{
     rc::Rc,
 };
 
-use actix_web::{Error, FromRequest, HttpMessage, HttpRequest, dev::{Extensions, Payload, RequestHead, ServiceRequest, ServiceResponse}, error::JsonPayloadError};
+use actix_web::{
+    dev::{Extensions, Payload, RequestHead, ServiceRequest, ServiceResponse},
+    error::JsonPayloadError,
+    Error, FromRequest, HttpMessage, HttpRequest,
+};
 use futures_util::future::{ok, Ready};
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -145,7 +149,10 @@ impl Session {
     /// Get a `value` from the session.
     pub fn get<T: DeserializeOwned>(&self, key: &str) -> Result<Option<T>, Error> {
         if let Some(s) = self.0.borrow().state.get(key) {
-            Ok(Some(serde_json::from_str(s).map_err(|err| JsonPayloadError::Serialize(err))?))
+            Ok(Some(
+                serde_json::from_str(s)
+                    .map_err(|err| JsonPayloadError::Serialize(err))?,
+            ))
         } else {
             Ok(None)
         }
@@ -171,7 +178,8 @@ impl Session {
 
         if inner.status != SessionStatus::Purged {
             inner.status = SessionStatus::Changed;
-            let val = serde_json::to_string(&value).map_err(|err| JsonPayloadError::Serialize(err))?;
+            let val = serde_json::to_string(&value)
+                .map_err(|err| JsonPayloadError::Serialize(err))?;
             inner.state.insert(key.into(), val);
         }
 

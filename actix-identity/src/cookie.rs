@@ -4,7 +4,13 @@ use futures_util::future::{ready, Ready};
 use serde::{Deserialize, Serialize};
 use time::Duration;
 
-use actix_web::{HttpMessage, cookie::{Cookie, CookieJar, Key, SameSite}, dev::{ServiceRequest, ServiceResponse}, error::{Error, JsonPayloadError, Result}, http::header::{self, HeaderValue}};
+use actix_web::{
+    cookie::{Cookie, CookieJar, Key, SameSite},
+    dev::{ServiceRequest, ServiceResponse},
+    error::{Error, JsonPayloadError, Result},
+    http::header::{self, HeaderValue},
+    HttpMessage,
+};
 
 use crate::IdentityPolicy;
 
@@ -71,8 +77,11 @@ impl CookieIdentityInner {
             }
         });
 
-        let mut cookie =
-            Cookie::new(self.name.clone(), val.unwrap_or_else(|| Ok(String::new())).map_err(|err| JsonPayloadError::Deserialize(err))?);
+        let mut cookie = Cookie::new(
+            self.name.clone(),
+            val.unwrap_or_else(|| Ok(String::new()))
+                .map_err(|err| JsonPayloadError::Deserialize(err))?,
+        );
         cookie.set_path(self.path.clone());
         cookie.set_secure(self.secure);
         cookie.set_http_only(true);

@@ -3,9 +3,12 @@ use std::{collections::HashMap, iter, rc::Rc};
 use actix::prelude::*;
 use actix_service::{Service, Transform};
 use actix_session::{Session, SessionStatus};
-use actix_web::{HttpRequest, cookie::{Cookie, CookieJar, Key, SameSite}};
 use actix_web::dev::{ServiceRequest, ServiceResponse};
 use actix_web::http::header::{self, HeaderValue};
+use actix_web::{
+    cookie::{Cookie, CookieJar, Key, SameSite},
+    HttpRequest,
+};
 use actix_web::{error, Error};
 use futures_core::future::LocalBoxFuture;
 use rand::{distributions::Alphanumeric, rngs::OsRng, Rng};
@@ -157,7 +160,7 @@ where
 
         Box::pin(async move {
             // TODO: replace into_parts() and then from_parts() into a better method of accessing the inner HttpRequest of the ServiceRequest.
-            let (http_req, payload) =  req.into_parts();
+            let (http_req, payload) = req.into_parts();
 
             let state = inner.load(&http_req).await?;
 
@@ -325,8 +328,8 @@ impl Inner {
 
         let state: HashMap<_, _> = state.collect();
 
-
-        let body = serde_json::to_string(&state).map_err(|err| error::JsonPayloadError::Serialize(err))?;
+        let body = serde_json::to_string(&state)
+            .map_err(|err| error::JsonPayloadError::Serialize(err))?;
 
         let cmd = Command(resp_array!["SET", cache_key, body, "EX", &self.ttl]);
 
@@ -443,7 +446,9 @@ mod test {
         }))
     }
 
-    async fn logout(session: Session) -> Result<actix_web::BaseHttpResponse<actix_web::dev::Body>> {
+    async fn logout(
+        session: Session,
+    ) -> Result<actix_web::BaseHttpResponse<actix_web::dev::Body>> {
         let id: Option<String> = session.get("user_id")?;
         if let Some(x) = id {
             session.purge();
@@ -651,7 +656,10 @@ mod test {
             .unwrap();
         assert_ne!(
             OffsetDateTime::now_utc().year(),
-            cookie_4.expires().map(|t| t.datetime().unwrap().year()).unwrap()
+            cookie_4
+                .expires()
+                .map(|t| t.datetime().unwrap().year())
+                .unwrap()
         );
 
         // Step 10: GET index, including session cookie #2 in request
