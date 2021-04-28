@@ -24,6 +24,8 @@ pub trait RootSpanBuilder {
 /// - Request path (`http.target`);
 /// - Status code (`http.status_code`);
 /// - [Request id](crate::RequestId) (`request_id`);
+/// - `Display` (`exception.message`) and `Debug` (`exception.details`) representations of the error, if there was an error;
+/// - [Request id](crate::RequestId) (`request_id`);
 /// - [OpenTelemetry trace identifier](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/overview.md#spancontext) (`trace_id`). Empty if the feature is not enabled;
 /// - OpenTelemetry span kind, set to `server` (`otel.kind`).
 ///
@@ -45,6 +47,11 @@ impl RootSpanBuilder for DefaultRootSpanBuilder {
             }
             Err(error) => {
                 let response_error = error.as_response_error();
+                span.record(
+                    "exception.message",
+                    &tracing::field::display(response_error),
+                );
+                span.record("exception.details", &tracing::field::debug(response_error));
                 let status_code = response_error.status_code();
                 span.record("http.status_code", &status_code.as_u16());
 

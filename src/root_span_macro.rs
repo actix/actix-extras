@@ -90,6 +90,9 @@ macro_rules! root_span {
                 otel.status_code = $crate::root_span_macro::private::tracing::field::Empty,
                 trace_id = $crate::root_span_macro::private::tracing::field::Empty,
                 request_id = %request_id,
+                exception.message = $crate::root_span_macro::private::tracing::field::Empty,
+                // Not proper OpenTelemetry, but their terminology is fairly exception-centric
+                exception.details = $crate::root_span_macro::private::tracing::field::Empty,
                 $($field)*
             );
             std::mem::drop(connection_info);
