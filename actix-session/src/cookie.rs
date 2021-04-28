@@ -529,7 +529,7 @@ mod tests {
         .await;
 
         let request = test::TestRequest::get().to_request();
-        let response = app.call(request).await.unwrap();
+        let response = test::call_service(&app, request).await;
         let expires_1 = response
             .response()
             .cookies()
@@ -540,8 +540,9 @@ mod tests {
 
         actix_rt::time::sleep(std::time::Duration::from_secs(1)).await;
 
+
         let request = test::TestRequest::with_uri("/test/").to_request();
-        let response = app.call(request).await.unwrap();
+        let response = test::call_service(&app, request).await;
         let expires_2 = response
             .response()
             .cookies()
@@ -550,6 +551,6 @@ mod tests {
             .expires()
             .expect("Expiration is set");
 
-        assert!(expires_2 - expires_1 >= Duration::seconds(1));
+        assert!(expires_2.datetime().unwrap() - expires_1.datetime().unwrap() >= Duration::seconds(1));
     }
 }
