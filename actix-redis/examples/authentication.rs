@@ -1,8 +1,6 @@
 use actix_redis::RedisSession;
 use actix_session::Session;
-use actix_web::{
-    cookie, middleware, web, App, Error, HttpResponse, HttpServer, Responder,
-};
+use actix_web::{cookie, middleware, web, App, HttpResponse, HttpServer};
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize)]
@@ -46,26 +44,24 @@ pub fn validate_session(session: &Session) -> Result<i64, HttpResponse> {
     }
 }
 
-async fn login(
-    credentials: web::Json<Credentials>,
-    session: Session,
-) -> Result<impl Responder, HttpResponse> {
+async fn login(credentials: web::Json<Credentials>, session: Session) -> HttpResponse {
     let credentials = credentials.into_inner();
 
     match User::authenticate(credentials) {
         Ok(user) => session.insert("user_id", user.id).unwrap(),
-        Err(_) => return Err(HttpResponse::Unauthorized().json("Unauthorized")),
+        Err(_) => return HttpResponse::Unauthorized().json("Unauthorized"),
     };
 
-    Ok("Welcome!")
+    HttpResponse::Ok().json("Welcome!")
 }
 
 /// some protected resource
-async fn secret(session: Session) -> Result<impl Responder, Error> {
+async fn secret(session: Session) -> HttpResponse {
     // only allow access to this resource if the user has an active session
-    validate_session(&session)?;
-
-    Ok("secret revealed")
+    match validate_session(&session) {
+        Ok(_) => HttpResponse::Ok().json("secret revealed"),
+        Err(err) => err,
+    }
 }
 
 #[actix_rt::main]

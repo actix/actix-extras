@@ -4,7 +4,7 @@ use futures_util::future::{ready, Ready};
 use serde::{Deserialize, Serialize};
 use time::Duration;
 
-use actix_web::{HttpMessage, HttpRequest, cookie::{Cookie, CookieJar, Key, SameSite}, dev::{ServiceRequest, ServiceResponse}, error::{Error, JsonPayloadError, Result}, http::header::{self, HeaderValue}};
+use actix_web::{HttpMessage, cookie::{Cookie, CookieJar, Key, SameSite}, dev::{ServiceRequest, ServiceResponse}, error::{Error, JsonPayloadError, Result}, http::header::{self, HeaderValue}};
 
 use crate::IdentityPolicy;
 

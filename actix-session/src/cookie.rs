@@ -3,16 +3,19 @@
 use std::{collections::HashMap, rc::Rc};
 
 use actix_service::{Service, Transform};
-use actix_web::{HttpRequest, cookie::{Cookie, CookieJar, Key, SameSite}};
 use actix_web::dev::{ServiceRequest, ServiceResponse};
 use actix_web::http::{header::SET_COOKIE, HeaderValue};
-use actix_web::{Error, HttpMessage, ResponseError};
+use actix_web::{
+    cookie::{Cookie, CookieJar, Key, SameSite},
+    HttpRequest,
+};
+use actix_web::{Error, ResponseError};
 use derive_more::Display;
 use futures_util::future::{ok, LocalBoxFuture, Ready};
 use serde_json::error::Error as JsonError;
 use time::{Duration, OffsetDateTime};
 
-use crate::{Session, SessionStatus, UserSession};
+use crate::{Session, SessionStatus};
 
 /// Errors that can occur during handling cookie session
 #[derive(Debug, Display)]
@@ -338,7 +341,7 @@ where
     fn call(&self, mut req: ServiceRequest) -> Self::Future {
         let inner = self.inner.clone();
         // TODO: replace into_parts() and then from_parts() into a better method of accessing the inner HttpRequest of the ServiceRequest.
-        let (http_req, payload) =  req.into_parts();
+        let (http_req, payload) = req.into_parts();
         let (is_new, state) = self.inner.load(&http_req);
         req = ServiceRequest::from_parts(http_req, payload);
         let prolong_expiration = self.inner.expires_in.is_some();
@@ -540,7 +543,6 @@ mod tests {
 
         actix_rt::time::sleep(std::time::Duration::from_secs(1)).await;
 
-
         let request = test::TestRequest::with_uri("/test/").to_request();
         let response = test::call_service(&app, request).await;
         let expires_2 = response
@@ -551,6 +553,9 @@ mod tests {
             .expires()
             .expect("Expiration is set");
 
-        assert!(expires_2.datetime().unwrap() - expires_1.datetime().unwrap() >= Duration::seconds(1));
+        assert!(
+            expires_2.datetime().unwrap() - expires_1.datetime().unwrap()
+                >= Duration::seconds(1)
+        );
     }
 }

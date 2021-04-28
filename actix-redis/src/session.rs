@@ -443,7 +443,7 @@ mod test {
         }))
     }
 
-    async fn logout(session: Session) -> Result<HttpResponse> {
+    async fn logout(session: Session) -> Result<actix_web::BaseHttpResponse<actix_web::dev::Body>> {
         let id: Option<String> = session.get("user_id")?;
         if let Some(x) = id {
             session.purge();
@@ -651,7 +651,7 @@ mod test {
             .unwrap();
         assert_ne!(
             OffsetDateTime::now_utc().year(),
-            cookie_4.expires().map(|t| t.year()).unwrap()
+            cookie_4.expires().map(|t| t.datetime().unwrap().year()).unwrap()
         );
 
         // Step 10: GET index, including session cookie #2 in request
