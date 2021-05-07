@@ -31,21 +31,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      # # install OpenSSL on Windows
-      # - name: Set vcpkg root
-      #   if: matrix.target.triple == 'x86_64-pc-windows-msvc'
-      #   run: echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Append
-      # - name: Install OpenSSL
-      #   if: matrix.target.triple == 'x86_64-pc-windows-msvc'
-      #   run: vcpkg install openssl:x64-windows
-
-      - name: Install ${{ matrix.version }}
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: ${{ matrix.version }}-${{ matrix.target.triple }}
-          profile: minimal
-          override: true
-
       - name: Install ${{ matrix.version }}
         uses: actions-rs/toolchain@v1
         with:
@@ -68,21 +53,32 @@ jobs:
 
       - name: check minimal
         uses: actions-rs/cargo@v1
-        with:
-          command: hack
-          args: --clean-per-run check --workspace --no-default-features --tests
+        with: { command: ci-min }
+
+      - name: check minimal + tests
+        uses: actions-rs/cargo@v1
+        with: { command: ci-min-test }
+
+      - name: check default
+        uses: actions-rs/cargo@v1
+        with: { command: ci-default }
 
       - name: check full
         uses: actions-rs/cargo@v1
-        with:
-          command: check
-          args: --workspace --bins --examples --tests
+        with: { command: ci-full }
 
       - name: tests
         uses: actions-rs/cargo@v1
+        timeout-minutes: 40
+        with: { command: ci-test }
+
+        # only run on Linux due to unknown issue with running doc tests on macOS
+      - name: doc tests
+        uses: actions-rs/cargo@v1
+        timeout-minutes: 40
         with:
-          command: test
-          args: -v --workspace --all-features --no-fail-fast -- --nocapture
+          command: ci-doctest
+          args: -- --nocapture
 
       - name: Generate coverage file
         if: >
@@ -122,21 +118,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      # # install OpenSSL on Windows
-      # - name: Set vcpkg root
-      #   if: matrix.target.triple == 'x86_64-pc-windows-msvc'
-      #   run: echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Append
-      # - name: Install OpenSSL
-      #   if: matrix.target.triple == 'x86_64-pc-windows-msvc'
-      #   run: vcpkg install openssl:x64-windows
-
-      - name: Install ${{ matrix.version }}
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: ${{ matrix.version }}-${{ matrix.target.triple }}
-          profile: minimal
-          override: true
-
       - name: Install ${{ matrix.version }}
         uses: actions-rs/toolchain@v1
         with:
@@ -159,24 +140,26 @@ jobs:
 
       - name: check minimal
         uses: actions-rs/cargo@v1
-        with:
-          command: hack
-          args: --clean-per-run check --workspace --no-default-features --tests
+        with: { command: ci-min }
+
+      - name: check minimal + tests
+        uses: actions-rs/cargo@v1
+        with: { command: ci-min-test }
+
+      - name: check default
+        uses: actions-rs/cargo@v1
+        with: { command: ci-default }
 
       - name: check full
         uses: actions-rs/cargo@v1
-        with:
-          command: check
-          args: --workspace --bins --examples --tests
+        with: { command: ci-full }
 
       - name: tests
         uses: actions-rs/cargo@v1
+        timeout-minutes: 40
         with:
-          command: test
-          args: -v
-            --workspace --all-features --no-fail-fast
-            --exclude=actix-redis
-            -- --nocapture
+          command: ci-test
+          args: --exclude=actix-redis -- --nocapture
 
       - name: Clear the cargo caches
         run: |
