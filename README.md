@@ -29,6 +29,7 @@ These crates are provided by the community.
 | [actix-casbin]           | [![crates.io](https://img.shields.io/crates/v/actix-casbin?label=latest)](https://crates.io/crates/actix-casbin) [![Documentation](https://docs.rs/actix-casbin/badge.svg)](https://docs.rs/actix-casbin) [![dependency status](https://deps.rs/crate/actix-casbin/0.4.2/status.svg)](https://deps.rs/crate/actix-casbin/0.4.2)                                                             | Authorization library that supports access control models like ACL, RBAC & ABAC. |
 | [actix-web-static-files] | [![crates.io](https://img.shields.io/crates/v/actix-web-static-files?label=latest)](https://crates.io/crates/actix-web-static-files) [![Documentation](https://docs.rs/actix-web-static-files/badge.svg)](https://docs.rs/actix-web-static-files) [![dependency status](https://deps.rs/crate/actix-web-static-files/3.0.5/status.svg)](https://deps.rs/crate/actix-web-static-files/3.0.5) | Static files as embedded resources.                                              |
 | [actix-web-grants]       | [![crates.io](https://img.shields.io/crates/v/actix-web-grants?label=latest)](https://crates.io/crates/actix-web-grants) [![Documentation](https://docs.rs/actix-web-grants/badge.svg)](https://docs.rs/actix-web-grants) [![dependency status](https://deps.rs/crate/actix-web-grants/2.0.1/status.svg)](https://deps.rs/crate/actix-web-grants)                                           | Extension for validating user authorities.                                       |
+| [aliri_actix]       | [![crates.io](https://img.shields.io/crates/v/aliri_actix?label=latest)](https://crates.io/crates/aliri_actix) [![Documentation](https://docs.rs/aliri_actix/badge.svg)](https://docs.rs/aliri_actix) [![dependency status](https://deps.rs/crate/aliri_actix/0.5.0/status.svg)](https://deps.rs/crate/aliri_actix/0.5.0)                                           | Endpoint authorization and authentication using scoped OAuth2 JWT tokens.                                        |
 
 To add a crate to this list, submit a pull request.
 
@@ -48,3 +49,4 @@ To add a crate to this list, submit a pull request.
 [actix-web-static-files]: https://github.com/kilork/actix-web-static-files
 [actix-web-grants]: https://github.com/DDtKey/actix-web-grants
 [actix-governor]: https://github.com/AaronErhardt/actix-governor
+[aliri_actix]: https://github.com/neoeinstein/aliri
