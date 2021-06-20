@@ -1,5 +1,5 @@
 use actix_web::dev::Payload;
-use actix_web::{FromRequest, HttpRequest};
+use actix_web::{FromRequest, HttpRequest, ResponseError};
 use std::future::{ready, Ready};
 use tracing::Span;
 
@@ -47,11 +47,47 @@ impl std::convert::Into<Span> for RootSpan {
 }
 
 impl FromRequest for RootSpan {
-    type Error = ();
+    type Error = RootSpanExtractionError;
     type Future = Ready<Result<Self, Self::Error>>;
     type Config = ();
 
     fn from_request(req: &HttpRequest, _: &mut Payload) -> Self::Future {
-        ready(req.extensions().get::<RootSpan>().cloned().ok_or(()))
+        ready(
+            req.extensions()
+                .get::<RootSpan>()
+                .cloned()
+                .ok_or(RootSpanExtractionError { _priv: () }),
+        )
     }
 }
+
+#[derive(Debug)]
+/// Error returned by the [`RootSpan`] extractor when it fails to retrieve
+/// the root span from request-local storage.
+///
+/// It only happens if you try to extract the root span without having
+/// registered [`TracingLogger`] as a middleware for your application.
+///
+/// [`TracingLogger`]: crate::TracingLogger
+pub struct RootSpanExtractionError {
+    // It turns out that a unit struct has a public constructor!
+    // Therefore adding fields to it (either public or private) later on
+    // is an API breaking change.
+    // Therefore we are adding a dummy private field that the compiler is going
+    // to optimise away to make sure users cannot construct this error
+    // manually in their own code.
+    _priv: (),
+}
+
+impl ResponseError for RootSpanExtractionError {}
+
+impl std::fmt::Display for RootSpanExtractionError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "Failed to retrieve the root span from request-local storage."
+        )
+    }
+}
+
+impl std::error::Error for RootSpanExtractionError {}
