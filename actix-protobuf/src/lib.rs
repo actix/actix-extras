@@ -12,11 +12,13 @@ use prost::DecodeError as ProtoBufDecodeError;
 use prost::EncodeError as ProtoBufEncodeError;
 use prost::Message;
 
-use actix_web::dev::{HttpResponseBuilder, Payload};
-use actix_web::error::{Error, PayloadError, ResponseError};
+use actix_web::dev::Payload;
+use actix_web::error::{Error, ErrorBadRequest, ErrorPayloadTooLarge, PayloadError};
 use actix_web::http::header::{CONTENT_LENGTH, CONTENT_TYPE};
 use actix_web::web::BytesMut;
-use actix_web::{FromRequest, HttpMessage, HttpRequest, HttpResponse, Responder};
+use actix_web::{
+    FromRequest, HttpMessage, HttpRequest, HttpResponse, HttpResponseBuilder, Responder,
+};
 use futures_util::future::{FutureExt, LocalBoxFuture};
 use futures_util::StreamExt;
 
@@ -39,11 +41,11 @@ pub enum ProtoBufPayloadError {
     Payload(PayloadError),
 }
 
-impl ResponseError for ProtoBufPayloadError {
-    fn error_response(&self) -> HttpResponse {
-        match *self {
-            ProtoBufPayloadError::Overflow => HttpResponse::PayloadTooLarge().into(),
-            _ => HttpResponse::BadRequest().into(),
+impl Into<Error> for ProtoBufPayloadError {
+    fn into(self) -> Error {
+        match self {
+            ProtoBufPayloadError::Overflow => ErrorPayloadTooLarge(self).into(),
+            _ => ErrorBadRequest(self).into(),
         }
     }
 }
@@ -143,9 +145,7 @@ impl<T: Message + Default> Responder for ProtoBuf<T> {
             Ok(()) => HttpResponse::Ok()
                 .content_type("application/protobuf")
                 .body(buf),
-            Err(err) => HttpResponse::from_error(Error::from(
-                ProtoBufPayloadError::Serialize(err),
-            )),
+            Err(err) => HttpResponse::from_error(ProtoBufPayloadError::Serialize(err)),
         }
     }
 }
@@ -255,7 +255,7 @@ impl ProtoBufResponseBuilder for HttpResponseBuilder {
         let mut body = Vec::new();
         value
             .encode(&mut body)
-            .map_err(ProtoBufPayloadError::Serialize)?;
+            .map_err(|err| Into::<Error>::into(ProtoBufPayloadError::Serialize(err)))?;
         Ok(self.body(body))
     }
 }

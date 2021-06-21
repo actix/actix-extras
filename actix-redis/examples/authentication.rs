@@ -1,7 +1,8 @@
 use actix_redis::RedisSession;
 use actix_session::Session;
 use actix_web::{
-    cookie, middleware, web, App, Error, HttpResponse, HttpServer, Responder,
+    cookie, error::InternalError, middleware, web, App, Error, HttpResponse, HttpServer,
+    Responder,
 };
 use serde::{Deserialize, Serialize};
 
@@ -19,10 +20,10 @@ struct User {
 }
 
 impl User {
-    fn authenticate(credentials: Credentials) -> Result<Self, HttpResponse> {
+    fn authenticate(credentials: Credentials) -> Result<Self, Error> {
         // TODO: figure out why I keep getting hacked
         if &credentials.password != "hunter2" {
-            return Err(HttpResponse::Unauthorized().json("Unauthorized"));
+            return Err(unauthorized());
         }
 
         Ok(User {
@@ -33,29 +34,32 @@ impl User {
     }
 }
 
-pub fn validate_session(session: &Session) -> Result<i64, HttpResponse> {
-    let user_id: Option<i64> = session.get("user_id").unwrap_or(None);
+fn unauthorized() -> Error {
+    InternalError::from_response(
+        "Unauthorized",
+        HttpResponse::Unauthorized().json("Unauthorized").into(),
+    )
+    .into()
+}
 
-    match user_id {
-        Some(id) => {
-            // keep the user's session alive
-            session.renew();
-            Ok(id)
-        }
-        None => Err(HttpResponse::Unauthorized().json("Unauthorized")),
-    }
+pub fn validate_session(session: &Session) -> Result<i64, Error> {
+    let user_id: i64 = session
+        .get("user_id")
+        .unwrap_or(None)
+        .ok_or_else(unauthorized)?;
+    // keep the user's session alive
+    session.renew();
+    Ok(user_id)
 }
 
 async fn login(
     credentials: web::Json<Credentials>,
     session: Session,
-) -> Result<impl Responder, HttpResponse> {
+) -> Result<impl Responder, Error> {
     let credentials = credentials.into_inner();
 
-    match User::authenticate(credentials) {
-        Ok(user) => session.insert("user_id", user.id).unwrap(),
-        Err(_) => return Err(HttpResponse::Unauthorized().json("Unauthorized")),
-    };
+    let user = User::authenticate(credentials)?;
+    session.insert("user_id", user.id).unwrap();
 
     Ok("Welcome!")
 }
