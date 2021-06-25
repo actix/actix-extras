@@ -3,14 +3,16 @@ use std::{collections::HashMap, iter, rc::Rc};
 use actix::prelude::*;
 use actix_service::{Service, Transform};
 use actix_session::{Session, SessionStatus};
-use actix_web::cookie::{Cookie, CookieJar, Key, SameSite};
-use actix_web::dev::{ServiceRequest, ServiceResponse};
-use actix_web::http::header::{self, HeaderValue};
-use actix_web::{error, Error, HttpMessage};
+use actix_web::{
+    cookie::{Cookie, CookieJar, Key, SameSite},
+    dev::{ServiceRequest, ServiceResponse},
+    error::{self, ErrorInternalServerError},
+    http::header::{self, HeaderValue},
+    Error,
+};
 use futures_core::future::LocalBoxFuture;
 use rand::{distributions::Alphanumeric, rngs::OsRng, Rng};
-use redis_async::resp::RespValue;
-use redis_async::resp_array;
+use redis_async::{resp::RespValue, resp_array};
 use time::{self, Duration, OffsetDateTime};
 
 use crate::redis::{Command, RedisActor};
@@ -311,7 +313,7 @@ impl Inner {
 
             // set cookie
             let mut jar = CookieJar::new();
-            jar.signed(&self.key).add(cookie);
+            jar.signed_mut(&self.key).add(cookie);
 
             (value, Some(jar))
         };
@@ -321,7 +323,8 @@ impl Inner {
         let state: HashMap<_, _> = state.collect();
 
         let body = match serde_json::to_string(&state) {
-            Err(e) => return Err(e.into()),
+            // TODO: remove error wrap after impl ResponseError for serde_json::Error is restored
+            Err(err) => return Err(ErrorInternalServerError(err)),
             Ok(body) => body,
         };
 
@@ -442,12 +445,15 @@ mod test {
 
     async fn logout(session: Session) -> Result<HttpResponse> {
         let id: Option<String> = session.get("user_id")?;
-        if let Some(x) = id {
+
+        let body = if let Some(x) = id {
             session.purge();
-            Ok(format!("Logged out: {}", x).into())
+            format!("Logged out: {}", x)
         } else {
-            Ok("Could not log out anonymous user".into())
-        }
+            "Could not log out anonymous user".to_owned()
+        };
+
+        Ok(HttpResponse::Ok().body(body))
     }
 
     #[actix_rt::test]
@@ -648,7 +654,10 @@ mod test {
             .unwrap();
         assert_ne!(
             OffsetDateTime::now_utc().year(),
-            cookie_4.expires().map(|t| t.year()).unwrap()
+            cookie_4
+                .expires()
+                .map(|t| t.datetime().expect("Expiration is a datetime").year())
+                .unwrap()
         );
 
         // Step 10: GET index, including session cookie #2 in request
