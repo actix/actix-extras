@@ -7,7 +7,7 @@ use time::Duration;
 use actix_web::{
     cookie::{Cookie, CookieJar, Key, SameSite},
     dev::{ServiceRequest, ServiceResponse},
-    error::{Error, Result},
+    error::{Error, ErrorInternalServerError, Result},
     http::header::{self, HeaderValue},
     HttpMessage,
 };
@@ -69,16 +69,18 @@ impl CookieIdentityInner {
         value: Option<CookieValue>,
     ) -> Result<()> {
         let add_cookie = value.is_some();
-        let val = value.map(|val| {
-            if !self.legacy_supported() {
-                serde_json::to_string(&val)
-            } else {
-                Ok(val.identity)
-            }
-        });
+        let val = value
+            .map(|val| {
+                if !self.legacy_supported() {
+                    serde_json::to_string(&val)
+                } else {
+                    Ok(val.identity)
+                }
+            })
+            .transpose()
+            .map_err(ErrorInternalServerError)?;
 
-        let mut cookie =
-            Cookie::new(self.name.clone(), val.unwrap_or_else(|| Ok(String::new()))?);
+        let mut cookie = Cookie::new(self.name.clone(), val.unwrap_or_default());
         cookie.set_path(self.path.clone());
         cookie.set_secure(self.secure);
         cookie.set_http_only(true);
@@ -108,10 +110,10 @@ impl CookieIdentityInner {
         };
 
         if add_cookie {
-            jar.private(&key).add(cookie);
+            jar.private_mut(&key).add(cookie);
         } else {
             jar.add_original(cookie.clone());
-            jar.private(&key).remove(cookie);
+            jar.private_mut(&key).remove(cookie);
         }
 
         for cookie in jar.delta() {
@@ -128,17 +130,19 @@ impl CookieIdentityInner {
         jar.add_original(cookie.clone());
 
         let res = if self.legacy_supported() {
-            jar.private(&self.key).get(&self.name).map(|n| CookieValue {
-                identity: n.value().to_string(),
-                login_timestamp: None,
-                visit_timestamp: None,
-            })
+            jar.private_mut(&self.key)
+                .get(&self.name)
+                .map(|n| CookieValue {
+                    identity: n.value().to_string(),
+                    login_timestamp: None,
+                    visit_timestamp: None,
+                })
         } else {
             None
         };
 
         res.or_else(|| {
-            jar.private(&self.key_v2)
+            jar.private_mut(&self.key_v2)
                 .get(&self.name)
                 .and_then(|c| self.parse(c))
         })
@@ -391,7 +395,7 @@ mod tests {
             .copied()
             .collect();
 
-        jar.private(&Key::derive_from(&key)).add(Cookie::new(
+        jar.private_mut(&Key::derive_from(&key)).add(Cookie::new(
             COOKIE_NAME,
             serde_json::to_string(&CookieValue {
                 identity: identity.to_string(),
@@ -575,7 +579,7 @@ mod tests {
 
     fn legacy_login_cookie(identity: &'static str) -> Cookie<'static> {
         let mut jar = CookieJar::new();
-        jar.private(&Key::derive_from(&COOKIE_KEY_MASTER))
+        jar.private_mut(&Key::derive_from(&COOKIE_KEY_MASTER))
             .add(Cookie::new(COOKIE_NAME, identity));
         jar.get(COOKIE_NAME).unwrap().clone()
     }
@@ -592,7 +596,7 @@ mod tests {
             cookies.add(Cookie::parse(cookie.to_str().unwrap().to_string()).unwrap());
         }
         let cookie = cookies
-            .private(&Key::derive_from(&COOKIE_KEY_MASTER))
+            .private_mut(&Key::derive_from(&COOKIE_KEY_MASTER))
             .get(COOKIE_NAME)
             .unwrap();
         assert_eq!(cookie.value(), identity);

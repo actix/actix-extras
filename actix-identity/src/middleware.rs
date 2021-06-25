@@ -1,10 +1,13 @@
-use std::rc::Rc;
+use std::{error::Error as StdError, rc::Rc};
 
 use actix_web::{
+    body::{AnyBody, MessageBody},
     dev::{Service, ServiceRequest, ServiceResponse, Transform},
     Error, HttpMessage, Result,
 };
-use futures_util::future::{ready, FutureExt, LocalBoxFuture, Ready};
+use futures_util::future::{
+    ready, FutureExt as _, LocalBoxFuture, Ready, TryFutureExt as _,
+};
 
 use crate::{identity::IdentityItem, IdentityPolicy};
 
@@ -41,9 +44,10 @@ where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
     S::Future: 'static,
     T: IdentityPolicy,
-    B: 'static,
+    B: MessageBody + 'static,
+    B::Error: StdError,
 {
-    type Response = ServiceResponse<B>;
+    type Response = ServiceResponse;
     type Error = Error;
     type InitError = ();
     type Transform = IdentityServiceMiddleware<S, T>;
@@ -73,12 +77,13 @@ impl<S, T> Clone for IdentityServiceMiddleware<S, T> {
 
 impl<S, T, B> Service<ServiceRequest> for IdentityServiceMiddleware<S, T>
 where
-    B: 'static,
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
     S::Future: 'static,
     T: IdentityPolicy,
+    B: MessageBody + 'static,
+    B::Error: StdError,
 {
-    type Response = ServiceResponse<B>;
+    type Response = ServiceResponse;
     type Error = Error;
     type Future = LocalBoxFuture<'static, Result<Self::Response, Self::Error>>;
 
@@ -100,16 +105,19 @@ where
 
                     if let Some(id) = id {
                         match backend.to_response(id.id, id.changed, &mut res).await {
-                            Ok(_) => Ok(res),
+                            Ok(_) => {
+                                Ok(res.map_body(|_, body| AnyBody::from_message(body)))
+                            }
                             Err(e) => Ok(res.error_response(e)),
                         }
                     } else {
-                        Ok(res)
+                        Ok(res.map_body(|_, body| AnyBody::from_message(body)))
                     }
                 }
                 Err(err) => Ok(req.error_response(err)),
             }
         }
+        .map_ok(|res| res.map_body(|_, body| AnyBody::from_message(body)))
         .boxed_local()
     }
 }
