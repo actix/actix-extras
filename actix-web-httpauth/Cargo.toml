@@ -6,11 +6,9 @@ authors = [
     "Yuki Okushi <huyuumi.dev@gmail.com>",
 ]
 description = "HTTP authentication schemes for Actix web"
-readme = "README.md"
 keywords = ["http", "web", "framework", "authentication", "security"]
 homepage = "https://actix.rs"
-repository = "https://github.com/actix/actix-extras.git"
-documentation = "https://docs.rs/actix-web-httpauth/"
+repository = "https://github.com/actix/actix-extras"
 categories = ["web-programming::http-server"]
 license = "MIT OR Apache-2.0"
 edition = "2018"

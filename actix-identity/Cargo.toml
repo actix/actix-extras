@@ -3,10 +3,9 @@ name = "actix-identity"
 version = "0.4.0-beta.1"
 authors = ["Nikolay Kim <fafhrd91@gmail.com>"]
 description = "Identity service for Actix web"
-readme = "README.md"
 keywords = ["actix", "auth", "identity", "web", "security"]
 homepage = "https://actix.rs"
-repository = "https://github.com/actix/actix-extras.git"
+repository = "https://github.com/actix/actix-extras"
 license = "MIT OR Apache-2.0"
 edition = "2018"
 

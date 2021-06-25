@@ -3,11 +3,9 @@ name = "actix-session"
 version = "0.5.0-beta.1"
 authors = ["Nikolay Kim <fafhrd91@gmail.com>"]
 description = "Sessions for Actix web"
-readme = "README.md"
 keywords = ["http", "web", "framework", "async", "session"]
 homepage = "https://actix.rs"
 repository = "https://github.com/actix/actix-extras"
-documentation = "https://docs.rs/actix-session/"
 license = "MIT OR Apache-2.0"
 edition = "2018"
 
