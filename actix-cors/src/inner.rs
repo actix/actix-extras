@@ -9,7 +9,7 @@ use actix_web::{
     },
 };
 use once_cell::sync::Lazy;
-use tinyvec::TinyVec;
+use smallvec::SmallVec;
 
 use crate::{AllOrSome, CorsError};
 
@@ -42,7 +42,7 @@ fn header_value_try_into_method(hdr: &HeaderValue) -> Option<Method> {
 #[derive(Debug, Clone)]
 pub(crate) struct Inner {
     pub(crate) allowed_origins: AllOrSome<HashSet<HeaderValue>>,
-    pub(crate) allowed_origins_fns: TinyVec<[OriginFn; 4]>,
+    pub(crate) allowed_origins_fns: SmallVec<[OriginFn; 4]>,
 
     pub(crate) allowed_methods: HashSet<Method>,
     pub(crate) allowed_methods_baked: Option<HeaderValue>,

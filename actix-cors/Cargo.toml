@@ -6,11 +6,9 @@ authors = [
     "Rob Ede <robjtede@icloud.com>",
 ]
 description = "Cross-Origin Resource Sharing (CORS) controls for Actix Web"
-readme = "README.md"
 keywords = ["actix", "cors", "web", "security", "crossorigin"]
 homepage = "https://actix.rs"
-repository = "https://github.com/actix/actix-extras.git"
-documentation = "https://docs.rs/actix-cors"
+repository = "https://github.com/actix/actix-extras"
 license = "MIT OR Apache-2.0"
 edition = "2018"
 
@@ -19,14 +17,14 @@ name = "actix_cors"
 path = "src/lib.rs"
 
 [dependencies]
-actix-web = { version = "4.0.0-beta.5", default-features = false }
-actix-service = "2.0.0-beta.5"
+actix-web = { version = "4.0.0-beta.7", default-features = false }
+actix-service = "2.0.0"
 
 derive_more = "0.99.5"
 futures-util = { version = "0.3.7", default-features = false }
 log = "0.4"
 once_cell = "1"
-tinyvec = { version = "1", features = ["alloc"] }
+smallvec = "1.6"
 
 [dev-dependencies]
 actix-rt = "2"
