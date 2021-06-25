@@ -1,8 +1,12 @@
 //! HTTP Authentication middleware.
 
-use std::{future::Future, marker::PhantomData, pin::Pin, rc::Rc, sync::Arc};
+use std::{
+    error::Error as StdError, future::Future, marker::PhantomData, pin::Pin, rc::Rc,
+    sync::Arc,
+};
 
 use actix_web::{
+    body::{AnyBody, MessageBody},
     dev::{Service, ServiceRequest, ServiceResponse, Transform},
     Error,
 };
@@ -120,8 +124,10 @@ where
     F: Fn(ServiceRequest, T) -> O + 'static,
     O: Future<Output = Result<ServiceRequest, Error>> + 'static,
     T: AuthExtractor + 'static,
+    B: MessageBody + 'static,
+    B::Error: StdError,
 {
-    type Response = ServiceResponse<B>;
+    type Response = ServiceResponse;
     type Error = Error;
     type Transform = AuthenticationMiddleware<S, F, T>;
     type InitError = ();
@@ -153,10 +159,12 @@ where
     F: Fn(ServiceRequest, T) -> O + 'static,
     O: Future<Output = Result<ServiceRequest, Error>> + 'static,
     T: AuthExtractor + 'static,
+    B: MessageBody + 'static,
+    B::Error: StdError,
 {
-    type Response = ServiceResponse<B>;
+    type Response = ServiceResponse;
     type Error = S::Error;
-    type Future = LocalBoxFuture<'static, Result<ServiceResponse<B>, Error>>;
+    type Future = LocalBoxFuture<'static, Result<ServiceResponse, Error>>;
 
     actix_service::forward_ready!(service);
 
@@ -177,7 +185,10 @@ where
             // middleware to do their thing (eg. cors adding headers)
             let req = process_fn(req, credentials).await?;
 
-            service.call(req).await
+            service
+                .call(req)
+                .await
+                .map(|res| res.map_body(|_, body| AnyBody::from_message(body)))
         }
         .boxed_local()
     }
