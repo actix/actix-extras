@@ -51,7 +51,6 @@ use std::{
 
 use actix_web::{
     dev::{Extensions, Payload, RequestHead, ServiceRequest, ServiceResponse},
-    error::ErrorInternalServerError,
     Error, FromRequest, HttpMessage, HttpRequest,
 };
 use futures_util::future::{ok, Ready};

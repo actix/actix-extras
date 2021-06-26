@@ -6,7 +6,7 @@ use actix_session::{Session, SessionStatus};
 use actix_web::{
     cookie::{Cookie, CookieJar, Key, SameSite},
     dev::{ServiceRequest, ServiceResponse},
-    error::{self, ErrorInternalServerError},
+    error,
     http::header::{self, HeaderValue},
     Error,
 };
