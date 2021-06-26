@@ -323,8 +323,7 @@ impl Inner {
         let state: HashMap<_, _> = state.collect();
 
         let body = match serde_json::to_string(&state) {
-            // TODO: remove error wrap after impl ResponseError for serde_json::Error is restored
-            Err(err) => return Err(ErrorInternalServerError(err)),
+            Err(err) => return Err(err.into()),
             Ok(body) => body,
         };
 

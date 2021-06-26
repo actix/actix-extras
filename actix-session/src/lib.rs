@@ -149,10 +149,7 @@ impl Session {
     /// Get a `value` from the session.
     pub fn get<T: DeserializeOwned>(&self, key: &str) -> Result<Option<T>, Error> {
         if let Some(s) = self.0.borrow().state.get(key) {
-            Ok(Some(
-                // TODO: remove map_err after impl ResponseError for serde_json::Error is restored
-                serde_json::from_str(s).map_err(ErrorInternalServerError)?,
-            ))
+            Ok(Some(serde_json::from_str(s)?))
         } else {
             Ok(None)
         }
@@ -178,8 +175,7 @@ impl Session {
 
         if inner.status != SessionStatus::Purged {
             inner.status = SessionStatus::Changed;
-            // TODO: remove map_err after impl ResponseError for serde_json::Error is restored
-            let val = serde_json::to_string(&value).map_err(ErrorInternalServerError)?;
+            let val = serde_json::to_string(&value)?;
             inner.state.insert(key.into(), val);
         }
 

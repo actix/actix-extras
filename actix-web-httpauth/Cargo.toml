@@ -18,7 +18,7 @@ name = "actix_web_httpauth"
 path = "src/lib.rs"
 
 [dependencies]
-actix-web = { version = "4.0.0-beta.7", default_features = false }
+actix-web = { version = "4.0.0-beta.8", default_features = false }
 actix-service = "2.0.0"
 base64 = "0.13"
 futures-util = { version = "0.3.7", default-features = false }
