@@ -341,10 +341,7 @@ where
     /// session state changes, then set-cookie is returned in response.  As
     /// a user logs out, call session.purge() to set SessionStatus accordingly
     /// and this will trigger removal of the session cookie in the response.
-    fn call(&self, req: ServiceRequest) -> Self::Future {
-        let (req, pl) = req.into_parts();
-        let mut req = ServiceRequest::from_parts(req, pl);
-
+    fn call(&self, mut req: ServiceRequest) -> Self::Future {
         let inner = self.inner.clone();
         let (is_new, state) = self.inner.load(&req);
         let prolong_expiration = self.inner.expires_in.is_some();
