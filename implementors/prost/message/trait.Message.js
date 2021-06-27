@@ -1,3 +1,0 @@
-(function() {var implementors = {};
-implementors["prost_example"] = [{"text":"impl <a class=\"trait\" href=\"https://docs.rs/prost/0.7.0/prost/message/trait.Message.html\" title=\"trait prost::message::Message\">Message</a> for <a class=\"struct\" href=\"prost_example/struct.MyObj.html\" title=\"struct prost_example::MyObj\">MyObj</a>","synthetic":false,"types":["prost_example::MyObj"]}];
-if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

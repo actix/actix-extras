@@ -1,1 +1,1 @@
-window.ALL_CRATES = ["actix_cors","actix_identity","actix_protobuf","actix_redis","actix_session","actix_web_httpauth","prost_example"];
+window.ALL_CRATES = ["actix_cors","actix_identity","actix_protobuf","actix_redis","actix_session","actix_web_httpauth"];
