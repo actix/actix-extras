@@ -8,14 +8,13 @@ INSERT_PR_TYPE
 
 
 ## PR Checklist
-Check your PR fulfills the following:
-
+<!-- Check your PR fulfills the following items. -->
 <!-- For draft PRs check the boxes as you complete them. -->
 
 - [ ] Tests for the changes have been added / updated.
 - [ ] Documentation comments have been added / updated.
 - [ ] A changelog entry has been made for the appropriate packages.
-- [ ] Format code with the latest stable rustfmt
+- [ ] Format code with the latest stable rustfmt.
 
 
 ## Overview

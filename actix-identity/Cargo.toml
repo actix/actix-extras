@@ -22,5 +22,5 @@ serde_json = "1.0"
 time = "0.2.23"
 
 [dev-dependencies]
-actix-http = "3.0.0-beta.4"
+actix-http = "3.0.0-beta.8"
 actix-rt = "2"
