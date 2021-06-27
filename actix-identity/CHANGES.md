@@ -3,6 +3,10 @@
 ## Unreleased - 2020-xx-xx
 
 
+## 0.4.0-beta.2 - 2020-06-27
+* No notable changes.
+
+
 ## 0.4.0-beta.1 - 2020-04-02
 * Rename `CookieIdentityPolicy::{max_age => max_age_secs}`. [#168]
 * Rename `CookieIdentityPolicy::{max_age_time => max_age}`. [#168]
