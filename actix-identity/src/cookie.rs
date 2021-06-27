@@ -7,7 +7,7 @@ use time::Duration;
 use actix_web::{
     cookie::{Cookie, CookieJar, Key, SameSite},
     dev::{ServiceRequest, ServiceResponse},
-    error::{Error, ErrorInternalServerError, Result},
+    error::{Error, Result},
     http::header::{self, HeaderValue},
     HttpMessage,
 };
@@ -77,8 +77,7 @@ impl CookieIdentityInner {
                     Ok(val.identity)
                 }
             })
-            .transpose()
-            .map_err(ErrorInternalServerError)?;
+            .transpose()?;
 
         let mut cookie = Cookie::new(self.name.clone(), val.unwrap_or_default());
         cookie.set_path(self.path.clone());
