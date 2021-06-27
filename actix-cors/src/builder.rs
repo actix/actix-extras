@@ -9,7 +9,7 @@ use actix_web::{
 use futures_util::future::{self, Ready};
 use log::error;
 use once_cell::sync::Lazy;
-use tinyvec::tiny_vec;
+use smallvec::smallvec;
 
 use crate::{AllOrSome, CorsError, CorsMiddleware, Inner, OriginFn};
 
@@ -82,7 +82,7 @@ impl Cors {
     pub fn permissive() -> Self {
         let inner = Inner {
             allowed_origins: AllOrSome::All,
-            allowed_origins_fns: tiny_vec![],
+            allowed_origins_fns: smallvec![],
 
             allowed_methods: ALL_METHODS_SET.clone(),
             allowed_methods_baked: None,
@@ -458,7 +458,7 @@ impl Default for Cors {
     fn default() -> Cors {
         let inner = Inner {
             allowed_origins: AllOrSome::Some(HashSet::with_capacity(8)),
-            allowed_origins_fns: tiny_vec![],
+            allowed_origins_fns: smallvec![],
 
             allowed_methods: HashSet::with_capacity(8),
             allowed_methods_baked: None,
@@ -483,13 +483,12 @@ impl Default for Cors {
     }
 }
 
-impl<S, B> Transform<S, ServiceRequest> for Cors
+impl<S> Transform<S, ServiceRequest> for Cors
 where
-    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
+    S: Service<ServiceRequest, Response = ServiceResponse, Error = Error>,
     S::Future: 'static,
-    B: 'static,
 {
-    type Response = ServiceResponse<B>;
+    type Response = ServiceResponse;
     type Error = Error;
     type InitError = ();
     type Transform = CorsMiddleware<S>;

@@ -1,7 +1,8 @@
 use actix_redis::RedisSession;
 use actix_session::Session;
 use actix_web::{
-    cookie, middleware, web, App, Error, HttpResponse, HttpServer, Responder,
+    cookie, error::InternalError, middleware, web, App, Error, HttpResponse, HttpServer,
+    Responder,
 };
 use serde::{Deserialize, Serialize};
 
@@ -49,12 +50,12 @@ pub fn validate_session(session: &Session) -> Result<i64, HttpResponse> {
 async fn login(
     credentials: web::Json<Credentials>,
     session: Session,
-) -> Result<impl Responder, HttpResponse> {
+) -> Result<impl Responder, Error> {
     let credentials = credentials.into_inner();
 
     match User::authenticate(credentials) {
         Ok(user) => session.insert("user_id", user.id).unwrap(),
-        Err(_) => return Err(HttpResponse::Unauthorized().json("Unauthorized")),
+        Err(err) => return Err(InternalError::from_response("", err).into()),
     };
 
     Ok("Welcome!")
@@ -63,7 +64,7 @@ async fn login(
 /// some protected resource
 async fn secret(session: Session) -> Result<impl Responder, Error> {
     // only allow access to this resource if the user has an active session
-    validate_session(&session)?;
+    validate_session(&session).map_err(|err| InternalError::from_response("", err))?;
 
     Ok("secret revealed")
 }

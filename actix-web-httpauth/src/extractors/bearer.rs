@@ -84,7 +84,7 @@ impl AuthExtractorConfig for Config {
 ///
 /// fn main() {
 ///     let app = App::new()
-///         .data(
+///         .app_data(
 ///             Config::default()
 ///                 .realm("Restricted area")
 ///                 .scope("email photo"),

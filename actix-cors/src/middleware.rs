@@ -1,6 +1,7 @@
-use std::{convert::TryInto, rc::Rc};
+use std::{convert::TryInto, error::Error as StdError, rc::Rc};
 
 use actix_web::{
+    body::{AnyBody, MessageBody},
     dev::{Service, ServiceRequest, ServiceResponse},
     error::{Error, Result},
     http::{
@@ -9,7 +10,9 @@ use actix_web::{
     },
     HttpResponse,
 };
-use futures_util::future::{ok, Either, FutureExt as _, LocalBoxFuture, Ready};
+use futures_util::future::{
+    ok, Either, FutureExt as _, LocalBoxFuture, Ready, TryFutureExt as _,
+};
 use log::debug;
 
 use crate::Inner;
@@ -26,7 +29,7 @@ pub struct CorsMiddleware<S> {
 }
 
 impl<S> CorsMiddleware<S> {
-    fn handle_preflight<B>(inner: &Inner, req: ServiceRequest) -> ServiceResponse<B> {
+    fn handle_preflight(inner: &Inner, req: ServiceRequest) -> ServiceResponse {
         if let Err(err) = inner
             .validate_origin(req.head())
             .and_then(|_| inner.validate_allowed_method(req.head()))
@@ -69,7 +72,6 @@ impl<S> CorsMiddleware<S> {
         }
 
         let res = res.finish();
-        let res = res.into_body();
         req.into_response(res)
     }
 
@@ -112,20 +114,21 @@ impl<S> CorsMiddleware<S> {
     }
 }
 
-type CorsMiddlewareServiceFuture<B> = Either<
-    Ready<Result<ServiceResponse<B>, Error>>,
-    LocalBoxFuture<'static, Result<ServiceResponse<B>, Error>>,
+type CorsMiddlewareServiceFuture = Either<
+    Ready<Result<ServiceResponse, Error>>,
+    LocalBoxFuture<'static, Result<ServiceResponse, Error>>,
 >;
 
 impl<S, B> Service<ServiceRequest> for CorsMiddleware<S>
 where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
     S::Future: 'static,
-    B: 'static,
+    B: MessageBody + 'static,
+    B::Error: StdError,
 {
-    type Response = ServiceResponse<B>;
+    type Response = ServiceResponse;
     type Error = Error;
-    type Future = CorsMiddlewareServiceFuture<B>;
+    type Future = CorsMiddlewareServiceFuture;
 
     actix_service::forward_ready!(service);
 
@@ -158,6 +161,7 @@ where
                     res
                 }
             }
+            .map_ok(|res| res.map_body(|_, body| AnyBody::from_message(body)))
             .boxed_local();
 
             Either::Right(res)

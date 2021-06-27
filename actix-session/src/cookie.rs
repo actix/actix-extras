@@ -1,14 +1,16 @@
 //! Cookie based sessions. See docs for [`CookieSession`].
 
-use std::{collections::HashMap, rc::Rc};
+use std::{collections::HashMap, error::Error as StdError, rc::Rc};
 
-use actix_service::{Service, Transform};
-use actix_web::cookie::{Cookie, CookieJar, Key, SameSite};
-use actix_web::dev::{ServiceRequest, ServiceResponse};
-use actix_web::http::{header::SET_COOKIE, HeaderValue};
-use actix_web::{Error, HttpMessage, ResponseError};
+use actix_web::{
+    body::{AnyBody, MessageBody},
+    cookie::{Cookie, CookieJar, Key, SameSite},
+    dev::{Service, ServiceRequest, ServiceResponse, Transform},
+    http::{header::SET_COOKIE, HeaderValue},
+    Error, ResponseError,
+};
 use derive_more::Display;
-use futures_util::future::{ok, LocalBoxFuture, Ready};
+use futures_util::future::{ok, FutureExt as _, LocalBoxFuture, Ready};
 use serde_json::error::Error as JsonError;
 use time::{Duration, OffsetDateTime};
 
@@ -106,8 +108,8 @@ impl CookieSessionInner {
         let mut jar = CookieJar::new();
 
         match self.security {
-            CookieSecurity::Signed => jar.signed(&self.key).add(cookie),
-            CookieSecurity::Private => jar.private(&self.key).add(cookie),
+            CookieSecurity::Signed => jar.signed_mut(&self.key).add(cookie),
+            CookieSecurity::Private => jar.private_mut(&self.key).add(cookie),
         }
 
         for cookie in jar.delta() {
@@ -292,13 +294,15 @@ impl CookieSession {
     }
 }
 
-impl<S, B: 'static> Transform<S, ServiceRequest> for CookieSession
+impl<S, B> Transform<S, ServiceRequest> for CookieSession
 where
     S: Service<ServiceRequest, Response = ServiceResponse<B>>,
     S::Future: 'static,
     S::Error: 'static,
+    B: MessageBody + 'static,
+    B::Error: StdError,
 {
-    type Response = ServiceResponse<B>;
+    type Response = ServiceResponse;
     type Error = S::Error;
     type InitError = ();
     type Transform = CookieSessionMiddleware<S>;
@@ -318,13 +322,15 @@ pub struct CookieSessionMiddleware<S> {
     inner: Rc<CookieSessionInner>,
 }
 
-impl<S, B: 'static> Service<ServiceRequest> for CookieSessionMiddleware<S>
+impl<S, B> Service<ServiceRequest> for CookieSessionMiddleware<S>
 where
     S: Service<ServiceRequest, Response = ServiceResponse<B>>,
     S::Future: 'static,
     S::Error: 'static,
+    B: MessageBody + 'static,
+    B::Error: StdError,
 {
-    type Response = ServiceResponse<B>;
+    type Response = ServiceResponse;
     type Error = S::Error;
     type Future = LocalBoxFuture<'static, Result<Self::Response, Self::Error>>;
 
@@ -343,36 +349,40 @@ where
 
         let fut = self.service.call(req);
 
-        Box::pin(async move {
+        async move {
             let mut res = fut.await?;
 
-            let res = match Session::get_changes(&mut res) {
+            let result = match Session::get_changes(&mut res) {
                 (SessionStatus::Changed, state) | (SessionStatus::Renewed, state) => {
-                    res.checked_expr(|res| inner.set_cookie(res, state))
+                    inner.set_cookie(&mut res, state)
                 }
 
                 (SessionStatus::Unchanged, state) if prolong_expiration => {
-                    res.checked_expr(|res| inner.set_cookie(res, state))
+                    inner.set_cookie(&mut res, state)
                 }
 
                 // set a new session cookie upon first request (new client)
                 (SessionStatus::Unchanged, _) => {
                     if is_new {
                         let state: HashMap<String, String> = HashMap::new();
-                        res.checked_expr(|res| inner.set_cookie(res, state.into_iter()))
+                        inner.set_cookie(&mut res, state.into_iter())
                     } else {
-                        res
+                        Ok(())
                     }
                 }
 
                 (SessionStatus::Purged, _) => {
                     let _ = inner.remove_cookie(&mut res);
-                    res
+                    Ok(())
                 }
             };
 
-            Ok(res)
-        })
+            match result {
+                Ok(()) => Ok(res.map_body(|_, body| AnyBody::from_message(body))),
+                Err(error) => Ok(res.error_response(error)),
+            }
+        }
+        .boxed_local()
     }
 }
 
@@ -533,7 +543,9 @@ mod tests {
             .find(|c| c.name() == "actix-session")
             .expect("Cookie is set")
             .expires()
-            .expect("Expiration is set");
+            .expect("Expiration is set")
+            .datetime()
+            .expect("Expiration is a datetime");
 
         actix_rt::time::sleep(std::time::Duration::from_secs(1)).await;
 
@@ -545,7 +557,9 @@ mod tests {
             .find(|c| c.name() == "actix-session")
             .expect("Cookie is set")
             .expires()
-            .expect("Expiration is set");
+            .expect("Expiration is set")
+            .datetime()
+            .expect("Expiration is a datetime");
 
         assert!(expires_2 - expires_1 >= Duration::seconds(1));
     }

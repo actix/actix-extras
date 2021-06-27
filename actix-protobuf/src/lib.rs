@@ -1,39 +1,49 @@
-#![deny(rust_2018_idioms)]
+#![forbid(unsafe_code)]
+#![deny(rust_2018_idioms, nonstandard_style)]
 
+use std::{
+    fmt,
+    future::Future,
+    ops::{Deref, DerefMut},
+    pin::Pin,
+    task::{self, Poll},
+};
+
+use actix_web::{
+    dev::Payload,
+    error::PayloadError,
+    http::header::{CONTENT_LENGTH, CONTENT_TYPE},
+    web::BytesMut,
+    Error, FromRequest, HttpMessage, HttpRequest, HttpResponse, HttpResponseBuilder,
+    Responder, ResponseError,
+};
 use derive_more::Display;
-use std::fmt;
-use std::future::Future;
-use std::ops::{Deref, DerefMut};
-use std::pin::Pin;
-use std::task;
-use std::task::Poll;
-
-use prost::DecodeError as ProtoBufDecodeError;
-use prost::EncodeError as ProtoBufEncodeError;
-use prost::Message;
-
-use actix_web::dev::{HttpResponseBuilder, Payload};
-use actix_web::error::{Error, PayloadError, ResponseError};
-use actix_web::http::header::{CONTENT_LENGTH, CONTENT_TYPE};
-use actix_web::web::BytesMut;
-use actix_web::{FromRequest, HttpMessage, HttpRequest, HttpResponse, Responder};
-use futures_util::future::{FutureExt, LocalBoxFuture};
-use futures_util::StreamExt;
+use futures_util::{
+    future::{FutureExt as _, LocalBoxFuture},
+    stream::StreamExt as _,
+};
+use prost::{
+    DecodeError as ProtoBufDecodeError, EncodeError as ProtoBufEncodeError, Message,
+};
 
 #[derive(Debug, Display)]
 pub enum ProtoBufPayloadError {
     /// Payload size is bigger than 256k
     #[display(fmt = "Payload size is bigger than 256k")]
     Overflow,
+
     /// Content type error
     #[display(fmt = "Content type error")]
     ContentType,
+
     /// Serialize error
     #[display(fmt = "ProtoBuf serialize error: {}", _0)]
     Serialize(ProtoBufEncodeError),
+
     /// Deserialize error
     #[display(fmt = "ProtoBuf deserialize error: {}", _0)]
     Deserialize(ProtoBufDecodeError),
+
     /// Payload error
     #[display(fmt = "Error that occur during reading payload: {}", _0)]
     Payload(PayloadError),
