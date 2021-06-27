@@ -1,14 +1,17 @@
 # actix-protobuf
 
-[![crates.io](https://img.shields.io/crates/v/actix-protobuf)](https://crates.io/crates/actix-protobuf)
-[![Documentation](https://docs.rs/actix-protobuf/badge.svg)](https://docs.rs/actix-protobuf)
-[![Dependency Status](https://deps.rs/crate/actix-protobuf/0.5.1/status.svg)](https://deps.rs/crate/actix-protobuf/0.5.1)
+> Protobuf support for Actix Web.
+
+[![crates.io](https://img.shields.io/crates/v/actix-protobuf?label=latest)](https://crates.io/crates/actix-protobuf)
+[![Documentation](https://docs.rs/actix-protobuf/badge.svg?version=0.7.0-beta.1)](https://docs.rs/actix-protobuf/0.7.0-beta.1)
 ![Apache 2.0 or MIT licensed](https://img.shields.io/crates/l/actix-protobuf)
-[![Join the chat at https://gitter.im/actix/actix](https://badges.gitter.im/actix/actix.svg)](https://gitter.im/actix/actix?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Dependency Status](https://deps.rs/crate/actix-protobuf/0.7.0-beta.1/status.svg)](https://deps.rs/crate/actix-protobuf/0.7.0-beta.1)
 
-> Protobuf support for actix-web framework.
+## Documentation & Resources
 
-- Minimum Supported Rust Version (MSRV): 1.46
+- [API Documentation](https://docs.rs/actix-protobuf)
+- [Example Project](https://github.com/actix/examples/tree/master/other/protobuf)
+- Minimum Supported Rust Version (MSRV): 1.46.0
 
 ## Example
 
@@ -36,7 +39,7 @@ See [here](https://github.com/actix/actix-extras/tree/master/actix-protobuf/exam
 
 This project is licensed under either of
 
-* Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0))
-* MIT license ([LICENSE-MIT](LICENSE-MIT) or [https://opensource.org/licenses/MIT](https://opensource.org/licenses/MIT))
+- Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0))
+- MIT license ([LICENSE-MIT](LICENSE-MIT) or [https://opensource.org/licenses/MIT](https://opensource.org/licenses/MIT))
 
 at your option.

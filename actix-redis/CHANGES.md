@@ -3,6 +3,10 @@
 ## Unreleased - 2020-xx-xx
 
 
+## 0.10.0-beta.2 - 2020-06-27
+* No notable changes.
+
+
 ## 0.10.0-beta.1 - 2020-04-02
 * Update `actix-web` dependency to 4.0.0 beta.
 * Minimum supported Rust version (MSRV) is now 1.46.0.
