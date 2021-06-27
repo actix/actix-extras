@@ -7,7 +7,7 @@ use actix_web::{
     cookie::{Cookie, CookieJar, Key, SameSite},
     dev::{Service, ServiceRequest, ServiceResponse, Transform},
     http::{header::SET_COOKIE, HeaderValue},
-    Error, HttpResponse, ResponseError,
+    Error, ResponseError,
 };
 use derive_more::Display;
 use futures_util::future::{ok, FutureExt as _, LocalBoxFuture, Ready};
@@ -343,7 +343,6 @@ where
     /// and this will trigger removal of the session cookie in the response.
     fn call(&self, req: ServiceRequest) -> Self::Future {
         let (req, pl) = req.into_parts();
-        let req2 = req.clone();
         let mut req = ServiceRequest::from_parts(req, pl);
 
         let inner = self.inner.clone();
@@ -358,34 +357,32 @@ where
 
             let result = match Session::get_changes(&mut res) {
                 (SessionStatus::Changed, state) | (SessionStatus::Renewed, state) => {
-                    res.checked_expr(|res| inner.set_cookie(res, state))
+                    inner.set_cookie(&mut res, state)
                 }
 
                 (SessionStatus::Unchanged, state) if prolong_expiration => {
-                    res.checked_expr(|res| inner.set_cookie(res, state))
+                    inner.set_cookie(&mut res, state)
                 }
 
                 // set a new session cookie upon first request (new client)
                 (SessionStatus::Unchanged, _) => {
                     if is_new {
                         let state: HashMap<String, String> = HashMap::new();
-                        res.checked_expr(|res| inner.set_cookie(res, state.into_iter()))
+                        inner.set_cookie(&mut res, state.into_iter())
                     } else {
-                        Ok(res)
+                        Ok(())
                     }
                 }
 
                 (SessionStatus::Purged, _) => {
                     let _ = inner.remove_cookie(&mut res);
-                    Ok(res)
+                    Ok(())
                 }
             };
 
             match result {
-                Ok(res) => Ok(res.map_body(|_, body| AnyBody::from_message(body))),
-                Err(err) => {
-                    Ok(ServiceResponse::new(req2, HttpResponse::from_error(err)))
-                }
+                Ok(()) => Ok(res.map_body(|_, body| AnyBody::from_message(body))),
+                Err(error) => Ok(res.error_response(error)),
             }
         }
         .boxed_local()
