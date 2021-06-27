@@ -81,7 +81,7 @@ impl AuthExtractorConfig for Config {
 ///
 /// fn main() {
 ///     let app = App::new()
-///         .data(Config::default().realm("Restricted area"))
+///         .app_data(Config::default().realm("Restricted area"))
 ///         .service(web::resource("/index.html").route(web::get().to(index)));
 /// }
 /// ```
