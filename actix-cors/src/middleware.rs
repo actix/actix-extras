@@ -1,6 +1,7 @@
-use std::{convert::TryInto, rc::Rc};
+use std::{convert::TryInto, error::Error as StdError, rc::Rc};
 
 use actix_web::{
+    body::{Body, MessageBody},
     dev::{Service, ServiceRequest, ServiceResponse},
     error::{Error, Result},
     http::{
@@ -25,8 +26,13 @@ pub struct CorsMiddleware<S> {
     pub(crate) inner: Rc<Inner>,
 }
 
-impl<S> CorsMiddleware<S> {
-    fn handle_preflight<B>(inner: &Inner, req: ServiceRequest) -> ServiceResponse<B> {
+impl<S, B> CorsMiddleware<S>
+where
+    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
+    B: MessageBody + 'static,
+    B::Error: StdError,
+{
+    fn handle_preflight(inner: &Inner, req: ServiceRequest) -> ServiceResponse {
         if let Err(err) = inner
             .validate_origin(req.head())
             .and_then(|_| inner.validate_allowed_method(req.head()))
@@ -69,11 +75,10 @@ impl<S> CorsMiddleware<S> {
         }
 
         let res = res.finish();
-        let res = res.into_body();
         req.into_response(res)
     }
 
-    fn augment_response<B>(
+    fn augment_response(
         inner: &Inner,
         mut res: ServiceResponse<B>,
     ) -> ServiceResponse<B> {
@@ -112,20 +117,21 @@ impl<S> CorsMiddleware<S> {
     }
 }
 
-type CorsMiddlewareServiceFuture<B> = Either<
-    Ready<Result<ServiceResponse<B>, Error>>,
-    LocalBoxFuture<'static, Result<ServiceResponse<B>, Error>>,
+type CorsMiddlewareServiceFuture = Either<
+    Ready<Result<ServiceResponse, Error>>,
+    LocalBoxFuture<'static, Result<ServiceResponse, Error>>,
 >;
 
 impl<S, B> Service<ServiceRequest> for CorsMiddleware<S>
 where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
     S::Future: 'static,
-    B: 'static,
+    B: MessageBody + 'static,
+    B::Error: StdError,
 {
-    type Response = ServiceResponse<B>;
+    type Response = ServiceResponse;
     type Error = Error;
-    type Future = CorsMiddlewareServiceFuture<B>;
+    type Future = CorsMiddlewareServiceFuture;
 
     actix_service::forward_ready!(service);
 
@@ -157,6 +163,7 @@ where
                 } else {
                     res
                 }
+                .map(|res| res.map_body(|_, body| Body::from_message(body)))
             }
             .boxed_local();
 

@@ -1,6 +1,7 @@
-use std::rc::Rc;
+use std::{error::Error as StdError, rc::Rc};
 
 use actix_web::{
+    body::{Body, MessageBody},
     dev::{Service, ServiceRequest, ServiceResponse, Transform},
     Error, HttpMessage, Result,
 };
@@ -41,9 +42,10 @@ where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
     S::Future: 'static,
     T: IdentityPolicy,
-    B: 'static,
+    B: MessageBody + 'static,
+    B::Error: StdError,
 {
-    type Response = ServiceResponse<B>;
+    type Response = ServiceResponse;
     type Error = Error;
     type InitError = ();
     type Transform = IdentityServiceMiddleware<S, T>;
@@ -73,12 +75,13 @@ impl<S, T> Clone for IdentityServiceMiddleware<S, T> {
 
 impl<S, T, B> Service<ServiceRequest> for IdentityServiceMiddleware<S, T>
 where
-    B: 'static,
+    B: MessageBody + 'static,
+    B::Error: StdError,
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
     S::Future: 'static,
     T: IdentityPolicy,
 {
-    type Response = ServiceResponse<B>;
+    type Response = ServiceResponse;
     type Error = Error;
     type Future = LocalBoxFuture<'static, Result<Self::Response, Self::Error>>;
 
@@ -100,11 +103,13 @@ where
 
                     if let Some(id) = id {
                         match backend.to_response(id.id, id.changed, &mut res).await {
-                            Ok(_) => Ok(res),
+                            Ok(_) => {
+                                Ok(res.map_body(|_, body| Body::from_message(body)))
+                            }
                             Err(e) => Ok(res.error_response(e)),
                         }
                     } else {
-                        Ok(res)
+                        Ok(res.map_body(|_, body| Body::from_message(body)))
                     }
                 }
                 Err(err) => Ok(req.error_response(err)),

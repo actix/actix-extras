@@ -1,6 +1,10 @@
-use std::{collections::HashSet, convert::TryInto, iter::FromIterator, rc::Rc};
+use std::{
+    collections::HashSet, convert::TryInto, error::Error as StdError,
+    iter::FromIterator, rc::Rc,
+};
 
 use actix_web::{
+    body::MessageBody,
     dev::{RequestHead, Service, ServiceRequest, ServiceResponse, Transform},
     error::{Error, Result},
     http::{self, header::HeaderName, Error as HttpError, HeaderValue, Method, Uri},
@@ -487,9 +491,10 @@ impl<S, B> Transform<S, ServiceRequest> for Cors
 where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
     S::Future: 'static,
-    B: 'static,
+    B: MessageBody + 'static,
+    B::Error: StdError,
 {
-    type Response = ServiceResponse<B>;
+    type Response = ServiceResponse;
     type Error = Error;
     type InitError = ();
     type Transform = CorsMiddleware<S>;
