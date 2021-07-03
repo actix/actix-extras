@@ -13,12 +13,11 @@
 //! actix-web = "4.0.0-beta.7"
 //! ```
 //!
-//! `tracing-actix-web` exposes two feature flags:
+//! `tracing-actix-web` exposes three feature flags:
 //!
-//! - `opentelemetry_0_13`: attach [OpenTelemetry](https://github.com/open-telemetry/opentelemetry-rust)'s context to the root span;
-//! - `emit_event_on_error`: emit a [`tracing`] event when request processing fails with an error.
-//!
-//! They are both enabled by default.
+//! - `opentelemetry_0_13`: attach [OpenTelemetry](https://github.com/open-telemetry/opentelemetry-rust)'s context to the root span using OTEL 0.13 (enabled by default).
+//! - `opentelemetry_0_14`: same as above but using OTEL 0.14.
+//! - `emit_event_on_error`: emit a [`tracing`] event when request processing fails with an error (enabled by default).
 //!
 //! `tracing-actix-web` will release `0.4.0`, going out of beta, as soon as `actix-web` releases a stable `4.0.0`.
 //!
@@ -215,7 +214,7 @@
 //!
 //! `tracing-actix-web` follows [OpenTelemetry's semantic convention](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/overview.md#spancontext)
 //! for field names.  
-//! Furthermore, if you have not disabled the `opentelemetry_0_13` feature flag, `tracing-actix-web` automatically
+//! Furthermore, if you have not disabled the `opentelemetry_0_13` or `opentelemetry_0_14` feature flags, `tracing-actix-web` automatically
 //! performs trace propagation according to the OpenTelemetry standard.
 //! It tries to extract the OpenTelemetry context out of the headers of incoming requests and, when it finds one, it sets
 //! it as the remote context for the current root span.
@@ -245,4 +244,7 @@ pub use root_span_builder::{DefaultRootSpanBuilder, RootSpanBuilder};
 pub mod root_span_macro;
 
 #[cfg(feature = "opentelemetry_0_13")]
-mod otel;
+mod otel_0_13;
+
+#[cfg(feature = "opentelemetry_0_14")]
+mod otel_0_14;

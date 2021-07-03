@@ -97,7 +97,12 @@ macro_rules! root_span {
             );
             std::mem::drop(connection_info);
 
-            $crate::root_span_macro::private::set_otel_parent(&$request, &span);
+            #[cfg(feature = "opentelemetry_0_13")]
+            $crate::root_span_macro::private::set_otel_parent_0_13(&$request, &span);
+
+            #[cfg(feature = "opentelemetry_0_14")]
+            $crate::root_span_macro::private::set_otel_parent_0_14(&$request, &span);
+
             span
         }
     };
@@ -116,26 +121,16 @@ pub mod private {
 
     pub use tracing;
 
-    #[cfg(not(feature = "opentelemetry_0_13"))]
-    #[doc(hidden)]
-    pub fn set_otel_parent(_req: &ServiceRequest, _span: &tracing::Span) {
-        // No-op if the OpenTelemetry feature is not active
-    }
-
     #[cfg(feature = "opentelemetry_0_13")]
     #[doc(hidden)]
-    pub fn set_otel_parent(req: &ServiceRequest, span: &tracing::Span) {
-        use opentelemetry::trace::TraceContextExt as _;
-        use tracing_opentelemetry::OpenTelemetrySpanExt as _;
+    pub fn set_otel_parent_0_13(req: &ServiceRequest, span: &tracing::Span) {
+        crate::otel_0_13::set_otel_parent(req, span);
+    }
 
-        let parent_context = opentelemetry::global::get_text_map_propagator(|propagator| {
-            propagator.extract(&crate::otel::RequestHeaderCarrier::new(req.headers()))
-        });
-        span.set_parent(parent_context);
-        // If we have a remote parent span, this will be the parent's trace identifier.
-        // If not, it will be the newly generated trace identifier with this request as root span.
-        let trace_id = span.context().span().span_context().trace_id().to_hex();
-        span.record("trace_id", &tracing::field::display(trace_id));
+    #[cfg(feature = "opentelemetry_0_14")]
+    #[doc(hidden)]
+    pub fn set_otel_parent_0_14(req: &ServiceRequest, span: &tracing::Span) {
+        crate::otel_0_14::set_otel_parent(req, span);
     }
 
     #[doc(hidden)]
