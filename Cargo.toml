@@ -19,7 +19,7 @@ keywords = ["http", "actix-web", "tracing", "logging"]
 categories = ["asynchronous", "web-programming"]
 
 [features]
-default = ["opentelemetry_0_14", "emit_event_on_error"]
+default = ["emit_event_on_error"]
 opentelemetry_0_13 = ["opentelemetry_0_13_pkg", "tracing-opentelemetry_0_12_pkg"]
 opentelemetry_0_14 = ["opentelemetry_0_14_pkg", "tracing-opentelemetry_0_13_pkg"]
 opentelemetry_0_15 = ["opentelemetry_0_15_pkg", "tracing-opentelemetry_0_14_pkg"]
