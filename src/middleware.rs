@@ -2,7 +2,6 @@ use crate::{DefaultRootSpanBuilder, RequestId, RootSpan, RootSpanBuilder};
 use actix_web::dev::{Service, ServiceRequest, ServiceResponse, Transform};
 use actix_web::{Error, HttpMessage, ResponseError};
 use futures::future::{ok, Ready};
-use futures::task::{Context, Poll};
 use std::future::Future;
 use std::pin::Pin;
 use tracing::Span;
@@ -125,9 +124,7 @@ where
     type Error = Error;
     type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>>>>;
 
-    fn poll_ready(&self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        self.service.poll_ready(cx)
-    }
+    actix_web::dev::forward_ready!(service);
 
     fn call(&self, req: ServiceRequest) -> Self::Future {
         req.extensions_mut().insert(RequestId::generate());

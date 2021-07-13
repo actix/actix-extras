@@ -25,9 +25,7 @@ opentelemetry_0_14 = ["opentelemetry_0_14_pkg", "tracing-opentelemetry_0_13_pkg"
 emit_event_on_error = []
 
 [dependencies]
-actix-web = "=4.0.0-beta.8"
-actix-http = "=3.0.0-beta.8"
-actix-service = "^2.0.0"
+actix-web = { version = "=4.0.0-beta.8", default-features = false }
 tracing = "0.1.19"
 tracing-futures = "0.2.4"
 futures = "0.3.5"
