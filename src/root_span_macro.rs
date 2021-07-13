@@ -103,6 +103,9 @@ macro_rules! root_span {
             #[cfg(feature = "opentelemetry_0_14")]
             $crate::root_span_macro::private::set_otel_parent_0_14(&$request, &span);
 
+            #[cfg(feature = "opentelemetry_0_15")]
+            $crate::root_span_macro::private::set_otel_parent_0_15(&$request, &span);
+
             span
         }
     };
@@ -131,6 +134,12 @@ pub mod private {
     #[doc(hidden)]
     pub fn set_otel_parent_0_14(req: &ServiceRequest, span: &tracing::Span) {
         crate::otel_0_14::set_otel_parent(req, span);
+    }
+
+    #[cfg(feature = "opentelemetry_0_15")]
+    #[doc(hidden)]
+    pub fn set_otel_parent_0_15(req: &ServiceRequest, span: &tracing::Span) {
+        crate::otel_0_15::set_otel_parent(req, span);
     }
 
     #[doc(hidden)]
