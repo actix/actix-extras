@@ -43,6 +43,7 @@ impl RedisSession {
             max_age: Some(Duration::days(7)),
             same_site: None,
             http_only: true,
+            sliding_expiration: false,
         }))
     }
 
@@ -110,6 +111,17 @@ impl RedisSession {
         Rc::get_mut(&mut self.0).unwrap().cache_keygen = keygen;
         self
     }
+
+    /// Set sliding expiration.
+    ///
+    /// If the `sliding_expiration` field is set, the TTL in session value will reset
+    /// after each request.
+    ///
+    /// Default is false.
+    pub fn sliding_expiration(mut self, sliding_expiration: bool) -> Self {
+        Rc::get_mut(&mut self.0).unwrap().sliding_expiration = sliding_expiration;
+        self
+    }
 }
 
 impl<S, B> Transform<S, ServiceRequest> for RedisSession
@@ -171,11 +183,14 @@ where
 
             match Session::get_changes(&mut res) {
                 (SessionStatus::Unchanged, state) => {
-                    if value.is_none() {
+                    if let Some(val) = value {
+                        if inner.sliding_expiration {
+                            inner.refresh_ttl(val).await?;
+                        }
+                        Ok(res)
+                    } else {
                         // implies the session is new
                         inner.update(res, state, value).await
-                    } else {
-                        Ok(res)
                     }
                 }
 
@@ -218,6 +233,7 @@ struct Inner {
     max_age: Option<Duration>,
     same_site: Option<SameSite>,
     http_only: bool,
+    sliding_expiration: bool,
 }
 
 impl Inner {
@@ -377,6 +393,25 @@ impl Inner {
 
         Ok(())
     }
+
+    /// Refresh cache TTL.
+    async fn refresh_ttl(&self, key: String) -> Result<(), Error> {
+        let cache_key = (self.cache_keygen)(&key);
+
+        let res = self
+            .addr
+            .send(Command(resp_array!["EXPIRE", cache_key, &self.ttl]))
+            .await
+            .map_err(error::ErrorInternalServerError)?;
+
+        match res {
+            // redis responds with number of refresh TTL records
+            Ok(RespValue::Integer(x)) if x > 0 => Ok(()),
+            _ => Err(error::ErrorInternalServerError(
+                "failed to refresh session TTL from cache",
+            )),
+        }
+    }
 }
 
 #[cfg(test)]
@@ -390,6 +425,7 @@ mod test {
     };
     use serde::{Deserialize, Serialize};
     use serde_json::json;
+    use tokio::time;
 
     #[derive(Serialize, Deserialize, Debug, PartialEq)]
     pub struct IndexResponse {
@@ -710,5 +746,98 @@ mod test {
             .unwrap();
 
         assert_eq!(cookie.max_age(), None);
+    }
+
+    #[actix_rt::test]
+    async fn test_sliding_expiration() {
+        //
+        // Test that sliding expiration in session
+        //
+        let srv = actix_test::start(|| {
+            App::new()
+                .wrap(
+                    RedisSession::new("127.0.0.1:6379", &[0; 32])
+                        .cookie_name("test-session")
+                        .ttl(4)
+                        .sliding_expiration(false),
+                )
+                .wrap(middleware::Logger::default())
+                .service(resource("/do_something").route(post().to(do_something)))
+        });
+
+        // Step 1: POST to do_something without cookie
+        //   - set-cookie actix-session will be in response (session cookie #1)
+        //   - adds new session state in redis:  {"counter": 1}
+        //   - response should be: {"counter": 1, "user_id": None}
+        let req_1 = srv.post("/do_something").send();
+        let mut resp_1 = req_1.await.unwrap();
+        let cookie = resp_1
+            .cookies()
+            .unwrap()
+            .clone()
+            .into_iter()
+            .find(|c| c.name() == "test-session")
+            .unwrap();
+
+        let result_1 = resp_1.json::<IndexResponse>().await.unwrap();
+        assert_eq!(
+            result_1,
+            IndexResponse {
+                user_id: None,
+                counter: 1
+            }
+        );
+
+        // Step 2: POST to do_something, including session cookie #1 in request
+        //   - wait 3 seconds
+        //   - set-cookie actix-session should not be in response
+        //   - update session state in redis:  {"counter": 2}
+        //   - response should be: {"counter": 2, "user_id": None}
+        time::sleep(time::Duration::from_secs(3)).await;
+        let req_2 = srv.post("/do_something").cookie(cookie.clone()).send();
+        let mut resp_2 = req_2.await.unwrap();
+        if let Some(_) = resp_2
+            .cookies()
+            .unwrap()
+            .clone()
+            .into_iter()
+            .find(|c| c.name() == "test-session")
+        {
+            panic!("set-cookie actix-session should not be in response");
+        }
+        let result_2 = resp_2.json::<IndexResponse>().await.unwrap();
+        assert_eq!(
+            result_2,
+            IndexResponse {
+                user_id: None,
+                counter: 2
+            }
+        );
+
+        // Step 3: POST to do_something, including session cookie #1 in request
+        //   - wait 3 seconds, now total time(6s) is out of TTL(4s)
+        //   - set-cookie actix-session should not be in response
+        //   - update session state in redis:  {"counter": 3}
+        //   - response should be: {"counter": 3, "user_id": None}
+        time::sleep(time::Duration::from_secs(3)).await;
+        let req_3 = srv.post("/do_something").cookie(cookie.clone()).send();
+        let mut resp_3 = req_3.await.unwrap();
+        if let Some(_) = resp_3
+            .cookies()
+            .unwrap()
+            .clone()
+            .into_iter()
+            .find(|c| c.name() == "test-session")
+        {
+            panic!("set-cookie actix-session should not be in response");
+        }
+        let result_3 = resp_3.json::<IndexResponse>().await.unwrap();
+        assert_eq!(
+            result_3,
+            IndexResponse {
+                user_id: None,
+                counter: 3
+            }
+        );
     }
 }

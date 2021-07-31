@@ -1,6 +1,7 @@
 # Changes
 
 ## Unreleased - 2020-xx-xx
+* Implement `sliding expiration` for redis session
 
 
 ## 0.10.0-beta.2 - 2020-06-27
