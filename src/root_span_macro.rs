@@ -118,7 +118,11 @@ pub mod private {
 
     pub use tracing;
 
-    #[cfg(any(feature = "opentelemetry_0_13", feature = "opentelemetry_0_14", feature = "opentelemetry_0_15"))]
+    #[cfg(any(
+        feature = "opentelemetry_0_13",
+        feature = "opentelemetry_0_14",
+        feature = "opentelemetry_0_15"
+    ))]
     #[doc(hidden)]
     pub fn set_otel_parent(req: &ServiceRequest, span: &tracing::Span) {
         crate::otel::set_otel_parent(req, span);
