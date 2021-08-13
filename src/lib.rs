@@ -244,5 +244,18 @@ pub use root_span_builder::{DefaultRootSpanBuilder, RootSpanBuilder};
 #[doc(hidden)]
 pub mod root_span_macro;
 
-#[cfg(any(feature = "opentelemetry_0_13", feature = "opentelemetry_0_14", feature = "opentelemetry_0_15"))]
+#[cfg(any(
+    feature = "opentelemetry_0_13",
+    feature = "opentelemetry_0_14",
+    feature = "opentelemetry_0_15"
+))]
 mod otel;
+
+#[cfg(all(feature = "opentelemetry_0_13", feature = "opentelemetry_0_14"))]
+compile_error!("feature \"opentelemetry_0_13\" and feature \"opentelemetry_0_14\" cannot be enabled at the same time");
+
+#[cfg(all(feature = "opentelemetry_0_13", feature = "opentelemetry_0_15"))]
+compile_error!("feature \"opentelemetry_0_13\" and feature \"opentelemetry_0_15\" cannot be enabled at the same time");
+
+#[cfg(all(feature = "opentelemetry_0_14", feature = "opentelemetry_0_15"))]
+compile_error!("feature \"opentelemetry_0_14\" and feature \"opentelemetry_0_15\" cannot be enabled at the same time");
