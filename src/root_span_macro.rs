@@ -97,14 +97,8 @@ macro_rules! root_span {
             );
             std::mem::drop(connection_info);
 
-            #[cfg(feature = "opentelemetry_0_13")]
-            $crate::root_span_macro::private::set_otel_parent_0_13(&$request, &span);
-
-            #[cfg(feature = "opentelemetry_0_14")]
-            $crate::root_span_macro::private::set_otel_parent_0_14(&$request, &span);
-
-            #[cfg(feature = "opentelemetry_0_15")]
-            $crate::root_span_macro::private::set_otel_parent_0_15(&$request, &span);
+            #[cfg(any(feature = "opentelemetry_0_13", feature = "opentelemetry_0_14", feature = "opentelemetry_0_15"))]
+            $crate::root_span_macro::private::set_otel_parent(&$request, &span);
 
             span
         }
@@ -124,22 +118,10 @@ pub mod private {
 
     pub use tracing;
 
-    #[cfg(feature = "opentelemetry_0_13")]
+    #[cfg(any(feature = "opentelemetry_0_13", feature = "opentelemetry_0_14", feature = "opentelemetry_0_15"))]
     #[doc(hidden)]
-    pub fn set_otel_parent_0_13(req: &ServiceRequest, span: &tracing::Span) {
-        crate::otel_0_13::set_otel_parent(req, span);
-    }
-
-    #[cfg(feature = "opentelemetry_0_14")]
-    #[doc(hidden)]
-    pub fn set_otel_parent_0_14(req: &ServiceRequest, span: &tracing::Span) {
-        crate::otel_0_14::set_otel_parent(req, span);
-    }
-
-    #[cfg(feature = "opentelemetry_0_15")]
-    #[doc(hidden)]
-    pub fn set_otel_parent_0_15(req: &ServiceRequest, span: &tracing::Span) {
-        crate::otel_0_15::set_otel_parent(req, span);
+    pub fn set_otel_parent(req: &ServiceRequest, span: &tracing::Span) {
+        crate::otel::set_otel_parent(req, span);
     }
 
     #[doc(hidden)]
