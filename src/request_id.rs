@@ -42,9 +42,9 @@ impl std::ops::Deref for RequestId {
     }
 }
 
-impl std::convert::Into<Uuid> for RequestId {
-    fn into(self) -> Uuid {
-        self.0
+impl From<RequestId> for Uuid {
+    fn from(r: RequestId) -> Self {
+        r.0
     }
 }
 
@@ -53,10 +53,11 @@ impl std::fmt::Display for RequestId {
         write!(f, "{}", self.0)
     }
 }
+
 impl FromRequest for RequestId {
+    type Config = ();
     type Error = RequestIdExtractionError;
     type Future = Ready<Result<Self, Self::Error>>;
-    type Config = ();
 
     fn from_request(req: &HttpRequest, _: &mut Payload) -> Self::Future {
         ready(

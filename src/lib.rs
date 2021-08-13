@@ -28,16 +28,12 @@
 //! use actix_web::{App, web, HttpServer};
 //! use tracing_actix_web::TracingLogger;
 //!
-//! fn main() {
-//!     // Init your `tracing` subscriber here!
-//!
-//!     let server = HttpServer::new(|| {
-//!         App::new()
-//!             // Mount `TracingLogger` as a middleware
-//!             .wrap(TracingLogger::default())
-//!             .service( /*  */ )
-//!     });
-//! }
+//! let server = HttpServer::new(|| {
+//!     App::new()
+//!         // Mount `TracingLogger` as a middleware
+//!         .wrap(TracingLogger::default())
+//!         .service( /*  */ )
+//! });
 //! ```
 //!
 //! Check out [the examples on GitHub](https://github.com/LukeMathWalker/tracing-actix-web/tree/main/examples) to get a taste of how [`TracingLogger`] can be used to observe and monitor your

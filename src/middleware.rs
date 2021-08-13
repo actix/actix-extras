@@ -113,6 +113,7 @@ pub struct TracingLoggerMiddleware<S, RootSpanBuilder> {
     root_span_builder: std::marker::PhantomData<RootSpanBuilder>,
 }
 
+#[allow(clippy::type_complexity)]
 impl<S, B, RootSpanType> Service<ServiceRequest> for TracingLoggerMiddleware<S, RootSpanType>
 where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,

@@ -40,16 +40,16 @@ impl std::ops::Deref for RootSpan {
     }
 }
 
-impl std::convert::Into<Span> for RootSpan {
-    fn into(self) -> Span {
-        self.0
+impl From<RootSpan> for Span {
+    fn from(r: RootSpan) -> Self {
+        r.0
     }
 }
 
 impl FromRequest for RootSpan {
+    type Config = ();
     type Error = RootSpanExtractionError;
     type Future = Ready<Result<Self, Self::Error>>;
-    type Config = ();
 
     fn from_request(req: &HttpRequest, _: &mut Payload) -> Self::Future {
         ready(
