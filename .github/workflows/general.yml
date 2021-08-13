@@ -37,13 +37,16 @@ jobs:
           command: test
       - uses: actions-rs/cargo@v1
         with:
-          command: test --features opentelemetry_0_13
+          command: test
+          args: --features opentelemetry_0_13
       - uses: actions-rs/cargo@v1
         with:
-          command: test --features opentelemetry_0_14
+          command: test
+          args: --features opentelemetry_0_14
       - uses: actions-rs/cargo@v1
         with:
-          command: test --features opentelemetry_0_15
+          command: test
+          args: --features opentelemetry_0_15
 
   fmt:
     name: Rustfmt
