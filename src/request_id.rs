@@ -25,7 +25,7 @@ use uuid::Uuid;
 ///   format!("{}", uuid)
 /// }
 /// ```
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct RequestId(Uuid);
 
 impl RequestId {
