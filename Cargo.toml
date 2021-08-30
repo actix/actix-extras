@@ -23,6 +23,7 @@ default = ["emit_event_on_error"]
 opentelemetry_0_13 = ["opentelemetry_0_13_pkg", "tracing-opentelemetry_0_12_pkg"]
 opentelemetry_0_14 = ["opentelemetry_0_14_pkg", "tracing-opentelemetry_0_13_pkg"]
 opentelemetry_0_15 = ["opentelemetry_0_15_pkg", "tracing-opentelemetry_0_14_pkg"]
+opentelemetry_0_16 = ["opentelemetry_0_16_pkg", "tracing-opentelemetry_0_15_pkg"]
 emit_event_on_error = []
 
 [dependencies]
@@ -34,9 +35,11 @@ uuid = { version = "0.8.1", features = ["v4"] }
 opentelemetry_0_13_pkg = { package = "opentelemetry", version = "0.13", optional = true }
 opentelemetry_0_14_pkg = { package = "opentelemetry", version = "0.14", optional = true }
 opentelemetry_0_15_pkg = { package = "opentelemetry", version = "0.15", optional = true }
+opentelemetry_0_16_pkg = { package = "opentelemetry", version = "0.16", optional = true }
 tracing-opentelemetry_0_12_pkg = { package = "tracing-opentelemetry",version = "0.12", optional = true }
 tracing-opentelemetry_0_13_pkg = { package = "tracing-opentelemetry", version = "0.13", optional = true }
 tracing-opentelemetry_0_14_pkg = { package = "tracing-opentelemetry",version = "0.14", optional = true }
+tracing-opentelemetry_0_15_pkg = { package = "tracing-opentelemetry",version = "0.15", optional = true }
 
 [dev-dependencies]
 tracing-subscriber = { version = "0.2.12", features = ["registry", "env-filter"] }

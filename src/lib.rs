@@ -8,7 +8,7 @@
 //! ```toml
 //! [dependencies]
 //! # ...
-//! tracing-actix-web = "0.4.0-beta.10"
+//! tracing-actix-web = "0.4.0-beta.11"
 //! tracing = "0.1"
 //! actix-web = "4.0.0-beta.8"
 //! ```
@@ -18,6 +18,7 @@
 //! - `opentelemetry_0_13`: attach [OpenTelemetry](https://github.com/open-telemetry/opentelemetry-rust)'s context to the root span using `opentelemetry` 0.13;
 //! - `opentelemetry_0_14`: same as above but using `opentelemetry` 0.14;
 //! - `opentelemetry_0_15`: same as above but using `opentelemetry` 0.15;
+//! - `opentelemetry_0_16`: same as above but using `opentelemetry` 0.16;
 //! - `emit_event_on_error`: emit a [`tracing`] event when request processing fails with an error (enabled by default).
 //!
 //! `tracing-actix-web` will release `0.4.0`, going out of beta, as soon as `actix-web` releases a stable `4.0.0`.
@@ -243,7 +244,8 @@ pub mod root_span_macro;
 #[cfg(any(
     feature = "opentelemetry_0_13",
     feature = "opentelemetry_0_14",
-    feature = "opentelemetry_0_15"
+    feature = "opentelemetry_0_15",
+    feature = "opentelemetry_0_16"
 ))]
 mod otel;
 
@@ -253,5 +255,14 @@ compile_error!("feature \"opentelemetry_0_13\" and feature \"opentelemetry_0_14\
 #[cfg(all(feature = "opentelemetry_0_13", feature = "opentelemetry_0_15"))]
 compile_error!("feature \"opentelemetry_0_13\" and feature \"opentelemetry_0_15\" cannot be enabled at the same time");
 
+#[cfg(all(feature = "opentelemetry_0_13", feature = "opentelemetry_0_16"))]
+compile_error!("feature \"opentelemetry_0_13\" and feature \"opentelemetry_0_16\" cannot be enabled at the same time");
+
 #[cfg(all(feature = "opentelemetry_0_14", feature = "opentelemetry_0_15"))]
 compile_error!("feature \"opentelemetry_0_14\" and feature \"opentelemetry_0_15\" cannot be enabled at the same time");
+
+#[cfg(all(feature = "opentelemetry_0_14", feature = "opentelemetry_0_16"))]
+compile_error!("feature \"opentelemetry_0_14\" and feature \"opentelemetry_0_16\" cannot be enabled at the same time");
+
+#[cfg(all(feature = "opentelemetry_0_15", feature = "opentelemetry_0_16"))]
+compile_error!("feature \"opentelemetry_0_15\" and feature \"opentelemetry_0_16\" cannot be enabled at the same time");

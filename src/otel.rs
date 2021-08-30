@@ -6,6 +6,8 @@ use opentelemetry_0_13_pkg as opentelemetry;
 use opentelemetry_0_14_pkg as opentelemetry;
 #[cfg(feature = "opentelemetry_0_15")]
 use opentelemetry_0_15_pkg as opentelemetry;
+#[cfg(feature = "opentelemetry_0_16")]
+use opentelemetry_0_16_pkg as opentelemetry;
 
 #[cfg(feature = "opentelemetry_0_13")]
 use tracing_opentelemetry_0_12_pkg as tracing_opentelemetry;
@@ -13,6 +15,8 @@ use tracing_opentelemetry_0_12_pkg as tracing_opentelemetry;
 use tracing_opentelemetry_0_13_pkg as tracing_opentelemetry;
 #[cfg(feature = "opentelemetry_0_15")]
 use tracing_opentelemetry_0_14_pkg as tracing_opentelemetry;
+#[cfg(feature = "opentelemetry_0_16")]
+use tracing_opentelemetry_0_15_pkg as tracing_opentelemetry;
 
 use opentelemetry::propagation::Extractor;
 

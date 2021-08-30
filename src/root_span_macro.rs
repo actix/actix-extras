@@ -97,7 +97,12 @@ macro_rules! root_span {
             );
             std::mem::drop(connection_info);
 
-            #[cfg(any(feature = "opentelemetry_0_13", feature = "opentelemetry_0_14", feature = "opentelemetry_0_15"))]
+            #[cfg(any(
+                feature = "opentelemetry_0_13",
+                feature = "opentelemetry_0_14",
+                feature = "opentelemetry_0_15",
+                feature = "opentelemetry_0_16"
+            ))]
             $crate::root_span_macro::private::set_otel_parent(&$request, &span);
 
             span
@@ -121,7 +126,8 @@ pub mod private {
     #[cfg(any(
         feature = "opentelemetry_0_13",
         feature = "opentelemetry_0_14",
-        feature = "opentelemetry_0_15"
+        feature = "opentelemetry_0_15",
+        feature = "opentelemetry_0_16"
     ))]
     #[doc(hidden)]
     pub fn set_otel_parent(req: &ServiceRequest, span: &tracing::Span) {
