@@ -1,8 +1,7 @@
 //! HTTP Authentication middleware.
 
 use std::{
-    error::Error as StdError, future::Future, marker::PhantomData, pin::Pin, rc::Rc,
-    sync::Arc,
+    error::Error as StdError, future::Future, marker::PhantomData, pin::Pin, rc::Rc, sync::Arc,
 };
 
 use actix_web::{

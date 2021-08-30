@@ -108,10 +108,7 @@ impl FromRequest for BasicAuth {
     type Config = Config;
     type Error = AuthenticationError<Challenge>;
 
-    fn from_request(
-        req: &HttpRequest,
-        _: &mut Payload,
-    ) -> <Self as FromRequest>::Future {
+    fn from_request(req: &HttpRequest, _: &mut Payload) -> <Self as FromRequest>::Future {
         ready(
             Authorization::<Basic>::parse(req)
                 .map(|auth| BasicAuth(auth.into_scheme()))

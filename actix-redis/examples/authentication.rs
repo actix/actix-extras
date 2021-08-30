@@ -1,8 +1,7 @@
 use actix_redis::RedisSession;
 use actix_session::Session;
 use actix_web::{
-    cookie, error::InternalError, middleware, web, App, Error, HttpResponse, HttpServer,
-    Responder,
+    cookie, error::InternalError, middleware, web, App, Error, HttpResponse, HttpServer, Responder,
 };
 use serde::{Deserialize, Serialize};
 

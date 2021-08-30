@@ -233,9 +233,7 @@ impl Inner {
                 return Ok(None);
             };
 
-            if let Some(cookie) =
-                cookies.iter().find(|&cookie| cookie.name() == self.name)
-            {
+            if let Some(cookie) = cookies.iter().find(|&cookie| cookie.name() == self.name) {
                 let mut jar = CookieJar::new();
                 jar.add_original(cookie.clone());
 
@@ -371,8 +369,8 @@ impl Inner {
         cookie.set_max_age(Duration::zero());
         cookie.set_expires(OffsetDateTime::now_utc() - Duration::days(365));
 
-        let val = HeaderValue::from_str(&cookie.to_string())
-            .map_err(error::ErrorInternalServerError)?;
+        let val =
+            HeaderValue::from_str(&cookie.to_string()).map_err(error::ErrorInternalServerError)?;
         res.headers_mut().append(header::SET_COOKIE, val);
 
         Ok(())
@@ -423,10 +421,7 @@ mod test {
         user_id: String,
     }
 
-    async fn login(
-        user_id: web::Json<Identity>,
-        session: Session,
-    ) -> Result<HttpResponse> {
+    async fn login(user_id: web::Json<Identity>, session: Session) -> Result<HttpResponse> {
         let id = user_id.into_inner().user_id;
         session.insert("user_id", &id)?;
         session.renew();
@@ -490,10 +485,7 @@ mod test {
 
         let srv = actix_test::start(|| {
             App::new()
-                .wrap(
-                    RedisSession::new("127.0.0.1:6379", &[0; 32])
-                        .cookie_name("test-session"),
-                )
+                .wrap(RedisSession::new("127.0.0.1:6379", &[0; 32]).cookie_name("test-session"))
                 .wrap(middleware::Logger::default())
                 .service(resource("/").route(get().to(index)))
                 .service(resource("/do_something").route(post().to(do_something)))

@@ -14,17 +14,15 @@ use actix_web::{
     error::PayloadError,
     http::header::{CONTENT_LENGTH, CONTENT_TYPE},
     web::BytesMut,
-    Error, FromRequest, HttpMessage, HttpRequest, HttpResponse, HttpResponseBuilder,
-    Responder, ResponseError,
+    Error, FromRequest, HttpMessage, HttpRequest, HttpResponse, HttpResponseBuilder, Responder,
+    ResponseError,
 };
 use derive_more::Display;
 use futures_util::{
     future::{FutureExt as _, LocalBoxFuture},
     stream::StreamExt as _,
 };
-use prost::{
-    DecodeError as ProtoBufDecodeError, EncodeError as ProtoBufEncodeError, Message,
-};
+use prost::{DecodeError as ProtoBufDecodeError, EncodeError as ProtoBufEncodeError, Message};
 
 #[derive(Debug, Display)]
 pub enum ProtoBufPayloadError {
@@ -153,9 +151,7 @@ impl<T: Message + Default> Responder for ProtoBuf<T> {
             Ok(()) => HttpResponse::Ok()
                 .content_type("application/protobuf")
                 .body(buf),
-            Err(err) => HttpResponse::from_error(Error::from(
-                ProtoBufPayloadError::Serialize(err),
-            )),
+            Err(err) => HttpResponse::from_error(Error::from(ProtoBufPayloadError::Serialize(err))),
         }
     }
 }
@@ -209,10 +205,7 @@ impl<T: Message + Default> ProtoBufMessage<T> {
 impl<T: Message + Default + 'static> Future for ProtoBufMessage<T> {
     type Output = Result<T, ProtoBufPayloadError>;
 
-    fn poll(
-        mut self: Pin<&mut Self>,
-        task: &mut task::Context<'_>,
-    ) -> Poll<Self::Output> {
+    fn poll(mut self: Pin<&mut Self>, task: &mut task::Context<'_>) -> Poll<Self::Output> {
         if let Some(ref mut fut) = self.fut {
             return Pin::new(fut).poll(task);
         }

@@ -1,9 +1,7 @@
 use std::fmt;
 
 use actix_web::error::ParseError;
-use actix_web::http::header::{
-    Header, HeaderName, HeaderValue, IntoHeaderValue, AUTHORIZATION,
-};
+use actix_web::http::header::{Header, HeaderName, HeaderValue, IntoHeaderValue, AUTHORIZATION};
 use actix_web::HttpMessage;
 
 use crate::headers::authorization::scheme::Scheme;

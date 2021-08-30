@@ -1,8 +1,6 @@
 use actix_cors::Cors;
 use actix_web::{dev::ServiceRequest, get, App, Error, HttpResponse, HttpServer};
-use actix_web_httpauth::{
-    extractors::bearer::BearerAuth, middleware::HttpAuthentication,
-};
+use actix_web_httpauth::{extractors::bearer::BearerAuth, middleware::HttpAuthentication};
 
 async fn ok_validator(
     req: ServiceRequest,

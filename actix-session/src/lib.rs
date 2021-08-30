@@ -165,11 +165,7 @@ impl Session {
     ///
     /// Any serializable value can be used and will be encoded as JSON in session data, hence why
     /// only a reference to the value is taken.
-    pub fn insert(
-        &self,
-        key: impl Into<String>,
-        value: impl Serialize,
-    ) -> Result<(), Error> {
+    pub fn insert(&self, key: impl Into<String>, value: impl Serialize) -> Result<(), Error> {
         let mut inner = self.0.borrow_mut();
 
         if inner.status != SessionStatus::Purged {
@@ -199,10 +195,7 @@ impl Session {
     ///
     /// Returns None if key was not present in session. Returns T if deserialization succeeds,
     /// otherwise returns un-deserialized JSON string.
-    pub fn remove_as<T: DeserializeOwned>(
-        &self,
-        key: &str,
-    ) -> Option<Result<T, String>> {
+    pub fn remove_as<T: DeserializeOwned>(&self, key: &str) -> Option<Result<T, String>> {
         self.remove(key)
             .map(|val_str| match serde_json::from_str(&val_str) {
                 Ok(val) => Ok(val),
@@ -259,10 +252,7 @@ impl Session {
     ///     vec![("counter".to_string(), serde_json::to_string(&0).unwrap())],
     /// );
     /// ```
-    pub fn set_session(
-        req: &mut ServiceRequest,
-        data: impl IntoIterator<Item = (String, String)>,
-    ) {
+    pub fn set_session(req: &mut ServiceRequest, data: impl IntoIterator<Item = (String, String)>) {
         let session = Session::get_session(&mut *req.extensions_mut());
         let mut inner = session.0.borrow_mut();
         inner.state.extend(data);

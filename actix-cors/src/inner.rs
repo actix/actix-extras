@@ -78,9 +78,7 @@ impl Inner {
         match req.headers().get(header::ORIGIN) {
             // origin header exists and is a string
             Some(origin) => {
-                if allowed_origins.contains(origin)
-                    || self.validate_origin_fns(origin, req)
-                {
+                if allowed_origins.contains(origin) || self.validate_origin_fns(origin, req) {
                     Ok(())
                 } else {
                     Err(CorsError::OriginNotAllowed)
@@ -102,10 +100,7 @@ impl Inner {
     }
 
     /// Only called if origin exists and always after it's validated.
-    pub(crate) fn access_control_allow_origin(
-        &self,
-        req: &RequestHead,
-    ) -> Option<HeaderValue> {
+    pub(crate) fn access_control_allow_origin(&self, req: &RequestHead) -> Option<HeaderValue> {
         let origin = req.headers().get(header::ORIGIN);
 
         match self.allowed_origins {
@@ -129,10 +124,7 @@ impl Inner {
 
     /// Use in preflight checks and therefore operates on header list in
     /// `Access-Control-Request-Headers` not the actual header set.
-    pub(crate) fn validate_allowed_method(
-        &self,
-        req: &RequestHead,
-    ) -> Result<(), CorsError> {
+    pub(crate) fn validate_allowed_method(&self, req: &RequestHead) -> Result<(), CorsError> {
         // extract access control header and try to parse as method
         let request_method = req
             .headers()
@@ -154,10 +146,7 @@ impl Inner {
         }
     }
 
-    pub(crate) fn validate_allowed_headers(
-        &self,
-        req: &RequestHead,
-    ) -> Result<(), CorsError> {
+    pub(crate) fn validate_allowed_headers(&self, req: &RequestHead) -> Result<(), CorsError> {
         // return early if all headers are allowed or get ref to allowed origins set
         #[allow(clippy::mutable_key_type)]
         let allowed_headers = match &self.allowed_headers {

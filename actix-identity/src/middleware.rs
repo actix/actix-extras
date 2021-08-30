@@ -5,9 +5,7 @@ use actix_web::{
     dev::{Service, ServiceRequest, ServiceResponse, Transform},
     Error, HttpMessage, Result,
 };
-use futures_util::future::{
-    ready, FutureExt as _, LocalBoxFuture, Ready, TryFutureExt as _,
-};
+use futures_util::future::{ready, FutureExt as _, LocalBoxFuture, Ready, TryFutureExt as _};
 
 use crate::{identity::IdentityItem, IdentityPolicy};
 
@@ -105,9 +103,7 @@ where
 
                     if let Some(id) = id {
                         match backend.to_response(id.id, id.changed, &mut res).await {
-                            Ok(_) => {
-                                Ok(res.map_body(|_, body| AnyBody::from_message(body)))
-                            }
+                            Ok(_) => Ok(res.map_body(|_, body| AnyBody::from_message(body))),
                             Err(e) => Ok(res.error_response(e)),
                         }
                     } else {

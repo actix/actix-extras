@@ -439,8 +439,7 @@ mod tests {
         match login_timestamp {
             LoginTimestampCheck::NoTimestamp => assert_eq!(cv.login_timestamp, None),
             LoginTimestampCheck::NewTimestamp => assert!(
-                t30sec_ago <= cv.login_timestamp.unwrap()
-                    && cv.login_timestamp.unwrap() <= now
+                t30sec_ago <= cv.login_timestamp.unwrap() && cv.login_timestamp.unwrap() <= now
             ),
             LoginTimestampCheck::OldTimestamp(old_timestamp) => {
                 assert_eq!(cv.login_timestamp, Some(old_timestamp))
@@ -450,8 +449,7 @@ mod tests {
         match visit_timestamp {
             VisitTimeStampCheck::NoTimestamp => assert_eq!(cv.visit_timestamp, None),
             VisitTimeStampCheck::NewTimestamp => assert!(
-                t30sec_ago <= cv.visit_timestamp.unwrap()
-                    && cv.visit_timestamp.unwrap() <= now
+                t30sec_ago <= cv.visit_timestamp.unwrap() && cv.visit_timestamp.unwrap() <= now
             ),
         }
     }
@@ -488,12 +486,10 @@ mod tests {
                 })),
         )
         .await;
-        let resp =
-            test::call_service(&srv, TestRequest::with_uri("/index").to_request()).await;
+        let resp = test::call_service(&srv, TestRequest::with_uri("/index").to_request()).await;
         assert_eq!(resp.status(), StatusCode::OK);
 
-        let resp =
-            test::call_service(&srv, TestRequest::with_uri("/login").to_request()).await;
+        let resp = test::call_service(&srv, TestRequest::with_uri("/login").to_request()).await;
         assert_eq!(resp.status(), StatusCode::OK);
         let c = resp.response().cookies().next().unwrap().to_owned();
 
@@ -538,8 +534,7 @@ mod tests {
         )
         .await;
 
-        let resp =
-            test::call_service(&srv, TestRequest::with_uri("/login").to_request()).await;
+        let resp = test::call_service(&srv, TestRequest::with_uri("/login").to_request()).await;
         assert_eq!(resp.status(), StatusCode::OK);
         assert!(resp.headers().contains_key(header::SET_COOKIE));
         let c = resp.response().cookies().next().unwrap().to_owned();
@@ -565,8 +560,7 @@ mod tests {
         )
         .await;
 
-        let resp =
-            test::call_service(&srv, TestRequest::with_uri("/login").to_request()).await;
+        let resp = test::call_service(&srv, TestRequest::with_uri("/login").to_request()).await;
 
         assert_eq!(resp.status(), StatusCode::OK);
         assert!(resp.headers().contains_key(header::SET_COOKIE));
@@ -628,8 +622,7 @@ mod tests {
                 })),
         )
         .await;
-        let resp =
-            test::call_service(&srv, TestRequest::with_uri("/login").to_request()).await;
+        let resp = test::call_service(&srv, TestRequest::with_uri("/login").to_request()).await;
         assert_eq!(resp.status(), StatusCode::OK);
         assert!(resp.headers().contains_key(header::SET_COOKIE));
         let c = resp.response().cookies().next().unwrap().to_owned();
@@ -639,8 +632,7 @@ mod tests {
     #[actix_rt::test]
     async fn test_identity_legacy_cookie_is_set() {
         let srv = create_identity_server(|c| c).await;
-        let mut resp =
-            test::call_service(&srv, TestRequest::with_uri("/").to_request()).await;
+        let mut resp = test::call_service(&srv, TestRequest::with_uri("/").to_request()).await;
         assert_legacy_login_cookie(&mut resp, COOKIE_LOGIN);
         assert_logged_in(resp, None).await;
     }

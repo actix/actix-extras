@@ -10,9 +10,7 @@ use actix_web::{
     },
     HttpResponse,
 };
-use futures_util::future::{
-    ok, Either, FutureExt as _, LocalBoxFuture, Ready, TryFutureExt as _,
-};
+use futures_util::future::{ok, Either, FutureExt as _, LocalBoxFuture, Ready, TryFutureExt as _};
 use log::debug;
 
 use crate::Inner;
@@ -53,9 +51,7 @@ impl<S> CorsMiddleware<S> {
 
         if let Some(ref headers) = inner.allowed_headers_baked {
             res.insert_header((header::ACCESS_CONTROL_ALLOW_HEADERS, headers.clone()));
-        } else if let Some(headers) =
-            req.headers().get(header::ACCESS_CONTROL_REQUEST_HEADERS)
-        {
+        } else if let Some(headers) = req.headers().get(header::ACCESS_CONTROL_REQUEST_HEADERS) {
             // all headers allowed, return
             res.insert_header((header::ACCESS_CONTROL_ALLOW_HEADERS, headers.clone()));
         }
@@ -75,10 +71,7 @@ impl<S> CorsMiddleware<S> {
         req.into_response(res)
     }
 
-    fn augment_response<B>(
-        inner: &Inner,
-        mut res: ServiceResponse<B>,
-    ) -> ServiceResponse<B> {
+    fn augment_response<B>(inner: &Inner, mut res: ServiceResponse<B>) -> ServiceResponse<B> {
         if let Some(origin) = inner.access_control_allow_origin(res.request().head()) {
             res.headers_mut()
                 .insert(header::ACCESS_CONTROL_ALLOW_ORIGIN, origin);

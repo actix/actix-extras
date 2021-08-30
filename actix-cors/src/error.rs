@@ -15,21 +15,15 @@ pub enum CorsError {
     MissingOrigin,
 
     /// Request header `Access-Control-Request-Method` is required but is missing.
-    #[display(
-        fmt = "Request header `Access-Control-Request-Method` is required but is missing."
-    )]
+    #[display(fmt = "Request header `Access-Control-Request-Method` is required but is missing.")]
     MissingRequestMethod,
 
     /// Request header `Access-Control-Request-Method` has an invalid value.
-    #[display(
-        fmt = "Request header `Access-Control-Request-Method` has an invalid value."
-    )]
+    #[display(fmt = "Request header `Access-Control-Request-Method` has an invalid value.")]
     BadRequestMethod,
 
     /// Request header `Access-Control-Request-Headers` has an invalid value.
-    #[display(
-        fmt = "Request header `Access-Control-Request-Headers` has an invalid value."
-    )]
+    #[display(fmt = "Request header `Access-Control-Request-Headers` has an invalid value.")]
     BadRequestHeaders,
 
     /// Origin is not allowed to make this request.

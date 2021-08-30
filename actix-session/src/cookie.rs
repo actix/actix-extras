@@ -77,8 +77,7 @@ impl CookieSessionInner {
             return Ok(());
         }
 
-        let value =
-            serde_json::to_string(&state).map_err(CookieSessionError::Serialize)?;
+        let value = serde_json::to_string(&state).map_err(CookieSessionError::Serialize)?;
 
         if value.len() > 4064 {
             return Err(CookieSessionError::Overflow.into());
@@ -143,9 +142,7 @@ impl CookieSessionInner {
 
                     let cookie_opt = match self.security {
                         CookieSecurity::Signed => jar.signed(&self.key).get(&self.name),
-                        CookieSecurity::Private => {
-                            jar.private(&self.key).get(&self.name)
-                        }
+                        CookieSecurity::Private => jar.private(&self.key).get(&self.name),
                     };
 
                     if let Some(cookie) = cookie_opt {
@@ -528,10 +525,7 @@ mod tests {
                     let _ = ses.insert("counter", 100);
                     "test"
                 }))
-                .service(
-                    web::resource("/test/")
-                        .to(|| async move { "no-changes-in-session" }),
-                ),
+                .service(web::resource("/test/").to(|| async move { "no-changes-in-session" })),
         )
         .await;
 

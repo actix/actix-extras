@@ -150,8 +150,7 @@ impl Cors {
 
                 Ok(_) => {
                     if cors.allowed_origins.is_all() {
-                        cors.allowed_origins =
-                            AllOrSome::Some(HashSet::with_capacity(8));
+                        cors.allowed_origins = AllOrSome::Some(HashSet::with_capacity(8));
                     }
 
                     if let Some(origins) = cors.allowed_origins.as_mut() {
@@ -257,8 +256,7 @@ impl Cors {
             match header.try_into() {
                 Ok(method) => {
                     if cors.allowed_headers.is_all() {
-                        cors.allowed_headers =
-                            AllOrSome::Some(HashSet::with_capacity(8));
+                        cors.allowed_headers = AllOrSome::Some(HashSet::with_capacity(8));
                     }
 
                     if let AllOrSome::Some(ref mut headers) = cors.allowed_headers {
@@ -294,8 +292,7 @@ impl Cors {
                 match h.try_into() {
                     Ok(method) => {
                         if cors.allowed_headers.is_all() {
-                            cors.allowed_headers =
-                                AllOrSome::Some(HashSet::with_capacity(8));
+                            cors.allowed_headers = AllOrSome::Some(HashSet::with_capacity(8));
                         }
 
                         if let AllOrSome::Some(ref mut headers) = cors.allowed_headers {
@@ -342,8 +339,7 @@ impl Cors {
                 Ok(header) => {
                     if let Some(cors) = cors(&mut self.inner, &self.error) {
                         if cors.expose_headers.is_all() {
-                            cors.expose_headers =
-                                AllOrSome::Some(HashSet::with_capacity(8));
+                            cors.expose_headers = AllOrSome::Some(HashSet::with_capacity(8));
                         }
                         if let AllOrSome::Some(ref mut headers) = cors.expose_headers {
                             headers.insert(header);
@@ -506,12 +502,11 @@ where
 
         let mut inner = Rc::clone(&self.inner);
 
-        if inner.supports_credentials
-            && inner.send_wildcard
-            && inner.allowed_origins.is_all()
-        {
-            error!("Illegal combination of CORS options: credentials can not be supported when all \
-                    origins are allowed and `send_wildcard` is enabled.");
+        if inner.supports_credentials && inner.send_wildcard && inner.allowed_origins.is_all() {
+            error!(
+                "Illegal combination of CORS options: credentials can not be supported when all \
+                    origins are allowed and `send_wildcard` is enabled."
+            );
             return future::err(());
         }
 
@@ -519,8 +514,7 @@ where
         match inner.allowed_headers.as_ref() {
             Some(header_set) if !header_set.is_empty() => {
                 let allowed_headers_str = intersperse_header_values(header_set);
-                Rc::make_mut(&mut inner).allowed_headers_baked =
-                    Some(allowed_headers_str);
+                Rc::make_mut(&mut inner).allowed_headers_baked = Some(allowed_headers_str);
             }
             _ => {}
         }
