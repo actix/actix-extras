@@ -99,14 +99,10 @@
 <span id="99"> 99</span>
 <span id="100">100</span>
 <span id="101">101</span>
-<span id="102">102</span>
-<span id="103">103</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::fmt</span>;
 
 <span class="kw">use</span> <span class="ident">actix_web::error::ParseError</span>;
-<span class="kw">use</span> <span class="ident">actix_web::http::header</span>::{
-    <span class="ident">Header</span>, <span class="ident">HeaderName</span>, <span class="ident">HeaderValue</span>, <span class="ident">IntoHeaderValue</span>, <span class="ident">AUTHORIZATION</span>,
-};
+<span class="kw">use</span> <span class="ident">actix_web::http::header</span>::{<span class="ident">Header</span>, <span class="ident">HeaderName</span>, <span class="ident">HeaderValue</span>, <span class="ident">IntoHeaderValue</span>, <span class="ident">AUTHORIZATION</span>};
 <span class="kw">use</span> <span class="ident">actix_web::HttpMessage</span>;
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::headers::authorization::scheme::Scheme</span>;

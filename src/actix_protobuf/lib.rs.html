@@ -325,13 +325,6 @@
 <span id="325">325</span>
 <span id="326">326</span>
 <span id="327">327</span>
-<span id="328">328</span>
-<span id="329">329</span>
-<span id="330">330</span>
-<span id="331">331</span>
-<span id="332">332</span>
-<span id="333">333</span>
-<span id="334">334</span>
 </pre><pre class="rust"><code><span class="attribute">#![<span class="ident">forbid</span>(<span class="ident">unsafe_code</span>)]</span>
 <span class="attribute">#![<span class="ident">deny</span>(<span class="ident">rust_2018_idioms</span>, <span class="ident">nonstandard_style</span>)]</span>
 
@@ -348,17 +341,15 @@
     <span class="ident">error::PayloadError</span>,
     <span class="ident">http::header</span>::{<span class="ident">CONTENT_LENGTH</span>, <span class="ident">CONTENT_TYPE</span>},
     <span class="ident">web::BytesMut</span>,
-    <span class="ident">Error</span>, <span class="ident">FromRequest</span>, <span class="ident">HttpMessage</span>, <span class="ident">HttpRequest</span>, <span class="ident">HttpResponse</span>, <span class="ident">HttpResponseBuilder</span>,
-    <span class="ident">Responder</span>, <span class="ident">ResponseError</span>,
+    <span class="ident">Error</span>, <span class="ident">FromRequest</span>, <span class="ident">HttpMessage</span>, <span class="ident">HttpRequest</span>, <span class="ident">HttpResponse</span>, <span class="ident">HttpResponseBuilder</span>, <span class="ident">Responder</span>,
+    <span class="ident">ResponseError</span>,
 };
 <span class="kw">use</span> <span class="ident">derive_more::Display</span>;
 <span class="kw">use</span> <span class="ident">futures_util</span>::{
     <span class="ident">future</span>::{<span class="ident">FutureExt</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">LocalBoxFuture</span>},
     <span class="ident">stream::StreamExt</span> <span class="kw">as</span> <span class="kw">_</span>,
 };
-<span class="kw">use</span> <span class="ident">prost</span>::{
-    <span class="ident">DecodeError</span> <span class="kw">as</span> <span class="ident">ProtoBufDecodeError</span>, <span class="ident">EncodeError</span> <span class="kw">as</span> <span class="ident">ProtoBufEncodeError</span>, <span class="ident">Message</span>,
-};
+<span class="kw">use</span> <span class="ident">prost</span>::{<span class="ident">DecodeError</span> <span class="kw">as</span> <span class="ident">ProtoBufDecodeError</span>, <span class="ident">EncodeError</span> <span class="kw">as</span> <span class="ident">ProtoBufEncodeError</span>, <span class="ident">Message</span>};
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Display</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ProtoBufPayloadError</span> {
@@ -487,9 +478,7 @@
             <span class="prelude-val">Ok</span>(()) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">HttpResponse::Ok</span>()
                 .<span class="ident">content_type</span>(<span class="string">&quot;application/protobuf&quot;</span>)
                 .<span class="ident">body</span>(<span class="ident">buf</span>),
-            <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">HttpResponse::from_error</span>(<span class="ident">Error::from</span>(
-                <span class="ident">ProtoBufPayloadError::Serialize</span>(<span class="ident">err</span>),
-            )),
+            <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">HttpResponse::from_error</span>(<span class="ident">Error::from</span>(<span class="ident">ProtoBufPayloadError::Serialize</span>(<span class="ident">err</span>))),
         }
     }
 }
@@ -543,10 +532,7 @@
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Message</span> <span class="op">+</span> <span class="ident">Default</span> <span class="op">+</span> <span class="lifetime">&#39;static</span><span class="op">&gt;</span> <span class="ident">Future</span> <span class="kw">for</span> <span class="ident">ProtoBufMessage</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
     <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">ProtoBufPayloadError</span><span class="op">&gt;</span>;
 
-    <span class="kw">fn</span> <span class="ident">poll</span>(
-        <span class="kw-2">mut</span> <span class="self">self</span>: <span class="ident">Pin</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">Self</span><span class="op">&gt;</span>,
-        <span class="ident">task</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">task::Context</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Poll</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Output</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">poll</span>(<span class="kw-2">mut</span> <span class="self">self</span>: <span class="ident">Pin</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">Self</span><span class="op">&gt;</span>, <span class="ident">task</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">task::Context</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Poll</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Output</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">fut</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">fut</span> {
             <span class="kw">return</span> <span class="ident">Pin::new</span>(<span class="ident">fut</span>).<span class="ident">poll</span>(<span class="ident">task</span>);
         }

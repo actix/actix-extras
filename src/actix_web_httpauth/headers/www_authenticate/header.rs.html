@@ -29,12 +29,8 @@
 <span id="29">29</span>
 <span id="30">30</span>
 <span id="31">31</span>
-<span id="32">32</span>
-<span id="33">33</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">actix_web::error::ParseError</span>;
-<span class="kw">use</span> <span class="ident">actix_web::http::header</span>::{
-    <span class="ident">Header</span>, <span class="ident">HeaderName</span>, <span class="ident">HeaderValue</span>, <span class="ident">IntoHeaderValue</span>, <span class="ident">WWW_AUTHENTICATE</span>,
-};
+<span class="kw">use</span> <span class="ident">actix_web::http::header</span>::{<span class="ident">Header</span>, <span class="ident">HeaderName</span>, <span class="ident">HeaderValue</span>, <span class="ident">IntoHeaderValue</span>, <span class="ident">WWW_AUTHENTICATE</span>};
 <span class="kw">use</span> <span class="ident">actix_web::HttpMessage</span>;
 
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::Challenge</span>;
