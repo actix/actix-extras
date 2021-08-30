@@ -15,8 +15,8 @@
 //! [Extractors]: https://actix.rs/docs/extractors/
 //! [Middleware]: ./middleware
 
+#![forbid(unsafe_code)]
 #![deny(missing_docs, nonstandard_style, rust_2018_idioms)]
-#![deny(clippy::all)]
 
 pub mod extractors;
 pub mod headers;

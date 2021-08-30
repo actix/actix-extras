@@ -11,4 +11,4 @@
 
 - [API Documentation](https://docs.rs/actix-cors)
 - [Example Project](https://github.com/actix/examples/tree/master/security/web-cors)
-- Minimum Supported Rust Version (MSRV): 1.46.0
+- Minimum Supported Rust Version (MSRV): 1.51

@@ -286,7 +286,7 @@ impl Session {
 
     fn get_session(extensions: &mut Extensions) -> Session {
         if let Some(s_impl) = extensions.get::<Rc<RefCell<SessionInner>>>() {
-            return Session(Rc::clone(&s_impl));
+            return Session(Rc::clone(s_impl));
         }
         let inner = Rc::new(RefCell::new(SessionInner::default()));
         extensions.insert(inner.clone());

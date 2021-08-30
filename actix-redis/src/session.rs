@@ -241,7 +241,7 @@ impl Inner {
 
                 if let Some(cookie) = jar.signed(&self.key).get(&self.name) {
                     let value = cookie.value().to_owned();
-                    let cache_key = (self.cache_keygen)(&cookie.value());
+                    let cache_key = (self.cache_keygen)(cookie.value());
                     (value, cache_key)
                 } else {
                     return Ok(None);

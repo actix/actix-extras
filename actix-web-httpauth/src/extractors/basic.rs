@@ -94,7 +94,7 @@ pub struct BasicAuth(Basic);
 impl BasicAuth {
     /// Returns client's user-ID.
     pub fn user_id(&self) -> &Cow<'static, str> {
-        &self.0.user_id()
+        self.0.user_id()
     }
 
     /// Returns client's password.

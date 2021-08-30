@@ -109,10 +109,10 @@ impl CookieIdentityInner {
         };
 
         if add_cookie {
-            jar.private_mut(&key).add(cookie);
+            jar.private_mut(key).add(cookie);
         } else {
             jar.add_original(cookie.clone());
-            jar.private_mut(&key).remove(cookie);
+            jar.private_mut(key).remove(cookie);
         }
 
         for cookie in jar.delta() {

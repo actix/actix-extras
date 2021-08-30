@@ -10,7 +10,7 @@
 ## Documentation & Resources
 
 - [API Documentation](*https://docs.rs/actix-web-httpauth/)
-- Minimum Supported Rust Version (MSRV): 1.46
+- Minimum Supported Rust Version (MSRV): 1.51
 
 ## Features
 - Typed [Authorization] and [WWW-Authenticate] headers

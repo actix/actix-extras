@@ -12,4 +12,4 @@
 
 - [API Documentation](https://docs.rs/actix-session)
 - [Example Projects](https://github.com/actix/examples/tree/HEAD/session)
-- Minimum Supported Rust Version (MSRV): 1.46
+- Minimum Supported Rust Version (MSRV): 1.51
