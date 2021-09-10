@@ -7,7 +7,7 @@ edition = "2018"
 license = "MIT/Apache-2.0"
 
 [dependencies]
-actix-web = "=4.0.0-beta.8"
+actix-web = "=4.0.0-beta.9"
 tracing = "0.1.19"
 opentelemetry = { version = "0.14", features = ["rt-tokio-current-thread"] }
 opentelemetry-jaeger = { version = "0.13", features = ["tokio"] }
