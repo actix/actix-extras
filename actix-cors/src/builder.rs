@@ -565,11 +565,15 @@ where
 #[cfg(test)]
 mod test {
     use std::convert::{Infallible, TryInto};
+    use std::pin::Pin;
+    use std::task::{Context, Poll};
 
     use actix_web::{
-        dev::Transform,
+        body::{BodySize, MessageBody},
+        dev::{fn_service, Transform},
         http::{HeaderName, StatusCode},
         test::{self, TestRequest},
+        web::{Bytes, HttpResponse},
     };
 
     use super::*;
@@ -620,5 +624,29 @@ mod test {
         }
 
         let _cors = Cors::default().allowed_header(ContentType);
+    }
+
+    #[actix_rt::test]
+    async fn middleware_generic_over_body_type() {
+        struct Foo;
+
+        impl MessageBody for Foo {
+            type Error = std::io::Error;
+            fn size(&self) -> BodySize {
+                BodySize::None
+            }
+            fn poll_next(
+                self: Pin<&mut Self>,
+                _: &mut Context<'_>,
+            ) -> Poll<Option<Result<Bytes, Self::Error>>> {
+                Poll::Ready(None)
+            }
+        }
+
+        let srv = fn_service(|req: ServiceRequest| async move {
+            Ok(req.into_response(HttpResponse::Ok().message_body(Foo)?))
+        });
+
+        Cors::default().new_transform(srv).await.unwrap();
     }
 }
