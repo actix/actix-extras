@@ -1,8 +1,7 @@
 use crate::{DefaultRootSpanBuilder, RequestId, RootSpan, RootSpanBuilder};
 use actix_web::dev::{Service, ServiceRequest, ServiceResponse, Transform};
 use actix_web::{Error, HttpMessage, ResponseError};
-use futures::future::{ok, Ready};
-use std::future::Future;
+use std::future::{ready, Future, Ready};
 use std::pin::Pin;
 use tracing::Span;
 use tracing_futures::Instrument;
@@ -100,10 +99,10 @@ where
     type Future = Ready<Result<Self::Transform, Self::InitError>>;
 
     fn new_transform(&self, service: S) -> Self::Future {
-        ok(TracingLoggerMiddleware {
+        ready(Ok(TracingLoggerMiddleware {
             service,
             root_span_builder: std::marker::PhantomData::default(),
-        })
+        }))
     }
 }
 
