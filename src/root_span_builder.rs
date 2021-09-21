@@ -56,11 +56,13 @@ impl RootSpanBuilder for DefaultRootSpanBuilder {
 
 fn handle_error(span: Span, error: &actix_web::Error) {
     let response_error = error.as_response_error();
-    span.record(
-        "exception.message",
-        &tracing::field::display(response_error),
-    );
-    span.record("exception.details", &tracing::field::debug(response_error));
+
+    // pre-formatting errors is a workaround for https://github.com/tokio-rs/tracing/issues/1565
+    let display = format!("{}", response_error);
+    let debug = format!("{:?}", response_error);
+    span.record("exception.message", &tracing::field::display(display));
+    span.record("exception.details", &tracing::field::display(debug));
+
     let status_code = response_error.status_code();
     span.record("http.status_code", &status_code.as_u16());
 
