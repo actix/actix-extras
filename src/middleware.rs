@@ -133,7 +133,7 @@ where
         let root_span_wrapper = RootSpan::new(root_span.clone());
         req.extensions_mut().insert(root_span_wrapper);
 
-        let fut = self.service.call(req);
+        let fut = root_span.in_scope(|| self.service.call(req));
         Box::pin(
             async move {
                 let outcome = fut.await;
