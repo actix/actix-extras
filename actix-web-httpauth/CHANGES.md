@@ -2,6 +2,9 @@
 
 ## Unreleased - 2020-xx-xx
 * Minimum supported Rust version (MSRV) is now 1.51.
+* Fix error handling in `HttpAuthetication` middleware in case of failed authentication. [#194]
+
+[#194]: https://github.com/actix/actix-extras/pull/194
 
 
 ## 0.6.0-beta.2 - 2020-06-27
