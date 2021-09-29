@@ -22,4 +22,7 @@ actix-rt = "2"
 actix-web = { version = "4.0.0-beta.8", default_features = false }
 derive_more = "0.99.5"
 futures-util = { version = "0.3.7", default-features = false }
-prost = "0.8"
+prost = { version = "0.8", default_features = false }
+
+[dev-dependencies]
+prost = { version = "0.8", default_features = false, features = ["prost-derive"] }

@@ -12,4 +12,4 @@ actix-web = "4.0.0-beta.8"
 actix-protobuf = { path = "../../" }
 
 env_logger = "0.8"
-prost = "0.8"
+prost = {version = "0.8", default_features = false, features = ["prost-derive"] }
