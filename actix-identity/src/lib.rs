@@ -7,7 +7,7 @@
 //!
 //! To access current request identity, use the [`Identity`] extractor.
 //!
-//! ```
+//! ```no_run
 //! use actix_web::*;
 //! use actix_identity::{Identity, CookieIdentityPolicy, IdentityService};
 //!
