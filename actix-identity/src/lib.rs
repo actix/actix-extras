@@ -38,7 +38,7 @@
 //!     HttpServer::new(move || {
 //!         // create cookie identity backend
 //!         let policy = CookieIdentityPolicy::new(&[0; 32])
-//!             .name("auth-cookie");
+//!             .name("auth-cookie")
 //!             .secure(false);
 //!
 //!         App::new()
