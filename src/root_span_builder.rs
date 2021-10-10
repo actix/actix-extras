@@ -45,7 +45,8 @@ impl RootSpanBuilder for DefaultRootSpanBuilder {
                 if let Some(error) = response.response().error() {
                     handle_error(span, error)
                 } else {
-                    span.record("http.status_code", &response.response().status().as_u16());
+                    let code: i32 = response.response().status().as_u16().into();
+                    span.record("http.status_code", &code);
                     span.record("otel.status_code", &"OK");
                 }
             }
@@ -64,7 +65,8 @@ fn handle_error(span: Span, error: &actix_web::Error) {
     span.record("exception.details", &tracing::field::display(debug));
 
     let status_code = response_error.status_code();
-    span.record("http.status_code", &status_code.as_u16());
+    let code: i32 = status_code.as_u16().into();
+    span.record("http.status_code", &code);
 
     if status_code.is_client_error() {
         span.record("otel.status_code", &"OK");
