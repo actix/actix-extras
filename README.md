@@ -264,14 +264,14 @@ Licensed under either of <a href="LICENSE-APACHE">Apache License, Version 2.0</a
 Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in `tracing-actix-web` by you, as defined in the Apache-2.0 license, shall be
 dual licensed as above, without any additional terms or conditions.
 
-[`TracingLogger`]: https://docs.rs/tracing-actix-web/4.0.0-beta.1/tracing-actix-web/struct.TracingLogger.html
-[`RequestId`]: https://docs.rs/tracing-actix-web/4.0.0-beta.1/tracing-actix-web/struct.RequestId.html
-[`RootSpan`]: https://docs.rs/tracing-actix-web/4.0.0-beta.1/tracing-actix-web/struct.RootSpan.html
-[`RootSpanBuilder`]: https://docs.rs/tracing-actix-web/4.0.0-beta.1/tracing-actix-web/trait.RootSpanBuilder.html
-[`DefaultRootSpanBuilder`]: https://docs.rs/tracing-actix-web/4.0.0-beta.1/tracing-actix-web/struct.DefaultRootSpanBuilder.html
-[`DefaultRootSpanBuilder::default`]: https://docs.rs/tracing-actix-web/4.0.0-beta.1/tracing-actix-web/struct.DefaultRootSpanBuilder.html#method.default
+[`TracingLogger`]: https://docs.rs/tracing-actix-web/4.0.0-beta.1/tracing_actix_web/struct.TracingLogger.html
+[`RequestId`]: https://docs.rs/tracing-actix-web/4.0.0-beta.1/tracing_actix_web/struct.RequestId.html
+[`RootSpan`]: https://docs.rs/tracing-actix-web/4.0.0-beta.1/tracing_actix_web/struct.RootSpan.html
+[`RootSpanBuilder`]: https://docs.rs/tracing-actix-web/4.0.0-beta.1/tracing_actix_web/trait.RootSpanBuilder.html
+[`DefaultRootSpanBuilder`]: https://docs.rs/tracing-actix-web/4.0.0-beta.1/tracing_actix_web/struct.DefaultRootSpanBuilder.html
+[`DefaultRootSpanBuilder::default`]: https://docs.rs/tracing-actix-web/4.0.0-beta.1/tracing_actix_web/struct.DefaultRootSpanBuilder.html#method.default
 [`tracing`]: https://docs.rs/tracing
 [`tracing::Span`]: https://docs.rs/tracing/latest/tracing/struct.Span.html
-[`root_span!`]: https://docs.rs/tracing-actix-web/4.0.0-beta.1/tracing-actix-web/macro.root_span.html
-[root span]: https://docs.rs/tracing-actix-web/4.0.0-beta.1/tracing-actix-web/struct.RootSpan.html
+[`root_span!`]: https://docs.rs/tracing-actix-web/4.0.0-beta.1/tracing_actix_web/macro.root_span.html
+[root span]: https://docs.rs/tracing-actix-web/4.0.0-beta.1/tracing_actix_web/struct.RootSpan.html
 [`actix-web`]: https://docs.rs/actix-web/4.0.0-beta.6/actix_web/index.html
