@@ -8,7 +8,7 @@
 //! ```toml
 //! [dependencies]
 //! # ...
-//! tracing-actix-web = "0.4.0-beta.13"
+//! tracing-actix-web = "0.4.0-beta.14"
 //! tracing = "0.1"
 //! actix-web = "4.0.0-beta.9"
 //! ```
