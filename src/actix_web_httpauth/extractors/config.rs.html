@@ -33,14 +33,14 @@
     <span class="kw">type</span> <span class="ident">Inner</span>: <span class="ident">Challenge</span>;
 
     <span class="doccomment">/// Convert the config instance into a HTTP challenge.</span>
-    <span class="kw">fn</span> <span class="ident">into_inner</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Inner</span>;
+    <span class="kw">fn</span> <span class="ident">into_inner</span>(<span class="self">self</span>) -&gt; <span class="ident"><span class="self">Self</span>::Inner</span>;
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">AuthenticationError</span><span class="op">&lt;</span><span class="op">&lt;</span><span class="ident">T</span> <span class="kw">as</span> <span class="ident">AuthExtractorConfig</span><span class="op">&gt;</span><span class="ident">::Inner</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">T</span>: <span class="ident">AuthExtractorConfig</span>,
 {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">config</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">config</span>: <span class="ident">T</span>) -&gt; <span class="self">Self</span> {
         <span class="ident">AuthenticationError::new</span>(<span class="ident">config</span>.<span class="ident">into_inner</span>())
     }
 }

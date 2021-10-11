@@ -103,7 +103,7 @@
     <span class="doccomment">/// Creates new authentication error from the provided `challenge`.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// By default returned error will resolve into the `HTTP 401` status code.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">challenge</span>: <span class="ident">C</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">AuthenticationError</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">challenge</span>: <span class="ident">C</span>) -&gt; <span class="ident">AuthenticationError</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span> {
         <span class="ident">AuthenticationError</span> {
             <span class="ident">challenge</span>,
             <span class="ident">status_code</span>: <span class="ident">StatusCode::UNAUTHORIZED</span>,
@@ -111,7 +111,7 @@
     }
 
     <span class="doccomment">/// Returns mutable reference to the inner challenge instance.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">challenge_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">C</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">challenge_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">C</span> {
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">challenge</span>
     }
 
@@ -119,13 +119,13 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// Can be used to override returned status code, but by default</span>
     <span class="doccomment">/// this lib tries to stick to the RFC, so it might be unreasonable.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">status_code_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">StatusCode</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">status_code_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">StatusCode</span> {
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">status_code</span>
     }
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">C</span>: <span class="ident">Challenge</span><span class="op">&gt;</span> <span class="ident">fmt::Display</span> <span class="kw">for</span> <span class="ident">AuthenticationError</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt::Result</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
         <span class="ident">fmt::Display::fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">status_code</span>, <span class="ident">f</span>)
     }
 }
@@ -133,14 +133,14 @@
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">C</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">Challenge</span><span class="op">&gt;</span> <span class="ident">Error</span> <span class="kw">for</span> <span class="ident">AuthenticationError</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span> {}
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">C</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">Challenge</span><span class="op">&gt;</span> <span class="ident">ResponseError</span> <span class="kw">for</span> <span class="ident">AuthenticationError</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">error_response</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">HttpResponse</span> {
+    <span class="kw">fn</span> <span class="ident">error_response</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">HttpResponse</span> {
         <span class="ident">HttpResponse::build</span>(<span class="self">self</span>.<span class="ident">status_code</span>)
             <span class="comment">// TODO: Get rid of the `.clone()`</span>
             .<span class="ident">insert_header</span>(<span class="ident">WwwAuthenticate</span>(<span class="self">self</span>.<span class="ident">challenge</span>.<span class="ident">clone</span>()))
             .<span class="ident">finish</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">status_code</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">StatusCode</span> {
+    <span class="kw">fn</span> <span class="ident">status_code</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">StatusCode</span> {
         <span class="self">self</span>.<span class="ident">status_code</span>
     }
 }

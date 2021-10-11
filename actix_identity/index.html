@@ -8,7 +8,7 @@ identity information.</p>
 <span class="kw">use</span> <span class="ident">actix_identity</span>::{<span class="ident">Identity</span>, <span class="ident">CookieIdentityPolicy</span>, <span class="ident">IdentityService</span>};
 
 <span class="attribute">#[<span class="ident">get</span>(<span class="string">&quot;/&quot;</span>)]</span>
-<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">index</span>(<span class="ident">id</span>: <span class="ident">Identity</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">index</span>(<span class="ident">id</span>: <span class="ident">Identity</span>) -&gt; <span class="ident">String</span> {
     <span class="comment">// access request identity</span>
     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">id</span>) <span class="op">=</span> <span class="ident">id</span>.<span class="ident">identity</span>() {
         <span class="macro">format!</span>(<span class="string">&quot;Welcome! {}&quot;</span>, <span class="ident">id</span>)
@@ -18,13 +18,13 @@ identity information.</p>
 }
 
 <span class="attribute">#[<span class="ident">post</span>(<span class="string">&quot;/login&quot;</span>)]</span>
-<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">login</span>(<span class="ident">id</span>: <span class="ident">Identity</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">HttpResponse</span> {
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">login</span>(<span class="ident">id</span>: <span class="ident">Identity</span>) -&gt; <span class="ident">HttpResponse</span> {
     <span class="ident">id</span>.<span class="ident">remember</span>(<span class="string">&quot;User1&quot;</span>.<span class="ident">to_owned</span>()); <span class="comment">// &lt;- remember identity</span>
     <span class="ident">HttpResponse::Ok</span>().<span class="ident">finish</span>()
 }
 
 <span class="attribute">#[<span class="ident">post</span>(<span class="string">&quot;/logout&quot;</span>)]</span>
-<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">logout</span>(<span class="ident">id</span>: <span class="ident">Identity</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">HttpResponse</span> {
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">logout</span>(<span class="ident">id</span>: <span class="ident">Identity</span>) -&gt; <span class="ident">HttpResponse</span> {
     <span class="ident">id</span>.<span class="ident">forget</span>();                      <span class="comment">// &lt;- remove identity</span>
     <span class="ident">HttpResponse::Ok</span>().<span class="ident">finish</span>()
 }
@@ -39,12 +39,12 @@ identity information.</p>
     .<span class="ident">wrap</span>(<span class="ident">IdentityService::new</span>(<span class="ident">policy</span>))
     .<span class="ident">service</span>(<span class="macro">services!</span>[<span class="ident">index</span>, <span class="ident">login</span>, <span class="ident">logout</span>]);</code></pre></div>
 </div></details><h2 id="structs" class="section-header"><a href="#structs">Structs</a></h2>
-<div class="item-table"><div class="item-left module-item"><a class="struct" href="struct.CookieIdentityPolicy.html" title="actix_identity::CookieIdentityPolicy struct">CookieIdentityPolicy</a></div><div class="item-right docblock-short"><p>Use cookies for request identity storage.</p>
-</div><div class="item-left module-item"><a class="struct" href="struct.Identity.html" title="actix_identity::Identity struct">Identity</a></div><div class="item-right docblock-short"><p>The extractor type to obtain your identity from a request.</p>
-</div><div class="item-left module-item"><a class="struct" href="struct.IdentityService.html" title="actix_identity::IdentityService struct">IdentityService</a></div><div class="item-right docblock-short"><p>Request identity middleware</p>
-</div></div><h2 id="traits" class="section-header"><a href="#traits">Traits</a></h2>
-<div class="item-table"><div class="item-left module-item"><a class="trait" href="trait.IdentityPolicy.html" title="actix_identity::IdentityPolicy trait">IdentityPolicy</a></div><div class="item-right docblock-short"><p>Identity policy.</p>
-</div><div class="item-left module-item"><a class="trait" href="trait.RequestIdentity.html" title="actix_identity::RequestIdentity trait">RequestIdentity</a></div><div class="item-right docblock-short"><p>Helper trait that allows to get Identity.</p>
-</div></div></section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../" data-current-crate="actix_identity" data-search-index-js="../search-index.js" data-search-js="../search.js"></div>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.CookieIdentityPolicy.html" title="actix_identity::CookieIdentityPolicy struct">CookieIdentityPolicy</a></div><div class="item-right docblock-short"><p>Use cookies for request identity storage.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Identity.html" title="actix_identity::Identity struct">Identity</a></div><div class="item-right docblock-short"><p>The extractor type to obtain your identity from a request.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.IdentityService.html" title="actix_identity::IdentityService struct">IdentityService</a></div><div class="item-right docblock-short"><p>Request identity middleware</p>
+</div></div></div><h2 id="traits" class="section-header"><a href="#traits">Traits</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.IdentityPolicy.html" title="actix_identity::IdentityPolicy trait">IdentityPolicy</a></div><div class="item-right docblock-short"><p>Identity policy.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.RequestIdentity.html" title="actix_identity::RequestIdentity trait">RequestIdentity</a></div><div class="item-right docblock-short"><p>Helper trait that allows to get Identity.</p>
+</div></div></div></section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../" data-current-crate="actix_identity" data-search-index-js="../search-index.js" data-search-js="../search.js"></div>
     <script src="../main.js"></script>
 </body></html>

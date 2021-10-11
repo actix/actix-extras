@@ -3,17 +3,17 @@
 <a href="struct.Cors.html" title="Cors"><code>Cors</code></a> builder can be used as an argument for Actix Web’s <code>App::wrap()</code>,
 <code>Scope::wrap()</code>, or <code>Resource::wrap()</code> methods.</p>
 <p>This CORS middleware automatically handles <code>OPTIONS</code> preflight requests.</p>
-<h1 id="example" class="section-header"><a href="#example">Example</a></h1>
+<h2 id="example" class="section-header"><a href="#example">Example</a></h2>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">actix_cors::Cors</span>;
 <span class="kw">use</span> <span class="ident">actix_web</span>::{<span class="ident">get</span>, <span class="ident">http</span>, <span class="ident">web</span>, <span class="ident">App</span>, <span class="ident">HttpRequest</span>, <span class="ident">HttpResponse</span>, <span class="ident">HttpServer</span>};
 
 <span class="attribute">#[<span class="ident">get</span>(<span class="string">&quot;/index.html&quot;</span>)]</span>
-<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">index</span>(<span class="ident">req</span>: <span class="ident">HttpRequest</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">index</span>(<span class="ident">req</span>: <span class="ident">HttpRequest</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
     <span class="string">&quot;&lt;p&gt;Hello World!&lt;/p&gt;&quot;</span>
 }
 
 <span class="attribute">#[<span class="ident">actix_web::main</span>]</span>
-<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">main</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">main</span>() -&gt; <span class="ident">std::io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="ident">HttpServer::new</span>(<span class="op">|</span><span class="op">|</span> {
         <span class="kw">let</span> <span class="ident">cors</span> <span class="op">=</span> <span class="ident">Cors::default</span>()
               .<span class="ident">allowed_origin</span>(<span class="string">&quot;https://www.rust-lang.org/&quot;</span>)
@@ -36,9 +36,9 @@
     <span class="prelude-val">Ok</span>(())
 }</code></pre></div>
 </div></details><h2 id="structs" class="section-header"><a href="#structs">Structs</a></h2>
-<div class="item-table"><div class="item-left module-item"><a class="struct" href="struct.Cors.html" title="actix_cors::Cors struct">Cors</a></div><div class="item-right docblock-short"><p>Builder for CORS middleware.</p>
-</div></div><h2 id="enums" class="section-header"><a href="#enums">Enums</a></h2>
-<div class="item-table"><div class="item-left module-item"><a class="enum" href="enum.CorsError.html" title="actix_cors::CorsError enum">CorsError</a></div><div class="item-right docblock-short"><p>Errors that can occur when processing CORS guarded requests.</p>
-</div></div></section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../" data-current-crate="actix_cors" data-search-index-js="../search-index.js" data-search-js="../search.js"></div>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Cors.html" title="actix_cors::Cors struct">Cors</a></div><div class="item-right docblock-short"><p>Builder for CORS middleware.</p>
+</div></div></div><h2 id="enums" class="section-header"><a href="#enums">Enums</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.CorsError.html" title="actix_cors::CorsError enum">CorsError</a></div><div class="item-right docblock-short"><p>Errors that can occur when processing CORS guarded requests.</p>
+</div></div></div></section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../" data-current-crate="actix_cors" data-search-index-js="../search-index.js" data-search-js="../search.js"></div>
     <script src="../main.js"></script>
 </body></html>

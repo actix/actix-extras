@@ -10,7 +10,7 @@ modifying session data.</p>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">actix_web</span>::{<span class="ident">web</span>, <span class="ident">App</span>, <span class="ident">HttpServer</span>, <span class="ident">HttpResponse</span>, <span class="ident">Error</span>};
 <span class="kw">use</span> <span class="ident">actix_session</span>::{<span class="ident">Session</span>, <span class="ident">CookieSession</span>};
 
-<span class="kw">fn</span> <span class="ident">index</span>(<span class="ident">session</span>: <span class="ident">Session</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">index</span>(<span class="ident">session</span>: <span class="ident">Session</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
     <span class="comment">// access session data</span>
     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">count</span>) <span class="op">=</span> <span class="ident">session</span>.<span class="ident">get</span>::<span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span>(<span class="string">&quot;counter&quot;</span>)<span class="question-mark">?</span> {
         <span class="macro">println!</span>(<span class="string">&quot;SESSION value: {}&quot;</span>, <span class="ident">count</span>);
@@ -23,7 +23,7 @@ modifying session data.</p>
 }
 
 <span class="attribute">#[<span class="ident">actix_rt::main</span>]</span>
-<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">main</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">main</span>() -&gt; <span class="ident">std::io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="ident">HttpServer::new</span>(
         <span class="op">|</span><span class="op">|</span> <span class="ident">App::new</span>()
             <span class="comment">// create cookie based session middleware</span>
@@ -34,12 +34,12 @@ modifying session data.</p>
         .<span class="kw">await</span>
 }</code></pre></div>
 </div></details><h2 id="structs" class="section-header"><a href="#structs">Structs</a></h2>
-<div class="item-table"><div class="item-left module-item"><a class="struct" href="struct.CookieSession.html" title="actix_session::CookieSession struct">CookieSession</a></div><div class="item-right docblock-short"><p>Use cookies for session storage.</p>
-</div><div class="item-left module-item"><a class="struct" href="struct.Session.html" title="actix_session::Session struct">Session</a></div><div class="item-right docblock-short"><p>The high-level interface you use to modify session data.</p>
-</div></div><h2 id="enums" class="section-header"><a href="#enums">Enums</a></h2>
-<div class="item-table"><div class="item-left module-item"><a class="enum" href="enum.SessionStatus.html" title="actix_session::SessionStatus enum">SessionStatus</a></div><div class="item-right docblock-short"><p>Status of a <a href="struct.Session.html" title="Session"><code>Session</code></a>.</p>
-</div></div><h2 id="traits" class="section-header"><a href="#traits">Traits</a></h2>
-<div class="item-table"><div class="item-left module-item"><a class="trait" href="trait.UserSession.html" title="actix_session::UserSession trait">UserSession</a></div><div class="item-right docblock-short"><p>Extraction of a <a href="struct.Session.html" title="Session"><code>Session</code></a> object.</p>
-</div></div></section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../" data-current-crate="actix_session" data-search-index-js="../search-index.js" data-search-js="../search.js"></div>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.CookieSession.html" title="actix_session::CookieSession struct">CookieSession</a></div><div class="item-right docblock-short"><p>Use cookies for session storage.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Session.html" title="actix_session::Session struct">Session</a></div><div class="item-right docblock-short"><p>The high-level interface you use to modify session data.</p>
+</div></div></div><h2 id="enums" class="section-header"><a href="#enums">Enums</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.SessionStatus.html" title="actix_session::SessionStatus enum">SessionStatus</a></div><div class="item-right docblock-short"><p>Status of a <a href="struct.Session.html" title="Session"><code>Session</code></a>.</p>
+</div></div></div><h2 id="traits" class="section-header"><a href="#traits">Traits</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.UserSession.html" title="actix_session::UserSession trait">UserSession</a></div><div class="item-right docblock-short"><p>Extraction of a <a href="struct.Session.html" title="Session"><code>Session</code></a> object.</p>
+</div></div></div></section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../" data-current-crate="actix_session" data-search-index-js="../search-index.js" data-search-js="../search.js"></div>
     <script src="../main.js"></script>
 </body></html>

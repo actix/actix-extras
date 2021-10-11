@@ -617,9 +617,45 @@
 <span id="617">617</span>
 <span id="618">618</span>
 <span id="619">619</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections::HashSet</span>, <span class="ident">convert::TryInto</span>, <span class="ident">iter::FromIterator</span>, <span class="ident">rc::Rc</span>};
+<span id="620">620</span>
+<span id="621">621</span>
+<span id="622">622</span>
+<span id="623">623</span>
+<span id="624">624</span>
+<span id="625">625</span>
+<span id="626">626</span>
+<span id="627">627</span>
+<span id="628">628</span>
+<span id="629">629</span>
+<span id="630">630</span>
+<span id="631">631</span>
+<span id="632">632</span>
+<span id="633">633</span>
+<span id="634">634</span>
+<span id="635">635</span>
+<span id="636">636</span>
+<span id="637">637</span>
+<span id="638">638</span>
+<span id="639">639</span>
+<span id="640">640</span>
+<span id="641">641</span>
+<span id="642">642</span>
+<span id="643">643</span>
+<span id="644">644</span>
+<span id="645">645</span>
+<span id="646">646</span>
+<span id="647">647</span>
+<span id="648">648</span>
+<span id="649">649</span>
+<span id="650">650</span>
+<span id="651">651</span>
+<span id="652">652</span>
+</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{
+    <span class="ident">collections::HashSet</span>, <span class="ident">convert::TryInto</span>, <span class="ident">error::Error</span> <span class="kw">as</span> <span class="ident">StdError</span>, <span class="ident">iter::FromIterator</span>, <span class="ident">rc::Rc</span>,
+};
 
 <span class="kw">use</span> <span class="ident">actix_web</span>::{
+    <span class="ident">body::MessageBody</span>,
     <span class="ident">dev</span>::{<span class="ident">RequestHead</span>, <span class="ident">Service</span>, <span class="ident">ServiceRequest</span>, <span class="ident">ServiceResponse</span>, <span class="ident">Transform</span>},
     <span class="ident">error</span>::{<span class="ident">Error</span>, <span class="prelude-ty">Result</span>},
     <span class="ident">http</span>::{<span class="self">self</span>, <span class="ident">header::HeaderName</span>, <span class="ident">Error</span> <span class="kw">as</span> <span class="ident">HttpError</span>, <span class="ident">HeaderValue</span>, <span class="ident">Method</span>, <span class="ident">Uri</span>},
@@ -637,7 +673,7 @@
 <span class="kw">fn</span> <span class="ident">cors</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
     <span class="ident">inner</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Inner</span><span class="op">&gt;</span>,
     <span class="ident">err</span>: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Either</span><span class="op">&lt;</span><span class="ident">http::Error</span>, <span class="ident">CorsError</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">Inner</span><span class="op">&gt;</span> {
+) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">Inner</span><span class="op">&gt;</span> {
     <span class="kw">if</span> <span class="ident">err</span>.<span class="ident">is_some</span>() {
         <span class="kw">return</span> <span class="prelude-val">None</span>;
     }
@@ -698,7 +734,7 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// *All* origins, methods, request headers and exposed headers allowed. Credentials supported.</span>
     <span class="doccomment">/// Max age 1 hour. Does not send wildcard.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">permissive</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">permissive</span>() -&gt; <span class="self">Self</span> {
         <span class="kw">let</span> <span class="ident">inner</span> <span class="op">=</span> <span class="ident">Inner</span> {
             <span class="ident">allowed_origins</span>: <span class="ident">AllOrSome::All</span>,
             <span class="ident">allowed_origins_fns</span>: <span class="macro">smallvec!</span>[],
@@ -727,7 +763,7 @@
     <span class="doccomment">/// Resets allowed origin list to a state where any origin is accepted.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// See [`Cors::allowed_origin`] for more info on allowed origins.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">allow_any_origin</span>(<span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Cors</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">allow_any_origin</span>(<span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="ident">Cors</span> {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">cors</span>) <span class="op">=</span> <span class="ident">cors</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">inner</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">error</span>) {
             <span class="ident">cors</span>.<span class="ident">allowed_origins</span> <span class="op">=</span> <span class="ident">AllOrSome::All</span>;
         }
@@ -759,15 +795,15 @@
     <span class="doccomment">/// - If supplied origin is a wildcard (`*`). [`Cors::send_wildcard`] should be used instead.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// [Fetch Standard]: https://fetch.spec.whatwg.org/#origin-header</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">allowed_origin</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">origin</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Cors</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">allowed_origin</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">origin</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">Cors</span> {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">cors</span>) <span class="op">=</span> <span class="ident">cors</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">inner</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">error</span>) {
             <span class="kw">match</span> <span class="ident">TryInto</span>::<span class="op">&lt;</span><span class="ident">Uri</span><span class="op">&gt;</span><span class="ident">::try_into</span>(<span class="ident">origin</span>) {
-                <span class="prelude-val">Ok</span>(<span class="kw">_</span>) <span class="kw">if</span> <span class="ident">origin</span> <span class="op">=</span><span class="op">=</span> <span class="string">&quot;*&quot;</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="prelude-val">Ok</span>(<span class="kw">_</span>) <span class="kw">if</span> <span class="ident">origin</span> <span class="op">==</span> <span class="string">&quot;*&quot;</span> =&gt; {
                     <span class="macro">error!</span>(<span class="string">&quot;Wildcard in `allowed_origin` is not allowed. Use `send_wildcard`.&quot;</span>);
                     <span class="self">self</span>.<span class="ident">error</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">Either::Right</span>(<span class="ident">CorsError::WildcardOrigin</span>));
                 }
 
-                <span class="prelude-val">Ok</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; {
                     <span class="kw">if</span> <span class="ident">cors</span>.<span class="ident">allowed_origins</span>.<span class="ident">is_all</span>() {
                         <span class="ident">cors</span>.<span class="ident">allowed_origins</span> <span class="op">=</span> <span class="ident">AllOrSome::Some</span>(<span class="ident">HashSet::with_capacity</span>(<span class="number">8</span>));
                     }
@@ -779,7 +815,7 @@
                     }
                 }
 
-                <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="prelude-val">Err</span>(<span class="ident">err</span>) =&gt; {
                     <span class="self">self</span>.<span class="ident">error</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">Either::Left</span>(<span class="ident">err</span>.<span class="ident">into</span>()));
                 }
             }
@@ -796,9 +832,9 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// If the function returns `true`, the client&#39;s `Origin` request header will be echoed back</span>
     <span class="doccomment">/// into the `Access-Control-Allow-Origin` response header.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">allowed_origin_fn</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">f</span>: <span class="ident">F</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Cors</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">allowed_origin_fn</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">f</span>: <span class="ident">F</span>) -&gt; <span class="ident">Cors</span>
     <span class="kw">where</span>
-        <span class="ident">F</span>: (<span class="ident">Fn</span>(<span class="kw-2">&amp;</span><span class="ident">HeaderValue</span>, <span class="kw-2">&amp;</span><span class="ident">RequestHead</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span>) <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+        <span class="ident">F</span>: (<span class="ident">Fn</span>(<span class="kw-2">&amp;</span><span class="ident">HeaderValue</span>, <span class="kw-2">&amp;</span><span class="ident">RequestHead</span>) -&gt; <span class="ident">bool</span>) <span class="op">+</span> <span class="lifetime">&#39;static</span>,
     {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">cors</span>) <span class="op">=</span> <span class="ident">cors</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">inner</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">error</span>) {
             <span class="ident">cors</span>.<span class="ident">allowed_origins_fns</span>.<span class="ident">push</span>(<span class="ident">OriginFn</span> {
@@ -812,7 +848,7 @@
     <span class="doccomment">/// Resets allowed methods list to all methods.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// See [`Cors::allowed_methods`] for more info on allowed methods.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">allow_any_method</span>(<span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Cors</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">allow_any_method</span>(<span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="ident">Cors</span> {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">cors</span>) <span class="op">=</span> <span class="ident">cors</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">inner</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">error</span>) {
             <span class="ident">cors</span>.<span class="ident">allowed_methods</span> <span class="op">=</span> <span class="ident">ALL_METHODS_SET</span>.<span class="ident">clone</span>();
         }
@@ -828,7 +864,7 @@
     <span class="doccomment">/// Defaults to `[GET, HEAD, POST, OPTIONS, PUT, PATCH, DELETE]`</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// [Fetch Standard CORS protocol]: https://fetch.spec.whatwg.org/#http-cors-protocol</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">allowed_methods</span><span class="op">&lt;</span><span class="ident">U</span>, <span class="ident">M</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">methods</span>: <span class="ident">U</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Cors</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">allowed_methods</span><span class="op">&lt;</span><span class="ident">U</span>, <span class="ident">M</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">methods</span>: <span class="ident">U</span>) -&gt; <span class="ident">Cors</span>
     <span class="kw">where</span>
         <span class="ident">U</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">M</span><span class="op">&gt;</span>,
         <span class="ident">M</span>: <span class="ident">TryInto</span><span class="op">&lt;</span><span class="ident">Method</span><span class="op">&gt;</span>,
@@ -837,11 +873,11 @@
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">cors</span>) <span class="op">=</span> <span class="ident">cors</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">inner</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">error</span>) {
             <span class="kw">for</span> <span class="ident">m</span> <span class="kw">in</span> <span class="ident">methods</span> {
                 <span class="kw">match</span> <span class="ident">m</span>.<span class="ident">try_into</span>() {
-                    <span class="prelude-val">Ok</span>(<span class="ident">method</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="prelude-val">Ok</span>(<span class="ident">method</span>) =&gt; {
                         <span class="ident">cors</span>.<span class="ident">allowed_methods</span>.<span class="ident">insert</span>(<span class="ident">method</span>);
                     }
 
-                    <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="prelude-val">Err</span>(<span class="ident">err</span>) =&gt; {
                         <span class="self">self</span>.<span class="ident">error</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">Either::Left</span>(<span class="ident">err</span>.<span class="ident">into</span>()));
                         <span class="kw">break</span>;
                     }
@@ -855,7 +891,7 @@
     <span class="doccomment">/// Resets allowed request header list to a state where any header is accepted.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// See [`Cors::allowed_headers`] for more info on allowed request headers.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">allow_any_header</span>(<span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Cors</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">allow_any_header</span>(<span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="ident">Cors</span> {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">cors</span>) <span class="op">=</span> <span class="ident">cors</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">inner</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">error</span>) {
             <span class="ident">cors</span>.<span class="ident">allowed_headers</span> <span class="op">=</span> <span class="ident">AllOrSome::All</span>;
         }
@@ -866,14 +902,14 @@
     <span class="doccomment">/// Add an allowed request header.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// See [`Cors::allowed_headers`] for more info on allowed request headers.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">allowed_header</span><span class="op">&lt;</span><span class="ident">H</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">header</span>: <span class="ident">H</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Cors</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">allowed_header</span><span class="op">&lt;</span><span class="ident">H</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">header</span>: <span class="ident">H</span>) -&gt; <span class="ident">Cors</span>
     <span class="kw">where</span>
         <span class="ident">H</span>: <span class="ident">TryInto</span><span class="op">&lt;</span><span class="ident">HeaderName</span><span class="op">&gt;</span>,
         <span class="op">&lt;</span><span class="ident">H</span> <span class="kw">as</span> <span class="ident">TryInto</span><span class="op">&lt;</span><span class="ident">HeaderName</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Error</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">HttpError</span><span class="op">&gt;</span>,
     {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">cors</span>) <span class="op">=</span> <span class="ident">cors</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">inner</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">error</span>) {
             <span class="kw">match</span> <span class="ident">header</span>.<span class="ident">try_into</span>() {
-                <span class="prelude-val">Ok</span>(<span class="ident">method</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="prelude-val">Ok</span>(<span class="ident">method</span>) =&gt; {
                     <span class="kw">if</span> <span class="ident">cors</span>.<span class="ident">allowed_headers</span>.<span class="ident">is_all</span>() {
                         <span class="ident">cors</span>.<span class="ident">allowed_headers</span> <span class="op">=</span> <span class="ident">AllOrSome::Some</span>(<span class="ident">HashSet::with_capacity</span>(<span class="number">8</span>));
                     }
@@ -883,7 +919,7 @@
                     }
                 }
 
-                <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">error</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">Either::Left</span>(<span class="ident">err</span>.<span class="ident">into</span>())),
+                <span class="prelude-val">Err</span>(<span class="ident">err</span>) =&gt; <span class="self">self</span>.<span class="ident">error</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">Either::Left</span>(<span class="ident">err</span>.<span class="ident">into</span>())),
             }
         }
 
@@ -900,7 +936,7 @@
     <span class="doccomment">/// Defaults to `All`.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// [Fetch Standard CORS protocol]: https://fetch.spec.whatwg.org/#http-cors-protocol</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">allowed_headers</span><span class="op">&lt;</span><span class="ident">U</span>, <span class="ident">H</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">headers</span>: <span class="ident">U</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Cors</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">allowed_headers</span><span class="op">&lt;</span><span class="ident">U</span>, <span class="ident">H</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">headers</span>: <span class="ident">U</span>) -&gt; <span class="ident">Cors</span>
     <span class="kw">where</span>
         <span class="ident">U</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">H</span><span class="op">&gt;</span>,
         <span class="ident">H</span>: <span class="ident">TryInto</span><span class="op">&lt;</span><span class="ident">HeaderName</span><span class="op">&gt;</span>,
@@ -909,7 +945,7 @@
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">cors</span>) <span class="op">=</span> <span class="ident">cors</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">inner</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">error</span>) {
             <span class="kw">for</span> <span class="ident">h</span> <span class="kw">in</span> <span class="ident">headers</span> {
                 <span class="kw">match</span> <span class="ident">h</span>.<span class="ident">try_into</span>() {
-                    <span class="prelude-val">Ok</span>(<span class="ident">method</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="prelude-val">Ok</span>(<span class="ident">method</span>) =&gt; {
                         <span class="kw">if</span> <span class="ident">cors</span>.<span class="ident">allowed_headers</span>.<span class="ident">is_all</span>() {
                             <span class="ident">cors</span>.<span class="ident">allowed_headers</span> <span class="op">=</span> <span class="ident">AllOrSome::Some</span>(<span class="ident">HashSet::with_capacity</span>(<span class="number">8</span>));
                         }
@@ -918,7 +954,7 @@
                             <span class="ident">headers</span>.<span class="ident">insert</span>(<span class="ident">method</span>);
                         }
                     }
-                    <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="prelude-val">Err</span>(<span class="ident">err</span>) =&gt; {
                         <span class="self">self</span>.<span class="ident">error</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">Either::Left</span>(<span class="ident">err</span>.<span class="ident">into</span>()));
                         <span class="kw">break</span>;
                     }
@@ -932,7 +968,7 @@
     <span class="doccomment">/// Resets exposed response header list to a state where any header is accepted.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// See [`Cors::expose_headers`] for more info on exposed response headers.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">expose_any_header</span>(<span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Cors</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">expose_any_header</span>(<span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="ident">Cors</span> {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">cors</span>) <span class="op">=</span> <span class="ident">cors</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">inner</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">error</span>) {
             <span class="ident">cors</span>.<span class="ident">expose_headers</span> <span class="op">=</span> <span class="ident">AllOrSome::All</span>;
         }
@@ -947,7 +983,7 @@
     <span class="doccomment">/// This defaults to an empty set.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// [Fetch Standard CORS protocol]: https://fetch.spec.whatwg.org/#http-cors-protocol</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">expose_headers</span><span class="op">&lt;</span><span class="ident">U</span>, <span class="ident">H</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">headers</span>: <span class="ident">U</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Cors</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">expose_headers</span><span class="op">&lt;</span><span class="ident">U</span>, <span class="ident">H</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">headers</span>: <span class="ident">U</span>) -&gt; <span class="ident">Cors</span>
     <span class="kw">where</span>
         <span class="ident">U</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">H</span><span class="op">&gt;</span>,
         <span class="ident">H</span>: <span class="ident">TryInto</span><span class="op">&lt;</span><span class="ident">HeaderName</span><span class="op">&gt;</span>,
@@ -955,7 +991,7 @@
     {
         <span class="kw">for</span> <span class="ident">h</span> <span class="kw">in</span> <span class="ident">headers</span> {
             <span class="kw">match</span> <span class="ident">h</span>.<span class="ident">try_into</span>() {
-                <span class="prelude-val">Ok</span>(<span class="ident">header</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="prelude-val">Ok</span>(<span class="ident">header</span>) =&gt; {
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">cors</span>) <span class="op">=</span> <span class="ident">cors</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">inner</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">error</span>) {
                         <span class="kw">if</span> <span class="ident">cors</span>.<span class="ident">expose_headers</span>.<span class="ident">is_all</span>() {
                             <span class="ident">cors</span>.<span class="ident">expose_headers</span> <span class="op">=</span> <span class="ident">AllOrSome::Some</span>(<span class="ident">HashSet::with_capacity</span>(<span class="number">8</span>));
@@ -965,7 +1001,7 @@
                         }
                     }
                 }
-                <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="prelude-val">Err</span>(<span class="ident">err</span>) =&gt; {
                     <span class="self">self</span>.<span class="ident">error</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">Either::Left</span>(<span class="ident">err</span>.<span class="ident">into</span>()));
                     <span class="kw">break</span>;
                 }
@@ -982,7 +1018,7 @@
     <span class="doccomment">/// Pass a number (of seconds) or use None to disable sending max age header.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// [Fetch Standard CORS protocol]: https://fetch.spec.whatwg.org/#http-cors-protocol</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">max_age</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">max_age</span>: <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Cors</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">max_age</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">max_age</span>: <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span><span class="op">&gt;</span>) -&gt; <span class="ident">Cors</span> {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">cors</span>) <span class="op">=</span> <span class="ident">cors</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">inner</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">error</span>) {
             <span class="ident">cors</span>.<span class="ident">max_age</span> <span class="op">=</span> <span class="ident">max_age</span>.<span class="ident">into</span>()
         }
@@ -1001,7 +1037,7 @@
     <span class="doccomment">/// in an `CorsError::CredentialsWithWildcardOrigin` error during actix launch or runtime.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Defaults to `false`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">send_wildcard</span>(<span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Cors</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">send_wildcard</span>(<span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="ident">Cors</span> {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">cors</span>) <span class="op">=</span> <span class="ident">cors</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">inner</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">error</span>) {
             <span class="ident">cors</span>.<span class="ident">send_wildcard</span> <span class="op">=</span> <span class="bool-val">true</span>
         }
@@ -1024,7 +1060,7 @@
     <span class="doccomment">/// to send wildcards (`*`); this is not allowed by the CORS protocol.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// [Fetch Standard CORS protocol]: https://fetch.spec.whatwg.org/#http-cors-protocol</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">supports_credentials</span>(<span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Cors</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">supports_credentials</span>(<span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="ident">Cors</span> {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">cors</span>) <span class="op">=</span> <span class="ident">cors</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">inner</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">error</span>) {
             <span class="ident">cors</span>.<span class="ident">supports_credentials</span> <span class="op">=</span> <span class="bool-val">true</span>
         }
@@ -1042,7 +1078,7 @@
     <span class="doccomment">/// informs CDNs and other caches that the CORS headers are dynamic, and cannot be cached.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// By default, `Vary` header support is enabled.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">disable_vary_header</span>(<span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Cors</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">disable_vary_header</span>(<span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="ident">Cors</span> {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">cors</span>) <span class="op">=</span> <span class="ident">cors</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">inner</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">error</span>) {
             <span class="ident">cors</span>.<span class="ident">vary_header</span> <span class="op">=</span> <span class="bool-val">false</span>
         }
@@ -1056,7 +1092,7 @@
     <span class="doccomment">/// This is useful for application level middleware.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// By default *preflight* support is enabled.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">disable_preflight</span>(<span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Cors</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">disable_preflight</span>(<span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="ident">Cors</span> {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">cors</span>) <span class="op">=</span> <span class="ident">cors</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">inner</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">error</span>) {
             <span class="ident">cors</span>.<span class="ident">preflight</span> <span class="op">=</span> <span class="bool-val">false</span>
         }
@@ -1070,7 +1106,7 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// *No* allowed origins, methods, request headers or exposed headers. Credentials</span>
     <span class="doccomment">/// not supported. No max age (will use browser&#39;s default).</span>
-    <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Cors</span> {
+    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="ident">Cors</span> {
         <span class="kw">let</span> <span class="ident">inner</span> <span class="op">=</span> <span class="ident">Inner</span> {
             <span class="ident">allowed_origins</span>: <span class="ident">AllOrSome::Some</span>(<span class="ident">HashSet::with_capacity</span>(<span class="number">8</span>)),
             <span class="ident">allowed_origins_fns</span>: <span class="macro">smallvec!</span>[],
@@ -1098,10 +1134,12 @@
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> <span class="ident">Transform</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">ServiceRequest</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Cors</span>
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">B</span><span class="op">&gt;</span> <span class="ident">Transform</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">ServiceRequest</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Cors</span>
 <span class="kw">where</span>
-    <span class="ident">S</span>: <span class="ident">Service</span><span class="op">&lt;</span><span class="ident">ServiceRequest</span>, <span class="ident">Response</span> <span class="op">=</span> <span class="ident">ServiceResponse</span>, <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Error</span><span class="op">&gt;</span>,
+    <span class="ident">S</span>: <span class="ident">Service</span><span class="op">&lt;</span><span class="ident">ServiceRequest</span>, <span class="ident">Response</span> <span class="op">=</span> <span class="ident">ServiceResponse</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>, <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Error</span><span class="op">&gt;</span>,
     <span class="ident">S::Future</span>: <span class="lifetime">&#39;static</span>,
+    <span class="ident">B</span>: <span class="ident">MessageBody</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+    <span class="ident">B::Error</span>: <span class="ident">StdError</span>,
 {
     <span class="kw">type</span> <span class="ident">Response</span> <span class="op">=</span> <span class="ident">ServiceResponse</span>;
     <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Error</span>;
@@ -1109,11 +1147,11 @@
     <span class="kw">type</span> <span class="ident">Transform</span> <span class="op">=</span> <span class="ident">CorsMiddleware</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>;
     <span class="kw">type</span> <span class="ident">Future</span> <span class="op">=</span> <span class="ident">Ready</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Transform</span>, <span class="ident"><span class="self">Self</span>::InitError</span><span class="op">&gt;</span><span class="op">&gt;</span>;
 
-    <span class="kw">fn</span> <span class="ident">new_transform</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">service</span>: <span class="ident">S</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Future</span> {
+    <span class="kw">fn</span> <span class="ident">new_transform</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">service</span>: <span class="ident">S</span>) -&gt; <span class="ident"><span class="self">Self</span>::Future</span> {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">err</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">error</span> {
             <span class="kw">match</span> <span class="ident">err</span> {
-                <span class="ident">Either::Left</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">error!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">err</span>),
-                <span class="ident">Either::Right</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">error!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">err</span>),
+                <span class="ident">Either::Left</span>(<span class="ident">err</span>) =&gt; <span class="macro">error!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">err</span>),
+                <span class="ident">Either::Right</span>(<span class="ident">err</span>) =&gt; <span class="macro">error!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">err</span>),
             }
 
             <span class="kw">return</span> <span class="ident">future::err</span>(());
@@ -1131,11 +1169,11 @@
 
         <span class="comment">// bake allowed headers value if Some and not empty</span>
         <span class="kw">match</span> <span class="ident">inner</span>.<span class="ident">allowed_headers</span>.<span class="ident">as_ref</span>() {
-            <span class="prelude-val">Some</span>(<span class="ident">header_set</span>) <span class="kw">if</span> <span class="op">!</span><span class="ident">header_set</span>.<span class="ident">is_empty</span>() <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Some</span>(<span class="ident">header_set</span>) <span class="kw">if</span> <span class="op">!</span><span class="ident">header_set</span>.<span class="ident">is_empty</span>() =&gt; {
                 <span class="kw">let</span> <span class="ident">allowed_headers_str</span> <span class="op">=</span> <span class="ident">intersperse_header_values</span>(<span class="ident">header_set</span>);
                 <span class="ident">Rc::make_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">inner</span>).<span class="ident">allowed_headers_baked</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">allowed_headers_str</span>);
             }
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {}
+            <span class="kw">_</span> =&gt; {}
         }
 
         <span class="comment">// bake allowed methods value if not empty</span>
@@ -1146,11 +1184,11 @@
 
         <span class="comment">// bake exposed headers value if Some and not empty</span>
         <span class="kw">match</span> <span class="ident">inner</span>.<span class="ident">expose_headers</span>.<span class="ident">as_ref</span>() {
-            <span class="prelude-val">Some</span>(<span class="ident">header_set</span>) <span class="kw">if</span> <span class="op">!</span><span class="ident">header_set</span>.<span class="ident">is_empty</span>() <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Some</span>(<span class="ident">header_set</span>) <span class="kw">if</span> <span class="op">!</span><span class="ident">header_set</span>.<span class="ident">is_empty</span>() =&gt; {
                 <span class="kw">let</span> <span class="ident">expose_headers_str</span> <span class="op">=</span> <span class="ident">intersperse_header_values</span>(<span class="ident">header_set</span>);
                 <span class="ident">Rc::make_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">inner</span>).<span class="ident">expose_headers_baked</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">expose_headers_str</span>);
             }
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {}
+            <span class="kw">_</span> =&gt; {}
         }
 
         <span class="ident">future::ok</span>(<span class="ident">CorsMiddleware</span> { <span class="ident">service</span>, <span class="ident">inner</span> })
@@ -1158,7 +1196,7 @@
 }
 
 <span class="doccomment">/// Only call when values are guaranteed to be valid header values and set is not empty.</span>
-<span class="kw">fn</span> <span class="ident">intersperse_header_values</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">val_set</span>: <span class="kw-2">&amp;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">HeaderValue</span>
+<span class="kw">fn</span> <span class="ident">intersperse_header_values</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">val_set</span>: <span class="kw-2">&amp;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>) -&gt; <span class="ident">HeaderValue</span>
 <span class="kw">where</span>
     <span class="ident">T</span>: <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>,
 {
@@ -1179,11 +1217,15 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">test</span> {
     <span class="kw">use</span> <span class="ident">std::convert</span>::{<span class="ident">Infallible</span>, <span class="ident">TryInto</span>};
+    <span class="kw">use</span> <span class="ident">std::pin::Pin</span>;
+    <span class="kw">use</span> <span class="ident">std::task</span>::{<span class="ident">Context</span>, <span class="ident">Poll</span>};
 
     <span class="kw">use</span> <span class="ident">actix_web</span>::{
-        <span class="ident">dev::Transform</span>,
+        <span class="ident">body</span>::{<span class="ident">BodySize</span>, <span class="ident">MessageBody</span>},
+        <span class="ident">dev</span>::{<span class="ident">fn_service</span>, <span class="ident">Transform</span>},
         <span class="ident">http</span>::{<span class="ident">HeaderName</span>, <span class="ident">StatusCode</span>},
         <span class="ident">test</span>::{<span class="self">self</span>, <span class="ident">TestRequest</span>},
+        <span class="ident">web</span>::{<span class="ident">Bytes</span>, <span class="ident">HttpResponse</span>},
     };
 
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
@@ -1228,12 +1270,36 @@
         <span class="kw">impl</span> <span class="ident">TryInto</span><span class="op">&lt;</span><span class="ident">HeaderName</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">ContentType</span> {
             <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Infallible</span>;
 
-            <span class="kw">fn</span> <span class="ident">try_into</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">HeaderName</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
+            <span class="kw">fn</span> <span class="ident">try_into</span>(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">HeaderName</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
                 <span class="prelude-val">Ok</span>(<span class="ident">HeaderName::from_static</span>(<span class="string">&quot;content-type&quot;</span>))
             }
         }
 
         <span class="kw">let</span> <span class="ident">_cors</span> <span class="op">=</span> <span class="ident">Cors::default</span>().<span class="ident">allowed_header</span>(<span class="ident">ContentType</span>);
+    }
+
+    <span class="attribute">#[<span class="ident">actix_rt::test</span>]</span>
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">middleware_generic_over_body_type</span>() {
+        <span class="kw">struct</span> <span class="ident">Foo</span>;
+
+        <span class="kw">impl</span> <span class="ident">MessageBody</span> <span class="kw">for</span> <span class="ident">Foo</span> {
+            <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">std::io::Error</span>;
+            <span class="kw">fn</span> <span class="ident">size</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">BodySize</span> {
+                <span class="ident">BodySize::None</span>
+            }
+            <span class="kw">fn</span> <span class="ident">poll_next</span>(
+                <span class="self">self</span>: <span class="ident">Pin</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">Self</span><span class="op">&gt;</span>,
+                <span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Context</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>,
+            ) -&gt; <span class="ident">Poll</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Bytes</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+                <span class="ident">Poll::Ready</span>(<span class="prelude-val">None</span>)
+            }
+        }
+
+        <span class="kw">let</span> <span class="ident">srv</span> <span class="op">=</span> <span class="ident">fn_service</span>(<span class="op">|</span><span class="ident">req</span>: <span class="ident">ServiceRequest</span><span class="op">|</span> <span class="kw">async</span> <span class="kw">move</span> {
+            <span class="prelude-val">Ok</span>(<span class="ident">req</span>.<span class="ident">into_response</span>(<span class="ident">HttpResponse::Ok</span>().<span class="ident">message_body</span>(<span class="ident">Foo</span>)<span class="question-mark">?</span>))
+        });
+
+        <span class="ident">Cors::default</span>().<span class="ident">new_transform</span>(<span class="ident">srv</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();
     }
 }
 </code></pre></div>

@@ -222,7 +222,7 @@
     <span class="kw">type</span> <span class="ident">ResponseFuture</span>: <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span>;
 
     <span class="doccomment">/// Parse the session from request and load data from a service identity.</span>
-    <span class="kw">fn</span> <span class="ident">from_request</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">req</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ServiceRequest</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Future</span>;
+    <span class="kw">fn</span> <span class="ident">from_request</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">req</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ServiceRequest</span>) -&gt; <span class="ident"><span class="self">Self</span>::Future</span>;
 
     <span class="doccomment">/// Write changes to response</span>
     <span class="kw">fn</span> <span class="ident">to_response</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>(
@@ -230,7 +230,7 @@
         <span class="ident">identity</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
         <span class="ident">changed</span>: <span class="ident">bool</span>,
         <span class="ident">response</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ServiceResponse</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::ResponseFuture</span>;
+    ) -&gt; <span class="ident"><span class="self">Self</span>::ResponseFuture</span>;
 }
 
 <span class="doccomment">/// Helper trait that allows to get Identity.</span>
@@ -238,14 +238,14 @@
 <span class="doccomment">/// It could be used in middleware but identity policy must be set before any other middleware that</span>
 <span class="doccomment">/// needs identity. RequestIdentity is implemented both for `ServiceRequest` and `HttpRequest`.</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">RequestIdentity</span> {
-    <span class="kw">fn</span> <span class="ident">get_identity</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>;
+    <span class="kw">fn</span> <span class="ident">get_identity</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>;
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">RequestIdentity</span> <span class="kw">for</span> <span class="ident">T</span>
 <span class="kw">where</span>
     <span class="ident">T</span>: <span class="ident">HttpMessage</span>,
 {
-    <span class="kw">fn</span> <span class="ident">get_identity</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">get_identity</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
         <span class="ident">Identity::get_identity</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">extensions</span>())
     }
 }
@@ -276,10 +276,10 @@
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">create_identity_server</span><span class="op">&lt;</span>
-        <span class="ident">F</span>: <span class="ident">Fn</span>(<span class="ident">CookieIdentityPolicy</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CookieIdentityPolicy</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+        <span class="ident">F</span>: <span class="ident">Fn</span>(<span class="ident">CookieIdentityPolicy</span>) -&gt; <span class="ident">CookieIdentityPolicy</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
     <span class="op">&gt;</span>(
         <span class="ident">f</span>: <span class="ident">F</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="ident">actix_service::Service</span><span class="op">&lt;</span>
+    ) -&gt; <span class="kw">impl</span> <span class="ident">actix_service::Service</span><span class="op">&lt;</span>
         <span class="ident">actix_http::Request</span>,
         <span class="ident">Response</span> <span class="op">=</span> <span class="ident">ServiceResponse</span><span class="op">&lt;</span><span class="ident">actix_web::body::Body</span><span class="op">&gt;</span>,
         <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Error</span>,
