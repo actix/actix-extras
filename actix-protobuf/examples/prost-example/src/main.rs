@@ -1,6 +1,6 @@
 use actix_protobuf::*;
 use actix_web::*;
-use prost_derive::Message;
+use prost::Message;
 
 #[derive(Clone, PartialEq, Message)]
 pub struct MyObj {

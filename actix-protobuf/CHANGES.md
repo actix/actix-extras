@@ -2,6 +2,9 @@
 
 ## Unreleased - 2020-xx-xx
 * Minimum supported Rust version (MSRV) is now 1.51.
+* Bump `prost` version to 0.8. [#197]
+
+[#197]: https://github.com/actix/actix-extras/pull/197
 
 
 ## 0.7.0-beta.1 - 2020-06-27
