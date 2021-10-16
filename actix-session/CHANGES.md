@@ -2,6 +2,7 @@
 
 ## Unreleased - 2020-xx-xx
 * Minimum supported Rust version (MSRV) is now 1.51.
+* Derive `Clone` for `CookieSession`
 
 
 ## 0.5.0-beta.2 - 2020-06-27
