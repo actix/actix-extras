@@ -51,5 +51,6 @@ To add a crate to this list, submit a pull request.
 [actix-ip-filter]: https://github.com/jhen0409/actix-ip-filter
 [actix-web-static-files]: https://github.com/kilork/actix-web-static-files
 [actix-web-grants]: https://github.com/DDtKey/actix-web-grants
+[actix-web-flash-messages]: https://github.com/LukeMathWalker/actix-web-flash-messages
 [actix-governor]: https://github.com/AaronErhardt/actix-governor
 [aliri_actix]: https://github.com/neoeinstein/aliri
