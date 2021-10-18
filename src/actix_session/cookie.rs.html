@@ -558,6 +558,9 @@
 <span id="558">558</span>
 <span id="559">559</span>
 <span id="560">560</span>
+<span id="561">561</span>
+<span id="562">562</span>
+<span id="563">563</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Cookie based sessions. See docs for [`CookieSession`].</span>
 
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections::HashMap</span>, <span class="ident">error::Error</span> <span class="kw">as</span> <span class="ident">StdError</span>, <span class="ident">rc::Rc</span>};
@@ -590,11 +593,13 @@
 
 <span class="kw">impl</span> <span class="ident">ResponseError</span> <span class="kw">for</span> <span class="ident">CookieSessionError</span> {}
 
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">enum</span> <span class="ident">CookieSecurity</span> {
     <span class="ident">Signed</span>,
     <span class="ident">Private</span>,
 }
 
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
 <span class="kw">struct</span> <span class="ident">CookieSessionInner</span> {
     <span class="ident">key</span>: <span class="ident">Key</span>,
     <span class="ident">security</span>: <span class="ident">CookieSecurity</span>,
@@ -757,6 +762,7 @@
 <span class="doccomment">///         .secure(true))</span>
 <span class="doccomment">///     .service(web::resource(&quot;/&quot;).to(|| HttpResponse::Ok()));</span>
 <span class="doccomment">/// ```</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CookieSession</span>(<span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">CookieSessionInner</span><span class="op">&gt;</span>);
 
 <span class="kw">impl</span> <span class="ident">CookieSession</span> {
