@@ -30,11 +30,13 @@ pub enum CookieSessionError {
 
 impl ResponseError for CookieSessionError {}
 
+#[derive(Copy, Clone)]
 enum CookieSecurity {
     Signed,
     Private,
 }
 
+#[derive(Clone)]
 struct CookieSessionInner {
     key: Key,
     security: CookieSecurity,
@@ -197,6 +199,7 @@ impl CookieSessionInner {
 ///         .secure(true))
 ///     .service(web::resource("/").to(|| HttpResponse::Ok()));
 /// ```
+#[derive(Clone)]
 pub struct CookieSession(Rc<CookieSessionInner>);
 
 impl CookieSession {
