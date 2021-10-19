@@ -2,7 +2,7 @@
 
 ## Unreleased - 2021-xx-xx
 * Make `Cors` middleware generic over body type [#195]
-* Minimum supported Rust version (MSRV) is now 1.51.
+* Minimum supported Rust version (MSRV) is now 1.52.
 
 [#195]: https://github.com/actix/actix-extras/pull/195
 

@@ -1,7 +1,7 @@
 # Changes
 
 ## Unreleased - 2020-xx-xx
-* Minimum supported Rust version (MSRV) is now 1.51.
+* Minimum supported Rust version (MSRV) is now 1.52.
 * Impl `Clone` for `CookieSession`. [#201]
 
 [#201]: https://github.com/actix/actix-extras/pull/201
