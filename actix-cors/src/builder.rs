@@ -95,6 +95,7 @@ impl Cors {
 
             expose_headers: AllOrSome::All,
             expose_headers_baked: None,
+
             max_age: Some(3600),
             preflight: true,
             send_wildcard: false,
@@ -544,13 +545,18 @@ where
 }
 
 /// Only call when values are guaranteed to be valid header values and set is not empty.
-fn intersperse_header_values<T>(val_set: &HashSet<T>) -> HeaderValue
+pub(crate) fn intersperse_header_values<T>(val_set: &HashSet<T>) -> HeaderValue
 where
     T: AsRef<str>,
 {
+    debug_assert!(
+        !val_set.is_empty(),
+        "only call `intersperse_header_values` when set is not empty"
+    );
+
     val_set
         .iter()
-        .fold(String::with_capacity(32), |mut acc, val| {
+        .fold(String::with_capacity(64), |mut acc, val| {
             acc.push_str(", ");
             acc.push_str(val.as_ref());
             acc
