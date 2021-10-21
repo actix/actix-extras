@@ -124,7 +124,6 @@ impl<T> FromRequest for ProtoBuf<T>
 where
     T: Message + Default + 'static,
 {
-    type Config = ProtoBufConfig;
     type Error = Error;
     type Future = LocalBoxFuture<'static, Result<Self, Error>>;
 
