@@ -55,7 +55,6 @@ impl std::fmt::Display for RequestId {
 }
 
 impl FromRequest for RequestId {
-    type Config = ();
     type Error = RequestIdExtractionError;
     type Future = Ready<Result<Self, Self::Error>>;
 

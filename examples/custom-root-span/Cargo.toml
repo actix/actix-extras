@@ -7,7 +7,7 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-actix-web = "4.0.0-beta.8"
+actix-web = "4.0.0-beta.10"
 opentelemetry = { version = "0.13", features = ["rt-tokio-current-thread"] }
 opentelemetry-jaeger = { version = "0.12", features = ["tokio"] }
 tracing-opentelemetry = { version = "0.12" }

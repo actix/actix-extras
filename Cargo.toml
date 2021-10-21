@@ -3,7 +3,7 @@ members = [".", "examples/opentelemetry", "examples/custom-root-span"]
 
 [package]
 name = "tracing-actix-web"
-version = "0.4.0-beta.14"
+version = "0.4.0-beta.15"
 authors = ["Luca Palmieri <rust@lpalmieri.com>"]
 edition = "2018"
 
@@ -27,7 +27,7 @@ opentelemetry_0_16 = ["opentelemetry_0_16_pkg", "tracing-opentelemetry_0_15_pkg"
 emit_event_on_error = []
 
 [dependencies]
-actix-web = { version = "=4.0.0-beta.9", default-features = false }
+actix-web = { version = "=4.0.0-beta.10", default-features = false }
 pin-project = "1.0.0"
 tracing = "0.1.19"
 tracing-futures = "0.2.4"

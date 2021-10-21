@@ -47,7 +47,6 @@ impl From<RootSpan> for Span {
 }
 
 impl FromRequest for RootSpan {
-    type Config = ();
     type Error = RootSpanExtractionError;
     type Future = Ready<Result<Self, Self::Error>>;
 
