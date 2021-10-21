@@ -105,7 +105,6 @@ impl BasicAuth {
 
 impl FromRequest for BasicAuth {
     type Future = Ready<Result<Self, Self::Error>>;
-    type Config = Config;
     type Error = AuthenticationError<Challenge>;
 
     fn from_request(req: &HttpRequest, _: &mut Payload) -> <Self as FromRequest>::Future {
@@ -115,7 +114,7 @@ impl FromRequest for BasicAuth {
                 .map_err(|_| {
                     // TODO: debug! the original error
                     let challenge = req
-                        .app_data::<Self::Config>()
+                        .app_data::<Config>()
                         .map(|config| config.0.clone())
                         // TODO: Add trace! about `Default::default` call
                         .unwrap_or_else(Default::default);

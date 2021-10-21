@@ -2,6 +2,7 @@
 
 ## Unreleased - 2020-xx-xx
 * Minimum supported Rust version (MSRV) is now 1.52.
+* Fix FromRequest for BasicAuth and BearerAuth.
 
 
 ## 0.6.0-beta.2 - 2020-06-27
