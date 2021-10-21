@@ -1,6 +1,6 @@
 [package]
 name = "actix-cors"
-version = "0.6.0-beta.2"
+version = "0.6.0-beta.3"
 authors = [
     "Nikolay Kim <fafhrd91@gmail.com>",
     "Rob Ede <robjtede@icloud.com>",
@@ -8,7 +8,7 @@ authors = [
 description = "Cross-Origin Resource Sharing (CORS) controls for Actix Web"
 keywords = ["actix", "cors", "web", "security", "crossorigin"]
 homepage = "https://actix.rs"
-repository = "https://github.com/actix/actix-extras"
+repository = "https://github.com/actix/actix-extras.git"
 license = "MIT OR Apache-2.0"
 edition = "2018"
 

@@ -1,6 +1,9 @@
 # Changes
 
 ## Unreleased - 2021-xx-xx
+
+
+## 0.6.0-beta.3 - 2021-10-21
 * Make `Cors` middleware generic over body type [#195]
 * Fix `expose_any_header` behavior. [#204]
 * Update `actix-web` dependency to v4.0.0-beta.10. [#203]
