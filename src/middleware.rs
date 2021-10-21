@@ -1,6 +1,7 @@
 use crate::{DefaultRootSpanBuilder, RequestId, RootSpan, RootSpanBuilder};
 use actix_web::body::{BodySize, MessageBody};
 use actix_web::dev::{Service, ServiceRequest, ServiceResponse, Transform};
+use actix_web::http::StatusCode;
 use actix_web::web::Bytes;
 use actix_web::{Error, HttpMessage, ResponseError};
 use std::future::{ready, Future, Ready};
@@ -238,18 +239,18 @@ fn emit_event_on_error<B: 'static>(outcome: &Result<ServiceResponse<B>, actix_we
     match outcome {
         Ok(response) => {
             if let Some(err) = response.response().error() {
-                emit_error_event(err.as_response_error())
+                // use the status code already constructed for the outgoing HTTP response
+                emit_error_event(err.as_response_error(), response.status())
             }
         }
         Err(error) => {
             let response_error = error.as_response_error();
-            emit_error_event(response_error)
+            emit_error_event(response_error, response_error.status_code())
         }
     }
 }
 
-fn emit_error_event(response_error: &dyn ResponseError) {
-    let status_code = response_error.status_code();
+fn emit_error_event(response_error: &dyn ResponseError, status_code: StatusCode) {
     let error_msg_prefix = "Error encountered while processing the incoming HTTP request";
     if status_code.is_client_error() {
         tracing::warn!("{}: {:?}", error_msg_prefix, response_error);

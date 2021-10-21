@@ -1,6 +1,7 @@
 use crate::root_span;
 use actix_web::dev::{ServiceRequest, ServiceResponse};
-use actix_web::Error;
+use actix_web::http::StatusCode;
+use actix_web::{Error, ResponseError};
 use tracing::Span;
 
 /// `RootSpanBuilder` allows you to customise the root span attached by
@@ -43,29 +44,30 @@ impl RootSpanBuilder for DefaultRootSpanBuilder {
         match &outcome {
             Ok(response) => {
                 if let Some(error) = response.response().error() {
-                    handle_error(span, error)
+                    // use the status code already constructed for the outgoing HTTP response
+                    handle_error(span, response.status(), error.as_response_error());
                 } else {
                     let code: i32 = response.response().status().as_u16().into();
                     span.record("http.status_code", &code);
                     span.record("otel.status_code", &"OK");
                 }
             }
-            Err(error) => handle_error(span, error),
+            Err(error) => {
+                let response_error = error.as_response_error();
+                handle_error(span, response_error.status_code(), response_error);
+            }
         };
     }
 }
 
-fn handle_error(span: Span, error: &actix_web::Error) {
-    let response_error = error.as_response_error();
-
+fn handle_error(span: Span, status_code: StatusCode, response_error: &dyn ResponseError) {
     // pre-formatting errors is a workaround for https://github.com/tokio-rs/tracing/issues/1565
     let display = format!("{}", response_error);
     let debug = format!("{:?}", response_error);
     span.record("exception.message", &tracing::field::display(display));
     span.record("exception.details", &tracing::field::display(debug));
-
-    let status_code = response_error.status_code();
     let code: i32 = status_code.as_u16().into();
+
     span.record("http.status_code", &code);
 
     if status_code.is_client_error() {
