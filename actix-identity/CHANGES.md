@@ -1,17 +1,17 @@
 # Changes
 
-## Unreleased - 2020-xx-xx
+## Unreleased - 2021-xx-xx
 * Update `actix-web` dependency to v4.0.0-beta.10. [#203]
 * Minimum supported Rust version (MSRV) is now 1.52.
 
 [#203]: https://github.com/actix/actix-extras/pull/203
 
 
-## 0.4.0-beta.2 - 2020-06-27
+## 0.4.0-beta.2 - 2021-06-27
 * No notable changes.
 
 
-## 0.4.0-beta.1 - 2020-04-02
+## 0.4.0-beta.1 - 2021-04-02
 * Rename `CookieIdentityPolicy::{max_age => max_age_secs}`. [#168]
 * Rename `CookieIdentityPolicy::{max_age_time => max_age}`. [#168]
 * Update `actix-web` dependency to 4.0.0 beta.

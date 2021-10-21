@@ -1,6 +1,9 @@
 # Changes
 
-## Unreleased - 2020-xx-xx
+## Unreleased - 2021-xx-xx
+
+
+## 0.5.0-beta.3 - 2021-10-21
 * Impl `Clone` for `CookieSession`. [#201]
 * Update `actix-web` dependency to v4.0.0-beta.10. [#203]
 * Minimum supported Rust version (MSRV) is now 1.52.
@@ -9,11 +12,11 @@
 [#203]: https://github.com/actix/actix-extras/pull/203
 
 
-## 0.5.0-beta.2 - 2020-06-27
+## 0.5.0-beta.2 - 2021-06-27
 * No notable changes.
 
 
-## 0.5.0-beta.1 - 2020-04-02
+## 0.5.0-beta.1 - 2021-04-02
 * Add `Session::entries`. [#170]
 * Rename `Session::{set => insert}` to match standard hash map naming. [#170]
 * Return values from `Session::remove`. [#170]
@@ -26,7 +29,7 @@
 [#170]: https://github.com/actix/actix-extras/pull/170
 
 
-## 0.4.1 - 2020-03-21
+## 0.4.1 - 2021-03-21
 * `Session::set_session` takes a `IntoIterator` instead of `Iterator`. [#105]
 * Fix calls to `session.purge()` from paths other than the one specified in the cookie. [#129]
 
