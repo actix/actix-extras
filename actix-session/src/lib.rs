@@ -307,7 +307,6 @@ impl Session {
 impl FromRequest for Session {
     type Error = Error;
     type Future = Ready<Result<Session, Error>>;
-    type Config = ();
 
     #[inline]
     fn from_request(req: &HttpRequest, _: &mut Payload) -> Self::Future {
@@ -321,8 +320,8 @@ mod tests {
 
     use super::*;
 
-    #[test]
-    fn session() {
+    #[actix_web::test]
+    async fn session() {
         let mut req = test::TestRequest::default().to_srv_request();
 
         Session::set_session(
@@ -342,8 +341,8 @@ mod tests {
         assert_eq!(changes, [("key2".to_string(), "\"value2\"".to_string())]);
     }
 
-    #[test]
-    fn get_session() {
+    #[actix_web::test]
+    async fn get_session() {
         let mut req = test::TestRequest::default().to_srv_request();
 
         Session::set_session(
@@ -356,8 +355,8 @@ mod tests {
         assert_eq!(res, Some(true));
     }
 
-    #[test]
-    fn get_session_from_request_head() {
+    #[actix_web::test]
+    async fn get_session_from_request_head() {
         let mut req = test::TestRequest::default().to_srv_request();
 
         Session::set_session(
@@ -370,8 +369,8 @@ mod tests {
         assert_eq!(res, Some(10));
     }
 
-    #[test]
-    fn purge_session() {
+    #[actix_web::test]
+    async fn purge_session() {
         let req = test::TestRequest::default().to_srv_request();
         let session = Session::get_session(&mut *req.extensions_mut());
         assert_eq!(session.0.borrow().status, SessionStatus::Unchanged);
@@ -379,8 +378,8 @@ mod tests {
         assert_eq!(session.0.borrow().status, SessionStatus::Purged);
     }
 
-    #[test]
-    fn renew_session() {
+    #[actix_web::test]
+    async fn renew_session() {
         let req = test::TestRequest::default().to_srv_request();
         let session = Session::get_session(&mut *req.extensions_mut());
         assert_eq!(session.0.borrow().status, SessionStatus::Unchanged);
@@ -388,8 +387,8 @@ mod tests {
         assert_eq!(session.0.borrow().status, SessionStatus::Renewed);
     }
 
-    #[test]
-    fn session_entries() {
+    #[actix_web::test]
+    async fn session_entries() {
         let session = Session(Rc::new(RefCell::new(SessionInner::default())));
         session.insert("test_str", "val").unwrap();
         session.insert("test_num", 1).unwrap();

@@ -103,7 +103,6 @@ impl BearerAuth {
 }
 
 impl FromRequest for BearerAuth {
-    type Config = Config;
     type Future = Ready<Result<Self, Self::Error>>;
     type Error = AuthenticationError<bearer::Bearer>;
 
@@ -113,7 +112,7 @@ impl FromRequest for BearerAuth {
                 .map(|auth| BearerAuth(auth.into_scheme()))
                 .map_err(|_| {
                     let bearer = req
-                        .app_data::<Self::Config>()
+                        .app_data::<Config>()
                         .map(|config| config.0.clone())
                         .unwrap_or_else(Default::default);
 

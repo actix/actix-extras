@@ -17,7 +17,7 @@ name = "actix_cors"
 path = "src/lib.rs"
 
 [dependencies]
-actix-web = { version = "4.0.0-beta.8", default-features = false }
+actix-web = { version = "4.0.0-beta.10", default-features = false }
 actix-service = "2.0.0"
 
 derive_more = "0.99.5"

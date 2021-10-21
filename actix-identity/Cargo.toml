@@ -15,12 +15,12 @@ path = "src/lib.rs"
 
 [dependencies]
 actix-service = "2.0.0"
-actix-web = { version = "4.0.0-beta.8", default-features = false, features = ["cookies", "secure-cookies"] }
+actix-web = { version = "4.0.0-beta.10", default-features = false, features = ["cookies", "secure-cookies"] }
 futures-util = { version = "0.3.7", default-features = false }
 serde = "1.0"
 serde_json = "1.0"
 time = "0.2.23"
 
 [dev-dependencies]
-actix-http = "3.0.0-beta.8"
+actix-http = "3.0.0-beta.11"
 actix-rt = "2"
