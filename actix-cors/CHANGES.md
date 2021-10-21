@@ -2,11 +2,13 @@
 
 ## Unreleased - 2021-xx-xx
 * Make `Cors` middleware generic over body type [#195]
+* Fix `expose_any_header` behavior. [#204]
 * Update `actix-web` dependency to v4.0.0-beta.10. [#203]
 * Minimum supported Rust version (MSRV) is now 1.52.
 
 [#195]: https://github.com/actix/actix-extras/pull/195
 [#203]: https://github.com/actix/actix-extras/pull/203
+[#204]: https://github.com/actix/actix-extras/pull/204
 
 
 ## 0.6.0-beta.2 - 2021-06-27

@@ -1,4 +1,4 @@
-use std::{convert::TryInto, error::Error as StdError, rc::Rc};
+use std::{collections::HashSet, convert::TryInto, error::Error as StdError, rc::Rc};
 
 use actix_web::{
     body::{AnyBody, MessageBody},
@@ -13,7 +13,7 @@ use actix_web::{
 use futures_util::future::{ok, Either, FutureExt as _, LocalBoxFuture, Ready, TryFutureExt as _};
 use log::debug;
 
-use crate::Inner;
+use crate::{builder::intersperse_header_values, AllOrSome, Inner};
 
 /// Service wrapper for Cross-Origin Resource Sharing support.
 ///
@@ -78,8 +78,34 @@ impl<S> CorsMiddleware<S> {
         };
 
         if let Some(ref expose) = inner.expose_headers_baked {
+            log::trace!("exposing selected headers: {:?}", expose);
+
             res.headers_mut()
                 .insert(header::ACCESS_CONTROL_EXPOSE_HEADERS, expose.clone());
+        } else if matches!(inner.expose_headers, AllOrSome::All) {
+            // intersperse_header_values requires that argument is non-empty
+            if !res.request().headers().is_empty() {
+                // extract header names from request
+                let expose_all_request_headers = res
+                    .request()
+                    .headers()
+                    .keys()
+                    .into_iter()
+                    .map(|name| name.as_str())
+                    .collect::<HashSet<_>>();
+
+                // create comma separated string of header names
+                let expose_headers_value = intersperse_header_values(&expose_all_request_headers);
+
+                log::trace!(
+                    "exposing all headers from request: {:?}",
+                    expose_headers_value
+                );
+
+                // add header names to expose response header
+                res.headers_mut()
+                    .insert(header::ACCESS_CONTROL_EXPOSE_HEADERS, expose_headers_value);
+            }
         }
 
         if inner.supports_credentials {

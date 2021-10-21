@@ -416,3 +416,32 @@ async fn test_allow_any_origin_any_method_any_header() {
     let resp = test::call_service(&cors, req).await;
     assert_eq!(resp.status(), StatusCode::OK);
 }
+
+#[actix_web::test]
+async fn expose_all_request_header_values() {
+    let cors = Cors::permissive()
+        .new_transform(test::ok_service())
+        .await
+        .unwrap();
+
+    let req = TestRequest::default()
+        .insert_header((header::ORIGIN, "https://www.example.com"))
+        .insert_header((header::ACCESS_CONTROL_REQUEST_METHOD, "POST"))
+        .insert_header((header::ACCESS_CONTROL_REQUEST_HEADERS, "content-type"))
+        .insert_header(("X-XSRF-TOKEN", "xsrf-token"))
+        .to_srv_request();
+
+    let resp = test::call_service(&cors, req).await;
+
+    assert!(resp
+        .headers()
+        .contains_key(header::ACCESS_CONTROL_EXPOSE_HEADERS));
+
+    assert!(resp
+        .headers()
+        .get(header::ACCESS_CONTROL_EXPOSE_HEADERS)
+        .unwrap()
+        .to_str()
+        .unwrap()
+        .contains("xsrf-token"));
+}
