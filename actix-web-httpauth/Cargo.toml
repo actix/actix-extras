@@ -22,6 +22,7 @@ actix-web = { version = "4.0.0-beta.10", default_features = false }
 actix-service = "2.0.0"
 base64 = "0.13"
 futures-util = { version = "0.3.7", default-features = false }
+pin-project-lite = "0.2.7"
 
 [dev-dependencies]
 actix-cors = "0.6.0-beta.3"

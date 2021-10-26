@@ -247,8 +247,8 @@ mod tests {
     use super::*;
     use crate::extractors::bearer::BearerAuth;
     use actix_service::{into_service, Service};
-    use actix_web::error;
     use actix_web::test::TestRequest;
+    use actix_web::{error, HttpResponse};
 
     /// This is a test for https://github.com/actix/actix-extras/issues/10
     #[actix_rt::test]
@@ -308,5 +308,55 @@ mod tests {
         assert!(f1.is_err());
         assert!(f2.is_err());
         assert!(f3.is_err());
+    }
+
+    #[actix_rt::test]
+    async fn test_middleware_opt_extractor() {
+        let middleware = AuthenticationMiddleware {
+            service: Rc::new(into_service(|req: ServiceRequest| async move {
+                Ok::<ServiceResponse, _>(req.into_response(HttpResponse::Ok().finish()))
+            })),
+            process_fn: Arc::new(|req, auth: Option<BearerAuth>| {
+                assert!(auth.is_none());
+                async { Ok(req) }
+            }),
+            _extractor: PhantomData,
+        };
+
+        let req = TestRequest::get()
+            .append_header(("Authorization996", "Bearer 1"))
+            .to_srv_request();
+
+        let f = middleware.call(req).await;
+
+        let _res = futures_util::future::lazy(|cx| middleware.poll_ready(cx)).await;
+
+        assert!(f.is_ok());
+    }
+
+    #[actix_rt::test]
+    async fn test_middleware_res_extractor() {
+        let middleware = AuthenticationMiddleware {
+            service: Rc::new(into_service(|req: ServiceRequest| async move {
+                Ok::<ServiceResponse, _>(req.into_response(HttpResponse::Ok().finish()))
+            })),
+            process_fn: Arc::new(
+                |req, auth: Result<BearerAuth, <BearerAuth as AuthExtractor>::Error>| {
+                    assert!(auth.is_err());
+                    async { Ok(req) }
+                },
+            ),
+            _extractor: PhantomData,
+        };
+
+        let req = TestRequest::get()
+            .append_header(("Authorization", "BearerLOL"))
+            .to_srv_request();
+
+        let f = middleware.call(req).await;
+
+        let _res = futures_util::future::lazy(|cx| middleware.poll_ready(cx)).await;
+
+        assert!(f.is_ok());
     }
 }
