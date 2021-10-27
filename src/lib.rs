@@ -8,7 +8,7 @@
 //! ```toml
 //! [dependencies]
 //! # ...
-//! tracing-actix-web = "0.4.0-beta.16"
+//! tracing-actix-web = "0.5.0-beta.1"
 //! tracing = "0.1"
 //! actix-web = "4.0.0-beta.10"
 //! ```
@@ -21,7 +21,7 @@
 //! - `opentelemetry_0_16`: same as above but using `opentelemetry` 0.16;
 //! - `emit_event_on_error`: emit a [`tracing`] event when request processing fails with an error (enabled by default).
 //!
-//! `tracing-actix-web` will release `0.4.0`, going out of beta, as soon as `actix-web` releases a stable `4.0.0`.
+//! `tracing-actix-web` will release `0.5.0`, going out of beta, as soon as `actix-web` releases a stable `4.0.0`.
 //!
 //! # Getting started
 //!
