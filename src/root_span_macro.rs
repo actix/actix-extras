@@ -123,6 +123,10 @@ pub mod private {
     pub use tracing;
 
     #[doc(hidden)]
+    // We need to allow unused variables because the function
+    // body is empty if the user of the library chose not to activate
+    // any OTEL feature.
+    #[allow(unused_variables)]
     pub fn set_otel_parent(req: &ServiceRequest, span: &tracing::Span) {
         #[cfg(any(
             feature = "opentelemetry_0_13",
