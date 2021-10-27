@@ -97,12 +97,11 @@ macro_rules! root_span {
             );
             std::mem::drop(connection_info);
 
-            #[cfg(any(
-                feature = "opentelemetry_0_13",
-                feature = "opentelemetry_0_14",
-                feature = "opentelemetry_0_15",
-                feature = "opentelemetry_0_16"
-            ))]
+            // Previously, this line was instrumented with an opentelemetry-specific feature
+            // flag check. However, this resulted in the feature flags being resolved in the crate
+            // which called `root_span!` as opposed to being resolved by this crate as expected.
+            // Therefore, this function simply wraps an internal function with the feature flags
+            // to ensure that the flags are resolved against this crate.
             $crate::root_span_macro::private::set_otel_parent(&$request, &span);
 
             span
@@ -123,14 +122,14 @@ pub mod private {
 
     pub use tracing;
 
-    #[cfg(any(
-        feature = "opentelemetry_0_13",
-        feature = "opentelemetry_0_14",
-        feature = "opentelemetry_0_15",
-        feature = "opentelemetry_0_16"
-    ))]
     #[doc(hidden)]
     pub fn set_otel_parent(req: &ServiceRequest, span: &tracing::Span) {
+        #[cfg(any(
+            feature = "opentelemetry_0_13",
+            feature = "opentelemetry_0_14",
+            feature = "opentelemetry_0_15",
+            feature = "opentelemetry_0_16"
+        ))]
         crate::otel::set_otel_parent(req, span);
     }
 
