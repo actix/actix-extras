@@ -7,11 +7,11 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-actix-web = "4.0.0-beta.10"
-opentelemetry = { version = "0.13", features = ["rt-tokio-current-thread"] }
-opentelemetry-jaeger = { version = "0.12", features = ["tokio"] }
-tracing-opentelemetry = { version = "0.12" }
+actix-web = "4.0.0-beta.11"
+opentelemetry = { version = "0.16", features = ["rt-tokio-current-thread"] }
+opentelemetry-jaeger = { version = "0.15", features = ["rt-tokio-current-thread"] }
+tracing-opentelemetry = { version = "0.16" }
 tracing = "0.1.19"
-tracing-subscriber = { version = "0.2.12", features = ["registry", "env-filter"] }
-tracing-bunyan-formatter = "0.1.6"
+tracing-subscriber = { version = "0.3", features = ["registry", "env-filter"] }
+tracing-bunyan-formatter = "0.3"
 tracing-actix-web = { path = "../.." }
