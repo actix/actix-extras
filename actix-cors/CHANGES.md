@@ -3,6 +3,10 @@
 ## Unreleased - 2021-xx-xx
 
 
+## 0.6.0-beta.4 - 2021-11-22
+* No significant changes since `0.6.0-beta.3`.
+
+
 ## 0.6.0-beta.3 - 2021-10-21
 * Make `Cors` middleware generic over body type [#195]
 * Fix `expose_any_header` behavior. [#204]
