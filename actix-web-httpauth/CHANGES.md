@@ -1,6 +1,14 @@
 # Changes
 
 ## Unreleased - 2021-xx-xx
+
+
+## 0.6.0-beta.4 - 2021-11-22
+* impl `AuthExtractor` trait for `Option<T: AuthExtractor>` and `Result<T: AuthExtractor, T::Error>`. [#205]
+
+[#205]: https://github.com/actix/actix-extras/pull/205
+
+
 * impl `AuthExtractor` trait for `Option<T: AuthExtractor>` and `Result<T: AuthExtractor, T::Error>`. [#205]
 
 [#205]: https://github.com/actix/actix-extras/pull/205
