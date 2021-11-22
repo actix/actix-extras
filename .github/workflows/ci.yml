@@ -140,15 +140,11 @@ jobs:
 
       - name: check minimal + tests
         uses: actions-rs/cargo@v1
-        with: { command: ci-min-test }
+        with: { command: ci-check-min-tests }
 
       - name: check default
         uses: actions-rs/cargo@v1
-        with: { command: ci-default }
-
-      - name: check full
-        uses: actions-rs/cargo@v1
-        with: { command: ci-full }
+        with: { command: ci-check }
 
       - name: tests
         uses: actions-rs/cargo@v1
