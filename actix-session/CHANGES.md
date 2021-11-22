@@ -3,6 +3,10 @@
 ## Unreleased - 2021-xx-xx
 
 
+## 0.5.0-beta.4 - 2021-11-22
+* No significant changes since `0.5.0-beta.3`.
+
+
 ## 0.5.0-beta.3 - 2021-10-21
 * Impl `Clone` for `CookieSession`. [#201]
 * Update `actix-web` dependency to v4.0.0-beta.10. [#203]
