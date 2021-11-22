@@ -57,7 +57,6 @@ where
     /// Construct `HttpAuthentication` middleware for the HTTP "Basic" authentication scheme.
     ///
     /// # Example
-    ///
     /// ```
     /// # use actix_web::Error;
     /// # use actix_web::dev::ServiceRequest;
@@ -89,7 +88,6 @@ where
     /// Construct `HttpAuthentication` middleware for the HTTP "Bearer" authentication scheme.
     ///
     /// # Example
-    ///
     /// ```
     /// # use actix_web::Error;
     /// # use actix_web::dev::ServiceRequest;
@@ -187,7 +185,7 @@ where
             service
                 .call(req)
                 .await
-                .map(|res| res.map_body(|_, body| AnyBody::from_message(body)))
+                .map(|res| res.map_body(|_, body| AnyBody::new_boxed(body)))
         }
         .boxed_local()
     }

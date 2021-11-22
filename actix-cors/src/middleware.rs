@@ -180,7 +180,7 @@ where
                     res
                 }
             }
-            .map_ok(|res| res.map_body(|_, body| AnyBody::from_message(body)))
+            .map_ok(|res| res.map_body(|_, body| AnyBody::new_boxed(body)))
             .boxed_local();
 
             Either::Right(res)

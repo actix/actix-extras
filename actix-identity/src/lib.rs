@@ -129,7 +129,7 @@ mod tests {
         f: F,
     ) -> impl actix_service::Service<
         actix_http::Request,
-        Response = ServiceResponse<actix_web::body::Body>,
+        Response = ServiceResponse<actix_web::body::AnyBody>,
         Error = Error,
     > {
         test::init_service(

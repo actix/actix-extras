@@ -378,7 +378,7 @@ where
             };
 
             match result {
-                Ok(()) => Ok(res.map_body(|_, body| AnyBody::from_message(body))),
+                Ok(()) => Ok(res.map_body(|_, body| AnyBody::new_boxed(body))),
                 Err(error) => Ok(res.error_response(error)),
             }
         }

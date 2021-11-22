@@ -103,17 +103,17 @@ where
 
                     if let Some(id) = id {
                         match backend.to_response(id.id, id.changed, &mut res).await {
-                            Ok(_) => Ok(res.map_body(|_, body| AnyBody::from_message(body))),
+                            Ok(_) => Ok(res.map_body(|_, body| AnyBody::new_boxed(body))),
                             Err(e) => Ok(res.error_response(e)),
                         }
                     } else {
-                        Ok(res.map_body(|_, body| AnyBody::from_message(body)))
+                        Ok(res.map_body(|_, body| AnyBody::new_boxed(body)))
                     }
                 }
                 Err(err) => Ok(req.error_response(err)),
             }
         }
-        .map_ok(|res| res.map_body(|_, body| AnyBody::from_message(body)))
+        .map_ok(|res| res.map_body(|_, body| AnyBody::new_boxed(body)))
         .boxed_local()
     }
 }
