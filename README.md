@@ -28,16 +28,18 @@
 
 `tracing-actix-web` provides [`TracingLogger`], a middleware to collect telemetry data from applications built on top of the [`actix-web`] framework.
 
-# How to install
+# Getting started 
+
+## How to install
 
 Add `tracing-actix-web` to your dependencies:
 
 ```toml
 [dependencies]
 # ...
-tracing-actix-web = "0.5.0-beta.2"
+tracing-actix-web = "0.5.0-beta.3"
 tracing = "0.1"
-actix-web = "4.0.0-beta.11"
+actix-web = "4.0.0-beta.12"
 ```
 
 `tracing-actix-web` exposes three feature flags:
@@ -50,7 +52,7 @@ actix-web = "4.0.0-beta.11"
 
 `tracing-actix-web` will release `0.5.0`, going out of beta, as soon as `actix-web` releases a stable `4.0.0`.
 
-# Getting started
+## Quickstart
 
 ```rust,compile_fail
 use actix_web::{App, web, HttpServer};
@@ -71,7 +73,9 @@ fn main() {
 Check out [the examples on GitHub](https://github.com/LukeMathWalker/tracing-actix-web/tree/main/examples) to get a taste of how [`TracingLogger`] can be used to observe and monitor your
 application.  
 
-# `tracing`: who art thou?
+# From zero to hero: a crash course in observability
+
+## `tracing`: who art thou?
 
 [`TracingLogger`] is built on top of [`tracing`], a modern instrumentation framework with
 [a vibrant ecosystem](https://github.com/tokio-rs/tracing#related-crates).
@@ -80,7 +84,7 @@ application.
 If you want to learn more check out ["Are we observable yet?"](https://www.lpalmieri.com/posts/2020-09-27-zero-to-production-4-are-we-observable-yet/) -
 it provides an in-depth introduction to the crate and the problems it solves within the bigger picture of [observability](https://docs.honeycomb.io/learning-about-observability/).
 
-# The root span
+## The root span
 
 [`tracing::Span`] is the key abstraction in [`tracing`]: it represents a unit of work in your system.  
 A [`tracing::Span`] has a beginning and an end. It can include one or more **child spans** to represent sub-unit
@@ -93,7 +97,7 @@ All the spans created _while_ processing the request will be children of the roo
 Those properties can then be queried in a variety of tools (e.g. ElasticSearch, Honeycomb, DataDog) to
 understand what is happening in your system.  
 
-# Customisation via [`RootSpanBuilder`]
+## Customisation via [`RootSpanBuilder`]
 
 Troubleshooting becomes much easier when the root span has a _rich context_ - e.g. you can understand most of what
 happened when processing the request just by looking at the properties attached to the corresponding root span.  
@@ -178,7 +182,7 @@ We need to use a macro because `tracing` requires all the properties attached to
 You cannot add new ones afterwards. This makes it extremely fast, but it pushes us to reach for macros when we need some level of
 composition.
 
-# The [`RootSpan`] extractor
+## The [`RootSpan`] extractor
 
 It often happens that not all information about a task is known upfront, encoded in the incoming request.  
 You can use the [`RootSpan`] extractor to grab the root span in your handlers and attach more information
@@ -222,7 +226,9 @@ impl RootSpanBuilder for DomainRootSpanBuilder {
 }
 ```
 
-# The [`RequestId`] extractor
+# Unique identifiers
+
+## Request Id
 
 `tracing-actix-web` generates a unique identifier for each incoming request, the **request id**.  
 
@@ -239,23 +245,24 @@ async fn index(request_id: RequestId) -> String {
 }
 ```
 
-# OpenTelemetry integration
+The request id is meant to identify all operations related to a particular request **within the boundary of your API**.  
+If you need to **trace** a request across multiple services (e.g. in a microservice architecture), you want to look at the `trace_id` field - see the next section on OpenTelemetry for more details.
 
+## Trace Id
+
+To fulfill a request you often have to perform additional I/O operations - e.g. calls to other REST or gRPC APIs, database queries, etc.  
+**Distributed tracing** is the standard approach to **trace** a single request across the entirety of your stack.
+
+`tracing-actix-web` provides support for distributed tracing by supporting the [OpenTelemetry standard](https://opentelemetry.io/).  
 `tracing-actix-web` follows [OpenTelemetry's semantic convention](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/overview.md#spancontext)
 for field names.  
-Furthermore, if you have not disabled the `opentelemetry_0_13` or `opentelemetry_0_14` feature flags, `tracing-actix-web` automatically
-performs trace propagation according to the OpenTelemetry standard.
-It tries to extract the OpenTelemetry context out of the headers of incoming requests and, when it finds one, it sets
-it as the remote context for the current root span.
+Furthermore, it provides an `opentelemetry_0_16` feature flag to automatically performs trace propagation: it tries to extract the OpenTelemetry context out of the headers of incoming requests and, when it finds one, it sets it as the remote context for the current root span. The context is then propagated to your downstream dependencies if your HTTP or gRPC clients are OpenTelemetry-aware - e.g. using [`reqwest-middleware` and `reqwest-tracing`](https://github.com/TrueLayer/reqwest-middleware) if you are using `reqwest` as your HTTP client.  
+You can then find all logs for the same request across all the services it touched by looking for the `trace_id`, automatically logged by `tracing-actix-web`.
 
-If you add [`tracing-opentelemetry::OpenTelemetryLayer`](https://docs.rs/tracing-opentelemetry/0.12.0/tracing_opentelemetry/struct.OpenTelemetryLayer.html)
+If you add [`tracing-opentelemetry::OpenTelemetryLayer`](https://docs.rs/tracing-opentelemetry/0.16.0/tracing_opentelemetry/struct.OpenTelemetryLayer.html)
 in your `tracing::Subscriber` you will be able to export the root span (and all its children) as OpenTelemetry spans.
 
 Check out the [relevant example in the GitHub repository](https://github.com/LukeMathWalker/tracing-actix-web/tree/main/examples/opentelemetry) for reference.
-
-You can find an alternative integration of `actix-web` with OpenTelemetry in [`actix-web-opentelemetry`](https://github.com/OutThereLabs/actix-web-opentelemetry)
-- parts of this project were heavily inspired by their implementation. They provide support for metrics
-and instrumentation for the `awc` HTTP client, both out of scope for `tracing-actix-web`.
 
 # License
 
