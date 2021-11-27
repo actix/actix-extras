@@ -170,13 +170,10 @@ where
             let mut res = srv.call(req).await?;
 
             match Session::get_changes(&mut res) {
-                (SessionStatus::Unchanged, state) => {
-                    if value.is_none() {
-                        // implies the session is new
-                        inner.update(res, state, value).await
-                    } else {
-                        Ok(res)
-                    }
+                (SessionStatus::Unchanged, _) => {
+                    // If the session already exists, we don't need to update the state stored in Redis
+                    // If the session is new, creating an empty session in Redis is unnecessary overhead
+                    Ok(res)
                 }
 
                 (SessionStatus::Changed, state) => inner.update(res, state, value).await,
@@ -527,8 +524,9 @@ mod test {
         // Step 3:  GET index, including session cookie #1 in request
         //   - set-cookie will *not* be in response
         //   - response should be: {"counter": 1, "user_id": None}
-        let req_3 = srv.post("/do_something").cookie(cookie_1.clone()).send();
+        let req_3 = srv.get("/").cookie(cookie_1.clone()).send();
         let mut resp_3 = req_3.await.unwrap();
+        assert!(resp_3.cookies().unwrap().is_empty());
         let result_3 = resp_3.json::<IndexResponse>().await.unwrap();
         assert_eq!(
             result_3,
