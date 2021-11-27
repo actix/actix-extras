@@ -453,14 +453,14 @@ mod test {
     #[actix_rt::test]
     async fn test_session_workflow() {
         // Step 1:  GET index
-        //   - set-cookie actix-session will be in response (session cookie #1)
+        //   - set-cookie actix-session should NOT be in response (session data is empty)
         //   - response should be: {"counter": 0, "user_id": None}
-        //   - cookie should have default max-age of 7 days
-        // Step 2:  GET index, including session cookie #1 in request
-        //   - set-cookie will *not* be in response
-        //   - response should be: {"counter": 0, "user_id": None}
-        // Step 3: POST to do_something, including session cookie #1 in request
+        // Step 2: POST to do_something
         //   - adds new session state in redis:  {"counter": 1}
+        //   - set-cookie actix-session should be in response (session cookie #1)
+        //   - response should be: {"counter": 1, "user_id": None}
+        // Step 3:  GET index, including session cookie #1 in request
+        //   - set-cookie will *not* be in response
         //   - response should be: {"counter": 1, "user_id": None}
         // Step 4: POST again to do_something, including session cookie #1 in request
         //   - updates session state in redis:  {"counter": 2}
@@ -480,6 +480,7 @@ mod test {
         //   - set-cookie actix-session will be in response with session cookie #2
         //     invalidation logic
         // Step 10: GET index, including session cookie #2 in request
+        //   CHECK WHAT HAPPENS
         //   - set-cookie actix-session will be in response (session cookie #3)
         //   - response should be: {"counter": 0, "user_id": None}
 
@@ -494,17 +495,11 @@ mod test {
         });
 
         // Step 1:  GET index
-        //   - set-cookie actix-session will be in response (session cookie #1)
+        //   - set-cookie actix-session should NOT be in response (session data is empty)
         //   - response should be: {"counter": 0, "user_id": None}
         let req_1a = srv.get("/").send();
         let mut resp_1 = req_1a.await.unwrap();
-        let cookie_1 = resp_1
-            .cookies()
-            .unwrap()
-            .clone()
-            .into_iter()
-            .find(|c| c.name() == "test-session")
-            .unwrap();
+        assert!(resp_1.cookies().unwrap().is_empty());
         let result_1 = resp_1.json::<IndexResponse>().await.unwrap();
         assert_eq!(
             result_1,
@@ -513,23 +508,24 @@ mod test {
                 counter: 0
             }
         );
-        assert_eq!(cookie_1.max_age(), Some(Duration::days(7)));
 
-        // Step 2:  GET index, including session cookie #1 in request
-        //   - set-cookie will *not* be in response
-        //   - response should be: {"counter": 0, "user_id": None}
-        let req_2 = srv.get("/").cookie(cookie_1.clone()).send();
+        // Step 2: POST to do_something
+        //   - adds new session state in redis:  {"counter": 1}
+        //   - set-cookie actix-session should be in response (session cookie #1)
+        //   - response should be: {"counter": 1, "user_id": None}
+        let req_2 = srv.post("/do_something").send();
         let resp_2 = req_2.await.unwrap();
-        let cookie_2 = resp_2
+        let cookie_1 = resp_2
             .cookies()
             .unwrap()
             .clone()
             .into_iter()
-            .find(|c| c.name() == "test-session");
-        assert_eq!(cookie_2, None);
+            .find(|c| c.name() == "test-session")
+            .unwrap();
+        assert_eq!(cookie_1.max_age(), Some(Duration::days(7)));
 
-        // Step 3: POST to do_something, including session cookie #1 in request
-        //   - adds new session state in redis:  {"counter": 1}
+        // Step 3:  GET index, including session cookie #1 in request
+        //   - set-cookie will *not* be in response
         //   - response should be: {"counter": 1, "user_id": None}
         let req_3 = srv.post("/do_something").cookie(cookie_1.clone()).send();
         let mut resp_3 = req_3.await.unwrap();
