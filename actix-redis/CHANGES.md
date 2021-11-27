@@ -2,7 +2,7 @@
 
 ## Unreleased - 2020-xx-xx
 * Minimum supported Rust version (MSRV) is now 1.51.
-
+* A session will be created in Redis if and only if there is some data inside the session state. This reduces the performance impact of `RedisSession` on routes that do not leverage sessions.
 
 ## 0.10.0-beta.2 - 2020-06-27
 * No notable changes.
