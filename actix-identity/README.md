@@ -3,11 +3,11 @@
 > Identity service for actix-web framework.
 
 [![crates.io](https://img.shields.io/crates/v/actix-identity?label=latest)](https://crates.io/crates/actix-identity)
-[![Documentation](https://docs.rs/actix-identity/badge.svg?version=0.4.0-beta.2)](https://docs.rs/actix-identity/0.4.0-beta.2)
+[![Documentation](https://docs.rs/actix-identity/badge.svg?version=0.4.0-beta.4)](https://docs.rs/actix-identity/0.4.0-beta.4)
 ![Apache 2.0 or MIT licensed](https://img.shields.io/crates/l/actix-identity)
-[![Dependency Status](https://deps.rs/crate/actix-identity/0.4.0-beta.2/status.svg)](https://deps.rs/crate/actix-identity/0.4.0-beta.2)
+[![Dependency Status](https://deps.rs/crate/actix-identity/0.4.0-beta.4/status.svg)](https://deps.rs/crate/actix-identity/0.4.0-beta.4)
 
 ## Documentation & community resources
 
 * [API Documentation](https://docs.rs/actix-identity)
-* Minimum Supported Rust Version (MSRV): 1.51
+* Minimum Supported Rust Version (MSRV): 1.52

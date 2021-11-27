@@ -30,11 +30,13 @@ pub enum CookieSessionError {
 
 impl ResponseError for CookieSessionError {}
 
+#[derive(Copy, Clone)]
 enum CookieSecurity {
     Signed,
     Private,
 }
 
+#[derive(Clone)]
 struct CookieSessionInner {
     key: Key,
     security: CookieSecurity,
@@ -197,6 +199,7 @@ impl CookieSessionInner {
 ///         .secure(true))
 ///     .service(web::resource("/").to(|| HttpResponse::Ok()));
 /// ```
+#[derive(Clone)]
 pub struct CookieSession(Rc<CookieSessionInner>);
 
 impl CookieSession {
@@ -375,7 +378,7 @@ where
             };
 
             match result {
-                Ok(()) => Ok(res.map_body(|_, body| AnyBody::from_message(body))),
+                Ok(()) => Ok(res.map_body(|_, body| AnyBody::new_boxed(body))),
                 Err(error) => Ok(res.error_response(error)),
             }
         }

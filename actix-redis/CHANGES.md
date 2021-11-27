@@ -1,19 +1,25 @@
 # Changes
 
-## Unreleased - 2020-xx-xx
-* Minimum supported Rust version (MSRV) is now 1.51.
+## Unreleased - 2021-xx-xx
 * A session will be created in Redis if and only if there is some data inside the session state. This reduces the performance impact of `RedisSession` on routes that do not leverage sessions.
 
-## 0.10.0-beta.2 - 2020-06-27
+## 0.10.0-beta.3 - 2021-10-21
+* Update `actix-web` dependency to v4.0.0-beta.10. [#203]
+* Minimum supported Rust version (MSRV) is now 1.52.
+
+[#203]: https://github.com/actix/actix-extras/pull/203
+
+
+## 0.10.0-beta.2 - 2021-06-27
 * No notable changes.
 
 
-## 0.10.0-beta.1 - 2020-04-02
+## 0.10.0-beta.1 - 2021-04-02
 * Update `actix-web` dependency to 4.0.0 beta.
 * Minimum supported Rust version (MSRV) is now 1.46.0.
 
 
-## 0.9.2 - 2020-03-21
+## 0.9.2 - 2021-03-21
 * Implement `std::error::Error` for `Error` [#135]
 * Allow the removal of `Max-Age` for session-only cookies. [#161]
 

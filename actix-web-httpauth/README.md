@@ -3,14 +3,14 @@
 > HTTP authentication schemes for [actix-web](https://github.com/actix/actix-web).
 
 [![crates.io](https://img.shields.io/crates/v/actix-web-httpauth?label=latest)](https://crates.io/crates/actix-web-httpauth)
-[![Documentation](https://docs.rs/actix-web-httpauth/badge.svg?version=0.6.0-beta.2)](https://docs.rs/actix-web-httpauth/0.6.0-beta.2)
+[![Documentation](https://docs.rs/actix-web-httpauth/badge.svg?version=0.6.0-beta.4)](https://docs.rs/actix-web-httpauth/0.6.0-beta.4)
 ![Apache 2.0 or MIT licensed](https://img.shields.io/crates/l/actix-web-httpauth)
-[![Dependency Status](https://deps.rs/crate/actix-web-httpauth/0.6.0-beta.2/status.svg)](https://deps.rs/crate/actix-web-httpauth/0.6.0-beta.2)
+[![Dependency Status](https://deps.rs/crate/actix-web-httpauth/0.6.0-beta.4/status.svg)](https://deps.rs/crate/actix-web-httpauth/0.6.0-beta.4)
 
 ## Documentation & Resources
 
 - [API Documentation](*https://docs.rs/actix-web-httpauth/)
-- Minimum Supported Rust Version (MSRV): 1.51
+- Minimum Supported Rust Version (MSRV): 1.52
 
 ## Features
 - Typed [Authorization] and [WWW-Authenticate] headers

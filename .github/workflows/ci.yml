@@ -14,7 +14,7 @@ jobs:
         target:
           - { name: Linux, os: ubuntu-latest, triple: x86_64-unknown-linux-gnu }
         version:
-          - 1.51.0 # MSRV
+          - 1.52.1 # MSRV
           - stable
           - nightly
 
@@ -57,43 +57,16 @@ jobs:
 
       - name: check minimal + tests
         uses: actions-rs/cargo@v1
-        with: { command: ci-min-test }
+        with: { command: ci-check-min-tests }
 
       - name: check default
         uses: actions-rs/cargo@v1
-        with: { command: ci-default }
-
-      - name: check full
-        uses: actions-rs/cargo@v1
-        with: { command: ci-full }
+        with: { command: ci-check }
 
       - name: tests
         uses: actions-rs/cargo@v1
         timeout-minutes: 40
         with: { command: ci-test }
-
-        # only run on Linux due to unknown issue with running doc tests on macOS
-      - name: doc tests
-        uses: actions-rs/cargo@v1
-        timeout-minutes: 40
-        with:
-          command: ci-doctest
-          args: -- --nocapture
-
-      - name: Generate coverage file
-        if: >
-          matrix.version == 'stable'
-          && github.ref == 'refs/heads/master'
-        run: |
-          cargo install cargo-tarpaulin --vers "^0.13"
-          cargo tarpaulin --out Xml --verbose
-      - name: Upload to Codecov
-        if: >
-          matrix.version == 'stable'
-          && github.ref == 'refs/heads/master'
-        uses: codecov/codecov-action@v1
-        with:
-          file: cobertura.xml
 
       - name: Clear the cargo caches
         run: |
@@ -108,7 +81,7 @@ jobs:
           - { name: macOS, os: macos-latest, triple: x86_64-apple-darwin }
           - { name: Windows, os: windows-latest, triple: x86_64-pc-windows-msvc }
         version:
-          - 1.51.0 # MSRV
+          - 1.52.1 # MSRV
           - stable
           - nightly
 
@@ -144,15 +117,11 @@ jobs:
 
       - name: check minimal + tests
         uses: actions-rs/cargo@v1
-        with: { command: ci-min-test }
+        with: { command: ci-check-min-tests }
 
       - name: check default
         uses: actions-rs/cargo@v1
-        with: { command: ci-default }
-
-      - name: check full
-        uses: actions-rs/cargo@v1
-        with: { command: ci-full }
+        with: { command: ci-check }
 
       - name: tests
         uses: actions-rs/cargo@v1
@@ -165,3 +134,29 @@ jobs:
         run: |
           cargo install cargo-cache --version 0.6.2 --no-default-features --features ci-autoclean
           cargo-cache
+
+  doc_tests:
+    name: doc tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install Rust (nightly)
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly-x86_64-unknown-linux-gnu
+          profile: minimal
+          override: true
+
+      - name: Generate Cargo.lock
+        uses: actions-rs/cargo@v1
+        with: { command: generate-lockfile }
+      - name: Cache Dependencies
+        uses: Swatinem/rust-cache@v1.3.0
+
+      - name: doc tests
+        uses: actions-rs/cargo@v1
+        timeout-minutes: 40
+        with:
+          command: ci-doctest
+          args: -- --nocapture

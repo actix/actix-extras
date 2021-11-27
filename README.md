@@ -31,6 +31,7 @@ These crates are provided by the community.
 | [actix-web-static-files] | [![crates.io](https://img.shields.io/crates/v/actix-web-static-files?label=latest)](https://crates.io/crates/actix-web-static-files) [![Documentation](https://docs.rs/actix-web-static-files/badge.svg)](https://docs.rs/actix-web-static-files) [![dependency status](https://deps.rs/crate/actix-web-static-files/3.0.5/status.svg)](https://deps.rs/crate/actix-web-static-files/3.0.5) | Static files as embedded resources.                                              |
 | [actix-web-grants]       | [![crates.io](https://img.shields.io/crates/v/actix-web-grants?label=latest)](https://crates.io/crates/actix-web-grants) [![Documentation](https://docs.rs/actix-web-grants/badge.svg)](https://docs.rs/actix-web-grants) [![dependency status](https://deps.rs/crate/actix-web-grants/2.0.1/status.svg)](https://deps.rs/crate/actix-web-grants/2.0.1)                                     | Extension for validating user authorities.                                       |
 | [aliri_actix]            | [![crates.io](https://img.shields.io/crates/v/aliri_actix?label=latest)](https://crates.io/crates/aliri_actix) [![Documentation](https://docs.rs/aliri_actix/badge.svg)](https://docs.rs/aliri_actix) [![dependency status](https://deps.rs/crate/aliri_actix/0.5.0/status.svg)](https://deps.rs/crate/aliri_actix/0.5.0)                                                                   | Endpoint authorization and authentication using scoped OAuth2 JWT tokens.        |
+| [actix-web-flash-messages]            | [![crates.io](https://img.shields.io/crates/v/actix-web-flash-messages?label=latest)](https://crates.io/crates/actix-web-flash-messages) [![Documentation](https://docs.rs/actix-web-flash-messages/badge.svg)](https://docs.rs/actix_web_flash_messages) [![dependency status](https://deps.rs/crate/actix-web-flash-messages/0.2.0/status.svg)](https://deps.rs/crate/actix-web-flash-messages/0.2.0)                                                                   | Support for flash messages/one-time notifications in `actix-web`.        |
 
 To add a crate to this list, submit a pull request.
 
@@ -50,5 +51,6 @@ To add a crate to this list, submit a pull request.
 [actix-ip-filter]: https://github.com/jhen0409/actix-ip-filter
 [actix-web-static-files]: https://github.com/kilork/actix-web-static-files
 [actix-web-grants]: https://github.com/DDtKey/actix-web-grants
+[actix-web-flash-messages]: https://github.com/LukeMathWalker/actix-web-flash-messages
 [actix-governor]: https://github.com/AaronErhardt/actix-governor
 [aliri_actix]: https://github.com/neoeinstein/aliri
