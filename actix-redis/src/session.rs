@@ -469,16 +469,15 @@ mod test {
         //   - response should be: {"counter": 2, "user_id": "ferris"}
         // Step 7: POST again to do_something, including session cookie #2 in request
         //   - updates session state in redis: {"counter": 3, "user_id": "ferris"}
-        //   - response should be: {"counter": 2, "user_id": None}
+        //   - response should be: {"counter": 3, "user_id": "ferris"}
         // Step 8: GET index, including session cookie #1 in request
-        //   - set-cookie actix-session will be in response (session cookie #3)
+        //   - set-cookie actix-session should NOT be in response (session data is empty)
         //   - response should be: {"counter": 0, "user_id": None}
         // Step 9: POST to logout, including session cookie #2
         //   - set-cookie actix-session will be in response with session cookie #2
         //     invalidation logic
         // Step 10: GET index, including session cookie #2 in request
-        //   CHECK WHAT HAPPENS
-        //   - set-cookie actix-session will be in response (session cookie #3)
+        //   - set-cookie actix-session should NOT be in response (session data is empty)
         //   - response should be: {"counter": 0, "user_id": None}
 
         let srv = actix_test::start(|| {
@@ -591,7 +590,7 @@ mod test {
 
         // Step 7: POST again to do_something, including session cookie #2 in request
         //   - updates session state in redis: {"counter": 3, "user_id": "ferris"}
-        //   - response should be: {"counter": 2, "user_id": None}
+        //   - response should be: {"counter": 3, "user_id": "ferris"}
         let req_7 = srv.post("/do_something").cookie(cookie_2.clone()).send();
         let mut resp_7 = req_7.await.unwrap();
         let result_7 = resp_7.json::<IndexResponse>().await.unwrap();
@@ -604,17 +603,11 @@ mod test {
         );
 
         // Step 8: GET index, including session cookie #1 in request
-        //   - set-cookie actix-session will be in response (session cookie #3)
+        //   - set-cookie actix-session should NOT be in response (session data is empty)
         //   - response should be: {"counter": 0, "user_id": None}
         let req_8 = srv.get("/").cookie(cookie_1.clone()).send();
         let mut resp_8 = req_8.await.unwrap();
-        let cookie_3 = resp_8
-            .cookies()
-            .unwrap()
-            .clone()
-            .into_iter()
-            .find(|c| c.name() == "test-session")
-            .unwrap();
+        assert!(resp_8.cookies().unwrap().is_empty());
         let result_8 = resp_8.json::<IndexResponse>().await.unwrap();
         assert_eq!(
             result_8,
@@ -623,14 +616,13 @@ mod test {
                 counter: 0
             }
         );
-        assert_ne!(cookie_3.value(), cookie_2.value());
 
         // Step 9: POST to logout, including session cookie #2
         //   - set-cookie actix-session will be in response with session cookie #2
         //     invalidation logic
         let req_9 = srv.post("/logout").cookie(cookie_2.clone()).send();
         let resp_9 = req_9.await.unwrap();
-        let cookie_4 = resp_9
+        let cookie_3 = resp_9
             .cookies()
             .unwrap()
             .clone()
@@ -639,17 +631,18 @@ mod test {
             .unwrap();
         assert_ne!(
             OffsetDateTime::now_utc().year(),
-            cookie_4
+            cookie_3
                 .expires()
                 .map(|t| t.datetime().expect("Expiration is a datetime").year())
                 .unwrap()
         );
 
         // Step 10: GET index, including session cookie #2 in request
-        //   - set-cookie actix-session will be in response (session cookie #3)
+        //   - set-cookie actix-session should NOT be in response (session data is empty)
         //   - response should be: {"counter": 0, "user_id": None}
         let req_10 = srv.get("/").cookie(cookie_2.clone()).send();
         let mut resp_10 = req_10.await.unwrap();
+        assert!(resp_10.cookies().unwrap().is_empty());
         let result_10 = resp_10.json::<IndexResponse>().await.unwrap();
         assert_eq!(
             result_10,
@@ -658,15 +651,6 @@ mod test {
                 counter: 0
             }
         );
-
-        let cookie_5 = resp_10
-            .cookies()
-            .unwrap()
-            .clone()
-            .into_iter()
-            .find(|c| c.name() == "test-session")
-            .unwrap();
-        assert_ne!(cookie_5.value(), cookie_2.value());
     }
 
     #[actix_rt::test]
