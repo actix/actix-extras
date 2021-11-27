@@ -1,7 +1,9 @@
 # Changes
 
 ## Unreleased - 2021-xx-xx
-* A session will be created in Redis if and only if there is some data inside the session state. This reduces the performance impact of `RedisSession` on routes that do not leverage sessions.
+* A session will be created in Redis if and only if there is some data inside the session state. This reduces the performance impact of `RedisSession` on routes that do not leverage sessions. [#207]
+
+[#207]: https://github.com/actix/actix-extras/pull/207
 
 ## 0.10.0-beta.3 - 2021-10-21
 * Update `actix-web` dependency to v4.0.0-beta.10. [#203]
