@@ -666,10 +666,10 @@ mod test {
                         .cookie_max_age(None),
                 )
                 .wrap(middleware::Logger::default())
-                .service(resource("/").route(get().to(index)))
+                .service(resource("/do_something").route(post().to(do_something)))
         });
 
-        let req = srv.get("/").send();
+        let req = srv.post("/do_something").send();
         let resp = req.await.unwrap();
         let cookie = resp
             .cookies()
