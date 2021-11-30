@@ -19,14 +19,7 @@ path = "src/lib.rs"
 default = ["web"]
 
 # actix-web integration
-web = [
-    "actix-web/cookies",
-    "actix-web/secure-cookies",
-    "actix-session/cookie-session",
-    "rand",
-    "serde",
-    "serde_json"
-]
+web = ["actix-web"]
 
 [dependencies]
 actix = { version = "0.12.0", default-features = false }
@@ -44,12 +37,7 @@ time = "0.2.23"
 tokio = { version = "1", features = ["sync"] }
 tokio-util = "0.6.1"
 
-# actix-session
 actix-web = { version = "4.0.0-beta.10", default_features = false, optional = true }
-actix-session = { version = "0.5.0-beta.4", optional = true }
-rand = { version = "0.8.0", optional = true }
-serde = { version = "1.0.101", optional = true }
-serde_json = { version = "1.0.40", optional = true }
 
 [dev-dependencies]
 actix-test = "0.1.0-beta.5"
@@ -57,11 +45,3 @@ actix-http = "3.0.0-beta.11"
 actix-rt = "2.1"
 env_logger = "0.8"
 serde = { version = "1.0.101", features = ["derive"] }
-
-[[example]]
-name = "basic"
-required-features = ["web"]
-
-[[example]]
-name = "authentication"
-required-features = ["web"]

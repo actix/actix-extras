@@ -60,6 +60,10 @@ use serde::{de::DeserializeOwned, Serialize};
 mod cookie;
 #[cfg(feature = "cookie-session")]
 pub use self::cookie::CookieSession;
+#[cfg(feature = "redis-actor-session")]
+mod redis_actor;
+#[cfg(feature = "redis-actor-session")]
+pub use self::redis_actor::RedisActorSession;
 
 /// The high-level interface you use to modify session data.
 ///

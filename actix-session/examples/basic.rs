@@ -1,5 +1,4 @@
-use actix_redis::RedisSession;
-use actix_session::Session;
+use actix_session::{RedisActorSession, Session};
 use actix_web::{middleware, web, App, Error, HttpRequest, HttpServer, Responder};
 
 /// simple handler
@@ -27,7 +26,7 @@ async fn main() -> std::io::Result<()> {
             // enable logger
             .wrap(middleware::Logger::default())
             // cookie session middleware
-            .wrap(RedisSession::new("127.0.0.1:6379", &[0; 32]))
+            .wrap(RedisActorSession::new("127.0.0.1:6379", &[0; 32]))
             // register simple route, handle all methods
             .service(web::resource("/").to(index))
     })

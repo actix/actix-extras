@@ -1,8 +1,9 @@
 use std::{collections::HashMap, iter, rc::Rc};
 
+use crate::{Session, SessionStatus};
 use actix::prelude::*;
+use actix_redis::{resp_array, RespValue};
 use actix_service::{Service, Transform};
-use actix_session::{Session, SessionStatus};
 use actix_web::{
     cookie::{Cookie, CookieJar, Key, SameSite},
     dev::{ServiceRequest, ServiceResponse},
@@ -12,10 +13,9 @@ use actix_web::{
 };
 use futures_core::future::LocalBoxFuture;
 use rand::{distributions::Alphanumeric, rngs::OsRng, Rng};
-use redis_async::{resp::RespValue, resp_array};
 use time::{self, Duration, OffsetDateTime};
 
-use crate::redis::{Command, RedisActor};
+use actix_redis::{Command, RedisActor};
 
 /// Use redis as session storage.
 ///
@@ -24,14 +24,14 @@ use crate::redis::{Command, RedisActor};
 /// session, When this value is changed, all session data is lost.
 ///
 /// Constructor panics if key length is less than 32 bytes.
-pub struct RedisSession(Rc<Inner>);
+pub struct RedisActorSession(Rc<Inner>);
 
-impl RedisSession {
+impl RedisActorSession {
     /// Create new redis session backend
     ///
     /// * `addr` - address of the redis server
-    pub fn new<S: Into<String>>(addr: S, key: &[u8]) -> RedisSession {
-        RedisSession(Rc::new(Inner {
+    pub fn new<S: Into<String>>(addr: S, key: &[u8]) -> RedisActorSession {
+        RedisActorSession(Rc::new(Inner {
             key: Key::derive_from(key),
             cache_keygen: Box::new(|key: &str| format!("session:{}", &key)),
             ttl: "7200".to_owned(),
@@ -112,7 +112,7 @@ impl RedisSession {
     }
 }
 
-impl<S, B> Transform<S, ServiceRequest> for RedisSession
+impl<S, B> Transform<S, ServiceRequest> for RedisActorSession
 where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
     S::Future: 'static,
@@ -377,7 +377,6 @@ impl Inner {
 #[cfg(test)]
 mod test {
     use super::*;
-    use actix_session::Session;
     use actix_web::{
         middleware, web,
         web::{get, post, resource},
@@ -482,7 +481,9 @@ mod test {
 
         let srv = actix_test::start(|| {
             App::new()
-                .wrap(RedisSession::new("127.0.0.1:6379", &[0; 32]).cookie_name("test-session"))
+                .wrap(
+                    RedisActorSession::new("127.0.0.1:6379", &[0; 32]).cookie_name("test-session"),
+                )
                 .wrap(middleware::Logger::default())
                 .service(resource("/").route(get().to(index)))
                 .service(resource("/do_something").route(post().to(do_something)))
@@ -661,7 +662,7 @@ mod test {
         let srv = actix_test::start(|| {
             App::new()
                 .wrap(
-                    RedisSession::new("127.0.0.1:6379", &[0; 32])
+                    RedisActorSession::new("127.0.0.1:6379", &[0; 32])
                         .cookie_name("test-session")
                         .cookie_max_age(None),
                 )

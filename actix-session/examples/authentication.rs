@@ -1,5 +1,4 @@
-use actix_redis::RedisSession;
-use actix_session::Session;
+use actix_session::{RedisActorSession, Session};
 use actix_web::{
     cookie, error::InternalError, middleware, web, App, Error, HttpResponse, HttpServer, Responder,
 };
@@ -79,7 +78,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(middleware::Logger::default())
             // cookie session middleware
             .wrap(
-                RedisSession::new("127.0.0.1:6379", &[0; 32])
+                RedisActorSession::new("127.0.0.1:6379", &[0; 32])
                     // allow the cookie to be accessed from javascript
                     .cookie_http_only(false)
                     // allow the cookie only from the current domain
