@@ -57,13 +57,11 @@ use futures_util::future::{ok, Ready};
 use serde::{de::DeserializeOwned, Serialize};
 
 #[cfg(feature = "cookie-session")]
-mod cookie;
-#[cfg(feature = "cookie-session")]
-pub use self::cookie::CookieSession;
+pub use storage::CookieSession;
 #[cfg(feature = "redis-actor-session")]
-mod redis_actor;
-#[cfg(feature = "redis-actor-session")]
-pub use self::redis_actor::RedisActorSession;
+pub use storage::RedisActorSession;
+
+mod storage;
 
 /// The high-level interface you use to modify session data.
 ///
