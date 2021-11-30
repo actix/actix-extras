@@ -1,5 +1,5 @@
 mod interface;
-pub use interface::
+pub use interface::SessionStore;
 
 #[cfg(feature = "cookie-session")]
 pub use cookie::CookieSession;
