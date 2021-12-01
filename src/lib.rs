@@ -12,7 +12,7 @@
 //! # ...
 //! tracing-actix-web = "0.5.0-beta.3"
 //! tracing = "0.1"
-//! actix-web = "4.0.0-beta.12"
+//! actix-web = "4.0.0-beta.13"
 //! ```
 //!
 //! `tracing-actix-web` exposes three feature flags:
@@ -234,7 +234,7 @@
 //! Check out the [relevant example in the GitHub repository](https://github.com/LukeMathWalker/tracing-actix-web/tree/main/examples/opentelemetry) for reference.
 //!
 //! [root span]: crate::RootSpan
-//! [`actix-web`]: https://docs.rs/actix-web/4.0.0-beta.6/actix_web/index.html
+//! [`actix-web`]: https://docs.rs/actix-web/4.0.0-beta.13/actix_web/index.html
 mod middleware;
 mod request_id;
 mod root_span;

@@ -76,8 +76,8 @@ use tracing::Span;
 /// ```
 ///
 /// [`actix-web`]: https://docs.rs/actix-web
-/// [`Logger`]: https://docs.rs/actix-web/4.0.0-beta.9/actix_web/middleware/struct.Logger.html
-/// [`Compat`]: https://docs.rs/actix-web/4.0.0-beta.9/actix_web/middleware/struct.Compat.html
+/// [`Logger`]: https://docs.rs/actix-web/4.0.0-beta.13/actix_web/middleware/struct.Logger.html
+/// [`Compat`]: https://docs.rs/actix-web/4.0.0-beta.13/actix_web/middleware/struct.Compat.html
 /// [`tracing`]: https://docs.rs/tracing
 pub struct TracingLogger<RootSpan: RootSpanBuilder> {
     root_span_builder: std::marker::PhantomData<RootSpan>,

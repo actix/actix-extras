@@ -39,7 +39,7 @@ Add `tracing-actix-web` to your dependencies:
 # ...
 tracing-actix-web = "0.5.0-beta.3"
 tracing = "0.1"
-actix-web = "4.0.0-beta.12"
+actix-web = "4.0.0-beta.13"
 ```
 
 `tracing-actix-web` exposes three feature flags:
