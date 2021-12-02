@@ -51,5 +51,6 @@ pub use extractors::UserSession;
 pub use session::{Session, SessionStatus};
 
 mod extractors;
+mod middleware;
 mod session;
 mod storage;
