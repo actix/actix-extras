@@ -22,7 +22,6 @@ pub struct SessionMiddleware<Store: SessionStore> {
 }
 
 #[derive(Clone)]
-// TODO: add configuration for encryption vs signing
 struct SessionCookieConfiguration {
     secure: bool,
     http_only: bool,
