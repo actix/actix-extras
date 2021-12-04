@@ -22,23 +22,36 @@ pub struct SessionMiddleware<Store: SessionStore> {
 }
 
 #[derive(Clone)]
+// TODO: add configuration for encryption vs signing
 struct SessionCookieConfiguration {
     secure: bool,
     http_only: bool,
     name: String,
     same_site: SameSite,
+    path: String,
+    domain: Option<String>,
     // TODO: rename to cookie durability using enum
     max_age: Option<Duration>,
+    content_security: CookieContentSecurity,
     key: Key,
+}
+
+#[derive(Copy, Clone)]
+enum CookieContentSecurity {
+    Signed,
+    Private,
 }
 
 fn default_cookie_configuration(key: Key) -> SessionCookieConfiguration {
     SessionCookieConfiguration {
         secure: true,
         http_only: true,
-        name: "id".to_owned(),
+        name: "id".into(),
         same_site: SameSite::Lax,
+        path: "/".into(),
+        domain: None,
         max_age: None,
+        content_security: CookieContentSecurity::Signed,
         key,
     }
 }
@@ -96,9 +109,39 @@ impl<Store: SessionStore> SessionMiddlewareBuilder<Store> {
 
     /// Set the `SameSite` attribute for the cookie used to store the session id.
     ///
-    /// By default, the attribute is `Lax`.
+    /// By default, the attribute is set to `Lax`.
     pub fn cookie_same_site(mut self, same_site: SameSite) -> Self {
         self.cookie_configuration.same_site = same_site;
+        self
+    }
+
+    /// Set the `Path` attribute for the cookie used to store the session id.
+    ///
+    /// By default, the attribute is set to `/`.
+    pub fn cookie_path(mut self, path: String) -> Self {
+        self.cookie_configuration.path = path;
+        self
+    }
+
+    /// Set the `Domain` attribute for the cookie used to store the session id.
+    ///
+    /// Use `None` to leave the attribute unspecified. If unspecified, the attribute defaults
+    /// to the same host that set the cookie, excluding subdomains.
+    ///
+    /// By default, the attribute is left unspecified.
+    pub fn cookie_domain(mut self, domain: Option<String>) -> Self {
+        self.cookie_configuration.domain = domain;
+        self
+    }
+
+    /// Choose how the session cookie content should be secured.
+    ///
+    /// `CookieContentSecurity::Private` translates into an encrypted cookie content.
+    /// `CookieContentSecurity::Signed` translates into a signed cookie content.
+    ///
+    /// By default, the content is signed, not encrypted.
+    pub fn cookie_content_security(mut self, content_security: CookieContentSecurity) -> Self {
+        self.cookie_configuration.content_security = content_security;
         self
     }
 
@@ -267,7 +310,10 @@ fn set_session_cookie(
     cookie.set_same_site(config.same_site);
 
     let mut jar = CookieJar::new();
-    jar.signed_mut(&config.key).add(cookie);
+    match config.content_security {
+        CookieContentSecurity::Signed => jar.signed_mut(&config.key).add(cookie),
+        CookieContentSecurity::Private => jar.private_mut(&config.key).add(cookie),
+    }
 
     // Set cookie
     let cookie = jar.delta().next().unwrap();

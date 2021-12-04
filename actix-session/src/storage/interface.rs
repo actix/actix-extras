@@ -40,7 +40,7 @@ pub enum LoadError {
     #[error("Failed to deserialize session state")]
     DeserializationError(#[source] anyhow::Error),
     #[error(
-        "The session failed a cryptographic integrity check (e.g. HMAC/signature verification)"
+        "The session failed a cryptographic integrity check (e.g. HMAC/signature verification/decryption)"
     )]
     IntegrityCheckFailed(#[source] anyhow::Error),
     #[error("Something went wrong when retrieving the session state.")]
@@ -50,6 +50,17 @@ pub enum LoadError {
 #[derive(thiserror::Error, Debug)]
 /// Possible failures modes for [`SessionStore::save`].
 pub enum SaveError {
+    #[error("Failed to serialize session state")]
+    SerializationError(#[source] anyhow::Error),
     #[error("Something went wrong when persisting the session state.")]
+    GenericError(#[source] anyhow::Error),
+}
+
+#[derive(thiserror::Error, Debug)]
+/// Possible failures modes for [`SessionStore::update`].
+pub enum UpdateError {
+    #[error("Failed to serialize session state")]
+    SerializationError(#[source] anyhow::Error),
+    #[error("Something went wrong when updating the session state.")]
     GenericError(#[source] anyhow::Error),
 }
