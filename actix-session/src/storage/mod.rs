@@ -1,12 +1,12 @@
 mod interface;
-pub use interface::SessionStore;
+pub use interface::{LoadError, SaveError, SessionStore, UpdateError};
 
 #[cfg(feature = "cookie-session")]
-pub use cookie::CookieSession;
+pub use cookie::CookieSessionStore;
 #[cfg(feature = "cookie-session")]
 mod cookie;
 
 #[cfg(feature = "redis-actor-session")]
-pub use redis_actor::RedisActorSession;
+pub use redis_actor::RedisActorSessionStore;
 #[cfg(feature = "redis-actor-session")]
 mod redis_actor;

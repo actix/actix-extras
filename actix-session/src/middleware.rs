@@ -36,7 +36,7 @@ struct SessionCookieConfiguration {
 }
 
 #[derive(Copy, Clone)]
-enum CookieContentSecurity {
+pub enum CookieContentSecurity {
     Signed,
     Private,
 }
@@ -154,6 +154,13 @@ impl<Store: SessionStore> SessionMiddlewareBuilder<Store> {
         self.cookie_configuration.http_only = http_only;
         self
     }
+
+    pub fn build(self) -> SessionMiddleware<Store> {
+        SessionMiddleware {
+            storage_backend: self.storage_backend,
+            cookie_configuration: Rc::new(self.cookie_configuration),
+        }
+    }
 }
 
 impl<S, B, Store> Transform<S, ServiceRequest> for SessionMiddleware<Store>
@@ -245,7 +252,8 @@ where
                     match status {
                         SessionStatus::Changed => {
                             // TODO: remove unwrap
-                            storage_backend.update(&session_key, session_state).unwrap();
+                            let session_key =
+                                storage_backend.update(session_key, session_state).unwrap();
                             set_session_cookie(
                                 res.response_mut().head_mut(),
                                 session_key,

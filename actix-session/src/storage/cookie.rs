@@ -1,22 +1,7 @@
 //! Cookie based sessions. See docs for [`CookieSession`].
 
-use std::{collections::HashMap, error::Error as StdError, rc::Rc};
-
-use actix_web::{
-    body::{AnyBody, MessageBody},
-    cookie::{Cookie, CookieJar, Key, SameSite},
-    dev::{Service, ServiceRequest, ServiceResponse, Transform},
-    http::{header::SET_COOKIE, HeaderValue},
-    Error, ResponseError,
-};
-use derive_more::Display;
-use futures_util::future::{ok, FutureExt as _, LocalBoxFuture, Ready};
-use serde_json::error::Error as JsonError;
-use time::{Duration, OffsetDateTime};
-
 use crate::storage::interface::{LoadError, SaveError, SessionState, UpdateError};
 use crate::storage::SessionStore;
-use crate::{Session, SessionStatus};
 
 pub struct CookieSessionStore;
 
@@ -24,12 +9,14 @@ impl SessionStore for CookieSessionStore {
     fn load(&self, session_key: &str) -> Result<Option<SessionState>, LoadError> {
         serde_json::from_str(session_key)
             .map(Option::Some)
+            .map_err(anyhow::Error::new)
             .map_err(LoadError::DeserializationError)
     }
 
     fn save(&self, session_state: SessionState) -> Result<String, SaveError> {
-        let session_key =
-            serde_json::to_string(&session_state).map_err(SaveError::SerializationError)?;
+        let session_key = serde_json::to_string(&session_state)
+            .map_err(anyhow::Error::new)
+            .map_err(SaveError::SerializationError)?;
         if session_key.len() > 4064 {
             return Err(SaveError::GenericError(anyhow::anyhow!("Size of the serialized session is greater than 4000 bytes, the maximum limit for cookie-based session storage.")));
         }
@@ -47,7 +34,7 @@ impl SessionStore for CookieSessionStore {
         })
     }
 
-    fn delete(&self, _session_key: &str) -> Result<(), Error> {
+    fn delete(&self, _session_key: &str) -> Result<(), anyhow::Error> {
         Ok(())
     }
 }

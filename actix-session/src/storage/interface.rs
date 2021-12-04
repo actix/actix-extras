@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
 pub(crate) type SessionState = HashMap<String, String>;
-pub(crate) type SessionId = String;
 
 /// The interface to retrieve and save the current session data from/to the
 /// chosen storage backend.
@@ -27,7 +26,11 @@ pub trait SessionStore: Send + Sync {
 
     /// Update the session state associated to a pre-existing session key.
     // TODO: add error type
-    fn update(&self, session_key: &str, session_state: SessionState) -> Result<(), anyhow::Error>;
+    fn update(
+        &self,
+        session_key: String,
+        session_state: SessionState,
+    ) -> Result<String, UpdateError>;
 
     /// Delete a session from the store.
     // TODO: add error type
