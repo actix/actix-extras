@@ -48,6 +48,7 @@ pub use storage::CookieSession;
 pub use storage::RedisActorSession;
 
 pub use extractors::UserSession;
+pub use middleware::{SessionMiddleware, SessionMiddlewareBuilder};
 pub use session::{Session, SessionStatus};
 
 mod extractors;

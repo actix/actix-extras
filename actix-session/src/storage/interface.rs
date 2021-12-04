@@ -1,5 +1,3 @@
-use actix_web::dev::ResponseHead;
-use actix_web::HttpRequest;
 use std::collections::HashMap;
 
 pub(crate) type SessionState = HashMap<String, String>;
@@ -20,20 +18,20 @@ pub(crate) type SessionId = String;
 /// [`CookieSession`]: crate::CookieSession
 /// [`RedisActorSession`]: crate::RedisActorSession
 pub trait SessionStore: Send + Sync {
-    type SessionMetadata;
+    /// Load the session state associated to a session key.
+    fn load(&self, session_key: &str) -> Result<Option<SessionState>, LoadError>;
 
-    /// Extract the session state from an incoming request.
-    fn load(
-        &self,
-        request: &HttpRequest,
-    ) -> Result<Option<(Self::SessionMetadata, SessionState)>, LoadError>;
+    /// Persist the session state for a newly created session.
+    /// It returns the corresponding session key.
+    fn save(&self, session_state: SessionState) -> Result<String, SaveError>;
 
-    /// Persist the session state.
-    fn save(
-        &self,
-        response: &mut ResponseHead,
-        session: (Option<Self::SessionMetadata>, SessionState),
-    ) -> Result<(), ()>;
+    /// Update the session state associated to a pre-existing session key.
+    // TODO: add error type
+    fn update(&self, session_key: &str, session_state: SessionState) -> Result<(), anyhow::Error>;
+
+    /// Delete a session from the store.
+    // TODO: add error type
+    fn delete(&self, session_key: &str) -> Result<(), anyhow::Error>;
 }
 
 #[derive(thiserror::Error, Debug)]
@@ -46,5 +44,12 @@ pub enum LoadError {
     )]
     IntegrityCheckFailed(#[source] anyhow::Error),
     #[error("Something went wrong when retrieving the session state.")]
+    GenericError(#[source] anyhow::Error),
+}
+
+#[derive(thiserror::Error, Debug)]
+/// Possible failures modes for [`SessionStore::save`].
+pub enum SaveError {
+    #[error("Something went wrong when persisting the session state.")]
     GenericError(#[source] anyhow::Error),
 }
