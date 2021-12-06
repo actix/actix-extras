@@ -32,7 +32,7 @@ web = [
 actix = { version = "0.12.0", default-features = false }
 actix-rt = { version = "2.1", default-features = false }
 actix-service = "2.0.0"
-actix-tls = { version = "3.0.0-beta.7", default-features = false, features = ["connect"] }
+actix-tls = { version = "3.0.0-rc.1", default-features = false, features = ["connect"] }
 
 log = "0.4.6"
 backoff = "0.2.1"

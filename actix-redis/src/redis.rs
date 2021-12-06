@@ -4,7 +4,7 @@ use std::io;
 use actix::prelude::*;
 use actix_rt::net::TcpStream;
 use actix_service::boxed::{service, BoxService};
-use actix_tls::connect::{default_connector, Connect, ConnectError, Connection};
+use actix_tls::connect::{ConnectError, ConnectInfo as Connect, Connection, Connector};
 use backoff::backoff::Backoff;
 use backoff::ExponentialBackoff;
 use log::{error, info, warn};
@@ -45,7 +45,7 @@ impl RedisActor {
 
         Supervisor::start(|_| RedisActor {
             addr,
-            connector: service(default_connector()),
+            connector: service(Connector::default().service()),
             cell: None,
             backoff,
             queue: VecDeque::new(),
