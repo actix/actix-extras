@@ -4,7 +4,7 @@ use std::io;
 use actix::prelude::*;
 use actix_rt::net::TcpStream;
 use actix_service::boxed::{service, BoxService};
-use actix_tls::connect::{Connector, ConnectInfo as Connect, ConnectError, Connection};
+use actix_tls::connect::{ConnectError, ConnectInfo as Connect, Connection, Connector};
 use backoff::backoff::Backoff;
 use backoff::ExponentialBackoff;
 use log::{error, info, warn};
