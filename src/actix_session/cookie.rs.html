@@ -562,10 +562,12 @@
 <span id="561">561</span>
 <span id="562">562</span>
 <span id="563">563</span>
+<span id="564">564</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Cookie based sessions. See docs for [`CookieSession`].</span>
 
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections::HashMap</span>, <span class="ident">error::Error</span> <span class="kw">as</span> <span class="ident">StdError</span>, <span class="ident">rc::Rc</span>};
 
+<span class="kw">use</span> <span class="ident">actix_utils::future</span>::{<span class="ident">ok</span>, <span class="ident">Ready</span>};
 <span class="kw">use</span> <span class="ident">actix_web</span>::{
     <span class="ident">body</span>::{<span class="ident">AnyBody</span>, <span class="ident">MessageBody</span>},
     <span class="ident">cookie</span>::{<span class="ident">Cookie</span>, <span class="ident">CookieJar</span>, <span class="ident">Key</span>, <span class="ident">SameSite</span>},
@@ -574,7 +576,7 @@
     <span class="ident">Error</span>, <span class="ident">ResponseError</span>,
 };
 <span class="kw">use</span> <span class="ident">derive_more::Display</span>;
-<span class="kw">use</span> <span class="ident">futures_util::future</span>::{<span class="ident">ok</span>, <span class="ident">FutureExt</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">LocalBoxFuture</span>, <span class="ident">Ready</span>};
+<span class="kw">use</span> <span class="ident">futures_util::future</span>::{<span class="ident">FutureExt</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">LocalBoxFuture</span>};
 <span class="kw">use</span> <span class="ident">serde_json::error::Error</span> <span class="kw">as</span> <span class="ident">JsonError</span>;
 <span class="kw">use</span> <span class="ident">time</span>::{<span class="ident">Duration</span>, <span class="ident">OffsetDateTime</span>};
 

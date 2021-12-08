@@ -151,10 +151,10 @@
 
 <span class="kw">use</span> <span class="ident">std::borrow::Cow</span>;
 
+<span class="kw">use</span> <span class="ident">actix_utils::future</span>::{<span class="ident">ready</span>, <span class="ident">Ready</span>};
 <span class="kw">use</span> <span class="ident">actix_web::dev</span>::{<span class="ident">Payload</span>, <span class="ident">ServiceRequest</span>};
 <span class="kw">use</span> <span class="ident">actix_web::http::header::Header</span>;
 <span class="kw">use</span> <span class="ident">actix_web</span>::{<span class="ident">FromRequest</span>, <span class="ident">HttpRequest</span>};
-<span class="kw">use</span> <span class="ident">futures_util::future</span>::{<span class="ident">ready</span>, <span class="ident">Ready</span>};
 
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::config::AuthExtractorConfig</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::errors::AuthenticationError</span>;

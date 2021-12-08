@@ -173,24 +173,20 @@
 <span id="172">172</span>
 <span id="173">173</span>
 <span id="174">174</span>
-<span id="175">175</span>
-<span id="176">176</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Extractor for the &quot;Bearer&quot; HTTP Authentication Scheme</span>
 
-<span class="kw">use</span> <span class="ident">std::borrow::Cow</span>;
-<span class="kw">use</span> <span class="ident">std::default::Default</span>;
+<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">borrow::Cow</span>, <span class="ident">default::Default</span>};
 
-<span class="kw">use</span> <span class="ident">actix_web::dev</span>::{<span class="ident">Payload</span>, <span class="ident">ServiceRequest</span>};
-<span class="kw">use</span> <span class="ident">actix_web::http::header::Header</span>;
-<span class="kw">use</span> <span class="ident">actix_web</span>::{<span class="ident">FromRequest</span>, <span class="ident">HttpRequest</span>};
-<span class="kw">use</span> <span class="ident">futures_util::future</span>::{<span class="ident">ready</span>, <span class="ident">Ready</span>};
+<span class="kw">use</span> <span class="ident">actix_utils::future</span>::{<span class="ident">ready</span>, <span class="ident">Ready</span>};
+<span class="kw">use</span> <span class="ident">actix_web</span>::{
+    <span class="ident">dev</span>::{<span class="ident">Payload</span>, <span class="ident">ServiceRequest</span>},
+    <span class="ident">http::header::Header</span>,
+    <span class="ident">FromRequest</span>, <span class="ident">HttpRequest</span>,
+};
 
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::config::AuthExtractorConfig</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::errors::AuthenticationError</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::AuthExtractor</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::headers::authorization</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::headers::www_authenticate::bearer</span>;
+<span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">config::AuthExtractorConfig</span>, <span class="ident">errors::AuthenticationError</span>, <span class="ident">AuthExtractor</span>};
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::headers::www_authenticate::bearer::Error</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::headers</span>::{<span class="ident">authorization</span>, <span class="ident">www_authenticate::bearer</span>};
 
 <span class="doccomment">/// [BearerAuth](./struct/BearerAuth.html) extractor configuration.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Default</span>)]</span>

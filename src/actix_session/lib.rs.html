@@ -450,11 +450,11 @@
     <span class="ident">rc::Rc</span>,
 };
 
+<span class="kw">use</span> <span class="ident">actix_utils::future</span>::{<span class="ident">ok</span>, <span class="ident">Ready</span>};
 <span class="kw">use</span> <span class="ident">actix_web</span>::{
     <span class="ident">dev</span>::{<span class="ident">Extensions</span>, <span class="ident">Payload</span>, <span class="ident">RequestHead</span>, <span class="ident">ServiceRequest</span>, <span class="ident">ServiceResponse</span>},
     <span class="ident">Error</span>, <span class="ident">FromRequest</span>, <span class="ident">HttpMessage</span>, <span class="ident">HttpRequest</span>,
 };
-<span class="kw">use</span> <span class="ident">futures_util::future</span>::{<span class="ident">ok</span>, <span class="ident">Ready</span>};
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">de::DeserializeOwned</span>, <span class="ident">Serialize</span>};
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;cookie-session&quot;</span>)]</span>

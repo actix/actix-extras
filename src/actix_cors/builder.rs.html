@@ -661,6 +661,7 @@
     <span class="ident">collections::HashSet</span>, <span class="ident">convert::TryInto</span>, <span class="ident">error::Error</span> <span class="kw">as</span> <span class="ident">StdError</span>, <span class="ident">iter::FromIterator</span>, <span class="ident">rc::Rc</span>,
 };
 
+<span class="kw">use</span> <span class="ident">actix_utils::future</span>::{<span class="self">self</span>, <span class="ident">Ready</span>};
 <span class="kw">use</span> <span class="ident">actix_web</span>::{
     <span class="ident">body::MessageBody</span>,
     <span class="ident">dev</span>::{<span class="ident">RequestHead</span>, <span class="ident">Service</span>, <span class="ident">ServiceRequest</span>, <span class="ident">ServiceResponse</span>, <span class="ident">Transform</span>},
@@ -668,7 +669,6 @@
     <span class="ident">http</span>::{<span class="self">self</span>, <span class="ident">header::HeaderName</span>, <span class="ident">Error</span> <span class="kw">as</span> <span class="ident">HttpError</span>, <span class="ident">HeaderValue</span>, <span class="ident">Method</span>, <span class="ident">Uri</span>},
     <span class="ident">Either</span>,
 };
-<span class="kw">use</span> <span class="ident">futures_util::future</span>::{<span class="self">self</span>, <span class="ident">Ready</span>};
 <span class="kw">use</span> <span class="ident">log::error</span>;
 <span class="kw">use</span> <span class="ident">once_cell::sync::Lazy</span>;
 <span class="kw">use</span> <span class="ident">smallvec::smallvec</span>;
