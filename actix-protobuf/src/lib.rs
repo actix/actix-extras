@@ -1,5 +1,6 @@
 #![forbid(unsafe_code)]
 #![deny(rust_2018_idioms, nonstandard_style)]
+#![warn(future_incompatible)]
 
 use std::{
     fmt,

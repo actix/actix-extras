@@ -58,7 +58,7 @@ static ALL_METHODS_SET: Lazy<HashSet<Method>> = Lazy::new(|| {
 /// server will fail to start up or serve requests.
 ///
 /// # Example
-/// ```rust
+/// ```
 /// use actix_cors::Cors;
 /// use actix_web::http::header;
 ///
