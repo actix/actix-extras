@@ -1,11 +1,12 @@
 use std::{error::Error as StdError, rc::Rc};
 
+use actix_utils::future::{ready, Ready};
 use actix_web::{
     body::{AnyBody, MessageBody},
     dev::{Service, ServiceRequest, ServiceResponse, Transform},
     Error, HttpMessage, Result,
 };
-use futures_util::future::{ready, FutureExt as _, LocalBoxFuture, Ready, TryFutureExt as _};
+use futures_util::future::{FutureExt as _, LocalBoxFuture, TryFutureExt as _};
 
 use crate::{identity::IdentityItem, IdentityPolicy};
 
@@ -129,7 +130,8 @@ mod tests {
 
     #[actix_rt::test]
     async fn test_borrowed_mut_error() {
-        use futures_util::future::{lazy, ok, Ready};
+        use actix_utils::future::{ok, Ready};
+        use futures_util::future::lazy;
 
         struct Ident;
         impl IdentityPolicy for Ident {

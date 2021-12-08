@@ -17,8 +17,9 @@ name = "actix_cors"
 path = "src/lib.rs"
 
 [dependencies]
-actix-web = { version = "4.0.0-beta.10", default-features = false }
 actix-service = "2.0.0"
+actix-utils = "3"
+actix-web = { version = "4.0.0-beta.10", default-features = false }
 
 derive_more = "0.99.5"
 futures-util = { version = "0.3.7", default-features = false }
@@ -28,5 +29,5 @@ smallvec = "1.6"
 
 [dev-dependencies]
 actix-rt = "2"
-pretty_env_logger = "0.4"
+env_logger = "0.9"
 regex = "1.4"

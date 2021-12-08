@@ -1,6 +1,6 @@
 use std::{rc::Rc, time::SystemTime};
 
-use futures_util::future::{ready, Ready};
+use actix_utils::future::{ready, Ready};
 use serde::{Deserialize, Serialize};
 use time::Duration;
 

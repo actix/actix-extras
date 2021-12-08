@@ -2,6 +2,7 @@
 
 use std::{collections::HashMap, error::Error as StdError, rc::Rc};
 
+use actix_utils::future::{ok, Ready};
 use actix_web::{
     body::{AnyBody, MessageBody},
     cookie::{Cookie, CookieJar, Key, SameSite},
@@ -10,7 +11,7 @@ use actix_web::{
     Error, ResponseError,
 };
 use derive_more::Display;
-use futures_util::future::{ok, FutureExt as _, LocalBoxFuture, Ready};
+use futures_util::future::{FutureExt as _, LocalBoxFuture};
 use serde_json::error::Error as JsonError;
 use time::{Duration, OffsetDateTime};
 

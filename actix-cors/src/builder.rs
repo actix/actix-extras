@@ -2,6 +2,7 @@ use std::{
     collections::HashSet, convert::TryInto, error::Error as StdError, iter::FromIterator, rc::Rc,
 };
 
+use actix_utils::future::{self, Ready};
 use actix_web::{
     body::MessageBody,
     dev::{RequestHead, Service, ServiceRequest, ServiceResponse, Transform},
@@ -9,7 +10,6 @@ use actix_web::{
     http::{self, header::HeaderName, Error as HttpError, HeaderValue, Method, Uri},
     Either,
 };
-use futures_util::future::{self, Ready};
 use log::error;
 use once_cell::sync::Lazy;
 use smallvec::smallvec;

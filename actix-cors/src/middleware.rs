@@ -1,5 +1,6 @@
 use std::{collections::HashSet, convert::TryInto, error::Error as StdError, rc::Rc};
 
+use actix_utils::future::{ok, Either, Ready};
 use actix_web::{
     body::{AnyBody, MessageBody},
     dev::{Service, ServiceRequest, ServiceResponse},
@@ -10,7 +11,7 @@ use actix_web::{
     },
     HttpResponse,
 };
-use futures_util::future::{ok, Either, FutureExt as _, LocalBoxFuture, Ready, TryFutureExt as _};
+use futures_util::future::{FutureExt as _, LocalBoxFuture, TryFutureExt as _};
 use log::debug;
 
 use crate::{builder::intersperse_header_values, AllOrSome, Inner};
@@ -155,7 +156,7 @@ where
         if self.inner.preflight && req.method() == Method::OPTIONS {
             let inner = Rc::clone(&self.inner);
             let res = Self::handle_preflight(&inner, req);
-            Either::Left(ok(res))
+            Either::left(ok(res))
         } else {
             let origin = req.headers().get(header::ORIGIN).cloned();
 
@@ -163,7 +164,7 @@ where
                 // Only check requests with a origin header.
                 if let Err(err) = self.inner.validate_origin(req.head()) {
                     debug!("origin validation failed; inner service is not called");
-                    return Either::Left(ok(req.error_response(err)));
+                    return Either::left(ok(req.error_response(err)));
                 }
             }
 
@@ -183,7 +184,7 @@ where
             .map_ok(|res| res.map_body(|_, body| AnyBody::new_boxed(body)))
             .boxed_local();
 
-            Either::Right(res)
+            Either::right(res)
         }
     }
 }

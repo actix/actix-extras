@@ -2,7 +2,7 @@ use actix_web::{
     dev::{Extensions, Payload},
     Error, FromRequest, HttpRequest,
 };
-use futures_util::future::{ready, Ready};
+use actix_utils::future::{ready, Ready};
 
 pub(crate) struct IdentityItem {
     pub(crate) id: Option<String>,

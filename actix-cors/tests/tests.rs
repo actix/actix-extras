@@ -1,11 +1,11 @@
 use actix_service::fn_service;
+use actix_utils::future::ok;
 use actix_web::{
     dev::{ServiceRequest, Transform},
     http::{header, HeaderValue, Method, StatusCode},
     test::{self, TestRequest},
     HttpResponse,
 };
-use futures_util::future::ok;
 use regex::bytes::Regex;
 
 use actix_cors::Cors;
