@@ -45,15 +45,10 @@ impl SessionStore for CookieSessionStore {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::test_helpers::key;
     use crate::{CookieContentSecurity, Session, SessionMiddleware, SessionMiddlewareBuilder};
-    use actix_web::cookie::Key;
     use actix_web::web::Bytes;
     use actix_web::{dev::Service, test, web, App};
-
-    fn key() -> Key {
-        // TODO: randomise
-        Key::from(&[0; 32])
-    }
 
     // Short-hand helper for writing test cases.
     fn builder() -> SessionMiddlewareBuilder<CookieSessionStore> {
@@ -72,10 +67,7 @@ mod tests {
 
         let request = test::TestRequest::get().to_request();
         let response = app.call(request).await.unwrap();
-        assert!(response
-            .response()
-            .cookies()
-            .any(|c| c.name() == "actix-session"));
+        assert!(response.response().cookies().any(|c| c.name() == "id"));
     }
 
     #[actix_rt::test]
@@ -96,10 +88,7 @@ mod tests {
 
         let request = test::TestRequest::get().to_request();
         let response = app.call(request).await.unwrap();
-        assert!(response
-            .response()
-            .cookies()
-            .any(|c| c.name() == "actix-session"));
+        assert!(response.response().cookies().any(|c| c.name() == "id"));
     }
 
     #[actix_rt::test]
@@ -122,10 +111,7 @@ mod tests {
         let request = test::TestRequest::with_uri("/count").to_request();
         let response = app.call(request).await.unwrap();
 
-        assert!(response
-            .response()
-            .cookies()
-            .any(|c| c.name() == "actix-session"));
+        assert!(response.response().cookies().any(|c| c.name() == "id"));
     }
 
     #[actix_rt::test]
@@ -140,10 +126,7 @@ mod tests {
 
         let request = test::TestRequest::get().to_request();
         let response = app.call(request).await.unwrap();
-        assert!(response
-            .response()
-            .cookies()
-            .any(|c| c.name() == "actix-session"));
+        assert!(response.response().cookies().any(|c| c.name() == "id"));
     }
 
     #[actix_rt::test]
@@ -186,6 +169,7 @@ mod tests {
         assert_eq!(body, Bytes::from_static(b"counter: 100"));
     }
 
+    // TODO: review test
     // #[actix_rt::test]
     // async fn prolong_expiration() {
     //     let app = test::init_service(

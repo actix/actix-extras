@@ -12,7 +12,8 @@
 //!
 //! ```no_run
 //! use actix_web::{web, App, HttpServer, HttpResponse, Error};
-//! use actix_session::{Session, CookieSession};
+//! use actix_session::{Session, SessionMiddleware, CookieSessionStore};
+//! use actix_web::cookie::Key;
 //!
 //! fn index(session: Session) -> Result<&'static str, Error> {
 //!     // access session data
@@ -26,12 +27,26 @@
 //!     Ok("Welcome!")
 //! }
 //!
+//! // The signing key would usually be read from a configuration file/environment variables.
+//! fn get_signing_key() -> Key {
+//!     # use rand::distributions::Alphanumeric;
+//!     # use rand::{thread_rng, Rng};
+//!     # let signing_key: String = thread_rng()
+//!     #     .sample_iter(&Alphanumeric)
+//!     #     .take(64)
+//!     #     .map(char::from)
+//!     #     .collect();
+//!     # Key::from(signing_key.as_bytes())
+//!     // [...]
+//! }
+//!
 //! #[actix_rt::main]
 //! async fn main() -> std::io::Result<()> {
-//!     HttpServer::new(
-//!         || App::new()
-//!             // create cookie based session middleware
-//!             .wrap(CookieSession::signed(&[0; 32]).secure(false))
+//!     let signing_key = get_signing_key();
+//!     HttpServer::new(move ||
+//!             App::new()
+//!             // Create cookie-based session middleware
+//!             .wrap(SessionMiddleware::new(CookieSessionStore::default(), signing_key.clone()))
 //!             .default_service(web::to(|| HttpResponse::Ok())))
 //!         .bind(("127.0.0.1", 8080))?
 //!         .run()
@@ -54,4 +69,20 @@ pub use session::{Session, SessionStatus};
 mod extractors;
 mod middleware;
 mod session;
-mod storage;
+pub mod storage;
+
+#[cfg(test)]
+pub mod test_helpers {
+    use actix_web::cookie::Key;
+    use rand::distributions::Alphanumeric;
+    use rand::{thread_rng, Rng};
+
+    pub fn key() -> Key {
+        let signing_key: String = thread_rng()
+            .sample_iter(&Alphanumeric)
+            .take(64)
+            .map(char::from)
+            .collect();
+        Key::from(signing_key.as_bytes())
+    }
+}

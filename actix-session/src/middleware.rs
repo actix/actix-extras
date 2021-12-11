@@ -315,6 +315,7 @@ fn set_session_cookie(
         cookie.set_max_age(max_age);
     }
     cookie.set_same_site(config.same_site);
+    cookie.set_path(config.path.clone());
 
     let mut jar = CookieJar::new();
     match config.content_security {

@@ -112,17 +112,28 @@ impl SessionStore for RedisActorSessionStore {
             cache_key,
             body,
             "NX",
+            "EX",
             &format!("{}", self.configuration.ttl.whole_seconds())
         ]);
 
-        self.addr
+        let result = self
+            .addr
             .send(cmd)
             .await
             .map_err(Into::into)
             .map_err(SaveError::GenericError)?
             .map_err(Into::into)
             .map_err(SaveError::GenericError)?;
-        Ok(session_key)
+        match result {
+            RespValue::SimpleString(_) => Ok(session_key),
+            RespValue::Nil => Err(SaveError::GenericError(anyhow::anyhow!(
+                "Failed to save session state. A record with the same key already existed in Redis"
+            ))),
+            e => Err(SaveError::GenericError(anyhow::anyhow!(
+                "Failed to save session state. {:?}",
+                e
+            ))),
+        }
     }
 
     async fn update(
@@ -185,8 +196,8 @@ fn generate_session_key() -> String {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::test_helpers::key;
     use crate::{Session, SessionMiddleware};
-    use actix_web::cookie::Key;
     use actix_web::{
         middleware, web,
         web::{get, post, resource},
@@ -194,7 +205,6 @@ mod test {
     };
     use serde::{Deserialize, Serialize};
     use serde_json::json;
-    use time::OffsetDateTime;
 
     #[derive(Serialize, Deserialize, Debug, PartialEq)]
     pub struct IndexResponse {
@@ -295,9 +305,10 @@ mod test {
                 .wrap(
                     SessionMiddleware::builder(
                         RedisActorSessionStore::new("127.0.0.1:6379"),
-                        Key::from(&[0; 32]),
+                        key(),
                     )
                     .cookie_name("test-session".into())
+                    .cookie_max_age(Some(time::Duration::days(7)))
                     .build(),
                 )
                 .wrap(middleware::Logger::default())
@@ -327,7 +338,15 @@ mod test {
         //   - set-cookie actix-session should be in response (session cookie #1)
         //   - response should be: {"counter": 1, "user_id": None}
         let req_2 = srv.post("/do_something").send();
-        let resp_2 = req_2.await.unwrap();
+        let mut resp_2 = req_2.await.unwrap();
+        let result_2 = resp_2.json::<IndexResponse>().await.unwrap();
+        assert_eq!(
+            result_2,
+            IndexResponse {
+                user_id: None,
+                counter: 1
+            }
+        );
         let cookie_1 = resp_2
             .cookies()
             .unwrap()
@@ -446,13 +465,7 @@ mod test {
             .into_iter()
             .find(|c| c.name() == "test-session")
             .unwrap();
-        assert_ne!(
-            OffsetDateTime::now_utc().year(),
-            cookie_3
-                .expires()
-                .map(|t| t.datetime().expect("Expiration is a datetime").year())
-                .unwrap()
-        );
+        assert_eq!(0, cookie_3.max_age().map(|t| t.whole_seconds()).unwrap());
 
         // Step 10: GET index, including session cookie #2 in request
         //   - set-cookie actix-session should NOT be in response (session data is empty)
