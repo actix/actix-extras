@@ -16,7 +16,8 @@
 //! [Middleware]: ./middleware
 
 #![forbid(unsafe_code)]
-#![deny(missing_docs, nonstandard_style, rust_2018_idioms)]
+#![deny(rust_2018_idioms, nonstandard_style)]
+#![warn(future_incompatible, missing_docs)]
 
 pub mod extractors;
 pub mod headers;

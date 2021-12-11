@@ -8,7 +8,7 @@ use std::{
 
 use actix_web::dev::ServiceRequest;
 use actix_web::Error;
-use futures_util::ready;
+use futures_core::ready;
 use pin_project_lite::pin_project;
 
 pub mod basic;

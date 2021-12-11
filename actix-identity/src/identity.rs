@@ -1,8 +1,8 @@
+use actix_utils::future::{ready, Ready};
 use actix_web::{
     dev::{Extensions, Payload},
     Error, FromRequest, HttpRequest,
 };
-use futures_util::future::{ready, Ready};
 
 pub(crate) struct IdentityItem {
     pub(crate) id: Option<String>,
@@ -48,12 +48,12 @@ impl Identity {
     /// Return the claimed identity of the user associated request or `None` if no identity can be
     /// found associated with the request.
     pub fn identity(&self) -> Option<String> {
-        Identity::get_identity(&self.0.extensions())
+        Identity::get_identity(&self.0.req_data())
     }
 
     /// Remember identity.
     pub fn remember(&self, identity: String) {
-        if let Some(id) = self.0.extensions_mut().get_mut::<IdentityItem>() {
+        if let Some(id) = self.0.req_data_mut().get_mut::<IdentityItem>() {
             id.id = Some(identity);
             id.changed = true;
         }
@@ -61,7 +61,7 @@ impl Identity {
 
     /// This method is used to 'forget' the current identity on subsequent requests.
     pub fn forget(&self) {
-        if let Some(id) = self.0.extensions_mut().get_mut::<IdentityItem>() {
+        if let Some(id) = self.0.req_data_mut().get_mut::<IdentityItem>() {
             id.id = None;
             id.changed = true;
         }

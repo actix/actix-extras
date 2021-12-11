@@ -1,11 +1,12 @@
 use std::{error::Error as StdError, rc::Rc};
 
+use actix_utils::future::{ready, Ready};
 use actix_web::{
-    body::{AnyBody, MessageBody},
+    body::{EitherBody, MessageBody},
     dev::{Service, ServiceRequest, ServiceResponse, Transform},
     Error, HttpMessage, Result,
 };
-use futures_util::future::{ready, FutureExt as _, LocalBoxFuture, Ready, TryFutureExt as _};
+use futures_util::future::{FutureExt as _, LocalBoxFuture};
 
 use crate::{identity::IdentityItem, IdentityPolicy};
 
@@ -45,7 +46,7 @@ where
     B: MessageBody + 'static,
     B::Error: StdError,
 {
-    type Response = ServiceResponse;
+    type Response = ServiceResponse<EitherBody<B>>;
     type Error = Error;
     type InitError = ();
     type Transform = IdentityServiceMiddleware<S, T>;
@@ -81,7 +82,7 @@ where
     B: MessageBody + 'static,
     B::Error: StdError,
 {
-    type Response = ServiceResponse;
+    type Response = ServiceResponse<EitherBody<B>>;
     type Error = Error;
     type Future = LocalBoxFuture<'static, Result<Self::Response, Self::Error>>;
 
@@ -103,17 +104,16 @@ where
 
                     if let Some(id) = id {
                         match backend.to_response(id.id, id.changed, &mut res).await {
-                            Ok(_) => Ok(res.map_body(|_, body| AnyBody::new_boxed(body))),
-                            Err(e) => Ok(res.error_response(e)),
+                            Ok(_) => Ok(res.map_into_left_body()),
+                            Err(err) => Ok(res.error_response(err).map_into_right_body()),
                         }
                     } else {
-                        Ok(res.map_body(|_, body| AnyBody::new_boxed(body)))
+                        Ok(res.map_into_left_body())
                     }
                 }
-                Err(err) => Ok(req.error_response(err)),
+                Err(err) => Ok(req.error_response(err).map_into_right_body()),
             }
         }
-        .map_ok(|res| res.map_body(|_, body| AnyBody::new_boxed(body)))
         .boxed_local()
     }
 }
@@ -129,7 +129,8 @@ mod tests {
 
     #[actix_rt::test]
     async fn test_borrowed_mut_error() {
-        use futures_util::future::{lazy, ok, Ready};
+        use actix_utils::future::{ok, Ready};
+        use futures_util::future::lazy;
 
         struct Ident;
         impl IdentityPolicy for Ident {

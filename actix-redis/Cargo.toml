@@ -6,7 +6,7 @@ description = "Redis integration for Actix and session store for Actix Web"
 license = "MIT OR Apache-2.0"
 keywords = ["actix", "redis", "async", "session"]
 homepage = "https://actix.rs"
-repository = "https://github.com/actix/actix-extras"
+repository = "https://github.com/actix/actix-extras.git"
 categories = ["network-programming", "asynchronous"]
 exclude = [".cargo/config"]
 edition = "2018"
@@ -25,7 +25,7 @@ web = ["actix-web"]
 actix = { version = "0.12.0", default-features = false }
 actix-rt = { version = "2.1", default-features = false }
 actix-service = "2.0.0"
-actix-tls = { version = "3.0.0-beta.7", default-features = false, features = ["connect"] }
+actix-tls = { version = "3.0.0-rc.2", default-features = false, features = ["connect"] }
 
 log = "0.4.6"
 backoff = "0.2.1"
@@ -36,11 +36,10 @@ time = "0.2.23"
 tokio = { version = "1", features = ["sync"] }
 tokio-util = "0.6.1"
 
-actix-web = { version = "4.0.0-beta.10", default_features = false, optional = true }
+actix-web = { version = "4.0.0-beta.14", default_features = false, optional = true }
 
 [dev-dependencies]
-actix-test = "0.1.0-beta.5"
-actix-http = "3.0.0-beta.11"
+actix-test = "0.1.0-beta.8"
 actix-rt = "2.1"
 env_logger = "0.8"
 serde = { version = "1.0.101", features = ["derive"] }

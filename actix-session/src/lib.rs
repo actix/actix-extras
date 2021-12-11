@@ -57,14 +57,13 @@
 #![deny(rust_2018_idioms, nonstandard_style)]
 // #![warn(missing_docs)]
 
+pub use extractors::UserSession;
+pub use middleware::{CookieContentSecurity, SessionMiddleware, SessionMiddlewareBuilder};
+pub use session::{Session, SessionStatus};
 #[cfg(feature = "cookie-session")]
 pub use storage::CookieSessionStore;
 #[cfg(feature = "redis-actor-session")]
 pub use storage::RedisActorSessionStore;
-
-pub use extractors::UserSession;
-pub use middleware::{CookieContentSecurity, SessionMiddleware, SessionMiddlewareBuilder};
-pub use session::{Session, SessionStatus};
 
 mod extractors;
 mod middleware;

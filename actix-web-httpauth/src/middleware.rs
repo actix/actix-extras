@@ -1,19 +1,22 @@
 //! HTTP Authentication middleware.
 
 use std::{
-    error::Error as StdError, future::Future, marker::PhantomData, pin::Pin, rc::Rc, sync::Arc,
+    error::Error as StdError,
+    future::Future,
+    marker::PhantomData,
+    pin::Pin,
+    rc::Rc,
+    sync::Arc,
+    task::{Context, Poll},
 };
 
 use actix_web::{
-    body::{AnyBody, MessageBody},
+    body::{EitherBody, MessageBody},
     dev::{Service, ServiceRequest, ServiceResponse, Transform},
     Error,
 };
-use futures_util::{
-    future::{self, FutureExt as _, LocalBoxFuture, TryFutureExt as _},
-    ready,
-    task::{Context, Poll},
-};
+use futures_core::ready;
+use futures_util::future::{self, FutureExt as _, LocalBoxFuture, TryFutureExt as _};
 
 use crate::extractors::{basic, bearer, AuthExtractor};
 
@@ -124,7 +127,7 @@ where
     B: MessageBody + 'static,
     B::Error: StdError,
 {
-    type Response = ServiceResponse;
+    type Response = ServiceResponse<EitherBody<B>>;
     type Error = Error;
     type Transform = AuthenticationMiddleware<S, F, T>;
     type InitError = ();
@@ -159,9 +162,9 @@ where
     B: MessageBody + 'static,
     B::Error: StdError,
 {
-    type Response = ServiceResponse;
+    type Response = ServiceResponse<EitherBody<B>>;
     type Error = S::Error;
-    type Future = LocalBoxFuture<'static, Result<ServiceResponse, Error>>;
+    type Future = LocalBoxFuture<'static, Result<Self::Response, Self::Error>>;
 
     actix_service::forward_ready!(service);
 
@@ -174,7 +177,7 @@ where
             let (req, credentials) = match Extract::<T>::new(req).await {
                 Ok(req) => req,
                 Err((err, req)) => {
-                    return Ok(req.error_response(err));
+                    return Ok(req.error_response(err).map_into_right_body());
                 }
             };
 
@@ -182,10 +185,7 @@ where
             // middleware to do their thing (eg. cors adding headers)
             let req = process_fn(req, credentials).await?;
 
-            service
-                .call(req)
-                .await
-                .map(|res| res.map_body(|_, body| AnyBody::new_boxed(body)))
+            service.call(req).await.map(|res| res.map_into_left_body())
         }
         .boxed_local()
     }
