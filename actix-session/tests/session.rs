@@ -45,7 +45,7 @@ async fn get_session_from_request_head() {
         vec![("key".to_string(), serde_json::to_string(&10).unwrap())],
     );
 
-    let session = req.head_mut().get_session();
+    let session = req.get_session();
     let res = session.get::<u32>("key").unwrap();
     assert_eq!(res, Some(10));
 }

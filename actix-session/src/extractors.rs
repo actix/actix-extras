@@ -1,5 +1,5 @@
 use crate::Session;
-use actix_web::dev::{Payload, RequestHead, ServiceRequest};
+use actix_web::dev::{Payload, ServiceRequest};
 use actix_web::error::Error;
 use actix_web::{FromRequest, HttpMessage, HttpRequest};
 use futures_util::future::{ok, Ready};
@@ -17,12 +17,6 @@ impl UserSession for HttpRequest {
 }
 
 impl UserSession for ServiceRequest {
-    fn get_session(&self) -> Session {
-        Session::get_session(&mut *self.extensions_mut())
-    }
-}
-
-impl UserSession for RequestHead {
     fn get_session(&self) -> Session {
         Session::get_session(&mut *self.extensions_mut())
     }
