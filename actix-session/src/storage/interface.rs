@@ -17,7 +17,7 @@ pub(crate) type SessionState = HashMap<String, String>;
 /// [`CookieSession`]: crate::CookieSession
 /// [`RedisActorSession`]: crate::RedisActorSession
 #[async_trait::async_trait]
-pub trait SessionStore: Send + Sync {
+pub trait SessionStore {
     /// Load the session state associated to a session key.
     async fn load(&self, session_key: &str) -> Result<Option<SessionState>, LoadError>;
 
