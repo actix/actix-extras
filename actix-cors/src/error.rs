@@ -2,22 +2,10 @@ use actix_web::{http::StatusCode, HttpResponse, ResponseError};
 
 use derive_more::{Display, Error};
 
-/// Errors that can occur when constructing the middleware or processing CORS guarded requests.
+/// Errors that can occur when processing CORS guarded requests.
 #[derive(Debug, Clone, Display, Error)]
 #[non_exhaustive]
 pub enum CorsError {
-    /// Origin provided was invalid.
-    #[display(fmt = "Origin provided was invalid")]
-    InvalidOrigin,
-
-    /// Method provided was invalid.
-    #[display(fmt = "Method provided was invalid")]
-    InvalidMethod,
-
-    /// Header provided was invalid.
-    #[display(fmt = "Header provided was invalid")]
-    InvalidHeader,
-
     /// Allowed origin argument must not be wildcard (`*`).
     #[display(fmt = "`allowed_origin` argument must not be wildcard (`*`)")]
     WildcardOrigin,
