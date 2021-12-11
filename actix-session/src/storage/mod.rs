@@ -7,6 +7,6 @@ pub use cookie::CookieSessionStore;
 mod cookie;
 
 #[cfg(feature = "redis-actor-session")]
-pub use redis_actor::RedisActorSessionStore;
+pub use redis_actor::{RedisActorSessionStore, RedisActorSessionStoreBuilder};
 #[cfg(feature = "redis-actor-session")]
 mod redis_actor;

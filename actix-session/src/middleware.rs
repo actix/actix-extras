@@ -6,9 +6,6 @@ use actix_web::dev::{ResponseHead, Service, ServiceRequest, ServiceResponse, Tra
 use actix_web::http::header::SET_COOKIE;
 use actix_web::http::HeaderValue;
 use actix_web::HttpRequest;
-use rand::distributions::Alphanumeric;
-use rand::rngs::OsRng;
-use rand::Rng;
 use std::collections::HashMap;
 use std::future::Future;
 use std::pin::Pin;
@@ -339,13 +336,4 @@ fn delete_session_cookie(response: &mut ResponseHead, config: &SessionCookieConf
     // TODO: remove unwrap
     let val = HeaderValue::from_str(&removal_cookie.to_string()).unwrap();
     response.headers_mut().append(SET_COOKIE, val);
-}
-
-// TODO: check if the current generation algorithm satisfies OWASP's recommendations
-fn generate_session_key() -> String {
-    let value = std::iter::repeat(())
-        .map(|()| OsRng.sample(Alphanumeric))
-        .take(32)
-        .collect::<Vec<_>>();
-    String::from_utf8(value).unwrap()
 }

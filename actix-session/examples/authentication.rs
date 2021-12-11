@@ -1,6 +1,7 @@
-use actix_session::{RedisActorSession, Session};
+use actix_session::{RedisActorSessionStore, Session, SessionMiddleware};
+use actix_web::cookie::{Key, SameSite};
 use actix_web::{
-    cookie, error::InternalError, middleware, web, App, Error, HttpResponse, HttpServer, Responder,
+    error::InternalError, middleware, web, App, Error, HttpResponse, HttpServer, Responder,
 };
 use serde::{Deserialize, Serialize};
 
@@ -78,11 +79,15 @@ async fn main() -> std::io::Result<()> {
             .wrap(middleware::Logger::default())
             // cookie session middleware
             .wrap(
-                RedisActorSession::new("127.0.0.1:6379", &[0; 32])
-                    // allow the cookie to be accessed from javascript
-                    .cookie_http_only(false)
-                    // allow the cookie only from the current domain
-                    .cookie_same_site(cookie::SameSite::Strict),
+                SessionMiddleware::builder(
+                    RedisActorSessionStore::new("127.0.0.1:6379"),
+                    Key::from(&[0; 32]),
+                )
+                // allow the cookie to be accessed from javascript
+                .cookie_http_only(false)
+                // allow the cookie only from the current domain
+                .cookie_same_site(SameSite::Strict)
+                .build(),
             )
             .route("/login", web::post().to(login))
             .route("/secret", web::get().to(secret))

@@ -1,4 +1,5 @@
-use actix_session::{RedisActorSession, Session};
+use actix_session::{RedisActorSessionStore, Session, SessionMiddleware};
+use actix_web::cookie::Key;
 use actix_web::{middleware, web, App, Error, HttpRequest, HttpServer, Responder};
 
 /// simple handler
@@ -20,13 +21,15 @@ async fn index(req: HttpRequest, session: Session) -> Result<impl Responder, Err
 async fn main() -> std::io::Result<()> {
     std::env::set_var("RUST_LOG", "actix_web=info,actix_redis=info");
     env_logger::init();
-
     HttpServer::new(|| {
         App::new()
             // enable logger
             .wrap(middleware::Logger::default())
             // cookie session middleware
-            .wrap(RedisActorSession::new("127.0.0.1:6379", &[0; 32]))
+            .wrap(SessionMiddleware::new(
+                RedisActorSessionStore::new("127.0.0.1:6379"),
+                Key::from(&[0; 32]),
+            ))
             // register simple route, handle all methods
             .service(web::resource("/").to(index))
     })
