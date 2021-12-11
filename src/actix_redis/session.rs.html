@@ -683,28 +683,6 @@
 <span id="682">682</span>
 <span id="683">683</span>
 <span id="684">684</span>
-<span id="685">685</span>
-<span id="686">686</span>
-<span id="687">687</span>
-<span id="688">688</span>
-<span id="689">689</span>
-<span id="690">690</span>
-<span id="691">691</span>
-<span id="692">692</span>
-<span id="693">693</span>
-<span id="694">694</span>
-<span id="695">695</span>
-<span id="696">696</span>
-<span id="697">697</span>
-<span id="698">698</span>
-<span id="699">699</span>
-<span id="700">700</span>
-<span id="701">701</span>
-<span id="702">702</span>
-<span id="703">703</span>
-<span id="704">704</span>
-<span id="705">705</span>
-<span id="706">706</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections::HashMap</span>, <span class="ident">iter</span>, <span class="ident">rc::Rc</span>};
 
 <span class="kw">use</span> <span class="ident">actix::prelude</span>::<span class="kw-2">*</span>;
@@ -877,13 +855,10 @@
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">srv</span>.<span class="ident">call</span>(<span class="ident">req</span>).<span class="kw">await</span><span class="question-mark">?</span>;
 
             <span class="kw">match</span> <span class="ident">Session::get_changes</span>(<span class="kw-2">&amp;mut</span> <span class="ident">res</span>) {
-                (<span class="ident">SessionStatus::Unchanged</span>, <span class="ident">state</span>) =&gt; {
-                    <span class="kw">if</span> <span class="ident">value</span>.<span class="ident">is_none</span>() {
-                        <span class="comment">// implies the session is new</span>
-                        <span class="ident">inner</span>.<span class="ident">update</span>(<span class="ident">res</span>, <span class="ident">state</span>, <span class="ident">value</span>).<span class="kw">await</span>
-                    } <span class="kw">else</span> {
-                        <span class="prelude-val">Ok</span>(<span class="ident">res</span>)
-                    }
+                (<span class="ident">SessionStatus::Unchanged</span>, <span class="kw">_</span>) =&gt; {
+                    <span class="comment">// If the session already exists, we don&#39;t need to update the state stored in Redis</span>
+                    <span class="comment">// If the session is new, creating an empty session in Redis is unnecessary overhead</span>
+                    <span class="prelude-val">Ok</span>(<span class="ident">res</span>)
                 }
 
                 (<span class="ident">SessionStatus::Changed</span>, <span class="ident">state</span>) =&gt; <span class="ident">inner</span>.<span class="ident">update</span>(<span class="ident">res</span>, <span class="ident">state</span>, <span class="ident">value</span>).<span class="kw">await</span>,
@@ -1160,14 +1135,14 @@
     <span class="attribute">#[<span class="ident">actix_rt::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">test_session_workflow</span>() {
         <span class="comment">// Step 1:  GET index</span>
-        <span class="comment">//   - set-cookie actix-session will be in response (session cookie #1)</span>
+        <span class="comment">//   - set-cookie actix-session should NOT be in response (session data is empty)</span>
         <span class="comment">//   - response should be: {&quot;counter&quot;: 0, &quot;user_id&quot;: None}</span>
-        <span class="comment">//   - cookie should have default max-age of 7 days</span>
-        <span class="comment">// Step 2:  GET index, including session cookie #1 in request</span>
-        <span class="comment">//   - set-cookie will *not* be in response</span>
-        <span class="comment">//   - response should be: {&quot;counter&quot;: 0, &quot;user_id&quot;: None}</span>
-        <span class="comment">// Step 3: POST to do_something, including session cookie #1 in request</span>
+        <span class="comment">// Step 2: POST to do_something</span>
         <span class="comment">//   - adds new session state in redis:  {&quot;counter&quot;: 1}</span>
+        <span class="comment">//   - set-cookie actix-session should be in response (session cookie #1)</span>
+        <span class="comment">//   - response should be: {&quot;counter&quot;: 1, &quot;user_id&quot;: None}</span>
+        <span class="comment">// Step 3:  GET index, including session cookie #1 in request</span>
+        <span class="comment">//   - set-cookie will *not* be in response</span>
         <span class="comment">//   - response should be: {&quot;counter&quot;: 1, &quot;user_id&quot;: None}</span>
         <span class="comment">// Step 4: POST again to do_something, including session cookie #1 in request</span>
         <span class="comment">//   - updates session state in redis:  {&quot;counter&quot;: 2}</span>
@@ -1179,15 +1154,15 @@
         <span class="comment">//   - response should be: {&quot;counter&quot;: 2, &quot;user_id&quot;: &quot;ferris&quot;}</span>
         <span class="comment">// Step 7: POST again to do_something, including session cookie #2 in request</span>
         <span class="comment">//   - updates session state in redis: {&quot;counter&quot;: 3, &quot;user_id&quot;: &quot;ferris&quot;}</span>
-        <span class="comment">//   - response should be: {&quot;counter&quot;: 2, &quot;user_id&quot;: None}</span>
+        <span class="comment">//   - response should be: {&quot;counter&quot;: 3, &quot;user_id&quot;: &quot;ferris&quot;}</span>
         <span class="comment">// Step 8: GET index, including session cookie #1 in request</span>
-        <span class="comment">//   - set-cookie actix-session will be in response (session cookie #3)</span>
+        <span class="comment">//   - set-cookie actix-session should NOT be in response (session data is empty)</span>
         <span class="comment">//   - response should be: {&quot;counter&quot;: 0, &quot;user_id&quot;: None}</span>
         <span class="comment">// Step 9: POST to logout, including session cookie #2</span>
         <span class="comment">//   - set-cookie actix-session will be in response with session cookie #2</span>
         <span class="comment">//     invalidation logic</span>
         <span class="comment">// Step 10: GET index, including session cookie #2 in request</span>
-        <span class="comment">//   - set-cookie actix-session will be in response (session cookie #3)</span>
+        <span class="comment">//   - set-cookie actix-session should NOT be in response (session data is empty)</span>
         <span class="comment">//   - response should be: {&quot;counter&quot;: 0, &quot;user_id&quot;: None}</span>
 
         <span class="kw">let</span> <span class="ident">srv</span> <span class="op">=</span> <span class="ident">actix_test::start</span>(<span class="op">|</span><span class="op">|</span> {
@@ -1201,17 +1176,11 @@
         });
 
         <span class="comment">// Step 1:  GET index</span>
-        <span class="comment">//   - set-cookie actix-session will be in response (session cookie #1)</span>
+        <span class="comment">//   - set-cookie actix-session should NOT be in response (session data is empty)</span>
         <span class="comment">//   - response should be: {&quot;counter&quot;: 0, &quot;user_id&quot;: None}</span>
         <span class="kw">let</span> <span class="ident">req_1a</span> <span class="op">=</span> <span class="ident">srv</span>.<span class="ident">get</span>(<span class="string">&quot;/&quot;</span>).<span class="ident">send</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">resp_1</span> <span class="op">=</span> <span class="ident">req_1a</span>.<span class="kw">await</span>.<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">cookie_1</span> <span class="op">=</span> <span class="ident">resp_1</span>
-            .<span class="ident">cookies</span>()
-            .<span class="ident">unwrap</span>()
-            .<span class="ident">clone</span>()
-            .<span class="ident">into_iter</span>()
-            .<span class="ident">find</span>(<span class="op">|</span><span class="ident">c</span><span class="op">|</span> <span class="ident">c</span>.<span class="ident">name</span>() <span class="op">==</span> <span class="string">&quot;test-session&quot;</span>)
-            .<span class="ident">unwrap</span>();
+        <span class="macro">assert!</span>(<span class="ident">resp_1</span>.<span class="ident">cookies</span>().<span class="ident">unwrap</span>().<span class="ident">is_empty</span>());
         <span class="kw">let</span> <span class="ident">result_1</span> <span class="op">=</span> <span class="ident">resp_1</span>.<span class="ident">json</span>::<span class="op">&lt;</span><span class="ident">IndexResponse</span><span class="op">&gt;</span>().<span class="kw">await</span>.<span class="ident">unwrap</span>();
         <span class="macro">assert_eq!</span>(
             <span class="ident">result_1</span>,
@@ -1220,26 +1189,28 @@
                 <span class="ident">counter</span>: <span class="number">0</span>
             }
         );
-        <span class="macro">assert_eq!</span>(<span class="ident">cookie_1</span>.<span class="ident">max_age</span>(), <span class="prelude-val">Some</span>(<span class="ident">Duration::days</span>(<span class="number">7</span>)));
 
-        <span class="comment">// Step 2:  GET index, including session cookie #1 in request</span>
-        <span class="comment">//   - set-cookie will *not* be in response</span>
-        <span class="comment">//   - response should be: {&quot;counter&quot;: 0, &quot;user_id&quot;: None}</span>
-        <span class="kw">let</span> <span class="ident">req_2</span> <span class="op">=</span> <span class="ident">srv</span>.<span class="ident">get</span>(<span class="string">&quot;/&quot;</span>).<span class="ident">cookie</span>(<span class="ident">cookie_1</span>.<span class="ident">clone</span>()).<span class="ident">send</span>();
+        <span class="comment">// Step 2: POST to do_something</span>
+        <span class="comment">//   - adds new session state in redis:  {&quot;counter&quot;: 1}</span>
+        <span class="comment">//   - set-cookie actix-session should be in response (session cookie #1)</span>
+        <span class="comment">//   - response should be: {&quot;counter&quot;: 1, &quot;user_id&quot;: None}</span>
+        <span class="kw">let</span> <span class="ident">req_2</span> <span class="op">=</span> <span class="ident">srv</span>.<span class="ident">post</span>(<span class="string">&quot;/do_something&quot;</span>).<span class="ident">send</span>();
         <span class="kw">let</span> <span class="ident">resp_2</span> <span class="op">=</span> <span class="ident">req_2</span>.<span class="kw">await</span>.<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">cookie_2</span> <span class="op">=</span> <span class="ident">resp_2</span>
+        <span class="kw">let</span> <span class="ident">cookie_1</span> <span class="op">=</span> <span class="ident">resp_2</span>
             .<span class="ident">cookies</span>()
             .<span class="ident">unwrap</span>()
             .<span class="ident">clone</span>()
             .<span class="ident">into_iter</span>()
-            .<span class="ident">find</span>(<span class="op">|</span><span class="ident">c</span><span class="op">|</span> <span class="ident">c</span>.<span class="ident">name</span>() <span class="op">==</span> <span class="string">&quot;test-session&quot;</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">cookie_2</span>, <span class="prelude-val">None</span>);
+            .<span class="ident">find</span>(<span class="op">|</span><span class="ident">c</span><span class="op">|</span> <span class="ident">c</span>.<span class="ident">name</span>() <span class="op">==</span> <span class="string">&quot;test-session&quot;</span>)
+            .<span class="ident">unwrap</span>();
+        <span class="macro">assert_eq!</span>(<span class="ident">cookie_1</span>.<span class="ident">max_age</span>(), <span class="prelude-val">Some</span>(<span class="ident">Duration::days</span>(<span class="number">7</span>)));
 
-        <span class="comment">// Step 3: POST to do_something, including session cookie #1 in request</span>
-        <span class="comment">//   - adds new session state in redis:  {&quot;counter&quot;: 1}</span>
+        <span class="comment">// Step 3:  GET index, including session cookie #1 in request</span>
+        <span class="comment">//   - set-cookie will *not* be in response</span>
         <span class="comment">//   - response should be: {&quot;counter&quot;: 1, &quot;user_id&quot;: None}</span>
-        <span class="kw">let</span> <span class="ident">req_3</span> <span class="op">=</span> <span class="ident">srv</span>.<span class="ident">post</span>(<span class="string">&quot;/do_something&quot;</span>).<span class="ident">cookie</span>(<span class="ident">cookie_1</span>.<span class="ident">clone</span>()).<span class="ident">send</span>();
+        <span class="kw">let</span> <span class="ident">req_3</span> <span class="op">=</span> <span class="ident">srv</span>.<span class="ident">get</span>(<span class="string">&quot;/&quot;</span>).<span class="ident">cookie</span>(<span class="ident">cookie_1</span>.<span class="ident">clone</span>()).<span class="ident">send</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">resp_3</span> <span class="op">=</span> <span class="ident">req_3</span>.<span class="kw">await</span>.<span class="ident">unwrap</span>();
+        <span class="macro">assert!</span>(<span class="ident">resp_3</span>.<span class="ident">cookies</span>().<span class="ident">unwrap</span>().<span class="ident">is_empty</span>());
         <span class="kw">let</span> <span class="ident">result_3</span> <span class="op">=</span> <span class="ident">resp_3</span>.<span class="ident">json</span>::<span class="op">&lt;</span><span class="ident">IndexResponse</span><span class="op">&gt;</span>().<span class="kw">await</span>.<span class="ident">unwrap</span>();
         <span class="macro">assert_eq!</span>(
             <span class="ident">result_3</span>,
@@ -1304,7 +1275,7 @@
 
         <span class="comment">// Step 7: POST again to do_something, including session cookie #2 in request</span>
         <span class="comment">//   - updates session state in redis: {&quot;counter&quot;: 3, &quot;user_id&quot;: &quot;ferris&quot;}</span>
-        <span class="comment">//   - response should be: {&quot;counter&quot;: 2, &quot;user_id&quot;: None}</span>
+        <span class="comment">//   - response should be: {&quot;counter&quot;: 3, &quot;user_id&quot;: &quot;ferris&quot;}</span>
         <span class="kw">let</span> <span class="ident">req_7</span> <span class="op">=</span> <span class="ident">srv</span>.<span class="ident">post</span>(<span class="string">&quot;/do_something&quot;</span>).<span class="ident">cookie</span>(<span class="ident">cookie_2</span>.<span class="ident">clone</span>()).<span class="ident">send</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">resp_7</span> <span class="op">=</span> <span class="ident">req_7</span>.<span class="kw">await</span>.<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">result_7</span> <span class="op">=</span> <span class="ident">resp_7</span>.<span class="ident">json</span>::<span class="op">&lt;</span><span class="ident">IndexResponse</span><span class="op">&gt;</span>().<span class="kw">await</span>.<span class="ident">unwrap</span>();
@@ -1317,17 +1288,11 @@
         );
 
         <span class="comment">// Step 8: GET index, including session cookie #1 in request</span>
-        <span class="comment">//   - set-cookie actix-session will be in response (session cookie #3)</span>
+        <span class="comment">//   - set-cookie actix-session should NOT be in response (session data is empty)</span>
         <span class="comment">//   - response should be: {&quot;counter&quot;: 0, &quot;user_id&quot;: None}</span>
         <span class="kw">let</span> <span class="ident">req_8</span> <span class="op">=</span> <span class="ident">srv</span>.<span class="ident">get</span>(<span class="string">&quot;/&quot;</span>).<span class="ident">cookie</span>(<span class="ident">cookie_1</span>.<span class="ident">clone</span>()).<span class="ident">send</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">resp_8</span> <span class="op">=</span> <span class="ident">req_8</span>.<span class="kw">await</span>.<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">cookie_3</span> <span class="op">=</span> <span class="ident">resp_8</span>
-            .<span class="ident">cookies</span>()
-            .<span class="ident">unwrap</span>()
-            .<span class="ident">clone</span>()
-            .<span class="ident">into_iter</span>()
-            .<span class="ident">find</span>(<span class="op">|</span><span class="ident">c</span><span class="op">|</span> <span class="ident">c</span>.<span class="ident">name</span>() <span class="op">==</span> <span class="string">&quot;test-session&quot;</span>)
-            .<span class="ident">unwrap</span>();
+        <span class="macro">assert!</span>(<span class="ident">resp_8</span>.<span class="ident">cookies</span>().<span class="ident">unwrap</span>().<span class="ident">is_empty</span>());
         <span class="kw">let</span> <span class="ident">result_8</span> <span class="op">=</span> <span class="ident">resp_8</span>.<span class="ident">json</span>::<span class="op">&lt;</span><span class="ident">IndexResponse</span><span class="op">&gt;</span>().<span class="kw">await</span>.<span class="ident">unwrap</span>();
         <span class="macro">assert_eq!</span>(
             <span class="ident">result_8</span>,
@@ -1336,14 +1301,13 @@
                 <span class="ident">counter</span>: <span class="number">0</span>
             }
         );
-        <span class="macro">assert_ne!</span>(<span class="ident">cookie_3</span>.<span class="ident">value</span>(), <span class="ident">cookie_2</span>.<span class="ident">value</span>());
 
         <span class="comment">// Step 9: POST to logout, including session cookie #2</span>
         <span class="comment">//   - set-cookie actix-session will be in response with session cookie #2</span>
         <span class="comment">//     invalidation logic</span>
         <span class="kw">let</span> <span class="ident">req_9</span> <span class="op">=</span> <span class="ident">srv</span>.<span class="ident">post</span>(<span class="string">&quot;/logout&quot;</span>).<span class="ident">cookie</span>(<span class="ident">cookie_2</span>.<span class="ident">clone</span>()).<span class="ident">send</span>();
         <span class="kw">let</span> <span class="ident">resp_9</span> <span class="op">=</span> <span class="ident">req_9</span>.<span class="kw">await</span>.<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">cookie_4</span> <span class="op">=</span> <span class="ident">resp_9</span>
+        <span class="kw">let</span> <span class="ident">cookie_3</span> <span class="op">=</span> <span class="ident">resp_9</span>
             .<span class="ident">cookies</span>()
             .<span class="ident">unwrap</span>()
             .<span class="ident">clone</span>()
@@ -1352,17 +1316,18 @@
             .<span class="ident">unwrap</span>();
         <span class="macro">assert_ne!</span>(
             <span class="ident">OffsetDateTime::now_utc</span>().<span class="ident">year</span>(),
-            <span class="ident">cookie_4</span>
+            <span class="ident">cookie_3</span>
                 .<span class="ident">expires</span>()
                 .<span class="ident">map</span>(<span class="op">|</span><span class="ident">t</span><span class="op">|</span> <span class="ident">t</span>.<span class="ident">datetime</span>().<span class="ident">expect</span>(<span class="string">&quot;Expiration is a datetime&quot;</span>).<span class="ident">year</span>())
                 .<span class="ident">unwrap</span>()
         );
 
         <span class="comment">// Step 10: GET index, including session cookie #2 in request</span>
-        <span class="comment">//   - set-cookie actix-session will be in response (session cookie #3)</span>
+        <span class="comment">//   - set-cookie actix-session should NOT be in response (session data is empty)</span>
         <span class="comment">//   - response should be: {&quot;counter&quot;: 0, &quot;user_id&quot;: None}</span>
         <span class="kw">let</span> <span class="ident">req_10</span> <span class="op">=</span> <span class="ident">srv</span>.<span class="ident">get</span>(<span class="string">&quot;/&quot;</span>).<span class="ident">cookie</span>(<span class="ident">cookie_2</span>.<span class="ident">clone</span>()).<span class="ident">send</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">resp_10</span> <span class="op">=</span> <span class="ident">req_10</span>.<span class="kw">await</span>.<span class="ident">unwrap</span>();
+        <span class="macro">assert!</span>(<span class="ident">resp_10</span>.<span class="ident">cookies</span>().<span class="ident">unwrap</span>().<span class="ident">is_empty</span>());
         <span class="kw">let</span> <span class="ident">result_10</span> <span class="op">=</span> <span class="ident">resp_10</span>.<span class="ident">json</span>::<span class="op">&lt;</span><span class="ident">IndexResponse</span><span class="op">&gt;</span>().<span class="kw">await</span>.<span class="ident">unwrap</span>();
         <span class="macro">assert_eq!</span>(
             <span class="ident">result_10</span>,
@@ -1371,15 +1336,6 @@
                 <span class="ident">counter</span>: <span class="number">0</span>
             }
         );
-
-        <span class="kw">let</span> <span class="ident">cookie_5</span> <span class="op">=</span> <span class="ident">resp_10</span>
-            .<span class="ident">cookies</span>()
-            .<span class="ident">unwrap</span>()
-            .<span class="ident">clone</span>()
-            .<span class="ident">into_iter</span>()
-            .<span class="ident">find</span>(<span class="op">|</span><span class="ident">c</span><span class="op">|</span> <span class="ident">c</span>.<span class="ident">name</span>() <span class="op">==</span> <span class="string">&quot;test-session&quot;</span>)
-            .<span class="ident">unwrap</span>();
-        <span class="macro">assert_ne!</span>(<span class="ident">cookie_5</span>.<span class="ident">value</span>(), <span class="ident">cookie_2</span>.<span class="ident">value</span>());
     }
 
     <span class="attribute">#[<span class="ident">actix_rt::test</span>]</span>
@@ -1395,10 +1351,10 @@
                         .<span class="ident">cookie_max_age</span>(<span class="prelude-val">None</span>),
                 )
                 .<span class="ident">wrap</span>(<span class="ident">middleware::Logger::default</span>())
-                .<span class="ident">service</span>(<span class="ident">resource</span>(<span class="string">&quot;/&quot;</span>).<span class="ident">route</span>(<span class="ident">get</span>().<span class="ident">to</span>(<span class="ident">index</span>)))
+                .<span class="ident">service</span>(<span class="ident">resource</span>(<span class="string">&quot;/do_something&quot;</span>).<span class="ident">route</span>(<span class="ident">post</span>().<span class="ident">to</span>(<span class="ident">do_something</span>)))
         });
 
-        <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="ident">srv</span>.<span class="ident">get</span>(<span class="string">&quot;/&quot;</span>).<span class="ident">send</span>();
+        <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="ident">srv</span>.<span class="ident">post</span>(<span class="string">&quot;/do_something&quot;</span>).<span class="ident">send</span>();
         <span class="kw">let</span> <span class="ident">resp</span> <span class="op">=</span> <span class="ident">req</span>.<span class="kw">await</span>.<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">cookie</span> <span class="op">=</span> <span class="ident">resp</span>
             .<span class="ident">cookies</span>()
