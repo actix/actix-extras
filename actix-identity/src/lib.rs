@@ -103,7 +103,11 @@ where
 mod tests {
     use std::time::SystemTime;
 
-    use actix_web::{dev::ServiceResponse, test, web, App, Error};
+    use actix_web::{
+        body::{BoxBody, EitherBody},
+        dev::ServiceResponse,
+        test, web, App, Error,
+    };
 
     use super::*;
 
@@ -130,7 +134,7 @@ mod tests {
         f: F,
     ) -> impl actix_service::Service<
         actix_http::Request,
-        Response = ServiceResponse<actix_web::body::AnyBody>,
+        Response = ServiceResponse<EitherBody<BoxBody>>,
         Error = Error,
     > {
         test::init_service(

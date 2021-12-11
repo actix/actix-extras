@@ -205,7 +205,10 @@ mod test {
 
     use actix_web::{
         dev::Transform,
-        http::{header, HeaderValue, Method, StatusCode},
+        http::{
+            header::{self, HeaderValue},
+            Method, StatusCode,
+        },
         test::{self, TestRequest},
     };
 

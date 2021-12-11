@@ -51,7 +51,7 @@ use std::{
 
 use actix_utils::future::{ok, Ready};
 use actix_web::{
-    dev::{Extensions, Payload, RequestHead, ServiceRequest, ServiceResponse},
+    dev::{Extensions, Payload, ServiceRequest, ServiceResponse},
     Error, FromRequest, HttpMessage, HttpRequest,
 };
 use serde::{de::DeserializeOwned, Serialize};
@@ -96,12 +96,6 @@ impl UserSession for HttpRequest {
 }
 
 impl UserSession for ServiceRequest {
-    fn get_session(&self) -> Session {
-        Session::get_session(&mut *self.extensions_mut())
-    }
-}
-
-impl UserSession for RequestHead {
     fn get_session(&self) -> Session {
         Session::get_session(&mut *self.extensions_mut())
     }
@@ -353,20 +347,6 @@ mod tests {
         let session = req.get_session();
         let res = session.get("key").unwrap();
         assert_eq!(res, Some(true));
-    }
-
-    #[actix_web::test]
-    async fn get_session_from_request_head() {
-        let mut req = test::TestRequest::default().to_srv_request();
-
-        Session::set_session(
-            &mut req,
-            vec![("key".to_string(), serde_json::to_string(&10).unwrap())],
-        );
-
-        let session = req.head_mut().get_session();
-        let res = session.get::<u32>("key").unwrap();
-        assert_eq!(res, Some(10));
     }
 
     #[actix_web::test]
