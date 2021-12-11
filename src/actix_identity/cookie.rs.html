@@ -821,6 +821,13 @@
 <span id="820">820</span>
 <span id="821">821</span>
 <span id="822">822</span>
+<span id="823">823</span>
+<span id="824">824</span>
+<span id="825">825</span>
+<span id="826">826</span>
+<span id="827">827</span>
+<span id="828">828</span>
+<span id="829">829</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">rc::Rc</span>, <span class="ident">time::SystemTime</span>};
 
 <span class="kw">use</span> <span class="ident">actix_utils::future</span>::{<span class="ident">ready</span>, <span class="ident">Ready</span>};
@@ -1194,6 +1201,7 @@
     <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">borrow::Borrow</span>, <span class="ident">time::SystemTime</span>};
 
     <span class="kw">use</span> <span class="ident">actix_web</span>::{
+        <span class="ident">body</span>::{<span class="ident">BoxBody</span>, <span class="ident">EitherBody</span>},
         <span class="ident">cookie</span>::{<span class="ident">Cookie</span>, <span class="ident">CookieJar</span>, <span class="ident">Key</span>, <span class="ident">SameSite</span>},
         <span class="ident">dev::ServiceResponse</span>,
         <span class="ident">http</span>::{<span class="ident">header</span>, <span class="ident">StatusCode</span>},
@@ -1231,7 +1239,7 @@
     }
 
     <span class="kw">fn</span> <span class="ident">assert_login_cookie</span>(
-        <span class="ident">response</span>: <span class="kw-2">&amp;mut</span> <span class="ident">ServiceResponse</span>,
+        <span class="ident">response</span>: <span class="kw-2">&amp;mut</span> <span class="ident">ServiceResponse</span><span class="op">&lt;</span><span class="ident">EitherBody</span><span class="op">&lt;</span><span class="ident">BoxBody</span><span class="op">&gt;</span><span class="op">&gt;</span>,
         <span class="ident">identity</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
         <span class="ident">login_timestamp</span>: <span class="ident">LoginTimestampCheck</span>,
         <span class="ident">visit_timestamp</span>: <span class="ident">VisitTimeStampCheck</span>,
@@ -1400,13 +1408,19 @@
         <span class="ident">jar</span>.<span class="ident">get</span>(<span class="ident">COOKIE_NAME</span>).<span class="ident">unwrap</span>().<span class="ident">clone</span>()
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">assert_logged_in</span>(<span class="ident">response</span>: <span class="ident">ServiceResponse</span>, <span class="ident">identity</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span>) {
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">assert_logged_in</span>(
+        <span class="ident">response</span>: <span class="ident">ServiceResponse</span><span class="op">&lt;</span><span class="ident">EitherBody</span><span class="op">&lt;</span><span class="ident">BoxBody</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+        <span class="ident">identity</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span>,
+    ) {
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">test::read_body</span>(<span class="ident">response</span>).<span class="kw">await</span>;
         <span class="kw">let</span> <span class="ident">resp</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">serde_json::from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>[..]).<span class="ident">unwrap</span>();
         <span class="macro">assert_eq!</span>(<span class="ident">resp</span>.<span class="ident">as_ref</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">s</span>.<span class="ident">borrow</span>()), <span class="ident">identity</span>);
     }
 
-    <span class="kw">fn</span> <span class="ident">assert_legacy_login_cookie</span>(<span class="ident">response</span>: <span class="kw-2">&amp;mut</span> <span class="ident">ServiceResponse</span>, <span class="ident">identity</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) {
+    <span class="kw">fn</span> <span class="ident">assert_legacy_login_cookie</span>(
+        <span class="ident">response</span>: <span class="kw-2">&amp;mut</span> <span class="ident">ServiceResponse</span><span class="op">&lt;</span><span class="ident">EitherBody</span><span class="op">&lt;</span><span class="ident">BoxBody</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+        <span class="ident">identity</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
+    ) {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cookies</span> <span class="op">=</span> <span class="ident">CookieJar::new</span>();
         <span class="kw">for</span> <span class="ident">cookie</span> <span class="kw">in</span> <span class="ident">response</span>.<span class="ident">headers</span>().<span class="ident">get_all</span>(<span class="ident">header::SET_COOKIE</span>) {
             <span class="ident">cookies</span>.<span class="ident">add</span>(<span class="ident">Cookie::parse</span>(<span class="ident">cookie</span>.<span class="ident">to_str</span>().<span class="ident">unwrap</span>().<span class="ident">to_string</span>()).<span class="ident">unwrap</span>());
@@ -1418,7 +1432,7 @@
         <span class="macro">assert_eq!</span>(<span class="ident">cookie</span>.<span class="ident">value</span>(), <span class="ident">identity</span>);
     }
 
-    <span class="kw">fn</span> <span class="ident">assert_no_login_cookie</span>(<span class="ident">response</span>: <span class="kw-2">&amp;mut</span> <span class="ident">ServiceResponse</span>) {
+    <span class="kw">fn</span> <span class="ident">assert_no_login_cookie</span>(<span class="ident">response</span>: <span class="kw-2">&amp;mut</span> <span class="ident">ServiceResponse</span><span class="op">&lt;</span><span class="ident">EitherBody</span><span class="op">&lt;</span><span class="ident">BoxBody</span><span class="op">&gt;</span><span class="op">&gt;</span>) {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cookies</span> <span class="op">=</span> <span class="ident">CookieJar::new</span>();
         <span class="kw">for</span> <span class="ident">cookie</span> <span class="kw">in</span> <span class="ident">response</span>.<span class="ident">headers</span>().<span class="ident">get_all</span>(<span class="ident">header::SET_COOKIE</span>) {
             <span class="ident">cookies</span>.<span class="ident">add</span>(<span class="ident">Cookie::parse</span>(<span class="ident">cookie</span>.<span class="ident">to_str</span>().<span class="ident">unwrap</span>().<span class="ident">to_string</span>()).<span class="ident">unwrap</span>());

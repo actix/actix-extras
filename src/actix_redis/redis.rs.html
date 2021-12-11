@@ -145,8 +145,8 @@
 
 <span class="kw">use</span> <span class="ident">actix::prelude</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">actix_rt::net::TcpStream</span>;
-<span class="kw">use</span> <span class="ident">actix_service::boxed</span>::{<span class="ident">service</span>, <span class="ident">BoxService</span>};
-<span class="kw">use</span> <span class="ident">actix_tls::connect</span>::{<span class="ident">ConnectError</span>, <span class="ident">ConnectInfo</span> <span class="kw">as</span> <span class="ident">Connect</span>, <span class="ident">Connection</span>, <span class="ident">Connector</span>};
+<span class="kw">use</span> <span class="ident">actix_service::boxed</span>::{<span class="self">self</span>, <span class="ident">BoxService</span>};
+<span class="kw">use</span> <span class="ident">actix_tls::connect</span>::{<span class="ident">ConnectError</span>, <span class="ident">ConnectInfo</span>, <span class="ident">Connection</span>, <span class="ident">ConnectorService</span>};
 <span class="kw">use</span> <span class="ident">backoff::backoff::Backoff</span>;
 <span class="kw">use</span> <span class="ident">backoff::ExponentialBackoff</span>;
 <span class="kw">use</span> <span class="ident">log</span>::{<span class="ident">error</span>, <span class="ident">info</span>, <span class="ident">warn</span>};
@@ -169,7 +169,7 @@
 <span class="doccomment">/// Redis communication actor</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RedisActor</span> {
     <span class="ident">addr</span>: <span class="ident">String</span>,
-    <span class="ident">connector</span>: <span class="ident">BoxService</span><span class="op">&lt;</span><span class="ident">Connect</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>, <span class="ident">Connection</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">TcpStream</span><span class="op">&gt;</span>, <span class="ident">ConnectError</span><span class="op">&gt;</span>,
+    <span class="ident">connector</span>: <span class="ident">BoxService</span><span class="op">&lt;</span><span class="ident">ConnectInfo</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>, <span class="ident">Connection</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">TcpStream</span><span class="op">&gt;</span>, <span class="ident">ConnectError</span><span class="op">&gt;</span>,
     <span class="ident">backoff</span>: <span class="ident">ExponentialBackoff</span>,
     <span class="ident">cell</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">actix::io::FramedWrite</span><span class="op">&lt;</span><span class="ident">RespValue</span>, <span class="ident">WriteHalf</span><span class="op">&lt;</span><span class="ident">TcpStream</span><span class="op">&gt;</span>, <span class="ident">RespCodec</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="ident">queue</span>: <span class="ident">VecDeque</span><span class="op">&lt;</span><span class="ident">oneshot::Sender</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RespValue</span>, <span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
@@ -187,7 +187,7 @@
 
         <span class="ident">Supervisor::start</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">RedisActor</span> {
             <span class="ident">addr</span>,
-            <span class="ident">connector</span>: <span class="ident">service</span>(<span class="ident">Connector::default</span>().<span class="ident">service</span>()),
+            <span class="ident">connector</span>: <span class="ident">boxed::service</span>(<span class="ident">ConnectorService::default</span>()),
             <span class="ident">cell</span>: <span class="prelude-val">None</span>,
             <span class="ident">backoff</span>,
             <span class="ident">queue</span>: <span class="ident">VecDeque::new</span>(),
@@ -199,7 +199,7 @@
     <span class="kw">type</span> <span class="ident">Context</span> <span class="op">=</span> <span class="ident">Context</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>;
 
     <span class="kw">fn</span> <span class="ident">started</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">ctx</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Context</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>) {
-        <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="ident">Connect::new</span>(<span class="self">self</span>.<span class="ident">addr</span>.<span class="ident">to_owned</span>());
+        <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="ident">ConnectInfo::new</span>(<span class="self">self</span>.<span class="ident">addr</span>.<span class="ident">to_owned</span>());
         <span class="self">self</span>.<span class="ident">connector</span>
             .<span class="ident">call</span>(<span class="ident">req</span>)
             .<span class="ident">into_actor</span>(<span class="self">self</span>)

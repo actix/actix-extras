@@ -643,31 +643,20 @@
 <span id="642">642</span>
 <span id="643">643</span>
 <span id="644">644</span>
-<span id="645">645</span>
-<span id="646">646</span>
-<span id="647">647</span>
-<span id="648">648</span>
-<span id="649">649</span>
-<span id="650">650</span>
-<span id="651">651</span>
-<span id="652">652</span>
-<span id="653">653</span>
-<span id="654">654</span>
-<span id="655">655</span>
-<span id="656">656</span>
-<span id="657">657</span>
-<span id="658">658</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">collections::HashSet</span>, <span class="ident">convert::TryInto</span>, <span class="ident">error::Error</span> <span class="kw">as</span> <span class="ident">StdError</span>, <span class="ident">iter::FromIterator</span>, <span class="ident">rc::Rc</span>,
 };
 
 <span class="kw">use</span> <span class="ident">actix_utils::future</span>::{<span class="self">self</span>, <span class="ident">Ready</span>};
 <span class="kw">use</span> <span class="ident">actix_web</span>::{
-    <span class="ident">body::MessageBody</span>,
+    <span class="ident">body</span>::{<span class="ident">EitherBody</span>, <span class="ident">MessageBody</span>},
     <span class="ident">dev</span>::{<span class="ident">RequestHead</span>, <span class="ident">Service</span>, <span class="ident">ServiceRequest</span>, <span class="ident">ServiceResponse</span>, <span class="ident">Transform</span>},
-    <span class="ident">error</span>::{<span class="ident">Error</span>, <span class="prelude-ty">Result</span>},
-    <span class="ident">http</span>::{<span class="self">self</span>, <span class="ident">header::HeaderName</span>, <span class="ident">Error</span> <span class="kw">as</span> <span class="ident">HttpError</span>, <span class="ident">HeaderValue</span>, <span class="ident">Method</span>, <span class="ident">Uri</span>},
-    <span class="ident">Either</span>,
+    <span class="ident">error::HttpError</span>,
+    <span class="ident">http</span>::{
+        <span class="ident">header</span>::{<span class="ident">HeaderName</span>, <span class="ident">HeaderValue</span>},
+        <span class="ident">Method</span>, <span class="ident">Uri</span>,
+    },
+    <span class="ident">Either</span>, <span class="ident">Error</span>, <span class="prelude-ty">Result</span>,
 };
 <span class="kw">use</span> <span class="ident">log::error</span>;
 <span class="kw">use</span> <span class="ident">once_cell::sync::Lazy</span>;
@@ -679,7 +668,7 @@
 <span class="doccomment">/// Additionally, always causes first error (if any) to be reported during initialization.</span>
 <span class="kw">fn</span> <span class="ident">cors</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
     <span class="ident">inner</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Inner</span><span class="op">&gt;</span>,
-    <span class="ident">err</span>: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Either</span><span class="op">&lt;</span><span class="ident">http::Error</span>, <span class="ident">CorsError</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">err</span>: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Either</span><span class="op">&lt;</span><span class="ident">HttpError</span>, <span class="ident">CorsError</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 ) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">Inner</span><span class="op">&gt;</span> {
     <span class="kw">if</span> <span class="ident">err</span>.<span class="ident">is_some</span>() {
         <span class="kw">return</span> <span class="prelude-val">None</span>;
@@ -733,7 +722,7 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Cors</span> {
     <span class="ident">inner</span>: <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Inner</span><span class="op">&gt;</span>,
-    <span class="ident">error</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Either</span><span class="op">&lt;</span><span class="ident">http::Error</span>, <span class="ident">CorsError</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">error</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Either</span><span class="op">&lt;</span><span class="ident">HttpError</span>, <span class="ident">CorsError</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">Cors</span> {
@@ -1149,7 +1138,7 @@
     <span class="ident">B</span>: <span class="ident">MessageBody</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
     <span class="ident">B::Error</span>: <span class="ident">StdError</span>,
 {
-    <span class="kw">type</span> <span class="ident">Response</span> <span class="op">=</span> <span class="ident">ServiceResponse</span>;
+    <span class="kw">type</span> <span class="ident">Response</span> <span class="op">=</span> <span class="ident">ServiceResponse</span><span class="op">&lt;</span><span class="ident">EitherBody</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span><span class="op">&gt;</span>;
     <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Error</span>;
     <span class="kw">type</span> <span class="ident">InitError</span> <span class="op">=</span> ();
     <span class="kw">type</span> <span class="ident">Transform</span> <span class="op">=</span> <span class="ident">CorsMiddleware</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>;
@@ -1230,15 +1219,13 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">test</span> {
     <span class="kw">use</span> <span class="ident">std::convert</span>::{<span class="ident">Infallible</span>, <span class="ident">TryInto</span>};
-    <span class="kw">use</span> <span class="ident">std::pin::Pin</span>;
-    <span class="kw">use</span> <span class="ident">std::task</span>::{<span class="ident">Context</span>, <span class="ident">Poll</span>};
 
     <span class="kw">use</span> <span class="ident">actix_web</span>::{
-        <span class="ident">body</span>::{<span class="ident">BodySize</span>, <span class="ident">MessageBody</span>},
+        <span class="ident">body</span>,
         <span class="ident">dev</span>::{<span class="ident">fn_service</span>, <span class="ident">Transform</span>},
-        <span class="ident">http</span>::{<span class="ident">HeaderName</span>, <span class="ident">StatusCode</span>},
+        <span class="ident">http</span>::{<span class="ident">header::HeaderName</span>, <span class="ident">StatusCode</span>},
         <span class="ident">test</span>::{<span class="self">self</span>, <span class="ident">TestRequest</span>},
-        <span class="ident">web</span>::{<span class="ident">Bytes</span>, <span class="ident">HttpResponse</span>},
+        <span class="ident">web::HttpResponse</span>,
     };
 
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
@@ -1293,23 +1280,8 @@
 
     <span class="attribute">#[<span class="ident">actix_rt::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">middleware_generic_over_body_type</span>() {
-        <span class="kw">struct</span> <span class="ident">Foo</span>;
-
-        <span class="kw">impl</span> <span class="ident">MessageBody</span> <span class="kw">for</span> <span class="ident">Foo</span> {
-            <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">std::io::Error</span>;
-            <span class="kw">fn</span> <span class="ident">size</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">BodySize</span> {
-                <span class="ident">BodySize::None</span>
-            }
-            <span class="kw">fn</span> <span class="ident">poll_next</span>(
-                <span class="self">self</span>: <span class="ident">Pin</span><span class="op">&lt;</span><span class="kw-2">&amp;mut</span> <span class="self">Self</span><span class="op">&gt;</span>,
-                <span class="kw">_</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Context</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>,
-            ) -&gt; <span class="ident">Poll</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Bytes</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-                <span class="ident">Poll::Ready</span>(<span class="prelude-val">None</span>)
-            }
-        }
-
         <span class="kw">let</span> <span class="ident">srv</span> <span class="op">=</span> <span class="ident">fn_service</span>(<span class="op">|</span><span class="ident">req</span>: <span class="ident">ServiceRequest</span><span class="op">|</span> <span class="kw">async</span> <span class="kw">move</span> {
-            <span class="prelude-val">Ok</span>(<span class="ident">req</span>.<span class="ident">into_response</span>(<span class="ident">HttpResponse::Ok</span>().<span class="ident">message_body</span>(<span class="ident">Foo</span>)<span class="question-mark">?</span>))
+            <span class="prelude-val">Ok</span>(<span class="ident">req</span>.<span class="ident">into_response</span>(<span class="ident">HttpResponse::Ok</span>().<span class="ident">message_body</span>(<span class="ident">body::None::new</span>())<span class="question-mark">?</span>))
         });
 
         <span class="ident">Cors::default</span>().<span class="ident">new_transform</span>(<span class="ident">srv</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();

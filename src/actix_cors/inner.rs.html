@@ -326,6 +326,9 @@
 <span id="325">325</span>
 <span id="326">326</span>
 <span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections::HashSet</span>, <span class="ident">convert::TryFrom</span>, <span class="ident">convert::TryInto</span>, <span class="ident">fmt</span>, <span class="ident">rc::Rc</span>};
 
 <span class="kw">use</span> <span class="ident">actix_web</span>::{
@@ -533,7 +536,10 @@
 
     <span class="kw">use</span> <span class="ident">actix_web</span>::{
         <span class="ident">dev::Transform</span>,
-        <span class="ident">http</span>::{<span class="ident">header</span>, <span class="ident">HeaderValue</span>, <span class="ident">Method</span>, <span class="ident">StatusCode</span>},
+        <span class="ident">http</span>::{
+            <span class="ident">header</span>::{<span class="self">self</span>, <span class="ident">HeaderValue</span>},
+            <span class="ident">Method</span>, <span class="ident">StatusCode</span>,
+        },
         <span class="ident">test</span>::{<span class="self">self</span>, <span class="ident">TestRequest</span>},
     };
 

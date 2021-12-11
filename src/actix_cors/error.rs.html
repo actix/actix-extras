@@ -58,35 +58,35 @@
 <span class="attribute">#[<span class="ident">non_exhaustive</span>]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">CorsError</span> {
     <span class="doccomment">/// Allowed origin argument must not be wildcard (`*`).</span>
-    <span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;`allowed_origin` argument must not be wildcard (`*`).&quot;</span>)]</span>
+    <span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;`allowed_origin` argument must not be wildcard (`*`)&quot;</span>)]</span>
     <span class="ident">WildcardOrigin</span>,
 
     <span class="doccomment">/// Request header `Origin` is required but was not provided.</span>
-    <span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;Request header `Origin` is required but was not provided.&quot;</span>)]</span>
+    <span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;Request header `Origin` is required but was not provided&quot;</span>)]</span>
     <span class="ident">MissingOrigin</span>,
 
     <span class="doccomment">/// Request header `Access-Control-Request-Method` is required but is missing.</span>
-    <span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;Request header `Access-Control-Request-Method` is required but is missing.&quot;</span>)]</span>
+    <span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;Request header `Access-Control-Request-Method` is required but is missing&quot;</span>)]</span>
     <span class="ident">MissingRequestMethod</span>,
 
     <span class="doccomment">/// Request header `Access-Control-Request-Method` has an invalid value.</span>
-    <span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;Request header `Access-Control-Request-Method` has an invalid value.&quot;</span>)]</span>
+    <span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;Request header `Access-Control-Request-Method` has an invalid value&quot;</span>)]</span>
     <span class="ident">BadRequestMethod</span>,
 
     <span class="doccomment">/// Request header `Access-Control-Request-Headers` has an invalid value.</span>
-    <span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;Request header `Access-Control-Request-Headers` has an invalid value.&quot;</span>)]</span>
+    <span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;Request header `Access-Control-Request-Headers` has an invalid value&quot;</span>)]</span>
     <span class="ident">BadRequestHeaders</span>,
 
     <span class="doccomment">/// Origin is not allowed to make this request.</span>
-    <span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;Origin is not allowed to make this request.&quot;</span>)]</span>
+    <span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;Origin is not allowed to make this request&quot;</span>)]</span>
     <span class="ident">OriginNotAllowed</span>,
 
     <span class="doccomment">/// Request method is not allowed.</span>
-    <span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;Requested method is not allowed.&quot;</span>)]</span>
+    <span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;Requested method is not allowed&quot;</span>)]</span>
     <span class="ident">MethodNotAllowed</span>,
 
     <span class="doccomment">/// One or more request headers are not allowed.</span>
-    <span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;One or more request headers are not allowed.&quot;</span>)]</span>
+    <span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;One or more request headers are not allowed&quot;</span>)]</span>
     <span class="ident">HeadersNotAllowed</span>,
 }
 
@@ -96,7 +96,7 @@
     }
 
     <span class="kw">fn</span> <span class="ident">error_response</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">HttpResponse</span> {
-        <span class="ident">HttpResponse::with_body</span>(<span class="ident">StatusCode::BAD_REQUEST</span>, <span class="self">self</span>.<span class="ident">to_string</span>().<span class="ident">into</span>())
+        <span class="ident">HttpResponse::with_body</span>(<span class="ident">StatusCode::BAD_REQUEST</span>, <span class="self">self</span>.<span class="ident">to_string</span>()).<span class="ident">map_into_boxed_body</span>()
     }
 }
 </code></pre></div>

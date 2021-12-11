@@ -99,11 +99,11 @@
 <span id="98"> 98</span>
 <span id="99"> 99</span>
 <span id="100">100</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">actix_web</span>::{
+</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">actix_utils::future</span>::{<span class="ident">ready</span>, <span class="ident">Ready</span>};
+<span class="kw">use</span> <span class="ident">actix_web</span>::{
     <span class="ident">dev</span>::{<span class="ident">Extensions</span>, <span class="ident">Payload</span>},
     <span class="ident">Error</span>, <span class="ident">FromRequest</span>, <span class="ident">HttpRequest</span>,
 };
-<span class="kw">use</span> <span class="ident">actix_utils::future</span>::{<span class="ident">ready</span>, <span class="ident">Ready</span>};
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">IdentityItem</span> {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">id</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
@@ -149,12 +149,12 @@
     <span class="doccomment">/// Return the claimed identity of the user associated request or `None` if no identity can be</span>
     <span class="doccomment">/// found associated with the request.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">identity</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
-        <span class="ident">Identity::get_identity</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>.<span class="ident">extensions</span>())
+        <span class="ident">Identity::get_identity</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>.<span class="ident">req_data</span>())
     }
 
     <span class="doccomment">/// Remember identity.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">remember</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">identity</span>: <span class="ident">String</span>) {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">id</span>) <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">extensions_mut</span>().<span class="ident">get_mut</span>::<span class="op">&lt;</span><span class="ident">IdentityItem</span><span class="op">&gt;</span>() {
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">id</span>) <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">req_data_mut</span>().<span class="ident">get_mut</span>::<span class="op">&lt;</span><span class="ident">IdentityItem</span><span class="op">&gt;</span>() {
             <span class="ident">id</span>.<span class="ident">id</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">identity</span>);
             <span class="ident">id</span>.<span class="ident">changed</span> <span class="op">=</span> <span class="bool-val">true</span>;
         }
@@ -162,7 +162,7 @@
 
     <span class="doccomment">/// This method is used to &#39;forget&#39; the current identity on subsequent requests.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">forget</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">id</span>) <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">extensions_mut</span>().<span class="ident">get_mut</span>::<span class="op">&lt;</span><span class="ident">IdentityItem</span><span class="op">&gt;</span>() {
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">id</span>) <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">req_data_mut</span>().<span class="ident">get_mut</span>::<span class="op">&lt;</span><span class="ident">IdentityItem</span><span class="op">&gt;</span>() {
             <span class="ident">id</span>.<span class="ident">id</span> <span class="op">=</span> <span class="prelude-val">None</span>;
             <span class="ident">id</span>.<span class="ident">changed</span> <span class="op">=</span> <span class="bool-val">true</span>;
         }
