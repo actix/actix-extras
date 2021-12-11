@@ -6,7 +6,7 @@ use actix_web::{
     dev::{Service, ServiceRequest, ServiceResponse, Transform},
     Error, HttpMessage, Result,
 };
-use futures_util::future::{FutureExt as _, LocalBoxFuture, TryFutureExt as _};
+use futures_util::future::{FutureExt as _, LocalBoxFuture};
 
 use crate::{identity::IdentityItem, IdentityPolicy};
 
