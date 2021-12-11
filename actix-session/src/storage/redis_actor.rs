@@ -25,7 +25,7 @@ pub struct RedisActorSessionStore {
     addr: Addr<RedisActor>,
 }
 
-#[async_trait::async_trait]
+#[async_trait::async_trait(?Send)]
 impl SessionStore for RedisActorSession {
     async fn load(&self, session_key: &str) -> Result<Option<SessionState>, LoadError> {
         let cache_key = (self.cache_keygen)(session_key);

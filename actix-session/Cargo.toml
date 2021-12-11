@@ -39,7 +39,7 @@ thiserror = "1.0.30"
 anyhow = "1.0.51"
 
 [dev-dependencies]
-actix-session = { path = ".", features = ["cookie-session"] }
+actix-session = { path = ".", features = ["cookie-session", "redis-actor-session"] }
 actix-rt = "2"
 actix-test = "0.1.0-beta.5"
 env_logger = "0.8"

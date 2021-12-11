@@ -5,7 +5,7 @@ use crate::storage::SessionStore;
 
 pub struct CookieSessionStore;
 
-#[async_trait::async_trait]
+#[async_trait::async_trait(?Send)]
 impl SessionStore for CookieSessionStore {
     async fn load(&self, session_key: &str) -> Result<Option<SessionState>, LoadError> {
         serde_json::from_str(session_key)
