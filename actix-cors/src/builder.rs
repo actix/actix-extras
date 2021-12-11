@@ -3,11 +3,14 @@ use std::{
 };
 
 use actix_web::{
-    body::MessageBody,
+    body::{EitherBody, MessageBody},
     dev::{RequestHead, Service, ServiceRequest, ServiceResponse, Transform},
-    error::{Error, Result},
-    http::{self, header::HeaderName, Error as HttpError, HeaderValue, Method, Uri},
-    Either,
+    error::HttpError,
+    http::{
+        header::{HeaderName, HeaderValue},
+        Method, Uri,
+    },
+    Either, Error, Result,
 };
 use futures_util::future::{self, Ready};
 use log::error;
@@ -20,7 +23,7 @@ use crate::{AllOrSome, CorsError, CorsMiddleware, Inner, OriginFn};
 /// Additionally, always causes first error (if any) to be reported during initialization.
 fn cors<'a>(
     inner: &'a mut Rc<Inner>,
-    err: &Option<Either<http::Error, CorsError>>,
+    err: &Option<Either<HttpError, CorsError>>,
 ) -> Option<&'a mut Inner> {
     if err.is_some() {
         return None;
@@ -74,7 +77,7 @@ static ALL_METHODS_SET: Lazy<HashSet<Method>> = Lazy::new(|| {
 #[derive(Debug)]
 pub struct Cors {
     inner: Rc<Inner>,
-    error: Option<Either<http::Error, CorsError>>,
+    error: Option<Either<HttpError, CorsError>>,
 }
 
 impl Cors {
@@ -490,7 +493,7 @@ where
     B: MessageBody + 'static,
     B::Error: StdError,
 {
-    type Response = ServiceResponse;
+    type Response = ServiceResponse<EitherBody<B>>;
     type Error = Error;
     type InitError = ();
     type Transform = CorsMiddleware<S>;
@@ -571,15 +574,13 @@ where
 #[cfg(test)]
 mod test {
     use std::convert::{Infallible, TryInto};
-    use std::pin::Pin;
-    use std::task::{Context, Poll};
 
     use actix_web::{
-        body::{BodySize, MessageBody},
+        body,
         dev::{fn_service, Transform},
-        http::{HeaderName, StatusCode},
+        http::{header::HeaderName, StatusCode},
         test::{self, TestRequest},
-        web::{Bytes, HttpResponse},
+        web::HttpResponse,
     };
 
     use super::*;
@@ -634,23 +635,8 @@ mod test {
 
     #[actix_rt::test]
     async fn middleware_generic_over_body_type() {
-        struct Foo;
-
-        impl MessageBody for Foo {
-            type Error = std::io::Error;
-            fn size(&self) -> BodySize {
-                BodySize::None
-            }
-            fn poll_next(
-                self: Pin<&mut Self>,
-                _: &mut Context<'_>,
-            ) -> Poll<Option<Result<Bytes, Self::Error>>> {
-                Poll::Ready(None)
-            }
-        }
-
         let srv = fn_service(|req: ServiceRequest| async move {
-            Ok(req.into_response(HttpResponse::Ok().message_body(Foo)?))
+            Ok(req.into_response(HttpResponse::Ok().message_body(body::None::new())?))
         });
 
         Cors::default().new_transform(srv).await.unwrap();

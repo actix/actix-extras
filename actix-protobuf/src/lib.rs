@@ -10,6 +10,7 @@ use std::{
 };
 
 use actix_web::{
+    body::BoxBody,
     dev::Payload,
     error::PayloadError,
     http::header::{CONTENT_LENGTH, CONTENT_TYPE},
@@ -144,6 +145,8 @@ where
 }
 
 impl<T: Message + Default> Responder for ProtoBuf<T> {
+    type Body = BoxBody;
+
     fn respond_to(self, _: &HttpRequest) -> HttpResponse {
         let mut buf = Vec::new();
         match self.0.encode(&mut buf) {

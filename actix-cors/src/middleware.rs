@@ -1,7 +1,7 @@
 use std::{collections::HashSet, convert::TryInto, error::Error as StdError, rc::Rc};
 
 use actix_web::{
-    body::{AnyBody, MessageBody},
+    body::{EitherBody, MessageBody},
     dev::{Service, ServiceRequest, ServiceResponse},
     error::{Error, Result},
     http::{
@@ -10,7 +10,7 @@ use actix_web::{
     },
     HttpResponse,
 };
-use futures_util::future::{ok, Either, FutureExt as _, LocalBoxFuture, Ready, TryFutureExt as _};
+use futures_util::future::{ok, FutureExt as _, LocalBoxFuture};
 use log::debug;
 
 use crate::{builder::intersperse_header_values, AllOrSome, Inner};
@@ -133,11 +133,6 @@ impl<S> CorsMiddleware<S> {
     }
 }
 
-type CorsMiddlewareServiceFuture = Either<
-    Ready<Result<ServiceResponse, Error>>,
-    LocalBoxFuture<'static, Result<ServiceResponse, Error>>,
->;
-
 impl<S, B> Service<ServiceRequest> for CorsMiddleware<S>
 where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
@@ -145,9 +140,9 @@ where
     B: MessageBody + 'static,
     B::Error: StdError,
 {
-    type Response = ServiceResponse;
+    type Response = ServiceResponse<EitherBody<B>>;
     type Error = Error;
-    type Future = CorsMiddlewareServiceFuture;
+    type Future = LocalBoxFuture<'static, Result<ServiceResponse<EitherBody<B>>, Error>>;
 
     actix_service::forward_ready!(service);
 
@@ -155,7 +150,7 @@ where
         if self.inner.preflight && req.method() == Method::OPTIONS {
             let inner = Rc::clone(&self.inner);
             let res = Self::handle_preflight(&inner, req);
-            Either::Left(ok(res))
+            ok(res.map_into_right_body()).boxed_local()
         } else {
             let origin = req.headers().get(header::ORIGIN).cloned();
 
@@ -163,27 +158,37 @@ where
                 // Only check requests with a origin header.
                 if let Err(err) = self.inner.validate_origin(req.head()) {
                     debug!("origin validation failed; inner service is not called");
-                    return Either::Left(ok(req.error_response(err)));
+                    return ok(req.error_response(err).map_into_right_body()).boxed_local();
                 }
             }
+
+            let (req, pl) = req.into_parts();
+            let req2 = req.clone();
+            let req = ServiceRequest::from_parts(req, pl);
 
             let inner = Rc::clone(&self.inner);
             let fut = self.service.call(req);
 
-            let res = async move {
+            async move {
                 let res = fut.await;
 
                 if origin.is_some() {
-                    let res = res?;
+                    let res = match res {
+                        Ok(res) => res,
+                        Err(err) => {
+                            let res = HttpResponse::from_error(err);
+                            let res = ServiceResponse::new(req2, res);
+                            return Ok(res.map_into_right_body());
+                        }
+                    };
+
                     Ok(Self::augment_response(&inner, res))
                 } else {
                     res
                 }
+                .map(|res| res.map_into_left_body())
             }
-            .map_ok(|res| res.map_body(|_, body| AnyBody::new_boxed(body)))
-            .boxed_local();
-
-            Either::Right(res)
+            .boxed_local()
         }
     }
 }
