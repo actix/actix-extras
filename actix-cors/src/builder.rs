@@ -2,6 +2,7 @@ use std::{
     collections::HashSet, convert::TryInto, error::Error as StdError, iter::FromIterator, rc::Rc,
 };
 
+use actix_utils::future::{self, Ready};
 use actix_web::{
     body::{EitherBody, MessageBody},
     dev::{RequestHead, Service, ServiceRequest, ServiceResponse, Transform},
@@ -12,7 +13,6 @@ use actix_web::{
     },
     Either, Error, Result,
 };
-use futures_util::future::{self, Ready};
 use log::error;
 use once_cell::sync::Lazy;
 use smallvec::smallvec;
@@ -61,7 +61,7 @@ static ALL_METHODS_SET: Lazy<HashSet<Method>> = Lazy::new(|| {
 /// server will fail to start up or serve requests.
 ///
 /// # Example
-/// ```rust
+/// ```
 /// use actix_cors::Cors;
 /// use actix_web::http::header;
 ///

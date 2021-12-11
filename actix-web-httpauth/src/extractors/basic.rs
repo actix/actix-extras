@@ -2,10 +2,10 @@
 
 use std::borrow::Cow;
 
+use actix_utils::future::{ready, Ready};
 use actix_web::dev::{Payload, ServiceRequest};
 use actix_web::http::header::Header;
 use actix_web::{FromRequest, HttpRequest};
-use futures_util::future::{ready, Ready};
 
 use super::config::AuthExtractorConfig;
 use super::errors::AuthenticationError;

@@ -3,7 +3,7 @@ use actix_web::{http::header, web, App, HttpServer};
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    pretty_env_logger::init();
+    env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
 
     HttpServer::new(move || {
         App::new()

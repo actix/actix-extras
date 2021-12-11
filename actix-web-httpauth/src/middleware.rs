@@ -1,7 +1,13 @@
 //! HTTP Authentication middleware.
 
 use std::{
-    error::Error as StdError, future::Future, marker::PhantomData, pin::Pin, rc::Rc, sync::Arc,
+    error::Error as StdError,
+    future::Future,
+    marker::PhantomData,
+    pin::Pin,
+    rc::Rc,
+    sync::Arc,
+    task::{Context, Poll},
 };
 
 use actix_web::{
@@ -9,11 +15,8 @@ use actix_web::{
     dev::{Service, ServiceRequest, ServiceResponse, Transform},
     Error,
 };
-use futures_util::{
-    future::{self, FutureExt as _, LocalBoxFuture, TryFutureExt as _},
-    ready,
-    task::{Context, Poll},
-};
+use futures_core::ready;
+use futures_util::future::{self, FutureExt as _, LocalBoxFuture, TryFutureExt as _};
 
 use crate::extractors::{basic, bearer, AuthExtractor};
 

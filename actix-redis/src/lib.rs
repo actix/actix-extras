@@ -1,6 +1,7 @@
 //! Redis integration for Actix and session store for Actix Web.
 
-#![deny(rust_2018_idioms)]
+#![deny(rust_2018_idioms, nonstandard_style)]
+#![warn(future_incompatible)]
 
 mod redis;
 pub use redis::{Command, RedisActor};

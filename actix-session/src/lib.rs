@@ -40,7 +40,7 @@
 //! ```
 
 #![deny(rust_2018_idioms, nonstandard_style)]
-#![warn(missing_docs)]
+#![warn(future_incompatible, missing_docs)]
 
 use std::{
     cell::{Ref, RefCell},
@@ -49,11 +49,11 @@ use std::{
     rc::Rc,
 };
 
+use actix_utils::future::{ok, Ready};
 use actix_web::{
     dev::{Extensions, Payload, ServiceRequest, ServiceResponse},
     Error, FromRequest, HttpMessage, HttpRequest,
 };
-use futures_util::future::{ok, Ready};
 use serde::{de::DeserializeOwned, Serialize};
 
 #[cfg(feature = "cookie-session")]

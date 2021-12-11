@@ -1,5 +1,6 @@
 use std::{collections::HashSet, convert::TryInto, error::Error as StdError, rc::Rc};
 
+use actix_utils::future::{ok, Either, Ready};
 use actix_web::{
     body::{EitherBody, MessageBody},
     dev::{Service, ServiceRequest, ServiceResponse},
@@ -10,7 +11,7 @@ use actix_web::{
     },
     HttpResponse,
 };
-use futures_util::future::{ok, FutureExt as _, LocalBoxFuture};
+use futures_util::future::{FutureExt as _, LocalBoxFuture, TryFutureExt as _};
 use log::debug;
 
 use crate::{builder::intersperse_header_values, AllOrSome, Inner};

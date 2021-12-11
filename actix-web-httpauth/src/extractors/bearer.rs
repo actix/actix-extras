@@ -1,19 +1,17 @@
 //! Extractor for the "Bearer" HTTP Authentication Scheme
 
-use std::borrow::Cow;
-use std::default::Default;
+use std::{borrow::Cow, default::Default};
 
-use actix_web::dev::{Payload, ServiceRequest};
-use actix_web::http::header::Header;
-use actix_web::{FromRequest, HttpRequest};
-use futures_util::future::{ready, Ready};
+use actix_utils::future::{ready, Ready};
+use actix_web::{
+    dev::{Payload, ServiceRequest},
+    http::header::Header,
+    FromRequest, HttpRequest,
+};
 
-use super::config::AuthExtractorConfig;
-use super::errors::AuthenticationError;
-use super::AuthExtractor;
-use crate::headers::authorization;
-use crate::headers::www_authenticate::bearer;
+use super::{config::AuthExtractorConfig, errors::AuthenticationError, AuthExtractor};
 pub use crate::headers::www_authenticate::bearer::Error;
+use crate::headers::{authorization, www_authenticate::bearer};
 
 /// [BearerAuth](./struct/BearerAuth.html) extractor configuration.
 #[derive(Debug, Clone, Default)]

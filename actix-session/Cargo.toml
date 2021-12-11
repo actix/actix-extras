@@ -5,7 +5,7 @@ authors = ["Nikolay Kim <fafhrd91@gmail.com>"]
 description = "Sessions for Actix web"
 keywords = ["http", "web", "framework", "async", "session"]
 homepage = "https://actix.rs"
-repository = "https://github.com/actix/actix-extras"
+repository = "https://github.com/actix/actix-extras.git"
 license = "MIT OR Apache-2.0"
 edition = "2018"
 
@@ -18,8 +18,9 @@ default = ["cookie-session"]
 cookie-session = ["actix-web/secure-cookies"]
 
 [dependencies]
-actix-web = { version = "4.0.0-beta.14", default_features = false, features = ["cookies"] }
 actix-service = "2.0.0"
+actix-utils = "3"
+actix-web = { version = "4.0.0-beta.14", default_features = false, features = ["cookies"] }
 
 derive_more = "0.99.5"
 futures-util = { version = "0.3.7", default-features = false }
