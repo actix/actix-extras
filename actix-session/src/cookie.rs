@@ -2,15 +2,16 @@
 
 use std::{collections::HashMap, error::Error as StdError, rc::Rc};
 
+use actix_utils::future::{ok, Ready};
 use actix_web::{
-    body::{AnyBody, MessageBody},
+    body::{EitherBody, MessageBody},
     cookie::{Cookie, CookieJar, Key, SameSite},
     dev::{Service, ServiceRequest, ServiceResponse, Transform},
-    http::{header::SET_COOKIE, HeaderValue},
+    http::header::{HeaderValue, SET_COOKIE},
     Error, ResponseError,
 };
 use derive_more::Display;
-use futures_util::future::{ok, FutureExt as _, LocalBoxFuture, Ready};
+use futures_util::future::{FutureExt as _, LocalBoxFuture};
 use serde_json::error::Error as JsonError;
 use time::{Duration, OffsetDateTime};
 
@@ -302,7 +303,7 @@ where
     B: MessageBody + 'static,
     B::Error: StdError,
 {
-    type Response = ServiceResponse;
+    type Response = ServiceResponse<EitherBody<B>>;
     type Error = S::Error;
     type InitError = ();
     type Transform = CookieSessionMiddleware<S>;
@@ -330,7 +331,7 @@ where
     B: MessageBody + 'static,
     B::Error: StdError,
 {
-    type Response = ServiceResponse;
+    type Response = ServiceResponse<EitherBody<B>>;
     type Error = S::Error;
     type Future = LocalBoxFuture<'static, Result<Self::Response, Self::Error>>;
 
@@ -378,8 +379,8 @@ where
             };
 
             match result {
-                Ok(()) => Ok(res.map_body(|_, body| AnyBody::new_boxed(body))),
-                Err(error) => Ok(res.error_response(error)),
+                Ok(()) => Ok(res.map_into_left_body()),
+                Err(error) => Ok(res.error_response(error).map_into_right_body()),
             }
         }
         .boxed_local()

@@ -7,7 +7,7 @@
 //! This CORS middleware automatically handles `OPTIONS` preflight requests.
 //!
 //! # Example
-//! ```rust,no_run
+//! ```no_run
 //! use actix_cors::Cors;
 //! use actix_web::{get, http, web, App, HttpRequest, HttpResponse, HttpServer};
 //!
@@ -43,7 +43,7 @@
 
 #![forbid(unsafe_code)]
 #![deny(rust_2018_idioms, nonstandard_style)]
-#![warn(missing_docs, missing_debug_implementations)]
+#![warn(future_incompatible, missing_docs, missing_debug_implementations)]
 #![doc(html_logo_url = "https://actix.rs/img/logo.png")]
 #![doc(html_favicon_url = "https://actix.rs/favicon.ico")]
 

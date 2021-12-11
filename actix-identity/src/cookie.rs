@@ -1,6 +1,6 @@
 use std::{rc::Rc, time::SystemTime};
 
-use futures_util::future::{ready, Ready};
+use actix_utils::future::{ready, Ready};
 use serde::{Deserialize, Serialize};
 use time::Duration;
 
@@ -371,6 +371,7 @@ mod tests {
     use std::{borrow::Borrow, time::SystemTime};
 
     use actix_web::{
+        body::{BoxBody, EitherBody},
         cookie::{Cookie, CookieJar, Key, SameSite},
         dev::ServiceResponse,
         http::{header, StatusCode},
@@ -408,7 +409,7 @@ mod tests {
     }
 
     fn assert_login_cookie(
-        response: &mut ServiceResponse,
+        response: &mut ServiceResponse<EitherBody<BoxBody>>,
         identity: &str,
         login_timestamp: LoginTimestampCheck,
         visit_timestamp: VisitTimeStampCheck,
@@ -577,13 +578,19 @@ mod tests {
         jar.get(COOKIE_NAME).unwrap().clone()
     }
 
-    async fn assert_logged_in(response: ServiceResponse, identity: Option<&str>) {
+    async fn assert_logged_in(
+        response: ServiceResponse<EitherBody<BoxBody>>,
+        identity: Option<&str>,
+    ) {
         let bytes = test::read_body(response).await;
         let resp: Option<String> = serde_json::from_slice(&bytes[..]).unwrap();
         assert_eq!(resp.as_ref().map(|s| s.borrow()), identity);
     }
 
-    fn assert_legacy_login_cookie(response: &mut ServiceResponse, identity: &str) {
+    fn assert_legacy_login_cookie(
+        response: &mut ServiceResponse<EitherBody<BoxBody>>,
+        identity: &str,
+    ) {
         let mut cookies = CookieJar::new();
         for cookie in response.headers().get_all(header::SET_COOKIE) {
             cookies.add(Cookie::parse(cookie.to_str().unwrap().to_string()).unwrap());
@@ -595,7 +602,7 @@ mod tests {
         assert_eq!(cookie.value(), identity);
     }
 
-    fn assert_no_login_cookie(response: &mut ServiceResponse) {
+    fn assert_no_login_cookie(response: &mut ServiceResponse<EitherBody<BoxBody>>) {
         let mut cookies = CookieJar::new();
         for cookie in response.headers().get_all(header::SET_COOKIE) {
             cookies.add(Cookie::parse(cookie.to_str().unwrap().to_string()).unwrap());
