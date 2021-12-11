@@ -16,17 +16,18 @@ pub(crate) type SessionState = HashMap<String, String>;
 ///
 /// [`CookieSession`]: crate::CookieSession
 /// [`RedisActorSession`]: crate::RedisActorSession
+#[async_trait::async_trait]
 pub trait SessionStore: Send + Sync {
     /// Load the session state associated to a session key.
-    fn load(&self, session_key: &str) -> Result<Option<SessionState>, LoadError>;
+    async fn load(&self, session_key: &str) -> Result<Option<SessionState>, LoadError>;
 
     /// Persist the session state for a newly created session.
     /// It returns the corresponding session key.
-    fn save(&self, session_state: SessionState) -> Result<String, SaveError>;
+    async fn save(&self, session_state: SessionState) -> Result<String, SaveError>;
 
     /// Update the session state associated to a pre-existing session key.
     // TODO: add error type
-    fn update(
+    async fn update(
         &self,
         session_key: String,
         session_state: SessionState,
@@ -34,7 +35,7 @@ pub trait SessionStore: Send + Sync {
 
     /// Delete a session from the store.
     // TODO: add error type
-    fn delete(&self, session_key: &str) -> Result<(), anyhow::Error>;
+    async fn delete(&self, session_key: &str) -> Result<(), anyhow::Error>;
 }
 
 #[derive(thiserror::Error, Debug)]

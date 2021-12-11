@@ -5,15 +5,16 @@ use crate::storage::SessionStore;
 
 pub struct CookieSessionStore;
 
+#[async_trait::async_trait]
 impl SessionStore for CookieSessionStore {
-    fn load(&self, session_key: &str) -> Result<Option<SessionState>, LoadError> {
+    async fn load(&self, session_key: &str) -> Result<Option<SessionState>, LoadError> {
         serde_json::from_str(session_key)
             .map(Option::Some)
             .map_err(anyhow::Error::new)
             .map_err(LoadError::DeserializationError)
     }
 
-    fn save(&self, session_state: SessionState) -> Result<String, SaveError> {
+    async fn save(&self, session_state: SessionState) -> Result<String, SaveError> {
         let session_key = serde_json::to_string(&session_state)
             .map_err(anyhow::Error::new)
             .map_err(SaveError::SerializationError)?;
@@ -23,18 +24,18 @@ impl SessionStore for CookieSessionStore {
         Ok(session_key)
     }
 
-    fn update(
+    async fn update(
         &self,
         _session_key: String,
         session_state: SessionState,
     ) -> Result<String, UpdateError> {
-        self.save(session_state).map_err(|e| match e {
+        self.save(session_state).await.map_err(|e| match e {
             SaveError::SerializationError(e) => UpdateError::SerializationError(e),
             SaveError::GenericError(e) => UpdateError::GenericError(e),
         })
     }
 
-    fn delete(&self, _session_key: &str) -> Result<(), anyhow::Error> {
+    async fn delete(&self, _session_key: &str) -> Result<(), anyhow::Error> {
         Ok(())
     }
 }

@@ -15,7 +15,63 @@ use futures_core::future::LocalBoxFuture;
 use rand::{distributions::Alphanumeric, rngs::OsRng, Rng};
 use time::{self, Duration, OffsetDateTime};
 
+use crate::storage::interface::{LoadError, SaveError, SessionState, UpdateError};
+use crate::storage::SessionStore;
 use actix_redis::{Command, RedisActor};
+
+pub struct RedisActorSessionStore {
+    ttl: Duration,
+    cache_keygen: Box<dyn Fn(&str) -> String>,
+    addr: Addr<RedisActor>,
+}
+
+#[async_trait::async_trait]
+impl SessionStore for RedisActorSession {
+    async fn load(&self, session_key: &str) -> Result<Option<SessionState>, LoadError> {
+        let cache_key = (self.cache_keygen)(session_key);
+        let val = self
+            .addr
+            .send(Command(resp_array!["GET", cache_key]))
+            .await
+            .map_err(LoadError::GenericError)?
+            .map_err(LoadError::GenericError)?;
+
+        match val {
+            RespValue::Error(e) => {
+                return Err(LoadError::GenericError(anyhow::anyhow!(e)));
+            }
+            RespValue::SimpleString(s) => {
+                if let Ok(val) = serde_json::from_str(&s) {
+                    return Ok(Some(val));
+                }
+            }
+            RespValue::BulkString(s) => {
+                if let Ok(val) = serde_json::from_slice(&s) {
+                    return Ok(Some(val));
+                }
+            }
+            _ => {}
+        }
+
+        Ok(None)
+    }
+
+    async fn save(&self, session_state: SessionState) -> Result<String, SaveError> {
+        todo!()
+    }
+
+    async fn update(
+        &self,
+        session_key: &str,
+        session_state: SessionState,
+    ) -> Result<(), UpdateError> {
+        todo!()
+    }
+
+    async fn delete(&self, session_key: &str) -> Result<(), Error> {
+        todo!()
+    }
+}
 
 /// Use redis as session storage.
 ///

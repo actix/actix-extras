@@ -223,6 +223,7 @@ where
                 // TODO: remove unwrap
                 storage_backend
                     .load(&session_key)
+                    .await
                     .unwrap()
                     .unwrap_or_default()
             } else {
@@ -240,7 +241,7 @@ where
                     // attached to a fresh session
                     if !session_state.is_empty() {
                         // TODO: remove unwrap
-                        let session_key = storage_backend.save(session_state).unwrap();
+                        let session_key = storage_backend.save(session_state).await.unwrap();
                         set_session_cookie(
                             res.response_mut().head_mut(),
                             session_key,
@@ -252,8 +253,10 @@ where
                     match status {
                         SessionStatus::Changed => {
                             // TODO: remove unwrap
-                            let session_key =
-                                storage_backend.update(session_key, session_state).unwrap();
+                            let session_key = storage_backend
+                                .update(session_key, session_state)
+                                .await
+                                .unwrap();
                             set_session_cookie(
                                 res.response_mut().head_mut(),
                                 session_key,
@@ -262,7 +265,7 @@ where
                         }
                         SessionStatus::Purged => {
                             // TODO: remove unwrap
-                            storage_backend.delete(&session_key).unwrap();
+                            storage_backend.delete(&session_key).await.unwrap();
                             delete_session_cookie(
                                 res.response_mut().head_mut(),
                                 &cookie_configuration,
@@ -270,9 +273,9 @@ where
                         }
                         SessionStatus::Renewed => {
                             // TODO: remove unwrap
-                            storage_backend.delete(&session_key).unwrap();
+                            storage_backend.delete(&session_key).await.unwrap();
                             // TODO: remove unwrap
-                            let session_key = storage_backend.save(session_state).unwrap();
+                            let session_key = storage_backend.save(session_state).await.unwrap();
                             set_session_cookie(
                                 res.response_mut().head_mut(),
                                 session_key,
