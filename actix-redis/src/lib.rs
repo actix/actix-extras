@@ -1,4 +1,4 @@
-//! Redis integration for Actix and session store for Actix Web.
+//! Redis integration for `actix`.
 
 #![deny(rust_2018_idioms, nonstandard_style)]
 #![warn(future_incompatible)]
@@ -8,7 +8,7 @@ pub use redis::{Command, RedisActor};
 
 use derive_more::{Display, Error, From};
 
-/// General purpose actix redis error
+/// General purpose `actix-redis` error.
 #[derive(Debug, Display, Error, From)]
 pub enum Error {
     #[display(fmt = "Redis error {}", _0)]
