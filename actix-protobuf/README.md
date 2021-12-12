@@ -3,9 +3,9 @@
 > Protobuf support for Actix Web.
 
 [![crates.io](https://img.shields.io/crates/v/actix-protobuf?label=latest)](https://crates.io/crates/actix-protobuf)
-[![Documentation](https://docs.rs/actix-protobuf/badge.svg?version=0.7.0-beta.2)](https://docs.rs/actix-protobuf/0.7.0-beta.2)
+[![Documentation](https://docs.rs/actix-protobuf/badge.svg?version=0.7.0-beta.3)](https://docs.rs/actix-protobuf/0.7.0-beta.3)
 ![Apache 2.0 or MIT licensed](https://img.shields.io/crates/l/actix-protobuf)
-[![Dependency Status](https://deps.rs/crate/actix-protobuf/0.7.0-beta.2/status.svg)](https://deps.rs/crate/actix-protobuf/0.7.0-beta.2)
+[![Dependency Status](https://deps.rs/crate/actix-protobuf/0.7.0-beta.3/status.svg)](https://deps.rs/crate/actix-protobuf/0.7.0-beta.3)
 
 ## Documentation & Resources
 
