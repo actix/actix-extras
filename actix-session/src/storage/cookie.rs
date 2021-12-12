@@ -58,7 +58,7 @@ mod tests {
 
     #[actix_rt::test]
     async fn test_session_workflow() {
-        workflow_integration_test(|| CookieSessionStore::default()).await;
+        workflow_integration_test(|| CookieSessionStore::default(), false).await;
     }
 
     #[actix_rt::test]

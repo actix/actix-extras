@@ -200,6 +200,6 @@ mod test {
 
     #[actix_rt::test]
     async fn test_session_workflow() {
-        workflow_integration_test(|| RedisActorSessionStore::new("127.0.0.1:6379")).await;
+        workflow_integration_test(|| RedisActorSessionStore::new("127.0.0.1:6379"), true).await;
     }
 }
