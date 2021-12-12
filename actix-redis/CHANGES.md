@@ -4,6 +4,7 @@
 ### Removed
 * `RedisSession` has been removed. Check out `RedisActorSessionStore` in `actix-session` for a session store backed by Redis using `actix-redis`. [#212]
 * Update `actix-web` dependency to `4.0.0.beta-14`. [#209]
+* Update `redis-async` dependency to `0.12`. [#212]
   
 [#209]: https://github.com/actix/actix-extras/pull/209
 [#212]: https://github.com/actix/actix-extras/pull/212
