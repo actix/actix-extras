@@ -99,6 +99,7 @@ pub mod test_helpers {
         Store: SessionStore + 'static,
         F: Fn() -> Store + Clone + Send + 'static,
     {
+        acceptance_tests::basic_workflow(store_builder.clone()).await;
         acceptance_tests::complex_workflow(store_builder.clone(), is_invalidation_supported).await;
     }
 
@@ -106,14 +107,59 @@ pub mod test_helpers {
         use crate::storage::SessionStore;
         use crate::test_helpers::key;
         use crate::{Session, SessionMiddleware};
+        use actix_web::web::Bytes;
+        use actix_web::{dev::Service, test, App};
         use actix_web::{
             middleware, web,
             web::{get, post, resource},
-            App, HttpResponse, Result,
+            HttpResponse, Result,
         };
         use serde::{Deserialize, Serialize};
         use serde_json::json;
         use time::Duration;
+
+        pub(super) async fn basic_workflow<F, Store>(store_builder: F)
+        where
+            Store: SessionStore + 'static,
+            F: Fn() -> Store + Clone + Send + 'static,
+        {
+            let app = test::init_service(
+                App::new()
+                    .wrap(
+                        SessionMiddleware::builder(store_builder(), key())
+                            .cookie_path("/test/".into())
+                            .cookie_name("actix-test".into())
+                            .cookie_domain(Some("localhost".into()))
+                            .cookie_max_age(Some(time::Duration::seconds(100)))
+                            .build(),
+                    )
+                    .service(web::resource("/").to(|ses: Session| async move {
+                        let _ = ses.insert("counter", 100);
+                        "test"
+                    }))
+                    .service(web::resource("/test/").to(|ses: Session| async move {
+                        let val: usize = ses.get("counter").unwrap().unwrap();
+                        format!("counter: {}", val)
+                    })),
+            )
+            .await;
+
+            let request = test::TestRequest::get().to_request();
+            let response = app.call(request).await.unwrap();
+            let cookie = response
+                .response()
+                .cookies()
+                .find(|c| c.name() == "actix-test")
+                .unwrap()
+                .clone();
+            assert_eq!(cookie.path().unwrap(), "/test/");
+
+            let request = test::TestRequest::with_uri("/test/")
+                .cookie(cookie)
+                .to_request();
+            let body = test::read_response(&app, request).await;
+            assert_eq!(body, Bytes::from_static(b"counter: 100"));
+        }
 
         pub(super) async fn complex_workflow<F, Store>(
             store_builder: F,
