@@ -100,6 +100,7 @@ pub mod test_helpers {
         F: Fn() -> Store + Clone + Send + 'static,
     {
         acceptance_tests::basic_workflow(store_builder.clone()).await;
+        acceptance_tests::expiration_is_refreshed_on_changes(store_builder.clone()).await;
         acceptance_tests::complex_workflow(store_builder.clone(), is_invalidation_supported).await;
     }
 
@@ -159,6 +160,50 @@ pub mod test_helpers {
                 .to_request();
             let body = test::read_response(&app, request).await;
             assert_eq!(body, Bytes::from_static(b"counter: 100"));
+        }
+
+        pub(super) async fn expiration_is_refreshed_on_changes<F, Store>(store_builder: F)
+        where
+            Store: SessionStore + 'static,
+            F: Fn() -> Store + Clone + Send + 'static,
+        {
+            let app = test::init_service(
+                App::new()
+                    .wrap(
+                        SessionMiddleware::builder(store_builder(), key())
+                            .cookie_secure(false)
+                            .cookie_max_age(Some(time::Duration::seconds(60)))
+                            .build(),
+                    )
+                    .service(web::resource("/").to(|ses: Session| async move {
+                        let _ = ses.insert("counter", 100);
+                        "test"
+                    }))
+                    .service(web::resource("/test/").to(|| async move { "no-changes-in-session" })),
+            )
+            .await;
+
+            let request = test::TestRequest::get().to_request();
+            let response = app.call(request).await.unwrap();
+            let cookie_1 = response
+                .response()
+                .cookies()
+                .find(|c| c.name() == "id")
+                .expect("Cookie is set");
+            assert_eq!(cookie_1.max_age(), Some(Duration::seconds(60)));
+
+            let request = test::TestRequest::with_uri("/test/").to_request();
+            let response = app.call(request).await.unwrap();
+            assert!(response.response().cookies().collect::<Vec<_>>().is_empty());
+
+            let request = test::TestRequest::get().to_request();
+            let response = app.call(request).await.unwrap();
+            let cookie_2 = response
+                .response()
+                .cookies()
+                .find(|c| c.name() == "id")
+                .expect("Cookie is set");
+            assert_eq!(cookie_2.max_age(), Some(Duration::seconds(60)));
         }
 
         pub(super) async fn complex_workflow<F, Store>(

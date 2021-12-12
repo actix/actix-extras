@@ -51,47 +51,4 @@ mod tests {
     async fn test_session_workflow() {
         acceptance_test_suite(|| CookieSessionStore::default(), false).await;
     }
-
-    // TODO: review test
-    // #[actix_rt::test]
-    // async fn prolong_expiration() {
-    //     let app = test::init_service(
-    //         App::new()
-    //             .wrap(CookieSession::signed(&[0; 32]).secure(false).expires_in(60))
-    //             .service(web::resource("/").to(|ses: Session| async move {
-    //                 let _ = ses.insert("counter", 100);
-    //                 "test"
-    //             }))
-    //             .service(web::resource("/test/").to(|| async move { "no-changes-in-session" })),
-    //     )
-    //     .await;
-    //
-    //     let request = test::TestRequest::get().to_request();
-    //     let response = app.call(request).await.unwrap();
-    //     let expires_1 = response
-    //         .response()
-    //         .cookies()
-    //         .find(|c| c.name() == "actix-session")
-    //         .expect("Cookie is set")
-    //         .expires()
-    //         .expect("Expiration is set")
-    //         .datetime()
-    //         .expect("Expiration is a datetime");
-    //
-    //     actix_rt::time::sleep(std::time::Duration::from_secs(1)).await;
-    //
-    //     let request = test::TestRequest::with_uri("/test/").to_request();
-    //     let response = app.call(request).await.unwrap();
-    //     let expires_2 = response
-    //         .response()
-    //         .cookies()
-    //         .find(|c| c.name() == "actix-session")
-    //         .expect("Cookie is set")
-    //         .expires()
-    //         .expect("Expiration is set")
-    //         .datetime()
-    //         .expect("Expiration is a datetime");
-    //
-    //     assert!(expires_2 - expires_1 >= Duration::seconds(1));
-    // }
 }
