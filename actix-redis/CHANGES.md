@@ -1,12 +1,12 @@
 # Changes
 
-## Unreleased - 2021-xx-xx
-* A session will be created in Redis if and only if there is some data inside the session state. This reduces the performance impact of `RedisSession` on routes that do not leverage sessions. [#207]
+## 0.11.0-beta.1 - 2021-xx-xx
+### Removed
+* `RedisSession` has been removed. Check out `RedisActorSessionStore` in `actix-session` for a session store backed by Redis using `actix-redis`. [#212]
 * Update `actix-web` dependency to `4.0.0.beta-14`. [#209]
-
-[#207]: https://github.com/actix/actix-extras/pull/207
+  
 [#209]: https://github.com/actix/actix-extras/pull/209
-[#207]: https://github.com/actix/actix-extras/pull/207
+[#212]: https://github.com/actix/actix-extras/pull/212
 
 ## 0.10.0-beta.3 - 2021-10-21
 * Update `actix-web` dependency to v4.0.0-beta.10. [#203]

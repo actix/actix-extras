@@ -1,11 +1,12 @@
 # Changes
 
-## Unreleased - 2021-xx-xx
+## 0.6.0-beta.1 - 2021-xx-xx
 * Update `actix-web` dependency to `4.0.0.beta-14`. [#209]
 * Remove `UserSession` implementation for `RequestHead`. [#209]
+* A session will be created in the storage backend if and only if there is some data inside the session state. This reduces the performance impact of `SessionMiddleware` on routes that do not leverage sessions. [#207]
 
+[#207]: https://github.com/actix/actix-extras/pull/207
 [#209]: https://github.com/actix/actix-extras/pull/209
-
 
 ## 0.5.0-beta.4 - 2021-11-22
 * No significant changes since `0.5.0-beta.3`.
