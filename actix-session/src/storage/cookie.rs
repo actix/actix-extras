@@ -45,8 +45,8 @@ impl SessionStore for CookieSessionStore {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::test_helpers::acceptance_test_suite;
     use crate::test_helpers::key;
-    use crate::test_helpers::workflow_integration_test;
     use crate::{CookieContentSecurity, Session, SessionMiddleware, SessionMiddlewareBuilder};
     use actix_web::web::Bytes;
     use actix_web::{dev::Service, test, web, App};
@@ -58,7 +58,7 @@ mod tests {
 
     #[actix_rt::test]
     async fn test_session_workflow() {
-        workflow_integration_test(|| CookieSessionStore::default(), false).await;
+        acceptance_test_suite(|| CookieSessionStore::default(), false).await;
     }
 
     #[actix_rt::test]
