@@ -189,11 +189,11 @@ impl SessionStore for RedisActorSessionStore {
     }
 }
 
-// TODO: check if the current generation algorithm satisfies OWASP's recommendations
+/// This session key generation routine follows [OWASP's recommendations](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html#session-id-entropy).
 fn generate_session_key() -> String {
     let value = std::iter::repeat(())
         .map(|()| OsRng.sample(Alphanumeric))
-        .take(32)
+        .take(64)
         .collect::<Vec<_>>();
     String::from_utf8(value).unwrap()
 }
