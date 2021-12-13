@@ -125,23 +125,15 @@ impl SessionStore for RedisActorSessionStore {
             .map_err(LoadError::GenericError)?;
 
         match val {
-            RespValue::Error(e) => {
-                return Err(LoadError::GenericError(anyhow::anyhow!(e)));
-            }
-            RespValue::SimpleString(s) => {
-                if let Ok(val) = serde_json::from_str(&s) {
-                    return Ok(Some(val));
-                }
-            }
-            RespValue::BulkString(s) => {
-                if let Ok(val) = serde_json::from_slice(&s) {
-                    return Ok(Some(val));
-                }
-            }
-            _ => {}
+            RespValue::Error(e) => Err(LoadError::GenericError(anyhow::anyhow!(e))),
+            RespValue::SimpleString(s) => Ok(serde_json::from_str(&s)
+                .map_err(Into::into)
+                .map_err(LoadError::DeserializationError)?),
+            RespValue::BulkString(s) => Ok(serde_json::from_slice(&s)
+                .map_err(Into::into)
+                .map_err(LoadError::DeserializationError)?),
+            _ => Ok(None),
         }
-
-        Ok(None)
     }
 
     async fn save(
