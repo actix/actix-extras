@@ -4,7 +4,7 @@
 //!
 //! ```no_run
 //! use actix_web::{web, App, HttpServer, HttpResponse, Error};
-//! use actix_session::{Session, SessionMiddleware, RedisActorSessionStore};
+//! use actix_session::{Session, SessionMiddleware, storage::RedisActorSessionStore};
 //! use actix_web::cookie::Key;
 //!
 //! // The secret key would usually be read from a configuration file/environment variables.
@@ -66,10 +66,6 @@
 pub use extractors::SessionExt;
 pub use middleware::{CookieContentSecurity, SessionMiddleware, SessionMiddlewareBuilder};
 pub use session::{Session, SessionStatus};
-#[cfg(feature = "cookie-session")]
-pub use storage::CookieSessionStore;
-#[cfg(feature = "redis-actor-session")]
-pub use storage::RedisActorSessionStore;
 
 mod extractors;
 mod middleware;

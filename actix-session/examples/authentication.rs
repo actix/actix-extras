@@ -1,4 +1,4 @@
-use actix_session::{RedisActorSessionStore, Session, SessionMiddleware};
+use actix_session::{storage::RedisActorSessionStore, Session, SessionMiddleware};
 use actix_web::cookie::{Key, SameSite};
 use actix_web::{
     error::InternalError, middleware, web, App, Error, HttpResponse, HttpServer, Responder,

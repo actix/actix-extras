@@ -1,4 +1,4 @@
-use actix_session::{RedisActorSessionStore, Session, SessionMiddleware};
+use actix_session::{storage::RedisActorSessionStore, Session, SessionMiddleware};
 use actix_web::cookie::Key;
 use actix_web::{middleware, web, App, Error, HttpRequest, HttpServer, Responder};
 use rand::distributions::Alphanumeric;
