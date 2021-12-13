@@ -4,6 +4,7 @@ use crate::storage::interface::{LoadError, SaveError, SessionState, UpdateError}
 use crate::storage::SessionStore;
 use crate::SessionKey;
 use std::convert::TryInto;
+use time::Duration;
 
 #[derive(Default)]
 #[non_exhaustive]
@@ -18,7 +19,11 @@ impl SessionStore for CookieSessionStore {
             .map_err(LoadError::DeserializationError)
     }
 
-    async fn save(&self, session_state: SessionState) -> Result<SessionKey, SaveError> {
+    async fn save(
+        &self,
+        session_state: SessionState,
+        _ttl: &Duration,
+    ) -> Result<SessionKey, SaveError> {
         let session_key = serde_json::to_string(&session_state)
             .map_err(anyhow::Error::new)
             .map_err(SaveError::SerializationError)?;
@@ -32,8 +37,9 @@ impl SessionStore for CookieSessionStore {
         &self,
         _session_key: SessionKey,
         session_state: SessionState,
+        ttl: &Duration,
     ) -> Result<SessionKey, UpdateError> {
-        self.save(session_state).await.map_err(|e| match e {
+        self.save(session_state, ttl).await.map_err(|e| match e {
             SaveError::SerializationError(e) => UpdateError::SerializationError(e),
             SaveError::GenericError(e) => UpdateError::GenericError(e),
         })

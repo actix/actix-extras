@@ -30,14 +30,12 @@ impl RedisActorSessionStore {
 }
 
 struct CacheConfiguration {
-    ttl: Duration,
     cache_keygen: Box<dyn Fn(&str) -> String>,
 }
 
 impl Default for CacheConfiguration {
     fn default() -> Self {
         Self {
-            ttl: time::Duration::seconds(7200),
             cache_keygen: Box::new(|s| s.to_owned()),
         }
     }
@@ -49,13 +47,7 @@ pub struct RedisActorSessionStoreBuilder {
 }
 
 impl RedisActorSessionStoreBuilder {
-    /// Set time to live in seconds for session value.
-    pub fn ttl(mut self, ttl: time::Duration) -> Self {
-        self.configuration.ttl = ttl;
-        self
-    }
-
-    /// Set a custom cache key generation strategy, expecting session key as input.
+    /// Set a custom cache key generation strategy, expecting a session key as input.
     pub fn cache_keygen(mut self, keygen: Box<dyn Fn(&str) -> String>) -> Self {
         self.configuration.cache_keygen = keygen;
         self
@@ -102,7 +94,11 @@ impl SessionStore for RedisActorSessionStore {
         Ok(None)
     }
 
-    async fn save(&self, session_state: SessionState) -> Result<SessionKey, SaveError> {
+    async fn save(
+        &self,
+        session_state: SessionState,
+        ttl: &Duration,
+    ) -> Result<SessionKey, SaveError> {
         let body = serde_json::to_string(&session_state)
             .map_err(Into::into)
             .map_err(SaveError::SerializationError)?;
@@ -115,7 +111,7 @@ impl SessionStore for RedisActorSessionStore {
             body,
             "NX",
             "EX",
-            &format!("{}", self.configuration.ttl.whole_seconds())
+            &format!("{}", ttl.whole_seconds())
         ]);
 
         let result = self
@@ -145,6 +141,7 @@ impl SessionStore for RedisActorSessionStore {
         &self,
         session_key: SessionKey,
         session_state: SessionState,
+        ttl: &Duration,
     ) -> Result<SessionKey, UpdateError> {
         let body = serde_json::to_string(&session_state)
             .map_err(Into::into)
@@ -157,7 +154,7 @@ impl SessionStore for RedisActorSessionStore {
             body,
             "XX",
             "EX",
-            &format!("{}", self.configuration.ttl.whole_seconds())
+            &format!("{}", ttl.whole_seconds())
         ]);
 
         self.addr

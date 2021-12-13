@@ -1,5 +1,6 @@
 use crate::SessionKey;
 use std::collections::HashMap;
+use time::Duration;
 
 pub(crate) type SessionState = HashMap<String, String>;
 
@@ -24,13 +25,18 @@ pub trait SessionStore {
 
     /// Persist the session state for a newly created session.
     /// It returns the corresponding session key.
-    async fn save(&self, session_state: SessionState) -> Result<SessionKey, SaveError>;
+    async fn save(
+        &self,
+        session_state: SessionState,
+        ttl: &Duration,
+    ) -> Result<SessionKey, SaveError>;
 
     /// Update the session state associated to a pre-existing session key.
     async fn update(
         &self,
         session_key: SessionKey,
         session_state: SessionState,
+        ttl: &Duration,
     ) -> Result<SessionKey, UpdateError>;
 
     /// Delete a session from the store.

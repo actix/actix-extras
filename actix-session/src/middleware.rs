@@ -345,8 +345,10 @@ where
                     // We do not create an entry in the session store if there is no state
                     // attached to a fresh session
                     if !session_state.is_empty() {
-                        let session_key =
-                            storage_backend.save(session_state).await.map_err(e500)?;
+                        let session_key = storage_backend
+                            .save(session_state, &configuration.session.state_ttl)
+                            .await
+                            .map_err(e500)?;
                         set_session_cookie(
                             res.response_mut().head_mut(),
                             session_key.into(),
@@ -359,7 +361,11 @@ where
                     match status {
                         SessionStatus::Changed => {
                             let session_key = storage_backend
-                                .update(session_key, session_state)
+                                .update(
+                                    session_key,
+                                    session_state,
+                                    &configuration.session.state_ttl,
+                                )
                                 .await
                                 .map_err(e500)?;
                             set_session_cookie(
@@ -379,8 +385,10 @@ where
                         }
                         SessionStatus::Renewed => {
                             storage_backend.delete(&session_key).await.map_err(e500)?;
-                            let session_key =
-                                storage_backend.save(session_state).await.map_err(e500)?;
+                            let session_key = storage_backend
+                                .save(session_state, &configuration.session.state_ttl)
+                                .await
+                                .map_err(e500)?;
                             set_session_cookie(
                                 res.response_mut().head_mut(),
                                 session_key,
