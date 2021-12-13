@@ -36,8 +36,10 @@ pub trait SessionStore {
 #[derive(thiserror::Error, Debug)]
 /// Possible failures modes for [`SessionStore::load`].
 pub enum LoadError {
+    /// Failed to deserialize session state
     #[error("Failed to deserialize session state")]
     DeserializationError(#[source] anyhow::Error),
+    /// Something went wrong when retrieving the session state.
     #[error("Something went wrong when retrieving the session state.")]
     GenericError(#[source] anyhow::Error),
 }
@@ -45,8 +47,10 @@ pub enum LoadError {
 #[derive(thiserror::Error, Debug)]
 /// Possible failures modes for [`SessionStore::save`].
 pub enum SaveError {
+    /// Failed to serialize session state.
     #[error("Failed to serialize session state")]
     SerializationError(#[source] anyhow::Error),
+    /// Something went wrong when persisting the session state.
     #[error("Something went wrong when persisting the session state.")]
     GenericError(#[source] anyhow::Error),
 }
@@ -54,8 +58,10 @@ pub enum SaveError {
 #[derive(thiserror::Error, Debug)]
 /// Possible failures modes for [`SessionStore::update`].
 pub enum UpdateError {
+    /// Failed to serialize session state
     #[error("Failed to serialize session state")]
     SerializationError(#[source] anyhow::Error),
+    /// Something went wrong when updating the session state.
     #[error("Something went wrong when updating the session state.")]
     GenericError(#[source] anyhow::Error),
 }
