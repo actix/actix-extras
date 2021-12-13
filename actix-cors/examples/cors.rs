@@ -38,11 +38,7 @@ async fn main() -> std::io::Result<()> {
                     // set preflight cache TTL
                     .max_age(3600),
             )
-            .route(
-                "/{n}/init",
-                web::to(|path: web::Path<String>| async move { path.into_inner() }),
-            )
-            .default_service(web::to(|| async { "Hello world!" }))
+            .default_service(web::to(|| async { "Hello, cross-origin world!" }))
     })
     .bind("127.0.0.1:8080")?
     .run()
