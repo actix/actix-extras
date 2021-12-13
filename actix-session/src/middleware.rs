@@ -6,6 +6,7 @@ use actix_web::dev::{ResponseHead, Service, ServiceRequest, ServiceResponse, Tra
 use actix_web::http::header::{HeaderValue, SET_COOKIE};
 use actix_web::http::StatusCode;
 use actix_web::HttpResponse;
+use anyhow::Context;
 use std::collections::HashMap;
 use std::convert::TryInto;
 use std::future::Future;
@@ -350,7 +351,8 @@ where
                             res.response_mut().head_mut(),
                             session_key.into(),
                             &configuration.cookie,
-                        );
+                        )
+                        .map_err(e500)?;
                     }
                 }
                 Some(session_key) => {
@@ -364,14 +366,16 @@ where
                                 res.response_mut().head_mut(),
                                 session_key,
                                 &configuration.cookie,
-                            );
+                            )
+                            .map_err(e500)?;
                         }
                         SessionStatus::Purged => {
                             storage_backend.delete(&session_key).await.map_err(e500)?;
                             delete_session_cookie(
                                 res.response_mut().head_mut(),
                                 &configuration.cookie,
-                            );
+                            )
+                            .map_err(e500)?;
                         }
                         SessionStatus::Renewed => {
                             storage_backend.delete(&session_key).await.map_err(e500)?;
@@ -381,7 +385,8 @@ where
                                 res.response_mut().head_mut(),
                                 session_key,
                                 &configuration.cookie,
-                            );
+                            )
+                            .map_err(e500)?;
                         }
                         SessionStatus::Unchanged => {
                             // Nothing to do - we avoid the unnecessary call to the storage
@@ -448,7 +453,7 @@ fn set_session_cookie(
     response: &mut ResponseHead,
     session_key: SessionKey,
     config: &CookieConfiguration,
-) {
+) -> Result<(), anyhow::Error> {
     let value: String = session_key.into();
     let mut cookie = Cookie::new(config.name.clone(), value);
     cookie.set_secure(config.secure);
@@ -467,16 +472,21 @@ fn set_session_cookie(
 
     // Set cookie
     let cookie = jar.delta().next().unwrap();
-    // TODO: remove unwrap
-    let val = HeaderValue::from_str(&cookie.encoded().to_string()).unwrap();
+    let val = HeaderValue::from_str(&cookie.encoded().to_string())
+        .context("Failed to attach a session cookie to the outgoing response")?;
     response.headers_mut().append(SET_COOKIE, val);
+    Ok(())
 }
 
-fn delete_session_cookie(response: &mut ResponseHead, config: &CookieConfiguration) {
+fn delete_session_cookie(
+    response: &mut ResponseHead,
+    config: &CookieConfiguration,
+) -> Result<(), anyhow::Error> {
     let removal_cookie = Cookie::build(config.name.clone(), "")
         .max_age(time::Duration::seconds(0))
         .finish();
-    // TODO: remove unwrap
-    let val = HeaderValue::from_str(&removal_cookie.to_string()).unwrap();
+    let val = HeaderValue::from_str(&removal_cookie.to_string())
+        .context("Failed to attach a session removal cookie to the outgoing response")?;
     response.headers_mut().append(SET_COOKIE, val);
+    Ok(())
 }
