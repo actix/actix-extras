@@ -10,10 +10,10 @@ use std::{
     rc::Rc,
 };
 
-/// The high-level interface you use to modify session data.
+/// The primary interface to access and modify session state.
 ///
-/// Session object is obtained with [`UserSession::get_session`]. The [`UserSession`] trait is
-/// implemented for `HttpRequest`, `ServiceRequest`, and `RequestHead`.
+/// [`Session`] is an `actix-web` extractor - you can specify it as an input type for your request
+/// handlers and it will be automatically extracted from the incoming request.
 ///
 /// ```
 /// use actix_session::Session;
@@ -30,6 +30,11 @@ use std::{
 ///     Ok("Welcome!")
 /// }
 /// ```
+///
+/// You can also retrieve a [`Session`] object from an `HttpRequest` or a `ServiceRequest` using
+/// [`SessionExt`].
+///
+/// [`SessionExt`]: crate::SessionExt
 pub struct Session(Rc<RefCell<SessionInner>>);
 
 /// Status of a [`Session`].
