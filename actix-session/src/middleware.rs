@@ -76,6 +76,7 @@ impl<Store: SessionStore> SessionMiddleware<Store> {
     }
 }
 
+#[must_use]
 pub struct SessionMiddlewareBuilder<Store: SessionStore> {
     storage_backend: Arc<Store>,
     cookie_configuration: SessionCookieConfiguration,
