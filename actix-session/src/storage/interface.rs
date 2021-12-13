@@ -43,10 +43,6 @@ pub trait SessionStore {
 pub enum LoadError {
     #[error("Failed to deserialize session state")]
     DeserializationError(#[source] anyhow::Error),
-    #[error(
-        "The session failed a cryptographic integrity check (e.g. HMAC/signature verification/decryption)"
-    )]
-    IntegrityCheckFailed(#[source] anyhow::Error),
     #[error("Something went wrong when retrieving the session state.")]
     GenericError(#[source] anyhow::Error),
 }

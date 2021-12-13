@@ -1,10 +1,11 @@
-use crate::storage::SessionStore;
+use crate::storage::{LoadError, SessionStore};
 use crate::{Session, SessionStatus};
 use actix_web::body::MessageBody;
 use actix_web::cookie::{Cookie, CookieJar, Key, SameSite};
 use actix_web::dev::{ResponseHead, Service, ServiceRequest, ServiceResponse, Transform};
 use actix_web::http::header::{HeaderValue, SET_COOKIE};
-use actix_web::HttpRequest;
+use actix_web::http::StatusCode;
+use actix_web::{HttpRequest, HttpResponse};
 use std::collections::HashMap;
 use std::future::Future;
 use std::pin::Pin;
@@ -300,6 +301,16 @@ pub struct InnerSessionMiddleware<S, Store: SessionStore + 'static> {
     storage_backend: Arc<Store>,
 }
 
+/// Short-hand to create an `actix_web::Error` instance that will result in an `Internal Server Error` response
+/// while preserving the error root cause (e.g. in logs).
+fn e500<E: std::fmt::Debug + std::fmt::Display + 'static>(e: E) -> actix_web::Error {
+    actix_web::error::InternalError::from_response(
+        e,
+        HttpResponse::new(StatusCode::INTERNAL_SERVER_ERROR),
+    )
+    .into()
+}
+
 #[allow(clippy::type_complexity)]
 impl<S, B, Store> Service<ServiceRequest> for InnerSessionMiddleware<S, Store>
 where
@@ -322,16 +333,7 @@ where
         Box::pin(async move {
             let (request, payload) = req.into_parts();
             let session_key = extract_session_key(&request, &configuration.cookie);
-            let session_state = if let Some(session_key) = session_key.as_ref() {
-                // TODO: remove unwrap
-                storage_backend
-                    .load(&session_key)
-                    .await
-                    .unwrap()
-                    .unwrap_or_default()
-            } else {
-                HashMap::new()
-            };
+            let session_state = load_session_state(&session_key, storage_backend.as_ref()).await?;
             let mut req = ServiceRequest::from_parts(request, payload);
             Session::set_session(&mut req, session_state);
 
@@ -410,6 +412,31 @@ fn extract_session_key(req: &HttpRequest, config: &CookieConfiguration) -> Optio
         CookieContentSecurity::Private => jar.private(&config.key).get(&config.name),
     }?;
     Some(verified_cookie.value().to_owned())
+}
+
+async fn load_session_state<Store: SessionStore>(
+    session_key: &Option<String>,
+    storage_backend: &Store,
+) -> Result<HashMap<String, String>, actix_web::Error> {
+    if let Some(session_key) = session_key.as_ref() {
+        match storage_backend.load(&session_key).await {
+            Ok(state) => {
+                if state.is_none() {
+                    tracing::info!("No session state has been found for a valid session key, creating a new empty session.");
+                }
+                Ok(state.unwrap_or_default())
+            }
+            Err(e) => match e {
+                LoadError::DeserializationError(e) => {
+                    tracing::warn!(error.message = %e, error.cause_chain = ?e, "Invalid session state, creating a new empty session.");
+                    Ok(HashMap::new())
+                }
+                LoadError::GenericError(e) => Err(e500(e)),
+            },
+        }
+    } else {
+        Ok(HashMap::new())
+    }
 }
 
 fn set_session_cookie(
