@@ -12,6 +12,15 @@ use std::rc::Rc;
 use std::sync::Arc;
 use time::Duration;
 
+/// ## How did we choose defaults?
+///
+/// If you add `actix-session` to your dependencies and go to production using the default
+/// configuration you should not have to regret it.
+/// That is why, when in doubt, we opt to use the most secure option for each configuration
+/// parameter.
+/// We expose knobs to change the default to suit your needs - i.e. if you know
+/// what you are doing, we will not stop you. But being a subject-matter expert should not
+/// be a requirement to deploy a reasonably secure implementation of sessions.
 pub struct SessionMiddleware<Store: SessionStore> {
     storage_backend: Arc<Store>,
     cookie_configuration: Rc<SessionCookieConfiguration>,
@@ -46,13 +55,6 @@ fn default_cookie_configuration(key: Key) -> SessionCookieConfiguration {
         path: "/".into(),
         domain: None,
         max_age: None,
-        // We choose `private` instead of `signed` as default because
-        // it reduces the chances of sensitive information being exposed
-        // in the session key, regardless of the specific backend implementations.
-        // E.g. if you are using cookie-based storage, you definitely want to use
-        // `private. If you are using Redis-based storage, `signed` is more than enough.
-        // When in doubt, we opt for the most secure option but expose to users a knob
-        // to change the default to suite their needs - a.k.a. "I know what I am doing".
         content_security: CookieContentSecurity::Private,
         key,
     }
@@ -141,7 +143,17 @@ impl<Store: SessionStore> SessionMiddlewareBuilder<Store> {
     /// `CookieContentSecurity::Private` translates into an encrypted cookie content.
     /// `CookieContentSecurity::Signed` translates into a signed cookie content.
     ///
-    /// By default, the content is signed, not encrypted.
+    /// ## Default
+    ///
+    /// By default, the cookie content is encrypted.
+    /// We choose `private` instead of `signed` as default because it reduces the chances of
+    /// sensitive information being exposed in the session key by accident, regardless of
+    /// the specific backend implementations.
+    ///
+    /// E.g. if you are using cookie-based storage, you definitely want the cookie content
+    /// to be encrypted - it contains the whole session state!
+    /// If you are using Redis-based storage, `signed` is more than enough - the cookie content
+    /// is just a unique tamper-proof session key.
     pub fn cookie_content_security(mut self, content_security: CookieContentSecurity) -> Self {
         self.cookie_configuration.content_security = content_security;
         self
