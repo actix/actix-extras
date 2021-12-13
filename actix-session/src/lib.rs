@@ -97,7 +97,9 @@
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
 pub use extractors::SessionExt;
-pub use middleware::{CookieContentSecurity, SessionMiddleware, SessionMiddlewareBuilder};
+pub use middleware::{
+    CookieContentSecurity, SessionLength, SessionMiddleware, SessionMiddlewareBuilder,
+};
 pub use session::{Session, SessionStatus};
 
 mod extractors;
