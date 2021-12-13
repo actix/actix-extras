@@ -2,8 +2,16 @@
 
 ## 0.6.0-beta.1 (Unreleased) - 2021-xx-xx
 
+### Added
+* `SessionMiddleware`, a middleware to provide support for saving/updating/deleting session state against a pluggable storage backend (see `SessionStore` trait) [#212]
+* `CookieSessionStore`, a cookie-based backend to store session state [#212]
+* `RedisActorSessionStore`, a Redis-based backend to store session state powered by `actix-redis` [#212]
+
 ### Changed
 * Rename `UserSession` to `SessionExt` [#212]
+
+### Removed
+* `CookieSession` has been removed in favour of `CookieSessionStore`, a storage backend for `SessionMiddleware` [#212]
   
 [#212]: https://github.com/actix/actix-extras/pull/212
 
