@@ -41,8 +41,16 @@ struct SessionCookieConfiguration {
 }
 
 #[derive(Copy, Clone)]
+/// Used by [`SessionMiddlewareBuilder::cookie_content_security`] to determine how to secure
+/// the content of the session cookie.
 pub enum CookieContentSecurity {
+    /// `CookieContentSecurity::Signed` translates into a signed cookie content - i.e.
+    /// the end-user/JavaScript scripts cannot tamper with its content, but they can read it
+    /// (i.e. no confidentiality).
     Signed,
+    /// `CookieContentSecurity::Private` translates into an encrypted cookie content - i.e.
+    /// the end-user cannot/JavaScript scripts cannot tamper with its content nor decode it
+    /// (i.e. it preserves confidentiality, as long the as the encryption key is not breached).
     Private,
 }
 
