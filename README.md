@@ -37,9 +37,9 @@ Add `tracing-actix-web` to your dependencies:
 ```toml
 [dependencies]
 # ...
-tracing-actix-web = "0.5.0-beta.4"
+tracing-actix-web = "0.5.0-beta.5"
 tracing = "0.1"
-actix-web = "4.0.0-beta.13"
+actix-web = "4.0.0-beta.14"
 ```
 
 `tracing-actix-web` exposes three feature flags:
