@@ -35,8 +35,12 @@ async fn main() -> std::io::Result<()> {
                     .allowed_header(header::CONTENT_TYPE)
                     // set list of headers that are safe to expose
                     .expose_headers(&[header::CONTENT_DISPOSITION])
-                    // set CORS rules ttl
+                    // set preflight cache TTL
                     .max_age(3600),
+            )
+            .route(
+                "/{n}/init",
+                web::to(|path: web::Path<String>| async move { path.into_inner() }),
             )
             .default_service(web::to(|| async { "Hello world!" }))
     })

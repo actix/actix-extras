@@ -1,6 +1,9 @@
 # Changes
 
 ## Unreleased - 2021-xx-xx
+* Fix panic when wrapping routes with dynamic segments in their paths. [#213]
+
+[#213]: https://github.com/actix/actix-extras/pull/213
 
 
 ## 0.6.0-beta.5 - 2021-12-12
