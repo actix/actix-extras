@@ -73,6 +73,7 @@ pub mod storage;
 #[cfg(test)]
 pub mod test_helpers {
     use crate::storage::SessionStore;
+    use crate::CookieContentSecurity;
     use actix_web::cookie::Key;
     use rand::distributions::Alphanumeric;
     use rand::{thread_rng, Rng};
@@ -99,15 +100,28 @@ pub mod test_helpers {
         Store: SessionStore + 'static,
         F: Fn() -> Store + Clone + Send + 'static,
     {
-        acceptance_tests::basic_workflow(store_builder.clone()).await;
-        acceptance_tests::expiration_is_refreshed_on_changes(store_builder.clone()).await;
-        acceptance_tests::complex_workflow(store_builder.clone(), is_invalidation_supported).await;
+        for policy in vec![
+            CookieContentSecurity::Signed,
+            CookieContentSecurity::Private,
+        ] {
+            println!("Using {:?} as cookie content security policy.", policy);
+            acceptance_tests::basic_workflow(store_builder.clone(), policy).await;
+            acceptance_tests::expiration_is_refreshed_on_changes(store_builder.clone(), policy)
+                .await;
+            acceptance_tests::complex_workflow(
+                store_builder.clone(),
+                is_invalidation_supported,
+                policy,
+            )
+            .await;
+        }
     }
 
     mod acceptance_tests {
+        use crate::middleware::SessionLength;
         use crate::storage::SessionStore;
         use crate::test_helpers::key;
-        use crate::{Session, SessionMiddleware};
+        use crate::{CookieContentSecurity, Session, SessionMiddleware};
         use actix_web::web::Bytes;
         use actix_web::{dev::Service, test, App};
         use actix_web::{
@@ -119,8 +133,10 @@ pub mod test_helpers {
         use serde_json::json;
         use time::Duration;
 
-        pub(super) async fn basic_workflow<F, Store>(store_builder: F)
-        where
+        pub(super) async fn basic_workflow<F, Store>(
+            store_builder: F,
+            policy: CookieContentSecurity,
+        ) where
             Store: SessionStore + 'static,
             F: Fn() -> Store + Clone + Send + 'static,
         {
@@ -131,7 +147,10 @@ pub mod test_helpers {
                             .cookie_path("/test/".into())
                             .cookie_name("actix-test".into())
                             .cookie_domain(Some("localhost".into()))
-                            .cookie_max_age(Some(time::Duration::seconds(100)))
+                            .cookie_content_security(policy)
+                            .session_length(SessionLength::Predetermined {
+                                max_session_length: Some(time::Duration::seconds(100)),
+                            })
                             .build(),
                     )
                     .service(web::resource("/").to(|ses: Session| async move {
@@ -162,8 +181,10 @@ pub mod test_helpers {
             assert_eq!(body, Bytes::from_static(b"counter: 100"));
         }
 
-        pub(super) async fn expiration_is_refreshed_on_changes<F, Store>(store_builder: F)
-        where
+        pub(super) async fn expiration_is_refreshed_on_changes<F, Store>(
+            store_builder: F,
+            policy: CookieContentSecurity,
+        ) where
             Store: SessionStore + 'static,
             F: Fn() -> Store + Clone + Send + 'static,
         {
@@ -171,8 +192,10 @@ pub mod test_helpers {
                 App::new()
                     .wrap(
                         SessionMiddleware::builder(store_builder(), key())
-                            .cookie_secure(false)
-                            .cookie_max_age(Some(time::Duration::seconds(60)))
+                            .cookie_content_security(policy)
+                            .session_length(SessionLength::Predetermined {
+                                max_session_length: Some(time::Duration::seconds(60)),
+                            })
                             .build(),
                     )
                     .service(web::resource("/").to(|ses: Session| async move {
@@ -209,6 +232,7 @@ pub mod test_helpers {
         pub(super) async fn complex_workflow<F, Store>(
             store_builder: F,
             is_invalidation_supported: bool,
+            policy: CookieContentSecurity,
         ) where
             Store: SessionStore + 'static,
             F: Fn() -> Store + Clone + Send + 'static,
@@ -218,7 +242,10 @@ pub mod test_helpers {
                     .wrap(
                         SessionMiddleware::builder(store_builder(), key())
                             .cookie_name("test-session".into())
-                            .cookie_max_age(Some(time::Duration::days(7)))
+                            .cookie_content_security(policy)
+                            .session_length(SessionLength::Predetermined {
+                                max_session_length: Some(time::Duration::days(7)),
+                            })
                             .build(),
                     )
                     .wrap(middleware::Logger::default())
