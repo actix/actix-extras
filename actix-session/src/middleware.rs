@@ -5,7 +5,7 @@ use actix_web::cookie::{Cookie, CookieJar, Key, SameSite};
 use actix_web::dev::{ResponseHead, Service, ServiceRequest, ServiceResponse, Transform};
 use actix_web::http::header::{HeaderValue, SET_COOKIE};
 use actix_web::http::StatusCode;
-use actix_web::{HttpRequest, HttpResponse};
+use actix_web::HttpResponse;
 use std::collections::HashMap;
 use std::future::Future;
 use std::pin::Pin;
@@ -325,16 +325,14 @@ where
 
     actix_web::dev::forward_ready!(service);
 
-    fn call(&self, req: ServiceRequest) -> Self::Future {
+    fn call(&self, mut req: ServiceRequest) -> Self::Future {
         let service = Rc::clone(&self.service);
         let storage_backend = self.storage_backend.clone();
         let configuration = Rc::clone(&self.configuration);
 
         Box::pin(async move {
-            let (request, payload) = req.into_parts();
-            let session_key = extract_session_key(&request, &configuration.cookie);
+            let session_key = extract_session_key(&req, &configuration.cookie);
             let session_state = load_session_state(&session_key, storage_backend.as_ref()).await?;
-            let mut req = ServiceRequest::from_parts(request, payload);
             Session::set_session(&mut req, session_state);
 
             let mut res = service.call(req).await?;
@@ -398,7 +396,7 @@ where
     }
 }
 
-fn extract_session_key(req: &HttpRequest, config: &CookieConfiguration) -> Option<String> {
+fn extract_session_key(req: &ServiceRequest, config: &CookieConfiguration) -> Option<String> {
     let cookies = req.cookies().ok()?;
     let session_cookie = cookies
         .iter()
