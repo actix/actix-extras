@@ -397,7 +397,6 @@ where
 }
 
 fn extract_session_key(req: &HttpRequest, config: &CookieConfiguration) -> Option<String> {
-    // TODO: Should we fail the request if we cannot read cookies?
     let cookies = req.cookies().ok()?;
     let session_cookie = cookies
         .iter()
