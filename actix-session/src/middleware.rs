@@ -148,7 +148,7 @@ impl<Store: SessionStore> SessionMiddlewareBuilder<Store> {
     /// By default, the cookie content is encrypted.
     /// We choose `private` instead of `signed` as default because it reduces the chances of
     /// sensitive information being exposed in the session key by accident, regardless of
-    /// the specific backend implementations.
+    /// [`SessionStore`] implementation you chose to use.
     ///
     /// E.g. if you are using cookie-based storage, you definitely want the cookie content
     /// to be encrypted - it contains the whole session state!
