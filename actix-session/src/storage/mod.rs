@@ -5,6 +5,9 @@ pub use cookie::CookieSessionStore;
 #[cfg(feature = "redis-actor-session")]
 #[cfg_attr(docsrs, doc(cfg(feature = "redis-actor-session")))]
 pub use redis_actor::{RedisActorSessionStore, RedisActorSessionStoreBuilder};
+#[cfg(feature = "redis-actor-session")]
+#[cfg_attr(docsrs, doc(cfg(feature = "redis-rs-session")))]
+pub use redis_rs::{RedisSessionStore, RedisSessionStoreBuilder};
 
 mod session_key;
 pub use session_key::SessionKey;
@@ -15,3 +18,5 @@ pub use interface::{LoadError, SaveError, SessionStore, UpdateError};
 mod cookie;
 #[cfg(feature = "redis-actor-session")]
 mod redis_actor;
+#[cfg(feature = "redis-rs-session")]
+mod redis_rs;

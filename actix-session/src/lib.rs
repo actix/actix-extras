@@ -75,12 +75,20 @@
 //! actix-session = { version = "0.6.0-beta.1", features = ["cookie-session"] }
 //! ```
 //!
-//! - a Redis-based backend, [`storage::RedisActorSessionStore`], using the `redis-actor-session` feature flag.
+//! - a Redis-based backend via `actix-redis`, [`storage::RedisActorSessionStore`], using the `redis-actor-session` feature flag.
 //!
 //! ```toml
 //! [dependencies]
 //! # ...
 //! actix-session = { version = "0.6.0-beta.1", features = ["redis-actor-session"] }
+//! ```
+//!
+//! - a Redis-based backend via [`redis-rs`](https://github.com/mitsuhiko/redis-rs), [`storage::RedisSessionStore`], using the `redis-rs-session` feature flag.
+//!
+//! ```toml
+//! [dependencies]
+//! # ...
+//! actix-session = { version = "0.6.0-beta.1", features = ["redis-rs-session"] }
 //! ```
 //!
 //! You can provide a different session store by implementing the [`storage::SessionStore`] trait.

@@ -20,7 +20,8 @@ path = "src/lib.rs"
 [features]
 default = []
 cookie-session = []
-redis-actor-session = ["actix-redis", "cookie-session", "actix", "futures-core"]
+redis-actor-session = ["actix-redis", "actix", "futures-core"]
+redis-rs-session = ["redis", "futures-core"]
 
 [dependencies]
 actix-service = "2.0.0"
@@ -35,17 +36,20 @@ time = "0.2.23"
 serde = { version = "1.0.101" }
 serde_json = { version = "1.0.40" }
 rand = { version = "0.8.0" }
+tracing = { version = "0.1.29", default-features = false }
+thiserror = "1.0.30"
+anyhow = "1.0.51"
 
 # redis-actor-session
 actix-redis = { version = "0.10.0-beta.3", path = "../actix-redis", optional = true}
 actix = { version = "0.12.0", default-features = false, optional = true }
 futures-core = { version = "0.3.7", default-features = false, optional = true }
-thiserror = "1.0.30"
-anyhow = "1.0.51"
-tracing = { version = "0.1.29", default-features = false }
+
+# redis-rs-session
+redis = { version = "0.21.4", default-features = false, features = ["aio", "tokio-comp", "connection-manager"], optional = true }
 
 [dev-dependencies]
-actix-session = { path = ".", features = ["cookie-session", "redis-actor-session"] }
+actix-session = { path = ".", features = ["cookie-session", "redis-actor-session", "redis-rs-session"] }
 actix-rt = "2"
 actix-test = "0.1.0-beta.5"
 env_logger = "0.8"

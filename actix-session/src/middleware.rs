@@ -113,6 +113,7 @@ use time::Duration;
 /// We expose knobs to change the default to suit your needs - i.e. if you know
 /// what you are doing, we will not stop you. But being a subject-matter expert should not
 /// be a requirement to deploy a reasonably secure implementation of sessions.
+#[derive(Clone)]
 pub struct SessionMiddleware<Store: SessionStore> {
     storage_backend: Arc<Store>,
     configuration: Rc<Configuration>,
