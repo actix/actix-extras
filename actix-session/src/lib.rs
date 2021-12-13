@@ -63,7 +63,7 @@
 #![deny(rust_2018_idioms, nonstandard_style)]
 #![warn(missing_docs)]
 
-pub use extractors::UserSession;
+pub use extractors::SessionExt;
 pub use middleware::{CookieContentSecurity, SessionMiddleware, SessionMiddlewareBuilder};
 pub use session::{Session, SessionStatus};
 #[cfg(feature = "cookie-session")]

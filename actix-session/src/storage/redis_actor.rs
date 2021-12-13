@@ -1,6 +1,6 @@
+use super::SessionKey;
 use crate::storage::interface::{LoadError, SaveError, SessionState, UpdateError};
 use crate::storage::SessionStore;
-use crate::SessionKey;
 use actix::Addr;
 use actix_redis::{resp_array, RespValue};
 use actix_redis::{Command, RedisActor};

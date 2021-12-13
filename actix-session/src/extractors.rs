@@ -4,25 +4,25 @@ use actix_web::error::Error;
 use actix_web::{FromRequest, HttpMessage, HttpRequest};
 use futures_util::future::{ok, Ready};
 
-/// Extraction of a [`Session`] object.
-pub trait UserSession {
-    /// Extract the [`Session`] object
+/// Extract a [`Session`] object from various `actix-web` types (e.g. [`HttpRequest`], [`ServiceRequest`]).
+pub trait SessionExt {
+    /// Extract a [`Session`] object.
     fn get_session(&self) -> Session;
 }
 
-impl UserSession for HttpRequest {
+impl SessionExt for HttpRequest {
     fn get_session(&self) -> Session {
         Session::get_session(&mut *self.extensions_mut())
     }
 }
 
-impl UserSession for ServiceRequest {
+impl SessionExt for ServiceRequest {
     fn get_session(&self) -> Session {
         Session::get_session(&mut *self.extensions_mut())
     }
 }
 
-/// Extractor implementation for Session type.
+/// Extractor implementation for [`Session`]s.
 ///
 /// # Examples
 /// ```

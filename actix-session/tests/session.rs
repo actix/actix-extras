@@ -1,4 +1,4 @@
-use actix_session::{Session, SessionStatus, UserSession};
+use actix_session::{Session, SessionExt, SessionStatus};
 use actix_web::{test, HttpResponse};
 
 #[actix_web::test]
