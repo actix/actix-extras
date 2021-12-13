@@ -3,6 +3,12 @@
 ## Unreleased - 2021-xx-xx
 
 
+## 0.6.0-beta.6 - 2021-12-13
+* Fix panic when wrapping routes with dynamic segments in their paths. [#213]
+
+[#213]: https://github.com/actix/actix-extras/pull/213
+
+
 ## 0.6.0-beta.5 - 2021-12-12
 * Update `actix-web` dependency to `4.0.0.beta-14`. [#209]
 

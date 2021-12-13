@@ -163,10 +163,6 @@ where
                 }
             }
 
-            let (req, pl) = req.into_parts();
-            let req2 = req.clone();
-            let req = ServiceRequest::from_parts(req, pl);
-
             let inner = Rc::clone(&self.inner);
             let fut = self.service.call(req);
 
@@ -174,16 +170,7 @@ where
                 let res = fut.await;
 
                 if origin.is_some() {
-                    let res = match res {
-                        Ok(res) => res,
-                        Err(err) => {
-                            let res = HttpResponse::from_error(err);
-                            let res = ServiceResponse::new(req2, res);
-                            return Ok(res.map_into_right_body());
-                        }
-                    };
-
-                    Ok(Self::augment_response(&inner, res))
+                    Ok(Self::augment_response(&inner, res?))
                 } else {
                     res
                 }
