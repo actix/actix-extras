@@ -250,6 +250,8 @@ impl<Store: SessionStore> SessionMiddleware<Store> {
 }
 
 #[must_use]
+/// A fluent builder to construct a [`SessionMiddleware`] instance with custom
+/// configuration parameters.
 pub struct SessionMiddlewareBuilder<Store: SessionStore> {
     storage_backend: Arc<Store>,
     configuration: Configuration,
@@ -361,6 +363,7 @@ impl<Store: SessionStore> SessionMiddlewareBuilder<Store> {
         self
     }
 
+    /// Finalise the builder and return a [`SessionMiddleware`] instance.
     pub fn build(self) -> SessionMiddleware<Store> {
         SessionMiddleware {
             storage_backend: self.storage_backend,
