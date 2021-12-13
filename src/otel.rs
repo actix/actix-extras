@@ -21,11 +21,11 @@ use tracing_opentelemetry_0_16_pkg as tracing_opentelemetry;
 use opentelemetry::propagation::Extractor;
 
 pub(crate) struct RequestHeaderCarrier<'a> {
-    headers: &'a actix_web::http::HeaderMap,
+    headers: &'a actix_web::http::header::HeaderMap,
 }
 
 impl<'a> RequestHeaderCarrier<'a> {
-    pub(crate) fn new(headers: &'a actix_web::http::HeaderMap) -> Self {
+    pub(crate) fn new(headers: &'a actix_web::http::header::HeaderMap) -> Self {
         RequestHeaderCarrier { headers }
     }
 }
