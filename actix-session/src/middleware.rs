@@ -15,11 +15,107 @@ use std::rc::Rc;
 use std::sync::Arc;
 use time::Duration;
 
+/// A middleware for session management in `actix-web`'s applications.
+///
+/// [`SessionMiddleware`] takes care of a few jobs:
+///
+/// - Instructs the session storage backend to create/update/delete/retrieve the state attached to
+/// a session according to its status and the operations that have been performed against it;
+/// - Set/remove a cookie, on the client side, to enable a user to be consistently associated with
+/// the same session across multiple HTTP requests.
+///
+/// Use [`SessionMiddleware::new`] to initialize the session framework using the default parameters.
+/// To create a new instance of [`SessionMiddleware`] you need to provide:
+///
+/// - an instance of the session storage backend you wish to use (i.e. an implementation of [`SessionStore]);
+/// - a secret key, to sign or encrypt the content of client-side session cookie.
+///
+/// ```no_run
+/// use actix_web::{web, App, HttpServer, HttpResponse, Error};
+/// use actix_session::{Session, SessionMiddleware, storage::RedisActorSessionStore};
+/// use actix_web::cookie::Key;
+///
+/// // The secret key would usually be read from a configuration file/environment variables.
+/// fn get_secret_key() -> Key {
+///     # use rand::distributions::Alphanumeric;
+///     # use rand::{thread_rng, Rng};
+///     # let signing_key: String = thread_rng()
+///     #     .sample_iter(&Alphanumeric)
+///     #     .take(64)
+///     #     .map(char::from)
+///     #     .collect();
+///     # Key::from(signing_key.as_bytes())
+///     // [...]
+/// }
+///
+/// #[actix_rt::main]
+/// async fn main() -> std::io::Result<()> {
+///     let secret_key = get_secret_key();
+///     let redis_connection_string = "127.0.0.1:6379";
+///     HttpServer::new(move ||
+///             App::new()
+///             // Add session management to your application using Redis for session state storage
+///             .wrap(
+///                 SessionMiddleware::new(
+///                     RedisActorSessionStore::new(redis_connection_string),
+///                     secret_key.clone()
+///                 )
+///             )
+///             .default_service(web::to(|| HttpResponse::Ok())))
+///         .bind(("127.0.0.1", 8080))?
+///         .run()
+///         .await
+/// }
+/// ```
+///
+/// If you want to customise use [`SessionMiddleware::builder`] instead of [`SessionMiddleware::new`]:
+///
+/// ```no_run
+/// use actix_web::{web, App, HttpServer, HttpResponse, Error};
+/// use actix_session::{Session, SessionMiddleware, storage::RedisActorSessionStore, SessionLength};
+/// use actix_web::cookie::Key;
+///
+/// // The secret key would usually be read from a configuration file/environment variables.
+/// fn get_secret_key() -> Key {
+///     # use rand::distributions::Alphanumeric;
+///     # use rand::{thread_rng, Rng};
+///     # let signing_key: String = thread_rng()
+///     #     .sample_iter(&Alphanumeric)
+///     #     .take(64)
+///     #     .map(char::from)
+///     #     .collect();
+///     # Key::from(signing_key.as_bytes())
+///     // [...]
+/// }
+///
+/// #[actix_rt::main]
+/// async fn main() -> std::io::Result<()> {
+///     let secret_key = get_secret_key();
+///     let redis_connection_string = "127.0.0.1:6379";
+///     HttpServer::new(move ||
+///             App::new()
+///             // Customise session length!
+///             .wrap(
+///                 SessionMiddleware::builder(
+///                     RedisActorSessionStore::new(redis_connection_string),
+///                     secret_key.clone()
+///                 )
+///                 .session_length(SessionLength::Predetermined {
+///                     max_session_length: Some(time::Duration::days(5)),
+///                 })
+///                 .build(),
+///             )
+///             .default_service(web::to(|| HttpResponse::Ok())))
+///         .bind(("127.0.0.1", 8080))?
+///         .run()
+///         .await
+/// }
+/// ```
+///
 /// ## How did we choose defaults?
 ///
-/// If you add `actix-session` to your dependencies and go to production using the default
-/// configuration you should not have to regret it.
-/// That is why, when in doubt, we opt to use the most secure option for each configuration
+/// You should not regret adding `actix-session` to your dependencies and going to production using the default
+/// configuration. That is why, when in doubt, we opt to use the most secure option for each configuration
 /// parameter.
 /// We expose knobs to change the default to suit your needs - i.e. if you know
 /// what you are doing, we will not stop you. But being a subject-matter expert should not
