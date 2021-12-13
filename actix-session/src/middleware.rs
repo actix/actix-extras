@@ -46,7 +46,14 @@ fn default_cookie_configuration(key: Key) -> SessionCookieConfiguration {
         path: "/".into(),
         domain: None,
         max_age: None,
-        content_security: CookieContentSecurity::Signed,
+        // We choose `private` instead of `signed` as default because
+        // it reduces the chances of sensitive information being exposed
+        // in the session key, regardless of the specific backend implementations.
+        // E.g. if you are using cookie-based storage, you definitely want to use
+        // `private. If you are using Redis-based storage, `signed` is more than enough.
+        // When in doubt, we opt for the most secure option but expose to users a knob
+        // to change the default to suite their needs - a.k.a. "I know what I am doing".
+        content_security: CookieContentSecurity::Private,
         key,
     }
 }
