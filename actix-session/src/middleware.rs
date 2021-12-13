@@ -153,13 +153,13 @@ impl<Store: SessionStore> SessionMiddlewareBuilder<Store> {
     /// ## Default
     ///
     /// By default, the cookie content is encrypted.
-    /// We choose `private` instead of `signed` as default because it reduces the chances of
+    /// We choose encrypted instead of signed as default because it reduces the chances of
     /// sensitive information being exposed in the session key by accident, regardless of
     /// [`SessionStore`] implementation you chose to use.
     ///
     /// E.g. if you are using cookie-based storage, you definitely want the cookie content
-    /// to be encrypted - it contains the whole session state!
-    /// If you are using Redis-based storage, `signed` is more than enough - the cookie content
+    /// to be encrypted - the whole session state is embedded in the cookie!
+    /// If you are using Redis-based storage, signed is more than enough - the cookie content
     /// is just a unique tamper-proof session key.
     #[must_use]
     pub fn cookie_content_security(mut self, content_security: CookieContentSecurity) -> Self {
