@@ -356,11 +356,10 @@ where
                 Some(session_key) => {
                     match status {
                         SessionStatus::Changed => {
-                            // TODO: remove unwrap
                             let session_key = storage_backend
                                 .update(session_key, session_state)
                                 .await
-                                .unwrap();
+                                .map_err(e500)?;
                             set_session_cookie(
                                 res.response_mut().head_mut(),
                                 session_key,
@@ -368,18 +367,16 @@ where
                             );
                         }
                         SessionStatus::Purged => {
-                            // TODO: remove unwrap
-                            storage_backend.delete(&session_key).await.unwrap();
+                            storage_backend.delete(&session_key).await.map_err(e500)?;
                             delete_session_cookie(
                                 res.response_mut().head_mut(),
                                 &configuration.cookie,
                             );
                         }
                         SessionStatus::Renewed => {
-                            // TODO: remove unwrap
-                            storage_backend.delete(&session_key).await.unwrap();
-                            // TODO: remove unwrap
-                            let session_key = storage_backend.save(session_state).await.unwrap();
+                            storage_backend.delete(&session_key).await.map_err(e500)?;
+                            let session_key =
+                                storage_backend.save(session_state).await.map_err(e500)?;
                             set_session_cookie(
                                 res.response_mut().head_mut(),
                                 session_key,

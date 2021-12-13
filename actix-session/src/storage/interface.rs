@@ -34,7 +34,6 @@ pub trait SessionStore {
     ) -> Result<SessionKey, UpdateError>;
 
     /// Delete a session from the store.
-    // TODO: add error type
     async fn delete(&self, session_key: &SessionKey) -> Result<(), anyhow::Error>;
 }
 
