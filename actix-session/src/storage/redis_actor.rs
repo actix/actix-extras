@@ -1,9 +1,11 @@
 use crate::storage::interface::{LoadError, SaveError, SessionState, UpdateError};
 use crate::storage::SessionStore;
+use crate::SessionKey;
 use actix::Addr;
 use actix_redis::{resp_array, RespValue};
 use actix_redis::{Command, RedisActor};
 use rand::{distributions::Alphanumeric, rngs::OsRng, Rng};
+use std::convert::TryInto;
 use time::{self, Duration};
 
 /// Use redis as session storage.
@@ -69,8 +71,8 @@ impl RedisActorSessionStoreBuilder {
 
 #[async_trait::async_trait(?Send)]
 impl SessionStore for RedisActorSessionStore {
-    async fn load(&self, session_key: &str) -> Result<Option<SessionState>, LoadError> {
-        let cache_key = (self.configuration.cache_keygen)(session_key);
+    async fn load(&self, session_key: &SessionKey) -> Result<Option<SessionState>, LoadError> {
+        let cache_key = (self.configuration.cache_keygen)(session_key.as_ref());
         let val = self
             .addr
             .send(Command(resp_array!["GET", cache_key]))
@@ -100,7 +102,7 @@ impl SessionStore for RedisActorSessionStore {
         Ok(None)
     }
 
-    async fn save(&self, session_state: SessionState) -> Result<String, SaveError> {
+    async fn save(&self, session_state: SessionState) -> Result<SessionKey, SaveError> {
         let body = serde_json::to_string(&session_state)
             .map_err(Into::into)
             .map_err(SaveError::SerializationError)?;
@@ -125,7 +127,10 @@ impl SessionStore for RedisActorSessionStore {
             .map_err(Into::into)
             .map_err(SaveError::GenericError)?;
         match result {
-            RespValue::SimpleString(_) => Ok(session_key),
+            RespValue::SimpleString(_) => Ok(session_key
+                .try_into()
+                .map_err(Into::into)
+                .map_err(SaveError::GenericError)?),
             RespValue::Nil => Err(SaveError::GenericError(anyhow::anyhow!(
                 "Failed to save session state. A record with the same key already existed in Redis"
             ))),
@@ -138,13 +143,13 @@ impl SessionStore for RedisActorSessionStore {
 
     async fn update(
         &self,
-        session_key: String,
+        session_key: SessionKey,
         session_state: SessionState,
-    ) -> Result<String, UpdateError> {
+    ) -> Result<SessionKey, UpdateError> {
         let body = serde_json::to_string(&session_state)
             .map_err(Into::into)
             .map_err(UpdateError::SerializationError)?;
-        let cache_key = (self.configuration.cache_keygen)(&session_key);
+        let cache_key = (self.configuration.cache_keygen)(session_key.as_ref());
 
         let cmd = Command(resp_array![
             "SET",
@@ -165,8 +170,8 @@ impl SessionStore for RedisActorSessionStore {
         Ok(session_key)
     }
 
-    async fn delete(&self, session_key: &str) -> Result<(), anyhow::Error> {
-        let cache_key = (self.configuration.cache_keygen)(session_key);
+    async fn delete(&self, session_key: &SessionKey) -> Result<(), anyhow::Error> {
+        let cache_key = (self.configuration.cache_keygen)(session_key.as_ref());
 
         let res = self
             .addr

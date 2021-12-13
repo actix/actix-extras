@@ -1,5 +1,5 @@
 use crate::storage::{LoadError, SessionStore};
-use crate::{Session, SessionStatus};
+use crate::{Session, SessionKey, SessionStatus};
 use actix_web::body::MessageBody;
 use actix_web::cookie::{Cookie, CookieJar, Key, SameSite};
 use actix_web::dev::{ResponseHead, Service, ServiceRequest, ServiceResponse, Transform};
@@ -7,6 +7,7 @@ use actix_web::http::header::{HeaderValue, SET_COOKIE};
 use actix_web::http::StatusCode;
 use actix_web::HttpResponse;
 use std::collections::HashMap;
+use std::convert::TryInto;
 use std::future::Future;
 use std::pin::Pin;
 use std::rc::Rc;
@@ -347,7 +348,7 @@ where
                         let session_key = storage_backend.save(session_state).await.unwrap();
                         set_session_cookie(
                             res.response_mut().head_mut(),
-                            session_key,
+                            session_key.into(),
                             &configuration.cookie,
                         );
                     }
@@ -396,7 +397,7 @@ where
     }
 }
 
-fn extract_session_key(req: &ServiceRequest, config: &CookieConfiguration) -> Option<String> {
+fn extract_session_key(req: &ServiceRequest, config: &CookieConfiguration) -> Option<SessionKey> {
     let cookies = req.cookies().ok()?;
     let session_cookie = cookies
         .iter()
@@ -405,15 +406,24 @@ fn extract_session_key(req: &ServiceRequest, config: &CookieConfiguration) -> Op
     let mut jar = CookieJar::new();
     jar.add_original(session_cookie.clone());
 
-    let verified_cookie = match config.content_security {
+    let verification_result = match config.content_security {
         CookieContentSecurity::Signed => jar.signed(&config.key).get(&config.name),
         CookieContentSecurity::Private => jar.private(&config.key).get(&config.name),
-    }?;
-    Some(verified_cookie.value().to_owned())
+    };
+    if verification_result.is_none() {
+        tracing::warn!("The incoming request had a session cookie attached that failed to pass cryptographic checks (signing verification/decryption).");
+    }
+    match verification_result?.value().to_owned().try_into() {
+        Ok(session_key) => Some(session_key),
+        Err(e) => {
+            tracing::warn!(error.message = %e, error.cause_chain = ?e, "Invalid session key, ignoring.");
+            None
+        }
+    }
 }
 
 async fn load_session_state<Store: SessionStore>(
-    session_key: &Option<String>,
+    session_key: &Option<SessionKey>,
     storage_backend: &Store,
 ) -> Result<HashMap<String, String>, actix_web::Error> {
     if let Some(session_key) = session_key.as_ref() {
@@ -439,10 +449,11 @@ async fn load_session_state<Store: SessionStore>(
 
 fn set_session_cookie(
     response: &mut ResponseHead,
-    session_key: String,
+    session_key: SessionKey,
     config: &CookieConfiguration,
 ) {
-    let mut cookie = Cookie::new(config.name.clone(), session_key);
+    let value: String = session_key.into();
+    let mut cookie = Cookie::new(config.name.clone(), value);
     cookie.set_secure(config.secure);
     cookie.set_http_only(config.http_only);
     if let Some(max_age) = config.max_age {

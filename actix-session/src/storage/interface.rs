@@ -1,3 +1,4 @@
+use crate::SessionKey;
 use std::collections::HashMap;
 
 pub(crate) type SessionState = HashMap<String, String>;
@@ -19,23 +20,22 @@ pub(crate) type SessionState = HashMap<String, String>;
 #[async_trait::async_trait(?Send)]
 pub trait SessionStore {
     /// Load the session state associated to a session key.
-    async fn load(&self, session_key: &str) -> Result<Option<SessionState>, LoadError>;
+    async fn load(&self, session_key: &SessionKey) -> Result<Option<SessionState>, LoadError>;
 
     /// Persist the session state for a newly created session.
     /// It returns the corresponding session key.
-    async fn save(&self, session_state: SessionState) -> Result<String, SaveError>;
+    async fn save(&self, session_state: SessionState) -> Result<SessionKey, SaveError>;
 
     /// Update the session state associated to a pre-existing session key.
-    // TODO: add error type
     async fn update(
         &self,
-        session_key: String,
+        session_key: SessionKey,
         session_state: SessionState,
-    ) -> Result<String, UpdateError>;
+    ) -> Result<SessionKey, UpdateError>;
 
     /// Delete a session from the store.
     // TODO: add error type
-    async fn delete(&self, session_key: &str) -> Result<(), anyhow::Error>;
+    async fn delete(&self, session_key: &SessionKey) -> Result<(), anyhow::Error>;
 }
 
 #[derive(thiserror::Error, Debug)]
