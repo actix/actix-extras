@@ -144,8 +144,11 @@ impl SessionStore for RedisActorSessionStore {
         let body = serde_json::to_string(&session_state)
             .map_err(Into::into)
             .map_err(SaveError::SerializationError)?;
-        let session_key = generate_session_key();
-        let cache_key = (self.configuration.cache_keygen)(&session_key);
+        let session_key: SessionKey = generate_session_key()
+            .try_into()
+            .map_err(Into::into)
+            .map_err(SaveError::GenericError)?;
+        let cache_key = (self.configuration.cache_keygen)(session_key.as_ref());
 
         let cmd = Command(resp_array![
             "SET",
@@ -165,10 +168,7 @@ impl SessionStore for RedisActorSessionStore {
             .map_err(Into::into)
             .map_err(SaveError::GenericError)?;
         match result {
-            RespValue::SimpleString(_) => Ok(session_key
-                .try_into()
-                .map_err(Into::into)
-                .map_err(SaveError::GenericError)?),
+            RespValue::SimpleString(_) => Ok(session_key),
             RespValue::Nil => Err(SaveError::GenericError(anyhow::anyhow!(
                 "Failed to save session state. A record with the same key already existed in Redis"
             ))),
