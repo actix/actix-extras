@@ -1,34 +1,14 @@
-//! Sessions for Actix Web.
+//! Sessions management for `actix-web` applications.
 //!
-//! Provides a general solution for session management. Session middleware could provide different
-//! implementations which could be accessed via general session API.
-//!
-//! This crate provides a general solution for session management and includes a cookie backend.
-//! Other backend implementations can be built to use persistent or key-value stores, for example.
-//!
-//! In general, some session middleware, such as a [`CookieSession`] is initialized and applied.
-//! To access session data, the [`Session`] extractor must be used. This extractor allows reading
-//! modifying session data.
+//! To start using sessions in your `actix-web` application you must register [`SessionMiddleware`] as a middleware on your `actix-web`'s `App`:
 //!
 //! ```no_run
 //! use actix_web::{web, App, HttpServer, HttpResponse, Error};
-//! use actix_session::{Session, SessionMiddleware, CookieSessionStore};
+//! use actix_session::{Session, SessionMiddleware, RedisActorSessionStore};
 //! use actix_web::cookie::Key;
 //!
-//! fn index(session: Session) -> Result<&'static str, Error> {
-//!     // access session data
-//!     if let Some(count) = session.get::<i32>("counter")? {
-//!         println!("SESSION value: {}", count);
-//!         session.insert("counter", count + 1)?;
-//!     } else {
-//!         session.insert("counter", 1)?;
-//!     }
-//!
-//!     Ok("Welcome!")
-//! }
-//!
-//! // The signing key would usually be read from a configuration file/environment variables.
-//! fn get_signing_key() -> Key {
+//! // The secret key would usually be read from a configuration file/environment variables.
+//! fn get_secret_key() -> Key {
 //!     # use rand::distributions::Alphanumeric;
 //!     # use rand::{thread_rng, Rng};
 //!     # let signing_key: String = thread_rng()
@@ -42,20 +22,46 @@
 //!
 //! #[actix_rt::main]
 //! async fn main() -> std::io::Result<()> {
-//!     let signing_key = get_signing_key();
+//!     let secret_key = get_secret_key();
+//!     let redis_connection_string = "127.0.0.1:6379";
 //!     HttpServer::new(move ||
 //!             App::new()
-//!             // Create cookie-based session middleware
-//!             .wrap(SessionMiddleware::new(CookieSessionStore::default(), signing_key.clone()))
+//!             // Add session management to your application using Redis for session state storage
+//!             .wrap(
+//!                 SessionMiddleware::new(
+//!                     RedisActorSessionStore::new(redis_connection_string),
+//!                     secret_key.clone()
+//!                 )
+//!             )
 //!             .default_service(web::to(|| HttpResponse::Ok())))
 //!         .bind(("127.0.0.1", 8080))?
 //!         .run()
 //!         .await
 //! }
 //! ```
+//!
+//! The session state can be accessed and modified by your request handlers using the [`Session`] extractor.
+//!
+//! ```no_run
+//! use actix_web::Error;
+//! use actix_session::Session;
+//!
+//! fn index(session: Session) -> Result<&'static str, Error> {
+//!     // Access the session state
+//!     if let Some(count) = session.get::<i32>("counter")? {
+//!         println!("SESSION value: {}", count);
+//!         // Modify the session state
+//!         session.insert("counter", count + 1)?;
+//!     } else {
+//!         session.insert("counter", 1)?;
+//!     }
+//!
+//!     Ok("Welcome!")
+//! }
+//! ```
 
 #![deny(rust_2018_idioms, nonstandard_style)]
-// #![warn(missing_docs)]
+#![warn(missing_docs)]
 
 pub use extractors::UserSession;
 pub use middleware::{CookieContentSecurity, SessionMiddleware, SessionMiddlewareBuilder};
