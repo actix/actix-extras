@@ -321,11 +321,7 @@ where
 
         Box::pin(async move {
             let (request, payload) = req.into_parts();
-            let session_key = extract_session_key(
-                &request,
-                &configuration.cookie.key,
-                &configuration.cookie.name,
-            );
+            let session_key = extract_session_key(&request, &configuration.cookie);
             let session_state = if let Some(session_key) = session_key.as_ref() {
                 // TODO: remove unwrap
                 storage_backend
@@ -400,16 +396,20 @@ where
     }
 }
 
-fn extract_session_key(req: &HttpRequest, signing_key: &Key, cookie_name: &str) -> Option<String> {
+fn extract_session_key(req: &HttpRequest, config: &CookieConfiguration) -> Option<String> {
     // TODO: Should we fail the request if we cannot read cookies?
     let cookies = req.cookies().ok()?;
     let session_cookie = cookies
         .iter()
-        .find(|&cookie| cookie.name() == cookie_name)?;
+        .find(|&cookie| cookie.name() == config.name)?;
 
     let mut jar = CookieJar::new();
     jar.add_original(session_cookie.clone());
-    let verified_cookie = jar.signed(&signing_key).get(&cookie_name)?;
+
+    let verified_cookie = match config.content_security {
+        CookieContentSecurity::Signed => jar.signed(&config.key).get(&config.name),
+        CookieContentSecurity::Private => jar.private(&config.key).get(&config.name),
+    }?;
     Some(verified_cookie.value().to_owned())
 }
 
