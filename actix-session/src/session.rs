@@ -40,25 +40,22 @@ pub struct Session(Rc<RefCell<SessionInner>>);
 /// Status of a [`Session`].
 #[derive(PartialEq, Clone, Debug)]
 pub enum SessionStatus {
-    /// Session has been updated and requires a new persist operation.
+    /// Session state has been updated - the changes will have to be persisted to the backend.
     Changed,
 
-    /// Session is flagged for deletion and should be removed from client and server.
+    /// The session has been flagged for deletion - the session cookie will be removed from
+    /// the client and the session state will be deleted from the session store.
     ///
-    /// Most operations on the session after purge flag is set should have no effect.
+    /// Most operations on the session after it has been marked for deletion will have no effect.
     Purged,
 
-    /// Session is flagged for refresh.
+    /// The session has been flagged for renewal.
     ///
-    /// For example, when using a backend that has a TTL (time-to-live) expiry on the session entry,
-    /// the session will be refreshed even if no data inside it has changed. The client may also
-    /// be notified of the refresh.
+    /// The session key will be regenerated and the time-to-live of the session state will be
+    /// extended.
     Renewed,
 
-    /// Session is unchanged from when last seen (if exists).
-    ///
-    /// This state also captures new (previously unissued) sessions such as a user's first
-    /// site visit.
+    /// The session state has not been modified since its creation/retrieval.
     Unchanged,
 }
 
