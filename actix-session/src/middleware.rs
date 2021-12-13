@@ -181,10 +181,10 @@ impl<Store: SessionStore> SessionMiddlewareBuilder<Store> {
         self
     }
 
-    /// Determine how long a session should last - check out [`CookieDurability`]'s documentation
+    /// Determine how long a session should last - check out [`SessionLength`]'s documentation
     /// for more details on the available options.
     ///
-    /// Default is [`CookieDurability::BrowserSession`].
+    /// Default is [`SessionLength::BrowserSession`].
     #[must_use]
     pub fn session_length(mut self, session_length: SessionLength) -> Self {
         match session_length {
