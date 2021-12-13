@@ -1,4 +1,4 @@
-//! Sessions management for `actix-web` applications.
+//! # Session management for `actix-web`
 //!
 //! To start using sessions in your `actix-web` application you must register [`SessionMiddleware`] as a middleware on your `actix-web`'s `App`:
 //!
@@ -59,9 +59,42 @@
 //!     Ok("Welcome!")
 //! }
 //! ```
+//!
+//! ## How to install
+//!
+//! Add `actix-session` to your dependencies:
+//!
+//! ```toml
+//! [dependencies]
+//! # ...
+//! actix-web = "4.0.0-beta.14"
+//! actix-session = "0.6.0-beta.1"
+//! ```
+//!
+//! By default, `actix-session` does not provide any storage backend to retrieve and save the state attached to your sessions.
+//! You can enable:
+//!
+//! - a cookie-based backend, [`storage::CookieSessionStore`], using the `cookie-session` feature flag.
+//!
+//! ```toml
+//! [dependencies]
+//! # ...
+//! actix-session = { version = "0.6.0-beta.1", features = ["cookie-session"] }
+//! ```
+//!
+//! - a Redis-based backend, [`storage::RedisActorSessionStore`], using the `redis-actor-session` feature flag.
+//!
+//! ```toml
+//! [dependencies]
+//! # ...
+//! actix-session = { version = "0.6.0-beta.1", features = ["redis-actor-session"] }
+//! ```
+//!
+//! You can provide a different session store by implementing the [`storage::SessionStore`] trait.
 
 #![deny(rust_2018_idioms, nonstandard_style)]
 #![warn(missing_docs)]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 
 pub use extractors::SessionExt;
 pub use middleware::{CookieContentSecurity, SessionMiddleware, SessionMiddlewareBuilder};

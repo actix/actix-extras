@@ -9,6 +9,10 @@ repository = "https://github.com/actix/actix-extras.git"
 license = "MIT OR Apache-2.0"
 edition = "2018"
 
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
 [lib]
 name = "actix_session"
 path = "src/lib.rs"

@@ -1,6 +1,8 @@
 #[cfg(feature = "cookie-session")]
+#[cfg_attr(docsrs, doc(cfg(feature = "cookie-session")))]
 pub use cookie::CookieSessionStore;
 #[cfg(feature = "redis-actor-session")]
+#[cfg_attr(docsrs, doc(cfg(feature = "redis-actor-session")))]
 pub use redis_actor::{RedisActorSessionStore, RedisActorSessionStoreBuilder};
 
 mod session_key;
