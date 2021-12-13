@@ -1,5 +1,3 @@
-//! Cookie based sessions. See docs for [`CookieSession`].
-
 use crate::storage::interface::{LoadError, SaveError, SessionState, UpdateError};
 use crate::storage::SessionStore;
 use crate::SessionKey;
