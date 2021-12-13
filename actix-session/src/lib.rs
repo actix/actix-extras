@@ -9,14 +9,7 @@
 //!
 //! // The secret key would usually be read from a configuration file/environment variables.
 //! fn get_secret_key() -> Key {
-//!     # use rand::distributions::Alphanumeric;
-//!     # use rand::{thread_rng, Rng};
-//!     # let signing_key: String = thread_rng()
-//!     #     .sample_iter(&Alphanumeric)
-//!     #     .take(64)
-//!     #     .map(char::from)
-//!     #     .collect();
-//!     # Key::from(signing_key.as_bytes())
+//!     # todo!()
 //!     // [...]
 //! }
 //!

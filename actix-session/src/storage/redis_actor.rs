@@ -12,19 +12,12 @@ use time::{self, Duration};
 ///
 /// ```no_run
 /// use actix_web::{web, App, HttpServer, HttpResponse, Error};
-/// use actix_session::{Session, SessionMiddleware, storage::RedisActorSessionStore, SessionLength};
+/// use actix_session::{SessionMiddleware, storage::RedisActorSessionStore};
 /// use actix_web::cookie::Key;
 ///
 /// // The secret key would usually be read from a configuration file/environment variables.
 /// fn get_secret_key() -> Key {
-///     # use rand::distributions::Alphanumeric;
-///     # use rand::{thread_rng, Rng};
-///     # let signing_key: String = thread_rng()
-///     #     .sample_iter(&Alphanumeric)
-///     #     .take(64)
-///     #     .map(char::from)
-///     #     .collect();
-///     # Key::from(signing_key.as_bytes())
+///     # todo!()
 ///     // [...]
 /// }
 ///
@@ -34,16 +27,11 @@ use time::{self, Duration};
 ///     let redis_connection_string = "127.0.0.1:6379";
 ///     HttpServer::new(move ||
 ///             App::new()
-///             // Customise session length!
 ///             .wrap(
-///                 SessionMiddleware::builder(
+///                 SessionMiddleware::new(
 ///                     RedisActorSessionStore::new(redis_connection_string),
 ///                     secret_key.clone()
 ///                 )
-///                 .session_length(SessionLength::Predetermined {
-///                     max_session_length: Some(time::Duration::days(5)),
-///                 })
-///                 .build(),
 ///             )
 ///             .default_service(web::to(|| HttpResponse::Ok())))
 ///         .bind(("127.0.0.1", 8080))?
