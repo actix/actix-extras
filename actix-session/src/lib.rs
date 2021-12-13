@@ -66,7 +66,6 @@
 pub use extractors::UserSession;
 pub use middleware::{CookieContentSecurity, SessionMiddleware, SessionMiddlewareBuilder};
 pub use session::{Session, SessionStatus};
-pub use session_key::SessionKey;
 #[cfg(feature = "cookie-session")]
 pub use storage::CookieSessionStore;
 #[cfg(feature = "redis-actor-session")]
@@ -75,16 +74,16 @@ pub use storage::RedisActorSessionStore;
 mod extractors;
 mod middleware;
 mod session;
-mod session_key;
 pub mod storage;
 
 #[cfg(test)]
 pub mod test_helpers {
-    use crate::storage::SessionStore;
-    use crate::CookieContentSecurity;
     use actix_web::cookie::Key;
     use rand::distributions::Alphanumeric;
     use rand::{thread_rng, Rng};
+
+    use crate::storage::SessionStore;
+    use crate::CookieContentSecurity;
 
     /// Generate a random cookie signing/encryption key.
     pub fn key() -> Key {
@@ -126,10 +125,6 @@ pub mod test_helpers {
     }
 
     mod acceptance_tests {
-        use crate::middleware::SessionLength;
-        use crate::storage::SessionStore;
-        use crate::test_helpers::key;
-        use crate::{CookieContentSecurity, Session, SessionMiddleware};
         use actix_web::web::Bytes;
         use actix_web::{dev::Service, test, App};
         use actix_web::{
@@ -140,6 +135,11 @@ pub mod test_helpers {
         use serde::{Deserialize, Serialize};
         use serde_json::json;
         use time::Duration;
+
+        use crate::middleware::SessionLength;
+        use crate::storage::SessionStore;
+        use crate::test_helpers::key;
+        use crate::{CookieContentSecurity, Session, SessionMiddleware};
 
         pub(super) async fn basic_workflow<F, Store>(
             store_builder: F,

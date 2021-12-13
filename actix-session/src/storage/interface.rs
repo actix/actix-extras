@@ -1,4 +1,4 @@
-use crate::SessionKey;
+use super::SessionKey;
 use std::collections::HashMap;
 use time::Duration;
 

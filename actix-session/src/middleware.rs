@@ -1,5 +1,5 @@
 use crate::storage::{LoadError, SessionStore};
-use crate::{Session, SessionKey, SessionStatus};
+use crate::{storage::SessionKey, Session, SessionStatus};
 use actix_web::body::MessageBody;
 use actix_web::cookie::{Cookie, CookieJar, Key, SameSite};
 use actix_web::dev::{ResponseHead, Service, ServiceRequest, ServiceResponse, Transform};
