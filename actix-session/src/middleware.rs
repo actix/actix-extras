@@ -86,6 +86,7 @@ impl<Store: SessionStore> SessionMiddlewareBuilder<Store> {
     /// Set the name of the cookie used to store the session id.
     ///
     /// Defaults to `id`.
+    #[must_use]
     pub fn cookie_name(mut self, name: String) -> Self {
         self.cookie_configuration.name = name;
         self
@@ -97,6 +98,7 @@ impl<Store: SessionStore> SessionMiddlewareBuilder<Store> {
     /// connection is secure - i.e. `https`.
     ///
     /// Default is `true`.
+    #[must_use]
     pub fn cookie_secure(mut self, secure: bool) -> Self {
         self.cookie_configuration.secure = secure;
         self
@@ -107,6 +109,7 @@ impl<Store: SessionStore> SessionMiddlewareBuilder<Store> {
     /// Use `None` for session-only cookies.
     ///
     /// Default is `None`.
+    #[must_use]
     pub fn cookie_max_age(mut self, max_age: Option<Duration>) -> Self {
         self.cookie_configuration.max_age = max_age;
         self
@@ -115,6 +118,7 @@ impl<Store: SessionStore> SessionMiddlewareBuilder<Store> {
     /// Set the `SameSite` attribute for the cookie used to store the session id.
     ///
     /// By default, the attribute is set to `Lax`.
+    #[must_use]
     pub fn cookie_same_site(mut self, same_site: SameSite) -> Self {
         self.cookie_configuration.same_site = same_site;
         self
@@ -123,6 +127,7 @@ impl<Store: SessionStore> SessionMiddlewareBuilder<Store> {
     /// Set the `Path` attribute for the cookie used to store the session id.
     ///
     /// By default, the attribute is set to `/`.
+    #[must_use]
     pub fn cookie_path(mut self, path: String) -> Self {
         self.cookie_configuration.path = path;
         self
@@ -134,6 +139,7 @@ impl<Store: SessionStore> SessionMiddlewareBuilder<Store> {
     /// to the same host that set the cookie, excluding subdomains.
     ///
     /// By default, the attribute is left unspecified.
+    #[must_use]
     pub fn cookie_domain(mut self, domain: Option<String>) -> Self {
         self.cookie_configuration.domain = domain;
         self
@@ -155,6 +161,7 @@ impl<Store: SessionStore> SessionMiddlewareBuilder<Store> {
     /// to be encrypted - it contains the whole session state!
     /// If you are using Redis-based storage, `signed` is more than enough - the cookie content
     /// is just a unique tamper-proof session key.
+    #[must_use]
     pub fn cookie_content_security(mut self, content_security: CookieContentSecurity) -> Self {
         self.cookie_configuration.content_security = content_security;
         self
@@ -166,6 +173,7 @@ impl<Store: SessionStore> SessionMiddlewareBuilder<Store> {
     /// snippets running in the browser.
     ///
     /// Default is `true`.
+    #[must_use]
     pub fn cookie_http_only(mut self, http_only: bool) -> Self {
         self.cookie_configuration.http_only = http_only;
         self
