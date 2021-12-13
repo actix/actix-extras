@@ -233,6 +233,11 @@ fn default_ttl() -> Duration {
 }
 
 impl<Store: SessionStore> SessionMiddleware<Store> {
+    /// Use [`SessionMiddleware::new`] to initialize the session framework using the default parameters.
+    /// To create a new instance of [`SessionMiddleware`] you need to provide:
+    ///
+    /// - an instance of the session storage backend you wish to use (i.e. an implementation of [`SessionStore]);
+    /// - a secret key, to sign or encrypt the content of client-side session cookie.
     pub fn new(store: Store, key: Key) -> Self {
         Self {
             storage_backend: Arc::new(store),
@@ -241,6 +246,11 @@ impl<Store: SessionStore> SessionMiddleware<Store> {
     }
 
     #[must_use]
+    /// A fluent API to configure [`SessionMiddleware`].
+    /// It takes as input the two required inputs to create a new instance of [`SessionMiddleware`]:
+    ///
+    /// - an instance of the session storage backend you wish to use (i.e. an implementation of [`SessionStore]);
+    /// - a secret key, to sign or encrypt the content of client-side session cookie.
     pub fn builder(store: Store, key: Key) -> SessionMiddlewareBuilder<Store> {
         SessionMiddlewareBuilder {
             storage_backend: Arc::new(store),
@@ -364,6 +374,7 @@ impl<Store: SessionStore> SessionMiddlewareBuilder<Store> {
     }
 
     /// Finalise the builder and return a [`SessionMiddleware`] instance.
+    #[must_use]
     pub fn build(self) -> SessionMiddleware<Store> {
         SessionMiddleware {
             storage_backend: self.storage_backend,

@@ -8,15 +8,68 @@ use rand::{distributions::Alphanumeric, rngs::OsRng, Rng};
 use std::convert::TryInto;
 use time::{self, Duration};
 
-/// Use redis as session storage.
+/// Use Redis as session storage backend.
 ///
-/// You need to pass the address of the redis server to the constructor.
+/// ```no_run
+/// use actix_web::{web, App, HttpServer, HttpResponse, Error};
+/// use actix_session::{Session, SessionMiddleware, storage::RedisActorSessionStore, SessionLength};
+/// use actix_web::cookie::Key;
+///
+/// // The secret key would usually be read from a configuration file/environment variables.
+/// fn get_secret_key() -> Key {
+///     # use rand::distributions::Alphanumeric;
+///     # use rand::{thread_rng, Rng};
+///     # let signing_key: String = thread_rng()
+///     #     .sample_iter(&Alphanumeric)
+///     #     .take(64)
+///     #     .map(char::from)
+///     #     .collect();
+///     # Key::from(signing_key.as_bytes())
+///     // [...]
+/// }
+///
+/// #[actix_rt::main]
+/// async fn main() -> std::io::Result<()> {
+///     let secret_key = get_secret_key();
+///     let redis_connection_string = "127.0.0.1:6379";
+///     HttpServer::new(move ||
+///             App::new()
+///             // Customise session length!
+///             .wrap(
+///                 SessionMiddleware::builder(
+///                     RedisActorSessionStore::new(redis_connection_string),
+///                     secret_key.clone()
+///                 )
+///                 .session_length(SessionLength::Predetermined {
+///                     max_session_length: Some(time::Duration::days(5)),
+///                 })
+///                 .build(),
+///             )
+///             .default_service(web::to(|| HttpResponse::Ok())))
+///         .bind(("127.0.0.1", 8080))?
+///         .run()
+///         .await
+/// }
+/// ```
+///
+/// ## Implementation notes
+///
+/// `RedisActorSessionStore` leverages `actix-redis`'s `RedisActor` implementation - each thread worker gets its
+/// own connection to Redis.
+///
+/// ### Limitations
+///
+/// `RedisActorSessionStore` does not currently support establishing authenticated connections to Redis.
 pub struct RedisActorSessionStore {
     configuration: CacheConfiguration,
     addr: Addr<RedisActor>,
 }
 
 impl RedisActorSessionStore {
+    /// A fluent API to configure [`RedisActorSessionStore`].
+    /// It takes as input the only required input to create a new instance of [`RedisActorSessionStore`] - a
+    /// connection string for Redis.
+    #[must_use]
     pub fn builder<S: Into<String>>(connection_string: S) -> RedisActorSessionStoreBuilder {
         RedisActorSessionStoreBuilder {
             configuration: Default::default(),
@@ -24,6 +77,9 @@ impl RedisActorSessionStore {
         }
     }
 
+    /// Create a new instance of [`RedisActorSessionStore`] using the default configuration.
+    /// It takes as input the only required input to create a new instance of [`RedisActorSessionStore`] - a
+    /// connection string for Redis.
     pub fn new<S: Into<String>>(connection_string: S) -> RedisActorSessionStore {
         Self::builder(connection_string).build()
     }
@@ -41,6 +97,9 @@ impl Default for CacheConfiguration {
     }
 }
 
+/// A fluent builder to construct a [`RedisActorSessionStore`] instance with custom
+/// configuration parameters.
+#[must_use]
 pub struct RedisActorSessionStoreBuilder {
     connection_string: String,
     configuration: CacheConfiguration,
@@ -48,11 +107,14 @@ pub struct RedisActorSessionStoreBuilder {
 
 impl RedisActorSessionStoreBuilder {
     /// Set a custom cache key generation strategy, expecting a session key as input.
+    #[must_use]
     pub fn cache_keygen(mut self, keygen: Box<dyn Fn(&str) -> String>) -> Self {
         self.configuration.cache_keygen = keygen;
         self
     }
 
+    /// Finalise the builder and return a [`RedisActorSessionStore`] instance.
+    #[must_use]
     pub fn build(self) -> RedisActorSessionStore {
         RedisActorSessionStore {
             configuration: self.configuration,
