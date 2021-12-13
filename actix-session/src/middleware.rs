@@ -344,8 +344,8 @@ where
                     // We do not create an entry in the session store if there is no state
                     // attached to a fresh session
                     if !session_state.is_empty() {
-                        // TODO: remove unwrap
-                        let session_key = storage_backend.save(session_state).await.unwrap();
+                        let session_key =
+                            storage_backend.save(session_state).await.map_err(e500)?;
                         set_session_cookie(
                             res.response_mut().head_mut(),
                             session_key.into(),
