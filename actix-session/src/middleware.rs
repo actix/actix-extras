@@ -411,7 +411,7 @@ fn extract_session_key(req: &ServiceRequest, config: &CookieConfiguration) -> Op
         CookieContentSecurity::Private => jar.private(&config.key).get(&config.name),
     };
     if verification_result.is_none() {
-        tracing::warn!("The session cookie attached to the incoming request failed to pass cryptographic checks (signing verification/decryption).");
+        tracing::warn!("The session cookie attached to the incoming request failed to pass cryptographic checks (signature verification/decryption).");
     }
     match verification_result?.value().to_owned().try_into() {
         Ok(session_key) => Some(session_key),
