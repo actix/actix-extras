@@ -1,3 +1,4 @@
+//! Pluggable storage backends for session state.
 #[cfg(feature = "cookie-session")]
 #[cfg_attr(docsrs, doc(cfg(feature = "cookie-session")))]
 pub use cookie::CookieSessionStore;

@@ -1,5 +1,21 @@
 use std::convert::TryFrom;
 
+/// A session key, the string stored in a client-side cookie to associate a user
+/// with its session state on the backend.
+///
+/// ## Validation
+///
+/// Session keys are stored as cookies, therefore they cannot be arbitrary long.
+/// We require session keys to be smaller than 4064 bytes.
+///
+/// ```rust
+/// use std::convert::TryInto;
+/// use actix_session::storage::SessionKey;
+///
+/// let key: String = std::iter::repeat('a').take(4065).collect();
+/// let session_key: Result<SessionKey, _> = key.try_into();
+/// assert!(session_key.is_err());
+/// ```
 pub struct SessionKey(String);
 
 impl TryFrom<String> for SessionKey {
