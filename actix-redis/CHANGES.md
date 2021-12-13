@@ -1,8 +1,11 @@
 # Changes
 
-## 0.11.0-beta.1 - 2021-xx-xx
+## 0.11.0-beta.1 (Unreleased) - 2021-xx-xx
 ### Removed
 * `RedisSession` has been removed. Check out `RedisActorSessionStore` in `actix-session` for a session store backed by Redis using `actix-redis`. [#212]
+
+## 0.10.0-beta.4 - 2021-12-12
+* A session will be created in Redis if and only if there is some data inside the session state. This reduces the performance impact of `RedisSession` on routes that do not leverage sessions. [#207]
 * Update `actix-web` dependency to `4.0.0.beta-14`. [#209]
 * Update `redis-async` dependency to `0.12`. [#212]
   

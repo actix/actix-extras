@@ -1,6 +1,9 @@
 # Changes
 
 ## Unreleased - 2021-xx-xx
+
+
+## 0.4.0-beta.5 - 2021-12-12
 * Update `actix-web` dependency to `4.0.0.beta-14`. [#209]
 
 [#209]: https://github.com/actix/actix-extras/pull/209
