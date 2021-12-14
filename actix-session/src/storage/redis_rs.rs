@@ -91,8 +91,11 @@ pub struct RedisSessionStoreBuilder {
 
 impl RedisSessionStoreBuilder {
     /// Set a custom cache key generation strategy, expecting a session key as input.
-    pub fn cache_keygen(mut self, keygen: Arc<dyn Fn(&str) -> String + Send + Sync>) -> Self {
-        self.configuration.cache_keygen = keygen;
+    pub fn cache_keygen<F>(mut self, keygen: F) -> Self
+    where
+        F: Fn(&str) -> String + 'static + Send + Sync,
+    {
+        self.configuration.cache_keygen = Arc::new(keygen);
         self
     }
 

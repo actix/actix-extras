@@ -93,8 +93,11 @@ pub struct RedisActorSessionStoreBuilder {
 
 impl RedisActorSessionStoreBuilder {
     /// Set a custom cache key generation strategy, expecting a session key as input.
-    pub fn cache_keygen(mut self, keygen: Box<dyn Fn(&str) -> String>) -> Self {
-        self.configuration.cache_keygen = keygen;
+    pub fn cache_keygen<F>(mut self, keygen: F) -> Self
+    where
+        F: Fn(&str) -> String + 'static,
+    {
+        self.configuration.cache_keygen = Box::new(keygen);
         self
     }
 
