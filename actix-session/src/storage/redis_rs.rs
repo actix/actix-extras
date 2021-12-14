@@ -1,12 +1,11 @@
 use super::SessionKey;
 use crate::storage::interface::{LoadError, SaveError, SessionState, UpdateError};
+use crate::storage::utils::generate_session_key;
 use crate::storage::SessionStore;
 use redis::aio::ConnectionManager;
 use redis::AsyncCommands;
-use std::convert::TryInto;
 use std::sync::Arc;
 use time::{self, Duration};
-use crate::storage::utils::generate_session_key;
 
 /// Use Redis as session storage backend.
 ///
@@ -65,7 +64,6 @@ impl RedisSessionStore {
     /// A fluent API to configure [`RedisSessionStore`].
     /// It takes as input the only required input to create a new instance of [`RedisSessionStore`] - a
     /// connection string for Redis.
-    #[must_use]
     pub fn builder<S: Into<String>>(connection_string: S) -> RedisSessionStoreBuilder {
         RedisSessionStoreBuilder {
             configuration: Default::default(),
@@ -93,7 +91,6 @@ pub struct RedisSessionStoreBuilder {
 
 impl RedisSessionStoreBuilder {
     /// Set a custom cache key generation strategy, expecting a session key as input.
-    #[must_use]
     pub fn cache_keygen(mut self, keygen: Arc<dyn Fn(&str) -> String + Send + Sync>) -> Self {
         self.configuration.cache_keygen = keygen;
         self
@@ -136,10 +133,7 @@ impl SessionStore for RedisSessionStore {
         let body = serde_json::to_string(&session_state)
             .map_err(Into::into)
             .map_err(SaveError::SerializationError)?;
-        let session_key: SessionKey = generate_session_key()
-            .try_into()
-            .map_err(Into::into)
-            .map_err(SaveError::GenericError)?;
+        let session_key = generate_session_key();
         let cache_key = (self.configuration.cache_keygen)(session_key.as_ref());
         redis::cmd("SET")
             .arg(&[

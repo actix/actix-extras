@@ -239,7 +239,6 @@ impl<Store: SessionStore> SessionMiddleware<Store> {
         }
     }
 
-    #[must_use]
     /// A fluent API to configure [`SessionMiddleware`].
     /// It takes as input the two required inputs to create a new instance of [`SessionMiddleware`]:
     ///
@@ -265,7 +264,6 @@ impl<Store: SessionStore> SessionMiddlewareBuilder<Store> {
     /// Set the name of the cookie used to store the session id.
     ///
     /// Defaults to `id`.
-    #[must_use]
     pub fn cookie_name(mut self, name: String) -> Self {
         self.configuration.cookie.name = name;
         self
@@ -277,7 +275,6 @@ impl<Store: SessionStore> SessionMiddlewareBuilder<Store> {
     /// connection is secure - i.e. `https`.
     ///
     /// Default is `true`.
-    #[must_use]
     pub fn cookie_secure(mut self, secure: bool) -> Self {
         self.configuration.cookie.secure = secure;
         self
@@ -287,7 +284,6 @@ impl<Store: SessionStore> SessionMiddlewareBuilder<Store> {
     /// for more details on the available options.
     ///
     /// Default is [`SessionLength::BrowserSession`].
-    #[must_use]
     pub fn session_length(mut self, session_length: SessionLength) -> Self {
         match session_length {
             SessionLength::BrowserSession { state_ttl } => {
@@ -296,7 +292,7 @@ impl<Store: SessionStore> SessionMiddlewareBuilder<Store> {
             }
             SessionLength::Predetermined { max_session_length } => {
                 let ttl = max_session_length.unwrap_or_else(default_ttl);
-                self.configuration.cookie.max_age = Some(ttl.clone());
+                self.configuration.cookie.max_age = Some(ttl);
                 self.configuration.session.state_ttl = ttl;
             }
         }
@@ -306,7 +302,6 @@ impl<Store: SessionStore> SessionMiddlewareBuilder<Store> {
     /// Set the `SameSite` attribute for the cookie used to store the session id.
     ///
     /// By default, the attribute is set to `Lax`.
-    #[must_use]
     pub fn cookie_same_site(mut self, same_site: SameSite) -> Self {
         self.configuration.cookie.same_site = same_site;
         self
@@ -315,7 +310,6 @@ impl<Store: SessionStore> SessionMiddlewareBuilder<Store> {
     /// Set the `Path` attribute for the cookie used to store the session id.
     ///
     /// By default, the attribute is set to `/`.
-    #[must_use]
     pub fn cookie_path(mut self, path: String) -> Self {
         self.configuration.cookie.path = path;
         self
@@ -327,7 +321,6 @@ impl<Store: SessionStore> SessionMiddlewareBuilder<Store> {
     /// to the same host that set the cookie, excluding subdomains.
     ///
     /// By default, the attribute is left unspecified.
-    #[must_use]
     pub fn cookie_domain(mut self, domain: Option<String>) -> Self {
         self.configuration.cookie.domain = domain;
         self
@@ -349,7 +342,6 @@ impl<Store: SessionStore> SessionMiddlewareBuilder<Store> {
     /// to be encrypted - the whole session state is embedded in the cookie!
     /// If you are using Redis-based storage, signed is more than enough - the cookie content
     /// is just a unique tamper-proof session key.
-    #[must_use]
     pub fn cookie_content_security(mut self, content_security: CookieContentSecurity) -> Self {
         self.configuration.cookie.content_security = content_security;
         self
@@ -361,7 +353,6 @@ impl<Store: SessionStore> SessionMiddlewareBuilder<Store> {
     /// snippets running in the browser.
     ///
     /// Default is `true`.
-    #[must_use]
     pub fn cookie_http_only(mut self, http_only: bool) -> Self {
         self.configuration.cookie.http_only = http_only;
         self
@@ -455,7 +446,7 @@ where
                             .map_err(e500)?;
                         set_session_cookie(
                             res.response_mut().head_mut(),
-                            session_key.into(),
+                            session_key,
                             &configuration.cookie,
                         )
                         .map_err(e500)?;
@@ -541,7 +532,7 @@ async fn load_session_state<Store: SessionStore>(
     storage_backend: &Store,
 ) -> Result<HashMap<String, String>, actix_web::Error> {
     if let Some(session_key) = session_key.as_ref() {
-        match storage_backend.load(&session_key).await {
+        match storage_backend.load(session_key).await {
             Ok(state) => {
                 if state.is_none() {
                     tracing::info!("No session state has been found for a valid session key, creating a new empty session.");

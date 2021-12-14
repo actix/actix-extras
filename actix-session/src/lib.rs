@@ -139,18 +139,18 @@ pub mod test_helpers {
         Store: SessionStore + 'static,
         F: Fn() -> Store + Clone + Send + 'static,
     {
-        for policy in vec![
+        for policy in &[
             CookieContentSecurity::Signed,
             CookieContentSecurity::Private,
         ] {
             println!("Using {:?} as cookie content security policy.", policy);
-            acceptance_tests::basic_workflow(store_builder.clone(), policy).await;
-            acceptance_tests::expiration_is_refreshed_on_changes(store_builder.clone(), policy)
+            acceptance_tests::basic_workflow(store_builder.clone(), *policy).await;
+            acceptance_tests::expiration_is_refreshed_on_changes(store_builder.clone(), *policy)
                 .await;
             acceptance_tests::complex_workflow(
                 store_builder.clone(),
                 is_invalidation_supported,
-                policy,
+                *policy,
             )
             .await;
         }
@@ -257,7 +257,7 @@ pub mod test_helpers {
 
             let request = test::TestRequest::with_uri("/test/").to_request();
             let response = app.call(request).await.unwrap();
-            assert!(response.response().cookies().collect::<Vec<_>>().is_empty());
+            assert!(response.response().cookies().next().is_none());
 
             let request = test::TestRequest::get().to_request();
             let response = app.call(request).await.unwrap();

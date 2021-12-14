@@ -93,6 +93,6 @@ mod tests {
 
     #[actix_rt::test]
     async fn test_session_workflow() {
-        acceptance_test_suite(|| CookieSessionStore::default(), false).await;
+        acceptance_test_suite(CookieSessionStore::default, false).await;
     }
 }
