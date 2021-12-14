@@ -13,6 +13,7 @@
 
 ### Removed
 * `CookieSession` has been removed in favour of `CookieSessionStore`, a storage backend for `SessionMiddleware` [#212]
+* `Session::set_session` has been removed. Use `Session::insert` to modify the session state. [#212]
   
 [#212]: https://github.com/actix/actix-extras/pull/212
 
