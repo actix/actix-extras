@@ -20,8 +20,8 @@ path = "src/lib.rs"
 [features]
 default = []
 cookie-session = []
-redis-actor-session = ["actix-redis", "actix", "futures-core"]
-redis-rs-session = ["redis", "futures-core"]
+redis-actor-session = ["actix-redis", "actix", "futures-core", "rand"]
+redis-rs-session = ["redis", "rand"]
 
 [dependencies]
 actix-service = "2.0.0"
@@ -35,7 +35,7 @@ log = "0.4"
 time = "0.2.23"
 serde = { version = "1.0.101" }
 serde_json = { version = "1.0.40" }
-rand = { version = "0.8.0" }
+rand = { version = "0.8.0", optional = true }
 tracing = { version = "0.1.29", default-features = false }
 thiserror = "1.0.30"
 anyhow = "1.0.51"

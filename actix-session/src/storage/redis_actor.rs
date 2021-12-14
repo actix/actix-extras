@@ -4,9 +4,9 @@ use crate::storage::SessionStore;
 use actix::Addr;
 use actix_redis::{resp_array, RespValue};
 use actix_redis::{Command, RedisActor};
-use rand::{distributions::Alphanumeric, rngs::OsRng, Rng};
 use std::convert::TryInto;
 use time::{self, Duration};
+use crate::storage::utils::generate_session_key;
 
 /// Use Redis as session storage backend.
 ///
@@ -226,15 +226,6 @@ impl SessionStore for RedisActorSessionStore {
             )),
         }
     }
-}
-
-/// This session key generation routine follows [OWASP's recommendations](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html#session-id-entropy).
-fn generate_session_key() -> String {
-    let value = std::iter::repeat(())
-        .map(|()| OsRng.sample(Alphanumeric))
-        .take(64)
-        .collect::<Vec<_>>();
-    String::from_utf8(value).unwrap()
 }
 
 #[cfg(test)]

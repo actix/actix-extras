@@ -1,12 +1,12 @@
 use super::SessionKey;
 use crate::storage::interface::{LoadError, SaveError, SessionState, UpdateError};
 use crate::storage::SessionStore;
-use rand::{distributions::Alphanumeric, rngs::OsRng, Rng};
 use redis::aio::ConnectionManager;
 use redis::AsyncCommands;
 use std::convert::TryInto;
 use std::sync::Arc;
 use time::{self, Duration};
+use crate::storage::utils::generate_session_key;
 
 /// Use Redis as session storage backend.
 ///
@@ -191,15 +191,6 @@ impl SessionStore for RedisSessionStore {
             .map_err(UpdateError::GenericError)?;
         Ok(())
     }
-}
-
-/// This session key generation routine follows [OWASP's recommendations](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html#session-id-entropy).
-fn generate_session_key() -> String {
-    let value = std::iter::repeat(())
-        .map(|()| OsRng.sample(Alphanumeric))
-        .take(64)
-        .collect::<Vec<_>>();
-    String::from_utf8(value).unwrap()
 }
 
 #[cfg(test)]
