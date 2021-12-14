@@ -12,7 +12,6 @@ use std::convert::TryInto;
 use std::future::Future;
 use std::pin::Pin;
 use std::rc::Rc;
-use std::sync::Arc;
 use time::Duration;
 
 /// A middleware for session management in `actix-web`'s applications.
@@ -115,7 +114,7 @@ use time::Duration;
 /// be a requirement to deploy a reasonably secure implementation of sessions.
 #[derive(Clone)]
 pub struct SessionMiddleware<Store: SessionStore> {
-    storage_backend: Arc<Store>,
+    storage_backend: Rc<Store>,
     configuration: Rc<Configuration>,
 }
 
@@ -234,7 +233,7 @@ impl<Store: SessionStore> SessionMiddleware<Store> {
     /// - a secret key, to sign or encrypt the content of client-side session cookie.
     pub fn new(store: Store, key: Key) -> Self {
         Self {
-            storage_backend: Arc::new(store),
+            storage_backend: Rc::new(store),
             configuration: Rc::new(default_configuration(key)),
         }
     }
@@ -246,7 +245,7 @@ impl<Store: SessionStore> SessionMiddleware<Store> {
     /// - a secret key, to sign or encrypt the content of client-side session cookie.
     pub fn builder(store: Store, key: Key) -> SessionMiddlewareBuilder<Store> {
         SessionMiddlewareBuilder {
-            storage_backend: Arc::new(store),
+            storage_backend: Rc::new(store),
             configuration: default_configuration(key),
         }
     }
@@ -256,7 +255,7 @@ impl<Store: SessionStore> SessionMiddleware<Store> {
 /// A fluent builder to construct a [`SessionMiddleware`] instance with custom
 /// configuration parameters.
 pub struct SessionMiddlewareBuilder<Store: SessionStore> {
-    storage_backend: Arc<Store>,
+    storage_backend: Rc<Store>,
     configuration: Configuration,
 }
 
@@ -385,7 +384,7 @@ where
         std::future::ready(Ok(InnerSessionMiddleware {
             service: Rc::new(service),
             configuration: Rc::clone(&self.configuration),
-            storage_backend: self.storage_backend.clone(),
+            storage_backend: Rc::clone(&self.storage_backend),
         }))
     }
 }
@@ -395,7 +394,7 @@ where
 pub struct InnerSessionMiddleware<S, Store: SessionStore + 'static> {
     service: Rc<S>,
     configuration: Rc<Configuration>,
-    storage_backend: Arc<Store>,
+    storage_backend: Rc<Store>,
 }
 
 /// Short-hand to create an `actix_web::Error` instance that will result in an `Internal Server Error` response
@@ -424,7 +423,7 @@ where
 
     fn call(&self, mut req: ServiceRequest) -> Self::Future {
         let service = Rc::clone(&self.service);
-        let storage_backend = self.storage_backend.clone();
+        let storage_backend = Rc::clone(&self.storage_backend);
         let configuration = Rc::clone(&self.configuration);
 
         Box::pin(async move {
