@@ -16,10 +16,12 @@ async fn session() {
     session.insert("key2", "value2").unwrap();
     session.remove("key");
 
-    let mut res = req.into_response(HttpResponse::Ok().finish());
-    let (_status, state) = Session::get_changes(&mut res);
-    let changes: Vec<_> = state.collect();
-    assert_eq!(changes, [("key2".to_string(), "\"value2\"".to_string())]);
+    let res = req.into_response(HttpResponse::Ok().finish());
+    let state: Vec<_> = res.get_session().entries().clone().into_iter().collect();
+    assert_eq!(
+        state.as_slice(),
+        [("key2".to_string(), "\"value2\"".to_string())]
+    );
 }
 
 #[actix_web::test]

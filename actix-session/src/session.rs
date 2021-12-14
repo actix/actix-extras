@@ -191,18 +191,22 @@ impl Session {
     }
 
     /// Returns session status and iterator of key-value pairs of changes.
-    pub fn get_changes<B>(
+    ///
+    /// This is a destructive operation - the session state is removed from the request extensions typemap,
+    /// leaving behind a new empty map. It should only be used when the session is being finalised (i.e.
+    /// in `SessionMiddleware`).
+    pub(crate) fn get_changes<B>(
         res: &mut ServiceResponse<B>,
-    ) -> (SessionStatus, impl Iterator<Item = (String, String)>) {
+    ) -> (SessionStatus, HashMap<String, String>) {
         if let Some(s_impl) = res
             .request()
             .extensions()
             .get::<Rc<RefCell<SessionInner>>>()
         {
             let state = mem::take(&mut s_impl.borrow_mut().state);
-            (s_impl.borrow().status.clone(), state.into_iter())
+            (s_impl.borrow().status.clone(), state)
         } else {
-            (SessionStatus::Unchanged, HashMap::new().into_iter())
+            (SessionStatus::Unchanged, HashMap::new())
         }
     }
 

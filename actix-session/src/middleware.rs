@@ -425,8 +425,7 @@ where
             Session::set_session(&mut req, session_state);
 
             let mut res = service.call(req).await?;
-            let (status, state) = Session::get_changes(&mut res);
-            let session_state: HashMap<String, String> = state.collect();
+            let (status, session_state) = Session::get_changes(&mut res);
             match session_key {
                 None => {
                     // We do not create an entry in the session store if there is no state
