@@ -1,15 +1,11 @@
-use actix_session::{Session, SessionExt, SessionStatus};
+use actix_session::{SessionExt, SessionStatus};
 use actix_web::{test, HttpResponse};
 
 #[actix_web::test]
 async fn session() {
-    let mut req = test::TestRequest::default().to_srv_request();
-
-    Session::set_session(
-        &mut req,
-        vec![("key".to_string(), serde_json::to_string("value").unwrap())],
-    );
+    let req = test::TestRequest::default().to_srv_request();
     let session = req.get_session();
+    session.insert("key", "value").unwrap();
     let res = session.get::<String>("key").unwrap();
     assert_eq!(res, Some("value".to_string()));
 
@@ -26,28 +22,20 @@ async fn session() {
 
 #[actix_web::test]
 async fn get_session() {
-    let mut req = test::TestRequest::default().to_srv_request();
-
-    Session::set_session(
-        &mut req,
-        vec![("key".to_string(), serde_json::to_string(&true).unwrap())],
-    );
+    let req = test::TestRequest::default().to_srv_request();
 
     let session = req.get_session();
+    session.insert("key", true).unwrap();
     let res = session.get("key").unwrap();
     assert_eq!(res, Some(true));
 }
 
 #[actix_web::test]
 async fn get_session_from_request_head() {
-    let mut req = test::TestRequest::default().to_srv_request();
-
-    Session::set_session(
-        &mut req,
-        vec![("key".to_string(), serde_json::to_string(&10).unwrap())],
-    );
+    let req = test::TestRequest::default().to_srv_request();
 
     let session = req.get_session();
+    session.insert("key", 10).unwrap();
     let res = session.get::<u32>("key").unwrap();
     assert_eq!(res, Some(10));
 }
@@ -72,16 +60,10 @@ async fn renew_session() {
 
 #[actix_web::test]
 async fn session_entries() {
-    let mut req = test::TestRequest::default().to_srv_request();
-    Session::set_session(
-        &mut req,
-        vec![
-            ("test_str".to_string(), "val".into()),
-            ("test_num".to_string(), "1".into()),
-        ],
-    );
-
+    let req = test::TestRequest::default().to_srv_request();
     let session = req.get_session();
+    session.insert("test_str", "val").unwrap();
+    session.insert("test_str", 1).unwrap();
     let map = session.entries();
     map.contains_key("test_str");
     map.contains_key("test_num");

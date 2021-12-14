@@ -172,19 +172,10 @@ impl Session {
     ///
     /// Values that match keys already existing on the session will be overwritten. Values should
     /// already be JSON serialized.
-    ///
-    /// # Examples
-    /// ```
-    /// # use actix_session::Session;
-    /// # use actix_web::test;
-    /// let mut req = test::TestRequest::default().to_srv_request();
-    ///
-    /// Session::set_session(
-    ///     &mut req,
-    ///     vec![("counter".to_string(), serde_json::to_string(&0).unwrap())],
-    /// );
-    /// ```
-    pub fn set_session(req: &mut ServiceRequest, data: impl IntoIterator<Item = (String, String)>) {
+    pub(crate) fn set_session(
+        req: &mut ServiceRequest,
+        data: impl IntoIterator<Item = (String, String)>,
+    ) {
         let session = Session::get_session(&mut *req.extensions_mut());
         let mut inner = session.0.borrow_mut();
         inner.state.extend(data);
