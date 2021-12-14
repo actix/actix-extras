@@ -132,7 +132,7 @@ impl Session {
             .map(|val_str| match serde_json::from_str(&val_str) {
                 Ok(val) => Ok(val),
                 Err(_err) => {
-                    log::debug!(
+                    tracing::debug!(
                         "removed value (key: {}) could not be deserialized as {}",
                         key,
                         std::any::type_name::<T>()

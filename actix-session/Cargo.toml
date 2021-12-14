@@ -31,7 +31,6 @@ actix-web = { version = "4.0.0-beta.14", default_features = false, features = ["
 async-trait = "0.1"
 derive_more = "0.99.5"
 futures-util = { version = "0.3.7", default-features = false }
-log = "0.4"
 time = "0.2.23"
 serde = { version = "1.0.101" }
 serde_json = { version = "1.0.40" }
