@@ -243,6 +243,9 @@ mod test {
     use crate::test_helpers::acceptance_test_suite;
 
     #[actix_rt::test]
+    // GitHub Actions do not support service containers (i.e. Redis, in our case) on
+    // non-Linux runners, therefore this test will fail in CI due to connection issues on those platform
+    #[cfg_attr(any(target_os = "macos", target_os = "windows"), ignore)]
     async fn test_session_workflow() {
         acceptance_test_suite(|| RedisActorSessionStore::new("127.0.0.1:6379"), true).await;
     }
