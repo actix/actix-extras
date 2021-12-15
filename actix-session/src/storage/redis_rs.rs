@@ -208,7 +208,7 @@ impl SessionStore for RedisSessionStore {
 // GitHub Actions do not support service containers (i.e. Redis, in our case) on
 // non-Linux runners, therefore this test will fail in CI due to connection issues on those platform
 #[cfg(test)]
-#[cfg_attr(any(target_os = "macos", target_os = "windows"), ignore)]
+#[cfg_attr(target_os = "linux")]
 mod test {
     use crate::storage::redis_rs::RedisSessionStore;
     use crate::storage::utils::generate_session_key;
