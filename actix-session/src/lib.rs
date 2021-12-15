@@ -120,6 +120,14 @@
 //! actix-session = { version = "0.6.0-beta.1", features = ["redis-rs-session"] }
 //! ```
 //!
+//! Add the `redis-rs-tls-session` feature flag if you want to connect to Redis using a secured connection:
+//!
+//! ```toml
+//! [dependencies]
+//! # ...
+//! actix-session = { version = "0.6.0-beta.1", features = ["redis-rs-session", "redis-rs-tls-session"] }
+//! ```
+//!
 //! You can provide a different session store by implementing the [`storage::SessionStore`] trait.
 
 #![deny(rust_2018_idioms, nonstandard_style)]

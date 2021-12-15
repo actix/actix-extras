@@ -38,6 +38,21 @@ use time::{self, Duration};
 /// }
 /// ```
 ///
+/// ## TLS support
+///
+/// Add the `redis-rs-tls-session` feature flag to enable TLS support. You can then establish a TLS
+/// connection to Redis using the `rediss://` URL scheme:
+///
+/// ```no_run
+/// use actix_session::{storage::RedisSessionStore};
+///
+/// # #[actix_rt::main]
+/// # async fn main() {
+/// let redis_connection_string = "rediss://127.0.0.1:6379";
+/// let store = RedisSessionStore::new(redis_connection_string).await.unwrap();
+/// # }
+/// ```
+///
 /// ## Implementation notes
 ///
 /// `RedisSessionStore` leverages [`redis-rs`](https://github.com/mitsuhiko/redis-rs) as Redis client.

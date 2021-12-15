@@ -7,6 +7,7 @@
 * `CookieSessionStore`, a cookie-based backend to store session state [#212]
 * `RedisActorSessionStore`, a Redis-based backend to store session state powered by `actix-redis` [#212]
 * `RedisSessionStore`, a Redis-based backend to store session state powered by `redis-rs` [#212]
+* Add TLS support for Redis via `RedisSessionStore` [#212]
 * Implement `SessionExt` for `ServiceResponse` [#212]
 
 ### Changed

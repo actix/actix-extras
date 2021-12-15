@@ -22,6 +22,7 @@ default = []
 cookie-session = []
 redis-actor-session = ["actix-redis", "actix", "futures-core", "rand"]
 redis-rs-session = ["redis", "rand"]
+redis-rs-tls-session = ["redis-rs-session", "redis/tokio-native-tls-comp"]
 
 [dependencies]
 actix-service = "2.0.0"

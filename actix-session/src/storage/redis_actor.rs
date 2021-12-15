@@ -46,7 +46,10 @@ use time::{self, Duration};
 ///
 /// ### Limitations
 ///
-/// `RedisActorSessionStore` does not currently support establishing authenticated connections to Redis.
+/// `RedisActorSessionStore` does not currently support establishing authenticated connections to Redis. Use
+/// [`RedisSessionStore`] if you need TLS support.
+///
+/// [`RedisSessionStore`]: crate::storage::RedisSessionStorage
 pub struct RedisActorSessionStore {
     configuration: CacheConfiguration,
     addr: Addr<RedisActor>,
