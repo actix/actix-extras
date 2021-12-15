@@ -89,10 +89,22 @@ impl SessionStore for CookieSessionStore {
 #[cfg(test)]
 mod tests {
     use super::CookieSessionStore;
+    use crate::storage::utils::generate_session_key;
+    use crate::storage::{LoadError, SessionStore};
     use crate::test_helpers::acceptance_test_suite;
 
     #[actix_rt::test]
     async fn test_session_workflow() {
         acceptance_test_suite(CookieSessionStore::default, false).await;
+    }
+
+    #[actix_rt::test]
+    async fn loading_a_random_session_key_returns_deserialization_error() {
+        let store = CookieSessionStore::default();
+        let session_key = generate_session_key();
+        assert!(matches!(
+            store.load(&session_key).await.unwrap_err(),
+            LoadError::DeserializationError(_),
+        ));
     }
 }

@@ -208,16 +208,29 @@ impl SessionStore for RedisSessionStore {
 #[cfg(test)]
 mod test {
     use crate::storage::redis_rs::RedisSessionStore;
+    use crate::storage::utils::generate_session_key;
+    use crate::storage::SessionStore;
     use crate::test_helpers::acceptance_test_suite;
+
+    async fn redis_store() -> RedisSessionStore {
+        RedisSessionStore::new("redis://127.0.0.1:6379")
+            .await
+            .unwrap()
+    }
 
     #[actix_rt::test]
     // GitHub Actions do not support service containers (i.e. Redis, in our case) on
     // non-Linux runners, therefore this test will fail in CI due to connection issues on those platform
     #[cfg_attr(any(target_os = "macos", target_os = "windows"), ignore)]
     async fn test_session_workflow() {
-        let redis_store = RedisSessionStore::new("redis://127.0.0.1:6379")
-            .await
-            .unwrap();
+        let redis_store = redis_store().await;
         acceptance_test_suite(move || redis_store.clone(), true).await;
+    }
+
+    #[actix_rt::test]
+    async fn loading_a_missing_session_returns_none() {
+        let store = redis_store().await;
+        let session_key = generate_session_key();
+        assert!(store.load(&session_key).await.unwrap().is_none());
     }
 }
