@@ -228,7 +228,10 @@ impl SessionStore for RedisActorSessionStore {
     }
 }
 
+// GitHub Actions do not support service containers (i.e. Redis, in our case) on
+// non-Linux runners, therefore this test will fail in CI due to connection issues on those platform
 #[cfg(test)]
+#[cfg_attr(any(target_os = "macos", target_os = "windows"), ignore)]
 mod test {
     use crate::storage::utils::generate_session_key;
     use crate::storage::{RedisActorSessionStore, SessionStore};
@@ -239,9 +242,6 @@ mod test {
     }
 
     #[actix_rt::test]
-    // GitHub Actions do not support service containers (i.e. Redis, in our case) on
-    // non-Linux runners, therefore this test will fail in CI due to connection issues on those platform
-    #[cfg_attr(any(target_os = "macos", target_os = "windows"), ignore)]
     async fn test_session_workflow() {
         acceptance_test_suite(redis_actor_store, true).await;
     }
