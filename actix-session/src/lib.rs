@@ -22,6 +22,11 @@
 //! `actix-session` provides three storage backends ([`storage::CookieSessionStore`], [`storage::RedisSessionStore`], [`storage::RedisActorSessionStore`])
 //! - you can provide a custom storage backend by implementing the [`SessionStore`] trait.
 //!
+//! Further reading on sessions:
+//!
+//! - [RFC6265](https://datatracker.ietf.org/doc/html/rfc6265);
+//! - [OWASP's session management cheatsheet](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html).
+//!
 //! ## Getting started
 //!
 //! To start using sessions in your `actix-web` application you must register [`SessionMiddleware`] as a middleware on your `actix-web`'s `App`:
