@@ -1,5 +1,29 @@
 //! # Session management for `actix-web`
 //!
+//! The HTTP protocol, at a first glance, is stateless: the client sends a request, the server parses its content, performs some processing and returns a response.
+//! The outcome is only influenced by the provided inputs (i.e. the request content) and whatever state the server queries while performing its processing.
+//!
+//! Stateless systems are easier to reason about, but they are not quite as powerful as we need to be - e.g. how do you authenticate a user?
+//! The user would be forced to authenticate **for every single request**. That is, for example, how 'Basic' Authentication works.
+//! While it may work for a machine user (i.e. an API client), it is impractical for a person - you do not want a login prompt on every single page
+//! you navigate to!
+//!
+//! There is a workaround - **sessions**.
+//! Using sessions the server can attach state to a set of requests coming from the same client. They are built on top of cookies - the server
+//! sets a cookie in the HTTP response (`Set-Cookie` header), the client (e.g. the browser) will store the cookie and play it back to the server
+//! when sending new requests (using the `Cookie` header).
+//!
+//! We refer to the cookie used for sessions as a **session cookie**. Its content is called **session key** (or **session ID**), while the state
+//! attached to the session is referred to as **session state**.
+//!
+//! `actix-session` provides an easy-to-use framework to manage sessions in applications built on top of `actix-web`.
+//! [`SessionMiddleware`] is the middleware underpinning the functionality provided by `actix-session`: it takes care of all the session cookie handling
+//! and instructs your **storage backend** to create/delete/update the session state based on the operations performed against the active [`Session`].
+//! `actix-session` provides three storage backends ([`storage::CookieSessionStore`], [`storage::RedisSessionStore`], [`storage::RedisActorSessionStore`])
+//! - you can provide a custom storage backend by implementing the [`SessionStore`] trait.
+//!
+//! ## Getting started
+//!
 //! To start using sessions in your `actix-web` application you must register [`SessionMiddleware`] as a middleware on your `actix-web`'s `App`:
 //!
 //! ```no_run
