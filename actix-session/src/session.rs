@@ -73,7 +73,9 @@ struct SessionInner {
 
 impl Session {
     /// Get a `value` from the session.
-    pub fn get<T: DeserializeOwned>(&self, key: &str) -> Result<Option<T>, Error> {
+    ///
+    /// It returns an error if it fails to deserialize as `T` the JSON value associated with `key`.
+    pub fn get<T: DeserializeOwned>(&self, key: &str) -> Result<Option<T>, serde_json::Error> {
         if let Some(s) = self.0.borrow().state.get(key) {
             Ok(Some(serde_json::from_str(s)?))
         } else {
@@ -97,7 +99,13 @@ impl Session {
     ///
     /// Any serializable value can be used and will be encoded as JSON in session data, hence why
     /// only a reference to the value is taken.
-    pub fn insert(&self, key: impl Into<String>, value: impl Serialize) -> Result<(), Error> {
+    ///
+    /// It returns an error if it fails to serialize `value` to JSON.
+    pub fn insert(
+        &self,
+        key: impl Into<String>,
+        value: impl Serialize,
+    ) -> Result<(), serde_json::Error> {
         let mut inner = self.0.borrow_mut();
 
         if inner.status != SessionStatus::Purged {
