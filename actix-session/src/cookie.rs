@@ -1,6 +1,6 @@
 //! Cookie based sessions. See docs for [`CookieSession`].
 
-use std::{collections::HashMap, error::Error as StdError, rc::Rc};
+use std::{collections::HashMap, rc::Rc};
 
 use actix_utils::future::{ok, Ready};
 use actix_web::{
@@ -301,7 +301,7 @@ where
     S::Future: 'static,
     S::Error: 'static,
     B: MessageBody + 'static,
-    B::Error: StdError,
+    B::Error: Into<Error>,
 {
     type Response = ServiceResponse<EitherBody<B>>;
     type Error = S::Error;
@@ -329,7 +329,7 @@ where
     S::Future: 'static,
     S::Error: 'static,
     B: MessageBody + 'static,
-    B::Error: StdError,
+    B::Error: Into<Error>,
 {
     type Response = ServiceResponse<EitherBody<B>>;
     type Error = S::Error;
@@ -516,7 +516,7 @@ mod tests {
         let request = test::TestRequest::with_uri("/test/")
             .cookie(cookie)
             .to_request();
-        let body = test::read_response(&app, request).await;
+        let body = test::call_and_read_body(&app, request).await;
         assert_eq!(body, Bytes::from_static(b"counter: 100"));
     }
 

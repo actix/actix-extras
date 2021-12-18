@@ -1,4 +1,4 @@
-use std::{error::Error as StdError, rc::Rc};
+use std::rc::Rc;
 
 use actix_utils::future::{ready, Ready};
 use actix_web::{
@@ -44,7 +44,7 @@ where
     S::Future: 'static,
     T: IdentityPolicy,
     B: MessageBody + 'static,
-    B::Error: StdError,
+    B::Error: Into<Error>,
 {
     type Response = ServiceResponse<EitherBody<B>>;
     type Error = Error;
@@ -80,7 +80,7 @@ where
     S::Future: 'static,
     T: IdentityPolicy,
     B: MessageBody + 'static,
-    B::Error: StdError,
+    B::Error: Into<Error>,
 {
     type Response = ServiceResponse<EitherBody<B>>;
     type Error = Error;

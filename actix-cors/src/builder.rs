@@ -1,6 +1,4 @@
-use std::{
-    collections::HashSet, convert::TryInto, error::Error as StdError, iter::FromIterator, rc::Rc,
-};
+use std::{collections::HashSet, convert::TryInto, iter::FromIterator, rc::Rc};
 
 use actix_utils::future::{self, Ready};
 use actix_web::{
@@ -491,7 +489,7 @@ where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
     S::Future: 'static,
     B: MessageBody + 'static,
-    B::Error: StdError,
+    B::Error: Into<Error>,
 {
     type Response = ServiceResponse<EitherBody<B>>;
     type Error = Error;
@@ -636,7 +634,7 @@ mod test {
     #[actix_rt::test]
     async fn middleware_generic_over_body_type() {
         let srv = fn_service(|req: ServiceRequest| async move {
-            Ok(req.into_response(HttpResponse::Ok().message_body(body::None::new())?))
+            Ok::<_, _>(req.into_response(HttpResponse::Ok().message_body(body::None::new())?))
         });
 
         Cors::default().new_transform(srv).await.unwrap();
