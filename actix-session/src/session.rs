@@ -1,6 +1,6 @@
 use actix_web::{
     dev::{Extensions, ServiceRequest, ServiceResponse},
-    Error, HttpMessage,
+    HttpMessage,
 };
 use serde::{de::DeserializeOwned, Serialize};
 use std::{
