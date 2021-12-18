@@ -154,6 +154,7 @@ impl SessionStore for RedisActorSessionStore {
             "SET",
             cache_key,
             body,
+            // NX -- Only set the key if it does not already exist.
             "NX",
             "EX",
             &format!("{}", ttl.whole_seconds())
@@ -194,19 +195,37 @@ impl SessionStore for RedisActorSessionStore {
             "SET",
             cache_key,
             body,
+            // XX -- Only set the key if it already exist.
             "XX",
             "EX",
             &format!("{}", ttl.whole_seconds())
         ]);
 
-        self.addr
+        let result = self
+            .addr
             .send(cmd)
             .await
             .map_err(Into::into)
             .map_err(UpdateError::GenericError)?
             .map_err(Into::into)
             .map_err(UpdateError::GenericError)?;
-        Ok(session_key)
+        match result {
+            RespValue::Nil => {
+                // The SET operation was not performed because the XX condition was not verified.
+                // This can happen if the session state expired between the load operation and the update
+                // operation. Unlucky, to say the least.
+                // We fall back to the `save` routine to ensure that the new key is unique.
+                self.save(session_state, ttl).await.map_err(|e| match e {
+                    SaveError::SerializationError(e) => UpdateError::SerializationError(e),
+                    SaveError::GenericError(e) => UpdateError::GenericError(e),
+                })
+            }
+            RespValue::SimpleString(_) => Ok(session_key),
+            v => Err(UpdateError::GenericError(anyhow::anyhow!(
+                "Failed to update session state. {:?}",
+                v
+            ))),
+        }
     }
 
     async fn delete(&self, session_key: &SessionKey) -> Result<(), anyhow::Error> {
@@ -255,12 +274,14 @@ mod test {
     }
 
     #[actix_rt::test]
-    async fn updating_a_non_existing_entry_returns_an_error() {
+    async fn updating_of_an_expired_state_is_handled_gracefully() {
         let store = redis_actor_store();
         let session_key = generate_session_key();
-        assert!(store
+        let initial_session_key = session_key.as_ref().to_owned();
+        let updated_session_key = store
             .update(session_key, HashMap::new(), &time::Duration::seconds(1))
             .await
-            .is_err());
+            .unwrap();
+        assert_ne!(initial_session_key, updated_session_key.as_ref());
     }
 }
