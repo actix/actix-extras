@@ -421,7 +421,8 @@ where
 
         Box::pin(async move {
             let session_key = extract_session_key(&req, &configuration.cookie);
-            let session_state = load_session_state(&session_key, storage_backend.as_ref()).await?;
+            let (session_key, session_state) =
+                load_session_state(session_key, storage_backend.as_ref()).await?;
             Session::set_session(&mut req, session_state);
 
             let mut res = service.call(req).await?;
@@ -519,27 +520,33 @@ fn extract_session_key(req: &ServiceRequest, config: &CookieConfiguration) -> Op
 }
 
 async fn load_session_state<Store: SessionStore>(
-    session_key: &Option<SessionKey>,
+    session_key: Option<SessionKey>,
     storage_backend: &Store,
-) -> Result<HashMap<String, String>, actix_web::Error> {
-    if let Some(session_key) = session_key.as_ref() {
-        match storage_backend.load(session_key).await {
+) -> Result<(Option<SessionKey>, HashMap<String, String>), actix_web::Error> {
+    if let Some(session_key) = session_key {
+        match storage_backend.load(&session_key).await {
             Ok(state) => {
-                if state.is_none() {
+                if let Some(state) = state {
+                    Ok((Some(session_key), state))
+                } else {
+                    // We discard the existing session key given that the state attached to it can no longer be found
+                    // (e.g. it expired or we suffered some data loss in the storage).
+                    // Regenerating the session key will trigger the `save` workflow instead of the `update` workflow if the
+                    // session state is modified during the lifecycle of the current request.
                     tracing::info!("No session state has been found for a valid session key, creating a new empty session.");
+                    Ok((None, HashMap::new()))
                 }
-                Ok(state.unwrap_or_default())
             }
             Err(e) => match e {
                 LoadError::DeserializationError(e) => {
                     tracing::warn!(error.message = %e, error.cause_chain = ?e, "Invalid session state, creating a new empty session.");
-                    Ok(HashMap::new())
+                    Ok((Some(session_key), HashMap::new()))
                 }
                 LoadError::GenericError(e) => Err(e500(e)),
             },
         }
     } else {
-        Ok(HashMap::new())
+        Ok((None, HashMap::new()))
     }
 }
 
