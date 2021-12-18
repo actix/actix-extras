@@ -1,15 +1,14 @@
-use std::{collections::HashSet, convert::TryInto, error::Error as StdError, rc::Rc};
+use std::{collections::HashSet, convert::TryInto, rc::Rc};
 
 use actix_utils::future::ok;
 use actix_web::{
     body::{EitherBody, MessageBody},
     dev::{Service, ServiceRequest, ServiceResponse},
-    error::{Error, Result},
     http::{
         header::{self, HeaderValue},
         Method,
     },
-    HttpResponse,
+    Error, HttpResponse, Result,
 };
 use futures_util::future::{FutureExt as _, LocalBoxFuture};
 use log::debug;
@@ -138,8 +137,9 @@ impl<S, B> Service<ServiceRequest> for CorsMiddleware<S>
 where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
     S::Future: 'static,
+
     B: MessageBody + 'static,
-    B::Error: StdError,
+    B::Error: Into<Error>,
 {
     type Response = ServiceResponse<EitherBody<B>>;
     type Error = Error;
@@ -172,7 +172,7 @@ where
                 if origin.is_some() {
                     Ok(Self::augment_response(&inner, res?))
                 } else {
-                    res
+                    res.map_err(Into::into)
                 }
                 .map(|res| res.map_into_left_body())
             }

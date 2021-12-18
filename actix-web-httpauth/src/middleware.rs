@@ -1,7 +1,6 @@
 //! HTTP Authentication middleware.
 
 use std::{
-    error::Error as StdError,
     future::Future,
     marker::PhantomData,
     pin::Pin,
@@ -125,7 +124,7 @@ where
     O: Future<Output = Result<ServiceRequest, Error>> + 'static,
     T: AuthExtractor + 'static,
     B: MessageBody + 'static,
-    B::Error: StdError,
+    B::Error: Into<Error>,
 {
     type Response = ServiceResponse<EitherBody<B>>;
     type Error = Error;
@@ -160,7 +159,7 @@ where
     O: Future<Output = Result<ServiceRequest, Error>> + 'static,
     T: AuthExtractor + 'static,
     B: MessageBody + 'static,
-    B::Error: StdError,
+    B::Error: Into<Error>,
 {
     type Response = ServiceResponse<EitherBody<B>>;
     type Error = S::Error;
