@@ -488,6 +488,7 @@ impl<S, B> Transform<S, ServiceRequest> for Cors
 where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
     S::Future: 'static,
+
     B: MessageBody + 'static,
     B::Error: Into<Error>,
 {
@@ -634,7 +635,7 @@ mod test {
     #[actix_rt::test]
     async fn middleware_generic_over_body_type() {
         let srv = fn_service(|req: ServiceRequest| async move {
-            Ok::<_, _>(req.into_response(HttpResponse::Ok().message_body(body::None::new())?))
+            Ok(req.into_response(HttpResponse::with_body(StatusCode::OK, body::None::new())))
         });
 
         Cors::default().new_transform(srv).await.unwrap();

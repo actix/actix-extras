@@ -137,6 +137,7 @@ impl<S, B> Service<ServiceRequest> for CorsMiddleware<S>
 where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
     S::Future: 'static,
+
     B: MessageBody + 'static,
     B::Error: Into<Error>,
 {
