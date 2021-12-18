@@ -36,7 +36,7 @@ time = "0.2.23"
 tokio = { version = "1", features = ["sync"] }
 tokio-util = "0.6.1"
 
-actix-web = { version = "4.0.0-beta.14", default_features = false, optional = true }
+actix-web = { version = "4.0.0-beta.15", default_features = false, optional = true }
 
 [dev-dependencies]
 actix-test = "0.1.0-beta.8"
