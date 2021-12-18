@@ -236,6 +236,7 @@ mod test {
     use crate::storage::utils::generate_session_key;
     use crate::storage::{RedisActorSessionStore, SessionStore};
     use crate::test_helpers::acceptance_test_suite;
+    use std::collections::HashMap;
 
     fn redis_actor_store() -> RedisActorSessionStore {
         RedisActorSessionStore::new("127.0.0.1:6379")
@@ -251,5 +252,15 @@ mod test {
         let store = redis_actor_store();
         let session_key = generate_session_key();
         assert!(store.load(&session_key).await.unwrap().is_none());
+    }
+
+    #[actix_rt::test]
+    async fn updating_a_non_existing_entry_returns_an_error() {
+        let store = redis_actor_store();
+        let session_key = generate_session_key();
+        assert!(store
+            .update(session_key, HashMap::new(), &time::Duration::seconds(1))
+            .await
+            .is_err());
     }
 }
