@@ -215,6 +215,7 @@ mod test {
     use crate::storage::{LoadError, SessionStore};
     use crate::test_helpers::acceptance_test_suite;
     use redis::AsyncCommands;
+    use std::collections::HashMap;
 
     async fn redis_store() -> RedisSessionStore {
         RedisSessionStore::new("redis://127.0.0.1:6379")
@@ -249,5 +250,15 @@ mod test {
             store.load(&session_key).await.unwrap_err(),
             LoadError::DeserializationError(_),
         ));
+    }
+
+    #[actix_rt::test]
+    async fn updating_a_non_existing_entry_returns_an_error() {
+        let store = redis_store().await;
+        let session_key = generate_session_key();
+        assert!(store
+            .update(session_key, HashMap::new(), &time::Duration::seconds(1))
+            .await
+            .is_err());
     }
 }
