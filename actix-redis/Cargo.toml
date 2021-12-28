@@ -52,7 +52,7 @@ serde = { version = "1.0.101", optional = true }
 serde_json = { version = "1.0.40", optional = true }
 
 [dev-dependencies]
-actix-test = "0.1.0-beta.8"
+actix-test = "0.1.0-beta.10"
 actix-rt = "2.1"
 env_logger = "0.8"
 serde = { version = "1.0.101", features = ["derive"] }
