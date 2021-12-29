@@ -27,12 +27,12 @@ redis-rs-tls-session = ["redis-rs-session", "redis/tokio-native-tls-comp"]
 [dependencies]
 actix-service = "2"
 actix-utils = "3"
-actix-web = { version = "4.0.0-beta.15", default_features = false, features = ["cookies", "secure-cookies"] }
+actix-web = { version = "4.0.0-beta.18", default_features = false, features = ["cookies", "secure-cookies"] }
 
 async-trait = "0.1"
 derive_more = "0.99.5"
 futures-util = { version = "0.3.7", default-features = false }
-time = "0.2.23"
+time = "0.3"
 serde = { version = "1.0.101" }
 serde_json = { version = "1.0.40" }
 rand = { version = "0.8.0", optional = true }

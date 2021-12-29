@@ -32,14 +32,14 @@ backoff = "0.2.1"
 derive_more = "0.99.2"
 futures-core = { version = "0.3.7", default-features = false }
 redis-async = { version = "0.12", default-features = false, features = ["tokio10"] }
-time = "0.2.23"
+time = "0.3"
 tokio = { version = "1", features = ["sync"] }
 tokio-util = "0.6.1"
 
-actix-web = { version = "4.0.0-beta.15", default_features = false, optional = true }
+actix-web = { version = "4.0.0-beta.18", default_features = false, optional = true }
 
 [dev-dependencies]
-actix-test = "0.1.0-beta.8"
+actix-test = "0.1.0-beta.10"
 actix-rt = "2.1"
 env_logger = "0.8"
 serde = { version = "1.0.101", features = ["derive"] }
