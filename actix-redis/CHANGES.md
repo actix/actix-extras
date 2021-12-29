@@ -1,6 +1,9 @@
 # Changes
 
 ## Unreleased - 2021-xx-xx
+
+
+## 0.10.0-beta.5 - 2021-12-29
 - Update `actix-web` dependency to `4.0.0.beta-18`. [#218]
 - Minimum supported Rust version (MSRV) is now 1.54.
 
