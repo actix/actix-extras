@@ -22,11 +22,6 @@
 [#205]: https://github.com/actix/actix-extras/pull/205
 
 
-- impl `AuthExtractor` trait for `Option<T: AuthExtractor>` and `Result<T: AuthExtractor, T::Error>`. [#205]
-
-[#205]: https://github.com/actix/actix-extras/pull/205
-
-
 ## 0.6.0-beta.3 - 2021-10-21
 - Update `actix-web` dependency to v4.0.0-beta.10. [#203]
 - Minimum supported Rust version (MSRV) is now 1.52.
