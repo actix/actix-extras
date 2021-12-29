@@ -1,58 +1,56 @@
 # Changes
 
 ## Unreleased - 2021-xx-xx
-* Update `actix-web` dependency to `4.0.0-beta.17`. [#217]
- 
-[#217]: https://github.com/actix/actix-extras/pull/217
+
 
 ## 0.6.0-beta.6 - 2021-12-18
-* Update `actix-web` dependency to `4.0.0.beta-15`. [#216]
+- Update `actix-web` dependency to `4.0.0.beta-15`. [#216]
 
 [#216]: https://github.com/actix/actix-extras/pull/216
 
 
 ## 0.6.0-beta.5 - 2021-12-12
-* Update `actix-web` dependency to `4.0.0.beta-14`. [#209]
+- Update `actix-web` dependency to `4.0.0.beta-14`. [#209]
 
 [#209]: https://github.com/actix/actix-extras/pull/209
 
 
 ## 0.6.0-beta.4 - 2021-11-22
-* impl `AuthExtractor` trait for `Option<T: AuthExtractor>` and `Result<T: AuthExtractor, T::Error>`. [#205]
+- impl `AuthExtractor` trait for `Option<T: AuthExtractor>` and `Result<T: AuthExtractor, T::Error>`. [#205]
 
 [#205]: https://github.com/actix/actix-extras/pull/205
 
 
-* impl `AuthExtractor` trait for `Option<T: AuthExtractor>` and `Result<T: AuthExtractor, T::Error>`. [#205]
+- impl `AuthExtractor` trait for `Option<T: AuthExtractor>` and `Result<T: AuthExtractor, T::Error>`. [#205]
 
 [#205]: https://github.com/actix/actix-extras/pull/205
 
 
 ## 0.6.0-beta.3 - 2021-10-21
-* Update `actix-web` dependency to v4.0.0-beta.10. [#203]
-* Minimum supported Rust version (MSRV) is now 1.52.
+- Update `actix-web` dependency to v4.0.0-beta.10. [#203]
+- Minimum supported Rust version (MSRV) is now 1.52.
 
 [#203]: https://github.com/actix/actix-extras/pull/203
 
 
 ## 0.6.0-beta.2 - 2021-06-27
-* No notable changes.
+- No notable changes.
 
 
 ## 0.6.0-beta.1 - 2021-04-02
-* Update `actix-web` dependency to 4.0.0 beta.
-* Minimum supported Rust version (MSRV) is now 1.46.0.
+- Update `actix-web` dependency to 4.0.0 beta.
+- Minimum supported Rust version (MSRV) is now 1.46.0.
 
 
 ## 0.5.1 - 2021-03-21
-* Correct error handling when extracting auth details from request. [#128]
+- Correct error handling when extracting auth details from request. [#128]
 
 [#128]: https://github.com/actix/actix-extras/pull/128
 
 
 ## 0.5.0 - 2020-09-11
-* Update `actix-web` dependency to 3.0.0.
-* Minimum supported Rust version (MSRV) is now 1.42.0.
+- Update `actix-web` dependency to 3.0.0.
+- Minimum supported Rust version (MSRV) is now 1.42.0.
 
 
 ## 0.4.2 - 2020-07-08
@@ -76,7 +74,9 @@
 
 
 ## 0.3.2 - 2019-07-19
-- Middleware accepts any `Fn` as a validator function instead of `FnMut` ([#11](https://github.com/actix/actix-web-httpauth/pull/11))
+- Middleware accepts any `Fn` as a validator function instead of `FnMut` [#11]
+
+[#11]: https://github.com/actix/actix-web-httpauth/pull/11
 
 
 ## 0.3.1 - 2019-06-09
@@ -91,8 +91,10 @@
 
 
 ## 0.2.0 - 2019-04-26
-- `actix-web` dependency is used without default features now ([#6](https://github.com/actix/actix-web-httpauth/pull/6))
+- `actix-web` dependency is used without default features now [#6]
 - `base64` dependency version was bumped to `0.10`
+
+[#6]: (https://github.com/actix/actix-web-httpauth/pull/6)
 
 
 ## 0.1.0 - 2018-09-08
