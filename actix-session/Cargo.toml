@@ -1,6 +1,6 @@
 [package]
 name = "actix-session"
-version = "0.5.0-beta.6"
+version = "0.5.0-beta.7"
 authors = ["Nikolay Kim <fafhrd91@gmail.com>", "Luca Palmieri <rust@lpalmieri.com>"]
 description = "Sessions for Actix Web"
 keywords = ["http", "web", "framework", "async", "session"]
