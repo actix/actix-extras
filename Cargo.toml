@@ -14,3 +14,8 @@ members = [
 [patch.crates-io]
 actix-cors = { path = "actix-cors" }
 actix-session = { path = "actix-session" }
+
+# uncomment to quickly test against local actix-web repo
+# actix-http = { path = "../actix-web/actix-http" }
+# actix-web = { path = "../actix-web" }
+# awc = { path = "../actix-web/awc" }
