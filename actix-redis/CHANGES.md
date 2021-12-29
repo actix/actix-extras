@@ -1,7 +1,9 @@
 # Changes
 
 ## Unreleased - 2021-xx-xx
+* Update `actix-web` dependency to `4.0.0-beta.17`. [#217]
 
+[#217]: https://github.com/actix/actix-extras/pull/217
 
 ## 0.10.0-beta.4 - 2021-12-12
 * A session will be created in Redis if and only if there is some data inside the session state. This reduces the performance impact of `RedisSession` on routes that do not leverage sessions. [#207]
