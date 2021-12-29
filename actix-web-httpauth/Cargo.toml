@@ -1,6 +1,6 @@
 [package]
 name = "actix-web-httpauth"
-version = "0.6.0-beta.6"
+version = "0.6.0-beta.7"
 authors = [
     "svartalf <self@svartalf.info>",
     "Yuki Okushi <huyuumi.dev@gmail.com>",
