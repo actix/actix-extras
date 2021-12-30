@@ -45,6 +45,12 @@ impl From<SessionKey> for String {
     }
 }
 
-#[derive(thiserror::Error, Debug)]
-#[error("The provided string is not a valid session key")]
-pub struct InvalidSessionKeyError(#[from] anyhow::Error);
+#[derive(Debug, derive_more::Display, derive_more::From)]
+#[display(fmt = "The provided string is not a valid session key")]
+pub struct InvalidSessionKeyError(anyhow::Error);
+
+impl std::error::Error for InvalidSessionKeyError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        Some(self.0.as_ref())
+    }
+}
