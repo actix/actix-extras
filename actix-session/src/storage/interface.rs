@@ -52,7 +52,7 @@ impl std::error::Error for LoadError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
             Self::DeserializationError(e) => Some(e.as_ref()),
-            Self::GenericError(e) => Some(e.as_ref())
+            Self::GenericError(e) => Some(e.as_ref()),
         }
     }
 }
@@ -72,7 +72,7 @@ impl std::error::Error for SaveError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
             Self::SerializationError(e) => Some(e.as_ref()),
-            Self::GenericError(e) => Some(e.as_ref())
+            Self::GenericError(e) => Some(e.as_ref()),
         }
     }
 }
@@ -92,7 +92,7 @@ impl std::error::Error for UpdateError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
             Self::SerializationError(e) => Some(e.as_ref()),
-            Self::GenericError(e) => Some(e.as_ref())
+            Self::GenericError(e) => Some(e.as_ref()),
         }
     }
 }
