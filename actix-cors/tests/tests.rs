@@ -267,8 +267,8 @@ async fn test_response() {
             .map(HeaderValue::as_bytes)
     );
     assert_eq!(
-        Some(&b"Origin"[..]),
-        resp.headers().get(header::VARY).map(HeaderValue::as_bytes)
+        resp.headers().get(header::VARY).map(HeaderValue::as_bytes),
+        Some(&b"Origin, Access-Control-Request-Method, Access-Control-Request-Headers"[..]),
     );
 
     #[allow(clippy::needless_collect)]
@@ -314,7 +314,7 @@ async fn test_response() {
         .to_srv_request();
     let resp = test::call_service(&cors, req).await;
     assert_eq!(
-        Some(&b"Accept, Origin"[..]),
+        Some(&b"Accept, Origin, Access-Control-Request-Method, Access-Control-Request-Headers"[..]),
         resp.headers().get(header::VARY).map(HeaderValue::as_bytes)
     );
 

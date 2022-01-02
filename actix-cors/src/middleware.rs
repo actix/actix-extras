@@ -118,12 +118,16 @@ impl<S> CorsMiddleware<S> {
         if inner.vary_header {
             let value = match res.headers_mut().get(header::VARY) {
                 Some(hdr) => {
-                    let mut val: Vec<u8> = Vec::with_capacity(hdr.len() + 8);
+                    let mut val: Vec<u8> = Vec::with_capacity(hdr.len() + 71);
                     val.extend(hdr.as_bytes());
-                    val.extend(b", Origin");
+                    val.extend(
+                        b", Origin, Access-Control-Request-Method, Access-Control-Request-Headers",
+                    );
                     val.try_into().unwrap()
                 }
-                None => HeaderValue::from_static("Origin"),
+                None => HeaderValue::from_static(
+                    "Origin, Access-Control-Request-Method, Access-Control-Request-Headers",
+                ),
             };
 
             res.headers_mut().insert(header::VARY, value);
