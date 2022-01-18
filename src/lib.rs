@@ -12,7 +12,7 @@
 //! # ...
 //! tracing-actix-web = "=0.5.0-beta.9"
 //! tracing = "0.1"
-//! actix-web = "=4.0.0-beta.19"
+//! actix-web = "=4.0.0-beta.20"
 //! ```
 //!
 //! `tracing-actix-web` exposes three feature flags:
