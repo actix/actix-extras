@@ -37,7 +37,7 @@ Add `tracing-actix-web` to your dependencies:
 ```toml
 [dependencies]
 # ...
-tracing-actix-web = "=0.5.0-beta.9"
+tracing-actix-web = "=0.5.0-beta.10"
 tracing = "0.1"
 actix-web = "=4.0.0-beta.20"
 ```
