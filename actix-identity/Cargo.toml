@@ -1,6 +1,6 @@
 [package]
 name = "actix-identity"
-version = "0.4.0-beta.7"
+version = "0.4.0-beta.8"
 authors = ["Nikolay Kim <fafhrd91@gmail.com>"]
 description = "Identity service for Actix Web"
 keywords = ["actix", "auth", "identity", "web", "security"]
