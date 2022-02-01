@@ -9,7 +9,7 @@
 
 ## Documentation & Resources
 
-- [API Documentation](*https://docs.rs/actix-web-httpauth/)
+- [API Documentation](https://docs.rs/actix-web-httpauth/)
 - Minimum Supported Rust Version (MSRV): 1.54
 
 ## Features
