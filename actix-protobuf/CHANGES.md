@@ -1,6 +1,7 @@
 # Changes
 
 ## Unreleased - 2021-xx-xx
+- Bump `prost` version to 0.9.
 
 
 ## 0.7.0-beta.4 - 2021-12-29
