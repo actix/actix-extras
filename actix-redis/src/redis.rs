@@ -2,9 +2,9 @@ use std::collections::VecDeque;
 use std::io;
 
 use actix::prelude::*;
+use actix_rt::net::TcpStream;
 use actix_service::boxed::{self, BoxService};
 use actix_tls::connect::{ConnectError, ConnectInfo, Connection, ConnectorService};
-use actix_web::rt::net::TcpStream;
 use backoff::backoff::Backoff;
 use backoff::ExponentialBackoff;
 use log::{error, info, warn};

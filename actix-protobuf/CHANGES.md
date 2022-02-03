@@ -1,11 +1,11 @@
 # Changes
 
 ## Unreleased - 2021-xx-xx
-- Update `actix-web` dependency to `4.0.0-rc.1`.
 
 
 ## 0.7.0-beta.5 - 2022-02-03
-- Bump `prost` version to 0.9.
+- Update `prost` dependency to `0.9`.
+- Update `actix-web` dependency to `4.0.0-rc.1`.
 
 
 ## 0.7.0-beta.4 - 2021-12-29
