@@ -218,7 +218,7 @@ mod test {
         val.to_str().unwrap()
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn test_validate_not_allowed_origin() {
         let cors = Cors::default()
             .allowed_origin("https://www.example.com")
@@ -236,7 +236,7 @@ mod test {
         assert!(cors.inner.validate_allowed_headers(req.head()).is_err());
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn test_preflight() {
         let mut cors = Cors::default()
             .allow_any_origin()

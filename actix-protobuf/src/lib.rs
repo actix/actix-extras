@@ -294,19 +294,19 @@ mod tests {
         pub name: String,
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn test_protobuf() {
         let protobuf = ProtoBuf(MyObject {
             number: 9,
             name: "test".to_owned(),
         });
         let req = TestRequest::default().to_http_request();
-        let resp = protobuf.respond_to(&req).await.unwrap();
+        let resp = protobuf.respond_to(&req);
         let ct = resp.headers().get(header::CONTENT_TYPE).unwrap();
         assert_eq!(ct, "application/protobuf");
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn test_protobuf_message() {
         let (req, mut pl) = TestRequest::default().to_http_parts();
         let protobuf = ProtoBufMessage::<MyObject>::new(&req, &mut pl).await;

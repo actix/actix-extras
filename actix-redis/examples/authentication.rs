@@ -68,7 +68,7 @@ async fn secret(session: Session) -> Result<impl Responder, Error> {
     Ok("secret revealed")
 }
 
-#[actix_rt::main]
+#[actix_web::main]
 async fn main() -> std::io::Result<()> {
     std::env::set_var("RUST_LOG", "actix_web=info,actix_redis=info");
     env_logger::init();

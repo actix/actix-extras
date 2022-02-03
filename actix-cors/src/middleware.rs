@@ -195,7 +195,7 @@ mod tests {
     use super::*;
     use crate::Cors;
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn test_options_no_origin() {
         // Tests case where allowed_origins is All but there are validate functions to run incase.
         // In this case, origins are only allowed when the DNT header is sent.

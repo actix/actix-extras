@@ -248,11 +248,11 @@ mod tests {
     use actix_web::{error, HttpResponse};
 
     /// This is a test for https://github.com/actix/actix-extras/issues/10
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn test_middleware_panic() {
         let middleware = AuthenticationMiddleware {
             service: Rc::new(into_service(|_: ServiceRequest| async move {
-                actix_rt::time::sleep(std::time::Duration::from_secs(1)).await;
+                actix_web::rt::time::sleep(std::time::Duration::from_secs(1)).await;
                 Err::<ServiceResponse, _>(error::ErrorBadRequest("error"))
             })),
             process_fn: Arc::new(|req, _: BearerAuth| async { Ok(req) }),
@@ -271,11 +271,11 @@ mod tests {
     }
 
     /// This is a test for https://github.com/actix/actix-extras/issues/10
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn test_middleware_panic_several_orders() {
         let middleware = AuthenticationMiddleware {
             service: Rc::new(into_service(|_: ServiceRequest| async move {
-                actix_rt::time::sleep(std::time::Duration::from_secs(1)).await;
+                actix_web::rt::time::sleep(std::time::Duration::from_secs(1)).await;
                 Err::<ServiceResponse, _>(error::ErrorBadRequest("error"))
             })),
             process_fn: Arc::new(|req, _: BearerAuth| async { Ok(req) }),
@@ -307,7 +307,7 @@ mod tests {
         assert!(f3.is_err());
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn test_middleware_opt_extractor() {
         let middleware = AuthenticationMiddleware {
             service: Rc::new(into_service(|req: ServiceRequest| async move {
@@ -331,7 +331,7 @@ mod tests {
         assert!(f.is_ok());
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn test_middleware_res_extractor() {
         let middleware = AuthenticationMiddleware {
             service: Rc::new(into_service(|req: ServiceRequest| async move {

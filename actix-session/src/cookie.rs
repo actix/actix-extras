@@ -393,7 +393,7 @@ mod tests {
     use actix_web::web::Bytes;
     use actix_web::{test, web, App};
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn cookie_session() {
         let app = test::init_service(
             App::new()
@@ -413,7 +413,7 @@ mod tests {
             .any(|c| c.name() == "actix-session"));
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn private_cookie() {
         let app = test::init_service(
             App::new()
@@ -433,7 +433,7 @@ mod tests {
             .any(|c| c.name() == "actix-session"));
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn lazy_cookie() {
         let app = test::init_service(
             App::new()
@@ -459,7 +459,7 @@ mod tests {
             .any(|c| c.name() == "actix-session"));
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn cookie_session_extractor() {
         let app = test::init_service(
             App::new()
@@ -479,7 +479,7 @@ mod tests {
             .any(|c| c.name() == "actix-session"));
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn basics() {
         let app = test::init_service(
             App::new()
@@ -520,7 +520,7 @@ mod tests {
         assert_eq!(body, Bytes::from_static(b"counter: 100"));
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn prolong_expiration() {
         let app = test::init_service(
             App::new()
@@ -545,7 +545,7 @@ mod tests {
             .datetime()
             .expect("Expiration is a datetime");
 
-        actix_rt::time::sleep(std::time::Duration::from_secs(1)).await;
+        actix_web::rt::time::sleep(std::time::Duration::from_secs(1)).await;
 
         let request = test::TestRequest::with_uri("/test/").to_request();
         let response = app.call(request).await.unwrap();
