@@ -28,7 +28,7 @@ modifying session data.</p>
     <span class="prelude-val">Ok</span>(<span class="string">&quot;Welcome!&quot;</span>)
 }
 
-<span class="attribute">#[<span class="ident">actix_rt::main</span>]</span>
+<span class="attribute">#[<span class="ident">actix_web::main</span>]</span>
 <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">main</span>() -&gt; <span class="ident">std::io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="ident">HttpServer::new</span>(
         <span class="op">|</span><span class="op">|</span> <span class="ident">App::new</span>()
