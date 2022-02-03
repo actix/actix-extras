@@ -305,7 +305,7 @@
 
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
 
-    <span class="attribute">#[<span class="ident">actix_rt::test</span>]</span>
+    <span class="attribute">#[<span class="ident">actix_web::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">test_borrowed_mut_error</span>() {
         <span class="kw">use</span> <span class="ident">actix_utils::future</span>::{<span class="ident">ok</span>, <span class="ident">Ready</span>};
         <span class="kw">use</span> <span class="ident">futures_util::future::lazy</span>;
@@ -332,7 +332,7 @@
         <span class="kw">let</span> <span class="ident">srv</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::middleware::IdentityServiceMiddleware</span> {
             <span class="ident">backend</span>: <span class="ident">Rc::new</span>(<span class="ident">Ident</span>),
             <span class="ident">service</span>: <span class="ident">Rc::new</span>(<span class="ident">into_service</span>(<span class="op">|</span><span class="kw">_</span>: <span class="ident">dev::ServiceRequest</span><span class="op">|</span> <span class="kw">async</span> <span class="kw">move</span> {
-                <span class="ident">actix_rt::time::sleep</span>(<span class="ident">Duration::from_secs</span>(<span class="number">100</span>)).<span class="kw">await</span>;
+                <span class="ident">actix_web::rt::time::sleep</span>(<span class="ident">Duration::from_secs</span>(<span class="number">100</span>)).<span class="kw">await</span>;
                 <span class="prelude-val">Err</span>::<span class="op">&lt;</span><span class="ident">dev::ServiceResponse</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">error::ErrorBadRequest</span>(<span class="string">&quot;error&quot;</span>))
             })),
         };
@@ -340,15 +340,15 @@
         <span class="kw">let</span> <span class="ident">srv2</span> <span class="op">=</span> <span class="ident">srv</span>.<span class="ident">clone</span>();
         <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="ident">test::TestRequest::default</span>().<span class="ident">to_srv_request</span>();
 
-        <span class="ident">actix_rt::spawn</span>(<span class="kw">async</span> <span class="kw">move</span> {
+        <span class="ident">actix_web::rt::spawn</span>(<span class="kw">async</span> <span class="kw">move</span> {
             <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">srv2</span>.<span class="ident">call</span>(<span class="ident">req</span>).<span class="kw">await</span>;
         });
 
-        <span class="ident">actix_rt::time::sleep</span>(<span class="ident">Duration::from_millis</span>(<span class="number">50</span>)).<span class="kw">await</span>;
+        <span class="ident">actix_web::rt::time::sleep</span>(<span class="ident">Duration::from_millis</span>(<span class="number">50</span>)).<span class="kw">await</span>;
 
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">lazy</span>(<span class="op">|</span><span class="ident">cx</span><span class="op">|</span> <span class="ident">srv</span>.<span class="ident">poll_ready</span>(<span class="ident">cx</span>)).<span class="kw">await</span>;
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_identity" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (21b4a9cfd 2022-01-27)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_identity" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (27f5d830e 2022-02-02)" ></div>
 </body></html>

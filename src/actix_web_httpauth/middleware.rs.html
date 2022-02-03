@@ -612,11 +612,11 @@
     <span class="kw">use</span> <span class="ident">actix_web</span>::{<span class="ident">error</span>, <span class="ident">HttpResponse</span>};
 
     <span class="doccomment">/// This is a test for https://github.com/actix/actix-extras/issues/10</span>
-    <span class="attribute">#[<span class="ident">actix_rt::test</span>]</span>
+    <span class="attribute">#[<span class="ident">actix_web::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">test_middleware_panic</span>() {
         <span class="kw">let</span> <span class="ident">middleware</span> <span class="op">=</span> <span class="ident">AuthenticationMiddleware</span> {
             <span class="ident">service</span>: <span class="ident">Rc::new</span>(<span class="ident">into_service</span>(<span class="op">|</span><span class="kw">_</span>: <span class="ident">ServiceRequest</span><span class="op">|</span> <span class="kw">async</span> <span class="kw">move</span> {
-                <span class="ident">actix_rt::time::sleep</span>(<span class="ident">std::time::Duration::from_secs</span>(<span class="number">1</span>)).<span class="kw">await</span>;
+                <span class="ident">actix_web::rt::time::sleep</span>(<span class="ident">std::time::Duration::from_secs</span>(<span class="number">1</span>)).<span class="kw">await</span>;
                 <span class="prelude-val">Err</span>::<span class="op">&lt;</span><span class="ident">ServiceResponse</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">error::ErrorBadRequest</span>(<span class="string">&quot;error&quot;</span>))
             })),
             <span class="ident">process_fn</span>: <span class="ident">Arc::new</span>(<span class="op">|</span><span class="ident">req</span>, <span class="kw">_</span>: <span class="ident">BearerAuth</span><span class="op">|</span> <span class="kw">async</span> { <span class="prelude-val">Ok</span>(<span class="ident">req</span>) }),
@@ -635,11 +635,11 @@
     }
 
     <span class="doccomment">/// This is a test for https://github.com/actix/actix-extras/issues/10</span>
-    <span class="attribute">#[<span class="ident">actix_rt::test</span>]</span>
+    <span class="attribute">#[<span class="ident">actix_web::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">test_middleware_panic_several_orders</span>() {
         <span class="kw">let</span> <span class="ident">middleware</span> <span class="op">=</span> <span class="ident">AuthenticationMiddleware</span> {
             <span class="ident">service</span>: <span class="ident">Rc::new</span>(<span class="ident">into_service</span>(<span class="op">|</span><span class="kw">_</span>: <span class="ident">ServiceRequest</span><span class="op">|</span> <span class="kw">async</span> <span class="kw">move</span> {
-                <span class="ident">actix_rt::time::sleep</span>(<span class="ident">std::time::Duration::from_secs</span>(<span class="number">1</span>)).<span class="kw">await</span>;
+                <span class="ident">actix_web::rt::time::sleep</span>(<span class="ident">std::time::Duration::from_secs</span>(<span class="number">1</span>)).<span class="kw">await</span>;
                 <span class="prelude-val">Err</span>::<span class="op">&lt;</span><span class="ident">ServiceResponse</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">error::ErrorBadRequest</span>(<span class="string">&quot;error&quot;</span>))
             })),
             <span class="ident">process_fn</span>: <span class="ident">Arc::new</span>(<span class="op">|</span><span class="ident">req</span>, <span class="kw">_</span>: <span class="ident">BearerAuth</span><span class="op">|</span> <span class="kw">async</span> { <span class="prelude-val">Ok</span>(<span class="ident">req</span>) }),
@@ -671,7 +671,7 @@
         <span class="macro">assert!</span>(<span class="ident">f3</span>.<span class="ident">is_err</span>());
     }
 
-    <span class="attribute">#[<span class="ident">actix_rt::test</span>]</span>
+    <span class="attribute">#[<span class="ident">actix_web::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">test_middleware_opt_extractor</span>() {
         <span class="kw">let</span> <span class="ident">middleware</span> <span class="op">=</span> <span class="ident">AuthenticationMiddleware</span> {
             <span class="ident">service</span>: <span class="ident">Rc::new</span>(<span class="ident">into_service</span>(<span class="op">|</span><span class="ident">req</span>: <span class="ident">ServiceRequest</span><span class="op">|</span> <span class="kw">async</span> <span class="kw">move</span> {
@@ -695,7 +695,7 @@
         <span class="macro">assert!</span>(<span class="ident">f</span>.<span class="ident">is_ok</span>());
     }
 
-    <span class="attribute">#[<span class="ident">actix_rt::test</span>]</span>
+    <span class="attribute">#[<span class="ident">actix_web::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">test_middleware_res_extractor</span>() {
         <span class="kw">let</span> <span class="ident">middleware</span> <span class="op">=</span> <span class="ident">AuthenticationMiddleware</span> {
             <span class="ident">service</span>: <span class="ident">Rc::new</span>(<span class="ident">into_service</span>(<span class="op">|</span><span class="ident">req</span>: <span class="ident">ServiceRequest</span><span class="op">|</span> <span class="kw">async</span> <span class="kw">move</span> {
@@ -722,5 +722,5 @@
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_web_httpauth" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (21b4a9cfd 2022-01-27)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_web_httpauth" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (27f5d830e 2022-02-02)" ></div>
 </body></html>

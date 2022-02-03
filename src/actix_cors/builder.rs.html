@@ -1247,7 +1247,7 @@
             .<span class="ident">is_err</span>());
     }
 
-    <span class="attribute">#[<span class="ident">actix_rt::test</span>]</span>
+    <span class="attribute">#[<span class="ident">actix_web::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">restrictive_defaults</span>() {
         <span class="kw">let</span> <span class="ident">cors</span> <span class="op">=</span> <span class="ident">Cors::default</span>()
             .<span class="ident">new_transform</span>(<span class="ident">test::ok_service</span>())
@@ -1262,12 +1262,12 @@
         <span class="macro">assert_eq!</span>(<span class="ident">resp</span>.<span class="ident">status</span>(), <span class="ident">StatusCode::BAD_REQUEST</span>);
     }
 
-    <span class="attribute">#[<span class="ident">actix_rt::test</span>]</span>
+    <span class="attribute">#[<span class="ident">actix_web::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">allowed_header_try_from</span>() {
         <span class="kw">let</span> <span class="ident">_cors</span> <span class="op">=</span> <span class="ident">Cors::default</span>().<span class="ident">allowed_header</span>(<span class="string">&quot;Content-Type&quot;</span>);
     }
 
-    <span class="attribute">#[<span class="ident">actix_rt::test</span>]</span>
+    <span class="attribute">#[<span class="ident">actix_web::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">allowed_header_try_into</span>() {
         <span class="kw">struct</span> <span class="ident">ContentType</span>;
 
@@ -1282,7 +1282,7 @@
         <span class="kw">let</span> <span class="ident">_cors</span> <span class="op">=</span> <span class="ident">Cors::default</span>().<span class="ident">allowed_header</span>(<span class="ident">ContentType</span>);
     }
 
-    <span class="attribute">#[<span class="ident">actix_rt::test</span>]</span>
+    <span class="attribute">#[<span class="ident">actix_web::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">middleware_generic_over_body_type</span>() {
         <span class="kw">let</span> <span class="ident">srv</span> <span class="op">=</span> <span class="ident">fn_service</span>(<span class="op">|</span><span class="ident">req</span>: <span class="ident">ServiceRequest</span><span class="op">|</span> <span class="kw">async</span> <span class="kw">move</span> {
             <span class="prelude-val">Ok</span>(<span class="ident">req</span>.<span class="ident">into_response</span>(<span class="ident">HttpResponse::with_body</span>(<span class="ident">StatusCode::OK</span>, <span class="ident">body::None::new</span>())))
@@ -1292,5 +1292,5 @@
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_cors" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (21b4a9cfd 2022-01-27)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_cors" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (27f5d830e 2022-02-02)" ></div>
 </body></html>

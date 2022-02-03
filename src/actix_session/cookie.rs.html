@@ -962,7 +962,7 @@
     <span class="kw">use</span> <span class="ident">actix_web::web::Bytes</span>;
     <span class="kw">use</span> <span class="ident">actix_web</span>::{<span class="ident">test</span>, <span class="ident">web</span>, <span class="ident">App</span>};
 
-    <span class="attribute">#[<span class="ident">actix_rt::test</span>]</span>
+    <span class="attribute">#[<span class="ident">actix_web::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">cookie_session</span>() {
         <span class="kw">let</span> <span class="ident">app</span> <span class="op">=</span> <span class="ident">test::init_service</span>(
             <span class="ident">App::new</span>()
@@ -982,7 +982,7 @@
             .<span class="ident">any</span>(<span class="op">|</span><span class="ident">c</span><span class="op">|</span> <span class="ident">c</span>.<span class="ident">name</span>() <span class="op">==</span> <span class="string">&quot;actix-session&quot;</span>));
     }
 
-    <span class="attribute">#[<span class="ident">actix_rt::test</span>]</span>
+    <span class="attribute">#[<span class="ident">actix_web::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">private_cookie</span>() {
         <span class="kw">let</span> <span class="ident">app</span> <span class="op">=</span> <span class="ident">test::init_service</span>(
             <span class="ident">App::new</span>()
@@ -1002,7 +1002,7 @@
             .<span class="ident">any</span>(<span class="op">|</span><span class="ident">c</span><span class="op">|</span> <span class="ident">c</span>.<span class="ident">name</span>() <span class="op">==</span> <span class="string">&quot;actix-session&quot;</span>));
     }
 
-    <span class="attribute">#[<span class="ident">actix_rt::test</span>]</span>
+    <span class="attribute">#[<span class="ident">actix_web::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">lazy_cookie</span>() {
         <span class="kw">let</span> <span class="ident">app</span> <span class="op">=</span> <span class="ident">test::init_service</span>(
             <span class="ident">App::new</span>()
@@ -1028,7 +1028,7 @@
             .<span class="ident">any</span>(<span class="op">|</span><span class="ident">c</span><span class="op">|</span> <span class="ident">c</span>.<span class="ident">name</span>() <span class="op">==</span> <span class="string">&quot;actix-session&quot;</span>));
     }
 
-    <span class="attribute">#[<span class="ident">actix_rt::test</span>]</span>
+    <span class="attribute">#[<span class="ident">actix_web::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">cookie_session_extractor</span>() {
         <span class="kw">let</span> <span class="ident">app</span> <span class="op">=</span> <span class="ident">test::init_service</span>(
             <span class="ident">App::new</span>()
@@ -1048,7 +1048,7 @@
             .<span class="ident">any</span>(<span class="op">|</span><span class="ident">c</span><span class="op">|</span> <span class="ident">c</span>.<span class="ident">name</span>() <span class="op">==</span> <span class="string">&quot;actix-session&quot;</span>));
     }
 
-    <span class="attribute">#[<span class="ident">actix_rt::test</span>]</span>
+    <span class="attribute">#[<span class="ident">actix_web::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">basics</span>() {
         <span class="kw">let</span> <span class="ident">app</span> <span class="op">=</span> <span class="ident">test::init_service</span>(
             <span class="ident">App::new</span>()
@@ -1089,7 +1089,7 @@
         <span class="macro">assert_eq!</span>(<span class="ident">body</span>, <span class="ident">Bytes::from_static</span>(<span class="string">b&quot;counter: 100&quot;</span>));
     }
 
-    <span class="attribute">#[<span class="ident">actix_rt::test</span>]</span>
+    <span class="attribute">#[<span class="ident">actix_web::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">prolong_expiration</span>() {
         <span class="kw">let</span> <span class="ident">app</span> <span class="op">=</span> <span class="ident">test::init_service</span>(
             <span class="ident">App::new</span>()
@@ -1114,7 +1114,7 @@
             .<span class="ident">datetime</span>()
             .<span class="ident">expect</span>(<span class="string">&quot;Expiration is a datetime&quot;</span>);
 
-        <span class="ident">actix_rt::time::sleep</span>(<span class="ident">std::time::Duration::from_secs</span>(<span class="number">1</span>)).<span class="kw">await</span>;
+        <span class="ident">actix_web::rt::time::sleep</span>(<span class="ident">std::time::Duration::from_secs</span>(<span class="number">1</span>)).<span class="kw">await</span>;
 
         <span class="kw">let</span> <span class="ident">request</span> <span class="op">=</span> <span class="ident">test::TestRequest::with_uri</span>(<span class="string">&quot;/test/&quot;</span>).<span class="ident">to_request</span>();
         <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">app</span>.<span class="ident">call</span>(<span class="ident">request</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();
@@ -1132,5 +1132,5 @@
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_session" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (21b4a9cfd 2022-01-27)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_session" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (27f5d830e 2022-02-02)" ></div>
 </body></html>
