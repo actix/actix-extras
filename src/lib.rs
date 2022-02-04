@@ -10,9 +10,9 @@
 //! ```toml
 //! [dependencies]
 //! # ...
-//! tracing-actix-web = "=0.5.0-rc.1"
+//! tracing-actix-web = "=0.5.0-rc.2"
 //! tracing = "0.1"
-//! actix-web = "=4.0.0-rc.1"
+//! actix-web = "=4.0.0-rc.2"
 //! ```
 //!
 //! `tracing-actix-web` exposes three feature flags:
@@ -21,6 +21,7 @@
 //! - `opentelemetry_0_14`: same as above but using `opentelemetry` 0.14;
 //! - `opentelemetry_0_15`: same as above but using `opentelemetry` 0.15;
 //! - `opentelemetry_0_16`: same as above but using `opentelemetry` 0.16;
+//! - `opentelemetry_0_17`: same as above but using `opentelemetry` 0.17;
 //! - `emit_event_on_error`: emit a [`tracing`] event when request processing fails with an error (enabled by default).
 //!
 //! `tracing-actix-web` will release `0.5.0`, going out of beta, as soon as `actix-web` releases a stable `4.0.0`.
@@ -225,10 +226,10 @@
 //! `tracing-actix-web` provides support for distributed tracing by supporting the [OpenTelemetry standard](https://opentelemetry.io/).  
 //! `tracing-actix-web` follows [OpenTelemetry's semantic convention](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/overview.md#spancontext)
 //! for field names.
-//! Furthermore, it provides an `opentelemetry_0_16` feature flag to automatically performs trace propagation: it tries to extract the OpenTelemetry context out of the headers of incoming requests and, when it finds one, it sets it as the remote context for the current root span. The context is then propagated to your downstream dependencies if your HTTP or gRPC clients are OpenTelemetry-aware - e.g. using [`reqwest-middleware` and `reqwest-tracing`](https://github.com/TrueLayer/reqwest-middleware) if you are using `reqwest` as your HTTP client.  
+//! Furthermore, it provides an `opentelemetry_0_17` feature flag to automatically performs trace propagation: it tries to extract the OpenTelemetry context out of the headers of incoming requests and, when it finds one, it sets it as the remote context for the current root span. The context is then propagated to your downstream dependencies if your HTTP or gRPC clients are OpenTelemetry-aware - e.g. using [`reqwest-middleware` and `reqwest-tracing`](https://github.com/TrueLayer/reqwest-middleware) if you are using `reqwest` as your HTTP client.  
 //! You can then find all logs for the same request across all the services it touched by looking for the `trace_id`, automatically logged by `tracing-actix-web`.
 //!
-//! If you add [`tracing-opentelemetry::OpenTelemetryLayer`](https://docs.rs/tracing-opentelemetry/0.16.0/tracing_opentelemetry/struct.OpenTelemetryLayer.html)
+//! If you add [`tracing-opentelemetry::OpenTelemetryLayer`](https://docs.rs/tracing-opentelemetry/0.17.0/tracing_opentelemetry/struct.OpenTelemetryLayer.html)
 //! in your `tracing::Subscriber` you will be able to export the root span (and all its children) as OpenTelemetry spans.
 //!
 //! Check out the [relevant example in the GitHub repository](https://github.com/LukeMathWalker/tracing-actix-web/tree/main/examples/opentelemetry) for reference.
@@ -252,7 +253,8 @@ pub mod root_span_macro;
     feature = "opentelemetry_0_13",
     feature = "opentelemetry_0_14",
     feature = "opentelemetry_0_15",
-    feature = "opentelemetry_0_16"
+    feature = "opentelemetry_0_16",
+    feature = "opentelemetry_0_17"
 ))]
 mod otel;
 
@@ -265,11 +267,23 @@ compile_error!("feature \"opentelemetry_0_13\" and feature \"opentelemetry_0_15\
 #[cfg(all(feature = "opentelemetry_0_13", feature = "opentelemetry_0_16"))]
 compile_error!("feature \"opentelemetry_0_13\" and feature \"opentelemetry_0_16\" cannot be enabled at the same time");
 
+#[cfg(all(feature = "opentelemetry_0_13", feature = "opentelemetry_0_17"))]
+compile_error!("feature \"opentelemetry_0_13\" and feature \"opentelemetry_0_17\" cannot be enabled at the same time");
+
 #[cfg(all(feature = "opentelemetry_0_14", feature = "opentelemetry_0_15"))]
 compile_error!("feature \"opentelemetry_0_14\" and feature \"opentelemetry_0_15\" cannot be enabled at the same time");
 
 #[cfg(all(feature = "opentelemetry_0_14", feature = "opentelemetry_0_16"))]
 compile_error!("feature \"opentelemetry_0_14\" and feature \"opentelemetry_0_16\" cannot be enabled at the same time");
 
+#[cfg(all(feature = "opentelemetry_0_14", feature = "opentelemetry_0_17"))]
+compile_error!("feature \"opentelemetry_0_14\" and feature \"opentelemetry_0_17\" cannot be enabled at the same time");
+
 #[cfg(all(feature = "opentelemetry_0_15", feature = "opentelemetry_0_16"))]
 compile_error!("feature \"opentelemetry_0_15\" and feature \"opentelemetry_0_16\" cannot be enabled at the same time");
+
+#[cfg(all(feature = "opentelemetry_0_15", feature = "opentelemetry_0_17"))]
+compile_error!("feature \"opentelemetry_0_15\" and feature \"opentelemetry_0_17\" cannot be enabled at the same time");
+
+#[cfg(all(feature = "opentelemetry_0_16", feature = "opentelemetry_0_17"))]
+compile_error!("feature \"opentelemetry_0_16\" and feature \"opentelemetry_0_17\" cannot be enabled at the same time");
