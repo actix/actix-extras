@@ -5,7 +5,7 @@ use actix_web::{
     body::{EitherBody, MessageBody},
     dev::{Service, ServiceRequest, ServiceResponse},
     http::{
-        header::{self, HeaderValue},
+        header::{self, HeaderMap, HeaderValue},
         Method,
     },
     Error, HttpResponse, Result,
@@ -67,6 +67,11 @@ impl<S> CorsMiddleware<S> {
             res.insert_header((header::ACCESS_CONTROL_MAX_AGE, max_age.to_string()));
         }
 
+        res.insert_header((
+            header::VARY,
+            "Origin, Access-Control-Request-Method, Access-Control-Request-Headers",
+        ));
+
         let res = res.finish();
         req.into_response(res)
     }
@@ -116,25 +121,25 @@ impl<S> CorsMiddleware<S> {
         }
 
         if inner.vary_header {
-            let value = match res.headers_mut().get(header::VARY) {
-                Some(hdr) => {
-                    let mut val: Vec<u8> = Vec::with_capacity(hdr.len() + 71);
-                    val.extend(hdr.as_bytes());
-                    val.extend(
-                        b", Origin, Access-Control-Request-Method, Access-Control-Request-Headers",
-                    );
-                    val.try_into().unwrap()
-                }
-                None => HeaderValue::from_static(
-                    "Origin, Access-Control-Request-Method, Access-Control-Request-Headers",
-                ),
-            };
-
-            res.headers_mut().insert(header::VARY, value);
+            add_vary_header(res.headers_mut());
         }
 
         res
     }
+}
+
+fn add_vary_header(headers: &mut HeaderMap) {
+    let value = match headers.get(header::VARY) {
+        Some(hdr) => {
+            let mut val: Vec<u8> = Vec::with_capacity(hdr.len() + 8);
+            val.extend(hdr.as_bytes());
+            val.extend(b", Origin");
+            val.try_into().unwrap()
+        }
+        None => HeaderValue::from_static("Origin"),
+    };
+
+    headers.insert(header::VARY, value);
 }
 
 impl<S, B> Service<ServiceRequest> for CorsMiddleware<S>
