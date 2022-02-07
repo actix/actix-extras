@@ -414,6 +414,9 @@ async fn vary_header_on_all_handled_responses() {
         .to_srv_request();
     let resp = test::call_service(&cors, req).await;
     assert_eq!(resp.status(), StatusCode::OK);
+    assert!(resp
+        .headers()
+        .contains_key(header::ACCESS_CONTROL_ALLOW_METHODS));
     assert_eq!(
         resp.headers()
             .get(header::VARY)
