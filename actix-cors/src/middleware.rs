@@ -143,7 +143,6 @@ where
     S::Future: 'static,
 
     B: MessageBody + 'static,
-    B::Error: Into<Error>,
 {
     type Response = ServiceResponse<EitherBody<B>>;
     type Error = Error;
@@ -189,11 +188,18 @@ where
 mod tests {
     use actix_web::{
         dev::Transform,
+        middleware::Compat,
         test::{self, TestRequest},
+        App,
     };
 
     use super::*;
     use crate::Cors;
+
+    #[test]
+    fn compat_compat() {
+        let _ = App::new().wrap(Compat::new(Cors::default()));
+    }
 
     #[actix_web::test]
     async fn test_options_no_origin() {

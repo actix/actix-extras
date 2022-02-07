@@ -490,7 +490,6 @@ where
     S::Future: 'static,
 
     B: MessageBody + 'static,
-    B::Error: Into<Error>,
 {
     type Response = ServiceResponse<EitherBody<B>>;
     type Error = Error;
