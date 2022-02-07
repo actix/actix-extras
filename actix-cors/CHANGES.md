@@ -1,7 +1,10 @@
 # Changes
 
 ## Unreleased - 2021-xx-xx
+- Relax body type bounds on middleware impl. [#???]
 - Update `actix-web` dependency to `4.0.0-rc.1`.
+
+[#???]: https://github.com/actix/actix-extras/pull/???
 
 
 ## 0.6.0-beta.8 - 2021-12-29
