@@ -6,6 +6,12 @@
 [#224]: https://github.com/actix/actix-extras/pull/224
 
 
+## 0.6.0-beta.10 - 2022-02-07
+- Ensure that preflight responses contain a Vary header. [#224]
+
+[#224]: https://github.com/actix/actix-extras/pull/224
+
+
 ## 0.6.0-beta.9 - 2022-02-07
 - Relax body type bounds on middleware impl. [#223]
 - Update `actix-web` dependency to `4.0.0-rc.1`.
