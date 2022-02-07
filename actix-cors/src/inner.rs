@@ -354,7 +354,7 @@ mod test {
                 let head_origin = head
                     .headers()
                     .get(header::ORIGIN)
-                    .expect("unwrapping origin header should neve fail in allowed_origin_fn");
+                    .expect("unwrapping origin header should never fail in allowed_origin_fn");
                 assert!(origin == head_origin);
                 true
             })
