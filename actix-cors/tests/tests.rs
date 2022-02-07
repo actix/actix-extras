@@ -268,7 +268,7 @@ async fn test_response() {
     );
     assert_eq!(
         resp.headers().get(header::VARY).map(HeaderValue::as_bytes),
-        Some(&b"Origin"[..]),
+        Some(&b"Origin, Access-Control-Request-Method, Access-Control-Request-Headers"[..]),
     );
 
     #[allow(clippy::needless_collect)]
@@ -315,7 +315,7 @@ async fn test_response() {
     let resp = test::call_service(&cors, req).await;
     assert_eq!(
         resp.headers().get(header::VARY).map(HeaderValue::as_bytes),
-        Some(&b"Accept, Origin"[..]),
+        Some(&b"Accept, Origin, Access-Control-Request-Method, Access-Control-Request-Headers"[..]),
     );
 
     let cors = Cors::default()
@@ -420,7 +420,7 @@ async fn vary_header_on_all_handled_responses() {
             .expect("response should have Vary header")
             .to_str()
             .unwrap(),
-        "Origin, Access-Control-Request-Method, Access-Control-Request-Headers"
+        "Origin, Access-Control-Request-Method, Access-Control-Request-Headers",
     );
 
     // follow-up regular request
@@ -436,7 +436,7 @@ async fn vary_header_on_all_handled_responses() {
             .expect("response should have Vary header")
             .to_str()
             .unwrap(),
-        "Origin"
+        "Origin, Access-Control-Request-Method, Access-Control-Request-Headers",
     );
 
     let cors = Cors::default()
@@ -458,7 +458,20 @@ async fn vary_header_on_all_handled_responses() {
             .expect("response should have Vary header")
             .to_str()
             .unwrap(),
-        "Origin"
+        "Origin, Access-Control-Request-Method, Access-Control-Request-Headers",
+    );
+
+    // regular request no origin
+    let req = TestRequest::default().method(Method::PUT).to_srv_request();
+    let resp = test::call_service(&cors, req).await;
+    assert_eq!(resp.status(), StatusCode::OK);
+    assert_eq!(
+        resp.headers()
+            .get(header::VARY)
+            .expect("response should have Vary header")
+            .to_str()
+            .unwrap(),
+        "Origin, Access-Control-Request-Method, Access-Control-Request-Headers",
     );
 }
 

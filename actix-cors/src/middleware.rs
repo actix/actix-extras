@@ -1,11 +1,11 @@
-use std::{collections::HashSet, convert::TryInto, rc::Rc};
+use std::{collections::HashSet, rc::Rc};
 
 use actix_utils::future::ok;
 use actix_web::{
     body::{EitherBody, MessageBody},
     dev::{Service, ServiceRequest, ServiceResponse},
     http::{
-        header::{self, HeaderMap, HeaderValue},
+        header::{self, HeaderValue},
         Method,
     },
     Error, HttpResponse, Result,
@@ -13,7 +13,7 @@ use actix_web::{
 use futures_util::future::{FutureExt as _, LocalBoxFuture};
 use log::debug;
 
-use crate::{builder::intersperse_header_values, AllOrSome, Inner};
+use crate::{builder::intersperse_header_values, inner::add_vary_header, AllOrSome, Inner};
 
 /// Service wrapper for Cross-Origin Resource Sharing support.
 ///
@@ -67,12 +67,9 @@ impl<S> CorsMiddleware<S> {
             res.insert_header((header::ACCESS_CONTROL_MAX_AGE, max_age.to_string()));
         }
 
-        res.insert_header((
-            header::VARY,
-            "Origin, Access-Control-Request-Method, Access-Control-Request-Headers",
-        ));
+        let mut res = res.finish();
+        add_vary_header(res.headers_mut());
 
-        let res = res.finish();
         req.into_response(res)
     }
 
@@ -128,20 +125,6 @@ impl<S> CorsMiddleware<S> {
     }
 }
 
-fn add_vary_header(headers: &mut HeaderMap) {
-    let value = match headers.get(header::VARY) {
-        Some(hdr) => {
-            let mut val: Vec<u8> = Vec::with_capacity(hdr.len() + 8);
-            val.extend(hdr.as_bytes());
-            val.extend(b", Origin");
-            val.try_into().unwrap()
-        }
-        None => HeaderValue::from_static("Origin"),
-    };
-
-    headers.insert(header::VARY, value);
-}
-
 impl<S, B> Service<ServiceRequest> for CorsMiddleware<S>
 where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
@@ -177,12 +160,7 @@ where
             async move {
                 let res = fut.await;
 
-                if origin.is_some() {
-                    Ok(Self::augment_response(&inner, res?))
-                } else {
-                    res.map_err(Into::into)
-                }
-                .map(|res| res.map_into_left_body())
+                Ok(Self::augment_response(&inner, res?).map_into_left_body())
             }
             .boxed_local()
         }

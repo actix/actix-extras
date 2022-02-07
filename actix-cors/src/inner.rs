@@ -4,7 +4,7 @@ use actix_web::{
     dev::RequestHead,
     error::Result,
     http::{
-        header::{self, HeaderName, HeaderValue},
+        header::{self, HeaderMap, HeaderName, HeaderValue},
         Method,
     },
 };
@@ -197,6 +197,25 @@ impl Inner {
             None => Ok(()),
         }
     }
+}
+
+/// Add CORS related request headers to response's Vary header.
+///
+/// See <https://fetch.spec.whatwg.org/#cors-protocol-and-http-caches>.
+pub(crate) fn add_vary_header(headers: &mut HeaderMap) {
+    let value = match headers.get(header::VARY) {
+        Some(hdr) => {
+            let mut val: Vec<u8> = Vec::with_capacity(hdr.len() + 71);
+            val.extend(hdr.as_bytes());
+            val.extend(b", Origin, Access-Control-Request-Method, Access-Control-Request-Headers");
+            val.try_into().unwrap()
+        }
+        None => HeaderValue::from_static(
+            "Origin, Access-Control-Request-Method, Access-Control-Request-Headers",
+        ),
+    };
+
+    headers.insert(header::VARY, value);
 }
 
 #[cfg(test)]
