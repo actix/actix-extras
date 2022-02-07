@@ -1,6 +1,9 @@
 # Changes
 
 ## Unreleased - 2021-xx-xx
+- Ensure that preflight responses contain a Vary header. [#224]
+
+[#224]: https://github.com/actix/actix-extras/pull/224
 
 
 ## 0.6.0-beta.9 - 2022-02-07

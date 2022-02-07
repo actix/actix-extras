@@ -1,4 +1,4 @@
-use std::{collections::HashSet, convert::TryInto, rc::Rc};
+use std::{collections::HashSet, rc::Rc};
 
 use actix_utils::future::ok;
 use actix_web::{
@@ -13,7 +13,7 @@ use actix_web::{
 use futures_util::future::{FutureExt as _, LocalBoxFuture};
 use log::debug;
 
-use crate::{builder::intersperse_header_values, AllOrSome, Inner};
+use crate::{builder::intersperse_header_values, inner::add_vary_header, AllOrSome, Inner};
 
 /// Service wrapper for Cross-Origin Resource Sharing support.
 ///
@@ -67,7 +67,9 @@ impl<S> CorsMiddleware<S> {
             res.insert_header((header::ACCESS_CONTROL_MAX_AGE, max_age.to_string()));
         }
 
-        let res = res.finish();
+        let mut res = res.finish();
+        add_vary_header(res.headers_mut());
+
         req.into_response(res)
     }
 
@@ -116,21 +118,7 @@ impl<S> CorsMiddleware<S> {
         }
 
         if inner.vary_header {
-            let value = match res.headers_mut().get(header::VARY) {
-                Some(hdr) => {
-                    let mut val: Vec<u8> = Vec::with_capacity(hdr.len() + 71);
-                    val.extend(hdr.as_bytes());
-                    val.extend(
-                        b", Origin, Access-Control-Request-Method, Access-Control-Request-Headers",
-                    );
-                    val.try_into().unwrap()
-                }
-                None => HeaderValue::from_static(
-                    "Origin, Access-Control-Request-Method, Access-Control-Request-Headers",
-                ),
-            };
-
-            res.headers_mut().insert(header::VARY, value);
+            add_vary_header(res.headers_mut());
         }
 
         res
@@ -172,12 +160,7 @@ where
             async move {
                 let res = fut.await;
 
-                if origin.is_some() {
-                    Ok(Self::augment_response(&inner, res?))
-                } else {
-                    res.map_err(Into::into)
-                }
-                .map(|res| res.map_into_left_body())
+                Ok(Self::augment_response(&inner, res?).map_into_left_body())
             }
             .boxed_local()
         }

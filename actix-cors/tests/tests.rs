@@ -314,8 +314,8 @@ async fn test_response() {
         .to_srv_request();
     let resp = test::call_service(&cors, req).await;
     assert_eq!(
+        resp.headers().get(header::VARY).map(HeaderValue::as_bytes),
         Some(&b"Accept, Origin, Access-Control-Request-Method, Access-Control-Request-Headers"[..]),
-        resp.headers().get(header::VARY).map(HeaderValue::as_bytes)
     );
 
     let cors = Cors::default()
@@ -397,6 +397,85 @@ async fn validate_origin_allows_all_origins() {
 
     let resp = test::call_service(&cors, req).await;
     assert_eq!(resp.status(), StatusCode::OK);
+}
+
+#[actix_web::test]
+async fn vary_header_on_all_handled_responses() {
+    let cors = Cors::permissive()
+        .new_transform(test::ok_service())
+        .await
+        .unwrap();
+
+    // preflight request
+    let req = TestRequest::default()
+        .method(Method::OPTIONS)
+        .insert_header((header::ORIGIN, "https://www.example.com"))
+        .insert_header((header::ACCESS_CONTROL_REQUEST_METHOD, "GET"))
+        .to_srv_request();
+    let resp = test::call_service(&cors, req).await;
+    assert_eq!(resp.status(), StatusCode::OK);
+    assert!(resp
+        .headers()
+        .contains_key(header::ACCESS_CONTROL_ALLOW_METHODS));
+    assert_eq!(
+        resp.headers()
+            .get(header::VARY)
+            .expect("response should have Vary header")
+            .to_str()
+            .unwrap(),
+        "Origin, Access-Control-Request-Method, Access-Control-Request-Headers",
+    );
+
+    // follow-up regular request
+    let req = TestRequest::default()
+        .method(Method::PUT)
+        .insert_header((header::ORIGIN, "https://www.example.com"))
+        .to_srv_request();
+    let resp = test::call_service(&cors, req).await;
+    assert_eq!(resp.status(), StatusCode::OK);
+    assert_eq!(
+        resp.headers()
+            .get(header::VARY)
+            .expect("response should have Vary header")
+            .to_str()
+            .unwrap(),
+        "Origin, Access-Control-Request-Method, Access-Control-Request-Headers",
+    );
+
+    let cors = Cors::default()
+        .allow_any_method()
+        .new_transform(test::ok_service())
+        .await
+        .unwrap();
+
+    // regular request bad origin
+    let req = TestRequest::default()
+        .method(Method::PUT)
+        .insert_header((header::ORIGIN, "https://www.example.com"))
+        .to_srv_request();
+    let resp = test::call_service(&cors, req).await;
+    assert_eq!(resp.status(), StatusCode::BAD_REQUEST);
+    assert_eq!(
+        resp.headers()
+            .get(header::VARY)
+            .expect("response should have Vary header")
+            .to_str()
+            .unwrap(),
+        "Origin, Access-Control-Request-Method, Access-Control-Request-Headers",
+    );
+
+    // regular request no origin
+    let req = TestRequest::default().method(Method::PUT).to_srv_request();
+    let resp = test::call_service(&cors, req).await;
+    assert_eq!(resp.status(), StatusCode::OK);
+    assert_eq!(
+        resp.headers()
+            .get(header::VARY)
+            .expect("response should have Vary header")
+            .to_str()
+            .unwrap(),
+        "Origin, Access-Control-Request-Method, Access-Control-Request-Headers",
+    );
 }
 
 #[actix_web::test]
