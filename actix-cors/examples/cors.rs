@@ -9,6 +9,8 @@ async fn main() -> std::io::Result<()> {
 
     HttpServer::new(move || {
         App::new()
+            // `permissive` is a wide-open development config
+            // .wrap(Cors::permissive())
             .wrap(
                 // default settings are overly restrictive to reduce chance of
                 // misconfiguration leading to security concerns
@@ -43,6 +45,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(Logger::default())
             .default_service(web::to(|| async { "Hello, cross-origin world!" }))
     })
+    .workers(1)
     .bind(("127.0.0.1", 8080))?
     .run()
     .await

@@ -346,4 +346,37 @@ mod test {
         let resp = test::call_service(&cors, req).await;
         assert_eq!(resp.status(), StatusCode::OK);
     }
+
+    #[actix_web::test]
+    async fn allow_fn_origin_equals_head_origin() {
+        let cors = Cors::default()
+            .allowed_origin_fn(|origin, head| {
+                let head_origin = head
+                    .headers()
+                    .get(header::ORIGIN)
+                    .expect("unwrapping origin header should neve fail in allowed_origin_fn");
+                assert!(origin == head_origin);
+                true
+            })
+            .allow_any_method()
+            .allow_any_header()
+            .new_transform(test::simple_service(StatusCode::NO_CONTENT))
+            .await
+            .unwrap();
+
+        let req = TestRequest::default()
+            .method(Method::OPTIONS)
+            .insert_header(("Origin", "https://www.example.com"))
+            .insert_header((header::ACCESS_CONTROL_REQUEST_METHOD, "POST"))
+            .to_srv_request();
+        let resp = test::call_service(&cors, req).await;
+        assert_eq!(resp.status(), StatusCode::OK);
+
+        let req = TestRequest::default()
+            .method(Method::GET)
+            .insert_header(("Origin", "https://www.example.com"))
+            .to_srv_request();
+        let resp = test::call_service(&cors, req).await;
+        assert_eq!(resp.status(), StatusCode::NO_CONTENT);
+    }
 }
