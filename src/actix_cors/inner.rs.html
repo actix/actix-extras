@@ -335,13 +335,65 @@
 <span id="328">328</span>
 <span id="329">329</span>
 <span id="330">330</span>
+<span id="331">331</span>
+<span id="332">332</span>
+<span id="333">333</span>
+<span id="334">334</span>
+<span id="335">335</span>
+<span id="336">336</span>
+<span id="337">337</span>
+<span id="338">338</span>
+<span id="339">339</span>
+<span id="340">340</span>
+<span id="341">341</span>
+<span id="342">342</span>
+<span id="343">343</span>
+<span id="344">344</span>
+<span id="345">345</span>
+<span id="346">346</span>
+<span id="347">347</span>
+<span id="348">348</span>
+<span id="349">349</span>
+<span id="350">350</span>
+<span id="351">351</span>
+<span id="352">352</span>
+<span id="353">353</span>
+<span id="354">354</span>
+<span id="355">355</span>
+<span id="356">356</span>
+<span id="357">357</span>
+<span id="358">358</span>
+<span id="359">359</span>
+<span id="360">360</span>
+<span id="361">361</span>
+<span id="362">362</span>
+<span id="363">363</span>
+<span id="364">364</span>
+<span id="365">365</span>
+<span id="366">366</span>
+<span id="367">367</span>
+<span id="368">368</span>
+<span id="369">369</span>
+<span id="370">370</span>
+<span id="371">371</span>
+<span id="372">372</span>
+<span id="373">373</span>
+<span id="374">374</span>
+<span id="375">375</span>
+<span id="376">376</span>
+<span id="377">377</span>
+<span id="378">378</span>
+<span id="379">379</span>
+<span id="380">380</span>
+<span id="381">381</span>
+<span id="382">382</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections::HashSet</span>, <span class="ident">convert::TryFrom</span>, <span class="ident">convert::TryInto</span>, <span class="ident">fmt</span>, <span class="ident">rc::Rc</span>};
 
 <span class="kw">use</span> <span class="ident">actix_web</span>::{
     <span class="ident">dev::RequestHead</span>,
     <span class="ident">error::Result</span>,
     <span class="ident">http</span>::{
-        <span class="ident">header</span>::{<span class="self">self</span>, <span class="ident">HeaderName</span>, <span class="ident">HeaderValue</span>},
+        <span class="ident">header</span>::{<span class="self">self</span>, <span class="ident">HeaderMap</span>, <span class="ident">HeaderName</span>, <span class="ident">HeaderValue</span>},
         <span class="ident">Method</span>,
     },
 };
@@ -536,6 +588,25 @@
     }
 }
 
+<span class="doccomment">/// Add CORS related request headers to response&#39;s Vary header.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// See &lt;https://fetch.spec.whatwg.org/#cors-protocol-and-http-caches&gt;.</span>
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">add_vary_header</span>(<span class="ident">headers</span>: <span class="kw-2">&amp;mut</span> <span class="ident">HeaderMap</span>) {
+    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">headers</span>.<span class="ident">get</span>(<span class="ident">header::VARY</span>) {
+        <span class="prelude-val">Some</span>(<span class="ident">hdr</span>) =&gt; {
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">val</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec::with_capacity</span>(<span class="ident">hdr</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="number">71</span>);
+            <span class="ident">val</span>.<span class="ident">extend</span>(<span class="ident">hdr</span>.<span class="ident">as_bytes</span>());
+            <span class="ident">val</span>.<span class="ident">extend</span>(<span class="string">b&quot;, Origin, Access-Control-Request-Method, Access-Control-Request-Headers&quot;</span>);
+            <span class="ident">val</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>()
+        }
+        <span class="prelude-val">None</span> =&gt; <span class="ident">HeaderValue::from_static</span>(
+            <span class="string">&quot;Origin, Access-Control-Request-Method, Access-Control-Request-Headers&quot;</span>,
+        ),
+    };
+
+    <span class="ident">headers</span>.<span class="ident">insert</span>(<span class="ident">header::VARY</span>, <span class="ident">value</span>);
+}
+
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">test</span> {
     <span class="kw">use</span> <span class="ident">std::rc::Rc</span>;
@@ -663,6 +734,39 @@
 
         <span class="kw">let</span> <span class="ident">resp</span> <span class="op">=</span> <span class="ident">test::call_service</span>(<span class="kw-2">&amp;</span><span class="ident">cors</span>, <span class="ident">req</span>).<span class="kw">await</span>;
         <span class="macro">assert_eq!</span>(<span class="ident">resp</span>.<span class="ident">status</span>(), <span class="ident">StatusCode::OK</span>);
+    }
+
+    <span class="attribute">#[<span class="ident">actix_web::test</span>]</span>
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">allow_fn_origin_equals_head_origin</span>() {
+        <span class="kw">let</span> <span class="ident">cors</span> <span class="op">=</span> <span class="ident">Cors::default</span>()
+            .<span class="ident">allowed_origin_fn</span>(<span class="op">|</span><span class="ident">origin</span>, <span class="ident">head</span><span class="op">|</span> {
+                <span class="kw">let</span> <span class="ident">head_origin</span> <span class="op">=</span> <span class="ident">head</span>
+                    .<span class="ident">headers</span>()
+                    .<span class="ident">get</span>(<span class="ident">header::ORIGIN</span>)
+                    .<span class="ident">expect</span>(<span class="string">&quot;unwrapping origin header should never fail in allowed_origin_fn&quot;</span>);
+                <span class="macro">assert!</span>(<span class="ident">origin</span> <span class="op">==</span> <span class="ident">head_origin</span>);
+                <span class="bool-val">true</span>
+            })
+            .<span class="ident">allow_any_method</span>()
+            .<span class="ident">allow_any_header</span>()
+            .<span class="ident">new_transform</span>(<span class="ident">test::simple_service</span>(<span class="ident">StatusCode::NO_CONTENT</span>))
+            .<span class="kw">await</span>
+            .<span class="ident">unwrap</span>();
+
+        <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="ident">TestRequest::default</span>()
+            .<span class="ident">method</span>(<span class="ident">Method::OPTIONS</span>)
+            .<span class="ident">insert_header</span>((<span class="string">&quot;Origin&quot;</span>, <span class="string">&quot;https://www.example.com&quot;</span>))
+            .<span class="ident">insert_header</span>((<span class="ident">header::ACCESS_CONTROL_REQUEST_METHOD</span>, <span class="string">&quot;POST&quot;</span>))
+            .<span class="ident">to_srv_request</span>();
+        <span class="kw">let</span> <span class="ident">resp</span> <span class="op">=</span> <span class="ident">test::call_service</span>(<span class="kw-2">&amp;</span><span class="ident">cors</span>, <span class="ident">req</span>).<span class="kw">await</span>;
+        <span class="macro">assert_eq!</span>(<span class="ident">resp</span>.<span class="ident">status</span>(), <span class="ident">StatusCode::OK</span>);
+
+        <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="ident">TestRequest::default</span>()
+            .<span class="ident">method</span>(<span class="ident">Method::GET</span>)
+            .<span class="ident">insert_header</span>((<span class="string">&quot;Origin&quot;</span>, <span class="string">&quot;https://www.example.com&quot;</span>))
+            .<span class="ident">to_srv_request</span>();
+        <span class="kw">let</span> <span class="ident">resp</span> <span class="op">=</span> <span class="ident">test::call_service</span>(<span class="kw-2">&amp;</span><span class="ident">cors</span>, <span class="ident">req</span>).<span class="kw">await</span>;
+        <span class="macro">assert_eq!</span>(<span class="ident">resp</span>.<span class="ident">status</span>(), <span class="ident">StatusCode::NO_CONTENT</span>);
     }
 }
 </code></pre></div>

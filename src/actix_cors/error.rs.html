@@ -55,9 +55,15 @@
 <span id="48">48</span>
 <span id="49">49</span>
 <span id="50">50</span>
+<span id="51">51</span>
+<span id="52">52</span>
+<span id="53">53</span>
+<span id="54">54</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">actix_web</span>::{<span class="ident">http::StatusCode</span>, <span class="ident">HttpResponse</span>, <span class="ident">ResponseError</span>};
 
 <span class="kw">use</span> <span class="ident">derive_more</span>::{<span class="ident">Display</span>, <span class="ident">Error</span>};
+
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::inner::add_vary_header</span>;
 
 <span class="doccomment">/// Errors that can occur when processing CORS guarded requests.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Display</span>, <span class="ident">Error</span>)]</span>
@@ -102,7 +108,9 @@
     }
 
     <span class="kw">fn</span> <span class="ident">error_response</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">HttpResponse</span> {
-        <span class="ident">HttpResponse::with_body</span>(<span class="ident">StatusCode::BAD_REQUEST</span>, <span class="self">self</span>.<span class="ident">to_string</span>()).<span class="ident">map_into_boxed_body</span>()
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">HttpResponse::with_body</span>(<span class="self">self</span>.<span class="ident">status_code</span>(), <span class="self">self</span>.<span class="ident">to_string</span>());
+        <span class="ident">add_vary_header</span>(<span class="ident">res</span>.<span class="ident">headers_mut</span>());
+        <span class="ident">res</span>.<span class="ident">map_into_boxed_body</span>()
     }
 }
 </code></pre></div>

@@ -231,24 +231,7 @@
 <span id="224">224</span>
 <span id="225">225</span>
 <span id="226">226</span>
-<span id="227">227</span>
-<span id="228">228</span>
-<span id="229">229</span>
-<span id="230">230</span>
-<span id="231">231</span>
-<span id="232">232</span>
-<span id="233">233</span>
-<span id="234">234</span>
-<span id="235">235</span>
-<span id="236">236</span>
-<span id="237">237</span>
-<span id="238">238</span>
-<span id="239">239</span>
-<span id="240">240</span>
-<span id="241">241</span>
-<span id="242">242</span>
-<span id="243">243</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections::HashSet</span>, <span class="ident">convert::TryInto</span>, <span class="ident">rc::Rc</span>};
+</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections::HashSet</span>, <span class="ident">rc::Rc</span>};
 
 <span class="kw">use</span> <span class="ident">actix_utils::future::ok</span>;
 <span class="kw">use</span> <span class="ident">actix_web</span>::{
@@ -263,7 +246,7 @@
 <span class="kw">use</span> <span class="ident">futures_util::future</span>::{<span class="ident">FutureExt</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">LocalBoxFuture</span>};
 <span class="kw">use</span> <span class="ident">log::debug</span>;
 
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">builder::intersperse_header_values</span>, <span class="ident">AllOrSome</span>, <span class="ident">Inner</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">builder::intersperse_header_values</span>, <span class="ident">inner::add_vary_header</span>, <span class="ident">AllOrSome</span>, <span class="ident">Inner</span>};
 
 <span class="doccomment">/// Service wrapper for Cross-Origin Resource Sharing support.</span>
 <span class="doccomment">///</span>
@@ -317,7 +300,9 @@
             <span class="ident">res</span>.<span class="ident">insert_header</span>((<span class="ident">header::ACCESS_CONTROL_MAX_AGE</span>, <span class="ident">max_age</span>.<span class="ident">to_string</span>()));
         }
 
-        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">res</span>.<span class="ident">finish</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">res</span>.<span class="ident">finish</span>();
+        <span class="ident">add_vary_header</span>(<span class="ident">res</span>.<span class="ident">headers_mut</span>());
+
         <span class="ident">req</span>.<span class="ident">into_response</span>(<span class="ident">res</span>)
     }
 
@@ -366,21 +351,7 @@
         }
 
         <span class="kw">if</span> <span class="ident">inner</span>.<span class="ident">vary_header</span> {
-            <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">res</span>.<span class="ident">headers_mut</span>().<span class="ident">get</span>(<span class="ident">header::VARY</span>) {
-                <span class="prelude-val">Some</span>(<span class="ident">hdr</span>) =&gt; {
-                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">val</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec::with_capacity</span>(<span class="ident">hdr</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="number">71</span>);
-                    <span class="ident">val</span>.<span class="ident">extend</span>(<span class="ident">hdr</span>.<span class="ident">as_bytes</span>());
-                    <span class="ident">val</span>.<span class="ident">extend</span>(
-                        <span class="string">b&quot;, Origin, Access-Control-Request-Method, Access-Control-Request-Headers&quot;</span>,
-                    );
-                    <span class="ident">val</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>()
-                }
-                <span class="prelude-val">None</span> =&gt; <span class="ident">HeaderValue::from_static</span>(
-                    <span class="string">&quot;Origin, Access-Control-Request-Method, Access-Control-Request-Headers&quot;</span>,
-                ),
-            };
-
-            <span class="ident">res</span>.<span class="ident">headers_mut</span>().<span class="ident">insert</span>(<span class="ident">header::VARY</span>, <span class="ident">value</span>);
+            <span class="ident">add_vary_header</span>(<span class="ident">res</span>.<span class="ident">headers_mut</span>());
         }
 
         <span class="ident">res</span>
@@ -422,12 +393,7 @@
             <span class="kw">async</span> <span class="kw">move</span> {
                 <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">fut</span>.<span class="kw">await</span>;
 
-                <span class="kw">if</span> <span class="ident">origin</span>.<span class="ident">is_some</span>() {
-                    <span class="prelude-val">Ok</span>(<span class="ident"><span class="self">Self</span>::augment_response</span>(<span class="kw-2">&amp;</span><span class="ident">inner</span>, <span class="ident">res</span><span class="question-mark">?</span>))
-                } <span class="kw">else</span> {
-                    <span class="ident">res</span>.<span class="ident">map_err</span>(<span class="ident">Into::into</span>)
-                }
-                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">res</span><span class="op">|</span> <span class="ident">res</span>.<span class="ident">map_into_left_body</span>())
+                <span class="prelude-val">Ok</span>(<span class="ident"><span class="self">Self</span>::augment_response</span>(<span class="kw-2">&amp;</span><span class="ident">inner</span>, <span class="ident">res</span><span class="question-mark">?</span>).<span class="ident">map_into_left_body</span>())
             }
             .<span class="ident">boxed_local</span>()
         }
