@@ -11,3 +11,4 @@ guide/build/
 *.pid
 *.sock
 *~
+.DS_Store

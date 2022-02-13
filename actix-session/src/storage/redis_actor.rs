@@ -20,7 +20,7 @@ use time::{self, Duration};
 ///     // [...]
 /// }
 ///
-/// #[actix_rt::main]
+/// #[actix_web::main]
 /// async fn main() -> std::io::Result<()> {
 ///     let secret_key = get_secret_key();
 ///     let redis_connection_string = "127.0.0.1:6379";
@@ -261,19 +261,19 @@ mod test {
         RedisActorSessionStore::new("127.0.0.1:6379")
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn test_session_workflow() {
         acceptance_test_suite(redis_actor_store, true).await;
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn loading_a_missing_session_returns_none() {
         let store = redis_actor_store();
         let session_key = generate_session_key();
         assert!(store.load(&session_key).await.unwrap().is_none());
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn updating_of_an_expired_state_is_handled_gracefully() {
         let store = redis_actor_store();
         let session_key = generate_session_key();

@@ -3,6 +3,11 @@
 ## Unreleased - 2021-xx-xx
 
 
+## 0.7.0-beta.5 - 2022-02-03
+- Update `prost` dependency to `0.9`.
+- Update `actix-web` dependency to `4.0.0-rc.1`.
+
+
 ## 0.7.0-beta.4 - 2021-12-29
 - Minimum supported Rust version (MSRV) is now 1.54.
 

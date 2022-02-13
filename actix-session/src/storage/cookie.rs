@@ -19,7 +19,7 @@ use time::Duration;
 ///     // [...]
 /// }
 ///
-/// #[actix_rt::main]
+/// #[actix_web::main]
 /// async fn main() -> std::io::Result<()> {
 ///     let secret_key = get_secret_key();
 ///     HttpServer::new(move ||
@@ -93,12 +93,12 @@ mod tests {
     use crate::storage::{LoadError, SessionStore};
     use crate::test_helpers::acceptance_test_suite;
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn test_session_workflow() {
         acceptance_test_suite(CookieSessionStore::default, false).await;
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn loading_a_random_session_key_returns_deserialization_error() {
         let store = CookieSessionStore::default();
         let session_key = generate_session_key();

@@ -3,8 +3,6 @@ use actix_web::cookie::{Key, SameSite};
 use actix_web::{
     error::InternalError, middleware, web, App, Error, HttpResponse, HttpServer, Responder,
 };
-use rand::distributions::Alphanumeric;
-use rand::{thread_rng, Rng};
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize)]
@@ -70,21 +68,12 @@ async fn secret(session: Session) -> Result<impl Responder, Error> {
     Ok("secret revealed")
 }
 
-// The signing key would usually be read from a configuration file/environment variables.
-fn get_signing_key() -> Key {
-    let signing_key: String = thread_rng()
-        .sample_iter(&Alphanumeric)
-        .take(64)
-        .map(char::from)
-        .collect();
-    Key::from(signing_key.as_bytes())
-}
-
-#[actix_rt::main]
+#[actix_web::main]
 async fn main() -> std::io::Result<()> {
     std::env::set_var("RUST_LOG", "actix_web=info,actix_redis=info");
     env_logger::init();
-    let signing_key = get_signing_key();
+    // The signing key would usually be read from a configuration file/environment variables.
+    let signing_key = Key::generate();
 
     HttpServer::new(move || {
         App::new()

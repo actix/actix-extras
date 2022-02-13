@@ -20,7 +20,7 @@ use time::{self, Duration};
 ///     // [...]
 /// }
 ///
-/// #[actix_rt::main]
+/// #[actix_web::main]
 /// async fn main() -> std::io::Result<()> {
 ///     let secret_key = get_secret_key();
 ///     let redis_connection_string = "redis://127.0.0.1:6379";
@@ -46,7 +46,7 @@ use time::{self, Duration};
 /// ```no_run
 /// use actix_session::{storage::RedisSessionStore};
 ///
-/// # #[actix_rt::main]
+/// # #[actix_web::main]
 /// # async fn main() {
 /// let redis_connection_string = "rediss://127.0.0.1:6379";
 /// let store = RedisSessionStore::new(redis_connection_string).await.unwrap();
@@ -241,20 +241,20 @@ mod test {
             .unwrap()
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn test_session_workflow() {
         let redis_store = redis_store().await;
         acceptance_test_suite(move || redis_store.clone(), true).await;
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn loading_a_missing_session_returns_none() {
         let store = redis_store().await;
         let session_key = generate_session_key();
         assert!(store.load(&session_key).await.unwrap().is_none());
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn loading_an_invalid_session_state_returns_deserialization_error() {
         let store = redis_store().await;
         let session_key = generate_session_key();
@@ -270,7 +270,7 @@ mod test {
         ));
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn updating_of_an_expired_state_is_handled_gracefully() {
         let store = redis_store().await;
         let session_key = generate_session_key();

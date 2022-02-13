@@ -490,7 +490,6 @@ where
     S::Future: 'static,
 
     B: MessageBody + 'static,
-    B::Error: Into<Error>,
 {
     type Response = ServiceResponse<EitherBody<B>>;
     type Error = Error;
@@ -597,7 +596,7 @@ mod test {
             .is_err());
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn restrictive_defaults() {
         let cors = Cors::default()
             .new_transform(test::ok_service())
@@ -612,12 +611,12 @@ mod test {
         assert_eq!(resp.status(), StatusCode::BAD_REQUEST);
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn allowed_header_try_from() {
         let _cors = Cors::default().allowed_header("Content-Type");
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn allowed_header_try_into() {
         struct ContentType;
 
@@ -632,7 +631,7 @@ mod test {
         let _cors = Cors::default().allowed_header(ContentType);
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn middleware_generic_over_body_type() {
         let srv = fn_service(|req: ServiceRequest| async move {
             Ok(req.into_response(HttpResponse::with_body(StatusCode::OK, body::None::new())))

@@ -40,7 +40,7 @@ use time::Duration;
 ///     // [...]
 /// }
 ///
-/// #[actix_rt::main]
+/// #[actix_web::main]
 /// async fn main() -> std::io::Result<()> {
 ///     let secret_key = get_secret_key();
 ///     let redis_connection_string = "127.0.0.1:6379";
@@ -73,7 +73,7 @@ use time::Duration;
 ///     // [...]
 /// }
 ///
-/// #[actix_rt::main]
+/// #[actix_web::main]
 /// async fn main() -> std::io::Result<()> {
 ///     let secret_key = get_secret_key();
 ///     let redis_connection_string = "127.0.0.1:6379";

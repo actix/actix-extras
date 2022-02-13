@@ -1,6 +1,22 @@
 # Changes
 
 ## Unreleased - 2021-xx-xx
+- Ensure that preflight responses contain a Vary header. [#224]
+
+[#224]: https://github.com/actix/actix-extras/pull/224
+
+
+## 0.6.0-beta.10 - 2022-02-07
+- Ensure that preflight responses contain a Vary header. [#224]
+
+[#224]: https://github.com/actix/actix-extras/pull/224
+
+
+## 0.6.0-beta.9 - 2022-02-07
+- Relax body type bounds on middleware impl. [#223]
+- Update `actix-web` dependency to `4.0.0-rc.1`.
+
+[#223]: https://github.com/actix/actix-extras/pull/223
 
 
 ## 0.6.0-beta.8 - 2021-12-29
@@ -8,7 +24,7 @@
 
 
 ## 0.6.0-beta.7 - 2021-12-18
-- Update `actix-web` dependency to `4.0.0.beta-15`. [#216]
+- Update `actix-web` dependency to `4.0.0-beta.15`. [#216]
 
 [#216]: https://github.com/actix/actix-extras/pull/216
 

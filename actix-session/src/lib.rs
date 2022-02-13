@@ -36,15 +36,10 @@
 //! use actix_session::{Session, SessionMiddleware, storage::RedisActorSessionStore};
 //! use actix_web::cookie::Key;
 //!
-//! // The secret key would usually be read from a configuration file/environment variables.
-//! fn get_secret_key() -> Key {
-//!     # todo!()
-//!     // [...]
-//! }
-//!
-//! #[actix_rt::main]
+//! #[actix_web::main]
 //! async fn main() -> std::io::Result<()> {
-//!     let secret_key = get_secret_key();
+//!     // The secret key would usually be read from a configuration file/environment variables.
+//!     let secret_key = Key::generate();
 //!     let redis_connection_string = "127.0.0.1:6379";
 //!     HttpServer::new(move ||
 //!             App::new()
@@ -89,7 +84,7 @@
 //! ```toml
 //! [dependencies]
 //! # ...
-//! actix-web = "4.0.0-beta.14"
+//! actix-web = "4.0.0-rc.3"
 //! actix-session = "0.6.0-beta.1"
 //! ```
 //!
@@ -254,7 +249,7 @@ pub mod test_helpers {
             let request = test::TestRequest::with_uri("/test/")
                 .cookie(cookie)
                 .to_request();
-            let body = test::read_response(&app, request).await;
+            let body = test::call_and_read_body(&app, request).await;
             assert_eq!(body, Bytes::from_static(b"counter: 100"));
         }
 

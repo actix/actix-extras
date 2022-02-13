@@ -9,6 +9,10 @@
 
 [#212]: https://github.com/actix/actix-extras/pull/212
 
+## 0.10.0-beta.6 - 2022-02-07
+- Update `actix-web` dependency to `4.0.0-rc.1`.
+
+
 ## 0.10.0-beta.5 - 2021-12-29
 - Update `actix-web` dependency to `4.0.0.beta-18`. [#218]
 - Minimum supported Rust version (MSRV) is now 1.54.
