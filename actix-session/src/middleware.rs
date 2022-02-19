@@ -595,7 +595,7 @@ fn delete_session_cookie(
     } else {
         removal_cookie.finish()
     };
-    
+
     let val = HeaderValue::from_str(&removal_cookie.to_string())
         .context("Failed to attach a session removal cookie to the outgoing response")?;
     response.headers_mut().append(SET_COOKIE, val);
