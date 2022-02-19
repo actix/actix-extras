@@ -495,6 +495,7 @@ pub mod test_helpers {
                 .find(|c| c.name() == "test-session")
                 .unwrap();
             assert_eq!(0, cookie_3.max_age().map(|t| t.whole_seconds()).unwrap());
+            assert_eq!("/", cookie_3.path().unwrap());
 
             // Step 10: GET index, including session cookie #3 in request
             //   - set-cookie actix-session should NOT be in response if invalidation is supported
