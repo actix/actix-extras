@@ -10,5 +10,5 @@
 ## Documentation & Resources
 
 - [API Documentation](https://docs.rs/actix-redis)
-- [Example Project](https://github.com/actix/examples/tree/HEAD/session/redis-session)
+- [Example Project](https://github.com/actix/examples/tree/master/auth/redis-session)
 - Minimum Supported Rust Version (MSRV): 1.54

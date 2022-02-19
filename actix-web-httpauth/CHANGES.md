@@ -100,7 +100,7 @@
 - `actix-web` dependency is used without default features now [#6]
 - `base64` dependency version was bumped to `0.10`
 
-[#6]: (https://github.com/actix/actix-web-httpauth/pull/6)
+[#6]: https://github.com/actix/actix-web-httpauth/pull/6
 
 
 ## 0.1.0 - 2018-09-08
