@@ -20,7 +20,7 @@ cookie-session = ["actix-web/secure-cookies"]
 [dependencies]
 actix-service = "2"
 actix-utils = "3"
-actix-web = { version = "4.0.0-rc.1", default_features = false, features = ["cookies"] }
+actix-web = { version = "4", default_features = false, features = ["cookies"] }
 
 derive_more = "0.99.5"
 futures-util = { version = "0.3.7", default-features = false }
@@ -30,4 +30,4 @@ serde_json = "1.0"
 time = "0.3"
 
 [dev-dependencies]
-actix-web = { version = "4.0.0-rc.2", default_features = false, features = ["macros", "cookies"] }
+actix-web = { version = "4", default_features = false, features = ["macros", "cookies"] }

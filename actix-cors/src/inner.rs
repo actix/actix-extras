@@ -360,7 +360,7 @@ mod test {
             })
             .allow_any_method()
             .allow_any_header()
-            .new_transform(test::simple_service(StatusCode::NO_CONTENT))
+            .new_transform(test::status_service(StatusCode::NO_CONTENT))
             .await
             .unwrap();
 
