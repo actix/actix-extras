@@ -45,7 +45,7 @@ tracing-opentelemetry_0_16_pkg = { package = "tracing-opentelemetry",version = "
 tracing-opentelemetry_0_17_pkg = { package = "tracing-opentelemetry",version = "0.17", optional = true }
 
 [dev-dependencies]
-actix-web = { version = "=4.0.0-rc.3", default-features = false, features = ["macros"] }
+actix-web = { version = "4", default-features = false, features = ["macros"] }
 tracing-subscriber = { version = "0.3.0", features = ["registry", "env-filter"] }
 tracing-bunyan-formatter = "0.3.0"
 tracing-log = "0.1.1"
