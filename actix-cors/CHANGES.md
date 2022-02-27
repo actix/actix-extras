@@ -1,7 +1,11 @@
 # Changes
 
 ## Unreleased - 2021-xx-xx
-- Ensure that preflight responses contain a Vary header. [#224]
+
+
+## 0.6.0 - 2022-02-25
+- Update `actix-web` dependency to 4.0.
+- Ensure that preflight responses contain a `Vary` header. [#224]
 
 [#224]: https://github.com/actix/actix-extras/pull/224
 

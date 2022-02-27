@@ -578,7 +578,7 @@ mod test {
         dev::{fn_service, Transform},
         http::{header::HeaderName, StatusCode},
         test::{self, TestRequest},
-        web::HttpResponse,
+        HttpResponse,
     };
 
     use super::*;
