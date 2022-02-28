@@ -86,6 +86,7 @@ macro_rules! root_span {
                 http.user_agent = %user_agent,
                 http.target = %$request.uri().path_and_query().map(|p| p.as_str()).unwrap_or(""),
                 http.status_code = $crate::root_span_macro::private::tracing::field::Empty,
+                otel.name = %format!("HTTP {} {}", http_method, http_route),
                 otel.kind = "server",
                 otel.status_code = $crate::root_span_macro::private::tracing::field::Empty,
                 trace_id = $crate::root_span_macro::private::tracing::field::Empty,
