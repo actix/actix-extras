@@ -240,10 +240,13 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::extractors::basic::BasicAuth;
     use crate::extractors::bearer::BearerAuth;
     use actix_service::{into_service, Service};
+    use actix_web::error::ErrorForbidden;
+    use actix_web::http::StatusCode;
     use actix_web::test::TestRequest;
-    use actix_web::{error, HttpResponse};
+    use actix_web::{error, web, App, HttpResponse};
 
     /// This is a test for https://github.com/actix/actix-extras/issues/10
     #[actix_web::test]
@@ -353,5 +356,57 @@ mod tests {
         let _res = futures_util::future::lazy(|cx| middleware.poll_ready(cx)).await;
 
         assert!(f.is_ok());
+    }
+
+    #[actix_rt::test]
+    async fn test_middleware_works_with_app() {
+        async fn validator(
+            _req: ServiceRequest,
+            _credentials: BasicAuth,
+        ) -> Result<ServiceRequest, actix_web::Error> {
+            Err(ErrorForbidden("You are not welcome!"))
+        }
+        let middleware = HttpAuthentication::basic(validator);
+
+        let srv = actix_web::test::init_service(
+            App::new()
+                .wrap(middleware)
+                .route("/", web::get().to(|| web::HttpResponse::Ok())),
+        )
+        .await;
+
+        let req = actix_web::test::TestRequest::with_uri("/")
+            .append_header(("Authorization", "Basic DontCare"))
+            .to_request();
+
+        let resp = srv.call(req).await.unwrap();
+        assert_eq!(resp.status(), StatusCode::UNAUTHORIZED);
+    }
+
+    #[actix_rt::test]
+    async fn test_middleware_works_with_scope() {
+        async fn validator(
+            _req: ServiceRequest,
+            _credentials: BasicAuth,
+        ) -> Result<ServiceRequest, actix_web::Error> {
+            Err(ErrorForbidden("You are not welcome!"))
+        }
+        let middleware = actix_web::middleware::Compat::new(HttpAuthentication::basic(validator));
+
+        let srv = actix_web::test::init_service(
+            App::new().service(
+                web::scope("/")
+                    .wrap(middleware)
+                    .route("/", web::get().to(|| web::HttpResponse::Ok())),
+            ),
+        )
+        .await;
+
+        let req = actix_web::test::TestRequest::with_uri("/")
+            .append_header(("Authorization", "Basic DontCare"))
+            .to_request();
+
+        let resp = srv.call(req).await.unwrap();
+        assert_eq!(resp.status(), StatusCode::UNAUTHORIZED);
     }
 }

@@ -19,6 +19,10 @@
   
 [#212]: https://github.com/actix/actix-extras/pull/212
 
+## 0.5.0 - 2022-03-01
+- Update `actix-web` dependency to `4`.
+
+
 ## 0.5.0-beta.8 - 2022-02-07
 - Update `actix-web` dependency to `4.0.0-rc.1`.
 

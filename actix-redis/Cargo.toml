@@ -1,6 +1,6 @@
 [package]
 name = "actix-redis"
-version = "0.10.0-beta.6"
+version = "0.10.0"
 authors = ["Nikolay Kim <fafhrd91@gmail.com>"]
 description = "Redis integration for Actix and session store for Actix Web"
 license = "MIT OR Apache-2.0"
@@ -22,14 +22,14 @@ default = ["web"]
 web = ["actix-web"]
 
 [dependencies]
-actix = { version = "0.12.0", default-features = false }
+actix = { version = "0.12", default-features = false }
 actix-rt = { version = "2.1", default-features = false }
-actix-service = "2.0.0"
-actix-tls = { version = "3.0.0-rc.2", default-features = false, features = ["connect"] }
+actix-service = "2"
+actix-tls = { version = "3", default-features = false, features = ["connect"] }
 
 log = "0.4.6"
 backoff = "0.4.0"
-derive_more = "0.99.2"
+derive_more = "0.99.5"
 futures-core = { version = "0.3.7", default-features = false }
 redis-async = { version = "0.12", default-features = false, features = ["tokio10"] }
 time = "0.3"
