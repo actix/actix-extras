@@ -52,6 +52,7 @@ use crate::storage::{
 /// Redis. Use [`RedisSessionStore`] if you need TLS support.
 ///
 /// [`RedisSessionStore`]: crate::storage::RedisSessionStore
+#[cfg_attr(docsrs, doc(cfg(feature = "redis-actor-session")))]
 pub struct RedisActorSessionStore {
     configuration: CacheConfiguration,
     addr: Addr<RedisActor>,
@@ -91,6 +92,7 @@ impl Default for CacheConfiguration {
 
 /// A fluent builder to construct a [`RedisActorSessionStore`] instance with custom
 /// configuration parameters.
+#[cfg_attr(docsrs, doc(cfg(feature = "redis-actor-session")))]
 #[must_use]
 pub struct RedisActorSessionStoreBuilder {
     connection_string: String,
