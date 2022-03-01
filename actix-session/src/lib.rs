@@ -1,35 +1,42 @@
-//! # Session management for `actix-web`
+//! Session management for Actix Web
 //!
-//! The HTTP protocol, at a first glance, is stateless: the client sends a request, the server parses its content, performs some processing and returns a response.
-//! The outcome is only influenced by the provided inputs (i.e. the request content) and whatever state the server queries while performing its processing.
+//! The HTTP protocol, at a first glance, is stateless: the client sends a request, the server
+//! parses its content, performs some processing and returns a response. The outcome is only
+//! influenced by the provided inputs (i.e. the request content) and whatever state the server
+//! queries while performing its processing.
 //!
-//! Stateless systems are easier to reason about, but they are not quite as powerful as we need to be - e.g. how do you authenticate a user?
-//! The user would be forced to authenticate **for every single request**. That is, for example, how 'Basic' Authentication works.
-//! While it may work for a machine user (i.e. an API client), it is impractical for a person - you do not want a login prompt on every single page
-//! you navigate to!
+//! Stateless systems are easier to reason about, but they are not quite as powerful as we need to
+//! be - e.g. how do you authenticate a user? The user would be forced to authenticate **for every
+//! single request**. That is, for example, how 'Basic' Authentication works. While it may work for
+//! a machine user (i.e. an API client), it is impractical for a person—you do not want a login
+//! prompt on every single page you navigate to!
 //!
-//! There is a workaround - **sessions**.
-//! Using sessions the server can attach state to a set of requests coming from the same client. They are built on top of cookies - the server
-//! sets a cookie in the HTTP response (`Set-Cookie` header), the client (e.g. the browser) will store the cookie and play it back to the server
-//! when sending new requests (using the `Cookie` header).
+//! There is a solution - **sessions**. Using sessions the server can attach state to a set of
+//! requests coming from the same client. They are built on top of cookies - the server sets a
+//! cookie in the HTTP response (`Set-Cookie` header), the client (e.g. the browser) will store the
+//! cookie and play it back to the server when sending new requests (using the `Cookie` header).
 //!
-//! We refer to the cookie used for sessions as a **session cookie**. Its content is called **session key** (or **session ID**), while the state
-//! attached to the session is referred to as **session state**.
+//! We refer to the cookie used for sessions as a **session cookie**. Its content is called
+//! **session key** (or **session ID**), while the state attached to the session is referred to as
+//! **session state**.
 //!
-//! `actix-session` provides an easy-to-use framework to manage sessions in applications built on top of `actix-web`.
-//! [`SessionMiddleware`] is the middleware underpinning the functionality provided by `actix-session`: it takes care of all the session cookie handling
-//! and instructs your **storage backend** to create/delete/update the session state based on the operations performed against the active [`Session`].
-//! `actix-session` provides three storage backends ([`storage::CookieSessionStore`], [`storage::RedisSessionStore`], [`storage::RedisActorSessionStore`])
-//! - you can provide a custom storage backend by implementing the [`SessionStore`] trait.
+//! `actix-session` provides an easy-to-use framework to manage sessions in applications built on
+//! top of Actix Web. [`SessionMiddleware`] is the middleware underpinning the functionality
+//! provided by `actix-session`; it takes care of all the session cookie handling and instructs the
+//! **storage backend** to create/delete/update the session state based on the operations performed
+//! against the active [`Session`].
+//!
+//! `actix-session` provides some built-in storage backends: ([`storage::CookieSessionStore`],
+//! [`storage::RedisSessionStore`], and [`storage::RedisActorSessionStore`]) - you can create a
+//! custom storage backend by implementing the [`SessionStore`](storage::SessionStore) trait.
 //!
 //! Further reading on sessions:
-//!
 //! - [RFC6265](https://datatracker.ietf.org/doc/html/rfc6265);
-//! - [OWASP's session management cheatsheet](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html).
+//! - [OWASP's session management cheat-sheet](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html).
 //!
-//! ## Getting started
-//!
-//! To start using sessions in your `actix-web` application you must register [`SessionMiddleware`] as a middleware on your `actix-web`'s `App`:
+//! # Getting started
+//! To start using sessions in your `actix-web` application you must register [`SessionMiddleware`]
+//! as a middleware on your `actix-web`'s `App`:
 //!
 //! ```no_run
 //! use actix_web::{web, App, HttpServer, HttpResponse, Error};
@@ -57,7 +64,8 @@
 //! }
 //! ```
 //!
-//! The session state can be accessed and modified by your request handlers using the [`Session`] extractor.
+//! The session state can be accessed and modified by your request handlers using the [`Session`]
+//! extractor.
 //!
 //! ```no_run
 //! use actix_web::Error;
@@ -77,55 +85,50 @@
 //! }
 //! ```
 //!
-//! ## How to install
+//! # Choosing A Backend
 //!
-//! Add `actix-session` to your dependencies:
+//! By default, `actix-session` does not provide any storage backend to retrieve and save the state
+//! attached to your sessions. You can enable:
+//!
+//! - a purely cookie-based "backend", [`storage::CookieSessionStore`], using the `cookie-session`
+//!   feature flag.
 //!
 //! ```toml
 //! [dependencies]
 //! # ...
-//! actix-web = "4.0.0-rc.3"
-//! actix-session = "0.6.0-beta.1"
+//! actix-session = { version = "...", features = ["cookie-session"] }
 //! ```
 //!
-//! By default, `actix-session` does not provide any storage backend to retrieve and save the state attached to your sessions.
-//! You can enable:
-//!
-//! - a cookie-based backend, [`storage::CookieSessionStore`], using the `cookie-session` feature flag.
+//! - a Redis-based backend via `actix-redis`, [`storage::RedisActorSessionStore`], using the
+//!   `redis-actor-session` feature flag.
 //!
 //! ```toml
 //! [dependencies]
 //! # ...
-//! actix-session = { version = "0.6.0-beta.1", features = ["cookie-session"] }
+//! actix-session = { version = "...", features = ["redis-actor-session"] }
 //! ```
 //!
-//! - a Redis-based backend via `actix-redis`, [`storage::RedisActorSessionStore`], using the `redis-actor-session` feature flag.
+//! - a Redis-based backend via [`redis-rs`](https://github.com/mitsuhiko/redis-rs),
+//!   [`storage::RedisSessionStore`], using the `redis-rs-session` feature flag.
 //!
 //! ```toml
 //! [dependencies]
 //! # ...
-//! actix-session = { version = "0.6.0-beta.1", features = ["redis-actor-session"] }
+//! actix-session = { version = "...", features = ["redis-rs-session"] }
 //! ```
 //!
-//! - a Redis-based backend via [`redis-rs`](https://github.com/mitsuhiko/redis-rs), [`storage::RedisSessionStore`], using the `redis-rs-session` feature flag.
+//! Add the `redis-rs-tls-session` feature flag if you want to connect to Redis using a secured
+//! connection:
 //!
 //! ```toml
 //! [dependencies]
 //! # ...
-//! actix-session = { version = "0.6.0-beta.1", features = ["redis-rs-session"] }
-//! ```
-//!
-//! Add the `redis-rs-tls-session` feature flag if you want to connect to Redis using a secured connection:
-//!
-//! ```toml
-//! [dependencies]
-//! # ...
-//! actix-session = { version = "0.6.0-beta.1", features = ["redis-rs-session", "redis-rs-tls-session"] }
+//! actix-session = { version = "0.6", features = ["redis-rs-session", "redis-rs-tls-session"] }
 //! ```
 //!
 //! You can provide a different session store by implementing the [`storage::SessionStore`] trait.
 
-#![deny(rust_2018_idioms, nonstandard_style)]
+#![deny(rust_2018_idioms, nonstandard_style, future_incompatible)]
 #![warn(missing_docs)]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 

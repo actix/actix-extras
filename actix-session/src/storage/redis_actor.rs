@@ -39,17 +39,17 @@ use time::{self, Duration};
 /// }
 /// ```
 ///
-/// ## Implementation notes
+/// # Implementation notes
 ///
-/// `RedisActorSessionStore` leverages `actix-redis`'s `RedisActor` implementation - each thread worker gets its
-/// own connection to Redis.
+/// `RedisActorSessionStore` leverages `actix-redis`'s `RedisActor` implementation - each thread
+/// worker gets its own connection to Redis.
 ///
-/// ### Limitations
+/// ## Limitations
 ///
-/// `RedisActorSessionStore` does not currently support establishing authenticated connections to Redis. Use
-/// [`RedisSessionStore`] if you need TLS support.
+/// `RedisActorSessionStore` does not currently support establishing authenticated connections to
+/// Redis. Use [`RedisSessionStore`] if you need TLS support.
 ///
-/// [`RedisSessionStore`]: crate::storage::RedisSessionStorage
+/// [`RedisSessionStore`]: crate::storage::RedisSessionStore
 pub struct RedisActorSessionStore {
     configuration: CacheConfiguration,
     addr: Addr<RedisActor>,
@@ -57,8 +57,9 @@ pub struct RedisActorSessionStore {
 
 impl RedisActorSessionStore {
     /// A fluent API to configure [`RedisActorSessionStore`].
-    /// It takes as input the only required input to create a new instance of [`RedisActorSessionStore`] - a
-    /// connection string for Redis.
+    ///
+    /// It takes as input the only required input to create a new instance of
+    /// [`RedisActorSessionStore`]—a connection string for Redis.
     pub fn builder<S: Into<String>>(connection_string: S) -> RedisActorSessionStoreBuilder {
         RedisActorSessionStoreBuilder {
             configuration: Default::default(),

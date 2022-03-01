@@ -96,8 +96,10 @@ impl RedisSessionStore {
     }
 }
 
-/// A fluent builder to construct a [`RedisActorSessionStore`] instance with custom
-/// configuration parameters.
+/// A fluent builder to construct a [`RedisActorSessionStore`] instance with custom configuration
+/// parameters.
+///
+/// [`RedisActorSessionStore`]: crate::storage::RedisActorSessionStore
 #[must_use]
 pub struct RedisSessionStoreBuilder {
     connection_string: String,
@@ -115,6 +117,8 @@ impl RedisSessionStoreBuilder {
     }
 
     /// Finalise the builder and return a [`RedisActorSessionStore`] instance.
+    ///
+    /// [`RedisActorSessionStore`]: crate::storage::RedisActorSessionStore
     pub async fn build(self) -> Result<RedisSessionStore, anyhow::Error> {
         let client = ConnectionManager::new(redis::Client::open(self.connection_string)?).await?;
         Ok(RedisSessionStore {
