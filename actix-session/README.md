@@ -1,6 +1,6 @@
 # actix-session
 
-> Session management for `actix-web` applications.
+> Session management for Actix Web applications.
 
 [![crates.io](https://img.shields.io/crates/v/actix-session?label=latest)](https://crates.io/crates/actix-session)
 [![Documentation](https://docs.rs/actix-session/badge.svg?version=0.5.0)](https://docs.rs/actix-session/0.5.0)
