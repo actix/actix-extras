@@ -358,7 +358,7 @@ mod tests {
         assert!(f.is_ok());
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn test_middleware_works_with_app() {
         async fn validator(
             _req: ServiceRequest,
@@ -371,7 +371,7 @@ mod tests {
         let srv = actix_web::test::init_service(
             App::new()
                 .wrap(middleware)
-                .route("/", web::get().to(|| web::HttpResponse::Ok())),
+                .route("/", web::get().to(HttpResponse::Ok)),
         )
         .await;
 
@@ -383,7 +383,7 @@ mod tests {
         assert_eq!(resp.status(), StatusCode::UNAUTHORIZED);
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn test_middleware_works_with_scope() {
         async fn validator(
             _req: ServiceRequest,
@@ -397,7 +397,7 @@ mod tests {
             App::new().service(
                 web::scope("/")
                     .wrap(middleware)
-                    .route("/", web::get().to(|| web::HttpResponse::Ok())),
+                    .route("/", web::get().to(HttpResponse::Ok)),
             ),
         )
         .await;
