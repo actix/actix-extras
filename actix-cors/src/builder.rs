@@ -1,6 +1,4 @@
-use std::{
-    collections::HashSet, convert::TryInto, error::Error as StdError, iter::FromIterator, rc::Rc,
-};
+use std::{collections::HashSet, convert::TryInto, iter::FromIterator, rc::Rc};
 
 use actix_utils::future::{self, Ready};
 use actix_web::{
@@ -490,8 +488,8 @@ impl<S, B> Transform<S, ServiceRequest> for Cors
 where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
     S::Future: 'static,
+
     B: MessageBody + 'static,
-    B::Error: StdError,
 {
     type Response = ServiceResponse<EitherBody<B>>;
     type Error = Error;
@@ -580,7 +578,7 @@ mod test {
         dev::{fn_service, Transform},
         http::{header::HeaderName, StatusCode},
         test::{self, TestRequest},
-        web::HttpResponse,
+        HttpResponse,
     };
 
     use super::*;
@@ -598,7 +596,7 @@ mod test {
             .is_err());
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn restrictive_defaults() {
         let cors = Cors::default()
             .new_transform(test::ok_service())
@@ -613,12 +611,12 @@ mod test {
         assert_eq!(resp.status(), StatusCode::BAD_REQUEST);
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn allowed_header_try_from() {
         let _cors = Cors::default().allowed_header("Content-Type");
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn allowed_header_try_into() {
         struct ContentType;
 
@@ -633,10 +631,10 @@ mod test {
         let _cors = Cors::default().allowed_header(ContentType);
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn middleware_generic_over_body_type() {
         let srv = fn_service(|req: ServiceRequest| async move {
-            Ok(req.into_response(HttpResponse::Ok().message_body(body::None::new())?))
+            Ok(req.into_response(HttpResponse::with_body(StatusCode::OK, body::None::new())))
         });
 
         Cors::default().new_transform(srv).await.unwrap();

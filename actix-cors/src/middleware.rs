@@ -1,20 +1,19 @@
-use std::{collections::HashSet, convert::TryInto, error::Error as StdError, rc::Rc};
+use std::{collections::HashSet, rc::Rc};
 
 use actix_utils::future::ok;
 use actix_web::{
     body::{EitherBody, MessageBody},
     dev::{Service, ServiceRequest, ServiceResponse},
-    error::{Error, Result},
     http::{
         header::{self, HeaderValue},
         Method,
     },
-    HttpResponse,
+    Error, HttpResponse, Result,
 };
 use futures_util::future::{FutureExt as _, LocalBoxFuture};
 use log::debug;
 
-use crate::{builder::intersperse_header_values, AllOrSome, Inner};
+use crate::{builder::intersperse_header_values, inner::add_vary_header, AllOrSome, Inner};
 
 /// Service wrapper for Cross-Origin Resource Sharing support.
 ///
@@ -68,7 +67,9 @@ impl<S> CorsMiddleware<S> {
             res.insert_header((header::ACCESS_CONTROL_MAX_AGE, max_age.to_string()));
         }
 
-        let res = res.finish();
+        let mut res = res.finish();
+        add_vary_header(res.headers_mut());
+
         req.into_response(res)
     }
 
@@ -117,17 +118,7 @@ impl<S> CorsMiddleware<S> {
         }
 
         if inner.vary_header {
-            let value = match res.headers_mut().get(header::VARY) {
-                Some(hdr) => {
-                    let mut val: Vec<u8> = Vec::with_capacity(hdr.len() + 8);
-                    val.extend(hdr.as_bytes());
-                    val.extend(b", Origin");
-                    val.try_into().unwrap()
-                }
-                None => HeaderValue::from_static("Origin"),
-            };
-
-            res.headers_mut().insert(header::VARY, value);
+            add_vary_header(res.headers_mut());
         }
 
         res
@@ -138,8 +129,8 @@ impl<S, B> Service<ServiceRequest> for CorsMiddleware<S>
 where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
     S::Future: 'static,
+
     B: MessageBody + 'static,
-    B::Error: StdError,
 {
     type Response = ServiceResponse<EitherBody<B>>;
     type Error = Error;
@@ -169,12 +160,7 @@ where
             async move {
                 let res = fut.await;
 
-                if origin.is_some() {
-                    Ok(Self::augment_response(&inner, res?))
-                } else {
-                    res
-                }
-                .map(|res| res.map_into_left_body())
+                Ok(Self::augment_response(&inner, res?).map_into_left_body())
             }
             .boxed_local()
         }
@@ -185,13 +171,20 @@ where
 mod tests {
     use actix_web::{
         dev::Transform,
+        middleware::Compat,
         test::{self, TestRequest},
+        App,
     };
 
     use super::*;
     use crate::Cors;
 
-    #[actix_rt::test]
+    #[test]
+    fn compat_compat() {
+        let _ = App::new().wrap(Compat::new(Cors::default()));
+    }
+
+    #[actix_web::test]
     async fn test_options_no_origin() {
         // Tests case where allowed_origins is All but there are validate functions to run incase.
         // In this case, origins are only allowed when the DNT header is sent.

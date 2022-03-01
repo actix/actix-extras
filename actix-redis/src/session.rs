@@ -363,7 +363,7 @@ impl Inner {
     fn remove_cookie<B>(&self, res: &mut ServiceResponse<B>) -> Result<(), Error> {
         let mut cookie = Cookie::named(self.name.clone());
         cookie.set_value("");
-        cookie.set_max_age(Duration::zero());
+        cookie.set_max_age(Duration::ZERO);
         cookie.set_expires(OffsetDateTime::now_utc() - Duration::days(365));
 
         let val =
@@ -447,7 +447,7 @@ mod test {
         Ok(HttpResponse::Ok().body(body))
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn test_session_workflow() {
         // Step 1:  GET index
         //   - set-cookie actix-session should NOT be in response (session data is empty)
@@ -653,7 +653,7 @@ mod test {
         );
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn test_max_age_session_only() {
         //
         // Test that removing max_age results in a session-only cookie

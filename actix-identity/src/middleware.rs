@@ -1,4 +1,4 @@
-use std::{error::Error as StdError, rc::Rc};
+use std::rc::Rc;
 
 use actix_utils::future::{ready, Ready};
 use actix_web::{
@@ -44,7 +44,6 @@ where
     S::Future: 'static,
     T: IdentityPolicy,
     B: MessageBody + 'static,
-    B::Error: StdError,
 {
     type Response = ServiceResponse<EitherBody<B>>;
     type Error = Error;
@@ -80,7 +79,6 @@ where
     S::Future: 'static,
     T: IdentityPolicy,
     B: MessageBody + 'static,
-    B::Error: StdError,
 {
     type Response = ServiceResponse<EitherBody<B>>;
     type Error = Error;
@@ -127,7 +125,7 @@ mod tests {
 
     use super::*;
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn test_borrowed_mut_error() {
         use actix_utils::future::{ok, Ready};
         use futures_util::future::lazy;
@@ -154,7 +152,7 @@ mod tests {
         let srv = crate::middleware::IdentityServiceMiddleware {
             backend: Rc::new(Ident),
             service: Rc::new(into_service(|_: dev::ServiceRequest| async move {
-                actix_rt::time::sleep(Duration::from_secs(100)).await;
+                actix_web::rt::time::sleep(Duration::from_secs(100)).await;
                 Err::<dev::ServiceResponse, _>(error::ErrorBadRequest("error"))
             })),
         };
@@ -162,11 +160,11 @@ mod tests {
         let srv2 = srv.clone();
         let req = test::TestRequest::default().to_srv_request();
 
-        actix_rt::spawn(async move {
+        actix_web::rt::spawn(async move {
             let _ = srv2.call(req).await;
         });
 
-        actix_rt::time::sleep(Duration::from_millis(50)).await;
+        actix_web::rt::time::sleep(Duration::from_millis(50)).await;
 
         let _ = lazy(|cx| srv.poll_ready(cx)).await;
     }

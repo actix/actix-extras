@@ -455,7 +455,7 @@ mod tests {
         }
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn test_identity_flow() {
         let srv = test::init_service(
             App::new()
@@ -514,7 +514,7 @@ mod tests {
         assert!(resp.headers().contains_key(header::SET_COOKIE))
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn test_identity_max_age_time() {
         let duration = Duration::days(1);
 
@@ -542,7 +542,7 @@ mod tests {
         assert_eq!(duration, c.max_age().unwrap());
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn test_http_only_same_site() {
         let srv = test::init_service(
             App::new()
@@ -610,7 +610,7 @@ mod tests {
         assert!(cookies.get(COOKIE_NAME).is_none());
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn test_identity_max_age() {
         let seconds = 60;
         let srv = test::init_service(
@@ -636,7 +636,7 @@ mod tests {
         assert_eq!(Duration::seconds(seconds as i64), c.max_age().unwrap());
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn test_identity_legacy_cookie_is_set() {
         let srv = create_identity_server(|c| c).await;
         let mut resp = test::call_service(&srv, TestRequest::with_uri("/").to_request()).await;
@@ -644,7 +644,7 @@ mod tests {
         assert_logged_in(resp, None).await;
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn test_identity_legacy_cookie_works() {
         let srv = create_identity_server(|c| c).await;
         let cookie = legacy_login_cookie(COOKIE_LOGIN);
@@ -659,7 +659,7 @@ mod tests {
         assert_logged_in(resp, Some(COOKIE_LOGIN)).await;
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn test_identity_legacy_cookie_rejected_if_visit_timestamp_needed() {
         let srv = create_identity_server(|c| c.visit_deadline(Duration::days(90))).await;
         let cookie = legacy_login_cookie(COOKIE_LOGIN);
@@ -679,7 +679,7 @@ mod tests {
         assert_logged_in(resp, None).await;
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn test_identity_legacy_cookie_rejected_if_login_timestamp_needed() {
         let srv = create_identity_server(|c| c.login_deadline(Duration::days(90))).await;
         let cookie = legacy_login_cookie(COOKIE_LOGIN);
@@ -699,7 +699,7 @@ mod tests {
         assert_logged_in(resp, None).await;
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn test_identity_cookie_rejected_if_login_timestamp_needed() {
         let srv = create_identity_server(|c| c.login_deadline(Duration::days(90))).await;
         let cookie = login_cookie(COOKIE_LOGIN, None, Some(SystemTime::now()));
@@ -719,7 +719,7 @@ mod tests {
         assert_logged_in(resp, None).await;
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn test_identity_cookie_rejected_if_visit_timestamp_needed() {
         let srv = create_identity_server(|c| c.visit_deadline(Duration::days(90))).await;
         let cookie = login_cookie(COOKIE_LOGIN, Some(SystemTime::now()), None);
@@ -739,7 +739,7 @@ mod tests {
         assert_logged_in(resp, None).await;
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn test_identity_cookie_rejected_if_login_timestamp_too_old() {
         let srv = create_identity_server(|c| c.login_deadline(Duration::days(90))).await;
         let cookie = login_cookie(
@@ -763,7 +763,7 @@ mod tests {
         assert_logged_in(resp, None).await;
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn test_identity_cookie_rejected_if_visit_timestamp_too_old() {
         let srv = create_identity_server(|c| c.visit_deadline(Duration::days(90))).await;
         let cookie = login_cookie(
@@ -787,7 +787,7 @@ mod tests {
         assert_logged_in(resp, None).await;
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn test_identity_cookie_not_updated_on_login_deadline() {
         let srv = create_identity_server(|c| c.login_deadline(Duration::days(90))).await;
         let cookie = login_cookie(COOKIE_LOGIN, Some(SystemTime::now()), None);
@@ -802,7 +802,7 @@ mod tests {
         assert_logged_in(resp, Some(COOKIE_LOGIN)).await;
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn test_identity_cookie_updated_on_visit_deadline() {
         let srv = create_identity_server(|c| {
             c.visit_deadline(Duration::days(90))

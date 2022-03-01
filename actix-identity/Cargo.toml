@@ -1,8 +1,8 @@
 [package]
 name = "actix-identity"
-version = "0.4.0-beta.5"
+version = "0.4.0"
 authors = ["Nikolay Kim <fafhrd91@gmail.com>"]
-description = "Identity service for Actix web"
+description = "Identity service for Actix Web"
 keywords = ["actix", "auth", "identity", "web", "security"]
 homepage = "https://actix.rs"
 repository = "https://github.com/actix/actix-extras.git"
@@ -14,15 +14,15 @@ name = "actix_identity"
 path = "src/lib.rs"
 
 [dependencies]
-actix-service = "2.0.0"
+actix-service = "2"
 actix-utils = "3"
-actix-web = { version = "4.0.0-beta.14", default-features = false, features = ["cookies", "secure-cookies"] }
+actix-web = { version = "4", default-features = false, features = ["cookies", "secure-cookies"] }
 
 futures-util = { version = "0.3.7", default-features = false }
-serde = "1.0"
-serde_json = "1.0"
-time = "0.2.23"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+time = "0.3"
 
 [dev-dependencies]
-actix-http = "3.0.0-beta.15"
-actix-rt = "2"
+actix-http = "3.0.0-rc.1"
+actix-web = { version = "4", default_features = false, features = ["macros", "cookies", "secure-cookies"] }

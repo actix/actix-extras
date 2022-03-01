@@ -1,6 +1,6 @@
 [package]
 name = "actix-protobuf"
-version = "0.7.0-beta.3"
+version = "0.7.0"
 edition = "2018"
 authors = [
     "kingxsp <jin.hb.zh@outlook.com>",
@@ -18,11 +18,11 @@ name = "actix_protobuf"
 path = "src/lib.rs"
 
 [dependencies]
-actix-rt = "2"
-actix-web = { version = "4.0.0-beta.14", default_features = false }
+actix-web = { version = "4", default_features = false }
 derive_more = "0.99.5"
 futures-util = { version = "0.3.7", default-features = false }
-prost = { version = "0.8", default_features = false }
+prost = { version = "0.9", default_features = false }
 
 [dev-dependencies]
-prost = { version = "0.8", default_features = false, features = ["prost-derive"] }
+actix-web = { version = "4", default_features = false, features = ["macros"] }
+prost = { version = "0.9", default_features = false, features = ["prost-derive"] }

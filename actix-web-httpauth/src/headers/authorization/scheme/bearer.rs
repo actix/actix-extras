@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 use std::fmt;
 
-use actix_web::http::header::{HeaderValue, IntoHeaderValue, InvalidHeaderValue};
+use actix_web::http::header::{HeaderValue, InvalidHeaderValue, TryIntoHeaderValue};
 use actix_web::web::{BufMut, BytesMut};
 
 use crate::headers::authorization::errors::ParseError;
@@ -73,10 +73,10 @@ impl fmt::Display for Bearer {
     }
 }
 
-impl IntoHeaderValue for Bearer {
+impl TryIntoHeaderValue for Bearer {
     type Error = InvalidHeaderValue;
 
-    fn try_into_value(self) -> Result<HeaderValue, <Self as IntoHeaderValue>::Error> {
+    fn try_into_value(self) -> Result<HeaderValue, Self::Error> {
         let mut buffer = BytesMut::with_capacity(7 + self.token.len());
         buffer.put(&b"Bearer "[..]);
         buffer.extend_from_slice(self.token.as_bytes());
@@ -87,8 +87,7 @@ impl IntoHeaderValue for Bearer {
 
 #[cfg(test)]
 mod tests {
-    use super::{Bearer, Scheme};
-    use actix_web::http::header::{HeaderValue, IntoHeaderValue};
+    use super::*;
 
     #[test]
     fn test_parse_header() {

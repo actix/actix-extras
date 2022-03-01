@@ -1,12 +1,11 @@
-use std::borrow::Cow;
-use std::fmt;
-use std::str;
+use std::{borrow::Cow, fmt, str};
 
-use actix_web::http::header::{HeaderValue, IntoHeaderValue, InvalidHeaderValue};
-use actix_web::web::{BufMut, BytesMut};
+use actix_web::{
+    http::header::{HeaderValue, InvalidHeaderValue, TryIntoHeaderValue},
+    web::{BufMut, BytesMut},
+};
 
-use crate::headers::authorization::errors::ParseError;
-use crate::headers::authorization::Scheme;
+use crate::headers::authorization::{errors::ParseError, Scheme};
 
 /// Credentials for `Basic` authentication scheme, defined in [RFC 7617](https://tools.ietf.org/html/rfc7617)
 #[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
@@ -94,10 +93,10 @@ impl fmt::Display for Basic {
     }
 }
 
-impl IntoHeaderValue for Basic {
+impl TryIntoHeaderValue for Basic {
     type Error = InvalidHeaderValue;
 
-    fn try_into_value(self) -> Result<HeaderValue, <Self as IntoHeaderValue>::Error> {
+    fn try_into_value(self) -> Result<HeaderValue, Self::Error> {
         let mut credentials = BytesMut::with_capacity(
             self.user_id.len()
                 + 1 // ':'
@@ -123,8 +122,7 @@ impl IntoHeaderValue for Basic {
 
 #[cfg(test)]
 mod tests {
-    use super::{Basic, Scheme};
-    use actix_web::http::header::{HeaderValue, IntoHeaderValue};
+    use super::*;
 
     #[test]
     fn test_parse_header() {

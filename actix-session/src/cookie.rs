@@ -1,6 +1,6 @@
 //! Cookie based sessions. See docs for [`CookieSession`].
 
-use std::{collections::HashMap, error::Error as StdError, rc::Rc};
+use std::{collections::HashMap, rc::Rc};
 
 use actix_utils::future::{ok, Ready};
 use actix_web::{
@@ -127,7 +127,7 @@ impl CookieSessionInner {
         let mut cookie = Cookie::named(self.name.clone());
         cookie.set_path(self.path.clone());
         cookie.set_value("");
-        cookie.set_max_age(Duration::zero());
+        cookie.set_max_age(Duration::ZERO);
         cookie.set_expires(OffsetDateTime::now_utc() - Duration::days(365));
 
         let val = HeaderValue::from_str(&cookie.to_string())?;
@@ -301,7 +301,6 @@ where
     S::Future: 'static,
     S::Error: 'static,
     B: MessageBody + 'static,
-    B::Error: StdError,
 {
     type Response = ServiceResponse<EitherBody<B>>;
     type Error = S::Error;
@@ -329,7 +328,6 @@ where
     S::Future: 'static,
     S::Error: 'static,
     B: MessageBody + 'static,
-    B::Error: StdError,
 {
     type Response = ServiceResponse<EitherBody<B>>;
     type Error = S::Error;
@@ -393,7 +391,7 @@ mod tests {
     use actix_web::web::Bytes;
     use actix_web::{test, web, App};
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn cookie_session() {
         let app = test::init_service(
             App::new()
@@ -413,7 +411,7 @@ mod tests {
             .any(|c| c.name() == "actix-session"));
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn private_cookie() {
         let app = test::init_service(
             App::new()
@@ -433,7 +431,7 @@ mod tests {
             .any(|c| c.name() == "actix-session"));
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn lazy_cookie() {
         let app = test::init_service(
             App::new()
@@ -459,7 +457,7 @@ mod tests {
             .any(|c| c.name() == "actix-session"));
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn cookie_session_extractor() {
         let app = test::init_service(
             App::new()
@@ -479,7 +477,7 @@ mod tests {
             .any(|c| c.name() == "actix-session"));
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn basics() {
         let app = test::init_service(
             App::new()
@@ -516,11 +514,11 @@ mod tests {
         let request = test::TestRequest::with_uri("/test/")
             .cookie(cookie)
             .to_request();
-        let body = test::read_response(&app, request).await;
+        let body = test::call_and_read_body(&app, request).await;
         assert_eq!(body, Bytes::from_static(b"counter: 100"));
     }
 
-    #[actix_rt::test]
+    #[actix_web::test]
     async fn prolong_expiration() {
         let app = test::init_service(
             App::new()
@@ -545,7 +543,7 @@ mod tests {
             .datetime()
             .expect("Expiration is a datetime");
 
-        actix_rt::time::sleep(std::time::Duration::from_secs(1)).await;
+        actix_web::rt::time::sleep(std::time::Duration::from_secs(1)).await;
 
         let request = test::TestRequest::with_uri("/test/").to_request();
         let response = app.call(request).await.unwrap();

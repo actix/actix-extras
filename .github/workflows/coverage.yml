@@ -1,3 +1,5 @@
+# disabled because `cargo tarpaulin` currently segfaults
+
 name: Coverage
 
 on:
