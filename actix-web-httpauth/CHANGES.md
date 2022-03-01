@@ -1,6 +1,9 @@
 # Changes
 
 ## Unreleased - 2021-xx-xx
+
+
+## 0.6.0 - 2022-03-01
 - Update `actix-web` dependency to `4`.
 
 
