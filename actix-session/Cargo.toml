@@ -34,7 +34,6 @@ actix-web = { version = "4", default_features = false, features = ["cookies", "s
 
 async-trait = "0.1"
 derive_more = "0.99.17"
-futures-util = { version = "0.3.7", default-features = false }
 time = "0.3"
 serde = { version = "1.0.101" }
 serde_json = { version = "1.0.40" }

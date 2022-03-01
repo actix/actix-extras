@@ -1,11 +1,14 @@
-use super::SessionKey;
-use crate::storage::interface::{LoadError, SaveError, SessionState, UpdateError};
-use crate::storage::utils::generate_session_key;
-use crate::storage::SessionStore;
-use redis::aio::ConnectionManager;
-use redis::{AsyncCommands, Value};
 use std::sync::Arc;
+
+use redis::{aio::ConnectionManager, AsyncCommands, Value};
 use time::{self, Duration};
+
+use super::SessionKey;
+use crate::storage::{
+    interface::{LoadError, SaveError, SessionState, UpdateError},
+    utils::generate_session_key,
+    SessionStore,
+};
 
 /// Use Redis as session storage backend.
 ///

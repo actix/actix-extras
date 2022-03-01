@@ -1,14 +1,15 @@
-use actix_web::{
-    dev::{Extensions, ServiceRequest, ServiceResponse},
-    HttpMessage,
-};
-use serde::{de::DeserializeOwned, Serialize};
 use std::{
     cell::{Ref, RefCell},
     collections::HashMap,
     mem,
     rc::Rc,
 };
+
+use actix_web::{
+    dev::{Extensions, ServiceRequest, ServiceResponse},
+    HttpMessage,
+};
+use serde::{de::DeserializeOwned, Serialize};
 
 /// The primary interface to access and modify session state.
 ///

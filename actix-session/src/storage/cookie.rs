@@ -1,17 +1,18 @@
-use super::SessionKey;
-use crate::storage::interface::{LoadError, SaveError, SessionState, UpdateError};
-use crate::storage::SessionStore;
 use std::convert::TryInto;
+
 use time::Duration;
 
-#[derive(Default)]
-#[non_exhaustive]
+use super::SessionKey;
+use crate::storage::{
+    interface::{LoadError, SaveError, SessionState, UpdateError},
+    SessionStore,
+};
+
 /// Use the session key, stored in the session cookie, as storage backend for the session state.
 ///
 /// ```no_run
-/// use actix_web::{web, App, HttpServer, HttpResponse, Error};
+/// use actix_web::{cookie::Key, web, App, HttpServer, HttpResponse, Error};
 /// use actix_session::{SessionMiddleware, storage::CookieSessionStore};
-/// use actix_web::cookie::Key;
 ///
 /// // The secret key would usually be read from a configuration file/environment variables.
 /// fn get_secret_key() -> Key {
@@ -44,6 +45,8 @@ use time::Duration;
 /// There is no way to invalidate a session before its natural expiry when using cookies as storage backend.
 ///
 /// [`CookieContentSecurity::Private`]: crate::CookieContentSecurity::Private
+#[derive(Default)]
+#[non_exhaustive]
 pub struct CookieSessionStore;
 
 #[async_trait::async_trait(?Send)]

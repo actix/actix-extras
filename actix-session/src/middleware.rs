@@ -1,18 +1,22 @@
-use crate::storage::{LoadError, SessionStore};
-use crate::{storage::SessionKey, Session, SessionStatus};
-use actix_web::body::MessageBody;
-use actix_web::cookie::{Cookie, CookieJar, Key, SameSite};
-use actix_web::dev::{ResponseHead, Service, ServiceRequest, ServiceResponse, Transform};
-use actix_web::http::header::{HeaderValue, SET_COOKIE};
-use actix_web::http::StatusCode;
-use actix_web::HttpResponse;
+use std::{collections::HashMap, convert::TryInto, future::Future, pin::Pin, rc::Rc};
+
+use actix_web::{
+    body::MessageBody,
+    cookie::{Cookie, CookieJar, Key, SameSite},
+    dev::{ResponseHead, Service, ServiceRequest, ServiceResponse, Transform},
+    http::{
+        header::{HeaderValue, SET_COOKIE},
+        StatusCode,
+    },
+    HttpResponse,
+};
 use anyhow::Context;
-use std::collections::HashMap;
-use std::convert::TryInto;
-use std::future::Future;
-use std::pin::Pin;
-use std::rc::Rc;
 use time::Duration;
+
+use crate::{
+    storage::{LoadError, SessionKey, SessionStore},
+    Session, SessionStatus,
+};
 
 /// A middleware for session management in `actix-web`'s applications.
 ///

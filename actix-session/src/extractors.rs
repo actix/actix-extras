@@ -1,8 +1,11 @@
+use actix_utils::future::{ready, Ready};
+use actix_web::{
+    dev::{Payload, ServiceRequest, ServiceResponse},
+    error::Error,
+    FromRequest, HttpMessage, HttpRequest,
+};
+
 use crate::Session;
-use actix_web::dev::{Payload, ServiceRequest, ServiceResponse};
-use actix_web::error::Error;
-use actix_web::{FromRequest, HttpMessage, HttpRequest};
-use futures_util::future::{ok, Ready};
 
 /// Extract a [`Session`] object from various `actix-web` types (e.g. `HttpRequest`, `ServiceRequest`, `ServiceResponse`).
 pub trait SessionExt {
@@ -54,6 +57,6 @@ impl FromRequest for Session {
 
     #[inline]
     fn from_request(req: &HttpRequest, _: &mut Payload) -> Self::Future {
-        ok(Session::get_session(&mut *req.extensions_mut()))
+        ready(Ok(Session::get_session(&mut *req.extensions_mut())))
     }
 }

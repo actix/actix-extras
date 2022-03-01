@@ -1,6 +1,8 @@
-use super::SessionKey;
 use std::collections::HashMap;
+
 use time::Duration;
+
+use super::SessionKey;
 
 pub(crate) type SessionState = HashMap<String, String>;
 

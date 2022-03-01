@@ -128,20 +128,22 @@
 //!
 //! You can provide a different session store by implementing the [`storage::SessionStore`] trait.
 
-#![deny(rust_2018_idioms, nonstandard_style, future_incompatible)]
-#![warn(missing_docs)]
+#![deny(rust_2018_idioms, nonstandard_style)]
+#![warn(future_incompatible, missing_docs)]
+#![doc(html_logo_url = "https://actix.rs/img/logo.png")]
+#![doc(html_favicon_url = "https://actix.rs/favicon.ico")]
 #![cfg_attr(docsrs, feature(doc_cfg))]
-
-pub use extractors::SessionExt;
-pub use middleware::{
-    CookieContentSecurity, SessionLength, SessionMiddleware, SessionMiddlewareBuilder,
-};
-pub use session::{Session, SessionStatus};
 
 mod extractors;
 mod middleware;
 mod session;
 pub mod storage;
+
+pub use self::extractors::SessionExt;
+pub use self::middleware::{
+    CookieContentSecurity, SessionLength, SessionMiddleware, SessionMiddlewareBuilder,
+};
+pub use self::session::{Session, SessionStatus};
 
 #[cfg(test)]
 pub mod test_helpers {

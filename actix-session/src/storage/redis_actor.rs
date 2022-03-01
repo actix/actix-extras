@@ -1,11 +1,13 @@
-use super::SessionKey;
-use crate::storage::interface::{LoadError, SaveError, SessionState, UpdateError};
-use crate::storage::utils::generate_session_key;
-use crate::storage::SessionStore;
 use actix::Addr;
-use actix_redis::{resp_array, RespValue};
-use actix_redis::{Command, RedisActor};
+use actix_redis::{resp_array, Command, RedisActor, RespValue};
 use time::{self, Duration};
+
+use super::SessionKey;
+use crate::storage::{
+    interface::{LoadError, SaveError, SessionState, UpdateError},
+    utils::generate_session_key,
+    SessionStore,
+};
 
 /// Use Redis as session storage backend.
 ///
