@@ -18,19 +18,20 @@ use crate::{
     Session, SessionStatus,
 };
 
-/// A middleware for session management in `actix-web`'s applications.
+/// A middleware for session management in Actix Web applications.
 ///
 /// [`SessionMiddleware`] takes care of a few jobs:
 ///
 /// - Instructs the session storage backend to create/update/delete/retrieve the state attached to
-/// a session according to its status and the operations that have been performed against it;
+///   a session according to its status and the operations that have been performed against it;
 /// - Set/remove a cookie, on the client side, to enable a user to be consistently associated with
-/// the same session across multiple HTTP requests.
+///   the same session across multiple HTTP requests.
 ///
 /// Use [`SessionMiddleware::new`] to initialize the session framework using the default parameters.
 /// To create a new instance of [`SessionMiddleware`] you need to provide:
 ///
-/// - an instance of the session storage backend you wish to use (i.e. an implementation of [`SessionStore]);
+/// - an instance of the session storage backend you wish to use (i.e. an implementation of
+///   [`SessionStore]);
 /// - a secret key, to sign or encrypt the content of client-side session cookie.
 ///
 /// ```no_run
@@ -64,12 +65,11 @@ use crate::{
 /// }
 /// ```
 ///
-/// If you want to customise use [`SessionMiddleware::builder`] instead of [`SessionMiddleware::new`]:
+/// If you want to customise use [`builder`](Self::builder) instead of [`new`](Self::new):
 ///
 /// ```no_run
-/// use actix_web::{web, App, HttpServer, HttpResponse, Error};
+/// use actix_web::{cookie::Key, web, App, HttpServer, HttpResponse, Error};
 /// use actix_session::{Session, SessionMiddleware, storage::RedisActorSessionStore, SessionLength};
-/// use actix_web::cookie::Key;
 ///
 /// // The secret key would usually be read from a configuration file/environment variables.
 /// fn get_secret_key() -> Key {
@@ -103,12 +103,13 @@ use crate::{
 ///
 /// ## How did we choose defaults?
 ///
-/// You should not regret adding `actix-session` to your dependencies and going to production using the default
-/// configuration. That is why, when in doubt, we opt to use the most secure option for each configuration
-/// parameter.
-/// We expose knobs to change the default to suit your needs - i.e. if you know
-/// what you are doing, we will not stop you. But being a subject-matter expert should not
-/// be a requirement to deploy a reasonably secure implementation of sessions.
+/// You should not regret adding `actix-session` to your dependencies and going to production using
+/// the default configuration. That is why, when in doubt, we opt to use the most secure option for
+/// each configuration parameter.
+///
+/// We expose knobs to change the default to suit your needs—i.e., if you know what you are doing,
+/// we will not stop you. But being a subject-matter expert should not be a requirement to deploy
+/// reasonably secure implementation of sessions.
 #[derive(Clone)]
 pub struct SessionMiddleware<Store: SessionStore> {
     storage_backend: Rc<Store>,

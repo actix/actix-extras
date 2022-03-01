@@ -35,8 +35,8 @@
 //! - [OWASP's session management cheat-sheet](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html).
 //!
 //! # Getting started
-//! To start using sessions in your `actix-web` application you must register [`SessionMiddleware`]
-//! as a middleware on your `actix-web`'s `App`:
+//! To start using sessions in your Actix Web application you must register [`SessionMiddleware`]
+//! as a middleware on your `App`:
 //!
 //! ```no_run
 //! use actix_web::{web, App, HttpServer, HttpResponse, Error};
@@ -123,7 +123,7 @@
 //! ```toml
 //! [dependencies]
 //! # ...
-//! actix-session = { version = "0.6", features = ["redis-rs-session", "redis-rs-tls-session"] }
+//! actix-session = { version = "...", features = ["redis-rs-session", "redis-rs-tls-session"] }
 //! ```
 //!
 //! You can provide a different session store by implementing the [`storage::SessionStore`] trait.
@@ -134,16 +134,16 @@
 #![doc(html_favicon_url = "https://actix.rs/favicon.ico")]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
-mod extractors;
 mod middleware;
 mod session;
+mod session_ext;
 pub mod storage;
 
-pub use self::extractors::SessionExt;
 pub use self::middleware::{
     CookieContentSecurity, SessionLength, SessionMiddleware, SessionMiddlewareBuilder,
 };
 pub use self::session::{Session, SessionStatus};
+pub use self::session_ext::SessionExt;
 
 #[cfg(test)]
 pub mod test_helpers {

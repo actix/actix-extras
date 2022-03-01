@@ -5,22 +5,23 @@ use std::{
     rc::Rc,
 };
 
+use actix_utils::future::{ready, Ready};
 use actix_web::{
-    dev::{Extensions, ServiceRequest, ServiceResponse},
-    HttpMessage,
+    dev::{Extensions, Payload, ServiceRequest, ServiceResponse},
+    error::Error,
+    FromRequest, HttpMessage, HttpRequest,
 };
 use serde::{de::DeserializeOwned, Serialize};
 
 /// The primary interface to access and modify session state.
 ///
-/// [`Session`] is an `actix-web` extractor - you can specify it as an input type for your request
-/// handlers and it will be automatically extracted from the incoming request.
+/// [`Session`] is an [extractor](#impl-FromRequest)—you can specify it as an input type for your
+/// request handlers and it will be automatically extracted from the incoming request.
 ///
 /// ```
 /// use actix_session::Session;
-/// use actix_web::Result;
 ///
-/// async fn index(session: Session) -> Result<&'static str> {
+/// async fn index(session: Session) -> actix_web::Result<&'static str> {
 ///     // access session data
 ///     if let Some(count) = session.get::<i32>("counter")? {
 ///         session.insert("counter", count + 1)?;
@@ -30,6 +31,7 @@ use serde::{de::DeserializeOwned, Serialize};
 ///
 ///     Ok("Welcome!")
 /// }
+/// # actix_web::web::to(index);
 /// ```
 ///
 /// You can also retrieve a [`Session`] object from an `HttpRequest` or a `ServiceRequest` using
@@ -217,5 +219,35 @@ impl Session {
         let inner = Rc::new(RefCell::new(SessionInner::default()));
         extensions.insert(inner.clone());
         Session(inner)
+    }
+}
+
+/// Extractor implementation for [`Session`]s.
+///
+/// # Examples
+/// ```
+/// # use actix_web::*;
+/// use actix_session::Session;
+///
+/// #[get("/")]
+/// async fn index(session: Session) -> Result<impl Responder> {
+///     // access session data
+///     if let Some(count) = session.get::<i32>("counter")? {
+///         session.insert("counter", count + 1)?;
+///     } else {
+///         session.insert("counter", 1)?;
+///     }
+///
+///     let count = session.get::<i32>("counter")?.unwrap();
+///     Ok(format!("Counter: {}", count))
+/// }
+/// ```
+impl FromRequest for Session {
+    type Error = Error;
+    type Future = Ready<Result<Session, Error>>;
+
+    #[inline]
+    fn from_request(req: &HttpRequest, _: &mut Payload) -> Self::Future {
+        ready(Ok(Session::get_session(&mut *req.extensions_mut())))
     }
 }
