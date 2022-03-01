@@ -4,7 +4,7 @@
     </nav>
     <nav class="sidebar"><a class="sidebar-logo" href="../actix_identity/index.html"><div class="logo-container"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></div>
         </a><h2 class="location"><a href="#">Crate actix_identity</a></h2><div class="sidebar-elems"><div class="block"><ul><li class="version">Version 0.4.0</li><li><a id="all-types" href="all.html">All Items</a></li></div></ul><section><div class="block"><ul><li><a href="#structs">Structs</a></li><li><a href="#traits">Traits</a></li></ul></div></section><div id="sidebar-vars" data-name="actix_identity" data-ty="mod" data-relpath=""></div><script defer src="sidebar-items.js"></script></div></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../actix_identity/index.html"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></a><nav class="sub"><div class="theme-picker hidden"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="22" height="22" alt="Pick another theme!" src="../brush.svg"></button><div id="theme-choices" role="menu"></div></div><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../wheel.svg"></a></div></form></nav></div><section id="main-content" class="content"><div class="main-heading">
-    <h1 class="fqn"><span class="in-band">Crate <a class="mod" href="#">actix_identity</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../clipboard.svg" width="19" height="18" alt="Copy item path"></button></span></h1><span class="out-of-band"><a class="srclink" href="../src/actix_identity/lib.rs.html#1-157">source</a> · <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span></div><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Opinionated request identity service for Actix Web apps.</p>
+    <h1 class="fqn"><span class="in-band">Crate <a class="mod" href="#">actix_identity</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../clipboard.svg" width="19" height="18" alt="Copy item path"></button></span></h1><span class="out-of-band"><a class="srclink" href="../src/actix_identity/lib.rs.html#1-165">source</a> · <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span></div><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Opinionated request identity service for Actix Web apps.</p>
 <p><a href="struct.IdentityService.html" title="IdentityService"><code>IdentityService</code></a> middleware can be used with different policies types to store
 identity information.</p>
 <p>A cookie based policy is provided. <a href="struct.CookieIdentityPolicy.html" title="CookieIdentityPolicy"><code>CookieIdentityPolicy</code></a> uses cookies as identity storage.</p>
@@ -35,15 +35,23 @@ identity information.</p>
     <span class="ident">HttpResponse::Ok</span>().<span class="ident">finish</span>()
 }
 
-<span class="comment">// create cookie identity backend</span>
-<span class="kw">let</span> <span class="ident">policy</span> <span class="op">=</span> <span class="ident">CookieIdentityPolicy::new</span>(<span class="kw-2">&amp;</span>[<span class="number">0</span>; <span class="number">32</span>])
-    .<span class="ident">name</span>(<span class="string">&quot;auth-cookie&quot;</span>)
-    .<span class="ident">secure</span>(<span class="bool-val">false</span>);
+<span class="attribute">#[<span class="ident">actix_web::main</span>]</span>
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">main</span>() -&gt; <span class="ident">std::io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="ident">HttpServer::new</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
+        <span class="comment">// create cookie identity backend</span>
+        <span class="kw">let</span> <span class="ident">policy</span> <span class="op">=</span> <span class="ident">CookieIdentityPolicy::new</span>(<span class="kw-2">&amp;</span>[<span class="number">0</span>; <span class="number">32</span>])
+            .<span class="ident">name</span>(<span class="string">&quot;auth-cookie&quot;</span>)
+            .<span class="ident">secure</span>(<span class="bool-val">false</span>);
 
-<span class="kw">let</span> <span class="ident">app</span> <span class="op">=</span> <span class="ident">App::new</span>()
-    <span class="comment">// wrap policy into middleware identity middleware</span>
-    .<span class="ident">wrap</span>(<span class="ident">IdentityService::new</span>(<span class="ident">policy</span>))
-    .<span class="ident">service</span>(<span class="macro">services!</span>[<span class="ident">index</span>, <span class="ident">login</span>, <span class="ident">logout</span>]);</code></pre></div>
+        <span class="ident">App::new</span>()
+            <span class="comment">// wrap policy into middleware identity middleware</span>
+            .<span class="ident">wrap</span>(<span class="ident">IdentityService::new</span>(<span class="ident">policy</span>))
+            .<span class="ident">service</span>(<span class="macro">services!</span>[<span class="ident">index</span>, <span class="ident">login</span>, <span class="ident">logout</span>])
+    })
+    .<span class="ident">bind</span>((<span class="string">&quot;0.0.0.0&quot;</span>, <span class="number">8080u16</span>))<span class="question-mark">?</span>
+    .<span class="ident">run</span>()
+    .<span class="kw">await</span>
+}</code></pre></div>
 </div></details><h2 id="structs" class="small-section-header"><a href="#structs">Structs</a></h2>
 <div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.CookieIdentityPolicy.html" title="actix_identity::CookieIdentityPolicy struct">CookieIdentityPolicy</a></div><div class="item-right docblock-short"><p>Use cookies for request identity storage.</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Identity.html" title="actix_identity::Identity struct">Identity</a></div><div class="item-right docblock-short"><p>The extractor type to obtain your identity from a request.</p>

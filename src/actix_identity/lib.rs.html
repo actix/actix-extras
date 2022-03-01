@@ -160,6 +160,14 @@
 <span id="155">155</span>
 <span id="156">156</span>
 <span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Opinionated request identity service for Actix Web apps.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! [`IdentityService`] middleware can be used with different policies types to store</span>
@@ -169,7 +177,7 @@
 <span class="doccomment">//!</span>
 <span class="doccomment">//! To access current request identity, use the [`Identity`] extractor.</span>
 <span class="doccomment">//!</span>
-<span class="doccomment">//! ```</span>
+<span class="doccomment">//! ```no_run</span>
 <span class="doccomment">//! use actix_web::*;</span>
 <span class="doccomment">//! use actix_identity::{Identity, CookieIdentityPolicy, IdentityService};</span>
 <span class="doccomment">//!</span>
@@ -195,15 +203,23 @@
 <span class="doccomment">//!     HttpResponse::Ok().finish()</span>
 <span class="doccomment">//! }</span>
 <span class="doccomment">//!</span>
-<span class="doccomment">//! // create cookie identity backend</span>
-<span class="doccomment">//! let policy = CookieIdentityPolicy::new(&amp;[0; 32])</span>
-<span class="doccomment">//!     .name(&quot;auth-cookie&quot;)</span>
-<span class="doccomment">//!     .secure(false);</span>
+<span class="doccomment">//! #[actix_web::main]</span>
+<span class="doccomment">//! async fn main() -&gt; std::io::Result&lt;()&gt; {</span>
+<span class="doccomment">//!     HttpServer::new(move || {</span>
+<span class="doccomment">//!         // create cookie identity backend</span>
+<span class="doccomment">//!         let policy = CookieIdentityPolicy::new(&amp;[0; 32])</span>
+<span class="doccomment">//!             .name(&quot;auth-cookie&quot;)</span>
+<span class="doccomment">//!             .secure(false);</span>
 <span class="doccomment">//!</span>
-<span class="doccomment">//! let app = App::new()</span>
-<span class="doccomment">//!     // wrap policy into middleware identity middleware</span>
-<span class="doccomment">//!     .wrap(IdentityService::new(policy))</span>
-<span class="doccomment">//!     .service(services![index, login, logout]);</span>
+<span class="doccomment">//!         App::new()</span>
+<span class="doccomment">//!             // wrap policy into middleware identity middleware</span>
+<span class="doccomment">//!             .wrap(IdentityService::new(policy))</span>
+<span class="doccomment">//!             .service(services![index, login, logout])</span>
+<span class="doccomment">//!     })</span>
+<span class="doccomment">//!     .bind((&quot;0.0.0.0&quot;, 8080u16))?</span>
+<span class="doccomment">//!     .run()</span>
+<span class="doccomment">//!     .await</span>
+<span class="doccomment">//! }</span>
 <span class="doccomment">//! ```</span>
 
 <span class="attribute">#![<span class="ident">deny</span>(<span class="ident">rust_2018_idioms</span>, <span class="ident">nonstandard_style</span>)]</span>
