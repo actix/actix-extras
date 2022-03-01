@@ -7,7 +7,7 @@
 //!
 //! To access current request identity, use the [`Identity`] extractor.
 //!
-//! ```
+//! ```no_run
 //! use actix_web::*;
 //! use actix_identity::{Identity, CookieIdentityPolicy, IdentityService};
 //!
@@ -33,15 +33,23 @@
 //!     HttpResponse::Ok().finish()
 //! }
 //!
-//! // create cookie identity backend
-//! let policy = CookieIdentityPolicy::new(&[0; 32])
-//!     .name("auth-cookie")
-//!     .secure(false);
+//! #[actix_web::main]
+//! async fn main() -> std::io::Result<()> {
+//!     HttpServer::new(move || {
+//!         // create cookie identity backend
+//!         let policy = CookieIdentityPolicy::new(&[0; 32])
+//!             .name("auth-cookie")
+//!             .secure(false);
 //!
-//! let app = App::new()
-//!     // wrap policy into middleware identity middleware
-//!     .wrap(IdentityService::new(policy))
-//!     .service(services![index, login, logout]);
+//!         App::new()
+//!             // wrap policy into middleware identity middleware
+//!             .wrap(IdentityService::new(policy))
+//!             .service(services![index, login, logout])
+//!     })
+//!     .bind(("0.0.0.0", 8080u16))?
+//!     .run()
+//!     .await
+//! }
 //! ```
 
 #![deny(rust_2018_idioms, nonstandard_style)]
