@@ -1,23 +1,25 @@
 # Changes
 
-## 0.6.0-beta.1 (Unreleased) - 2021-xx-xx
+## Unreleased - 2021-xx-xx
 
 ### Added
-* `SessionMiddleware`, a middleware to provide support for saving/updating/deleting session state against a pluggable storage backend (see `SessionStore` trait) [#212]
-* `CookieSessionStore`, a cookie-based backend to store session state [#212]
-* `RedisActorSessionStore`, a Redis-based backend to store session state powered by `actix-redis` [#212]
-* `RedisSessionStore`, a Redis-based backend to store session state powered by `redis-rs` [#212]
-* Add TLS support for Redis via `RedisSessionStore` [#212]
-* Implement `SessionExt` for `ServiceResponse` [#212]
+- `SessionMiddleware`, a middleware to provide support for saving/updating/deleting session state against a pluggable storage backend (see `SessionStore` trait) [#212]
+- `CookieSessionStore`, a cookie-based backend to store session state [#212]
+- `RedisActorSessionStore`, a Redis-based backend to store session state powered by `actix-redis` [#212]
+- `RedisSessionStore`, a Redis-based backend to store session state powered by `redis-rs` [#212]
+- Add TLS support for Redis via `RedisSessionStore` [#212]
+- Implement `SessionExt` for `ServiceResponse` [#212]
 
 ### Changed
-* Rename `UserSession` to `SessionExt` [#212]
+- Rename `UserSession` to `SessionExt` [#212]
+- Update `actix-web` dependency to `4`. [#212]
 
 ### Removed
-* `CookieSession` has been removed in favour of `CookieSessionStore`, a storage backend for `SessionMiddleware` [#212]
-* `Session::set_session` has been removed. Use `Session::insert` to modify the session state. [#212]
+- `CookieSession` has been removed in favour of `CookieSessionStore`, a storage backend for `SessionMiddleware` [#212]
+- `Session::set_session` has been removed. Use `Session::insert` to modify the session state. [#212]
   
 [#212]: https://github.com/actix/actix-extras/pull/212
+
 
 ## 0.5.0 - 2022-03-01
 - Update `actix-web` dependency to `4`.
@@ -33,6 +35,7 @@
 
 [#218]: https://github.com/actix/actix-extras/pull/218
 
+
 ## 0.5.0-beta.6 - 2021-12-18
 - Update `actix-web` dependency to `4.0.0.beta-15`. [#216]
 
@@ -40,12 +43,13 @@
 
 
 ## 0.5.0-beta.5 - 2021-12-12
-* Update `actix-web` dependency to `4.0.0.beta-14`. [#209]
-* Remove `UserSession` implementation for `RequestHead`. [#209]
-* A session will be created in the storage backend if and only if there is some data inside the session state. This reduces the performance impact of `SessionMiddleware` on routes that do not leverage sessions. [#207]
+- Update `actix-web` dependency to `4.0.0.beta-14`. [#209]
+- Remove `UserSession` implementation for `RequestHead`. [#209]
+- A session will be created in the storage backend if and only if there is some data inside the session state. This reduces the performance impact of `SessionMiddleware` on routes that do not leverage sessions. [#207]
 
 [#207]: https://github.com/actix/actix-extras/pull/207
 [#209]: https://github.com/actix/actix-extras/pull/209
+
 
 ## 0.5.0-beta.4 - 2021-11-22
 - No significant changes since `0.5.0-beta.3`.
