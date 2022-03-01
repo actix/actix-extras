@@ -3,6 +3,10 @@
 ## Unreleased - 2021-xx-xx
 
 
+## 0.4.0 - 2022-03-01
+- Update `actix-web` dependency to `4`.
+
+
 ## 0.4.0-beta.9 - 2022-02-07
 - Relax body type bounds on middleware impl. [#223]
 - Update `actix-web` dependency to `4.0.0-rc.1`.

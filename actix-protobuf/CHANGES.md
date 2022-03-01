@@ -4,7 +4,7 @@
 
 
 ## 0.7.0 - 2022-03-01
-- No significant changes since `0.7.0-beta.5`.
+- Update `actix-web` dependency to `4`.
 
 
 ## 0.7.0-beta.5 - 2022-02-03
