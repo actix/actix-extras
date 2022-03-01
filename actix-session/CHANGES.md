@@ -12,7 +12,6 @@
 
 ### Changed
 - Rename `UserSession` to `SessionExt` [#212]
-- Update `actix-web` dependency to `4`. [#212]
 
 ### Removed
 - `CookieSession` has been removed in favour of `CookieSessionStore`, a storage backend for `SessionMiddleware` [#212]
