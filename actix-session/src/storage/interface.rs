@@ -53,8 +53,8 @@ pub enum LoadError {
 impl std::error::Error for LoadError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
-            Self::DeserializationError(e) => Some(e.as_ref()),
-            Self::GenericError(e) => Some(e.as_ref()),
+            Self::DeserializationError(err) => Some(err.as_ref()),
+            Self::GenericError(err) => Some(err.as_ref()),
         }
     }
 }
@@ -73,8 +73,8 @@ pub enum SaveError {
 impl std::error::Error for SaveError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
-            Self::SerializationError(e) => Some(e.as_ref()),
-            Self::GenericError(e) => Some(e.as_ref()),
+            Self::SerializationError(err) => Some(err.as_ref()),
+            Self::GenericError(err) => Some(err.as_ref()),
         }
     }
 }
@@ -93,8 +93,8 @@ pub enum UpdateError {
 impl std::error::Error for UpdateError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
-            Self::SerializationError(e) => Some(e.as_ref()),
-            Self::GenericError(e) => Some(e.as_ref()),
+            Self::SerializationError(err) => Some(err.as_ref()),
+            Self::GenericError(err) => Some(err.as_ref()),
         }
     }
 }

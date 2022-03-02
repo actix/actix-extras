@@ -148,6 +148,7 @@ impl Session {
                         key,
                         std::any::type_name::<T>()
                     );
+
                     Err(val_str)
                 }
             })

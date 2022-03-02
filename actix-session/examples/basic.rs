@@ -1,6 +1,5 @@
 use actix_session::{storage::RedisActorSessionStore, Session, SessionMiddleware};
-use actix_web::cookie::Key;
-use actix_web::{middleware, web, App, Error, HttpRequest, HttpServer, Responder};
+use actix_web::{cookie::Key, middleware, web, App, Error, HttpRequest, HttpServer, Responder};
 
 /// simple handler
 async fn index(req: HttpRequest, session: Session) -> Result<impl Responder, Error> {
@@ -19,10 +18,12 @@ async fn index(req: HttpRequest, session: Session) -> Result<impl Responder, Err
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    std::env::set_var("RUST_LOG", "actix_web=info,actix_redis=info");
-    env_logger::init();
+    env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
+
     // The signing key would usually be read from a configuration file/environment variables.
     let signing_key = Key::generate();
+
+    log::info!("starting HTTP server at http://localhost:8080");
 
     HttpServer::new(move || {
         App::new()
@@ -36,7 +37,7 @@ async fn main() -> std::io::Result<()> {
             // register simple route, handle all methods
             .service(web::resource("/").to(index))
     })
-    .bind("0.0.0.0:8080")?
+    .bind(("127.0.0.1", 8080))?
     .run()
     .await
 }

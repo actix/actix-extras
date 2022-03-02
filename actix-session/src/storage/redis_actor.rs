@@ -133,13 +133,16 @@ impl SessionStore for RedisActorSessionStore {
             .map_err(LoadError::GenericError)?;
 
         match val {
-            RespValue::Error(e) => Err(LoadError::GenericError(anyhow::anyhow!(e))),
+            RespValue::Error(err) => Err(LoadError::GenericError(anyhow::anyhow!(err))),
+
             RespValue::SimpleString(s) => Ok(serde_json::from_str(&s)
                 .map_err(Into::into)
                 .map_err(LoadError::DeserializationError)?),
+
             RespValue::BulkString(s) => Ok(serde_json::from_slice(&s)
                 .map_err(Into::into)
                 .map_err(LoadError::DeserializationError)?),
+
             _ => Ok(None),
         }
     }
@@ -220,10 +223,12 @@ impl SessionStore for RedisActorSessionStore {
                 // This can happen if the session state expired between the load operation and the update
                 // operation. Unlucky, to say the least.
                 // We fall back to the `save` routine to ensure that the new key is unique.
-                self.save(session_state, ttl).await.map_err(|e| match e {
-                    SaveError::SerializationError(e) => UpdateError::SerializationError(e),
-                    SaveError::GenericError(e) => UpdateError::GenericError(e),
-                })
+                self.save(session_state, ttl)
+                    .await
+                    .map_err(|err| match err {
+                        SaveError::SerializationError(err) => UpdateError::SerializationError(err),
+                        SaveError::GenericError(err) => UpdateError::GenericError(err),
+                    })
             }
             RespValue::SimpleString(_) => Ok(session_key),
             v => Err(UpdateError::GenericError(anyhow::anyhow!(

@@ -207,10 +207,12 @@ impl SessionStore for RedisSessionStore {
                 // This can happen if the session state expired between the load operation and the update
                 // operation. Unlucky, to say the least.
                 // We fall back to the `save` routine to ensure that the new key is unique.
-                self.save(session_state, ttl).await.map_err(|e| match e {
-                    SaveError::SerializationError(e) => UpdateError::SerializationError(e),
-                    SaveError::GenericError(e) => UpdateError::GenericError(e),
-                })
+                self.save(session_state, ttl)
+                    .await
+                    .map_err(|err| match err {
+                        SaveError::SerializationError(err) => UpdateError::SerializationError(err),
+                        SaveError::GenericError(err) => UpdateError::GenericError(err),
+                    })
             }
             Value::Int(_) | Value::Okay | Value::Status(_) => Ok(session_key),
             v => Err(UpdateError::GenericError(anyhow::anyhow!(

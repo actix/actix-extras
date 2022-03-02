@@ -79,10 +79,12 @@ impl SessionStore for CookieSessionStore {
         session_state: SessionState,
         ttl: &Duration,
     ) -> Result<SessionKey, UpdateError> {
-        self.save(session_state, ttl).await.map_err(|e| match e {
-            SaveError::SerializationError(e) => UpdateError::SerializationError(e),
-            SaveError::GenericError(e) => UpdateError::GenericError(e),
-        })
+        self.save(session_state, ttl)
+            .await
+            .map_err(|err| match err {
+                SaveError::SerializationError(err) => UpdateError::SerializationError(err),
+                SaveError::GenericError(err) => UpdateError::GenericError(err),
+            })
     }
 
     async fn delete(&self, _session_key: &SessionKey) -> Result<(), anyhow::Error> {
