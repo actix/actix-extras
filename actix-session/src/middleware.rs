@@ -628,11 +628,14 @@ fn delete_session_cookie(
         .path(config.path.clone())
         .http_only(config.http_only);
 
-    let removal_cookie = if let Some(domain) = config.domain.clone() {
-        removal_cookie.domain(domain).finish()
+    let mut removal_cookie = if let Some(ref domain) = config.domain {
+        removal_cookie.domain(domain)
     } else {
-        removal_cookie.finish()
-    };
+        removal_cookie
+    }
+    .finish();
+
+    removal_cookie.make_removal();
 
     let val = HeaderValue::from_str(&removal_cookie.to_string())
         .context("Failed to attach a session removal cookie to the outgoing response")?;
