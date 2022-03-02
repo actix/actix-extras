@@ -143,12 +143,12 @@ impl SessionStore for RedisSessionStore {
             .get(cache_key)
             .await
             .map_err(Into::into)
-            .map_err(LoadError::GenericError)?;
+            .map_err(LoadError::Other)?;
         match value {
             None => Ok(None),
             Some(value) => Ok(serde_json::from_str(&value)
                 .map_err(Into::into)
-                .map_err(LoadError::DeserializationError)?),
+                .map_err(LoadError::Deserialization)?),
         }
     }
 
@@ -159,7 +159,7 @@ impl SessionStore for RedisSessionStore {
     ) -> Result<SessionKey, SaveError> {
         let body = serde_json::to_string(&session_state)
             .map_err(Into::into)
-            .map_err(SaveError::SerializationError)?;
+            .map_err(SaveError::Serialization)?;
         let session_key = generate_session_key();
         let cache_key = (self.configuration.cache_keygen)(session_key.as_ref());
         redis::cmd("SET")
@@ -174,7 +174,7 @@ impl SessionStore for RedisSessionStore {
             .query_async(&mut self.client.clone())
             .await
             .map_err(Into::into)
-            .map_err(SaveError::GenericError)?;
+            .map_err(SaveError::Other)?;
         Ok(session_key)
     }
 
@@ -186,7 +186,7 @@ impl SessionStore for RedisSessionStore {
     ) -> Result<SessionKey, UpdateError> {
         let body = serde_json::to_string(&session_state)
             .map_err(Into::into)
-            .map_err(UpdateError::SerializationError)?;
+            .map_err(UpdateError::Serialization)?;
         let cache_key = (self.configuration.cache_keygen)(session_key.as_ref());
         let v: redis::Value = redis::cmd("SET")
             .arg(&[
@@ -200,7 +200,7 @@ impl SessionStore for RedisSessionStore {
             .query_async(&mut self.client.clone())
             .await
             .map_err(Into::into)
-            .map_err(UpdateError::GenericError)?;
+            .map_err(UpdateError::Other)?;
         match v {
             Value::Nil => {
                 // The SET operation was not performed because the XX condition was not verified.
@@ -210,12 +210,12 @@ impl SessionStore for RedisSessionStore {
                 self.save(session_state, ttl)
                     .await
                     .map_err(|err| match err {
-                        SaveError::SerializationError(err) => UpdateError::SerializationError(err),
-                        SaveError::GenericError(err) => UpdateError::GenericError(err),
+                        SaveError::Serialization(err) => UpdateError::Serialization(err),
+                        SaveError::Other(err) => UpdateError::Other(err),
                     })
             }
             Value::Int(_) | Value::Okay | Value::Status(_) => Ok(session_key),
-            v => Err(UpdateError::GenericError(anyhow::anyhow!(
+            v => Err(UpdateError::Other(anyhow::anyhow!(
                 "Failed to update session state. {:?}",
                 v
             ))),
@@ -229,22 +229,19 @@ impl SessionStore for RedisSessionStore {
             .del(&cache_key)
             .await
             .map_err(Into::into)
-            .map_err(UpdateError::GenericError)?;
+            .map_err(UpdateError::Other)?;
         Ok(())
     }
 }
 
-// GitHub Actions do not support service containers (i.e. Redis, in our case) on
-// non-Linux runners, therefore this test will fail in CI due to connection issues on those platform
 #[cfg(test)]
-#[cfg(target_os = "linux")]
 mod test {
-    use crate::storage::redis_rs::RedisSessionStore;
-    use crate::storage::utils::generate_session_key;
-    use crate::storage::{LoadError, SessionStore};
-    use crate::test_helpers::acceptance_test_suite;
-    use redis::AsyncCommands;
     use std::collections::HashMap;
+
+    use redis::AsyncCommands;
+
+    use super::*;
+    use crate::test_helpers::acceptance_test_suite;
 
     async fn redis_store() -> RedisSessionStore {
         RedisSessionStore::new("redis://127.0.0.1:6379")
@@ -277,7 +274,7 @@ mod test {
             .unwrap();
         assert!(matches!(
             store.load(&session_key).await.unwrap_err(),
-            LoadError::DeserializationError(_),
+            LoadError::Deserialization(_),
         ));
     }
 

@@ -1,5 +1,7 @@
 use std::convert::TryFrom;
 
+use derive_more::{Display, From};
+
 /// A session key, the string stored in a client-side cookie to associate a user
 /// with its session state on the backend.
 ///
@@ -16,7 +18,7 @@ use std::convert::TryFrom;
 /// let session_key: Result<SessionKey, _> = key.try_into();
 /// assert!(session_key.is_err());
 /// ```
-#[derive(PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct SessionKey(String);
 
 impl TryFrom<String> for SessionKey {
@@ -29,6 +31,7 @@ impl TryFrom<String> for SessionKey {
             )
             .into());
         }
+
         Ok(SessionKey(v))
     }
 }
@@ -45,7 +48,7 @@ impl From<SessionKey> for String {
     }
 }
 
-#[derive(Debug, derive_more::Display, derive_more::From)]
+#[derive(Debug, Display, From)]
 #[display(fmt = "The provided string is not a valid session key")]
 pub struct InvalidSessionKeyError(anyhow::Error);
 

@@ -79,8 +79,8 @@ impl Session {
     ///
     /// It returns an error if it fails to deserialize as `T` the JSON value associated with `key`.
     pub fn get<T: DeserializeOwned>(&self, key: &str) -> Result<Option<T>, serde_json::Error> {
-        if let Some(s) = self.0.borrow().state.get(key) {
-            Ok(Some(serde_json::from_str(s)?))
+        if let Some(val_str) = self.0.borrow().state.get(key) {
+            Ok(Some(serde_json::from_str(val_str)?))
         } else {
             Ok(None)
         }
@@ -136,7 +136,7 @@ impl Session {
 
     /// Remove value from the session and deserialize.
     ///
-    /// Returns None if key was not present in session. Returns T if deserialization succeeds,
+    /// Returns None if key was not present in session. Returns `T` if deserialization succeeds,
     /// otherwise returns un-deserialized JSON string.
     pub fn remove_as<T: DeserializeOwned>(&self, key: &str) -> Option<Result<T, String>> {
         self.remove(key)
@@ -217,8 +217,10 @@ impl Session {
         if let Some(s_impl) = extensions.get::<Rc<RefCell<SessionInner>>>() {
             return Session(Rc::clone(s_impl));
         }
+
         let inner = Rc::new(RefCell::new(SessionInner::default()));
         extensions.insert(inner.clone());
+
         Session(inner)
     }
 }

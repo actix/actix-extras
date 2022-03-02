@@ -184,9 +184,9 @@ pub enum SessionLength {
     },
 }
 
-#[derive(Debug, Clone, Copy)]
 /// Used by [`SessionMiddlewareBuilder::cookie_content_security`] to determine how to secure
 /// the content of the session cookie.
+#[derive(Debug, Clone, Copy)]
 pub enum CookieContentSecurity {
     /// `CookieContentSecurity::Private` translates into an encrypted cookie content. The end-user/
     /// JavaScript cannot tamper with its content nor decode it (i.e., it preserves confidentiality,
@@ -294,6 +294,7 @@ impl<Store: SessionStore> SessionMiddlewareBuilder<Store> {
                 self.configuration.session.state_ttl = ttl;
             }
         }
+
         self
     }
 
@@ -565,7 +566,7 @@ async fn load_session_state<Store: SessionStore>(
             }
 
             Err(err) => match err {
-                LoadError::DeserializationError(err) => {
+                LoadError::Deserialization(err) => {
                     tracing::warn!(
                         error.message = %err,
                         error.cause_chain = ?err,
@@ -575,7 +576,7 @@ async fn load_session_state<Store: SessionStore>(
                     Ok((Some(session_key), HashMap::new()))
                 }
 
-                LoadError::GenericError(err) => Err(e500(err)),
+                LoadError::Other(err) => Err(e500(err)),
             },
         }
     } else {

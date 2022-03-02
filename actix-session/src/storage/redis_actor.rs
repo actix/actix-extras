@@ -128,20 +128,20 @@ impl SessionStore for RedisActorSessionStore {
             .send(Command(resp_array!["GET", cache_key]))
             .await
             .map_err(Into::into)
-            .map_err(LoadError::GenericError)?
+            .map_err(LoadError::Other)?
             .map_err(Into::into)
-            .map_err(LoadError::GenericError)?;
+            .map_err(LoadError::Other)?;
 
         match val {
-            RespValue::Error(err) => Err(LoadError::GenericError(anyhow::anyhow!(err))),
+            RespValue::Error(err) => Err(LoadError::Other(anyhow::anyhow!(err))),
 
             RespValue::SimpleString(s) => Ok(serde_json::from_str(&s)
                 .map_err(Into::into)
-                .map_err(LoadError::DeserializationError)?),
+                .map_err(LoadError::Deserialization)?),
 
             RespValue::BulkString(s) => Ok(serde_json::from_slice(&s)
                 .map_err(Into::into)
-                .map_err(LoadError::DeserializationError)?),
+                .map_err(LoadError::Deserialization)?),
 
             _ => Ok(None),
         }
@@ -154,7 +154,7 @@ impl SessionStore for RedisActorSessionStore {
     ) -> Result<SessionKey, SaveError> {
         let body = serde_json::to_string(&session_state)
             .map_err(Into::into)
-            .map_err(SaveError::SerializationError)?;
+            .map_err(SaveError::Serialization)?;
         let session_key = generate_session_key();
         let cache_key = (self.configuration.cache_keygen)(session_key.as_ref());
 
@@ -173,15 +173,15 @@ impl SessionStore for RedisActorSessionStore {
             .send(cmd)
             .await
             .map_err(Into::into)
-            .map_err(SaveError::GenericError)?
+            .map_err(SaveError::Other)?
             .map_err(Into::into)
-            .map_err(SaveError::GenericError)?;
+            .map_err(SaveError::Other)?;
         match result {
             RespValue::SimpleString(_) => Ok(session_key),
-            RespValue::Nil => Err(SaveError::GenericError(anyhow::anyhow!(
+            RespValue::Nil => Err(SaveError::Other(anyhow::anyhow!(
                 "Failed to save session state. A record with the same key already existed in Redis"
             ))),
-            e => Err(SaveError::GenericError(anyhow::anyhow!(
+            e => Err(SaveError::Other(anyhow::anyhow!(
                 "Failed to save session state. {:?}",
                 e
             ))),
@@ -196,7 +196,7 @@ impl SessionStore for RedisActorSessionStore {
     ) -> Result<SessionKey, UpdateError> {
         let body = serde_json::to_string(&session_state)
             .map_err(Into::into)
-            .map_err(UpdateError::SerializationError)?;
+            .map_err(UpdateError::Serialization)?;
         let cache_key = (self.configuration.cache_keygen)(session_key.as_ref());
 
         let cmd = Command(resp_array![
@@ -214,9 +214,10 @@ impl SessionStore for RedisActorSessionStore {
             .send(cmd)
             .await
             .map_err(Into::into)
-            .map_err(UpdateError::GenericError)?
+            .map_err(UpdateError::Other)?
             .map_err(Into::into)
-            .map_err(UpdateError::GenericError)?;
+            .map_err(UpdateError::Other)?;
+
         match result {
             RespValue::Nil => {
                 // The SET operation was not performed because the XX condition was not verified.
@@ -226,12 +227,12 @@ impl SessionStore for RedisActorSessionStore {
                 self.save(session_state, ttl)
                     .await
                     .map_err(|err| match err {
-                        SaveError::SerializationError(err) => UpdateError::SerializationError(err),
-                        SaveError::GenericError(err) => UpdateError::GenericError(err),
+                        SaveError::Serialization(err) => UpdateError::Serialization(err),
+                        SaveError::Other(err) => UpdateError::Other(err),
                     })
             }
             RespValue::SimpleString(_) => Ok(session_key),
-            v => Err(UpdateError::GenericError(anyhow::anyhow!(
+            v => Err(UpdateError::Other(anyhow::anyhow!(
                 "Failed to update session state. {:?}",
                 v
             ))),
@@ -257,15 +258,12 @@ impl SessionStore for RedisActorSessionStore {
     }
 }
 
-// GitHub Actions do not support service containers (i.e. Redis, in our case) on
-// non-Linux runners, therefore this test will fail in CI due to connection issues on those platform
 #[cfg(test)]
-#[cfg(target_os = "linux")]
 mod test {
-    use crate::storage::utils::generate_session_key;
-    use crate::storage::{RedisActorSessionStore, SessionStore};
-    use crate::test_helpers::acceptance_test_suite;
     use std::collections::HashMap;
+
+    use super::*;
+    use crate::test_helpers::acceptance_test_suite;
 
     fn redis_actor_store() -> RedisActorSessionStore {
         RedisActorSessionStore::new("127.0.0.1:6379")

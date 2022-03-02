@@ -33,7 +33,7 @@ use crate::storage::{
 /// }
 /// ```
 ///
-/// ## Limitations
+/// # Limitations
 ///
 /// Cookies are subject to size limits - we require session keys to be shorter than 4096 bytes. This translates
 /// into a limit on the maximum size of the session state when using cookies as storage backend.
@@ -56,7 +56,7 @@ impl SessionStore for CookieSessionStore {
         serde_json::from_str(session_key.as_ref())
             .map(Option::Some)
             .map_err(anyhow::Error::new)
-            .map_err(LoadError::DeserializationError)
+            .map_err(LoadError::Deserialization)
     }
 
     async fn save(
@@ -66,11 +66,12 @@ impl SessionStore for CookieSessionStore {
     ) -> Result<SessionKey, SaveError> {
         let session_key = serde_json::to_string(&session_state)
             .map_err(anyhow::Error::new)
-            .map_err(SaveError::SerializationError)?;
+            .map_err(SaveError::Serialization)?;
+
         Ok(session_key
             .try_into()
             .map_err(Into::into)
-            .map_err(SaveError::GenericError)?)
+            .map_err(SaveError::Other)?)
     }
 
     async fn update(
@@ -82,8 +83,8 @@ impl SessionStore for CookieSessionStore {
         self.save(session_state, ttl)
             .await
             .map_err(|err| match err {
-                SaveError::SerializationError(err) => UpdateError::SerializationError(err),
-                SaveError::GenericError(err) => UpdateError::GenericError(err),
+                SaveError::Serialization(err) => UpdateError::Serialization(err),
+                SaveError::Other(err) => UpdateError::Other(err),
             })
     }
 
@@ -94,10 +95,8 @@ impl SessionStore for CookieSessionStore {
 
 #[cfg(test)]
 mod tests {
-    use super::CookieSessionStore;
-    use crate::storage::utils::generate_session_key;
-    use crate::storage::{LoadError, SessionStore};
-    use crate::test_helpers::acceptance_test_suite;
+    use super::*;
+    use crate::{storage::utils::generate_session_key, test_helpers::acceptance_test_suite};
 
     #[actix_web::test]
     async fn test_session_workflow() {
@@ -110,7 +109,7 @@ mod tests {
         let session_key = generate_session_key();
         assert!(matches!(
             store.load(&session_key).await.unwrap_err(),
-            LoadError::DeserializationError(_),
+            LoadError::Deserialization(_),
         ));
     }
 }

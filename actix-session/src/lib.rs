@@ -148,11 +148,9 @@ pub use self::session_ext::SessionExt;
 #[cfg(test)]
 pub mod test_helpers {
     use actix_web::cookie::Key;
-    use rand::distributions::Alphanumeric;
-    use rand::{thread_rng, Rng};
+    use rand::{distributions::Alphanumeric, thread_rng, Rng};
 
-    use crate::storage::SessionStore;
-    use crate::CookieContentSecurity;
+    use crate::{storage::SessionStore, CookieContentSecurity};
 
     /// Generate a random cookie signing/encryption key.
     pub fn key() -> Key {
@@ -194,21 +192,20 @@ pub mod test_helpers {
     }
 
     mod acceptance_tests {
-        use actix_web::web::Bytes;
-        use actix_web::{dev::Service, test, App};
         use actix_web::{
-            middleware, web,
-            web::{get, post, resource},
-            HttpResponse, Result,
+            dev::Service,
+            middleware, test,
+            web::{self, get, post, resource, Bytes},
+            App, HttpResponse, Result,
         };
         use serde::{Deserialize, Serialize};
         use serde_json::json;
         use time::Duration;
 
-        use crate::middleware::SessionLength;
-        use crate::storage::SessionStore;
-        use crate::test_helpers::key;
-        use crate::{CookieContentSecurity, Session, SessionMiddleware};
+        use crate::{
+            middleware::SessionLength, storage::SessionStore, test_helpers::key,
+            CookieContentSecurity, Session, SessionMiddleware,
+        };
 
         pub(super) async fn basic_workflow<F, Store>(
             store_builder: F,
