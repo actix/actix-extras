@@ -41,24 +41,23 @@ use crate::storage::{
 /// }
 /// ```
 ///
-/// ## TLS support
-///
+/// # TLS support
 /// Add the `redis-rs-tls-session` feature flag to enable TLS support. You can then establish a TLS
 /// connection to Redis using the `rediss://` URL scheme:
 ///
 /// ```no_run
 /// use actix_session::{storage::RedisSessionStore};
 ///
-/// # #[actix_web::main]
-/// # async fn main() {
+/// # actix_web::rt::System::new().block_on(async {
 /// let redis_connection_string = "rediss://127.0.0.1:6379";
 /// let store = RedisSessionStore::new(redis_connection_string).await.unwrap();
-/// # }
+/// # })
 /// ```
 ///
-/// ## Implementation notes
+/// # Implementation notes
+/// `RedisSessionStore` leverages [`redis-rs`] as Redis client.
 ///
-/// `RedisSessionStore` leverages [`redis-rs`](https://github.com/mitsuhiko/redis-rs) as Redis client.
+/// [`redis-rs`]: https://github.com/mitsuhiko/redis-rs
 #[cfg_attr(docsrs, doc(cfg(feature = "redis-rs-session")))]
 #[derive(Clone)]
 pub struct RedisSessionStore {
@@ -74,7 +73,7 @@ struct CacheConfiguration {
 impl Default for CacheConfiguration {
     fn default() -> Self {
         Self {
-            cache_keygen: Arc::new(|s| s.to_owned()),
+            cache_keygen: Arc::new(str::to_owned),
         }
     }
 }
@@ -85,7 +84,7 @@ impl RedisSessionStore {
     /// connection string for Redis.
     pub fn builder<S: Into<String>>(connection_string: S) -> RedisSessionStoreBuilder {
         RedisSessionStoreBuilder {
-            configuration: Default::default(),
+            configuration: CacheConfiguration::default(),
             connection_string: connection_string.into(),
         }
     }
@@ -144,6 +143,7 @@ impl SessionStore for RedisSessionStore {
             .await
             .map_err(Into::into)
             .map_err(LoadError::Other)?;
+
         match value {
             None => Ok(None),
             Some(value) => Ok(serde_json::from_str(&value)
@@ -162,19 +162,20 @@ impl SessionStore for RedisSessionStore {
             .map_err(SaveError::Serialization)?;
         let session_key = generate_session_key();
         let cache_key = (self.configuration.cache_keygen)(session_key.as_ref());
+
         redis::cmd("SET")
             .arg(&[
                 &cache_key,
                 &body,
-                // NX -- Only set the key if it does not already exist.
-                "NX",
-                "EX",
+                "NX", // NX: only set the key if it does not already exist
+                "EX", // EX: set expiry
                 &format!("{}", ttl.whole_seconds()),
             ])
             .query_async(&mut self.client.clone())
             .await
             .map_err(Into::into)
             .map_err(SaveError::Other)?;
+
         Ok(session_key)
     }
 
@@ -187,26 +188,28 @@ impl SessionStore for RedisSessionStore {
         let body = serde_json::to_string(&session_state)
             .map_err(Into::into)
             .map_err(UpdateError::Serialization)?;
+
         let cache_key = (self.configuration.cache_keygen)(session_key.as_ref());
+
         let v: redis::Value = redis::cmd("SET")
             .arg(&[
                 &cache_key,
                 &body,
-                // XX -- Only set the key if it already exist.
-                "XX",
-                "EX",
+                "XX", // XX: Only set the key if it already exist.
+                "EX", // EX: set expiry
                 &format!("{}", ttl.whole_seconds()),
             ])
             .query_async(&mut self.client.clone())
             .await
             .map_err(Into::into)
             .map_err(UpdateError::Other)?;
+
         match v {
             Value::Nil => {
                 // The SET operation was not performed because the XX condition was not verified.
-                // This can happen if the session state expired between the load operation and the update
-                // operation. Unlucky, to say the least.
-                // We fall back to the `save` routine to ensure that the new key is unique.
+                // This can happen if the session state expired between the load operation and the
+                // update operation. Unlucky, to say the least. We fall back to the `save` routine
+                // to ensure that the new key is unique.
                 self.save(session_state, ttl)
                     .await
                     .map_err(|err| match err {
@@ -215,21 +218,23 @@ impl SessionStore for RedisSessionStore {
                     })
             }
             Value::Int(_) | Value::Okay | Value::Status(_) => Ok(session_key),
-            v => Err(UpdateError::Other(anyhow::anyhow!(
+            val => Err(UpdateError::Other(anyhow::anyhow!(
                 "Failed to update session state. {:?}",
-                v
+                val
             ))),
         }
     }
 
     async fn delete(&self, session_key: &SessionKey) -> Result<(), anyhow::Error> {
         let cache_key = (self.configuration.cache_keygen)(session_key.as_ref());
+
         self.client
             .clone()
             .del(&cache_key)
             .await
             .map_err(Into::into)
             .map_err(UpdateError::Other)?;
+
         Ok(())
     }
 }

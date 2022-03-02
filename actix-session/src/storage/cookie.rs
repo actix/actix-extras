@@ -34,15 +34,16 @@ use crate::storage::{
 /// ```
 ///
 /// # Limitations
+/// Cookies are subject to size limits - we require session keys to be shorter than 4096 bytes. This
+/// translates into a limit on the maximum size of the session state when using cookies as storage
+/// backend.
 ///
-/// Cookies are subject to size limits - we require session keys to be shorter than 4096 bytes. This translates
-/// into a limit on the maximum size of the session state when using cookies as storage backend.
+/// The session cookie can always be inspected by end users via the developer tools exposed by their
+/// browsers. We strongly recommend setting the policy to [`CookieContentSecurity::Private`] when
+/// using cookies as storage backend.
 ///
-/// The session cookie can always be inspected by end users via the developer tools exposed by their browsers.
-/// We strongly recommend setting the content security policy to [`CookieContentSecurity::Private`] when using
-/// cookies as storage backend.
-///
-/// There is no way to invalidate a session before its natural expiry when using cookies as storage backend.
+/// There is no way to invalidate a session before its natural expiry when using cookies as the
+/// storage backend.
 ///
 /// [`CookieContentSecurity::Private`]: crate::CookieContentSecurity::Private
 #[cfg_attr(docsrs, doc(cfg(feature = "cookie-session")))]
@@ -54,7 +55,7 @@ pub struct CookieSessionStore;
 impl SessionStore for CookieSessionStore {
     async fn load(&self, session_key: &SessionKey) -> Result<Option<SessionState>, LoadError> {
         serde_json::from_str(session_key.as_ref())
-            .map(Option::Some)
+            .map(Some)
             .map_err(anyhow::Error::new)
             .map_err(LoadError::Deserialization)
     }

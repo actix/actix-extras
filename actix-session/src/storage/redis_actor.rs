@@ -65,7 +65,7 @@ impl RedisActorSessionStore {
     /// [`RedisActorSessionStore`]—a connection string for Redis.
     pub fn builder<S: Into<String>>(connection_string: S) -> RedisActorSessionStoreBuilder {
         RedisActorSessionStoreBuilder {
-            configuration: Default::default(),
+            configuration: CacheConfiguration::default(),
             connection_string: connection_string.into(),
         }
     }
@@ -85,13 +85,13 @@ struct CacheConfiguration {
 impl Default for CacheConfiguration {
     fn default() -> Self {
         Self {
-            cache_keygen: Box::new(|s| s.to_owned()),
+            cache_keygen: Box::new(str::to_owned),
         }
     }
 }
 
-/// A fluent builder to construct a [`RedisActorSessionStore`] instance with custom
-/// configuration parameters.
+/// A fluent builder to construct a [`RedisActorSessionStore`] instance with custom configuration
+/// parameters.
 #[cfg_attr(docsrs, doc(cfg(feature = "redis-actor-session")))]
 #[must_use]
 pub struct RedisActorSessionStoreBuilder {
@@ -162,10 +162,9 @@ impl SessionStore for RedisActorSessionStore {
             "SET",
             cache_key,
             body,
-            // NX -- Only set the key if it does not already exist.
-            "NX",
-            "EX",
-            &format!("{}", ttl.whole_seconds())
+            "NX", // NX: only set the key if it does not already exist
+            "EX", // EX: set expiry
+            format!("{}", ttl.whole_seconds())
         ]);
 
         let result = self
@@ -176,14 +175,15 @@ impl SessionStore for RedisActorSessionStore {
             .map_err(SaveError::Other)?
             .map_err(Into::into)
             .map_err(SaveError::Other)?;
+
         match result {
             RespValue::SimpleString(_) => Ok(session_key),
             RespValue::Nil => Err(SaveError::Other(anyhow::anyhow!(
                 "Failed to save session state. A record with the same key already existed in Redis"
             ))),
-            e => Err(SaveError::Other(anyhow::anyhow!(
+            err => Err(SaveError::Other(anyhow::anyhow!(
                 "Failed to save session state. {:?}",
-                e
+                err
             ))),
         }
     }
@@ -203,10 +203,9 @@ impl SessionStore for RedisActorSessionStore {
             "SET",
             cache_key,
             body,
-            // XX -- Only set the key if it already exist.
-            "XX",
-            "EX",
-            &format!("{}", ttl.whole_seconds())
+            "XX", // XX: Only set the key if it already exist.
+            "EX", // EX: set expiry
+            format!("{}", ttl.whole_seconds())
         ]);
 
         let result = self
@@ -221,9 +220,9 @@ impl SessionStore for RedisActorSessionStore {
         match result {
             RespValue::Nil => {
                 // The SET operation was not performed because the XX condition was not verified.
-                // This can happen if the session state expired between the load operation and the update
-                // operation. Unlucky, to say the least.
-                // We fall back to the `save` routine to ensure that the new key is unique.
+                // This can happen if the session state expired between the load operation and the
+                // update operation. Unlucky, to say the least. We fall back to the `save` routine
+                // to ensure that the new key is unique.
                 self.save(session_state, ttl)
                     .await
                     .map_err(|err| match err {
@@ -232,9 +231,9 @@ impl SessionStore for RedisActorSessionStore {
                     })
             }
             RespValue::SimpleString(_) => Ok(session_key),
-            v => Err(UpdateError::Other(anyhow::anyhow!(
+            val => Err(UpdateError::Other(anyhow::anyhow!(
                 "Failed to update session state. {:?}",
-                v
+                val
             ))),
         }
     }
@@ -250,9 +249,9 @@ impl SessionStore for RedisActorSessionStore {
         match res {
             // Redis returns the number of deleted records
             Ok(RespValue::Integer(x)) if x > 0 => Ok(()),
-            v => Err(anyhow::anyhow!(
+            val => Err(anyhow::anyhow!(
                 "Failed to remove session from cache. {:?}",
-                v
+                val
             )),
         }
     }

@@ -41,7 +41,7 @@ use serde::{de::DeserializeOwned, Serialize};
 pub struct Session(Rc<RefCell<SessionInner>>);
 
 /// Status of a [`Session`].
-#[derive(PartialEq, Clone, Debug)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SessionStatus {
     /// Session state has been updated - the changes will have to be persisted to the backend.
     Changed,
