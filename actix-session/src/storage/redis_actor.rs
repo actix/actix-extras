@@ -248,7 +248,7 @@ impl SessionStore for RedisActorSessionStore {
 
         match res {
             // Redis returns the number of deleted records
-            Ok(RespValue::Integer(x)) if x > 0 => Ok(()),
+            Ok(RespValue::Integer(_)) => Ok(()),
             val => Err(anyhow::anyhow!(
                 "Failed to remove session from cache. {:?}",
                 val
