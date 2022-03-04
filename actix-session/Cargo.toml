@@ -39,7 +39,7 @@ rand = { version = "0.8", optional = true }
 serde = { version = "1" }
 serde_json = { version = "1" }
 time = "0.3"
-tracing = { version = "0.1.30", default-features = false }
+tracing = { version = "0.1.30", default-features = false, features = ["log"] }
 
 # redis-actor-session
 actix = { version = "0.12.0", default-features = false, optional = true }
