@@ -361,9 +361,8 @@ impl Cors {
         self
     }
 
-    /// Set a maximum time (in seconds) for which this CORS request maybe cached.
-    /// This value is set as the `Access-Control-Max-Age` header as specified in
-    /// the [Fetch Standard CORS protocol].
+    /// Set a maximum time (in seconds) for which this CORS request may be cached. This value is set
+    /// as the `Access-Control-Max-Age` header as specified in the [Fetch Standard CORS protocol].
     ///
     /// Pass a number (of seconds) or use None to disable sending max age header.
     ///
