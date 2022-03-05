@@ -33,13 +33,7 @@
 <span id="28">28</span>
 <span id="29">29</span>
 <span id="30">30</span>
-<span id="31">31</span>
-<span id="32">32</span>
-<span id="33">33</span>
-<span id="34">34</span>
-<span id="35">35</span>
-<span id="36">36</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Redis integration for Actix and session store for Actix Web.</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Redis integration for `actix`.</span>
 
 <span class="attribute">#![<span class="ident">deny</span>(<span class="ident">rust_2018_idioms</span>, <span class="ident">nonstandard_style</span>)]</span>
 <span class="attribute">#![<span class="ident">warn</span>(<span class="ident">future_incompatible</span>)]</span>
@@ -49,14 +43,7 @@
 
 <span class="kw">use</span> <span class="ident">derive_more</span>::{<span class="ident">Display</span>, <span class="ident">Error</span>, <span class="ident">From</span>};
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;web&quot;</span>)]</span>
-<span class="kw">mod</span> <span class="ident">session</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;web&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">actix_web::cookie::SameSite</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;web&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">session::RedisSession</span>;
-
-<span class="doccomment">/// General purpose actix redis error</span>
+<span class="doccomment">/// General purpose `actix-redis` error.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Display</span>, <span class="ident">Error</span>, <span class="ident">From</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span> {
     <span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;Redis error {}&quot;</span>, <span class="ident">_0</span>)]</span>
@@ -75,6 +62,7 @@
 <span class="comment">// re-export</span>
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">redis_async::error::Error</span> <span class="kw">as</span> <span class="ident">RespError</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">redis_async::resp::RespValue</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">redis_async::resp_array</span>;
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_redis" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (10913c000 2022-03-03)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_redis" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (9fcbc3205 2022-03-04)" ></div>
 </body></html>

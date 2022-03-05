@@ -1,9 +1,11 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `actix-session/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script src="../../crates.js"></script><script defer src="../../main.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script>
-    <noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../actix_session/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
+    <noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" href="https://actix.rs/favicon.ico"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../actix_session/index.html"><div class="logo-container"><img src="https://actix.rs/img/logo.png" alt="logo"></div>
         </a><h2 class="location"></h2>
     </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../actix_session/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../actix_session/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><div class="theme-picker hidden"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="22" height="22" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
+    <nav class="sidebar"><a class="sidebar-logo" href="../../actix_session/index.html"><div class="logo-container">
+                    <img src="https://actix.rs/img/logo.png" alt="logo"></div>
+        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../actix_session/index.html">
+                        <img src="https://actix.rs/img/logo.png" alt="logo"></a><nav class="sub"><div class="theme-picker hidden"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="22" height="22" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -383,26 +385,285 @@
 <span id="378">378</span>
 <span id="379">379</span>
 <span id="380">380</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Sessions for Actix Web.</span>
+<span id="381">381</span>
+<span id="382">382</span>
+<span id="383">383</span>
+<span id="384">384</span>
+<span id="385">385</span>
+<span id="386">386</span>
+<span id="387">387</span>
+<span id="388">388</span>
+<span id="389">389</span>
+<span id="390">390</span>
+<span id="391">391</span>
+<span id="392">392</span>
+<span id="393">393</span>
+<span id="394">394</span>
+<span id="395">395</span>
+<span id="396">396</span>
+<span id="397">397</span>
+<span id="398">398</span>
+<span id="399">399</span>
+<span id="400">400</span>
+<span id="401">401</span>
+<span id="402">402</span>
+<span id="403">403</span>
+<span id="404">404</span>
+<span id="405">405</span>
+<span id="406">406</span>
+<span id="407">407</span>
+<span id="408">408</span>
+<span id="409">409</span>
+<span id="410">410</span>
+<span id="411">411</span>
+<span id="412">412</span>
+<span id="413">413</span>
+<span id="414">414</span>
+<span id="415">415</span>
+<span id="416">416</span>
+<span id="417">417</span>
+<span id="418">418</span>
+<span id="419">419</span>
+<span id="420">420</span>
+<span id="421">421</span>
+<span id="422">422</span>
+<span id="423">423</span>
+<span id="424">424</span>
+<span id="425">425</span>
+<span id="426">426</span>
+<span id="427">427</span>
+<span id="428">428</span>
+<span id="429">429</span>
+<span id="430">430</span>
+<span id="431">431</span>
+<span id="432">432</span>
+<span id="433">433</span>
+<span id="434">434</span>
+<span id="435">435</span>
+<span id="436">436</span>
+<span id="437">437</span>
+<span id="438">438</span>
+<span id="439">439</span>
+<span id="440">440</span>
+<span id="441">441</span>
+<span id="442">442</span>
+<span id="443">443</span>
+<span id="444">444</span>
+<span id="445">445</span>
+<span id="446">446</span>
+<span id="447">447</span>
+<span id="448">448</span>
+<span id="449">449</span>
+<span id="450">450</span>
+<span id="451">451</span>
+<span id="452">452</span>
+<span id="453">453</span>
+<span id="454">454</span>
+<span id="455">455</span>
+<span id="456">456</span>
+<span id="457">457</span>
+<span id="458">458</span>
+<span id="459">459</span>
+<span id="460">460</span>
+<span id="461">461</span>
+<span id="462">462</span>
+<span id="463">463</span>
+<span id="464">464</span>
+<span id="465">465</span>
+<span id="466">466</span>
+<span id="467">467</span>
+<span id="468">468</span>
+<span id="469">469</span>
+<span id="470">470</span>
+<span id="471">471</span>
+<span id="472">472</span>
+<span id="473">473</span>
+<span id="474">474</span>
+<span id="475">475</span>
+<span id="476">476</span>
+<span id="477">477</span>
+<span id="478">478</span>
+<span id="479">479</span>
+<span id="480">480</span>
+<span id="481">481</span>
+<span id="482">482</span>
+<span id="483">483</span>
+<span id="484">484</span>
+<span id="485">485</span>
+<span id="486">486</span>
+<span id="487">487</span>
+<span id="488">488</span>
+<span id="489">489</span>
+<span id="490">490</span>
+<span id="491">491</span>
+<span id="492">492</span>
+<span id="493">493</span>
+<span id="494">494</span>
+<span id="495">495</span>
+<span id="496">496</span>
+<span id="497">497</span>
+<span id="498">498</span>
+<span id="499">499</span>
+<span id="500">500</span>
+<span id="501">501</span>
+<span id="502">502</span>
+<span id="503">503</span>
+<span id="504">504</span>
+<span id="505">505</span>
+<span id="506">506</span>
+<span id="507">507</span>
+<span id="508">508</span>
+<span id="509">509</span>
+<span id="510">510</span>
+<span id="511">511</span>
+<span id="512">512</span>
+<span id="513">513</span>
+<span id="514">514</span>
+<span id="515">515</span>
+<span id="516">516</span>
+<span id="517">517</span>
+<span id="518">518</span>
+<span id="519">519</span>
+<span id="520">520</span>
+<span id="521">521</span>
+<span id="522">522</span>
+<span id="523">523</span>
+<span id="524">524</span>
+<span id="525">525</span>
+<span id="526">526</span>
+<span id="527">527</span>
+<span id="528">528</span>
+<span id="529">529</span>
+<span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
+<span id="536">536</span>
+<span id="537">537</span>
+<span id="538">538</span>
+<span id="539">539</span>
+<span id="540">540</span>
+<span id="541">541</span>
+<span id="542">542</span>
+<span id="543">543</span>
+<span id="544">544</span>
+<span id="545">545</span>
+<span id="546">546</span>
+<span id="547">547</span>
+<span id="548">548</span>
+<span id="549">549</span>
+<span id="550">550</span>
+<span id="551">551</span>
+<span id="552">552</span>
+<span id="553">553</span>
+<span id="554">554</span>
+<span id="555">555</span>
+<span id="556">556</span>
+<span id="557">557</span>
+<span id="558">558</span>
+<span id="559">559</span>
+<span id="560">560</span>
+<span id="561">561</span>
+<span id="562">562</span>
+<span id="563">563</span>
+<span id="564">564</span>
+<span id="565">565</span>
+<span id="566">566</span>
+<span id="567">567</span>
+<span id="568">568</span>
+<span id="569">569</span>
+<span id="570">570</span>
+<span id="571">571</span>
+<span id="572">572</span>
+<span id="573">573</span>
+<span id="574">574</span>
+<span id="575">575</span>
+<span id="576">576</span>
+<span id="577">577</span>
+<span id="578">578</span>
+<span id="579">579</span>
+<span id="580">580</span>
+<span id="581">581</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Session management for Actix Web</span>
 <span class="doccomment">//!</span>
-<span class="doccomment">//! Provides a general solution for session management. Session middleware could provide different</span>
-<span class="doccomment">//! implementations which could be accessed via general session API.</span>
+<span class="doccomment">//! The HTTP protocol, at a first glance, is stateless: the client sends a request, the server</span>
+<span class="doccomment">//! parses its content, performs some processing and returns a response. The outcome is only</span>
+<span class="doccomment">//! influenced by the provided inputs (i.e. the request content) and whatever state the server</span>
+<span class="doccomment">//! queries while performing its processing.</span>
 <span class="doccomment">//!</span>
-<span class="doccomment">//! This crate provides a general solution for session management and includes a cookie backend.</span>
-<span class="doccomment">//! Other backend implementations can be built to use persistent or key-value stores, for example.</span>
+<span class="doccomment">//! Stateless systems are easier to reason about, but they are not quite as powerful as we need to</span>
+<span class="doccomment">//! be - e.g. how do you authenticate a user? The user would be forced to authenticate **for every</span>
+<span class="doccomment">//! single request**. That is, for example, how &#39;Basic&#39; Authentication works. While it may work for</span>
+<span class="doccomment">//! a machine user (i.e. an API client), it is impractical for a person—you do not want a login</span>
+<span class="doccomment">//! prompt on every single page you navigate to!</span>
 <span class="doccomment">//!</span>
-<span class="doccomment">//! In general, some session middleware, such as a [`CookieSession`] is initialized and applied.</span>
-<span class="doccomment">//! To access session data, the [`Session`] extractor must be used. This extractor allows reading</span>
-<span class="doccomment">//! modifying session data.</span>
+<span class="doccomment">//! There is a solution - **sessions**. Using sessions the server can attach state to a set of</span>
+<span class="doccomment">//! requests coming from the same client. They are built on top of cookies - the server sets a</span>
+<span class="doccomment">//! cookie in the HTTP response (`Set-Cookie` header), the client (e.g. the browser) will store the</span>
+<span class="doccomment">//! cookie and play it back to the server when sending new requests (using the `Cookie` header).</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! We refer to the cookie used for sessions as a **session cookie**. Its content is called</span>
+<span class="doccomment">//! **session key** (or **session ID**), while the state attached to the session is referred to as</span>
+<span class="doccomment">//! **session state**.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! `actix-session` provides an easy-to-use framework to manage sessions in applications built on</span>
+<span class="doccomment">//! top of Actix Web. [`SessionMiddleware`] is the middleware underpinning the functionality</span>
+<span class="doccomment">//! provided by `actix-session`; it takes care of all the session cookie handling and instructs the</span>
+<span class="doccomment">//! **storage backend** to create/delete/update the session state based on the operations performed</span>
+<span class="doccomment">//! against the active [`Session`].</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! `actix-session` provides some built-in storage backends: ([`storage::CookieSessionStore`],</span>
+<span class="doccomment">//! [`storage::RedisSessionStore`], and [`storage::RedisActorSessionStore`]) - you can create a</span>
+<span class="doccomment">//! custom storage backend by implementing the [`SessionStore`](storage::SessionStore) trait.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! Further reading on sessions:</span>
+<span class="doccomment">//! - [RFC6265](https://datatracker.ietf.org/doc/html/rfc6265);</span>
+<span class="doccomment">//! - [OWASP&#39;s session management cheat-sheet](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html).</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! # Getting started</span>
+<span class="doccomment">//! To start using sessions in your Actix Web application you must register [`SessionMiddleware`]</span>
+<span class="doccomment">//! as a middleware on your `App`:</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! ```no_run</span>
 <span class="doccomment">//! use actix_web::{web, App, HttpServer, HttpResponse, Error};</span>
-<span class="doccomment">//! use actix_session::{Session, CookieSession};</span>
+<span class="doccomment">//! use actix_session::{Session, SessionMiddleware, storage::RedisActorSessionStore};</span>
+<span class="doccomment">//! use actix_web::cookie::Key;</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! #[actix_web::main]</span>
+<span class="doccomment">//! async fn main() -&gt; std::io::Result&lt;()&gt; {</span>
+<span class="doccomment">//!     // The secret key would usually be read from a configuration file/environment variables.</span>
+<span class="doccomment">//!     let secret_key = Key::generate();</span>
+<span class="doccomment">//!     let redis_connection_string = &quot;127.0.0.1:6379&quot;;</span>
+<span class="doccomment">//!     HttpServer::new(move ||</span>
+<span class="doccomment">//!             App::new()</span>
+<span class="doccomment">//!             // Add session management to your application using Redis for session state storage</span>
+<span class="doccomment">//!             .wrap(</span>
+<span class="doccomment">//!                 SessionMiddleware::new(</span>
+<span class="doccomment">//!                     RedisActorSessionStore::new(redis_connection_string),</span>
+<span class="doccomment">//!                     secret_key.clone()</span>
+<span class="doccomment">//!                 )</span>
+<span class="doccomment">//!             )</span>
+<span class="doccomment">//!             .default_service(web::to(|| HttpResponse::Ok())))</span>
+<span class="doccomment">//!         .bind((&quot;127.0.0.1&quot;, 8080))?</span>
+<span class="doccomment">//!         .run()</span>
+<span class="doccomment">//!         .await</span>
+<span class="doccomment">//! }</span>
+<span class="doccomment">//! ```</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! The session state can be accessed and modified by your request handlers using the [`Session`]</span>
+<span class="doccomment">//! extractor.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! ```no_run</span>
+<span class="doccomment">//! use actix_web::Error;</span>
+<span class="doccomment">//! use actix_session::Session;</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! fn index(session: Session) -&gt; Result&lt;&amp;&#39;static str, Error&gt; {</span>
-<span class="doccomment">//!     // access session data</span>
+<span class="doccomment">//!     // Access the session state</span>
 <span class="doccomment">//!     if let Some(count) = session.get::&lt;i32&gt;(&quot;counter&quot;)? {</span>
 <span class="doccomment">//!         println!(&quot;SESSION value: {}&quot;, count);</span>
+<span class="doccomment">//!         // Modify the session state</span>
 <span class="doccomment">//!         session.insert(&quot;counter&quot;, count + 1)?;</span>
 <span class="doccomment">//!     } else {</span>
 <span class="doccomment">//!         session.insert(&quot;counter&quot;, 1)?;</span>
@@ -410,359 +671,502 @@
 <span class="doccomment">//!</span>
 <span class="doccomment">//!     Ok(&quot;Welcome!&quot;)</span>
 <span class="doccomment">//! }</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! #[actix_web::main]</span>
-<span class="doccomment">//! async fn main() -&gt; std::io::Result&lt;()&gt; {</span>
-<span class="doccomment">//!     HttpServer::new(</span>
-<span class="doccomment">//!         || App::new()</span>
-<span class="doccomment">//!             // create cookie based session middleware</span>
-<span class="doccomment">//!             .wrap(CookieSession::signed(&amp;[0; 32]).secure(false))</span>
-<span class="doccomment">//!             .default_service(web::to(|| HttpResponse::Ok())))</span>
-<span class="doccomment">//!         .bind((&quot;127.0.0.1&quot;, 8080))?</span>
-<span class="doccomment">//!         .run()</span>
-<span class="doccomment">//!         .await</span>
-<span class="doccomment">//! }</span>
 <span class="doccomment">//! ```</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! # Choosing A Backend</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! By default, `actix-session` does not provide any storage backend to retrieve and save the state</span>
+<span class="doccomment">//! attached to your sessions. You can enable:</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! - a purely cookie-based &quot;backend&quot;, [`storage::CookieSessionStore`], using the `cookie-session`</span>
+<span class="doccomment">//!   feature flag.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! ```toml</span>
+<span class="doccomment">//! [dependencies]</span>
+<span class="doccomment">//! # ...</span>
+<span class="doccomment">//! actix-session = { version = &quot;...&quot;, features = [&quot;cookie-session&quot;] }</span>
+<span class="doccomment">//! ```</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! - a Redis-based backend via `actix-redis`, [`storage::RedisActorSessionStore`], using the</span>
+<span class="doccomment">//!   `redis-actor-session` feature flag.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! ```toml</span>
+<span class="doccomment">//! [dependencies]</span>
+<span class="doccomment">//! # ...</span>
+<span class="doccomment">//! actix-session = { version = &quot;...&quot;, features = [&quot;redis-actor-session&quot;] }</span>
+<span class="doccomment">//! ```</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! - a Redis-based backend via [`redis-rs`](https://github.com/mitsuhiko/redis-rs),</span>
+<span class="doccomment">//!   [`storage::RedisSessionStore`], using the `redis-rs-session` feature flag.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! ```toml</span>
+<span class="doccomment">//! [dependencies]</span>
+<span class="doccomment">//! # ...</span>
+<span class="doccomment">//! actix-session = { version = &quot;...&quot;, features = [&quot;redis-rs-session&quot;] }</span>
+<span class="doccomment">//! ```</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! Add the `redis-rs-tls-session` feature flag if you want to connect to Redis using a secured</span>
+<span class="doccomment">//! connection:</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! ```toml</span>
+<span class="doccomment">//! [dependencies]</span>
+<span class="doccomment">//! # ...</span>
+<span class="doccomment">//! actix-session = { version = &quot;...&quot;, features = [&quot;redis-rs-session&quot;, &quot;redis-rs-tls-session&quot;] }</span>
+<span class="doccomment">//! ```</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! You can provide a different session store by implementing the [`storage::SessionStore`] trait.</span>
 
 <span class="attribute">#![<span class="ident">deny</span>(<span class="ident">rust_2018_idioms</span>, <span class="ident">nonstandard_style</span>)]</span>
 <span class="attribute">#![<span class="ident">warn</span>(<span class="ident">future_incompatible</span>, <span class="ident">missing_docs</span>)]</span>
+<span class="attribute">#![<span class="ident">doc</span>(<span class="ident">html_logo_url</span> <span class="op">=</span> <span class="string">&quot;https://actix.rs/img/logo.png&quot;</span>)]</span>
+<span class="attribute">#![<span class="ident">doc</span>(<span class="ident">html_favicon_url</span> <span class="op">=</span> <span class="string">&quot;https://actix.rs/favicon.ico&quot;</span>)]</span>
+<span class="attribute">#![<span class="ident">cfg_attr</span>(<span class="ident">docsrs</span>, <span class="ident">feature</span>(<span class="ident">doc_cfg</span>))]</span>
 
-<span class="kw">use</span> <span class="ident">std</span>::{
-    <span class="ident">cell</span>::{<span class="ident">Ref</span>, <span class="ident">RefCell</span>},
-    <span class="ident">collections::HashMap</span>,
-    <span class="ident">mem</span>,
-    <span class="ident">rc::Rc</span>,
+<span class="kw">mod</span> <span class="ident">middleware</span>;
+<span class="kw">mod</span> <span class="ident">session</span>;
+<span class="kw">mod</span> <span class="ident">session_ext</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">storage</span>;
+
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::middleware</span>::{
+    <span class="ident">CookieContentSecurity</span>, <span class="ident">SessionLength</span>, <span class="ident">SessionMiddleware</span>, <span class="ident">SessionMiddlewareBuilder</span>,
 };
-
-<span class="kw">use</span> <span class="ident">actix_utils::future</span>::{<span class="ident">ok</span>, <span class="ident">Ready</span>};
-<span class="kw">use</span> <span class="ident">actix_web</span>::{
-    <span class="ident">dev</span>::{<span class="ident">Extensions</span>, <span class="ident">Payload</span>, <span class="ident">ServiceRequest</span>, <span class="ident">ServiceResponse</span>},
-    <span class="ident">Error</span>, <span class="ident">FromRequest</span>, <span class="ident">HttpMessage</span>, <span class="ident">HttpRequest</span>,
-};
-<span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">de::DeserializeOwned</span>, <span class="ident">Serialize</span>};
-
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;cookie-session&quot;</span>)]</span>
-<span class="kw">mod</span> <span class="ident">cookie</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;cookie-session&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::cookie::CookieSession</span>;
-
-<span class="doccomment">/// The high-level interface you use to modify session data.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Session object is obtained with [`UserSession::get_session`]. The [`UserSession`] trait is</span>
-<span class="doccomment">/// implemented for `HttpRequest`, `ServiceRequest`, and `RequestHead`.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// use actix_session::Session;</span>
-<span class="doccomment">/// use actix_web::Result;</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// async fn index(session: Session) -&gt; Result&lt;&amp;&#39;static str&gt; {</span>
-<span class="doccomment">///     // access session data</span>
-<span class="doccomment">///     if let Some(count) = session.get::&lt;i32&gt;(&quot;counter&quot;)? {</span>
-<span class="doccomment">///         session.insert(&quot;counter&quot;, count + 1)?;</span>
-<span class="doccomment">///     } else {</span>
-<span class="doccomment">///         session.insert(&quot;counter&quot;, 1)?;</span>
-<span class="doccomment">///     }</span>
-<span class="doccomment">///</span>
-<span class="doccomment">///     Ok(&quot;Welcome!&quot;)</span>
-<span class="doccomment">/// }</span>
-<span class="doccomment">/// ```</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Session</span>(<span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">SessionInner</span><span class="op">&gt;</span><span class="op">&gt;</span>);
-
-<span class="doccomment">/// Extraction of a [`Session`] object.</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">UserSession</span> {
-    <span class="doccomment">/// Extract the [`Session`] object</span>
-    <span class="kw">fn</span> <span class="ident">get_session</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Session</span>;
-}
-
-<span class="kw">impl</span> <span class="ident">UserSession</span> <span class="kw">for</span> <span class="ident">HttpRequest</span> {
-    <span class="kw">fn</span> <span class="ident">get_session</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Session</span> {
-        <span class="ident">Session::get_session</span>(<span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">extensions_mut</span>())
-    }
-}
-
-<span class="kw">impl</span> <span class="ident">UserSession</span> <span class="kw">for</span> <span class="ident">ServiceRequest</span> {
-    <span class="kw">fn</span> <span class="ident">get_session</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Session</span> {
-        <span class="ident">Session::get_session</span>(<span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">extensions_mut</span>())
-    }
-}
-
-<span class="doccomment">/// Status of a [`Session`].</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">SessionStatus</span> {
-    <span class="doccomment">/// Session has been updated and requires a new persist operation.</span>
-    <span class="ident">Changed</span>,
-
-    <span class="doccomment">/// Session is flagged for deletion and should be removed from client and server.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Most operations on the session after purge flag is set should have no effect.</span>
-    <span class="ident">Purged</span>,
-
-    <span class="doccomment">/// Session is flagged for refresh.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// For example, when using a backend that has a TTL (time-to-live) expiry on the session entry,</span>
-    <span class="doccomment">/// the session will be refreshed even if no data inside it has changed. The client may also</span>
-    <span class="doccomment">/// be notified of the refresh.</span>
-    <span class="ident">Renewed</span>,
-
-    <span class="doccomment">/// Session is unchanged from when last seen (if exists).</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This state also captures new (previously unissued) sessions such as a user&#39;s first</span>
-    <span class="doccomment">/// site visit.</span>
-    <span class="ident">Unchanged</span>,
-}
-
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">SessionStatus</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="ident">SessionStatus</span> {
-        <span class="ident">SessionStatus::Unchanged</span>
-    }
-}
-
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
-<span class="kw">struct</span> <span class="ident">SessionInner</span> {
-    <span class="ident">state</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">String</span><span class="op">&gt;</span>,
-    <span class="ident">status</span>: <span class="ident">SessionStatus</span>,
-}
-
-<span class="kw">impl</span> <span class="ident">Session</span> {
-    <span class="doccomment">/// Get a `value` from the session.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">DeserializeOwned</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">s</span>) <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">borrow</span>().<span class="ident">state</span>.<span class="ident">get</span>(<span class="ident">key</span>) {
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">serde_json::from_str</span>(<span class="ident">s</span>)<span class="question-mark">?</span>))
-        } <span class="kw">else</span> {
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>)
-        }
-    }
-
-    <span class="doccomment">/// Get all raw key-value data from the session.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Note that values are JSON encoded.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">entries</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Ref</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="ident">Ref::map</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">borrow</span>(), <span class="op">|</span><span class="ident">inner</span><span class="op">|</span> <span class="kw-2">&amp;</span><span class="ident">inner</span>.<span class="ident">state</span>)
-    }
-
-    <span class="doccomment">/// Inserts a key-value pair into the session.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Any serializable value can be used and will be encoded as JSON in session data, hence why</span>
-    <span class="doccomment">/// only a reference to the value is taken.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">insert</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>, <span class="ident">value</span>: <span class="kw">impl</span> <span class="ident">Serialize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">inner</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">borrow_mut</span>();
-
-        <span class="kw">if</span> <span class="ident">inner</span>.<span class="ident">status</span> <span class="op">!</span><span class="op">=</span> <span class="ident">SessionStatus::Purged</span> {
-            <span class="ident">inner</span>.<span class="ident">status</span> <span class="op">=</span> <span class="ident">SessionStatus::Changed</span>;
-            <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="ident">serde_json::to_string</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>)<span class="question-mark">?</span>;
-            <span class="ident">inner</span>.<span class="ident">state</span>.<span class="ident">insert</span>(<span class="ident">key</span>.<span class="ident">into</span>(), <span class="ident">val</span>);
-        }
-
-        <span class="prelude-val">Ok</span>(())
-    }
-
-    <span class="doccomment">/// Remove value from the session.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// If present, the JSON encoded value is returned.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">inner</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">borrow_mut</span>();
-
-        <span class="kw">if</span> <span class="ident">inner</span>.<span class="ident">status</span> <span class="op">!</span><span class="op">=</span> <span class="ident">SessionStatus::Purged</span> {
-            <span class="ident">inner</span>.<span class="ident">status</span> <span class="op">=</span> <span class="ident">SessionStatus::Changed</span>;
-            <span class="kw">return</span> <span class="ident">inner</span>.<span class="ident">state</span>.<span class="ident">remove</span>(<span class="ident">key</span>);
-        }
-
-        <span class="prelude-val">None</span>
-    }
-
-    <span class="doccomment">/// Remove value from the session and deserialize.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Returns None if key was not present in session. Returns T if deserialization succeeds,</span>
-    <span class="doccomment">/// otherwise returns un-deserialized JSON string.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">remove_as</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">DeserializeOwned</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">remove</span>(<span class="ident">key</span>)
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">val_str</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">serde_json::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">val_str</span>) {
-                <span class="prelude-val">Ok</span>(<span class="ident">val</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">val</span>),
-                <span class="prelude-val">Err</span>(<span class="ident">_err</span>) =&gt; {
-                    <span class="macro">log::debug!</span>(
-                        <span class="string">&quot;removed value (key: {}) could not be deserialized as {}&quot;</span>,
-                        <span class="ident">key</span>,
-                        <span class="ident">std::any::type_name</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>()
-                    );
-                    <span class="prelude-val">Err</span>(<span class="ident">val_str</span>)
-                }
-            })
-    }
-
-    <span class="doccomment">/// Clear the session.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">clear</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">inner</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">borrow_mut</span>();
-
-        <span class="kw">if</span> <span class="ident">inner</span>.<span class="ident">status</span> <span class="op">!</span><span class="op">=</span> <span class="ident">SessionStatus::Purged</span> {
-            <span class="ident">inner</span>.<span class="ident">status</span> <span class="op">=</span> <span class="ident">SessionStatus::Changed</span>;
-            <span class="ident">inner</span>.<span class="ident">state</span>.<span class="ident">clear</span>()
-        }
-    }
-
-    <span class="doccomment">/// Removes session both client and server side.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">purge</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">inner</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">borrow_mut</span>();
-        <span class="ident">inner</span>.<span class="ident">status</span> <span class="op">=</span> <span class="ident">SessionStatus::Purged</span>;
-        <span class="ident">inner</span>.<span class="ident">state</span>.<span class="ident">clear</span>();
-    }
-
-    <span class="doccomment">/// Renews the session key, assigning existing session state to new key.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">renew</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">inner</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">borrow_mut</span>();
-
-        <span class="kw">if</span> <span class="ident">inner</span>.<span class="ident">status</span> <span class="op">!</span><span class="op">=</span> <span class="ident">SessionStatus::Purged</span> {
-            <span class="ident">inner</span>.<span class="ident">status</span> <span class="op">=</span> <span class="ident">SessionStatus::Renewed</span>;
-        }
-    }
-
-    <span class="doccomment">/// Adds the given key-value pairs to the session on the request.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Values that match keys already existing on the session will be overwritten. Values should</span>
-    <span class="doccomment">/// already be JSON serialized.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// # use actix_session::Session;</span>
-    <span class="doccomment">/// # use actix_web::test;</span>
-    <span class="doccomment">/// let mut req = test::TestRequest::default().to_srv_request();</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Session::set_session(</span>
-    <span class="doccomment">///     &amp;mut req,</span>
-    <span class="doccomment">///     vec![(&quot;counter&quot;.to_string(), serde_json::to_string(&amp;0).unwrap())],</span>
-    <span class="doccomment">/// );</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_session</span>(<span class="ident">req</span>: <span class="kw-2">&amp;mut</span> <span class="ident">ServiceRequest</span>, <span class="ident">data</span>: <span class="kw">impl</span> <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> (<span class="ident">String</span>, <span class="ident">String</span>)<span class="op">&gt;</span>) {
-        <span class="kw">let</span> <span class="ident">session</span> <span class="op">=</span> <span class="ident">Session::get_session</span>(<span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="ident">req</span>.<span class="ident">extensions_mut</span>());
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">inner</span> <span class="op">=</span> <span class="ident">session</span>.<span class="number">0</span>.<span class="ident">borrow_mut</span>();
-        <span class="ident">inner</span>.<span class="ident">state</span>.<span class="ident">extend</span>(<span class="ident">data</span>);
-    }
-
-    <span class="doccomment">/// Returns session status and iterator of key-value pairs of changes.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_changes</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>(
-        <span class="ident">res</span>: <span class="kw-2">&amp;mut</span> <span class="ident">ServiceResponse</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>,
-    ) -&gt; (<span class="ident">SessionStatus</span>, <span class="kw">impl</span> <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> (<span class="ident">String</span>, <span class="ident">String</span>)<span class="op">&gt;</span>) {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">s_impl</span>) <span class="op">=</span> <span class="ident">res</span>
-            .<span class="ident">request</span>()
-            .<span class="ident">extensions</span>()
-            .<span class="ident">get</span>::<span class="op">&lt;</span><span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">SessionInner</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>()
-        {
-            <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">mem::take</span>(<span class="kw-2">&amp;mut</span> <span class="ident">s_impl</span>.<span class="ident">borrow_mut</span>().<span class="ident">state</span>);
-            (<span class="ident">s_impl</span>.<span class="ident">borrow</span>().<span class="ident">status</span>.<span class="ident">clone</span>(), <span class="ident">state</span>.<span class="ident">into_iter</span>())
-        } <span class="kw">else</span> {
-            (<span class="ident">SessionStatus::Unchanged</span>, <span class="ident">HashMap::new</span>().<span class="ident">into_iter</span>())
-        }
-    }
-
-    <span class="kw">fn</span> <span class="ident">get_session</span>(<span class="ident">extensions</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Extensions</span>) -&gt; <span class="ident">Session</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">s_impl</span>) <span class="op">=</span> <span class="ident">extensions</span>.<span class="ident">get</span>::<span class="op">&lt;</span><span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">SessionInner</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>() {
-            <span class="kw">return</span> <span class="ident">Session</span>(<span class="ident">Rc::clone</span>(<span class="ident">s_impl</span>));
-        }
-        <span class="kw">let</span> <span class="ident">inner</span> <span class="op">=</span> <span class="ident">Rc::new</span>(<span class="ident">RefCell::new</span>(<span class="ident">SessionInner::default</span>()));
-        <span class="ident">extensions</span>.<span class="ident">insert</span>(<span class="ident">inner</span>.<span class="ident">clone</span>());
-        <span class="ident">Session</span>(<span class="ident">inner</span>)
-    }
-}
-
-<span class="doccomment">/// Extractor implementation for Session type.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Examples</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// # use actix_web::*;</span>
-<span class="doccomment">/// use actix_session::Session;</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// #[get(&quot;/&quot;)]</span>
-<span class="doccomment">/// async fn index(session: Session) -&gt; Result&lt;impl Responder&gt; {</span>
-<span class="doccomment">///     // access session data</span>
-<span class="doccomment">///     if let Some(count) = session.get::&lt;i32&gt;(&quot;counter&quot;)? {</span>
-<span class="doccomment">///         session.insert(&quot;counter&quot;, count + 1)?;</span>
-<span class="doccomment">///     } else {</span>
-<span class="doccomment">///         session.insert(&quot;counter&quot;, 1)?;</span>
-<span class="doccomment">///     }</span>
-<span class="doccomment">///</span>
-<span class="doccomment">///     let count = session.get::&lt;i32&gt;(&quot;counter&quot;)?.unwrap();</span>
-<span class="doccomment">///     Ok(format!(&quot;Counter: {}&quot;, count))</span>
-<span class="doccomment">/// }</span>
-<span class="doccomment">/// ```</span>
-<span class="kw">impl</span> <span class="ident">FromRequest</span> <span class="kw">for</span> <span class="ident">Session</span> {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Error</span>;
-    <span class="kw">type</span> <span class="ident">Future</span> <span class="op">=</span> <span class="ident">Ready</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Session</span>, <span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span>;
-
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">from_request</span>(<span class="ident">req</span>: <span class="kw-2">&amp;</span><span class="ident">HttpRequest</span>, <span class="kw">_</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Payload</span>) -&gt; <span class="ident"><span class="self">Self</span>::Future</span> {
-        <span class="ident">ok</span>(<span class="ident">Session::get_session</span>(<span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="ident">req</span>.<span class="ident">extensions_mut</span>()))
-    }
-}
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::session</span>::{<span class="ident">Session</span>, <span class="ident">SessionStatus</span>};
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::session_ext::SessionExt</span>;
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="ident">actix_web</span>::{<span class="ident">test</span>, <span class="ident">HttpResponse</span>};
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">test_helpers</span> {
+    <span class="kw">use</span> <span class="ident">actix_web::cookie::Key</span>;
+    <span class="kw">use</span> <span class="ident">rand</span>::{<span class="ident">distributions::Alphanumeric</span>, <span class="ident">thread_rng</span>, <span class="ident">Rng</span>};
 
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">storage::SessionStore</span>, <span class="ident">CookieContentSecurity</span>};
 
-    <span class="attribute">#[<span class="ident">actix_web::test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">session</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">req</span> <span class="op">=</span> <span class="ident">test::TestRequest::default</span>().<span class="ident">to_srv_request</span>();
-
-        <span class="ident">Session::set_session</span>(
-            <span class="kw-2">&amp;mut</span> <span class="ident">req</span>,
-            <span class="macro">vec!</span>[(<span class="string">&quot;key&quot;</span>.<span class="ident">to_string</span>(), <span class="ident">serde_json::to_string</span>(<span class="string">&quot;value&quot;</span>).<span class="ident">unwrap</span>())],
-        );
-        <span class="kw">let</span> <span class="ident">session</span> <span class="op">=</span> <span class="ident">Session::get_session</span>(<span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="ident">req</span>.<span class="ident">extensions_mut</span>());
-        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">session</span>.<span class="ident">get</span>::<span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>(<span class="string">&quot;key&quot;</span>).<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">res</span>, <span class="prelude-val">Some</span>(<span class="string">&quot;value&quot;</span>.<span class="ident">to_string</span>()));
-
-        <span class="ident">session</span>.<span class="ident">insert</span>(<span class="string">&quot;key2&quot;</span>, <span class="string">&quot;value2&quot;</span>).<span class="ident">unwrap</span>();
-        <span class="ident">session</span>.<span class="ident">remove</span>(<span class="string">&quot;key&quot;</span>);
-
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">req</span>.<span class="ident">into_response</span>(<span class="ident">HttpResponse::Ok</span>().<span class="ident">finish</span>());
-        <span class="kw">let</span> (<span class="ident">_status</span>, <span class="ident">state</span>) <span class="op">=</span> <span class="ident">Session::get_changes</span>(<span class="kw-2">&amp;mut</span> <span class="ident">res</span>);
-        <span class="kw">let</span> <span class="ident">changes</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">state</span>.<span class="ident">collect</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">changes</span>, [(<span class="string">&quot;key2&quot;</span>.<span class="ident">to_string</span>(), <span class="string">&quot;\&quot;value2\&quot;&quot;</span>.<span class="ident">to_string</span>())]);
+    <span class="doccomment">/// Generate a random cookie signing/encryption key.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">key</span>() -&gt; <span class="ident">Key</span> {
+        <span class="kw">let</span> <span class="ident">signing_key</span>: <span class="ident">String</span> <span class="op">=</span> <span class="ident">thread_rng</span>()
+            .<span class="ident">sample_iter</span>(<span class="kw-2">&amp;</span><span class="ident">Alphanumeric</span>)
+            .<span class="ident">take</span>(<span class="number">64</span>)
+            .<span class="ident">map</span>(<span class="ident">char::from</span>)
+            .<span class="ident">collect</span>();
+        <span class="ident">Key::from</span>(<span class="ident">signing_key</span>.<span class="ident">as_bytes</span>())
     }
 
-    <span class="attribute">#[<span class="ident">actix_web::test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_session</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">req</span> <span class="op">=</span> <span class="ident">test::TestRequest::default</span>().<span class="ident">to_srv_request</span>();
-
-        <span class="ident">Session::set_session</span>(
-            <span class="kw-2">&amp;mut</span> <span class="ident">req</span>,
-            <span class="macro">vec!</span>[(<span class="string">&quot;key&quot;</span>.<span class="ident">to_string</span>(), <span class="ident">serde_json::to_string</span>(<span class="kw-2">&amp;</span><span class="bool-val">true</span>).<span class="ident">unwrap</span>())],
-        );
-
-        <span class="kw">let</span> <span class="ident">session</span> <span class="op">=</span> <span class="ident">req</span>.<span class="ident">get_session</span>();
-        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">session</span>.<span class="ident">get</span>(<span class="string">&quot;key&quot;</span>).<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">res</span>, <span class="prelude-val">Some</span>(<span class="bool-val">true</span>));
+    <span class="doccomment">/// A ready-to-go acceptance test suite to verify that sessions behave as expected</span>
+    <span class="doccomment">/// regardless of the underlying session store.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// `is_invalidation_supported` must be set to `true` if the backend supports</span>
+    <span class="doccomment">/// &quot;remembering&quot; that a session has been invalidated (e.g. by logging out).</span>
+    <span class="doccomment">/// It should be to `false` if the backend allows multiple cookies to be active</span>
+    <span class="doccomment">/// at the same time (e.g. cookie store backend).</span>
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">acceptance_test_suite</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">Store</span><span class="op">&gt;</span>(<span class="ident">store_builder</span>: <span class="ident">F</span>, <span class="ident">is_invalidation_supported</span>: <span class="ident">bool</span>)
+    <span class="kw">where</span>
+        <span class="ident">Store</span>: <span class="ident">SessionStore</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+        <span class="ident">F</span>: <span class="ident">Fn</span>() -&gt; <span class="ident">Store</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+    {
+        <span class="kw">for</span> <span class="ident">policy</span> <span class="kw">in</span> <span class="kw-2">&amp;</span>[
+            <span class="ident">CookieContentSecurity::Signed</span>,
+            <span class="ident">CookieContentSecurity::Private</span>,
+        ] {
+            <span class="macro">println!</span>(<span class="string">&quot;Using {:?} as cookie content security policy.&quot;</span>, <span class="ident">policy</span>);
+            <span class="ident">acceptance_tests::basic_workflow</span>(<span class="ident">store_builder</span>.<span class="ident">clone</span>(), <span class="kw-2">*</span><span class="ident">policy</span>).<span class="kw">await</span>;
+            <span class="ident">acceptance_tests::expiration_is_refreshed_on_changes</span>(<span class="ident">store_builder</span>.<span class="ident">clone</span>(), <span class="kw-2">*</span><span class="ident">policy</span>)
+                .<span class="kw">await</span>;
+            <span class="ident">acceptance_tests::complex_workflow</span>(
+                <span class="ident">store_builder</span>.<span class="ident">clone</span>(),
+                <span class="ident">is_invalidation_supported</span>,
+                <span class="kw-2">*</span><span class="ident">policy</span>,
+            )
+            .<span class="kw">await</span>;
+        }
     }
 
-    <span class="attribute">#[<span class="ident">actix_web::test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">purge_session</span>() {
-        <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="ident">test::TestRequest::default</span>().<span class="ident">to_srv_request</span>();
-        <span class="kw">let</span> <span class="ident">session</span> <span class="op">=</span> <span class="ident">Session::get_session</span>(<span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="ident">req</span>.<span class="ident">extensions_mut</span>());
-        <span class="macro">assert_eq!</span>(<span class="ident">session</span>.<span class="number">0</span>.<span class="ident">borrow</span>().<span class="ident">status</span>, <span class="ident">SessionStatus::Unchanged</span>);
-        <span class="ident">session</span>.<span class="ident">purge</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">session</span>.<span class="number">0</span>.<span class="ident">borrow</span>().<span class="ident">status</span>, <span class="ident">SessionStatus::Purged</span>);
-    }
+    <span class="kw">mod</span> <span class="ident">acceptance_tests</span> {
+        <span class="kw">use</span> <span class="ident">actix_web</span>::{
+            <span class="ident">dev::Service</span>,
+            <span class="ident">middleware</span>, <span class="ident">test</span>,
+            <span class="ident">web</span>::{<span class="self">self</span>, <span class="ident">get</span>, <span class="ident">post</span>, <span class="ident">resource</span>, <span class="ident">Bytes</span>},
+            <span class="ident">App</span>, <span class="ident">HttpResponse</span>, <span class="prelude-ty">Result</span>,
+        };
+        <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
+        <span class="kw">use</span> <span class="ident">serde_json::json</span>;
+        <span class="kw">use</span> <span class="ident">time::Duration</span>;
 
-    <span class="attribute">#[<span class="ident">actix_web::test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">renew_session</span>() {
-        <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="ident">test::TestRequest::default</span>().<span class="ident">to_srv_request</span>();
-        <span class="kw">let</span> <span class="ident">session</span> <span class="op">=</span> <span class="ident">Session::get_session</span>(<span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="ident">req</span>.<span class="ident">extensions_mut</span>());
-        <span class="macro">assert_eq!</span>(<span class="ident">session</span>.<span class="number">0</span>.<span class="ident">borrow</span>().<span class="ident">status</span>, <span class="ident">SessionStatus::Unchanged</span>);
-        <span class="ident">session</span>.<span class="ident">renew</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">session</span>.<span class="number">0</span>.<span class="ident">borrow</span>().<span class="ident">status</span>, <span class="ident">SessionStatus::Renewed</span>);
-    }
+        <span class="kw">use</span> <span class="kw">crate</span>::{
+            <span class="ident">middleware::SessionLength</span>, <span class="ident">storage::SessionStore</span>, <span class="ident">test_helpers::key</span>,
+            <span class="ident">CookieContentSecurity</span>, <span class="ident">Session</span>, <span class="ident">SessionMiddleware</span>,
+        };
 
-    <span class="attribute">#[<span class="ident">actix_web::test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">session_entries</span>() {
-        <span class="kw">let</span> <span class="ident">session</span> <span class="op">=</span> <span class="ident">Session</span>(<span class="ident">Rc::new</span>(<span class="ident">RefCell::new</span>(<span class="ident">SessionInner::default</span>())));
-        <span class="ident">session</span>.<span class="ident">insert</span>(<span class="string">&quot;test_str&quot;</span>, <span class="string">&quot;val&quot;</span>).<span class="ident">unwrap</span>();
-        <span class="ident">session</span>.<span class="ident">insert</span>(<span class="string">&quot;test_num&quot;</span>, <span class="number">1</span>).<span class="ident">unwrap</span>();
+        <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">basic_workflow</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">Store</span><span class="op">&gt;</span>(
+            <span class="ident">store_builder</span>: <span class="ident">F</span>,
+            <span class="ident">policy</span>: <span class="ident">CookieContentSecurity</span>,
+        ) <span class="kw">where</span>
+            <span class="ident">Store</span>: <span class="ident">SessionStore</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+            <span class="ident">F</span>: <span class="ident">Fn</span>() -&gt; <span class="ident">Store</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+        {
+            <span class="kw">let</span> <span class="ident">app</span> <span class="op">=</span> <span class="ident">test::init_service</span>(
+                <span class="ident">App::new</span>()
+                    .<span class="ident">wrap</span>(
+                        <span class="ident">SessionMiddleware::builder</span>(<span class="ident">store_builder</span>(), <span class="ident">key</span>())
+                            .<span class="ident">cookie_path</span>(<span class="string">&quot;/test/&quot;</span>.<span class="ident">into</span>())
+                            .<span class="ident">cookie_name</span>(<span class="string">&quot;actix-test&quot;</span>.<span class="ident">into</span>())
+                            .<span class="ident">cookie_domain</span>(<span class="prelude-val">Some</span>(<span class="string">&quot;localhost&quot;</span>.<span class="ident">into</span>()))
+                            .<span class="ident">cookie_content_security</span>(<span class="ident">policy</span>)
+                            .<span class="ident">session_length</span>(<span class="ident">SessionLength::Predetermined</span> {
+                                <span class="ident">max_session_length</span>: <span class="prelude-val">Some</span>(<span class="ident">time::Duration::seconds</span>(<span class="number">100</span>)),
+                            })
+                            .<span class="ident">build</span>(),
+                    )
+                    .<span class="ident">service</span>(<span class="ident">web::resource</span>(<span class="string">&quot;/&quot;</span>).<span class="ident">to</span>(<span class="op">|</span><span class="ident">ses</span>: <span class="ident">Session</span><span class="op">|</span> <span class="kw">async</span> <span class="kw">move</span> {
+                        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">ses</span>.<span class="ident">insert</span>(<span class="string">&quot;counter&quot;</span>, <span class="number">100</span>);
+                        <span class="string">&quot;test&quot;</span>
+                    }))
+                    .<span class="ident">service</span>(<span class="ident">web::resource</span>(<span class="string">&quot;/test/&quot;</span>).<span class="ident">to</span>(<span class="op">|</span><span class="ident">ses</span>: <span class="ident">Session</span><span class="op">|</span> <span class="kw">async</span> <span class="kw">move</span> {
+                        <span class="kw">let</span> <span class="ident">val</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="ident">ses</span>.<span class="ident">get</span>(<span class="string">&quot;counter&quot;</span>).<span class="ident">unwrap</span>().<span class="ident">unwrap</span>();
+                        <span class="macro">format!</span>(<span class="string">&quot;counter: {}&quot;</span>, <span class="ident">val</span>)
+                    })),
+            )
+            .<span class="kw">await</span>;
 
-        <span class="kw">let</span> <span class="ident">map</span> <span class="op">=</span> <span class="ident">session</span>.<span class="ident">entries</span>();
-        <span class="ident">map</span>.<span class="ident">contains_key</span>(<span class="string">&quot;test_str&quot;</span>);
-        <span class="ident">map</span>.<span class="ident">contains_key</span>(<span class="string">&quot;test_num&quot;</span>);
+            <span class="kw">let</span> <span class="ident">request</span> <span class="op">=</span> <span class="ident">test::TestRequest::get</span>().<span class="ident">to_request</span>();
+            <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">app</span>.<span class="ident">call</span>(<span class="ident">request</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();
+            <span class="kw">let</span> <span class="ident">cookie</span> <span class="op">=</span> <span class="ident">response</span>
+                .<span class="ident">response</span>()
+                .<span class="ident">cookies</span>()
+                .<span class="ident">find</span>(<span class="op">|</span><span class="ident">c</span><span class="op">|</span> <span class="ident">c</span>.<span class="ident">name</span>() <span class="op">==</span> <span class="string">&quot;actix-test&quot;</span>)
+                .<span class="ident">unwrap</span>()
+                .<span class="ident">clone</span>();
+            <span class="macro">assert_eq!</span>(<span class="ident">cookie</span>.<span class="ident">path</span>().<span class="ident">unwrap</span>(), <span class="string">&quot;/test/&quot;</span>);
+
+            <span class="kw">let</span> <span class="ident">request</span> <span class="op">=</span> <span class="ident">test::TestRequest::with_uri</span>(<span class="string">&quot;/test/&quot;</span>)
+                .<span class="ident">cookie</span>(<span class="ident">cookie</span>)
+                .<span class="ident">to_request</span>();
+            <span class="kw">let</span> <span class="ident">body</span> <span class="op">=</span> <span class="ident">test::call_and_read_body</span>(<span class="kw-2">&amp;</span><span class="ident">app</span>, <span class="ident">request</span>).<span class="kw">await</span>;
+            <span class="macro">assert_eq!</span>(<span class="ident">body</span>, <span class="ident">Bytes::from_static</span>(<span class="string">b&quot;counter: 100&quot;</span>));
+        }
+
+        <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">expiration_is_refreshed_on_changes</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">Store</span><span class="op">&gt;</span>(
+            <span class="ident">store_builder</span>: <span class="ident">F</span>,
+            <span class="ident">policy</span>: <span class="ident">CookieContentSecurity</span>,
+        ) <span class="kw">where</span>
+            <span class="ident">Store</span>: <span class="ident">SessionStore</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+            <span class="ident">F</span>: <span class="ident">Fn</span>() -&gt; <span class="ident">Store</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+        {
+            <span class="kw">let</span> <span class="ident">app</span> <span class="op">=</span> <span class="ident">test::init_service</span>(
+                <span class="ident">App::new</span>()
+                    .<span class="ident">wrap</span>(
+                        <span class="ident">SessionMiddleware::builder</span>(<span class="ident">store_builder</span>(), <span class="ident">key</span>())
+                            .<span class="ident">cookie_content_security</span>(<span class="ident">policy</span>)
+                            .<span class="ident">session_length</span>(<span class="ident">SessionLength::Predetermined</span> {
+                                <span class="ident">max_session_length</span>: <span class="prelude-val">Some</span>(<span class="ident">time::Duration::seconds</span>(<span class="number">60</span>)),
+                            })
+                            .<span class="ident">build</span>(),
+                    )
+                    .<span class="ident">service</span>(<span class="ident">web::resource</span>(<span class="string">&quot;/&quot;</span>).<span class="ident">to</span>(<span class="op">|</span><span class="ident">ses</span>: <span class="ident">Session</span><span class="op">|</span> <span class="kw">async</span> <span class="kw">move</span> {
+                        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">ses</span>.<span class="ident">insert</span>(<span class="string">&quot;counter&quot;</span>, <span class="number">100</span>);
+                        <span class="string">&quot;test&quot;</span>
+                    }))
+                    .<span class="ident">service</span>(<span class="ident">web::resource</span>(<span class="string">&quot;/test/&quot;</span>).<span class="ident">to</span>(<span class="op">|</span><span class="op">|</span> <span class="kw">async</span> <span class="kw">move</span> { <span class="string">&quot;no-changes-in-session&quot;</span> })),
+            )
+            .<span class="kw">await</span>;
+
+            <span class="kw">let</span> <span class="ident">request</span> <span class="op">=</span> <span class="ident">test::TestRequest::get</span>().<span class="ident">to_request</span>();
+            <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">app</span>.<span class="ident">call</span>(<span class="ident">request</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();
+            <span class="kw">let</span> <span class="ident">cookie_1</span> <span class="op">=</span> <span class="ident">response</span>
+                .<span class="ident">response</span>()
+                .<span class="ident">cookies</span>()
+                .<span class="ident">find</span>(<span class="op">|</span><span class="ident">c</span><span class="op">|</span> <span class="ident">c</span>.<span class="ident">name</span>() <span class="op">==</span> <span class="string">&quot;id&quot;</span>)
+                .<span class="ident">expect</span>(<span class="string">&quot;Cookie is set&quot;</span>);
+            <span class="macro">assert_eq!</span>(<span class="ident">cookie_1</span>.<span class="ident">max_age</span>(), <span class="prelude-val">Some</span>(<span class="ident">Duration::seconds</span>(<span class="number">60</span>)));
+
+            <span class="kw">let</span> <span class="ident">request</span> <span class="op">=</span> <span class="ident">test::TestRequest::with_uri</span>(<span class="string">&quot;/test/&quot;</span>).<span class="ident">to_request</span>();
+            <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">app</span>.<span class="ident">call</span>(<span class="ident">request</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();
+            <span class="macro">assert!</span>(<span class="ident">response</span>.<span class="ident">response</span>().<span class="ident">cookies</span>().<span class="ident">next</span>().<span class="ident">is_none</span>());
+
+            <span class="kw">let</span> <span class="ident">request</span> <span class="op">=</span> <span class="ident">test::TestRequest::get</span>().<span class="ident">to_request</span>();
+            <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">app</span>.<span class="ident">call</span>(<span class="ident">request</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();
+            <span class="kw">let</span> <span class="ident">cookie_2</span> <span class="op">=</span> <span class="ident">response</span>
+                .<span class="ident">response</span>()
+                .<span class="ident">cookies</span>()
+                .<span class="ident">find</span>(<span class="op">|</span><span class="ident">c</span><span class="op">|</span> <span class="ident">c</span>.<span class="ident">name</span>() <span class="op">==</span> <span class="string">&quot;id&quot;</span>)
+                .<span class="ident">expect</span>(<span class="string">&quot;Cookie is set&quot;</span>);
+            <span class="macro">assert_eq!</span>(<span class="ident">cookie_2</span>.<span class="ident">max_age</span>(), <span class="prelude-val">Some</span>(<span class="ident">Duration::seconds</span>(<span class="number">60</span>)));
+        }
+
+        <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">complex_workflow</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">Store</span><span class="op">&gt;</span>(
+            <span class="ident">store_builder</span>: <span class="ident">F</span>,
+            <span class="ident">is_invalidation_supported</span>: <span class="ident">bool</span>,
+            <span class="ident">policy</span>: <span class="ident">CookieContentSecurity</span>,
+        ) <span class="kw">where</span>
+            <span class="ident">Store</span>: <span class="ident">SessionStore</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+            <span class="ident">F</span>: <span class="ident">Fn</span>() -&gt; <span class="ident">Store</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+        {
+            <span class="kw">let</span> <span class="ident">srv</span> <span class="op">=</span> <span class="ident">actix_test::start</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
+                <span class="ident">App::new</span>()
+                    .<span class="ident">wrap</span>(
+                        <span class="ident">SessionMiddleware::builder</span>(<span class="ident">store_builder</span>(), <span class="ident">key</span>())
+                            .<span class="ident">cookie_name</span>(<span class="string">&quot;test-session&quot;</span>.<span class="ident">into</span>())
+                            .<span class="ident">cookie_content_security</span>(<span class="ident">policy</span>)
+                            .<span class="ident">session_length</span>(<span class="ident">SessionLength::Predetermined</span> {
+                                <span class="ident">max_session_length</span>: <span class="prelude-val">Some</span>(<span class="ident">time::Duration::days</span>(<span class="number">7</span>)),
+                            })
+                            .<span class="ident">build</span>(),
+                    )
+                    .<span class="ident">wrap</span>(<span class="ident">middleware::Logger::default</span>())
+                    .<span class="ident">service</span>(<span class="ident">resource</span>(<span class="string">&quot;/&quot;</span>).<span class="ident">route</span>(<span class="ident">get</span>().<span class="ident">to</span>(<span class="ident">index</span>)))
+                    .<span class="ident">service</span>(<span class="ident">resource</span>(<span class="string">&quot;/do_something&quot;</span>).<span class="ident">route</span>(<span class="ident">post</span>().<span class="ident">to</span>(<span class="ident">do_something</span>)))
+                    .<span class="ident">service</span>(<span class="ident">resource</span>(<span class="string">&quot;/login&quot;</span>).<span class="ident">route</span>(<span class="ident">post</span>().<span class="ident">to</span>(<span class="ident">login</span>)))
+                    .<span class="ident">service</span>(<span class="ident">resource</span>(<span class="string">&quot;/logout&quot;</span>).<span class="ident">route</span>(<span class="ident">post</span>().<span class="ident">to</span>(<span class="ident">logout</span>)))
+            });
+
+            <span class="comment">// Step 1:  GET index</span>
+            <span class="comment">//   - set-cookie actix-session should NOT be in response (session data is empty)</span>
+            <span class="comment">//   - response should be: {&quot;counter&quot;: 0, &quot;user_id&quot;: None}</span>
+            <span class="kw">let</span> <span class="ident">req_1a</span> <span class="op">=</span> <span class="ident">srv</span>.<span class="ident">get</span>(<span class="string">&quot;/&quot;</span>).<span class="ident">send</span>();
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">resp_1</span> <span class="op">=</span> <span class="ident">req_1a</span>.<span class="kw">await</span>.<span class="ident">unwrap</span>();
+            <span class="macro">assert!</span>(<span class="ident">resp_1</span>.<span class="ident">cookies</span>().<span class="ident">unwrap</span>().<span class="ident">is_empty</span>());
+            <span class="kw">let</span> <span class="ident">result_1</span> <span class="op">=</span> <span class="ident">resp_1</span>.<span class="ident">json</span>::<span class="op">&lt;</span><span class="ident">IndexResponse</span><span class="op">&gt;</span>().<span class="kw">await</span>.<span class="ident">unwrap</span>();
+            <span class="macro">assert_eq!</span>(
+                <span class="ident">result_1</span>,
+                <span class="ident">IndexResponse</span> {
+                    <span class="ident">user_id</span>: <span class="prelude-val">None</span>,
+                    <span class="ident">counter</span>: <span class="number">0</span>
+                }
+            );
+
+            <span class="comment">// Step 2: POST to do_something</span>
+            <span class="comment">//   - adds new session state in redis:  {&quot;counter&quot;: 1}</span>
+            <span class="comment">//   - set-cookie actix-session should be in response (session cookie #1)</span>
+            <span class="comment">//   - response should be: {&quot;counter&quot;: 1, &quot;user_id&quot;: None}</span>
+            <span class="kw">let</span> <span class="ident">req_2</span> <span class="op">=</span> <span class="ident">srv</span>.<span class="ident">post</span>(<span class="string">&quot;/do_something&quot;</span>).<span class="ident">send</span>();
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">resp_2</span> <span class="op">=</span> <span class="ident">req_2</span>.<span class="kw">await</span>.<span class="ident">unwrap</span>();
+            <span class="kw">let</span> <span class="ident">result_2</span> <span class="op">=</span> <span class="ident">resp_2</span>.<span class="ident">json</span>::<span class="op">&lt;</span><span class="ident">IndexResponse</span><span class="op">&gt;</span>().<span class="kw">await</span>.<span class="ident">unwrap</span>();
+            <span class="macro">assert_eq!</span>(
+                <span class="ident">result_2</span>,
+                <span class="ident">IndexResponse</span> {
+                    <span class="ident">user_id</span>: <span class="prelude-val">None</span>,
+                    <span class="ident">counter</span>: <span class="number">1</span>
+                }
+            );
+            <span class="kw">let</span> <span class="ident">cookie_1</span> <span class="op">=</span> <span class="ident">resp_2</span>
+                .<span class="ident">cookies</span>()
+                .<span class="ident">unwrap</span>()
+                .<span class="ident">clone</span>()
+                .<span class="ident">into_iter</span>()
+                .<span class="ident">find</span>(<span class="op">|</span><span class="ident">c</span><span class="op">|</span> <span class="ident">c</span>.<span class="ident">name</span>() <span class="op">==</span> <span class="string">&quot;test-session&quot;</span>)
+                .<span class="ident">unwrap</span>();
+            <span class="macro">assert_eq!</span>(<span class="ident">cookie_1</span>.<span class="ident">max_age</span>(), <span class="prelude-val">Some</span>(<span class="ident">Duration::days</span>(<span class="number">7</span>)));
+
+            <span class="comment">// Step 3:  GET index, including session cookie #1 in request</span>
+            <span class="comment">//   - set-cookie will *not* be in response</span>
+            <span class="comment">//   - response should be: {&quot;counter&quot;: 1, &quot;user_id&quot;: None}</span>
+            <span class="kw">let</span> <span class="ident">req_3</span> <span class="op">=</span> <span class="ident">srv</span>.<span class="ident">get</span>(<span class="string">&quot;/&quot;</span>).<span class="ident">cookie</span>(<span class="ident">cookie_1</span>.<span class="ident">clone</span>()).<span class="ident">send</span>();
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">resp_3</span> <span class="op">=</span> <span class="ident">req_3</span>.<span class="kw">await</span>.<span class="ident">unwrap</span>();
+            <span class="macro">assert!</span>(<span class="ident">resp_3</span>.<span class="ident">cookies</span>().<span class="ident">unwrap</span>().<span class="ident">is_empty</span>());
+            <span class="kw">let</span> <span class="ident">result_3</span> <span class="op">=</span> <span class="ident">resp_3</span>.<span class="ident">json</span>::<span class="op">&lt;</span><span class="ident">IndexResponse</span><span class="op">&gt;</span>().<span class="kw">await</span>.<span class="ident">unwrap</span>();
+            <span class="macro">assert_eq!</span>(
+                <span class="ident">result_3</span>,
+                <span class="ident">IndexResponse</span> {
+                    <span class="ident">user_id</span>: <span class="prelude-val">None</span>,
+                    <span class="ident">counter</span>: <span class="number">1</span>
+                }
+            );
+
+            <span class="comment">// Step 4: POST again to do_something, including session cookie #1 in request</span>
+            <span class="comment">//   - set-cookie will be in response (session cookie #2)</span>
+            <span class="comment">//   - updates session state:  {&quot;counter&quot;: 2}</span>
+            <span class="comment">//   - response should be: {&quot;counter&quot;: 2, &quot;user_id&quot;: None}</span>
+            <span class="kw">let</span> <span class="ident">req_4</span> <span class="op">=</span> <span class="ident">srv</span>.<span class="ident">post</span>(<span class="string">&quot;/do_something&quot;</span>).<span class="ident">cookie</span>(<span class="ident">cookie_1</span>.<span class="ident">clone</span>()).<span class="ident">send</span>();
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">resp_4</span> <span class="op">=</span> <span class="ident">req_4</span>.<span class="kw">await</span>.<span class="ident">unwrap</span>();
+            <span class="kw">let</span> <span class="ident">result_4</span> <span class="op">=</span> <span class="ident">resp_4</span>.<span class="ident">json</span>::<span class="op">&lt;</span><span class="ident">IndexResponse</span><span class="op">&gt;</span>().<span class="kw">await</span>.<span class="ident">unwrap</span>();
+            <span class="macro">assert_eq!</span>(
+                <span class="ident">result_4</span>,
+                <span class="ident">IndexResponse</span> {
+                    <span class="ident">user_id</span>: <span class="prelude-val">None</span>,
+                    <span class="ident">counter</span>: <span class="number">2</span>
+                }
+            );
+            <span class="kw">let</span> <span class="ident">cookie_2</span> <span class="op">=</span> <span class="ident">resp_4</span>
+                .<span class="ident">cookies</span>()
+                .<span class="ident">unwrap</span>()
+                .<span class="ident">clone</span>()
+                .<span class="ident">into_iter</span>()
+                .<span class="ident">find</span>(<span class="op">|</span><span class="ident">c</span><span class="op">|</span> <span class="ident">c</span>.<span class="ident">name</span>() <span class="op">==</span> <span class="string">&quot;test-session&quot;</span>)
+                .<span class="ident">unwrap</span>();
+            <span class="macro">assert_eq!</span>(<span class="ident">cookie_2</span>.<span class="ident">max_age</span>(), <span class="prelude-val">Some</span>(<span class="ident">Duration::days</span>(<span class="number">7</span>)));
+
+            <span class="comment">// Step 5: POST to login, including session cookie #2 in request</span>
+            <span class="comment">//   - set-cookie actix-session will be in response  (session cookie #3)</span>
+            <span class="comment">//   - updates session state: {&quot;counter&quot;: 2, &quot;user_id&quot;: &quot;ferris&quot;}</span>
+            <span class="kw">let</span> <span class="ident">req_5</span> <span class="op">=</span> <span class="ident">srv</span>
+                .<span class="ident">post</span>(<span class="string">&quot;/login&quot;</span>)
+                .<span class="ident">cookie</span>(<span class="ident">cookie_2</span>.<span class="ident">clone</span>())
+                .<span class="ident">send_json</span>(<span class="kw-2">&amp;</span><span class="macro">json!</span>({<span class="string">&quot;user_id&quot;</span>: <span class="string">&quot;ferris&quot;</span>}));
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">resp_5</span> <span class="op">=</span> <span class="ident">req_5</span>.<span class="kw">await</span>.<span class="ident">unwrap</span>();
+            <span class="kw">let</span> <span class="ident">cookie_3</span> <span class="op">=</span> <span class="ident">resp_5</span>
+                .<span class="ident">cookies</span>()
+                .<span class="ident">unwrap</span>()
+                .<span class="ident">clone</span>()
+                .<span class="ident">into_iter</span>()
+                .<span class="ident">find</span>(<span class="op">|</span><span class="ident">c</span><span class="op">|</span> <span class="ident">c</span>.<span class="ident">name</span>() <span class="op">==</span> <span class="string">&quot;test-session&quot;</span>)
+                .<span class="ident">unwrap</span>();
+            <span class="macro">assert_ne!</span>(<span class="ident">cookie_2</span>.<span class="ident">value</span>(), <span class="ident">cookie_3</span>.<span class="ident">value</span>());
+
+            <span class="kw">let</span> <span class="ident">result_5</span> <span class="op">=</span> <span class="ident">resp_5</span>.<span class="ident">json</span>::<span class="op">&lt;</span><span class="ident">IndexResponse</span><span class="op">&gt;</span>().<span class="kw">await</span>.<span class="ident">unwrap</span>();
+            <span class="macro">assert_eq!</span>(
+                <span class="ident">result_5</span>,
+                <span class="ident">IndexResponse</span> {
+                    <span class="ident">user_id</span>: <span class="prelude-val">Some</span>(<span class="string">&quot;ferris&quot;</span>.<span class="ident">into</span>()),
+                    <span class="ident">counter</span>: <span class="number">2</span>
+                }
+            );
+
+            <span class="comment">// Step 6: GET index, including session cookie #3 in request</span>
+            <span class="comment">//   - response should be: {&quot;counter&quot;: 2, &quot;user_id&quot;: &quot;ferris&quot;}</span>
+            <span class="kw">let</span> <span class="ident">req_6</span> <span class="op">=</span> <span class="ident">srv</span>.<span class="ident">get</span>(<span class="string">&quot;/&quot;</span>).<span class="ident">cookie</span>(<span class="ident">cookie_3</span>.<span class="ident">clone</span>()).<span class="ident">send</span>();
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">resp_6</span> <span class="op">=</span> <span class="ident">req_6</span>.<span class="kw">await</span>.<span class="ident">unwrap</span>();
+            <span class="kw">let</span> <span class="ident">result_6</span> <span class="op">=</span> <span class="ident">resp_6</span>.<span class="ident">json</span>::<span class="op">&lt;</span><span class="ident">IndexResponse</span><span class="op">&gt;</span>().<span class="kw">await</span>.<span class="ident">unwrap</span>();
+            <span class="macro">assert_eq!</span>(
+                <span class="ident">result_6</span>,
+                <span class="ident">IndexResponse</span> {
+                    <span class="ident">user_id</span>: <span class="prelude-val">Some</span>(<span class="string">&quot;ferris&quot;</span>.<span class="ident">into</span>()),
+                    <span class="ident">counter</span>: <span class="number">2</span>
+                }
+            );
+
+            <span class="comment">// Step 7: POST again to do_something, including session cookie #3 in request</span>
+            <span class="comment">//   - updates session state: {&quot;counter&quot;: 3, &quot;user_id&quot;: &quot;ferris&quot;}</span>
+            <span class="comment">//   - response should be: {&quot;counter&quot;: 3, &quot;user_id&quot;: &quot;ferris&quot;}</span>
+            <span class="kw">let</span> <span class="ident">req_7</span> <span class="op">=</span> <span class="ident">srv</span>.<span class="ident">post</span>(<span class="string">&quot;/do_something&quot;</span>).<span class="ident">cookie</span>(<span class="ident">cookie_3</span>.<span class="ident">clone</span>()).<span class="ident">send</span>();
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">resp_7</span> <span class="op">=</span> <span class="ident">req_7</span>.<span class="kw">await</span>.<span class="ident">unwrap</span>();
+            <span class="kw">let</span> <span class="ident">result_7</span> <span class="op">=</span> <span class="ident">resp_7</span>.<span class="ident">json</span>::<span class="op">&lt;</span><span class="ident">IndexResponse</span><span class="op">&gt;</span>().<span class="kw">await</span>.<span class="ident">unwrap</span>();
+            <span class="macro">assert_eq!</span>(
+                <span class="ident">result_7</span>,
+                <span class="ident">IndexResponse</span> {
+                    <span class="ident">user_id</span>: <span class="prelude-val">Some</span>(<span class="string">&quot;ferris&quot;</span>.<span class="ident">into</span>()),
+                    <span class="ident">counter</span>: <span class="number">3</span>
+                }
+            );
+
+            <span class="comment">// Step 8: GET index, including session cookie #2 in request</span>
+            <span class="comment">// If invalidation is supported, no state will be found associated to this session.</span>
+            <span class="comment">// If invalidation is not supported, the old state will still be retrieved.</span>
+            <span class="kw">let</span> <span class="ident">req_8</span> <span class="op">=</span> <span class="ident">srv</span>.<span class="ident">get</span>(<span class="string">&quot;/&quot;</span>).<span class="ident">cookie</span>(<span class="ident">cookie_2</span>.<span class="ident">clone</span>()).<span class="ident">send</span>();
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">resp_8</span> <span class="op">=</span> <span class="ident">req_8</span>.<span class="kw">await</span>.<span class="ident">unwrap</span>();
+            <span class="kw">if</span> <span class="ident">is_invalidation_supported</span> {
+                <span class="macro">assert!</span>(<span class="ident">resp_8</span>.<span class="ident">cookies</span>().<span class="ident">unwrap</span>().<span class="ident">is_empty</span>());
+                <span class="kw">let</span> <span class="ident">result_8</span> <span class="op">=</span> <span class="ident">resp_8</span>.<span class="ident">json</span>::<span class="op">&lt;</span><span class="ident">IndexResponse</span><span class="op">&gt;</span>().<span class="kw">await</span>.<span class="ident">unwrap</span>();
+                <span class="macro">assert_eq!</span>(
+                    <span class="ident">result_8</span>,
+                    <span class="ident">IndexResponse</span> {
+                        <span class="ident">user_id</span>: <span class="prelude-val">None</span>,
+                        <span class="ident">counter</span>: <span class="number">0</span>
+                    }
+                );
+            } <span class="kw">else</span> {
+                <span class="kw">let</span> <span class="ident">result_8</span> <span class="op">=</span> <span class="ident">resp_8</span>.<span class="ident">json</span>::<span class="op">&lt;</span><span class="ident">IndexResponse</span><span class="op">&gt;</span>().<span class="kw">await</span>.<span class="ident">unwrap</span>();
+                <span class="macro">assert_eq!</span>(
+                    <span class="ident">result_8</span>,
+                    <span class="ident">IndexResponse</span> {
+                        <span class="ident">user_id</span>: <span class="prelude-val">None</span>,
+                        <span class="ident">counter</span>: <span class="number">2</span>
+                    }
+                );
+            }
+
+            <span class="comment">// Step 9: POST to logout, including session cookie #3</span>
+            <span class="comment">//   - set-cookie actix-session will be in response with session cookie #3</span>
+            <span class="comment">//     invalidation logic</span>
+            <span class="kw">let</span> <span class="ident">req_9</span> <span class="op">=</span> <span class="ident">srv</span>.<span class="ident">post</span>(<span class="string">&quot;/logout&quot;</span>).<span class="ident">cookie</span>(<span class="ident">cookie_3</span>.<span class="ident">clone</span>()).<span class="ident">send</span>();
+            <span class="kw">let</span> <span class="ident">resp_9</span> <span class="op">=</span> <span class="ident">req_9</span>.<span class="kw">await</span>.<span class="ident">unwrap</span>();
+            <span class="kw">let</span> <span class="ident">cookie_3</span> <span class="op">=</span> <span class="ident">resp_9</span>
+                .<span class="ident">cookies</span>()
+                .<span class="ident">unwrap</span>()
+                .<span class="ident">clone</span>()
+                .<span class="ident">into_iter</span>()
+                .<span class="ident">find</span>(<span class="op">|</span><span class="ident">c</span><span class="op">|</span> <span class="ident">c</span>.<span class="ident">name</span>() <span class="op">==</span> <span class="string">&quot;test-session&quot;</span>)
+                .<span class="ident">unwrap</span>();
+            <span class="macro">assert_eq!</span>(<span class="number">0</span>, <span class="ident">cookie_3</span>.<span class="ident">max_age</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">t</span><span class="op">|</span> <span class="ident">t</span>.<span class="ident">whole_seconds</span>()).<span class="ident">unwrap</span>());
+            <span class="macro">assert_eq!</span>(<span class="string">&quot;/&quot;</span>, <span class="ident">cookie_3</span>.<span class="ident">path</span>().<span class="ident">unwrap</span>());
+
+            <span class="comment">// Step 10: GET index, including session cookie #3 in request</span>
+            <span class="comment">//   - set-cookie actix-session should NOT be in response if invalidation is supported</span>
+            <span class="comment">//   - response should be: {&quot;counter&quot;: 0, &quot;user_id&quot;: None}</span>
+            <span class="kw">let</span> <span class="ident">req_10</span> <span class="op">=</span> <span class="ident">srv</span>.<span class="ident">get</span>(<span class="string">&quot;/&quot;</span>).<span class="ident">cookie</span>(<span class="ident">cookie_3</span>.<span class="ident">clone</span>()).<span class="ident">send</span>();
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">resp_10</span> <span class="op">=</span> <span class="ident">req_10</span>.<span class="kw">await</span>.<span class="ident">unwrap</span>();
+            <span class="kw">if</span> <span class="ident">is_invalidation_supported</span> {
+                <span class="macro">assert!</span>(<span class="ident">resp_10</span>.<span class="ident">cookies</span>().<span class="ident">unwrap</span>().<span class="ident">is_empty</span>());
+            }
+            <span class="kw">let</span> <span class="ident">result_10</span> <span class="op">=</span> <span class="ident">resp_10</span>.<span class="ident">json</span>::<span class="op">&lt;</span><span class="ident">IndexResponse</span><span class="op">&gt;</span>().<span class="kw">await</span>.<span class="ident">unwrap</span>();
+            <span class="macro">assert_eq!</span>(
+                <span class="ident">result_10</span>,
+                <span class="ident">IndexResponse</span> {
+                    <span class="ident">user_id</span>: <span class="prelude-val">None</span>,
+                    <span class="ident">counter</span>: <span class="number">0</span>
+                }
+            );
+        }
+
+        <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>)]</span>
+        <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">IndexResponse</span> {
+            <span class="ident">user_id</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
+            <span class="ident">counter</span>: <span class="ident">i32</span>,
+        }
+
+        <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">index</span>(<span class="ident">session</span>: <span class="ident">Session</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">HttpResponse</span><span class="op">&gt;</span> {
+            <span class="kw">let</span> <span class="ident">user_id</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">session</span>.<span class="ident">get</span>::<span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>(<span class="string">&quot;user_id&quot;</span>).<span class="ident">unwrap</span>();
+            <span class="kw">let</span> <span class="ident">counter</span>: <span class="ident">i32</span> <span class="op">=</span> <span class="ident">session</span>
+                .<span class="ident">get</span>::<span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span>(<span class="string">&quot;counter&quot;</span>)
+                .<span class="ident">unwrap_or</span>(<span class="prelude-val">Some</span>(<span class="number">0</span>))
+                .<span class="ident">unwrap_or</span>(<span class="number">0</span>);
+
+            <span class="prelude-val">Ok</span>(<span class="ident">HttpResponse::Ok</span>().<span class="ident">json</span>(<span class="kw-2">&amp;</span><span class="ident">IndexResponse</span> { <span class="ident">user_id</span>, <span class="ident">counter</span> }))
+        }
+
+        <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">do_something</span>(<span class="ident">session</span>: <span class="ident">Session</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">HttpResponse</span><span class="op">&gt;</span> {
+            <span class="kw">let</span> <span class="ident">user_id</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">session</span>.<span class="ident">get</span>::<span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>(<span class="string">&quot;user_id&quot;</span>).<span class="ident">unwrap</span>();
+            <span class="kw">let</span> <span class="ident">counter</span>: <span class="ident">i32</span> <span class="op">=</span> <span class="ident">session</span>
+                .<span class="ident">get</span>::<span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span>(<span class="string">&quot;counter&quot;</span>)
+                .<span class="ident">unwrap_or</span>(<span class="prelude-val">Some</span>(<span class="number">0</span>))
+                .<span class="ident">map_or</span>(<span class="number">1</span>, <span class="op">|</span><span class="ident">inner</span><span class="op">|</span> <span class="ident">inner</span> <span class="op">+</span> <span class="number">1</span>);
+            <span class="ident">session</span>.<span class="ident">insert</span>(<span class="string">&quot;counter&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">counter</span>)<span class="question-mark">?</span>;
+
+            <span class="prelude-val">Ok</span>(<span class="ident">HttpResponse::Ok</span>().<span class="ident">json</span>(<span class="kw-2">&amp;</span><span class="ident">IndexResponse</span> { <span class="ident">user_id</span>, <span class="ident">counter</span> }))
+        }
+
+        <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Deserialize</span>)]</span>
+        <span class="kw">struct</span> <span class="ident">Identity</span> {
+            <span class="ident">user_id</span>: <span class="ident">String</span>,
+        }
+
+        <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">login</span>(<span class="ident">user_id</span>: <span class="ident">web::Json</span><span class="op">&lt;</span><span class="ident">Identity</span><span class="op">&gt;</span>, <span class="ident">session</span>: <span class="ident">Session</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">HttpResponse</span><span class="op">&gt;</span> {
+            <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">user_id</span>.<span class="ident">into_inner</span>().<span class="ident">user_id</span>;
+            <span class="ident">session</span>.<span class="ident">insert</span>(<span class="string">&quot;user_id&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">id</span>)<span class="question-mark">?</span>;
+            <span class="ident">session</span>.<span class="ident">renew</span>();
+
+            <span class="kw">let</span> <span class="ident">counter</span>: <span class="ident">i32</span> <span class="op">=</span> <span class="ident">session</span>
+                .<span class="ident">get</span>::<span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span>(<span class="string">&quot;counter&quot;</span>)
+                .<span class="ident">unwrap_or</span>(<span class="prelude-val">Some</span>(<span class="number">0</span>))
+                .<span class="ident">unwrap_or</span>(<span class="number">0</span>);
+
+            <span class="prelude-val">Ok</span>(<span class="ident">HttpResponse::Ok</span>().<span class="ident">json</span>(<span class="kw-2">&amp;</span><span class="ident">IndexResponse</span> {
+                <span class="ident">user_id</span>: <span class="prelude-val">Some</span>(<span class="ident">id</span>),
+                <span class="ident">counter</span>,
+            }))
+        }
+
+        <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">logout</span>(<span class="ident">session</span>: <span class="ident">Session</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">HttpResponse</span><span class="op">&gt;</span> {
+            <span class="kw">let</span> <span class="ident">id</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">session</span>.<span class="ident">get</span>(<span class="string">&quot;user_id&quot;</span>)<span class="question-mark">?</span>;
+
+            <span class="kw">let</span> <span class="ident">body</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">x</span>) <span class="op">=</span> <span class="ident">id</span> {
+                <span class="ident">session</span>.<span class="ident">purge</span>();
+                <span class="macro">format!</span>(<span class="string">&quot;Logged out: {}&quot;</span>, <span class="ident">x</span>)
+            } <span class="kw">else</span> {
+                <span class="string">&quot;Could not log out anonymous user&quot;</span>.<span class="ident">to_owned</span>()
+            };
+
+            <span class="prelude-val">Ok</span>(<span class="ident">HttpResponse::Ok</span>().<span class="ident">body</span>(<span class="ident">body</span>))
+        }
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_session" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (10913c000 2022-03-03)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_session" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (9fcbc3205 2022-03-04)" ></div>
 </body></html>

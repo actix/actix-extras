@@ -1,50 +1,126 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Sessions for Actix Web."><meta name="keywords" content="rust, rustlang, rust-lang, actix_session"><title>actix_session - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../dark.css" disabled><link rel="stylesheet" type="text/css" href="../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../storage.js"></script><script src="../crates.js"></script><script defer src="../main.js"></script>
-    <noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../favicon.svg"></head><body class="rustdoc mod crate"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../actix_session/index.html"><div class="logo-container"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></div>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Session management for Actix Web"><meta name="keywords" content="rust, rustlang, rust-lang, actix_session"><title>actix_session - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../dark.css" disabled><link rel="stylesheet" type="text/css" href="../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../storage.js"></script><script src="../crates.js"></script><script defer src="../main.js"></script>
+    <noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="icon" href="https://actix.rs/favicon.ico"></head><body class="rustdoc mod crate"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../actix_session/index.html"><div class="logo-container"><img src="https://actix.rs/img/logo.png" alt="logo"></div>
         </a><h2 class="location"></h2>
     </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../actix_session/index.html"><div class="logo-container"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"><a href="#">Crate actix_session</a></h2><div class="sidebar-elems"><div class="block"><ul><li class="version">Version 0.5.0</li><li><a id="all-types" href="all.html">All Items</a></li></div></ul><section><div class="block"><ul><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li><li><a href="#traits">Traits</a></li></ul></div></section><div id="sidebar-vars" data-name="actix_session" data-ty="mod" data-relpath=""></div><script defer src="sidebar-items.js"></script></div></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../actix_session/index.html"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></a><nav class="sub"><div class="theme-picker hidden"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="22" height="22" alt="Pick another theme!" src="../brush.svg"></button><div id="theme-choices" role="menu"></div></div><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../wheel.svg"></a></div></form></nav></div><section id="main-content" class="content"><div class="main-heading">
-    <h1 class="fqn"><span class="in-band">Crate <a class="mod" href="#">actix_session</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../clipboard.svg" width="19" height="18" alt="Copy item path"></button></span></h1><span class="out-of-band"><a class="srclink" href="../src/actix_session/lib.rs.html#1-380">source</a> · <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span></div><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Sessions for Actix Web.</p>
-<p>Provides a general solution for session management. Session middleware could provide different
-implementations which could be accessed via general session API.</p>
-<p>This crate provides a general solution for session management and includes a cookie backend.
-Other backend implementations can be built to use persistent or key-value stores, for example.</p>
-<p>In general, some session middleware, such as a <a href="struct.CookieSession.html" title="CookieSession"><code>CookieSession</code></a> is initialized and applied.
-To access session data, the <a href="struct.Session.html" title="Session"><code>Session</code></a> extractor must be used. This extractor allows reading
-modifying session data.</p>
+    <nav class="sidebar"><a class="sidebar-logo" href="../actix_session/index.html"><div class="logo-container">
+                    <img src="https://actix.rs/img/logo.png" alt="logo"></div>
+        </a><h2 class="location"><a href="#">Crate actix_session</a></h2><div class="sidebar-elems"><div class="block"><ul><li class="version">Version 0.5.0</li><li><a id="all-types" href="all.html">All Items</a></li></div></ul><section><div class="block"><ul><li><a href="#modules">Modules</a></li><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li><li><a href="#traits">Traits</a></li></ul></div></section><div id="sidebar-vars" data-name="actix_session" data-ty="mod" data-relpath=""></div><script defer src="sidebar-items.js"></script></div></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../actix_session/index.html">
+                        <img src="https://actix.rs/img/logo.png" alt="logo"></a><nav class="sub"><div class="theme-picker hidden"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="22" height="22" alt="Pick another theme!" src="../brush.svg"></button><div id="theme-choices" role="menu"></div></div><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../wheel.svg"></a></div></form></nav></div><section id="main-content" class="content"><div class="main-heading">
+    <h1 class="fqn"><span class="in-band">Crate <a class="mod" href="#">actix_session</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../clipboard.svg" width="19" height="18" alt="Copy item path"></button></span></h1><span class="out-of-band"><a class="srclink" href="../src/actix_session/lib.rs.html#1-581">source</a> · <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span></div><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Session management for Actix Web</p>
+<p>The HTTP protocol, at a first glance, is stateless: the client sends a request, the server
+parses its content, performs some processing and returns a response. The outcome is only
+influenced by the provided inputs (i.e. the request content) and whatever state the server
+queries while performing its processing.</p>
+<p>Stateless systems are easier to reason about, but they are not quite as powerful as we need to
+be - e.g. how do you authenticate a user? The user would be forced to authenticate <strong>for every
+single request</strong>. That is, for example, how ‘Basic’ Authentication works. While it may work for
+a machine user (i.e. an API client), it is impractical for a person—you do not want a login
+prompt on every single page you navigate to!</p>
+<p>There is a solution - <strong>sessions</strong>. Using sessions the server can attach state to a set of
+requests coming from the same client. They are built on top of cookies - the server sets a
+cookie in the HTTP response (<code>Set-Cookie</code> header), the client (e.g. the browser) will store the
+cookie and play it back to the server when sending new requests (using the <code>Cookie</code> header).</p>
+<p>We refer to the cookie used for sessions as a <strong>session cookie</strong>. Its content is called
+<strong>session key</strong> (or <strong>session ID</strong>), while the state attached to the session is referred to as
+<strong>session state</strong>.</p>
+<p><code>actix-session</code> provides an easy-to-use framework to manage sessions in applications built on
+top of Actix Web. <a href="struct.SessionMiddleware.html" title="SessionMiddleware"><code>SessionMiddleware</code></a> is the middleware underpinning the functionality
+provided by <code>actix-session</code>; it takes care of all the session cookie handling and instructs the
+<strong>storage backend</strong> to create/delete/update the session state based on the operations performed
+against the active <a href="struct.Session.html" title="Session"><code>Session</code></a>.</p>
+<p><code>actix-session</code> provides some built-in storage backends: (<a href="storage/struct.CookieSessionStore.html" title="storage::CookieSessionStore"><code>storage::CookieSessionStore</code></a>,
+<a href="storage/struct.RedisSessionStore.html" title="storage::RedisSessionStore"><code>storage::RedisSessionStore</code></a>, and <a href="storage/struct.RedisActorSessionStore.html" title="storage::RedisActorSessionStore"><code>storage::RedisActorSessionStore</code></a>) - you can create a
+custom storage backend by implementing the <a href="storage/trait.SessionStore.html"><code>SessionStore</code></a> trait.</p>
+<p>Further reading on sessions:</p>
+<ul>
+<li><a href="https://datatracker.ietf.org/doc/html/rfc6265">RFC6265</a>;</li>
+<li><a href="https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html">OWASP’s session management cheat-sheet</a>.</li>
+</ul>
+<h2 id="getting-started"><a href="#getting-started">Getting started</a></h2>
+<p>To start using sessions in your Actix Web application you must register <a href="struct.SessionMiddleware.html" title="SessionMiddleware"><code>SessionMiddleware</code></a>
+as a middleware on your <code>App</code>:</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">actix_web</span>::{<span class="ident">web</span>, <span class="ident">App</span>, <span class="ident">HttpServer</span>, <span class="ident">HttpResponse</span>, <span class="ident">Error</span>};
-<span class="kw">use</span> <span class="ident">actix_session</span>::{<span class="ident">Session</span>, <span class="ident">CookieSession</span>};
+<span class="kw">use</span> <span class="ident">actix_session</span>::{<span class="ident">Session</span>, <span class="ident">SessionMiddleware</span>, <span class="ident">storage::RedisActorSessionStore</span>};
+<span class="kw">use</span> <span class="ident">actix_web::cookie::Key</span>;
+
+<span class="attribute">#[<span class="ident">actix_web::main</span>]</span>
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">main</span>() -&gt; <span class="ident">std::io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="comment">// The secret key would usually be read from a configuration file/environment variables.</span>
+    <span class="kw">let</span> <span class="ident">secret_key</span> <span class="op">=</span> <span class="ident">Key::generate</span>();
+    <span class="kw">let</span> <span class="ident">redis_connection_string</span> <span class="op">=</span> <span class="string">&quot;127.0.0.1:6379&quot;</span>;
+    <span class="ident">HttpServer::new</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span>
+            <span class="ident">App::new</span>()
+            <span class="comment">// Add session management to your application using Redis for session state storage</span>
+            .<span class="ident">wrap</span>(
+                <span class="ident">SessionMiddleware::new</span>(
+                    <span class="ident">RedisActorSessionStore::new</span>(<span class="ident">redis_connection_string</span>),
+                    <span class="ident">secret_key</span>.<span class="ident">clone</span>()
+                )
+            )
+            .<span class="ident">default_service</span>(<span class="ident">web::to</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">HttpResponse::Ok</span>())))
+        .<span class="ident">bind</span>((<span class="string">&quot;127.0.0.1&quot;</span>, <span class="number">8080</span>))<span class="question-mark">?</span>
+        .<span class="ident">run</span>()
+        .<span class="kw">await</span>
+}</code></pre></div>
+<p>The session state can be accessed and modified by your request handlers using the <a href="struct.Session.html" title="Session"><code>Session</code></a>
+extractor.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">actix_web::Error</span>;
+<span class="kw">use</span> <span class="ident">actix_session::Session</span>;
 
 <span class="kw">fn</span> <span class="ident">index</span>(<span class="ident">session</span>: <span class="ident">Session</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
-    <span class="comment">// access session data</span>
+    <span class="comment">// Access the session state</span>
     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">count</span>) <span class="op">=</span> <span class="ident">session</span>.<span class="ident">get</span>::<span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span>(<span class="string">&quot;counter&quot;</span>)<span class="question-mark">?</span> {
         <span class="macro">println!</span>(<span class="string">&quot;SESSION value: {}&quot;</span>, <span class="ident">count</span>);
+        <span class="comment">// Modify the session state</span>
         <span class="ident">session</span>.<span class="ident">insert</span>(<span class="string">&quot;counter&quot;</span>, <span class="ident">count</span> <span class="op">+</span> <span class="number">1</span>)<span class="question-mark">?</span>;
     } <span class="kw">else</span> {
         <span class="ident">session</span>.<span class="ident">insert</span>(<span class="string">&quot;counter&quot;</span>, <span class="number">1</span>)<span class="question-mark">?</span>;
     }
 
     <span class="prelude-val">Ok</span>(<span class="string">&quot;Welcome!&quot;</span>)
-}
-
-<span class="attribute">#[<span class="ident">actix_web::main</span>]</span>
-<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">main</span>() -&gt; <span class="ident">std::io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="ident">HttpServer::new</span>(
-        <span class="op">|</span><span class="op">|</span> <span class="ident">App::new</span>()
-            <span class="comment">// create cookie based session middleware</span>
-            .<span class="ident">wrap</span>(<span class="ident">CookieSession::signed</span>(<span class="kw-2">&amp;</span>[<span class="number">0</span>; <span class="number">32</span>]).<span class="ident">secure</span>(<span class="bool-val">false</span>))
-            .<span class="ident">default_service</span>(<span class="ident">web::to</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">HttpResponse::Ok</span>())))
-        .<span class="ident">bind</span>((<span class="string">&quot;127.0.0.1&quot;</span>, <span class="number">8080</span>))<span class="question-mark">?</span>
-        .<span class="ident">run</span>()
-        .<span class="kw">await</span>
 }</code></pre></div>
-</div></details><h2 id="structs" class="small-section-header"><a href="#structs">Structs</a></h2>
-<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.CookieSession.html" title="actix_session::CookieSession struct">CookieSession</a></div><div class="item-right docblock-short"><p>Use cookies for session storage.</p>
-</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Session.html" title="actix_session::Session struct">Session</a></div><div class="item-right docblock-short"><p>The high-level interface you use to modify session data.</p>
+<h2 id="choosing-a-backend"><a href="#choosing-a-backend">Choosing A Backend</a></h2>
+<p>By default, <code>actix-session</code> does not provide any storage backend to retrieve and save the state
+attached to your sessions. You can enable:</p>
+<ul>
+<li>a purely cookie-based “backend”, <a href="storage/struct.CookieSessionStore.html" title="storage::CookieSessionStore"><code>storage::CookieSessionStore</code></a>, using the <code>cookie-session</code>
+feature flag.</li>
+</ul>
+<div class="example-wrap"><pre class="language-toml"><code>[dependencies]
+actix-session = { version = &quot;...&quot;, features = [&quot;cookie-session&quot;] }</code></pre></div>
+<ul>
+<li>a Redis-based backend via <code>actix-redis</code>, <a href="storage/struct.RedisActorSessionStore.html" title="storage::RedisActorSessionStore"><code>storage::RedisActorSessionStore</code></a>, using the
+<code>redis-actor-session</code> feature flag.</li>
+</ul>
+<div class="example-wrap"><pre class="language-toml"><code>[dependencies]
+actix-session = { version = &quot;...&quot;, features = [&quot;redis-actor-session&quot;] }</code></pre></div>
+<ul>
+<li>a Redis-based backend via <a href="https://github.com/mitsuhiko/redis-rs"><code>redis-rs</code></a>,
+<a href="storage/struct.RedisSessionStore.html" title="storage::RedisSessionStore"><code>storage::RedisSessionStore</code></a>, using the <code>redis-rs-session</code> feature flag.</li>
+</ul>
+<div class="example-wrap"><pre class="language-toml"><code>[dependencies]
+actix-session = { version = &quot;...&quot;, features = [&quot;redis-rs-session&quot;] }</code></pre></div>
+<p>Add the <code>redis-rs-tls-session</code> feature flag if you want to connect to Redis using a secured
+connection:</p>
+<div class="example-wrap"><pre class="language-toml"><code>[dependencies]
+actix-session = { version = &quot;...&quot;, features = [&quot;redis-rs-session&quot;, &quot;redis-rs-tls-session&quot;] }</code></pre></div>
+<p>You can provide a different session store by implementing the <a href="storage/trait.SessionStore.html" title="storage::SessionStore"><code>storage::SessionStore</code></a> trait.</p>
+</div></details><h2 id="modules" class="small-section-header"><a href="#modules">Modules</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="mod" href="storage/index.html" title="actix_session::storage mod">storage</a></div><div class="item-right docblock-short"><p>Pluggable storage backends for session state.</p>
+</div></div></div><h2 id="structs" class="small-section-header"><a href="#structs">Structs</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Session.html" title="actix_session::Session struct">Session</a></div><div class="item-right docblock-short"><p>The primary interface to access and modify session state.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.SessionMiddleware.html" title="actix_session::SessionMiddleware struct">SessionMiddleware</a></div><div class="item-right docblock-short"><p>A middleware for session management in Actix Web applications.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.SessionMiddlewareBuilder.html" title="actix_session::SessionMiddlewareBuilder struct">SessionMiddlewareBuilder</a></div><div class="item-right docblock-short"><p>A fluent builder to construct a <a href="struct.SessionMiddleware.html" title="SessionMiddleware"><code>SessionMiddleware</code></a> instance with custom configuration
+parameters.</p>
 </div></div></div><h2 id="enums" class="small-section-header"><a href="#enums">Enums</a></h2>
-<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.SessionStatus.html" title="actix_session::SessionStatus enum">SessionStatus</a></div><div class="item-right docblock-short"><p>Status of a <a href="struct.Session.html" title="Session"><code>Session</code></a>.</p>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.CookieContentSecurity.html" title="actix_session::CookieContentSecurity enum">CookieContentSecurity</a></div><div class="item-right docblock-short"><p>Used by <a href="struct.SessionMiddlewareBuilder.html#method.cookie_content_security" title="SessionMiddlewareBuilder::cookie_content_security"><code>SessionMiddlewareBuilder::cookie_content_security</code></a> to determine how to secure
+the content of the session cookie.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.SessionLength.html" title="actix_session::SessionLength enum">SessionLength</a></div><div class="item-right docblock-short"><p>Describes how long a session should last.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.SessionStatus.html" title="actix_session::SessionStatus enum">SessionStatus</a></div><div class="item-right docblock-short"><p>Status of a <a href="struct.Session.html" title="Session"><code>Session</code></a>.</p>
 </div></div></div><h2 id="traits" class="small-section-header"><a href="#traits">Traits</a></h2>
-<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.UserSession.html" title="actix_session::UserSession trait">UserSession</a></div><div class="item-right docblock-short"><p>Extraction of a <a href="struct.Session.html" title="Session"><code>Session</code></a> object.</p>
-</div></div></div></section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../" data-current-crate="actix_session" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (10913c000 2022-03-03)" ></div>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.SessionExt.html" title="actix_session::SessionExt trait">SessionExt</a></div><div class="item-right docblock-short"><p>Extract a <a href="struct.Session.html" title="Session"><code>Session</code></a> object from various <code>actix-web</code> types (e.g. <code>HttpRequest</code>,
+<code>ServiceRequest</code>, <code>ServiceResponse</code>).</p>
+</div></div></div></section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../" data-current-crate="actix_session" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (9fcbc3205 2022-03-04)" ></div>
 </body></html>
