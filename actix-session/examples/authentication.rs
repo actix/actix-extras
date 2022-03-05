@@ -1,7 +1,8 @@
-use actix_redis::RedisSession;
-use actix_session::Session;
+use actix_session::{storage::RedisActorSessionStore, Session, SessionMiddleware};
 use actix_web::{
-    cookie, error::InternalError, middleware, web, App, Error, HttpResponse, HttpServer, Responder,
+    cookie::{Key, SameSite},
+    error::InternalError,
+    middleware, web, App, Error, HttpResponse, HttpServer, Responder,
 };
 use serde::{Deserialize, Serialize};
 
@@ -70,25 +71,33 @@ async fn secret(session: Session) -> Result<impl Responder, Error> {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    std::env::set_var("RUST_LOG", "actix_web=info,actix_redis=info");
-    env_logger::init();
+    env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
 
-    HttpServer::new(|| {
+    // The signing key would usually be read from a configuration file/environment variables.
+    let signing_key = Key::generate();
+
+    log::info!("starting HTTP server at http://localhost:8080");
+
+    HttpServer::new(move || {
         App::new()
             // enable logger
             .wrap(middleware::Logger::default())
             // cookie session middleware
             .wrap(
-                RedisSession::new("127.0.0.1:6379", &[0; 32])
-                    // allow the cookie to be accessed from javascript
-                    .cookie_http_only(false)
-                    // allow the cookie only from the current domain
-                    .cookie_same_site(cookie::SameSite::Strict),
+                SessionMiddleware::builder(
+                    RedisActorSessionStore::new("127.0.0.1:6379"),
+                    signing_key.clone(),
+                )
+                // allow the cookie to be accessed from javascript
+                .cookie_http_only(false)
+                // allow the cookie only from the current domain
+                .cookie_same_site(SameSite::Strict)
+                .build(),
             )
             .route("/login", web::post().to(login))
             .route("/secret", web::get().to(secret))
     })
-    .bind("0.0.0.0:8080")?
+    .bind(("127.0.0.1", 8080))?
     .run()
     .await
 }

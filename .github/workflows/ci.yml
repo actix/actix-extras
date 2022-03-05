@@ -22,10 +22,15 @@ jobs:
 
     services:
       redis:
-        image: redis:5.0.7
+        image: redis:6
         ports:
           - 6379:6379
-        options: --entrypoint redis-server
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          --entrypoint redis-server
 
     steps:
       - uses: actions/checkout@v2
@@ -126,7 +131,7 @@ jobs:
         timeout-minutes: 40
         with:
           command: ci-test
-          args: --exclude=actix-redis -- --nocapture
+          args: --exclude=actix-redis --exclude=actix-session -- --nocapture
 
       - name: Clear the cargo caches
         run: |

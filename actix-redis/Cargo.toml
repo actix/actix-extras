@@ -2,7 +2,7 @@
 name = "actix-redis"
 version = "0.10.0"
 authors = ["Nikolay Kim <fafhrd91@gmail.com>"]
-description = "Redis integration for Actix and session store for Actix Web"
+description = "Redis integration for Actix"
 license = "MIT OR Apache-2.0"
 keywords = ["actix", "redis", "async", "session"]
 homepage = "https://actix.rs"
@@ -19,14 +19,7 @@ path = "src/lib.rs"
 default = ["web"]
 
 # actix-web integration
-web = [
-    "actix-web/cookies",
-    "actix-web/secure-cookies",
-    "actix-session/cookie-session",
-    "rand",
-    "serde",
-    "serde_json"
-]
+web = ["actix-web"]
 
 [dependencies]
 actix = { version = "0.12", default-features = false }
@@ -35,32 +28,17 @@ actix-service = "2"
 actix-tls = { version = "3", default-features = false, features = ["connect"] }
 
 log = "0.4.6"
-backoff = "0.2.1"
+backoff = "0.4.0"
 derive_more = "0.99.5"
 futures-core = { version = "0.3.7", default-features = false }
-redis2 = { package = "redis", version = "0.19", features = ["tokio-comp", "tokio-native-tls-comp"] }
-redis-async = { version = "0.8", default-features = false, features = ["tokio10"] }
+redis-async = { version = "0.12", default-features = false, features = ["tokio10"] }
 time = "0.3"
 tokio = { version = "1.13.1", features = ["sync"] }
-tokio-util = "0.6"
-
-# web
+tokio-util = "0.6.1"
 actix-web = { version = "4", default_features = false, optional = true }
-actix-session = { version = "0.5", optional = true }
-rand = { version = "0.8", optional = true }
-serde = { version = "1.0.101", optional = true }
-serde_json = { version = "1.0.40", optional = true }
 
 [dev-dependencies]
 actix-test = "0.1.0-beta.12"
 actix-web = { version = "4", default_features = false, features = ["macros"] }
 env_logger = "0.9"
 serde = { version = "1.0.101", features = ["derive"] }
-
-[[example]]
-name = "basic"
-required-features = ["web"]
-
-[[example]]
-name = "authentication"
-required-features = ["web"]

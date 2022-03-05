@@ -1,7 +1,10 @@
 [package]
 name = "actix-session"
 version = "0.5.0"
-authors = ["Nikolay Kim <fafhrd91@gmail.com>"]
+authors = [
+  "Nikolay Kim <fafhrd91@gmail.com>",
+  "Luca Palmieri <rust@lpalmieri.com>",
+]
 description = "Sessions for Actix Web"
 keywords = ["http", "web", "framework", "async", "session"]
 homepage = "https://actix.rs"
@@ -9,25 +12,54 @@ repository = "https://github.com/actix/actix-extras.git"
 license = "MIT OR Apache-2.0"
 edition = "2018"
 
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
 [lib]
 name = "actix_session"
 path = "src/lib.rs"
 
 [features]
-default = ["cookie-session"]
-cookie-session = ["actix-web/secure-cookies"]
+default = []
+cookie-session = []
+redis-actor-session = ["actix-redis", "actix", "futures-core", "rand"]
+redis-rs-session = ["redis", "rand"]
+redis-rs-tls-session = ["redis-rs-session", "redis/tokio-native-tls-comp"]
 
 [dependencies]
 actix-service = "2"
 actix-utils = "3"
-actix-web = { version = "4", default_features = false, features = ["cookies"] }
+actix-web = { version = "4", default_features = false, features = ["cookies", "secure-cookies"] }
 
+anyhow = "1"
+async-trait = "0.1"
 derive_more = "0.99.5"
-futures-util = { version = "0.3.7", default-features = false }
-log = "0.4"
-serde = "1.0"
-serde_json = "1.0"
+rand = { version = "0.8", optional = true }
+serde = { version = "1" }
+serde_json = { version = "1" }
 time = "0.3"
+tracing = { version = "0.1.30", default-features = false, features = ["log"] }
+
+# redis-actor-session
+actix = { version = "0.12.0", default-features = false, optional = true }
+actix-redis = { version = "0.10", optional = true }
+futures-core = { version = "0.3.7", default-features = false, optional = true }
+
+# redis-rs-session
+redis = { version = "0.21", default-features = false, features = ["aio", "tokio-comp", "connection-manager"], optional = true }
 
 [dev-dependencies]
-actix-web = { version = "4", default_features = false, features = ["macros", "cookies"] }
+actix-session = { path = ".", features = ["cookie-session", "redis-actor-session", "redis-rs-session"] }
+actix-test = "0.1.0-beta.10"
+actix-web = { version = "4", default_features = false, features = ["cookies", "secure-cookies", "macros"] }
+env_logger = "0.9"
+log = "0.4"
+
+[[example]]
+name = "basic"
+required-features = ["redis-actor-session"]
+
+[[example]]
+name = "authentication"
+required-features = ["redis-actor-session"]

@@ -1,23 +1,81 @@
-//! Sessions for Actix Web.
+//! Session management for Actix Web
 //!
-//! Provides a general solution for session management. Session middleware could provide different
-//! implementations which could be accessed via general session API.
+//! The HTTP protocol, at a first glance, is stateless: the client sends a request, the server
+//! parses its content, performs some processing and returns a response. The outcome is only
+//! influenced by the provided inputs (i.e. the request content) and whatever state the server
+//! queries while performing its processing.
 //!
-//! This crate provides a general solution for session management and includes a cookie backend.
-//! Other backend implementations can be built to use persistent or key-value stores, for example.
+//! Stateless systems are easier to reason about, but they are not quite as powerful as we need to
+//! be - e.g. how do you authenticate a user? The user would be forced to authenticate **for every
+//! single request**. That is, for example, how 'Basic' Authentication works. While it may work for
+//! a machine user (i.e. an API client), it is impractical for a person—you do not want a login
+//! prompt on every single page you navigate to!
 //!
-//! In general, some session middleware, such as a [`CookieSession`] is initialized and applied.
-//! To access session data, the [`Session`] extractor must be used. This extractor allows reading
-//! modifying session data.
+//! There is a solution - **sessions**. Using sessions the server can attach state to a set of
+//! requests coming from the same client. They are built on top of cookies - the server sets a
+//! cookie in the HTTP response (`Set-Cookie` header), the client (e.g. the browser) will store the
+//! cookie and play it back to the server when sending new requests (using the `Cookie` header).
+//!
+//! We refer to the cookie used for sessions as a **session cookie**. Its content is called
+//! **session key** (or **session ID**), while the state attached to the session is referred to as
+//! **session state**.
+//!
+//! `actix-session` provides an easy-to-use framework to manage sessions in applications built on
+//! top of Actix Web. [`SessionMiddleware`] is the middleware underpinning the functionality
+//! provided by `actix-session`; it takes care of all the session cookie handling and instructs the
+//! **storage backend** to create/delete/update the session state based on the operations performed
+//! against the active [`Session`].
+//!
+//! `actix-session` provides some built-in storage backends: ([`storage::CookieSessionStore`],
+//! [`storage::RedisSessionStore`], and [`storage::RedisActorSessionStore`]) - you can create a
+//! custom storage backend by implementing the [`SessionStore`](storage::SessionStore) trait.
+//!
+//! Further reading on sessions:
+//! - [RFC6265](https://datatracker.ietf.org/doc/html/rfc6265);
+//! - [OWASP's session management cheat-sheet](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html).
+//!
+//! # Getting started
+//! To start using sessions in your Actix Web application you must register [`SessionMiddleware`]
+//! as a middleware on your `App`:
 //!
 //! ```no_run
 //! use actix_web::{web, App, HttpServer, HttpResponse, Error};
-//! use actix_session::{Session, CookieSession};
+//! use actix_session::{Session, SessionMiddleware, storage::RedisActorSessionStore};
+//! use actix_web::cookie::Key;
+//!
+//! #[actix_web::main]
+//! async fn main() -> std::io::Result<()> {
+//!     // The secret key would usually be read from a configuration file/environment variables.
+//!     let secret_key = Key::generate();
+//!     let redis_connection_string = "127.0.0.1:6379";
+//!     HttpServer::new(move ||
+//!             App::new()
+//!             // Add session management to your application using Redis for session state storage
+//!             .wrap(
+//!                 SessionMiddleware::new(
+//!                     RedisActorSessionStore::new(redis_connection_string),
+//!                     secret_key.clone()
+//!                 )
+//!             )
+//!             .default_service(web::to(|| HttpResponse::Ok())))
+//!         .bind(("127.0.0.1", 8080))?
+//!         .run()
+//!         .await
+//! }
+//! ```
+//!
+//! The session state can be accessed and modified by your request handlers using the [`Session`]
+//! extractor.
+//!
+//! ```no_run
+//! use actix_web::Error;
+//! use actix_session::Session;
 //!
 //! fn index(session: Session) -> Result<&'static str, Error> {
-//!     // access session data
+//!     // Access the session state
 //!     if let Some(count) = session.get::<i32>("counter")? {
 //!         println!("SESSION value: {}", count);
+//!         // Modify the session state
 //!         session.insert("counter", count + 1)?;
 //!     } else {
 //!         session.insert("counter", 1)?;
@@ -25,356 +83,499 @@
 //!
 //!     Ok("Welcome!")
 //! }
-//!
-//! #[actix_web::main]
-//! async fn main() -> std::io::Result<()> {
-//!     HttpServer::new(
-//!         || App::new()
-//!             // create cookie based session middleware
-//!             .wrap(CookieSession::signed(&[0; 32]).secure(false))
-//!             .default_service(web::to(|| HttpResponse::Ok())))
-//!         .bind(("127.0.0.1", 8080))?
-//!         .run()
-//!         .await
-//! }
 //! ```
+//!
+//! # Choosing A Backend
+//!
+//! By default, `actix-session` does not provide any storage backend to retrieve and save the state
+//! attached to your sessions. You can enable:
+//!
+//! - a purely cookie-based "backend", [`storage::CookieSessionStore`], using the `cookie-session`
+//!   feature flag.
+//!
+//! ```toml
+//! [dependencies]
+//! # ...
+//! actix-session = { version = "...", features = ["cookie-session"] }
+//! ```
+//!
+//! - a Redis-based backend via `actix-redis`, [`storage::RedisActorSessionStore`], using the
+//!   `redis-actor-session` feature flag.
+//!
+//! ```toml
+//! [dependencies]
+//! # ...
+//! actix-session = { version = "...", features = ["redis-actor-session"] }
+//! ```
+//!
+//! - a Redis-based backend via [`redis-rs`](https://github.com/mitsuhiko/redis-rs),
+//!   [`storage::RedisSessionStore`], using the `redis-rs-session` feature flag.
+//!
+//! ```toml
+//! [dependencies]
+//! # ...
+//! actix-session = { version = "...", features = ["redis-rs-session"] }
+//! ```
+//!
+//! Add the `redis-rs-tls-session` feature flag if you want to connect to Redis using a secured
+//! connection:
+//!
+//! ```toml
+//! [dependencies]
+//! # ...
+//! actix-session = { version = "...", features = ["redis-rs-session", "redis-rs-tls-session"] }
+//! ```
+//!
+//! You can provide a different session store by implementing the [`storage::SessionStore`] trait.
 
 #![deny(rust_2018_idioms, nonstandard_style)]
 #![warn(future_incompatible, missing_docs)]
+#![doc(html_logo_url = "https://actix.rs/img/logo.png")]
+#![doc(html_favicon_url = "https://actix.rs/favicon.ico")]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 
-use std::{
-    cell::{Ref, RefCell},
-    collections::HashMap,
-    mem,
-    rc::Rc,
+mod middleware;
+mod session;
+mod session_ext;
+pub mod storage;
+
+pub use self::middleware::{
+    CookieContentSecurity, SessionLength, SessionMiddleware, SessionMiddlewareBuilder,
 };
-
-use actix_utils::future::{ok, Ready};
-use actix_web::{
-    dev::{Extensions, Payload, ServiceRequest, ServiceResponse},
-    Error, FromRequest, HttpMessage, HttpRequest,
-};
-use serde::{de::DeserializeOwned, Serialize};
-
-#[cfg(feature = "cookie-session")]
-mod cookie;
-#[cfg(feature = "cookie-session")]
-pub use self::cookie::CookieSession;
-
-/// The high-level interface you use to modify session data.
-///
-/// Session object is obtained with [`UserSession::get_session`]. The [`UserSession`] trait is
-/// implemented for `HttpRequest`, `ServiceRequest`, and `RequestHead`.
-///
-/// ```
-/// use actix_session::Session;
-/// use actix_web::Result;
-///
-/// async fn index(session: Session) -> Result<&'static str> {
-///     // access session data
-///     if let Some(count) = session.get::<i32>("counter")? {
-///         session.insert("counter", count + 1)?;
-///     } else {
-///         session.insert("counter", 1)?;
-///     }
-///
-///     Ok("Welcome!")
-/// }
-/// ```
-pub struct Session(Rc<RefCell<SessionInner>>);
-
-/// Extraction of a [`Session`] object.
-pub trait UserSession {
-    /// Extract the [`Session`] object
-    fn get_session(&self) -> Session;
-}
-
-impl UserSession for HttpRequest {
-    fn get_session(&self) -> Session {
-        Session::get_session(&mut *self.extensions_mut())
-    }
-}
-
-impl UserSession for ServiceRequest {
-    fn get_session(&self) -> Session {
-        Session::get_session(&mut *self.extensions_mut())
-    }
-}
-
-/// Status of a [`Session`].
-#[derive(PartialEq, Clone, Debug)]
-pub enum SessionStatus {
-    /// Session has been updated and requires a new persist operation.
-    Changed,
-
-    /// Session is flagged for deletion and should be removed from client and server.
-    ///
-    /// Most operations on the session after purge flag is set should have no effect.
-    Purged,
-
-    /// Session is flagged for refresh.
-    ///
-    /// For example, when using a backend that has a TTL (time-to-live) expiry on the session entry,
-    /// the session will be refreshed even if no data inside it has changed. The client may also
-    /// be notified of the refresh.
-    Renewed,
-
-    /// Session is unchanged from when last seen (if exists).
-    ///
-    /// This state also captures new (previously unissued) sessions such as a user's first
-    /// site visit.
-    Unchanged,
-}
-
-impl Default for SessionStatus {
-    fn default() -> SessionStatus {
-        SessionStatus::Unchanged
-    }
-}
-
-#[derive(Default)]
-struct SessionInner {
-    state: HashMap<String, String>,
-    status: SessionStatus,
-}
-
-impl Session {
-    /// Get a `value` from the session.
-    pub fn get<T: DeserializeOwned>(&self, key: &str) -> Result<Option<T>, Error> {
-        if let Some(s) = self.0.borrow().state.get(key) {
-            Ok(Some(serde_json::from_str(s)?))
-        } else {
-            Ok(None)
-        }
-    }
-
-    /// Get all raw key-value data from the session.
-    ///
-    /// Note that values are JSON encoded.
-    pub fn entries(&self) -> Ref<'_, HashMap<String, String>> {
-        Ref::map(self.0.borrow(), |inner| &inner.state)
-    }
-
-    /// Inserts a key-value pair into the session.
-    ///
-    /// Any serializable value can be used and will be encoded as JSON in session data, hence why
-    /// only a reference to the value is taken.
-    pub fn insert(&self, key: impl Into<String>, value: impl Serialize) -> Result<(), Error> {
-        let mut inner = self.0.borrow_mut();
-
-        if inner.status != SessionStatus::Purged {
-            inner.status = SessionStatus::Changed;
-            let val = serde_json::to_string(&value)?;
-            inner.state.insert(key.into(), val);
-        }
-
-        Ok(())
-    }
-
-    /// Remove value from the session.
-    ///
-    /// If present, the JSON encoded value is returned.
-    pub fn remove(&self, key: &str) -> Option<String> {
-        let mut inner = self.0.borrow_mut();
-
-        if inner.status != SessionStatus::Purged {
-            inner.status = SessionStatus::Changed;
-            return inner.state.remove(key);
-        }
-
-        None
-    }
-
-    /// Remove value from the session and deserialize.
-    ///
-    /// Returns None if key was not present in session. Returns T if deserialization succeeds,
-    /// otherwise returns un-deserialized JSON string.
-    pub fn remove_as<T: DeserializeOwned>(&self, key: &str) -> Option<Result<T, String>> {
-        self.remove(key)
-            .map(|val_str| match serde_json::from_str(&val_str) {
-                Ok(val) => Ok(val),
-                Err(_err) => {
-                    log::debug!(
-                        "removed value (key: {}) could not be deserialized as {}",
-                        key,
-                        std::any::type_name::<T>()
-                    );
-                    Err(val_str)
-                }
-            })
-    }
-
-    /// Clear the session.
-    pub fn clear(&self) {
-        let mut inner = self.0.borrow_mut();
-
-        if inner.status != SessionStatus::Purged {
-            inner.status = SessionStatus::Changed;
-            inner.state.clear()
-        }
-    }
-
-    /// Removes session both client and server side.
-    pub fn purge(&self) {
-        let mut inner = self.0.borrow_mut();
-        inner.status = SessionStatus::Purged;
-        inner.state.clear();
-    }
-
-    /// Renews the session key, assigning existing session state to new key.
-    pub fn renew(&self) {
-        let mut inner = self.0.borrow_mut();
-
-        if inner.status != SessionStatus::Purged {
-            inner.status = SessionStatus::Renewed;
-        }
-    }
-
-    /// Adds the given key-value pairs to the session on the request.
-    ///
-    /// Values that match keys already existing on the session will be overwritten. Values should
-    /// already be JSON serialized.
-    ///
-    /// # Examples
-    /// ```
-    /// # use actix_session::Session;
-    /// # use actix_web::test;
-    /// let mut req = test::TestRequest::default().to_srv_request();
-    ///
-    /// Session::set_session(
-    ///     &mut req,
-    ///     vec![("counter".to_string(), serde_json::to_string(&0).unwrap())],
-    /// );
-    /// ```
-    pub fn set_session(req: &mut ServiceRequest, data: impl IntoIterator<Item = (String, String)>) {
-        let session = Session::get_session(&mut *req.extensions_mut());
-        let mut inner = session.0.borrow_mut();
-        inner.state.extend(data);
-    }
-
-    /// Returns session status and iterator of key-value pairs of changes.
-    pub fn get_changes<B>(
-        res: &mut ServiceResponse<B>,
-    ) -> (SessionStatus, impl Iterator<Item = (String, String)>) {
-        if let Some(s_impl) = res
-            .request()
-            .extensions()
-            .get::<Rc<RefCell<SessionInner>>>()
-        {
-            let state = mem::take(&mut s_impl.borrow_mut().state);
-            (s_impl.borrow().status.clone(), state.into_iter())
-        } else {
-            (SessionStatus::Unchanged, HashMap::new().into_iter())
-        }
-    }
-
-    fn get_session(extensions: &mut Extensions) -> Session {
-        if let Some(s_impl) = extensions.get::<Rc<RefCell<SessionInner>>>() {
-            return Session(Rc::clone(s_impl));
-        }
-        let inner = Rc::new(RefCell::new(SessionInner::default()));
-        extensions.insert(inner.clone());
-        Session(inner)
-    }
-}
-
-/// Extractor implementation for Session type.
-///
-/// # Examples
-/// ```
-/// # use actix_web::*;
-/// use actix_session::Session;
-///
-/// #[get("/")]
-/// async fn index(session: Session) -> Result<impl Responder> {
-///     // access session data
-///     if let Some(count) = session.get::<i32>("counter")? {
-///         session.insert("counter", count + 1)?;
-///     } else {
-///         session.insert("counter", 1)?;
-///     }
-///
-///     let count = session.get::<i32>("counter")?.unwrap();
-///     Ok(format!("Counter: {}", count))
-/// }
-/// ```
-impl FromRequest for Session {
-    type Error = Error;
-    type Future = Ready<Result<Session, Error>>;
-
-    #[inline]
-    fn from_request(req: &HttpRequest, _: &mut Payload) -> Self::Future {
-        ok(Session::get_session(&mut *req.extensions_mut()))
-    }
-}
+pub use self::session::{Session, SessionStatus};
+pub use self::session_ext::SessionExt;
 
 #[cfg(test)]
-mod tests {
-    use actix_web::{test, HttpResponse};
+pub mod test_helpers {
+    use actix_web::cookie::Key;
+    use rand::{distributions::Alphanumeric, thread_rng, Rng};
 
-    use super::*;
+    use crate::{storage::SessionStore, CookieContentSecurity};
 
-    #[actix_web::test]
-    async fn session() {
-        let mut req = test::TestRequest::default().to_srv_request();
-
-        Session::set_session(
-            &mut req,
-            vec![("key".to_string(), serde_json::to_string("value").unwrap())],
-        );
-        let session = Session::get_session(&mut *req.extensions_mut());
-        let res = session.get::<String>("key").unwrap();
-        assert_eq!(res, Some("value".to_string()));
-
-        session.insert("key2", "value2").unwrap();
-        session.remove("key");
-
-        let mut res = req.into_response(HttpResponse::Ok().finish());
-        let (_status, state) = Session::get_changes(&mut res);
-        let changes: Vec<_> = state.collect();
-        assert_eq!(changes, [("key2".to_string(), "\"value2\"".to_string())]);
+    /// Generate a random cookie signing/encryption key.
+    pub fn key() -> Key {
+        let signing_key: String = thread_rng()
+            .sample_iter(&Alphanumeric)
+            .take(64)
+            .map(char::from)
+            .collect();
+        Key::from(signing_key.as_bytes())
     }
 
-    #[actix_web::test]
-    async fn get_session() {
-        let mut req = test::TestRequest::default().to_srv_request();
-
-        Session::set_session(
-            &mut req,
-            vec![("key".to_string(), serde_json::to_string(&true).unwrap())],
-        );
-
-        let session = req.get_session();
-        let res = session.get("key").unwrap();
-        assert_eq!(res, Some(true));
+    /// A ready-to-go acceptance test suite to verify that sessions behave as expected
+    /// regardless of the underlying session store.
+    ///
+    /// `is_invalidation_supported` must be set to `true` if the backend supports
+    /// "remembering" that a session has been invalidated (e.g. by logging out).
+    /// It should be to `false` if the backend allows multiple cookies to be active
+    /// at the same time (e.g. cookie store backend).
+    pub async fn acceptance_test_suite<F, Store>(store_builder: F, is_invalidation_supported: bool)
+    where
+        Store: SessionStore + 'static,
+        F: Fn() -> Store + Clone + Send + 'static,
+    {
+        for policy in &[
+            CookieContentSecurity::Signed,
+            CookieContentSecurity::Private,
+        ] {
+            println!("Using {:?} as cookie content security policy.", policy);
+            acceptance_tests::basic_workflow(store_builder.clone(), *policy).await;
+            acceptance_tests::expiration_is_refreshed_on_changes(store_builder.clone(), *policy)
+                .await;
+            acceptance_tests::complex_workflow(
+                store_builder.clone(),
+                is_invalidation_supported,
+                *policy,
+            )
+            .await;
+        }
     }
 
-    #[actix_web::test]
-    async fn purge_session() {
-        let req = test::TestRequest::default().to_srv_request();
-        let session = Session::get_session(&mut *req.extensions_mut());
-        assert_eq!(session.0.borrow().status, SessionStatus::Unchanged);
-        session.purge();
-        assert_eq!(session.0.borrow().status, SessionStatus::Purged);
-    }
+    mod acceptance_tests {
+        use actix_web::{
+            dev::Service,
+            middleware, test,
+            web::{self, get, post, resource, Bytes},
+            App, HttpResponse, Result,
+        };
+        use serde::{Deserialize, Serialize};
+        use serde_json::json;
+        use time::Duration;
 
-    #[actix_web::test]
-    async fn renew_session() {
-        let req = test::TestRequest::default().to_srv_request();
-        let session = Session::get_session(&mut *req.extensions_mut());
-        assert_eq!(session.0.borrow().status, SessionStatus::Unchanged);
-        session.renew();
-        assert_eq!(session.0.borrow().status, SessionStatus::Renewed);
-    }
+        use crate::{
+            middleware::SessionLength, storage::SessionStore, test_helpers::key,
+            CookieContentSecurity, Session, SessionMiddleware,
+        };
 
-    #[actix_web::test]
-    async fn session_entries() {
-        let session = Session(Rc::new(RefCell::new(SessionInner::default())));
-        session.insert("test_str", "val").unwrap();
-        session.insert("test_num", 1).unwrap();
+        pub(super) async fn basic_workflow<F, Store>(
+            store_builder: F,
+            policy: CookieContentSecurity,
+        ) where
+            Store: SessionStore + 'static,
+            F: Fn() -> Store + Clone + Send + 'static,
+        {
+            let app = test::init_service(
+                App::new()
+                    .wrap(
+                        SessionMiddleware::builder(store_builder(), key())
+                            .cookie_path("/test/".into())
+                            .cookie_name("actix-test".into())
+                            .cookie_domain(Some("localhost".into()))
+                            .cookie_content_security(policy)
+                            .session_length(SessionLength::Predetermined {
+                                max_session_length: Some(time::Duration::seconds(100)),
+                            })
+                            .build(),
+                    )
+                    .service(web::resource("/").to(|ses: Session| async move {
+                        let _ = ses.insert("counter", 100);
+                        "test"
+                    }))
+                    .service(web::resource("/test/").to(|ses: Session| async move {
+                        let val: usize = ses.get("counter").unwrap().unwrap();
+                        format!("counter: {}", val)
+                    })),
+            )
+            .await;
 
-        let map = session.entries();
-        map.contains_key("test_str");
-        map.contains_key("test_num");
+            let request = test::TestRequest::get().to_request();
+            let response = app.call(request).await.unwrap();
+            let cookie = response
+                .response()
+                .cookies()
+                .find(|c| c.name() == "actix-test")
+                .unwrap()
+                .clone();
+            assert_eq!(cookie.path().unwrap(), "/test/");
+
+            let request = test::TestRequest::with_uri("/test/")
+                .cookie(cookie)
+                .to_request();
+            let body = test::call_and_read_body(&app, request).await;
+            assert_eq!(body, Bytes::from_static(b"counter: 100"));
+        }
+
+        pub(super) async fn expiration_is_refreshed_on_changes<F, Store>(
+            store_builder: F,
+            policy: CookieContentSecurity,
+        ) where
+            Store: SessionStore + 'static,
+            F: Fn() -> Store + Clone + Send + 'static,
+        {
+            let app = test::init_service(
+                App::new()
+                    .wrap(
+                        SessionMiddleware::builder(store_builder(), key())
+                            .cookie_content_security(policy)
+                            .session_length(SessionLength::Predetermined {
+                                max_session_length: Some(time::Duration::seconds(60)),
+                            })
+                            .build(),
+                    )
+                    .service(web::resource("/").to(|ses: Session| async move {
+                        let _ = ses.insert("counter", 100);
+                        "test"
+                    }))
+                    .service(web::resource("/test/").to(|| async move { "no-changes-in-session" })),
+            )
+            .await;
+
+            let request = test::TestRequest::get().to_request();
+            let response = app.call(request).await.unwrap();
+            let cookie_1 = response
+                .response()
+                .cookies()
+                .find(|c| c.name() == "id")
+                .expect("Cookie is set");
+            assert_eq!(cookie_1.max_age(), Some(Duration::seconds(60)));
+
+            let request = test::TestRequest::with_uri("/test/").to_request();
+            let response = app.call(request).await.unwrap();
+            assert!(response.response().cookies().next().is_none());
+
+            let request = test::TestRequest::get().to_request();
+            let response = app.call(request).await.unwrap();
+            let cookie_2 = response
+                .response()
+                .cookies()
+                .find(|c| c.name() == "id")
+                .expect("Cookie is set");
+            assert_eq!(cookie_2.max_age(), Some(Duration::seconds(60)));
+        }
+
+        pub(super) async fn complex_workflow<F, Store>(
+            store_builder: F,
+            is_invalidation_supported: bool,
+            policy: CookieContentSecurity,
+        ) where
+            Store: SessionStore + 'static,
+            F: Fn() -> Store + Clone + Send + 'static,
+        {
+            let srv = actix_test::start(move || {
+                App::new()
+                    .wrap(
+                        SessionMiddleware::builder(store_builder(), key())
+                            .cookie_name("test-session".into())
+                            .cookie_content_security(policy)
+                            .session_length(SessionLength::Predetermined {
+                                max_session_length: Some(time::Duration::days(7)),
+                            })
+                            .build(),
+                    )
+                    .wrap(middleware::Logger::default())
+                    .service(resource("/").route(get().to(index)))
+                    .service(resource("/do_something").route(post().to(do_something)))
+                    .service(resource("/login").route(post().to(login)))
+                    .service(resource("/logout").route(post().to(logout)))
+            });
+
+            // Step 1:  GET index
+            //   - set-cookie actix-session should NOT be in response (session data is empty)
+            //   - response should be: {"counter": 0, "user_id": None}
+            let req_1a = srv.get("/").send();
+            let mut resp_1 = req_1a.await.unwrap();
+            assert!(resp_1.cookies().unwrap().is_empty());
+            let result_1 = resp_1.json::<IndexResponse>().await.unwrap();
+            assert_eq!(
+                result_1,
+                IndexResponse {
+                    user_id: None,
+                    counter: 0
+                }
+            );
+
+            // Step 2: POST to do_something
+            //   - adds new session state in redis:  {"counter": 1}
+            //   - set-cookie actix-session should be in response (session cookie #1)
+            //   - response should be: {"counter": 1, "user_id": None}
+            let req_2 = srv.post("/do_something").send();
+            let mut resp_2 = req_2.await.unwrap();
+            let result_2 = resp_2.json::<IndexResponse>().await.unwrap();
+            assert_eq!(
+                result_2,
+                IndexResponse {
+                    user_id: None,
+                    counter: 1
+                }
+            );
+            let cookie_1 = resp_2
+                .cookies()
+                .unwrap()
+                .clone()
+                .into_iter()
+                .find(|c| c.name() == "test-session")
+                .unwrap();
+            assert_eq!(cookie_1.max_age(), Some(Duration::days(7)));
+
+            // Step 3:  GET index, including session cookie #1 in request
+            //   - set-cookie will *not* be in response
+            //   - response should be: {"counter": 1, "user_id": None}
+            let req_3 = srv.get("/").cookie(cookie_1.clone()).send();
+            let mut resp_3 = req_3.await.unwrap();
+            assert!(resp_3.cookies().unwrap().is_empty());
+            let result_3 = resp_3.json::<IndexResponse>().await.unwrap();
+            assert_eq!(
+                result_3,
+                IndexResponse {
+                    user_id: None,
+                    counter: 1
+                }
+            );
+
+            // Step 4: POST again to do_something, including session cookie #1 in request
+            //   - set-cookie will be in response (session cookie #2)
+            //   - updates session state:  {"counter": 2}
+            //   - response should be: {"counter": 2, "user_id": None}
+            let req_4 = srv.post("/do_something").cookie(cookie_1.clone()).send();
+            let mut resp_4 = req_4.await.unwrap();
+            let result_4 = resp_4.json::<IndexResponse>().await.unwrap();
+            assert_eq!(
+                result_4,
+                IndexResponse {
+                    user_id: None,
+                    counter: 2
+                }
+            );
+            let cookie_2 = resp_4
+                .cookies()
+                .unwrap()
+                .clone()
+                .into_iter()
+                .find(|c| c.name() == "test-session")
+                .unwrap();
+            assert_eq!(cookie_2.max_age(), Some(Duration::days(7)));
+
+            // Step 5: POST to login, including session cookie #2 in request
+            //   - set-cookie actix-session will be in response  (session cookie #3)
+            //   - updates session state: {"counter": 2, "user_id": "ferris"}
+            let req_5 = srv
+                .post("/login")
+                .cookie(cookie_2.clone())
+                .send_json(&json!({"user_id": "ferris"}));
+            let mut resp_5 = req_5.await.unwrap();
+            let cookie_3 = resp_5
+                .cookies()
+                .unwrap()
+                .clone()
+                .into_iter()
+                .find(|c| c.name() == "test-session")
+                .unwrap();
+            assert_ne!(cookie_2.value(), cookie_3.value());
+
+            let result_5 = resp_5.json::<IndexResponse>().await.unwrap();
+            assert_eq!(
+                result_5,
+                IndexResponse {
+                    user_id: Some("ferris".into()),
+                    counter: 2
+                }
+            );
+
+            // Step 6: GET index, including session cookie #3 in request
+            //   - response should be: {"counter": 2, "user_id": "ferris"}
+            let req_6 = srv.get("/").cookie(cookie_3.clone()).send();
+            let mut resp_6 = req_6.await.unwrap();
+            let result_6 = resp_6.json::<IndexResponse>().await.unwrap();
+            assert_eq!(
+                result_6,
+                IndexResponse {
+                    user_id: Some("ferris".into()),
+                    counter: 2
+                }
+            );
+
+            // Step 7: POST again to do_something, including session cookie #3 in request
+            //   - updates session state: {"counter": 3, "user_id": "ferris"}
+            //   - response should be: {"counter": 3, "user_id": "ferris"}
+            let req_7 = srv.post("/do_something").cookie(cookie_3.clone()).send();
+            let mut resp_7 = req_7.await.unwrap();
+            let result_7 = resp_7.json::<IndexResponse>().await.unwrap();
+            assert_eq!(
+                result_7,
+                IndexResponse {
+                    user_id: Some("ferris".into()),
+                    counter: 3
+                }
+            );
+
+            // Step 8: GET index, including session cookie #2 in request
+            // If invalidation is supported, no state will be found associated to this session.
+            // If invalidation is not supported, the old state will still be retrieved.
+            let req_8 = srv.get("/").cookie(cookie_2.clone()).send();
+            let mut resp_8 = req_8.await.unwrap();
+            if is_invalidation_supported {
+                assert!(resp_8.cookies().unwrap().is_empty());
+                let result_8 = resp_8.json::<IndexResponse>().await.unwrap();
+                assert_eq!(
+                    result_8,
+                    IndexResponse {
+                        user_id: None,
+                        counter: 0
+                    }
+                );
+            } else {
+                let result_8 = resp_8.json::<IndexResponse>().await.unwrap();
+                assert_eq!(
+                    result_8,
+                    IndexResponse {
+                        user_id: None,
+                        counter: 2
+                    }
+                );
+            }
+
+            // Step 9: POST to logout, including session cookie #3
+            //   - set-cookie actix-session will be in response with session cookie #3
+            //     invalidation logic
+            let req_9 = srv.post("/logout").cookie(cookie_3.clone()).send();
+            let resp_9 = req_9.await.unwrap();
+            let cookie_3 = resp_9
+                .cookies()
+                .unwrap()
+                .clone()
+                .into_iter()
+                .find(|c| c.name() == "test-session")
+                .unwrap();
+            assert_eq!(0, cookie_3.max_age().map(|t| t.whole_seconds()).unwrap());
+            assert_eq!("/", cookie_3.path().unwrap());
+
+            // Step 10: GET index, including session cookie #3 in request
+            //   - set-cookie actix-session should NOT be in response if invalidation is supported
+            //   - response should be: {"counter": 0, "user_id": None}
+            let req_10 = srv.get("/").cookie(cookie_3.clone()).send();
+            let mut resp_10 = req_10.await.unwrap();
+            if is_invalidation_supported {
+                assert!(resp_10.cookies().unwrap().is_empty());
+            }
+            let result_10 = resp_10.json::<IndexResponse>().await.unwrap();
+            assert_eq!(
+                result_10,
+                IndexResponse {
+                    user_id: None,
+                    counter: 0
+                }
+            );
+        }
+
+        #[derive(Serialize, Deserialize, Debug, PartialEq)]
+        pub struct IndexResponse {
+            user_id: Option<String>,
+            counter: i32,
+        }
+
+        async fn index(session: Session) -> Result<HttpResponse> {
+            let user_id: Option<String> = session.get::<String>("user_id").unwrap();
+            let counter: i32 = session
+                .get::<i32>("counter")
+                .unwrap_or(Some(0))
+                .unwrap_or(0);
+
+            Ok(HttpResponse::Ok().json(&IndexResponse { user_id, counter }))
+        }
+
+        async fn do_something(session: Session) -> Result<HttpResponse> {
+            let user_id: Option<String> = session.get::<String>("user_id").unwrap();
+            let counter: i32 = session
+                .get::<i32>("counter")
+                .unwrap_or(Some(0))
+                .map_or(1, |inner| inner + 1);
+            session.insert("counter", &counter)?;
+
+            Ok(HttpResponse::Ok().json(&IndexResponse { user_id, counter }))
+        }
+
+        #[derive(Deserialize)]
+        struct Identity {
+            user_id: String,
+        }
+
+        async fn login(user_id: web::Json<Identity>, session: Session) -> Result<HttpResponse> {
+            let id = user_id.into_inner().user_id;
+            session.insert("user_id", &id)?;
+            session.renew();
+
+            let counter: i32 = session
+                .get::<i32>("counter")
+                .unwrap_or(Some(0))
+                .unwrap_or(0);
+
+            Ok(HttpResponse::Ok().json(&IndexResponse {
+                user_id: Some(id),
+                counter,
+            }))
+        }
+
+        async fn logout(session: Session) -> Result<HttpResponse> {
+            let id: Option<String> = session.get("user_id")?;
+
+            let body = if let Some(x) = id {
+                session.purge();
+                format!("Logged out: {}", x)
+            } else {
+                "Could not log out anonymous user".to_owned()
+            };
+
+            Ok(HttpResponse::Ok().body(body))
+        }
     }
 }
