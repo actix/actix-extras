@@ -1,6 +1,9 @@
 # Changes
 
 ## Unreleased - 2021-xx-xx
+- Do not consider requests without a `Access-Control-Request-Method` as preflight. [#226]
+
+[#226]: https://github.com/actix/actix-extras/pull/226
 
 
 ## 0.6.0 - 2022-02-25

@@ -3,7 +3,7 @@ use std::{collections::HashSet, rc::Rc};
 use actix_utils::future::ok;
 use actix_web::{
     body::{EitherBody, MessageBody},
-    dev::{Service, ServiceRequest, ServiceResponse},
+    dev::{forward_ready, Service, ServiceRequest, ServiceResponse},
     http::{
         header::{self, HeaderValue},
         Method,
@@ -159,7 +159,7 @@ where
     type Error = Error;
     type Future = LocalBoxFuture<'static, Result<ServiceResponse<EitherBody<B>>, Error>>;
 
-    actix_service::forward_ready!(service);
+    forward_ready!(service);
 
     fn call(&self, req: ServiceRequest) -> Self::Future {
         if self.inner.preflight && Self::is_request_preflight(&req) {

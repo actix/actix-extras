@@ -1,5 +1,5 @@
-use actix_service::fn_service;
 use actix_utils::future::ok;
+use actix_web::dev::fn_service;
 use actix_web::{
     dev::{ServiceRequest, Transform},
     http::{
