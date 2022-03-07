@@ -33,7 +33,7 @@ impl fmt::Debug for OriginFn {
 }
 
 /// Try to parse header value as HTTP method.
-fn header_value_try_into_method(hdr: &HeaderValue) -> Option<Method> {
+pub(crate) fn header_value_try_into_method(hdr: &HeaderValue) -> Option<Method> {
     hdr.to_str()
         .ok()
         .and_then(|meth| Method::try_from(meth).ok())
@@ -141,7 +141,7 @@ impl Inner {
             // method invalid
             Some(_) => Err(CorsError::BadRequestMethod),
 
-            // method missing
+            // method missing so this is not a preflight request
             None => Err(CorsError::MissingRequestMethod),
         }
     }
@@ -277,7 +277,7 @@ mod test {
         assert!(cors.inner.validate_allowed_method(req.head()).is_err());
         assert!(cors.inner.validate_allowed_headers(req.head()).is_err());
         let resp = test::call_service(&cors, req).await;
-        assert_eq!(resp.status(), StatusCode::BAD_REQUEST);
+        assert_eq!(resp.status(), StatusCode::OK);
 
         let req = TestRequest::default()
             .method(Method::OPTIONS)
