@@ -2,8 +2,6 @@ use actix_web::{http::StatusCode, HttpResponse, ResponseError};
 
 use derive_more::{Display, Error};
 
-use crate::inner::add_vary_header;
-
 /// Errors that can occur when processing CORS guarded requests.
 #[derive(Debug, Clone, Display, Error)]
 #[non_exhaustive]
@@ -47,8 +45,6 @@ impl ResponseError for CorsError {
     }
 
     fn error_response(&self) -> HttpResponse {
-        let mut res = HttpResponse::with_body(self.status_code(), self.to_string());
-        add_vary_header(res.headers_mut());
-        res.map_into_boxed_body()
+        HttpResponse::with_body(self.status_code(), self.to_string()).map_into_boxed_body()
     }
 }
