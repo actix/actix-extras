@@ -422,7 +422,7 @@
 }
 
 <span class="doccomment">/// Try to parse header value as HTTP method.</span>
-<span class="kw">fn</span> <span class="ident">header_value_try_into_method</span>(<span class="ident">hdr</span>: <span class="kw-2">&amp;</span><span class="ident">HeaderValue</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Method</span><span class="op">&gt;</span> {
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">header_value_try_into_method</span>(<span class="ident">hdr</span>: <span class="kw-2">&amp;</span><span class="ident">HeaderValue</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Method</span><span class="op">&gt;</span> {
     <span class="ident">hdr</span>.<span class="ident">to_str</span>()
         .<span class="ident">ok</span>()
         .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">meth</span><span class="op">|</span> <span class="ident">Method::try_from</span>(<span class="ident">meth</span>).<span class="ident">ok</span>())
@@ -530,7 +530,7 @@
             <span class="comment">// method invalid</span>
             <span class="prelude-val">Some</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">CorsError::BadRequestMethod</span>),
 
-            <span class="comment">// method missing</span>
+            <span class="comment">// method missing so this is not a preflight request</span>
             <span class="prelude-val">None</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">CorsError::MissingRequestMethod</span>),
         }
     }
@@ -666,7 +666,7 @@
         <span class="macro">assert!</span>(<span class="ident">cors</span>.<span class="ident">inner</span>.<span class="ident">validate_allowed_method</span>(<span class="ident">req</span>.<span class="ident">head</span>()).<span class="ident">is_err</span>());
         <span class="macro">assert!</span>(<span class="ident">cors</span>.<span class="ident">inner</span>.<span class="ident">validate_allowed_headers</span>(<span class="ident">req</span>.<span class="ident">head</span>()).<span class="ident">is_err</span>());
         <span class="kw">let</span> <span class="ident">resp</span> <span class="op">=</span> <span class="ident">test::call_service</span>(<span class="kw-2">&amp;</span><span class="ident">cors</span>, <span class="ident">req</span>).<span class="kw">await</span>;
-        <span class="macro">assert_eq!</span>(<span class="ident">resp</span>.<span class="ident">status</span>(), <span class="ident">StatusCode::BAD_REQUEST</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">resp</span>.<span class="ident">status</span>(), <span class="ident">StatusCode::OK</span>);
 
         <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="ident">TestRequest::default</span>()
             .<span class="ident">method</span>(<span class="ident">Method::OPTIONS</span>)
@@ -770,5 +770,5 @@
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_cors" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (9fcbc3205 2022-03-04)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_cors" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (38a0b81b1 2022-03-06)" ></div>
 </body></html>

@@ -231,12 +231,35 @@
 <span id="224">224</span>
 <span id="225">225</span>
 <span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections::HashSet</span>, <span class="ident">rc::Rc</span>};
 
 <span class="kw">use</span> <span class="ident">actix_utils::future::ok</span>;
 <span class="kw">use</span> <span class="ident">actix_web</span>::{
     <span class="ident">body</span>::{<span class="ident">EitherBody</span>, <span class="ident">MessageBody</span>},
-    <span class="ident">dev</span>::{<span class="ident">Service</span>, <span class="ident">ServiceRequest</span>, <span class="ident">ServiceResponse</span>},
+    <span class="ident">dev</span>::{<span class="ident">forward_ready</span>, <span class="ident">Service</span>, <span class="ident">ServiceRequest</span>, <span class="ident">ServiceResponse</span>},
     <span class="ident">http</span>::{
         <span class="ident">header</span>::{<span class="self">self</span>, <span class="ident">HeaderValue</span>},
         <span class="ident">Method</span>,
@@ -246,7 +269,11 @@
 <span class="kw">use</span> <span class="ident">futures_util::future</span>::{<span class="ident">FutureExt</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">LocalBoxFuture</span>};
 <span class="kw">use</span> <span class="ident">log::debug</span>;
 
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">builder::intersperse_header_values</span>, <span class="ident">inner::add_vary_header</span>, <span class="ident">AllOrSome</span>, <span class="ident">Inner</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::{
+    <span class="ident">builder::intersperse_header_values</span>,
+    <span class="ident">inner</span>::{<span class="ident">add_vary_header</span>, <span class="ident">header_value_try_into_method</span>},
+    <span class="ident">AllOrSome</span>, <span class="ident">Inner</span>,
+};
 
 <span class="doccomment">/// Service wrapper for Cross-Origin Resource Sharing support.</span>
 <span class="doccomment">///</span>
@@ -260,6 +287,25 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> <span class="ident">CorsMiddleware</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">is_request_preflight</span>(<span class="ident">req</span>: <span class="kw-2">&amp;</span><span class="ident">ServiceRequest</span>) -&gt; <span class="ident">bool</span> {
+        <span class="comment">// check request method is OPTIONS</span>
+        <span class="kw">if</span> <span class="ident">req</span>.<span class="ident">method</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">Method::OPTIONS</span> {
+            <span class="kw">return</span> <span class="bool-val">false</span>;
+        }
+
+        <span class="comment">// check follow-up request method is present and valid</span>
+        <span class="kw">if</span> <span class="ident">req</span>
+            .<span class="ident">headers</span>()
+            .<span class="ident">get</span>(<span class="ident">header::ACCESS_CONTROL_REQUEST_METHOD</span>)
+            .<span class="ident">and_then</span>(<span class="ident">header_value_try_into_method</span>)
+            .<span class="ident">is_none</span>()
+        {
+            <span class="kw">return</span> <span class="bool-val">false</span>;
+        }
+
+        <span class="bool-val">true</span>
+    }
+
     <span class="kw">fn</span> <span class="ident">handle_preflight</span>(<span class="ident">inner</span>: <span class="kw-2">&amp;</span><span class="ident">Inner</span>, <span class="ident">req</span>: <span class="ident">ServiceRequest</span>) -&gt; <span class="ident">ServiceResponse</span> {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span> <span class="ident">inner</span>
             .<span class="ident">validate_origin</span>(<span class="ident">req</span>.<span class="ident">head</span>())
@@ -369,34 +415,34 @@
     <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Error</span>;
     <span class="kw">type</span> <span class="ident">Future</span> <span class="op">=</span> <span class="ident">LocalBoxFuture</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ServiceResponse</span><span class="op">&lt;</span><span class="ident">EitherBody</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span>;
 
-    <span class="macro">actix_service::forward_ready!</span>(<span class="ident">service</span>);
+    <span class="macro">forward_ready!</span>(<span class="ident">service</span>);
 
     <span class="kw">fn</span> <span class="ident">call</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">req</span>: <span class="ident">ServiceRequest</span>) -&gt; <span class="ident"><span class="self">Self</span>::Future</span> {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">preflight</span> <span class="op">&amp;&amp;</span> <span class="ident">req</span>.<span class="ident">method</span>() <span class="op">==</span> <span class="ident">Method::OPTIONS</span> {
+        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">preflight</span> <span class="op">&amp;&amp;</span> <span class="ident"><span class="self">Self</span>::is_request_preflight</span>(<span class="kw-2">&amp;</span><span class="ident">req</span>) {
             <span class="kw">let</span> <span class="ident">inner</span> <span class="op">=</span> <span class="ident">Rc::clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">inner</span>);
             <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::handle_preflight</span>(<span class="kw-2">&amp;</span><span class="ident">inner</span>, <span class="ident">req</span>);
-            <span class="ident">ok</span>(<span class="ident">res</span>.<span class="ident">map_into_right_body</span>()).<span class="ident">boxed_local</span>()
-        } <span class="kw">else</span> {
-            <span class="kw">let</span> <span class="ident">origin</span> <span class="op">=</span> <span class="ident">req</span>.<span class="ident">headers</span>().<span class="ident">get</span>(<span class="ident">header::ORIGIN</span>).<span class="ident">cloned</span>();
-
-            <span class="kw">if</span> <span class="ident">origin</span>.<span class="ident">is_some</span>() {
-                <span class="comment">// Only check requests with a origin header.</span>
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">validate_origin</span>(<span class="ident">req</span>.<span class="ident">head</span>()) {
-                    <span class="macro">debug!</span>(<span class="string">&quot;origin validation failed; inner service is not called&quot;</span>);
-                    <span class="kw">return</span> <span class="ident">ok</span>(<span class="ident">req</span>.<span class="ident">error_response</span>(<span class="ident">err</span>).<span class="ident">map_into_right_body</span>()).<span class="ident">boxed_local</span>();
-                }
-            }
-
-            <span class="kw">let</span> <span class="ident">inner</span> <span class="op">=</span> <span class="ident">Rc::clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">inner</span>);
-            <span class="kw">let</span> <span class="ident">fut</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">service</span>.<span class="ident">call</span>(<span class="ident">req</span>);
-
-            <span class="kw">async</span> <span class="kw">move</span> {
-                <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">fut</span>.<span class="kw">await</span>;
-
-                <span class="prelude-val">Ok</span>(<span class="ident"><span class="self">Self</span>::augment_response</span>(<span class="kw-2">&amp;</span><span class="ident">inner</span>, <span class="ident">res</span><span class="question-mark">?</span>).<span class="ident">map_into_left_body</span>())
-            }
-            .<span class="ident">boxed_local</span>()
+            <span class="kw">return</span> <span class="ident">ok</span>(<span class="ident">res</span>.<span class="ident">map_into_right_body</span>()).<span class="ident">boxed_local</span>();
         }
+
+        <span class="kw">let</span> <span class="ident">origin</span> <span class="op">=</span> <span class="ident">req</span>.<span class="ident">headers</span>().<span class="ident">get</span>(<span class="ident">header::ORIGIN</span>).<span class="ident">cloned</span>();
+
+        <span class="kw">if</span> <span class="ident">origin</span>.<span class="ident">is_some</span>() {
+            <span class="comment">// Only check requests with a origin header.</span>
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">validate_origin</span>(<span class="ident">req</span>.<span class="ident">head</span>()) {
+                <span class="macro">debug!</span>(<span class="string">&quot;origin validation failed; inner service is not called&quot;</span>);
+                <span class="kw">return</span> <span class="ident">ok</span>(<span class="ident">req</span>.<span class="ident">error_response</span>(<span class="ident">err</span>).<span class="ident">map_into_right_body</span>()).<span class="ident">boxed_local</span>();
+            }
+        }
+
+        <span class="kw">let</span> <span class="ident">inner</span> <span class="op">=</span> <span class="ident">Rc::clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">inner</span>);
+        <span class="kw">let</span> <span class="ident">fut</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">service</span>.<span class="ident">call</span>(<span class="ident">req</span>);
+
+        <span class="kw">async</span> <span class="kw">move</span> {
+            <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">fut</span>.<span class="kw">await</span>;
+
+            <span class="prelude-val">Ok</span>(<span class="ident"><span class="self">Self</span>::augment_response</span>(<span class="kw-2">&amp;</span><span class="ident">inner</span>, <span class="ident">res</span><span class="question-mark">?</span>).<span class="ident">map_into_left_body</span>())
+        }
+        .<span class="ident">boxed_local</span>()
     }
 }
 
@@ -458,5 +504,5 @@
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_cors" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (9fcbc3205 2022-03-04)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_cors" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (38a0b81b1 2022-03-06)" ></div>
 </body></html>
