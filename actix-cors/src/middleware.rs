@@ -13,7 +13,11 @@ use actix_web::{
 use futures_util::future::{FutureExt as _, LocalBoxFuture};
 use log::debug;
 
-use crate::{builder::intersperse_header_values, inner::add_vary_header, AllOrSome, Inner};
+use crate::{
+    builder::intersperse_header_values,
+    inner::{add_vary_header, header_value_try_into_method},
+    AllOrSome, Inner,
+};
 
 /// Service wrapper for Cross-Origin Resource Sharing support.
 ///
@@ -27,6 +31,25 @@ pub struct CorsMiddleware<S> {
 }
 
 impl<S> CorsMiddleware<S> {
+    fn is_request_preflight(req: &ServiceRequest) -> bool {
+        // check request method is OPTIONS
+        if req.method() != Method::OPTIONS {
+            return false;
+        }
+
+        // check follow-up request method is present and valid
+        if req
+            .headers()
+            .get(header::ACCESS_CONTROL_REQUEST_METHOD)
+            .and_then(header_value_try_into_method)
+            .is_none()
+        {
+            return false;
+        }
+
+        true
+    }
+
     fn handle_preflight(inner: &Inner, req: ServiceRequest) -> ServiceResponse {
         if let Err(err) = inner
             .validate_origin(req.head())
@@ -139,31 +162,31 @@ where
     actix_service::forward_ready!(service);
 
     fn call(&self, req: ServiceRequest) -> Self::Future {
-        if self.inner.preflight && req.method() == Method::OPTIONS {
+        if self.inner.preflight && Self::is_request_preflight(&req) {
             let inner = Rc::clone(&self.inner);
             let res = Self::handle_preflight(&inner, req);
-            ok(res.map_into_right_body()).boxed_local()
-        } else {
-            let origin = req.headers().get(header::ORIGIN).cloned();
-
-            if origin.is_some() {
-                // Only check requests with a origin header.
-                if let Err(err) = self.inner.validate_origin(req.head()) {
-                    debug!("origin validation failed; inner service is not called");
-                    return ok(req.error_response(err).map_into_right_body()).boxed_local();
-                }
-            }
-
-            let inner = Rc::clone(&self.inner);
-            let fut = self.service.call(req);
-
-            async move {
-                let res = fut.await;
-
-                Ok(Self::augment_response(&inner, res?).map_into_left_body())
-            }
-            .boxed_local()
+            return ok(res.map_into_right_body()).boxed_local();
         }
+
+        let origin = req.headers().get(header::ORIGIN).cloned();
+
+        if origin.is_some() {
+            // Only check requests with a origin header.
+            if let Err(err) = self.inner.validate_origin(req.head()) {
+                debug!("origin validation failed; inner service is not called");
+                return ok(req.error_response(err).map_into_right_body()).boxed_local();
+            }
+        }
+
+        let inner = Rc::clone(&self.inner);
+        let fut = self.service.call(req);
+
+        async move {
+            let res = fut.await;
+
+            Ok(Self::augment_response(&inner, res?).map_into_left_body())
+        }
+        .boxed_local()
     }
 }
 
