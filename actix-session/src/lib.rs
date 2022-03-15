@@ -1,4 +1,4 @@
-//! Session management for Actix Web
+//! Session management for Actix Web.
 //!
 //! The HTTP protocol, at a first glance, is stateless: the client sends a request, the server
 //! parses its content, performs some processing and returns a response. The outcome is only
