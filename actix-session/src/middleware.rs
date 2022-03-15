@@ -188,13 +188,15 @@ pub enum SessionLength {
 /// the content of the session cookie.
 #[derive(Debug, Clone, Copy)]
 pub enum CookieContentSecurity {
-    /// `CookieContentSecurity::Private` translates into an encrypted cookie content. The end-user/
-    /// JavaScript cannot tamper with its content nor decode it (i.e., it preserves confidentiality,
-    /// as long the as the encryption key is not breached).
+    /// `CookieContentSecurity::Private` selects encrypted cookie content.
+    ///
+    /// The client cannot tamper with its contents nor decode it (i.e., preserves confidentiality as
+    /// long the as the encryption key is not breached).
     Private,
 
-    /// `CookieContentSecurity::Signed` translates into a signed cookie content. The end-user/
-    /// JavaScript cannot tamper with its content, but they can read it (i.e., no confidentiality).
+    /// `CookieContentSecurity::Signed` selects signed cookie content.
+    ///
+    /// The client cannot tamper with its contents, but they can read it (i.e., no confidentiality).
     Signed,
 }
 
@@ -327,8 +329,8 @@ impl<Store: SessionStore> SessionMiddlewareBuilder<Store> {
 
     /// Choose how the session cookie content should be secured.
     ///
-    /// - `CookieContentSecurity::Private` translates into an encrypted cookie content.
-    /// - `CookieContentSecurity::Signed` translates into a signed cookie content.
+    /// - [`CookieContentSecurity::Private`] selects encrypted cookie content.
+    /// - [`CookieContentSecurity::Signed`] selects signed cookie content.
     ///
     /// # Default
     /// By default, the cookie content is encrypted. Encrypted was chosen instead of signed as

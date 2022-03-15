@@ -26,9 +26,9 @@
 //! **storage backend** to create/delete/update the session state based on the operations performed
 //! against the active [`Session`].
 //!
-//! `actix-session` provides some built-in storage backends: ([`storage::CookieSessionStore`],
-//! [`storage::RedisSessionStore`], and [`storage::RedisActorSessionStore`]) - you can create a
-//! custom storage backend by implementing the [`SessionStore`](storage::SessionStore) trait.
+//! `actix-session` provides some built-in storage backends: ([`CookieSessionStore`],
+//! [`RedisSessionStore`], and [`RedisActorSessionStore`]) - you can create a custom storage backend
+//! by implementing the [`SessionStore`] trait.
 //!
 //! Further reading on sessions:
 //! - [RFC6265](https://datatracker.ietf.org/doc/html/rfc6265);
@@ -72,10 +72,10 @@
 //! use actix_session::Session;
 //!
 //! fn index(session: Session) -> Result<&'static str, Error> {
-//!     // Access the session state
+//!     // access the session state
 //!     if let Some(count) = session.get::<i32>("counter")? {
 //!         println!("SESSION value: {}", count);
-//!         // Modify the session state
+//!         // modify the session state
 //!         session.insert("counter", count + 1)?;
 //!     } else {
 //!         session.insert("counter", 1)?;
@@ -90,43 +90,48 @@
 //! By default, `actix-session` does not provide any storage backend to retrieve and save the state
 //! attached to your sessions. You can enable:
 //!
-//! - a purely cookie-based "backend", [`storage::CookieSessionStore`], using the `cookie-session`
-//!   feature flag.
+//! - a purely cookie-based "backend", [`CookieSessionStore`], using the `cookie-session` feature
+//!   flag.
 //!
-//! ```toml
-//! [dependencies]
-//! # ...
-//! actix-session = { version = "...", features = ["cookie-session"] }
-//! ```
+//!   ```toml
+//!   [dependencies]
+//!   # ...
+//!   actix-session = { version = "...", features = ["cookie-session"] }
+//!   ```
 //!
-//! - a Redis-based backend via `actix-redis`, [`storage::RedisActorSessionStore`], using the
-//!   `redis-actor-session` feature flag.
+//! - a Redis-based backend via [`actix-redis`](https://docs.rs/acitx-redis),
+//!   [`RedisActorSessionStore`], using the `redis-actor-session` feature flag.
 //!
-//! ```toml
-//! [dependencies]
-//! # ...
-//! actix-session = { version = "...", features = ["redis-actor-session"] }
-//! ```
+//!   ```toml
+//!   [dependencies]
+//!   # ...
+//!   actix-session = { version = "...", features = ["redis-actor-session"] }
+//!   ```
 //!
-//! - a Redis-based backend via [`redis-rs`](https://github.com/mitsuhiko/redis-rs),
-//!   [`storage::RedisSessionStore`], using the `redis-rs-session` feature flag.
+//! - a Redis-based backend via [`redis-rs`](https://docs.rs/redis-rs), [`RedisSessionStore`], using
+//!   the `redis-rs-session` feature flag.
 //!
-//! ```toml
-//! [dependencies]
-//! # ...
-//! actix-session = { version = "...", features = ["redis-rs-session"] }
-//! ```
+//!   ```toml
+//!   [dependencies]
+//!   # ...
+//!   actix-session = { version = "...", features = ["redis-rs-session"] }
+//!   ```
 //!
-//! Add the `redis-rs-tls-session` feature flag if you want to connect to Redis using a secured
-//! connection:
+//!   Add the `redis-rs-tls-session` feature flag if you want to connect to Redis using a secured
+//!   connection:
 //!
-//! ```toml
-//! [dependencies]
-//! # ...
-//! actix-session = { version = "...", features = ["redis-rs-session", "redis-rs-tls-session"] }
-//! ```
+//!   ```toml
+//!   [dependencies]
+//!   # ...
+//!   actix-session = { version = "...", features = ["redis-rs-session", "redis-rs-tls-session"] }
+//!   ```
 //!
-//! You can provide a different session store by implementing the [`storage::SessionStore`] trait.
+//! You can implement your own session storage backend using the [`SessionStore`] trait.
+//!
+//! [`SessionStore`]: storage::SessionStore
+//! [`CookieSessionStore`]: storage::CookieSessionStore
+//! [`RedisSessionStore`]: storage::RedisSessionStore
+//! [`RedisActorSessionStore`]: storage::RedisActorSessionStore
 
 #![deny(rust_2018_idioms, nonstandard_style)]
 #![warn(future_incompatible, missing_docs)]
