@@ -1,9 +1,12 @@
 # Changes
 
 ## Unreleased - 2021-xx-xx
+
+
+## 0.11.0 - 2022-03-15
 ### Removed
 - `RedisSession` has been removed. Check out `RedisActorSessionStore` in `actix-session` for a session store backed by Redis using `actix-redis`. [#212]
-  
+
 ### Changed
 - Update `redis-async` dependency to `0.12`. [#212]
 
