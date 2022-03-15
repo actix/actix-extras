@@ -165,6 +165,7 @@
 <span id="160">160</span>
 <span id="161">161</span>
 <span id="162">162</span>
+<span id="163">163</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Opinionated request identity service for Actix Web apps.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! [`IdentityService`] middleware can be used with different policies types to store</span>
@@ -243,6 +244,7 @@
     <span class="kw">type</span> <span class="ident">ResponseFuture</span>: <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span>;
 
     <span class="doccomment">/// Parse the session from request and load data from a service identity.</span>
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::wrong_self_convention</span>)]</span>
     <span class="kw">fn</span> <span class="ident">from_request</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">req</span>: <span class="kw-2">&amp;mut</span> <span class="ident">ServiceRequest</span>) -&gt; <span class="ident"><span class="self">Self</span>::Future</span>;
 
     <span class="doccomment">/// Write changes to response</span>
