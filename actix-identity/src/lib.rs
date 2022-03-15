@@ -76,6 +76,7 @@ pub trait IdentityPolicy: Sized + 'static {
     type ResponseFuture: Future<Output = Result<(), Error>>;
 
     /// Parse the session from request and load data from a service identity.
+    #[allow(clippy::wrong_self_convention)]
     fn from_request(&self, req: &mut ServiceRequest) -> Self::Future;
 
     /// Write changes to response
