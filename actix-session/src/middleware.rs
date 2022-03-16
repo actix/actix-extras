@@ -197,7 +197,7 @@ pub enum CookieContentSecurity {
 
     /// The cookie content is signed when using `CookieContentSecurity::Signed`.
     ///
-    /// Signing guarantees integrity, but it doesn't ensure confidentiality: the client 
+    /// Signing guarantees integrity, but it doesn't ensure confidentiality: the client
     /// cannot tamper with the cookie content, but they can read it.
     Signed,
 }
