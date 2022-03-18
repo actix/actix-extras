@@ -80,7 +80,7 @@ where
         Box::pin(async move {
             let status = limiter.count(key.to_string()).await;
             if status.is_err() {
-                warn!("403. Rate limit exceed error for {}", key);
+                log::warn!("403. Rate limit exceed error for {}", key);
                 Ok(req.into_response(forbidden))
             } else {
                 service

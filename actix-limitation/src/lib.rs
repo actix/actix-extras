@@ -1,55 +1,54 @@
-/*!
-Rate limiter using a fixed window counter for arbitrary keys, backed by Redis for Actix Web
+//! Rate limiter using a fixed window counter for arbitrary keys, backed by Redis for Actix Web.
+//!
+//! ```toml
+//! [dependencies]
+//! actix-limitation = "0.1.4"
+//! actix-web = "4"
+//! ```
+//!
+//! ```no_run
+//! use std::time::Duration;
+//! use actix_web::{get, web, App, HttpServer, Responder};
+//! use actix_limitation::{Limiter, RateLimiter};
+//!
+//! #[get("/{id}/{name}")]
+//! async fn index(info: web::Path<(u32, String)>) -> impl Responder {
+//!     format!("Hello {}! id:{}", info.1, info.0)
+//! }
+//!
+//! #[actix_web::main]
+//! async fn main() -> std::io::Result<()> {
+//!     let limiter = web::Data::new(
+//!         Limiter::build("redis://127.0.0.1")
+//!             .cookie_name("session-id".to_owned())
+//!             .session_key("rate-api-id".to_owned())
+//!             .limit(5000)
+//!             .period(Duration::from_secs(3600)) // 60 minutes
+//!             .finish()
+//!             .expect("Can't build actix-limiter"),
+//!     );
+//!
+//!     HttpServer::new(move || {
+//!         App::new()
+//!             .wrap(RateLimiter)
+//!             .app_data(limiter.clone())
+//!             .service(index)
+//!     })
+//!     .bind("127.0.0.1:8080")?
+//!     .run()
+//!     .await
+//! }
+//! ```
 
-```toml
-[dependencies]
-actix-limitation = "0.1.4"
-actix-web = "4"
-```
-
-```no_run
 use std::time::Duration;
-use actix_web::{get, web, App, HttpServer, Responder};
-use actix_limitation::{Limiter, RateLimiter};
-
-#[get("/{id}/{name}")]
-async fn index(info: web::Path<(u32, String)>) -> impl Responder {
-    format!("Hello {}! id:{}", info.1, info.0)
-}
-
-#[actix_web::main]
-async fn main() -> std::io::Result<()> {
-    let limiter = web::Data::new(
-        Limiter::build("redis://127.0.0.1")
-            .cookie_name("session-id".to_owned())
-            .session_key("rate-api-id".to_owned())
-            .limit(5000)
-            .period(Duration::from_secs(3600)) // 60 minutes
-            .finish()
-            .expect("Can't build actix-limiter"),
-    );
-
-    HttpServer::new(move || {
-        App::new()
-            .wrap(RateLimiter)
-            .app_data(limiter.clone())
-            .service(index)
-    })
-    .bind("127.0.0.1:8080")?
-    .run()
-    .await
-}
-```
-*/
-
-#[macro_use]
-extern crate log;
 
 use redis::Client;
-use std::time::Duration;
 
-pub use crate::core::{builder::Builder, errors::Error, status::Status};
-pub use crate::middleware::RateLimiter;
+mod core;
+mod middleware;
+
+pub use self::core::{builder::Builder, errors::Error, status::Status};
+pub use self::middleware::RateLimiter;
 
 pub const DEFAULT_REQUEST_LIMIT: usize = 5000;
 pub const DEFAULT_PERIOD_SECS: u64 = 3600;
@@ -117,7 +116,20 @@ impl Limiter {
     }
 }
 
-mod core;
-mod middleware;
 #[cfg(test)]
-mod test;
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_create_limiter() {
+        let builder = Limiter::build("redis://127.0.0.1:6379/1");
+        let limiter = builder.finish();
+        assert!(limiter.is_ok());
+
+        let limiter = limiter.unwrap();
+        assert_eq!(limiter.limit, 5000);
+        assert_eq!(limiter.period, Duration::from_secs(3600));
+        assert_eq!(limiter.cookie_name, DEFAULT_COOKIE_NAME);
+        assert_eq!(limiter.session_key, DEFAULT_SESSION_KEY);
+    }
+}
