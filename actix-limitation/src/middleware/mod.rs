@@ -1,16 +1,13 @@
-use std::{pin::Pin, rc::Rc};
+use std::{future::Future, pin::Pin, rc::Rc};
 
 use actix_session::UserSession;
+use actix_utils::future::{ok, Ready};
 use actix_web::{
     body::EitherBody,
     cookie::Cookie,
     dev::{forward_ready, Service, ServiceRequest, ServiceResponse, Transform},
     http::header::COOKIE,
     web, Error, HttpResponse,
-};
-use futures::{
-    future::{ok, Ready},
-    Future,
 };
 
 use crate::Limiter;
@@ -40,8 +37,6 @@ pub struct RateLimiterMiddleware<S> {
     service: Rc<S>,
 }
 
-type FutureType<R, E> = dyn Future<Output = Result<R, E>>;
-
 impl<S, B> Service<ServiceRequest> for RateLimiterMiddleware<S>
 where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
@@ -50,7 +45,7 @@ where
 {
     type Response = ServiceResponse<EitherBody<B>>;
     type Error = Error;
-    type Future = Pin<Box<FutureType<Self::Response, Self::Error>>>;
+    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>>>>;
 
     forward_ready!(service);
 

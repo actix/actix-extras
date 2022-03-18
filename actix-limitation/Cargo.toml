@@ -11,9 +11,10 @@ edition = "2018"
 
 [dependencies]
 actix-session = "0.5"
+actix-utils = "3"
 actix-web = { version = "4", default-features = false }
+
 chrono = "0.4"
-futures = "0.3.7"
 log = "0.4"
 redis = { version = "0.21", default-features = false, features = ["aio", "tokio-comp"] }
 time = "0.3"
