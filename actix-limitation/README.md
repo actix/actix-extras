@@ -1,29 +1,32 @@
-# Actix Limitation
+# actix-limitation
 
-Rate limiting using a fixed window counter for arbitrary keys, backed by Redis for actix-web.
-This project is based on https://github.com/fnichol/limitation.
+> Rate limiter using a fixed window counter for arbitrary keys, backed by Redis for Actix Web.  
+> Originally based on <https://github.com/fnichol/limitation>.
 
-## Example
+[![crates.io](https://img.shields.io/crates/v/actix-limitation?label=latest)](https://crates.io/crates/actix-limitation)
+[![Documentation](https://docs.rs/actix-limitation/badge.svg?version=0.1.4)](https://docs.rs/actix-limitation/0.1.4)
+![Apache 2.0 or MIT licensed](https://img.shields.io/crates/l/actix-limitation)
+[![Dependency Status](https://deps.rs/crate/actix-limitation/0.1.4/status.svg)](https://deps.rs/crate/actix-limitation/0.1.4)
+
+## Examples
+
 ```toml
 [dependencies]
-actix-limitation = "0.1.3"
-actix-web = "2.0.0"
-actix-rt = "1.1.1"
+actix-limitation = "0.1.4"
+actix-web = "4"
 ```
 
-Code:
-
 ```rust
+use std::time::Duration;
 use actix_web::{get, web, App, HttpServer, Responder};
 use actix_limitation::{Limiter, RateLimiter};
-use std::time::Duration;
 
-#[get("/{id}/{name}/index.html")]
+#[get("/{id}/{name}")]
 async fn index(info: web::Path<(u32, String)>) -> impl Responder {
     format!("Hello {}! id:{}", info.1, info.0)
 }
 
-#[actix_rt::main]
+#[actix_web::main]
 async fn main() -> std::io::Result<()> {
     let limiter = web::Data::new(
         Limiter::build("redis://127.0.0.1")
