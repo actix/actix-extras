@@ -1,12 +1,12 @@
 [package]
 name = "actix-limitation"
 version = "0.1.4"
-authors = ["errmac-v"]
+authors = ["0xmad <0xmad@users.noreply.github.com>"]
 description = "A rate limiter using a fixed window counter for arbitrary keys, backed by Redis for actix-web."
 keywords = ["actix-web", "rate-api", "rate-limit", "limitation"]
 categories = ["asynchronous", "web-programming"]
 repository = "https://github.com/actix/actix-extras.git"
-license = "MIT"
+license = "MIT OR Apache-2.0"
 edition = "2018"
 
 [dependencies]
