@@ -30,18 +30,18 @@ async fn index(info: web::Path<(u32, String)>) -> impl Responder {
 async fn main() -> std::io::Result<()> {
     let limiter = web::Data::new(
         Limiter::build("redis://127.0.0.1")
-            .cookie_name("session-id")
-            .session_key("rate-api-id")
+            .cookie_name("session-id".to_owned())
+            .session_key("rate-api-id".to_owned())
             .limit(5000)
             .period(Duration::from_secs(3600)) // 60 minutes
             .finish()
             .expect("Can't build actix-limiter"),
     );
 
-    HttpServer::new(|| {
+    HttpServer::new(move || {
         App::new()
             .wrap(RateLimiter)
-            .app_data(limiter)
+            .app_data(limiter.clone())
             .service(index)
     })
     .bind("127.0.0.1:8080")?
