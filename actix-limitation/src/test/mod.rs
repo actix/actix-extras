@@ -18,10 +18,7 @@ fn test_create_limiter() {
 #[test]
 #[should_panic = "Redis URL did not parse"]
 fn test_create_limiter_error() {
-    match Limiter::build("127.0.0.1").finish().unwrap_err() {
-        Error::Client(error) => panic!("{}", error),
-        _ => (),
-    };
+    Limiter::build("127.0.0.1").finish().unwrap_err();
 }
 
 #[actix_rt::test]
@@ -51,7 +48,7 @@ async fn test_limiter_count_error() -> Result<(), Error> {
 
     match limiter.count(id.to_string()).await.unwrap_err() {
         Error::LimitExceeded(status) => assert_eq!(status.remaining(), 0),
-        _ => assert!(false),
+        _ => panic!("error should be LimitExceeded variant"),
     };
 
     let id = Uuid::new_v4();

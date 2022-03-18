@@ -1,23 +1,22 @@
 [package]
 name = "actix-limitation"
 version = "0.1.4"
-repository = "https://github.com/errmac-v/actix-limitation"
-license = "MIT"
-readme = "README.md"
 authors = ["errmac-v"]
-edition = "2018"
+description = "A rate limiter using a fixed window counter for arbitrary keys, backed by Redis for actix-web."
 keywords = ["actix-web", "rate-api", "rate-limit", "limitation"]
 categories = ["asynchronous", "web-programming"]
-description = "A rate limiter using a fixed window counter for arbitrary keys, backed by Redis for actix-web."
+repository = "https://github.com/actix/actix-extras.git"
+license = "MIT"
+edition = "2018"
 
 [dependencies]
-actix-session = "0.4.0-alpha.1"
-actix-web = "3.0.0-alpha.2"
-chrono = "0.4.11"
-futures = "0.3.5"
-log = "0.4.8"
-redis = "0.16.0"
-time = "0.2.16"
+actix-session = "0.4"
+actix-web = "3"
+chrono = "0.4"
+futures = "0.3.7"
+log = "0.4"
+redis = "0.16"
+time = "0.2.23"
 
 [dev-dependencies]
 actix-rt = "1.1.1"

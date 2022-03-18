@@ -58,8 +58,5 @@ fn test_create_limiter_error() {
         cookie_name: "sid".to_string(),
     };
 
-    match builder.limit(200).period(period).finish().unwrap_err() {
-        Error::Client(error) => panic!("{}", error),
-        _ => (),
-    };
+    builder.limit(200).period(period).finish().unwrap_err();
 }

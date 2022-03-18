@@ -58,8 +58,9 @@ where
         // A mis-configuration of the Actix App will result in a **runtime** failure, so the expect
         // method description is important context for the developer.
         let limiter = req
-            .app_data::<Limiter>()
-            .expect("web::Data<Limiter> should be set in app data for RateLimiter middleware");
+            .app_data::<web::Data<Limiter>>()
+            .expect("web::Data<Limiter> should be set in app data for RateLimiter middleware")
+            .clone();
 
         let forbidden = HttpResponse::Forbidden().finish().into_body();
         let (key, fallback) = key(&req, limiter.clone());
@@ -90,11 +91,10 @@ where
 
 fn key(req: &ServiceRequest, limiter: web::Data<Limiter>) -> (Option<String>, Option<String>) {
     let session = req.get_session();
-    let result: Option<String> = session.get(&limiter.session_key).unwrap_or_else(|_| None);
+    let result: Option<String> = session.get(&limiter.session_key).unwrap_or(None);
     let cookies = req.headers().get_all(COOKIE);
     let cookie = cookies
-        .map(|i| i.to_str().ok())
-        .flatten()
+        .filter_map(|i| i.to_str().ok())
         .find(|i| i.contains(&limiter.cookie_name));
 
     let fallback = match cookie {
