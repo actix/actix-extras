@@ -6,10 +6,13 @@ use crate::core::status::Status;
 pub enum Error {
     /// The Redis client failed to connect or run a query.
     Client(redis::RedisError),
+
     /// The limit is exceeded for a key.
     LimitExceeded(Status),
+
     /// A time conversion failed.
-    Time(time::ComponentRangeError),
+    Time(time::error::ComponentRange),
+
     Other(String),
 }
 
@@ -41,8 +44,8 @@ impl From<redis::RedisError> for Error {
     }
 }
 
-impl From<time::ComponentRangeError> for Error {
-    fn from(err: time::ComponentRangeError) -> Self {
+impl From<time::error::ComponentRange> for Error {
+    fn from(err: time::error::ComponentRange) -> Self {
         Error::Time(err)
     }
 }

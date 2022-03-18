@@ -10,14 +10,14 @@ license = "MIT OR Apache-2.0"
 edition = "2018"
 
 [dependencies]
-actix-session = "0.4"
-actix-web = "3"
+actix-session = "0.5"
+actix-web = { version = "4", default-features = false }
 chrono = "0.4"
 futures = "0.3.7"
 log = "0.4"
-redis = "0.16"
-time = "0.2.23"
+redis = { version = "0.21", default-features = false, features = ["aio", "tokio-comp"] }
+time = "0.3"
 
 [dev-dependencies]
-actix-rt = "1.1.1"
-uuid = { version = "0.8.1", features = ["v4"] }
+actix-web = "4"
+uuid = { version = "0.8", features = ["v4"] }

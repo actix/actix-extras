@@ -1,26 +1,29 @@
+use std::{pin::Pin, rc::Rc};
+
 use actix_session::UserSession;
-use actix_web::dev::{Service, ServiceRequest, ServiceResponse, Transform};
-use actix_web::{cookie::Cookie, http::header::COOKIE, web, Error, HttpResponse};
+use actix_web::{
+    body::EitherBody,
+    cookie::Cookie,
+    dev::{forward_ready, Service, ServiceRequest, ServiceResponse, Transform},
+    http::header::COOKIE,
+    web, Error, HttpResponse,
+};
 use futures::{
     future::{ok, Ready},
     Future,
 };
 
-use std::task::{Context, Poll};
-use std::{cell::RefCell, pin::Pin, rc::Rc};
-
 use crate::Limiter;
 
 pub struct RateLimiter;
 
-impl<S, B> Transform<S> for RateLimiter
+impl<S, B> Transform<S, ServiceRequest> for RateLimiter
 where
-    S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
+    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
     S::Future: 'static,
     B: 'static,
 {
-    type Request = ServiceRequest;
-    type Response = ServiceResponse<B>;
+    type Response = ServiceResponse<EitherBody<B>>;
     type Error = Error;
     type InitError = ();
     type Transform = RateLimiterMiddleware<S>;
@@ -28,33 +31,30 @@ where
 
     fn new_transform(&self, service: S) -> Self::Future {
         ok(RateLimiterMiddleware {
-            service: Rc::new(RefCell::new(service)),
+            service: Rc::new(service),
         })
     }
 }
 
 pub struct RateLimiterMiddleware<S> {
-    service: Rc<RefCell<S>>, // TODO: fix RefCell
+    service: Rc<S>,
 }
 
 type FutureType<R, E> = dyn Future<Output = Result<R, E>>;
 
-impl<S, B> Service for RateLimiterMiddleware<S>
+impl<S, B> Service<ServiceRequest> for RateLimiterMiddleware<S>
 where
-    S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
+    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
     S::Future: 'static,
     B: 'static,
 {
-    type Request = ServiceRequest;
-    type Response = ServiceResponse<B>;
+    type Response = ServiceResponse<EitherBody<B>>;
     type Error = Error;
     type Future = Pin<Box<FutureType<Self::Response, Self::Error>>>;
 
-    fn poll_ready(&mut self, context: &mut Context) -> Poll<Result<(), Self::Error>> {
-        self.service.poll_ready(context)
-    }
+    forward_ready!(service);
 
-    fn call(&mut self, req: ServiceRequest) -> Self::Future {
+    fn call(&self, req: ServiceRequest) -> Self::Future {
         // A mis-configuration of the Actix App will result in a **runtime** failure, so the expect
         // method description is important context for the developer.
         let limiter = req
@@ -62,28 +62,36 @@ where
             .expect("web::Data<Limiter> should be set in app data for RateLimiter middleware")
             .clone();
 
-        let forbidden = HttpResponse::Forbidden().finish().into_body();
+        let forbidden = HttpResponse::Forbidden().finish().map_into_right_body();
         let (key, fallback) = key(&req, limiter.clone());
 
-        let mut service = self.service.clone();
+        let service = Rc::clone(&self.service);
         let key = match key {
             Some(key) => key,
             None => match fallback {
                 Some(key) => key,
                 None => {
-                    return Box::pin(async move { service.call(req).await });
+                    return Box::pin(async move {
+                        service
+                            .call(req)
+                            .await
+                            .map(ServiceResponse::map_into_left_body)
+                    });
                 }
             },
         };
 
-        let mut service = self.service.clone();
+        let service = Rc::clone(&self.service);
         Box::pin(async move {
             let status = limiter.count(key.to_string()).await;
             if status.is_err() {
                 warn!("403. Rate limit exceed error for {}", key);
                 Ok(req.into_response(forbidden))
             } else {
-                service.call(req).await
+                service
+                    .call(req)
+                    .await
+                    .map(ServiceResponse::map_into_left_body)
             }
         })
     }

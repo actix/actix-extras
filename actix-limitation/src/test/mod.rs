@@ -21,7 +21,7 @@ fn test_create_limiter_error() {
     Limiter::build("127.0.0.1").finish().unwrap_err();
 }
 
-#[actix_rt::test]
+#[actix_web::test]
 async fn test_limiter_count() -> Result<(), Error> {
     let builder = Limiter::build("redis://127.0.0.1:6379/1");
     let limiter = builder.finish().unwrap();
@@ -35,7 +35,7 @@ async fn test_limiter_count() -> Result<(), Error> {
     Ok(())
 }
 
-#[actix_rt::test]
+#[actix_web::test]
 async fn test_limiter_count_error() -> Result<(), Error> {
     let builder = Limiter::build("redis://127.0.0.1:6379/1");
     let limiter = builder.finish().unwrap();
