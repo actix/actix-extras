@@ -50,5 +50,5 @@ fn test_epoch_utc_plus() {
 #[should_panic = "Source duration value is out of range for the target type"]
 fn test_epoch_utc_plus_overflow() {
     let duration = Duration::from_secs(10000000000000000000);
-    Status::epoch_utc_plus(duration).unwrap_err();
+    Status::epoch_utc_plus(duration).unwrap();
 }

@@ -58,5 +58,5 @@ fn test_create_limiter_error() {
         cookie_name: "sid".to_string(),
     };
 
-    builder.limit(200).period(period).finish().unwrap_err();
+    builder.limit(200).period(period).finish().unwrap();
 }
