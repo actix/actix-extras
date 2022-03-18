@@ -1,0 +1,1 @@
+initSidebarItems({"constant":[["DEFAULT_COOKIE_NAME",""],["DEFAULT_PERIOD_SECS",""],["DEFAULT_REQUEST_LIMIT",""],["DEFAULT_SESSION_KEY",""]],"enum":[["Error",""]],"struct":[["Builder",""],["Limiter",""],["RateLimiter",""],["Status","A report for a given key containing the limit status."]]});
