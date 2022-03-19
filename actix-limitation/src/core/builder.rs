@@ -1,15 +1,15 @@
-use std::time::Duration;
+use std::{borrow::Cow, time::Duration};
 
 use redis::Client;
 
 use crate::{core::errors::Error, Limiter};
 
-pub struct Builder<'builder> {
-    pub(crate) redis_url: &'builder str,
+pub struct Builder<'a> {
+    pub(crate) redis_url: &'a str,
     pub(crate) limit: usize,
     pub(crate) period: Duration,
-    pub(crate) cookie_name: String,
-    pub(crate) session_key: String,
+    pub(crate) cookie_name: Cow<'static, str>,
+    pub(crate) session_key: Cow<'static, str>,
 }
 
 impl Builder<'_> {
@@ -23,17 +23,17 @@ impl Builder<'_> {
         self
     }
 
-    pub fn cookie_name(&mut self, cookie_name: String) -> &mut Self {
-        self.cookie_name = cookie_name;
+    pub fn cookie_name(&mut self, cookie_name: impl Into<Cow<'static, str>>) -> &mut Self {
+        self.cookie_name = cookie_name.into();
         self
     }
 
-    pub fn session_key(&mut self, session_key: String) -> &mut Self {
-        self.session_key = session_key;
+    pub fn session_key(&mut self, session_key: impl Into<Cow<'static, str>>) -> &mut Self {
+        self.session_key = session_key.into();
         self
     }
 
-    /// Finializes and returns a `Limiter`.
+    /// Finalizes and returns a `Limiter`.
     ///
     /// Note that this method will connect to the Redis server to test its connection which is a
     /// **synchronous** operation.
@@ -42,8 +42,8 @@ impl Builder<'_> {
             client: Client::open(self.redis_url)?,
             limit: self.limit,
             period: self.period,
-            cookie_name: self.cookie_name.to_string(),
-            session_key: self.session_key.to_string(),
+            cookie_name: self.cookie_name.clone(),
+            session_key: self.session_key.clone(),
         })
     }
 }
@@ -60,8 +60,8 @@ mod tests {
             redis_url,
             limit: 100,
             period,
-            cookie_name: "session".to_string(),
-            session_key: "rate-api".to_string(),
+            cookie_name: Cow::Owned("session".to_string()),
+            session_key: Cow::Owned("rate-api".to_string()),
         };
 
         assert_eq!(builder.redis_url, redis_url);
@@ -79,8 +79,8 @@ mod tests {
             redis_url,
             limit: 100,
             period: Duration::from_secs(10),
-            session_key: "key".to_string(),
-            cookie_name: "sid".to_string(),
+            session_key: Cow::Borrowed("key"),
+            cookie_name: Cow::Borrowed("sid"),
         };
 
         let limiter = builder
@@ -106,8 +106,8 @@ mod tests {
             redis_url,
             limit: 100,
             period: Duration::from_secs(10),
-            session_key: "key".to_string(),
-            cookie_name: "sid".to_string(),
+            session_key: Cow::Borrowed("key"),
+            cookie_name: Cow::Borrowed("sid"),
         };
 
         builder.limit(200).period(period).finish().unwrap();

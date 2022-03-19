@@ -98,7 +98,7 @@ fn key(req: &ServiceRequest, limiter: web::Data<Limiter>) -> (Option<String>, Op
     let cookies = req.headers().get_all(COOKIE);
     let cookie = cookies
         .filter_map(|i| i.to_str().ok())
-        .find(|i| i.contains(&limiter.cookie_name));
+        .find(|i| i.contains(limiter.cookie_name.as_ref()));
 
     let fallback = match cookie {
         Some(value) => Cookie::parse(value).ok().map(|i| i.to_string()),

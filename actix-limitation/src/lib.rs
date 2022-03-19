@@ -40,6 +40,7 @@
 //! }
 //! ```
 
+use std::borrow::Cow;
 use std::time::Duration;
 
 use redis::Client;
@@ -60,8 +61,8 @@ pub struct Limiter {
     client: Client,
     limit: usize,
     period: Duration,
-    cookie_name: String,
-    session_key: String,
+    cookie_name: Cow<'static, str>,
+    session_key: Cow<'static, str>,
 }
 
 impl Limiter {
@@ -70,8 +71,8 @@ impl Limiter {
             redis_url,
             limit: DEFAULT_REQUEST_LIMIT,
             period: Duration::from_secs(DEFAULT_PERIOD_SECS),
-            cookie_name: DEFAULT_COOKIE_NAME.to_string(),
-            session_key: DEFAULT_SESSION_KEY.to_string(),
+            cookie_name: Cow::Borrowed(DEFAULT_COOKIE_NAME),
+            session_key: Cow::Borrowed(DEFAULT_SESSION_KEY),
         }
     }
 
