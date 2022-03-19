@@ -12,8 +12,8 @@
 
 ```toml
 [dependencies]
-actix-limitation = "0.1.4"
 actix-web = "4"
+actix-limitation = "0.1.4"
 ```
 
 ```rust

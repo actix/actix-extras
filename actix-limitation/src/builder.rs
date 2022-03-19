@@ -43,7 +43,7 @@ impl Builder<'_> {
     ///
     /// Note that this method will connect to the Redis server to test its connection which is a
     /// **synchronous** operation.
-    pub fn finish(&self) -> Result<Limiter, Error> {
+    pub fn build(&self) -> Result<Limiter, Error> {
         Ok(Limiter {
             client: Client::open(self.redis_url)?,
             limit: self.limit,
@@ -94,7 +94,7 @@ mod tests {
             .period(period)
             .cookie_name("session".to_string())
             .session_key("rate-api".to_string())
-            .finish()
+            .build()
             .unwrap();
 
         assert_eq!(limiter.limit, 200);
@@ -116,6 +116,6 @@ mod tests {
             cookie_name: Cow::Borrowed("sid"),
         };
 
-        builder.limit(200).period(period).finish().unwrap();
+        builder.limit(200).period(period).build().unwrap();
     }
 }

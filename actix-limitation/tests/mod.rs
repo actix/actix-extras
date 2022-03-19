@@ -4,15 +4,13 @@ use uuid::Uuid;
 #[test]
 #[should_panic = "Redis URL did not parse"]
 fn test_create_limiter_error() {
-    Limiter::build("127.0.0.1").finish().unwrap();
+    Limiter::builder("127.0.0.1").build().unwrap();
 }
 
-// TODO: figure out whats wrong with this test
-#[ignore]
 #[actix_web::test]
 async fn test_limiter_count() -> Result<(), Error> {
-    let builder = Limiter::build("redis://127.0.0.1:6379/2");
-    let limiter = builder.finish().unwrap();
+    let builder = Limiter::builder("redis://127.0.0.1:6379/2");
+    let limiter = builder.build().unwrap();
     let id = Uuid::new_v4();
 
     for i in 0..5000 {
@@ -27,10 +25,10 @@ async fn test_limiter_count() -> Result<(), Error> {
 #[ignore]
 #[actix_web::test]
 async fn test_limiter_count_error() -> Result<(), Error> {
-    let builder = Limiter::build("redis://127.0.0.1:6379/3");
-    let limiter = builder.finish().unwrap();
-    let id = Uuid::new_v4();
+    let builder = Limiter::builder("redis://127.0.0.1:6379/3");
+    let limiter = builder.build().unwrap();
 
+    let id = Uuid::new_v4();
     for i in 0..5000 {
         let status = limiter.count(id.to_string()).await?;
         assert_eq!(5000 - status.remaining(), i + 1);

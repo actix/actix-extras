@@ -2,8 +2,8 @@
 //!
 //! ```toml
 //! [dependencies]
-//! actix-limitation = "0.1.4"
 //! actix-web = "4"
+//! actix-limitation = "0.1.4"
 //! ```
 //!
 //! ```no_run
@@ -46,8 +46,7 @@
 #![doc(html_logo_url = "https://actix.rs/img/logo.png")]
 #![doc(html_favicon_url = "https://actix.rs/favicon.ico")]
 
-use std::borrow::Cow;
-use std::time::Duration;
+use std::{borrow::Cow, time::Duration};
 
 use redis::Client;
 
@@ -85,7 +84,8 @@ pub struct Limiter {
 
 impl Limiter {
     /// Construct rate limiter builder with defaults.
-    pub fn build(redis_url: &str) -> Builder<'_> {
+    #[must_use]
+    pub fn builder(redis_url: &str) -> Builder<'_> {
         Builder {
             redis_url,
             limit: DEFAULT_REQUEST_LIMIT,
@@ -95,10 +95,10 @@ impl Limiter {
         }
     }
 
-    ///
+    /// Consumes one rate limit unit, returning the status.
     pub async fn count(&self, key: impl Into<String>) -> Result<Status, Error> {
         let (count, reset) = self.track(key).await?;
-        let status = Status::build_status(count, self.limit, reset);
+        let status = Status::new(count, self.limit, reset);
 
         if count > self.limit {
             Err(Error::LimitExceeded(status))
@@ -114,25 +114,25 @@ impl Limiter {
 
         let mut connection = self.client.get_tokio_connection().await?;
 
-        // The seed of this approach is outlined Atul R in a blog post about rate limiting
-        // using NodeJS and Redis. For more details, see
-        // https://blog.atulr.com/rate-limiter/
+        // The seed of this approach is outlined Atul R in a blog post about rate limiting using
+        // NodeJS and Redis. For more details, see https://blog.atulr.com/rate-limiter
         let mut pipe = redis::pipe();
         pipe.atomic()
-            .cmd("SET")
+            .cmd("SET") // Set key and value
             .arg(&key)
             .arg(0)
-            .arg("EX")
+            .arg("EX") // Set the specified expire time, in seconds.
             .arg(expires)
-            .arg("NX")
-            .ignore()
-            .cmd("INCR")
+            .arg("NX") // Only set the key if it does not already exist.
+            .ignore() // --- ignore returned value of SET command ---
+            .cmd("INCR") // Increment key
             .arg(&key)
-            .cmd("TTL")
+            .cmd("TTL") // Return time-to-live of key
             .arg(&key);
 
-        let (count, ttl): (usize, u64) = pipe.query_async(&mut connection).await?;
+        let (count, ttl) = pipe.query_async(&mut connection).await?;
         let reset = Status::epoch_utc_plus(Duration::from_secs(ttl))?;
+
         Ok((count, reset))
     }
 }
@@ -143,8 +143,8 @@ mod tests {
 
     #[test]
     fn test_create_limiter() {
-        let builder = Limiter::build("redis://127.0.0.1:6379/1");
-        let limiter = builder.finish();
+        let builder = Limiter::builder("redis://127.0.0.1:6379/1");
+        let limiter = builder.build();
         assert!(limiter.is_ok());
 
         let limiter = limiter.unwrap();

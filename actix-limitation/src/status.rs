@@ -13,6 +13,18 @@ pub struct Status {
 }
 
 impl Status {
+    /// Constructs status limit status from parts.
+    #[must_use]
+    pub(crate) fn new(count: usize, limit: usize, reset_epoch_utc: usize) -> Self {
+        let remaining = if count >= limit { 0 } else { limit - count };
+
+        Status {
+            limit,
+            remaining,
+            reset_epoch_utc,
+        }
+    }
+
     /// Returns the maximum number of requests allowed in the current period.
     #[must_use]
     pub fn limit(&self) -> usize {
@@ -29,17 +41,6 @@ impl Status {
     #[must_use]
     pub fn reset_epoch_utc(&self) -> usize {
         self.reset_epoch_utc
-    }
-
-    #[must_use]
-    pub(crate) fn build_status(count: usize, limit: usize, reset_epoch_utc: usize) -> Self {
-        let remaining = if count >= limit { 0 } else { limit - count };
-
-        Status {
-            limit,
-            remaining,
-            reset_epoch_utc,
-        }
     }
 
     pub(crate) fn epoch_utc_plus(duration: Duration) -> Result<usize, LimitationError> {
@@ -79,7 +80,7 @@ mod tests {
     fn test_build_status() {
         let count = 200;
         let limit = 100;
-        let status = Status::build_status(count, limit, 2000);
+        let status = Status::new(count, limit, 2000);
         assert_eq!(status.limit(), limit);
         assert_eq!(status.remaining(), 0);
         assert_eq!(status.reset_epoch_utc(), 2000);
@@ -88,7 +89,7 @@ mod tests {
     #[test]
     fn test_build_status_limit() {
         let limit = 100;
-        let status = Status::build_status(0, limit, 2000);
+        let status = Status::new(0, limit, 2000);
         assert_eq!(status.limit(), limit);
         assert_eq!(status.remaining(), limit);
         assert_eq!(status.reset_epoch_utc(), 2000);
