@@ -1,17 +1,11 @@
 use std::{convert::TryInto, ops::Add, time::Duration};
 
-use chrono::SubsecRound;
+use chrono::SubsecRound as _;
 
 use crate::Error as LimitationError;
 
 /// A report for a given key containing the limit status.
-///
-/// The status contains the following information:
-///
-/// - [`limit`]: the maximum number of requests allowed in the current period
-/// - [`remaining`]: how many requests are left in the current period
-/// - [`reset_epoch_utc`]: a UNIX timestamp in UTC approximately when the next period will begin
-#[derive(Clone, Debug)]
+#[derive(Debug, Clone)]
 pub struct Status {
     pub(crate) limit: usize,
     pub(crate) remaining: usize,
@@ -19,18 +13,25 @@ pub struct Status {
 }
 
 impl Status {
+    /// Returns the maximum number of requests allowed in the current period.
+    #[must_use]
     pub fn limit(&self) -> usize {
         self.limit
     }
 
+    /// Returns how many requests are left in the current period.
+    #[must_use]
     pub fn remaining(&self) -> usize {
         self.remaining
     }
 
+    /// Returns a UNIX timestamp in UTC approximately when the next period will begin.
+    #[must_use]
     pub fn reset_epoch_utc(&self) -> usize {
         self.reset_epoch_utc
     }
 
+    #[must_use]
     pub(crate) fn build_status(count: usize, limit: usize, reset_epoch_utc: usize) -> Self {
         let remaining = if count >= limit { 0 } else { limit - count };
 
@@ -49,6 +50,7 @@ impl Status {
                 .timestamp()
                 .try_into()
                 .unwrap_or(0)),
+
             Err(_) => Err(LimitationError::Other(
                 "Source duration value is out of range for the target type".to_string(),
             )),

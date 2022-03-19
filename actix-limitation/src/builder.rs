@@ -2,8 +2,10 @@ use std::{borrow::Cow, time::Duration};
 
 use redis::Client;
 
-use crate::{core::errors::Error, Limiter};
+use crate::{errors::Error, Limiter};
 
+/// Rate limit builder.
+#[derive(Debug)]
 pub struct Builder<'a> {
     pub(crate) redis_url: &'a str,
     pub(crate) limit: usize,
@@ -13,21 +15,25 @@ pub struct Builder<'a> {
 }
 
 impl Builder<'_> {
+    /// Set upper limit.
     pub fn limit(&mut self, limit: usize) -> &mut Self {
         self.limit = limit;
         self
     }
 
+    /// Set limit window/period.
     pub fn period(&mut self, period: Duration) -> &mut Self {
         self.period = period;
         self
     }
 
+    /// Set name of cookie to be sent.
     pub fn cookie_name(&mut self, cookie_name: impl Into<Cow<'static, str>>) -> &mut Self {
         self.cookie_name = cookie_name.into();
         self
     }
 
+    /// Set session key to be used in backend.
     pub fn session_key(&mut self, session_key: impl Into<Cow<'static, str>>) -> &mut Self {
         self.session_key = session_key.into();
         self

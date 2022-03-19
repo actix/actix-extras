@@ -40,22 +40,40 @@
 //! }
 //! ```
 
+#![forbid(unsafe_code)]
+#![deny(rust_2018_idioms, nonstandard_style)]
+#![warn(future_incompatible, missing_docs, missing_debug_implementations)]
+#![doc(html_logo_url = "https://actix.rs/img/logo.png")]
+#![doc(html_favicon_url = "https://actix.rs/favicon.ico")]
+
 use std::borrow::Cow;
 use std::time::Duration;
 
 use redis::Client;
 
-mod core;
+mod builder;
+mod errors;
 mod middleware;
+mod status;
 
-pub use self::core::{builder::Builder, errors::Error, status::Status};
+pub use self::builder::Builder;
+pub use self::errors::Error;
 pub use self::middleware::RateLimiter;
+pub use self::status::Status;
 
+/// Default request limit.
 pub const DEFAULT_REQUEST_LIMIT: usize = 5000;
+
+/// Default period (in seconds).
 pub const DEFAULT_PERIOD_SECS: u64 = 3600;
+
+/// Default cookie name.
 pub const DEFAULT_COOKIE_NAME: &str = "sid";
+
+/// Default session key.
 pub const DEFAULT_SESSION_KEY: &str = "rate-api-id";
 
+/// Rate limiter.
 #[derive(Clone, Debug)]
 pub struct Limiter {
     client: Client,
@@ -66,7 +84,8 @@ pub struct Limiter {
 }
 
 impl Limiter {
-    pub fn build(redis_url: &str) -> Builder {
+    /// Construct rate limiter builder with defaults.
+    pub fn build(redis_url: &str) -> Builder<'_> {
         Builder {
             redis_url,
             limit: DEFAULT_REQUEST_LIMIT,
@@ -76,7 +95,8 @@ impl Limiter {
         }
     }
 
-    pub async fn count<K: Into<String>>(&self, key: K) -> Result<Status, Error> {
+    ///
+    pub async fn count(&self, key: impl Into<String>) -> Result<Status, Error> {
         let (count, reset) = self.track(key).await?;
         let status = Status::build_status(count, self.limit, reset);
 
@@ -88,9 +108,9 @@ impl Limiter {
     }
 
     /// Tracks the given key in a period and returns the count and TTL for the key in seconds.
-    async fn track<K: Into<String>>(&self, key: K) -> Result<(usize, usize), Error> {
+    async fn track(&self, key: impl Into<String>) -> Result<(usize, usize), Error> {
         let key = key.into();
-        let exipres = self.period.as_secs();
+        let expires = self.period.as_secs();
 
         let mut connection = self.client.get_tokio_connection().await?;
 
@@ -103,7 +123,7 @@ impl Limiter {
             .arg(&key)
             .arg(0)
             .arg("EX")
-            .arg(exipres)
+            .arg(expires)
             .arg("NX")
             .ignore()
             .cmd("INCR")
