@@ -15,10 +15,12 @@ actix-utils = "3"
 actix-web = { version = "4", default-features = false }
 
 chrono = "0.4"
+derive_more = "0.99.5"
 log = "0.4"
-redis = { version = "0.21", default-features = false, features = ["aio", "tokio-comp"] }
+redis = { version = "0.21", default-features = false, features = ["tokio-comp"] }
 time = "0.3"
 
 [dev-dependencies]
 actix-web = "4"
 uuid = { version = "0.8", features = ["v4"] }
+static_assertions = "1"
