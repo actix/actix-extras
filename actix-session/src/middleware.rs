@@ -88,6 +88,7 @@ use crate::{
 ///                 )
 ///                 .session_length(SessionLength::Predetermined {
 ///                     max_session_length: Some(time::Duration::days(5)),
+///                     refresh_session_ttl_when_active: None
 ///                 })
 ///                 .build(),
 ///             )
@@ -117,6 +118,7 @@ pub struct SessionMiddleware<Store: SessionStore> {
 struct Configuration {
     cookie: CookieConfiguration,
     session: SessionConfiguration,
+    refresh_when_active: bool,
 }
 
 #[derive(Clone)]
@@ -181,6 +183,25 @@ pub enum SessionLength {
         /// `max_session_length` is also used as the TTL for the session state in the
         /// storage backend.
         max_session_length: Option<Duration>,
+        /// If set to `Some(true)`, the session cookie expiration is reset (i.e. `Max-Age` is set
+        /// to `now + max_session_length`) every time the client associated with the session
+        /// makes a request. The TTL on the session state is updated accordingly.
+        ///
+        /// If set to `Some(false)`, the session cookie expiration is set when the session gets
+        /// created. It is refreshed exclusively when the session data changes or the session key
+        /// is renewed.
+        ///
+        /// If left unspecified (`None`), it defaults to `false`.
+        ///
+        /// # Performance impact
+        ///
+        /// Refreshing the expiration on activity is not free.
+        /// It is not enough to refresh the session cookie expiration, we need to refresh the TTL
+        /// on the session state as well. This translates into a request over the network if you
+        /// are using a remote system as storage backend (e.g. Redis).
+        /// This impacts both the total load on your storage backend (i.e. number of
+        /// queries it has to handle) and the latency of the requests served by your server.
+        refresh_session_ttl_when_active: Option<bool>,
     },
 }
 
@@ -216,6 +237,7 @@ fn default_configuration(key: Key) -> Configuration {
         session: SessionConfiguration {
             state_ttl: default_ttl(),
         },
+        refresh_when_active: false,
     }
 }
 
@@ -290,10 +312,16 @@ impl<Store: SessionStore> SessionMiddlewareBuilder<Store> {
                 self.configuration.cookie.max_age = None;
                 self.configuration.session.state_ttl = state_ttl.unwrap_or_else(default_ttl);
             }
-            SessionLength::Predetermined { max_session_length } => {
+            SessionLength::Predetermined {
+                max_session_length,
+                refresh_session_ttl_when_active,
+            } => {
                 let ttl = max_session_length.unwrap_or_else(default_ttl);
+                let refresh_session_ttl_when_active =
+                    refresh_session_ttl_when_active.unwrap_or(false);
                 self.configuration.cookie.max_age = Some(ttl);
                 self.configuration.session.state_ttl = ttl;
+                self.configuration.refresh_when_active = refresh_session_ttl_when_active;
             }
         }
 
@@ -449,7 +477,6 @@ where
                         .map_err(e500)?;
                     }
                 }
-
                 Some(session_key) => {
                     match status {
                         SessionStatus::Changed => {
@@ -461,7 +488,6 @@ where
                                 )
                                 .await
                                 .map_err(e500)?;
-
                             set_session_cookie(
                                 res.response_mut().head_mut(),
                                 session_key,
@@ -469,25 +495,20 @@ where
                             )
                             .map_err(e500)?;
                         }
-
                         SessionStatus::Purged => {
                             storage_backend.delete(&session_key).await.map_err(e500)?;
-
                             delete_session_cookie(
                                 res.response_mut().head_mut(),
                                 &configuration.cookie,
                             )
                             .map_err(e500)?;
                         }
-
                         SessionStatus::Renewed => {
                             storage_backend.delete(&session_key).await.map_err(e500)?;
-
                             let session_key = storage_backend
                                 .save(session_state, &configuration.session.state_ttl)
                                 .await
                                 .map_err(e500)?;
-
                             set_session_cookie(
                                 res.response_mut().head_mut(),
                                 session_key,
@@ -495,18 +516,38 @@ where
                             )
                             .map_err(e500)?;
                         }
-
                         SessionStatus::Unchanged => {
-                            // Nothing to do; we avoid the unnecessary call to the storage.
+                            if configuration.refresh_when_active {
+                                dbg!("Here");
+                                let session_key = storage_backend
+                                    .update(
+                                        session_key,
+                                        session_state,
+                                        &configuration.session.state_ttl,
+                                    )
+                                    .await
+                                    .map_err(e500)?;
+                                set_session_cookie(
+                                    res.response_mut().head_mut(),
+                                    session_key,
+                                    &configuration.cookie,
+                                )
+                                .map_err(e500)?;
+                            }
                         }
-                    }
+                    };
                 }
-            };
+            }
             Ok(res)
         })
     }
 }
 
+/// It examines the session cookie attached to the incoming request, if there is any, and tries
+/// to extract the session key.
+///
+/// It returns `None` if there is no session cookie or if the session cookie is considered invalid
+/// (e.g. it fails a signature check).
 fn extract_session_key(req: &ServiceRequest, config: &CookieConfiguration) -> Option<SessionKey> {
     let cookies = req.cookies().ok()?;
     let session_cookie = cookies

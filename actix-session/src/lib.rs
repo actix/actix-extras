@@ -187,6 +187,11 @@ pub mod test_helpers {
             acceptance_tests::basic_workflow(store_builder.clone(), *policy).await;
             acceptance_tests::expiration_is_refreshed_on_changes(store_builder.clone(), *policy)
                 .await;
+            acceptance_tests::expiration_is_always_refreshed_if_configured_to_refresh_on_activity(
+                store_builder.clone(),
+                *policy,
+            )
+            .await;
             acceptance_tests::complex_workflow(
                 store_builder.clone(),
                 is_invalidation_supported,
@@ -197,6 +202,7 @@ pub mod test_helpers {
     }
 
     mod acceptance_tests {
+        use actix_web::dev::ServiceResponse;
         use actix_web::{
             dev::Service,
             middleware, test,
@@ -229,6 +235,7 @@ pub mod test_helpers {
                             .cookie_content_security(policy)
                             .session_length(SessionLength::Predetermined {
                                 max_session_length: Some(time::Duration::seconds(100)),
+                                refresh_session_ttl_when_active: None,
                             })
                             .build(),
                     )
@@ -245,12 +252,7 @@ pub mod test_helpers {
 
             let request = test::TestRequest::get().to_request();
             let response = app.call(request).await.unwrap();
-            let cookie = response
-                .response()
-                .cookies()
-                .find(|c| c.name() == "actix-test")
-                .unwrap()
-                .clone();
+            let cookie = response.get_cookie("actix-test").unwrap().clone();
             assert_eq!(cookie.path().unwrap(), "/test/");
 
             let request = test::TestRequest::with_uri("/test/")
@@ -258,6 +260,52 @@ pub mod test_helpers {
                 .to_request();
             let body = test::call_and_read_body(&app, request).await;
             assert_eq!(body, Bytes::from_static(b"counter: 100"));
+        }
+
+        pub(super) async fn expiration_is_always_refreshed_if_configured_to_refresh_on_activity<
+            F,
+            Store,
+        >(
+            store_builder: F,
+            policy: CookieContentSecurity,
+        ) where
+            Store: SessionStore + 'static,
+            F: Fn() -> Store + Clone + Send + 'static,
+        {
+            let max_session_length = Some(time::Duration::seconds(60));
+            let app = test::init_service(
+                App::new()
+                    .wrap(
+                        SessionMiddleware::builder(store_builder(), key())
+                            .cookie_content_security(policy)
+                            .session_length(SessionLength::Predetermined {
+                                max_session_length,
+                                refresh_session_ttl_when_active: Some(true),
+                            })
+                            .build(),
+                    )
+                    .service(web::resource("/").to(|ses: Session| async move {
+                        let _ = ses.insert("counter", 100);
+                        "test"
+                    }))
+                    .service(web::resource("/test/").to(|| async move { "no-changes-in-session" })),
+            )
+            .await;
+
+            // Create session
+            let request = test::TestRequest::get().to_request();
+            let response = app.call(request).await.unwrap();
+            let cookie_1 = response.get_cookie("id").expect("Cookie is set");
+            assert_eq!(cookie_1.max_age(), max_session_length);
+
+            // Fire a request that doesn't touch the session state, check
+            // that the session cookie is present and its expiry is set to the maximum we configured.
+            let request = test::TestRequest::with_uri("/test/")
+                .cookie(cookie_1)
+                .to_request();
+            let response = app.call(request).await.unwrap();
+            let cookie_2 = response.get_cookie("id").expect("Cookie is set");
+            assert_eq!(cookie_2.max_age(), max_session_length);
         }
 
         pub(super) async fn expiration_is_refreshed_on_changes<F, Store>(
@@ -274,6 +322,7 @@ pub mod test_helpers {
                             .cookie_content_security(policy)
                             .session_length(SessionLength::Predetermined {
                                 max_session_length: Some(time::Duration::seconds(60)),
+                                refresh_session_ttl_when_active: None,
                             })
                             .build(),
                     )
@@ -287,24 +336,18 @@ pub mod test_helpers {
 
             let request = test::TestRequest::get().to_request();
             let response = app.call(request).await.unwrap();
-            let cookie_1 = response
-                .response()
-                .cookies()
-                .find(|c| c.name() == "id")
-                .expect("Cookie is set");
+            let cookie_1 = response.get_cookie("id").expect("Cookie is set");
             assert_eq!(cookie_1.max_age(), Some(Duration::seconds(60)));
 
-            let request = test::TestRequest::with_uri("/test/").to_request();
+            let request = test::TestRequest::with_uri("/test/")
+                .cookie(cookie_1.clone())
+                .to_request();
             let response = app.call(request).await.unwrap();
             assert!(response.response().cookies().next().is_none());
 
-            let request = test::TestRequest::get().to_request();
+            let request = test::TestRequest::get().cookie(cookie_1).to_request();
             let response = app.call(request).await.unwrap();
-            let cookie_2 = response
-                .response()
-                .cookies()
-                .find(|c| c.name() == "id")
-                .expect("Cookie is set");
+            let cookie_2 = response.get_cookie("id").expect("Cookie is set");
             assert_eq!(cookie_2.max_age(), Some(Duration::seconds(60)));
         }
 
@@ -324,6 +367,7 @@ pub mod test_helpers {
                             .cookie_content_security(policy)
                             .session_length(SessionLength::Predetermined {
                                 max_session_length: Some(time::Duration::days(7)),
+                                refresh_session_ttl_when_active: None,
                             })
                             .build(),
                     )
@@ -408,7 +452,7 @@ pub mod test_helpers {
                 .into_iter()
                 .find(|c| c.name() == "test-session")
                 .unwrap();
-            assert_eq!(cookie_2.max_age(), Some(Duration::days(7)));
+            assert_eq!(cookie_2.max_age(), cookie_1.max_age());
 
             // Step 5: POST to login, including session cookie #2 in request
             //   - set-cookie actix-session will be in response  (session cookie #3)
@@ -581,6 +625,19 @@ pub mod test_helpers {
             };
 
             Ok(HttpResponse::Ok().body(body))
+        }
+
+        trait ServiceResponseExt {
+            fn get_cookie(&self, cookie_name: &str) -> Option<actix_web::cookie::Cookie<'_>>;
+        }
+
+        impl ServiceResponseExt for ServiceResponse {
+            fn get_cookie(&self, cookie_name: &str) -> Option<actix_web::cookie::Cookie<'_>> {
+                self.response()
+                    .cookies()
+                    .into_iter()
+                    .find(|c| c.name() == cookie_name)
+            }
         }
     }
 }
