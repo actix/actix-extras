@@ -653,6 +653,8 @@
 <span id="646">646</span>
 <span id="647">647</span>
 <span id="648">648</span>
+<span id="649">649</span>
+<span id="650">650</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections::HashMap</span>, <span class="ident">convert::TryInto</span>, <span class="ident">fmt</span>, <span class="ident">future::Future</span>, <span class="ident">pin::Pin</span>, <span class="ident">rc::Rc</span>};
 
 <span class="kw">use</span> <span class="ident">actix_utils::future</span>::{<span class="ident">ready</span>, <span class="ident">Ready</span>};
@@ -802,7 +804,7 @@
     <span class="doccomment">/// When does a browser session end? It depends on the browser! Chrome, for example, will often</span>
     <span class="doccomment">/// continue running in the background when the browser is closed—session cookies are not</span>
     <span class="doccomment">/// deleted and they will still be available when the browser is opened again. Check the</span>
-    <span class="doccomment">/// documentation of the browser you are targeting for up-to-date information.</span>
+    <span class="doccomment">/// documentation of the browsers you are targeting for up-to-date information.</span>
     <span class="ident">BrowserSession</span> {
         <span class="doccomment">/// We must provide a time-to-live (TTL) when storing the session state in the storage</span>
         <span class="doccomment">/// backend—we do not want to store session states indefinitely, otherwise we will</span>
@@ -843,15 +845,17 @@
 <span class="doccomment">/// the content of the session cookie.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">CookieContentSecurity</span> {
-    <span class="doccomment">/// `CookieContentSecurity::Private` selects encrypted cookie content.</span>
+    <span class="doccomment">/// The cookie content is encrypted when using `CookieContentSecurity::Private`.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// The client cannot tamper with its contents nor decode it (i.e., preserves confidentiality as</span>
-    <span class="doccomment">/// long the as the encryption key is not breached).</span>
+    <span class="doccomment">/// Encryption guarantees confidentiality and integrity: the client cannot</span>
+    <span class="doccomment">/// tamper with the cookie content nor decode it, as long as the encryption key remains</span>
+    <span class="doccomment">/// confidential.</span>
     <span class="ident">Private</span>,
 
-    <span class="doccomment">/// `CookieContentSecurity::Signed` selects signed cookie content.</span>
+    <span class="doccomment">/// The cookie content is signed when using `CookieContentSecurity::Signed`.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// The client cannot tamper with its contents, but they can read it (i.e., no confidentiality).</span>
+    <span class="doccomment">/// Signing guarantees integrity, but it doesn&#39;t ensure confidentiality: the client</span>
+    <span class="doccomment">/// cannot tamper with the cookie content, but they can read it.</span>
     <span class="ident">Signed</span>,
 }
 
@@ -1302,5 +1306,5 @@
     <span class="prelude-val">Ok</span>(())
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_session" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (1bfe40d11 2022-03-18)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_session" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (8d60bf427 2022-03-19)" ></div>
 </body></html>
