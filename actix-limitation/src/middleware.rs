@@ -14,7 +14,6 @@ use crate::Limiter;
 
 /// Rate limit middleware.
 #[derive(Debug)]
-#[non_exhaustive]
 pub struct RateLimiter;
 
 impl<S, B> Transform<S, ServiceRequest> for RateLimiter

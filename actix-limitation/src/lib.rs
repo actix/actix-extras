@@ -19,13 +19,13 @@
 //! #[actix_web::main]
 //! async fn main() -> std::io::Result<()> {
 //!     let limiter = web::Data::new(
-//!         Limiter::build("redis://127.0.0.1")
+//!         Limiter::builder("redis://127.0.0.1")
 //!             .cookie_name("session-id".to_owned())
 //!             .session_key("rate-api-id".to_owned())
 //!             .limit(5000)
 //!             .period(Duration::from_secs(3600)) // 60 minutes
-//!             .finish()
-//!             .expect("Can't build actix-limiter"),
+//!             .build()
+//!             .unwrap(),
 //!     );
 //!
 //!     HttpServer::new(move || {

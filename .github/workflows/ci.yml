@@ -131,7 +131,10 @@ jobs:
         timeout-minutes: 40
         with:
           command: ci-test
-          args: --exclude=actix-redis --exclude=actix-session -- --nocapture
+          args: >-
+            --exclude=actix-redis
+            --exclude=actix-session
+            --exclude=actix-limitation
 
       - name: Clear the cargo caches
         run: |
