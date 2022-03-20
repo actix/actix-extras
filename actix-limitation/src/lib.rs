@@ -84,6 +84,9 @@ pub struct Limiter {
 
 impl Limiter {
     /// Construct rate limiter builder with defaults.
+    ///
+    /// See [`redis-rs` docs](https://docs.rs/redis/0.21/redis/#connection-parameters) on connection
+    /// parameters for how to set the Redis URL.
     #[must_use]
     pub fn builder(redis_url: &str) -> Builder<'_> {
         Builder {

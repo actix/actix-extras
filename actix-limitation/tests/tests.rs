@@ -9,29 +9,33 @@ fn test_create_limiter_error() {
 
 #[actix_web::test]
 async fn test_limiter_count() -> Result<(), Error> {
-    let builder = Limiter::builder("redis://127.0.0.1:6379/2");
-    let limiter = builder.build().unwrap();
+    let limiter = Limiter::builder("redis://127.0.0.1:6379/2")
+        .limit(20)
+        .build()
+        .unwrap();
+
     let id = Uuid::new_v4();
 
-    for i in 0..5000 {
+    for i in 0..20 {
         let status = limiter.count(id.to_string()).await?;
-        assert_eq!(5000 - status.remaining(), i + 1);
+        println!("status: {:?}", status);
+        assert_eq!(20 - status.remaining(), i + 1);
     }
 
     Ok(())
 }
 
-// TODO: figure out whats wrong with this test
-#[ignore]
 #[actix_web::test]
 async fn test_limiter_count_error() -> Result<(), Error> {
-    let builder = Limiter::builder("redis://127.0.0.1:6379/3");
-    let limiter = builder.build().unwrap();
+    let limiter = Limiter::builder("redis://127.0.0.1:6379/3")
+        .limit(25)
+        .build()
+        .unwrap();
 
     let id = Uuid::new_v4();
-    for i in 0..5000 {
+    for i in 0..25 {
         let status = limiter.count(id.to_string()).await?;
-        assert_eq!(5000 - status.remaining(), i + 1);
+        assert_eq!(25 - status.remaining(), i + 1);
     }
 
     match limiter.count(id.to_string()).await.unwrap_err() {
@@ -40,9 +44,9 @@ async fn test_limiter_count_error() -> Result<(), Error> {
     };
 
     let id = Uuid::new_v4();
-    for i in 0..5000 {
+    for i in 0..25 {
         let status = limiter.count(id.to_string()).await?;
-        assert_eq!(5000 - status.remaining(), i + 1);
+        assert_eq!(25 - status.remaining(), i + 1);
     }
 
     Ok(())
