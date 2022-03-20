@@ -1,7 +1,7 @@
 var N = null;var sourcesIndex = {};
 sourcesIndex["actix_cors"] = {"name":"","files":["all_or_some.rs","builder.rs","error.rs","inner.rs","lib.rs","middleware.rs"]};
 sourcesIndex["actix_identity"] = {"name":"","files":["cookie.rs","identity.rs","lib.rs","middleware.rs"]};
-sourcesIndex["actix_limitation"] = {"name":"","dirs":[{"name":"core","dirs":[{"name":"builder","files":["mod.rs"]},{"name":"errors","files":["mod.rs"]},{"name":"status","files":["mod.rs"]}],"files":["mod.rs"]},{"name":"middleware","files":["mod.rs"]}],"files":["lib.rs"]};
+sourcesIndex["actix_limitation"] = {"name":"","files":["builder.rs","errors.rs","lib.rs","middleware.rs","status.rs"]};
 sourcesIndex["actix_protobuf"] = {"name":"","files":["lib.rs"]};
 sourcesIndex["actix_redis"] = {"name":"","files":["lib.rs","redis.rs"]};
 sourcesIndex["actix_session"] = {"name":"","dirs":[{"name":"storage","files":["cookie.rs","interface.rs","mod.rs","redis_actor.rs","redis_rs.rs","session_key.rs","utils.rs"]}],"files":["lib.rs","middleware.rs","session.rs","session_ext.rs"]};
