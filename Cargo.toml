@@ -3,17 +3,20 @@ resolver = "2"
 members = [
     "actix-cors",
     "actix-identity",
+    "actix-limitation",
     "actix-protobuf",
-    # TODO: move this example to examples repo
-    # "actix-protobuf/examples/prost-example",
     "actix-redis",
     "actix-session",
     "actix-web-httpauth",
 ]
 
+# TODO: move this example to examples repo
+# "actix-protobuf/examples/prost-example",
+
 [patch.crates-io]
 actix-cors = { path = "./actix-cors" }
 actix-identity = { path = "./actix-identity" }
+actix-limitation = { path = "./actix-limitation" }
 actix-protobuf = { path = "./actix-protobuf" }
 actix-redis = { path = "./actix-redis" }
 actix-session = { path = "./actix-session" }
