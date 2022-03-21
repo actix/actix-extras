@@ -654,7 +654,6 @@
 <span id="647">647</span>
 <span id="648">648</span>
 <span id="649">649</span>
-<span id="650">650</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections::HashMap</span>, <span class="ident">convert::TryInto</span>, <span class="ident">fmt</span>, <span class="ident">future::Future</span>, <span class="ident">pin::Pin</span>, <span class="ident">rc::Rc</span>};
 
 <span class="kw">use</span> <span class="ident">actix_utils::future</span>::{<span class="ident">ready</span>, <span class="ident">Ready</span>};
@@ -847,15 +846,14 @@
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">CookieContentSecurity</span> {
     <span class="doccomment">/// The cookie content is encrypted when using `CookieContentSecurity::Private`.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// Encryption guarantees confidentiality and integrity: the client cannot</span>
-    <span class="doccomment">/// tamper with the cookie content nor decode it, as long as the encryption key remains</span>
-    <span class="doccomment">/// confidential.</span>
+    <span class="doccomment">/// Encryption guarantees confidentiality and integrity: the client cannot tamper with the</span>
+    <span class="doccomment">/// cookie content nor decode it, as long as the encryption key remains confidential.</span>
     <span class="ident">Private</span>,
 
     <span class="doccomment">/// The cookie content is signed when using `CookieContentSecurity::Signed`.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// Signing guarantees integrity, but it doesn&#39;t ensure confidentiality: the client</span>
-    <span class="doccomment">/// cannot tamper with the cookie content, but they can read it.</span>
+    <span class="doccomment">/// Signing guarantees integrity, but it doesn&#39;t ensure confidentiality: the client cannot</span>
+    <span class="doccomment">/// tamper with the cookie content, but they can read it.</span>
     <span class="ident">Signed</span>,
 }
 
