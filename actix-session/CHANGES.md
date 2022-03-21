@@ -3,6 +3,10 @@
 ## Unreleased - 2021-xx-xx
 
 
+## 0.6.1 - 2022-03-21
+- No significant changes since `0.6.0`.
+
+
 ## 0.6.0 - 2022-03-15
 ### Added
 - `SessionMiddleware`, a middleware to provide support for saving/updating/deleting session state against a pluggable storage backend (see `SessionStore` trait). [#212]

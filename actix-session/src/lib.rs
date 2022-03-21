@@ -5,11 +5,11 @@
 //! influenced by the provided inputs (i.e. the request content) and whatever state the server
 //! queries while performing its processing.
 //!
-//! Stateless systems are easier to reason about, but they are not quite as powerful as we need them to
-//! be - e.g. how do you authenticate a user? The user would be forced to authenticate **for every
-//! single request**. That is, for example, how 'Basic' Authentication works. While it may work for
-//! a machine user (i.e. an API client), it is impractical for a person—you do not want a login
-//! prompt on every single page you navigate to!
+//! Stateless systems are easier to reason about, but they are not quite as powerful as we need them
+//! to be - e.g. how do you authenticate a user? The user would be forced to authenticate **for
+//! every single request**. That is, for example, how 'Basic' Authentication works. While it may
+//! work for a machine user (i.e. an API client), it is impractical for a person—you do not want a
+//! login prompt on every single page you navigate to!
 //!
 //! There is a solution - **sessions**. Using sessions the server can attach state to a set of
 //! requests coming from the same client. They are built on top of cookies - the server sets a

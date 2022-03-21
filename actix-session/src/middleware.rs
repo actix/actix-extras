@@ -190,15 +190,14 @@ pub enum SessionLength {
 pub enum CookieContentSecurity {
     /// The cookie content is encrypted when using `CookieContentSecurity::Private`.
     ///
-    /// Encryption guarantees confidentiality and integrity: the client cannot
-    /// tamper with the cookie content nor decode it, as long as the encryption key remains
-    /// confidential.
+    /// Encryption guarantees confidentiality and integrity: the client cannot tamper with the
+    /// cookie content nor decode it, as long as the encryption key remains confidential.
     Private,
 
     /// The cookie content is signed when using `CookieContentSecurity::Signed`.
     ///
-    /// Signing guarantees integrity, but it doesn't ensure confidentiality: the client
-    /// cannot tamper with the cookie content, but they can read it.
+    /// Signing guarantees integrity, but it doesn't ensure confidentiality: the client cannot
+    /// tamper with the cookie content, but they can read it.
     Signed,
 }
 
