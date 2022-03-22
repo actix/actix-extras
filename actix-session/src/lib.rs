@@ -145,26 +145,20 @@ mod session_ext;
 pub mod storage;
 
 pub use self::middleware::{
-    CookieContentSecurity, SessionLength, SessionMiddleware, SessionMiddlewareBuilder,
+    BrowserSession, CookieContentSecurity, PersistentSession, SessionLength, SessionMiddleware,
+    SessionMiddlewareBuilder,
 };
 pub use self::session::{Session, SessionStatus};
 pub use self::session_ext::SessionExt;
 
 #[cfg(test)]
 pub mod test_helpers {
-    use actix_web::cookie::Key;
-    use rand::{distributions::Alphanumeric, thread_rng, Rng};
-
     use crate::{storage::SessionStore, CookieContentSecurity};
+    use actix_web::cookie::Key;
 
     /// Generate a random cookie signing/encryption key.
     pub fn key() -> Key {
-        let signing_key: String = thread_rng()
-            .sample_iter(&Alphanumeric)
-            .take(64)
-            .map(char::from)
-            .collect();
-        Key::from(signing_key.as_bytes())
+        Key::generate()
     }
 
     /// A ready-to-go acceptance test suite to verify that sessions behave as expected
@@ -214,8 +208,8 @@ pub mod test_helpers {
         use time::Duration;
 
         use crate::{
-            middleware::SessionLength, storage::SessionStore, test_helpers::key,
-            CookieContentSecurity, Session, SessionMiddleware,
+            storage::SessionStore, test_helpers::key, CookieContentSecurity, PersistentSession,
+            Session, SessionMiddleware,
         };
 
         pub(super) async fn basic_workflow<F, Store>(
@@ -233,10 +227,10 @@ pub mod test_helpers {
                             .cookie_name("actix-test".into())
                             .cookie_domain(Some("localhost".into()))
                             .cookie_content_security(policy)
-                            .session_length(SessionLength::Predetermined {
-                                max_session_length: Some(time::Duration::seconds(100)),
-                                refresh_session_ttl_when_active: None,
-                            })
+                            .session_length(
+                                PersistentSession::default()
+                                    .max_session_length(time::Duration::seconds(100)),
+                            )
                             .build(),
                     )
                     .service(web::resource("/").to(|ses: Session| async move {
@@ -272,16 +266,17 @@ pub mod test_helpers {
             Store: SessionStore + 'static,
             F: Fn() -> Store + Clone + Send + 'static,
         {
-            let max_session_length = Some(time::Duration::seconds(60));
+            let max_session_length = time::Duration::seconds(60);
             let app = test::init_service(
                 App::new()
                     .wrap(
                         SessionMiddleware::builder(store_builder(), key())
                             .cookie_content_security(policy)
-                            .session_length(SessionLength::Predetermined {
-                                max_session_length,
-                                refresh_session_ttl_when_active: Some(true),
-                            })
+                            .session_length(
+                                PersistentSession::default()
+                                    .max_session_length(max_session_length)
+                                    .refresh_session_ttl_when_active(true),
+                            )
                             .build(),
                     )
                     .service(web::resource("/").to(|ses: Session| async move {
@@ -296,7 +291,7 @@ pub mod test_helpers {
             let request = test::TestRequest::get().to_request();
             let response = app.call(request).await.unwrap();
             let cookie_1 = response.get_cookie("id").expect("Cookie is set");
-            assert_eq!(cookie_1.max_age(), max_session_length);
+            assert_eq!(cookie_1.max_age(), Some(max_session_length));
 
             // Fire a request that doesn't touch the session state, check
             // that the session cookie is present and its expiry is set to the maximum we configured.
@@ -305,7 +300,7 @@ pub mod test_helpers {
                 .to_request();
             let response = app.call(request).await.unwrap();
             let cookie_2 = response.get_cookie("id").expect("Cookie is set");
-            assert_eq!(cookie_2.max_age(), max_session_length);
+            assert_eq!(cookie_2.max_age(), Some(max_session_length));
         }
 
         pub(super) async fn expiration_is_refreshed_on_changes<F, Store>(
@@ -320,10 +315,10 @@ pub mod test_helpers {
                     .wrap(
                         SessionMiddleware::builder(store_builder(), key())
                             .cookie_content_security(policy)
-                            .session_length(SessionLength::Predetermined {
-                                max_session_length: Some(time::Duration::seconds(60)),
-                                refresh_session_ttl_when_active: None,
-                            })
+                            .session_length(
+                                PersistentSession::default()
+                                    .max_session_length(time::Duration::seconds(60)),
+                            )
                             .build(),
                     )
                     .service(web::resource("/").to(|ses: Session| async move {
@@ -365,10 +360,10 @@ pub mod test_helpers {
                         SessionMiddleware::builder(store_builder(), key())
                             .cookie_name("test-session".into())
                             .cookie_content_security(policy)
-                            .session_length(SessionLength::Predetermined {
-                                max_session_length: Some(time::Duration::days(7)),
-                                refresh_session_ttl_when_active: None,
-                            })
+                            .session_length(
+                                PersistentSession::default()
+                                    .max_session_length(time::Duration::days(7)),
+                            )
                             .build(),
                     )
                     .wrap(middleware::Logger::default())

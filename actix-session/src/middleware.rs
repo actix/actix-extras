@@ -86,7 +86,7 @@ use crate::{
 ///                     RedisActorSessionStore::new(redis_connection_string),
 ///                     secret_key.clone()
 ///                 )
-///                 .session_length(SessionLength::Predetermined {
+///                 .session_length(SessionLength::PersistentSession {
 ///                     max_session_length: Some(time::Duration::days(5)),
 ///                     refresh_session_ttl_when_active: None
 ///                 })
@@ -148,61 +148,133 @@ pub enum SessionLength {
     ///
     /// When does a browser session end? It depends on the browser! Chrome, for example, will often
     /// continue running in the background when the browser is closed—session cookies are not
-    /// deleted and they will still be available when the browser is opened again. Check the
-    /// documentation of the browsers you are targeting for up-to-date information.
-    BrowserSession {
-        /// We must provide a time-to-live (TTL) when storing the session state in the storage
-        /// backend—we do not want to store session states indefinitely, otherwise we will
-        /// inevitably run out of storage by holding on to the state of countless abandoned or
-        /// expired sessions!
-        ///
-        /// We are dealing with the lifecycle of two uncorrelated object here: the session cookie
-        /// and the session state. It is not a big issue if the session state outlives the cookie—
-        /// we are wasting some space in the backend storage, but it will be cleaned up eventually.
-        /// What happens, instead, if the cookie outlives the session state? A new session starts—
-        /// e.g. if sessions are being used for authentication, the user is de-facto logged out.
-        ///
-        /// It is not possible to predict with certainty how long a browser session is going to
-        /// last—you need to provide a reasonable upper bound. You do so via `state_ttl`—it dictates
-        /// what TTL should be used for session state when the lifecycle of the session cookie is
-        /// tied to the browser session length. [`SessionMiddleware`] will default to 1 day if
-        /// `state_ttl` is left unspecified.
-        state_ttl: Option<Duration>,
-    },
-
+    /// deleted and they will still be available when the browser is opened again.
+    /// Check the documentation of the browsers you are targeting for up-to-date information.
+    BrowserSession(BrowserSession),
     /// The session cookie will be a [persistent cookie].
     ///
     /// Persistent cookies have a pre-determined lifetime, specified via the `Max-Age` or `Expires`
     /// attribute. They do not disappear when the current browser session ends.
     ///
     /// [persistent cookie]: https://www.whitehatsec.com/glossary/content/persistent-session-cookie
-    Predetermined {
-        /// Set `max_session_length` to specify how long the session cookie should live.
-        /// [`SessionMiddleware`] will default to 1 day if `max_session_length` is set to `None`.
-        ///
-        /// `max_session_length` is also used as the TTL for the session state in the
-        /// storage backend.
-        max_session_length: Option<Duration>,
-        /// If set to `Some(true)`, the session cookie expiration is reset (i.e. `Max-Age` is set
-        /// to `now + max_session_length`) every time the client associated with the session
-        /// makes a request. The TTL on the session state is updated accordingly.
-        ///
-        /// If set to `Some(false)`, the session cookie expiration is set when the session gets
-        /// created. It is refreshed exclusively when the session data changes or the session key
-        /// is renewed.
-        ///
-        /// If left unspecified (`None`), it defaults to `false`.
-        ///
-        /// # Performance impact
-        ///
-        /// Refreshing the expiration on activity is not free.
-        /// It is not enough to refresh the session cookie expiration, we need to refresh the TTL
-        /// on the session state as well. This translates into a request over the network if you
-        /// are using a remote system as storage backend (e.g. Redis).
-        /// This impacts both the total load on your storage backend (i.e. number of
-        /// queries it has to handle) and the latency of the requests served by your server.
-        refresh_session_ttl_when_active: Option<bool>,
-    },
+    PersistentSession(PersistentSession),
+}
+
+impl From<BrowserSession> for SessionLength {
+    fn from(b: BrowserSession) -> Self {
+        Self::BrowserSession(b)
+    }
+}
+
+impl From<PersistentSession> for SessionLength {
+    fn from(p: PersistentSession) -> Self {
+        Self::PersistentSession(p)
+    }
+}
+
+/// One of the available options for [`SessionLength`].
+///
+/// The session cookie will expire when the current browser session ends.
+///
+/// When does a browser session end? It depends on the browser! Chrome, for example, will often
+/// continue running in the background when the browser is closed—session cookies are not
+/// deleted and they will still be available when the browser is opened again.
+/// Check the documentation of the browsers you are targeting for up-to-date information.
+#[derive(Clone, Debug)]
+pub struct BrowserSession {
+    state_ttl: Duration,
+}
+
+impl BrowserSession {
+    /// We set a time-to-live (TTL) when storing the session state in the storage
+    /// backend. We do not want to store session states indefinitely, otherwise we will
+    /// inevitably run out of storage by holding on to the state of countless abandoned or
+    /// expired sessions!
+    ///
+    /// We are dealing with the lifecycle of two uncorrelated object here: the session cookie
+    /// and the session state. It is not a big issue if the session state outlives the cookie—
+    /// we are wasting some space in the backend storage, but it will be cleaned up eventually.
+    /// What happens, instead, if the cookie outlives the session state? A new session starts—
+    /// e.g. if sessions are being used for authentication, the user is de-facto logged out.
+    ///
+    /// It is not possible to predict with certainty how long a browser session is going to
+    /// last—you need to provide a reasonable upper bound. You do so via `state_ttl`—it dictates
+    /// what TTL should be used for session state when the lifecycle of the session cookie is
+    /// tied to the browser session length. [`SessionMiddleware`] will default to 1 day if
+    /// `state_ttl` is left unspecified.
+    pub fn state_ttl(mut self, ttl: Duration) -> Self {
+        self.state_ttl = ttl;
+        self
+    }
+}
+
+impl Default for BrowserSession {
+    fn default() -> Self {
+        Self {
+            state_ttl: Duration::days(1),
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+/// One of the available options for [`SessionLength`].
+///
+/// The session cookie will be a [persistent cookie].
+///
+/// Persistent cookies have a pre-determined lifetime, specified via the `Max-Age` or `Expires`
+/// attribute. They do not disappear when the current browser session ends.
+///
+/// [persistent cookie]: https://www.whitehatsec.com/glossary/content/persistent-session-cookie
+pub struct PersistentSession {
+    max_session_length: Duration,
+    refresh_session_ttl_when_active: bool,
+}
+
+impl PersistentSession {
+    /// Specify how long the session cookie should live.
+    /// It will default to 1 day if left unspecified.
+    ///
+    /// The maximum session length is also used as the TTL for the session state in the
+    /// storage backend.
+    pub fn max_session_length(mut self, max_session_length: Duration) -> Self {
+        self.max_session_length = max_session_length;
+        self
+    }
+
+    /// If set to `true`, the session cookie expiration is reset (i.e. `Max-Age` is set
+    /// to `now + max_session_length`) every time the client associated with the session
+    /// makes a request. The TTL on the session state is updated accordingly.
+    ///
+    /// If set to `false`, the session cookie expiration is set when the session gets
+    /// created. It is refreshed exclusively when the session data changes or the session key
+    /// is renewed.
+    ///
+    /// If left unspecified, it defaults to `false`.
+    ///
+    /// # Performance impact
+    ///
+    /// Refreshing the expiration on activity is not free.
+    /// It is not enough to refresh the session cookie expiration, we need to refresh the TTL
+    /// on the session state as well. This translates into a request over the network if you
+    /// are using a remote system as storage backend (e.g. Redis).
+    /// This impacts both the total load on your storage backend (i.e. number of
+    /// queries it has to handle) and the latency of the requests served by your server.
+    pub fn refresh_session_ttl_when_active(
+        mut self,
+        refresh_session_ttl_when_active: bool,
+    ) -> Self {
+        self.refresh_session_ttl_when_active = refresh_session_ttl_when_active;
+        self
+    }
+}
+
+impl Default for PersistentSession {
+    fn default() -> Self {
+        Self {
+            max_session_length: Duration::days(1),
+            refresh_session_ttl_when_active: false,
+        }
+    }
 }
 
 /// Used by [`SessionMiddlewareBuilder::cookie_content_security`] to determine how to secure
@@ -307,21 +379,18 @@ impl<Store: SessionStore> SessionMiddlewareBuilder<Store> {
     /// more details on the available options.
     ///
     /// Default is [`SessionLength::BrowserSession`].
-    pub fn session_length(mut self, session_length: SessionLength) -> Self {
-        match session_length {
-            SessionLength::BrowserSession { state_ttl } => {
+    pub fn session_length<S: Into<SessionLength>>(mut self, session_length: S) -> Self {
+        match session_length.into() {
+            SessionLength::BrowserSession(BrowserSession { state_ttl }) => {
                 self.configuration.cookie.max_age = None;
-                self.configuration.session.state_ttl = state_ttl.unwrap_or_else(default_ttl);
+                self.configuration.session.state_ttl = state_ttl;
             }
-            SessionLength::Predetermined {
+            SessionLength::PersistentSession(PersistentSession {
                 max_session_length,
                 refresh_session_ttl_when_active,
-            } => {
-                let ttl = max_session_length.unwrap_or_else(default_ttl);
-                let refresh_session_ttl_when_active =
-                    refresh_session_ttl_when_active.unwrap_or(false);
-                self.configuration.cookie.max_age = Some(ttl);
-                self.configuration.session.state_ttl = ttl;
+            }) => {
+                self.configuration.cookie.max_age = Some(max_session_length);
+                self.configuration.session.state_ttl = max_session_length;
                 self.configuration.refresh_when_active = refresh_session_ttl_when_active;
             }
         }
