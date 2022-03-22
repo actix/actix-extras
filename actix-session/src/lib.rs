@@ -146,7 +146,7 @@ pub mod storage;
 
 pub use self::middleware::{
     BrowserSession, CookieContentSecurity, PersistentSession, SessionLength, SessionMiddleware,
-    SessionMiddlewareBuilder,
+    SessionMiddlewareBuilder, TtlExtensionPolicy,
 };
 pub use self::session::{Session, SessionStatus};
 pub use self::session_ext::SessionExt;
@@ -209,7 +209,7 @@ pub mod test_helpers {
 
         use crate::{
             storage::SessionStore, test_helpers::key, CookieContentSecurity, PersistentSession,
-            Session, SessionMiddleware,
+            Session, SessionMiddleware, TtlExtensionPolicy,
         };
 
         pub(super) async fn basic_workflow<F, Store>(
@@ -275,7 +275,7 @@ pub mod test_helpers {
                             .session_length(
                                 PersistentSession::default()
                                     .max_session_length(max_session_length)
-                                    .refresh_session_ttl_when_active(true),
+                                    .ttl_extension_policy(TtlExtensionPolicy::OnEveryRequest),
                             )
                             .build(),
                     )

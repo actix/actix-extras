@@ -117,7 +117,7 @@ pub struct SessionMiddleware<Store: SessionStore> {
 struct Configuration {
     cookie: CookieConfiguration,
     session: SessionConfiguration,
-    refresh_when_active: bool,
+    ttl_extension_policy: TtlExtensionPolicy,
 }
 
 #[derive(Clone)]
@@ -226,7 +226,7 @@ impl Default for BrowserSession {
 /// [persistent cookie]: https://www.whitehatsec.com/glossary/content/persistent-session-cookie
 pub struct PersistentSession {
     max_session_length: Duration,
-    refresh_session_ttl_when_active: bool,
+    ttl_extension_policy: TtlExtensionPolicy,
 }
 
 impl PersistentSession {
@@ -240,29 +240,12 @@ impl PersistentSession {
         self
     }
 
-    /// If set to `true`, the session cookie expiration is reset (i.e. `Max-Age` is set
-    /// to `now + max_session_length`) every time the client associated with the session
-    /// makes a request. The TTL on the session state is updated accordingly.
+    /// Determine under what circumstances the TTL of your session should be extended.
+    /// See [`TtlExtensionPolicy`] for more details.
     ///
-    /// If set to `false`, the session cookie expiration is set when the session gets
-    /// created. It is refreshed exclusively when the session data changes or the session key
-    /// is renewed.
-    ///
-    /// If left unspecified, it defaults to `false`.
-    ///
-    /// # Performance impact
-    ///
-    /// Refreshing the expiration on activity is not free.
-    /// It is not enough to refresh the session cookie expiration, we need to refresh the TTL
-    /// on the session state as well. This translates into a request over the network if you
-    /// are using a remote system as storage backend (e.g. Redis).
-    /// This impacts both the total load on your storage backend (i.e. number of
-    /// queries it has to handle) and the latency of the requests served by your server.
-    pub fn refresh_session_ttl_when_active(
-        mut self,
-        refresh_session_ttl_when_active: bool,
-    ) -> Self {
-        self.refresh_session_ttl_when_active = refresh_session_ttl_when_active;
+    /// It defaults to [`TtlExtensionPolicy::OnStateChanges`] if left unspecified.
+    pub fn ttl_extension_policy(mut self, ttl_extension_policy: TtlExtensionPolicy) -> Self {
+        self.ttl_extension_policy = ttl_extension_policy;
         self
     }
 }
@@ -271,9 +254,35 @@ impl Default for PersistentSession {
     fn default() -> Self {
         Self {
             max_session_length: Duration::days(1),
-            refresh_session_ttl_when_active: false,
+            ttl_extension_policy: TtlExtensionPolicy::OnStateChanges,
         }
     }
+}
+
+/// `TtlExtensionPolicy` is used to configure what events should trigger an extension of the
+/// time-to-live for your session.
+///
+/// If you are using a [`BrowserSession`], `TtlExtensionPolicy` controls how often the TTL of
+/// the session state should be refreshed. The browser is in control of the lifecycle of the
+/// session cookie.
+///
+/// If you are using a [`PersistentSession`], `TtlExtensionPolicy` controls both the expiration
+/// of the session cookie and the TTL of the session state.
+#[derive(Debug, Clone)]
+#[non_exhaustive]
+pub enum TtlExtensionPolicy {
+    /// The TTL is refreshed every time the server receives a request associated with a session.
+    ///
+    /// # Performance impact
+    ///
+    /// Refreshing the TTL on every request is not free.
+    /// It implies a refresh of the TTL on the session state. This translates into a request over
+    /// the network if you are using a remote system as storage backend (e.g. Redis).
+    /// This impacts both the total load on your storage backend (i.e. number of
+    /// queries it has to handle) and the latency of the requests served by your server.
+    OnEveryRequest,
+    /// The TTL is refreshed every time the session state changes or the session key is renewed.
+    OnStateChanges,
 }
 
 /// Used by [`SessionMiddlewareBuilder::cookie_content_security`] to determine how to secure
@@ -309,7 +318,7 @@ fn default_configuration(key: Key) -> Configuration {
         session: SessionConfiguration {
             state_ttl: default_ttl(),
         },
-        refresh_when_active: false,
+        ttl_extension_policy: TtlExtensionPolicy::OnStateChanges,
     }
 }
 
@@ -386,11 +395,11 @@ impl<Store: SessionStore> SessionMiddlewareBuilder<Store> {
             }
             SessionLength::PersistentSession(PersistentSession {
                 max_session_length,
-                refresh_session_ttl_when_active,
+                ttl_extension_policy,
             }) => {
                 self.configuration.cookie.max_age = Some(max_session_length);
                 self.configuration.session.state_ttl = max_session_length;
-                self.configuration.refresh_when_active = refresh_session_ttl_when_active;
+                self.configuration.ttl_extension_policy = ttl_extension_policy;
             }
         }
 
@@ -586,7 +595,9 @@ where
                             .map_err(e500)?;
                         }
                         SessionStatus::Unchanged => {
-                            if configuration.refresh_when_active {
+                            if let TtlExtensionPolicy::OnEveryRequest =
+                                configuration.ttl_extension_policy
+                            {
                                 let session_key = storage_backend
                                     .update(
                                         session_key,
