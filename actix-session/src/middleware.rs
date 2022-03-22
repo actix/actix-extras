@@ -210,7 +210,7 @@ impl BrowserSession {
 impl Default for BrowserSession {
     fn default() -> Self {
         Self {
-            state_ttl: Duration::days(1),
+            state_ttl: default_ttl(),
         }
     }
 }
@@ -256,8 +256,8 @@ impl PersistentSession {
 impl Default for PersistentSession {
     fn default() -> Self {
         Self {
-            session_ttl: Duration::days(1),
-            ttl_extension_policy: TtlExtensionPolicy::OnStateChanges,
+            session_ttl: default_ttl(),
+            ttl_extension_policy: default_ttl_extension_policy(),
         }
     }
 }
@@ -321,12 +321,16 @@ fn default_configuration(key: Key) -> Configuration {
         session: SessionConfiguration {
             state_ttl: default_ttl(),
         },
-        ttl_extension_policy: TtlExtensionPolicy::OnStateChanges,
+        ttl_extension_policy: default_ttl_extension_policy(),
     }
 }
 
 fn default_ttl() -> Duration {
     Duration::days(1)
+}
+
+fn default_ttl_extension_policy() -> TtlExtensionPolicy {
+    TtlExtensionPolicy::OnStateChanges
 }
 
 impl<Store: SessionStore> SessionMiddleware<Store> {
