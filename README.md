@@ -1,6 +1,6 @@
 # actix-extras
 
-> A collection of additional crates supporting the [actix-web] and [actix] frameworks.
+> A collection of additional crates supporting [Actix Web].
 
 [![CI](https://github.com/actix/actix-extras/actions/workflows/ci.yml/badge.svg)](https://github.com/actix/actix-extras/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/actix/actix-extras/branch/master/graph/badge.svg)](https://codecov.io/gh/actix/actix-extras)
@@ -44,7 +44,7 @@ To add a crate to this list, submit a pull request.
 <!-- REFERENCES -->
 
 [actix]: https://github.com/actix/actix
-[actix-web]: https://github.com/actix/actix-web
+[Actix Web]: https://github.com/actix/actix-web
 [actix-extras]: https://github.com/actix/actix-extras
 [actix-cors]: actix-cors
 [actix-identity]: actix-identity
