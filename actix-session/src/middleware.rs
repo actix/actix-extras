@@ -519,7 +519,6 @@ where
                         }
                         SessionStatus::Unchanged => {
                             if configuration.refresh_when_active {
-                                dbg!("Here");
                                 let session_key = storage_backend
                                     .update(
                                         session_key,
