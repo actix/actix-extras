@@ -145,7 +145,7 @@ mod session_ext;
 pub mod storage;
 
 pub use self::middleware::{
-    BrowserSession, CookieContentSecurity, PersistentSession, SessionLength, SessionMiddleware,
+    BrowserSession, CookieContentSecurity, PersistentSession, SessionLifecycle, SessionMiddleware,
     SessionMiddlewareBuilder, TtlExtensionPolicy,
 };
 pub use self::session::{Session, SessionStatus};
@@ -227,9 +227,9 @@ pub mod test_helpers {
                             .cookie_name("actix-test".into())
                             .cookie_domain(Some("localhost".into()))
                             .cookie_content_security(policy)
-                            .session_length(
+                            .session_lifecycle(
                                 PersistentSession::default()
-                                    .max_session_length(time::Duration::seconds(100)),
+                                    .session_ttl(time::Duration::seconds(100)),
                             )
                             .build(),
                     )
@@ -272,9 +272,9 @@ pub mod test_helpers {
                     .wrap(
                         SessionMiddleware::builder(store_builder(), key())
                             .cookie_content_security(policy)
-                            .session_length(
+                            .session_lifecycle(
                                 PersistentSession::default()
-                                    .max_session_length(max_session_length)
+                                    .session_ttl(max_session_length)
                                     .ttl_extension_policy(TtlExtensionPolicy::OnEveryRequest),
                             )
                             .build(),
@@ -315,9 +315,9 @@ pub mod test_helpers {
                     .wrap(
                         SessionMiddleware::builder(store_builder(), key())
                             .cookie_content_security(policy)
-                            .session_length(
+                            .session_lifecycle(
                                 PersistentSession::default()
-                                    .max_session_length(time::Duration::seconds(60)),
+                                    .session_ttl(time::Duration::seconds(60)),
                             )
                             .build(),
                     )
@@ -360,9 +360,8 @@ pub mod test_helpers {
                         SessionMiddleware::builder(store_builder(), key())
                             .cookie_name("test-session".into())
                             .cookie_content_security(policy)
-                            .session_length(
-                                PersistentSession::default()
-                                    .max_session_length(time::Duration::days(7)),
+                            .session_lifecycle(
+                                PersistentSession::default().session_ttl(time::Duration::days(7)),
                             )
                             .build(),
                     )

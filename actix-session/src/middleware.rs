@@ -85,9 +85,9 @@ use crate::{
 ///                     RedisActorSessionStore::new(redis_connection_string),
 ///                     secret_key.clone()
 ///                 )
-///                 .session_length(
+///                 .session_lifecycle(
 ///                     PersistentSession::default()
-///                         .max_session_length(time::Duration::days(5))
+///                         .session_ttl(time::Duration::days(5))
 ///                 )
 ///                 .build(),
 ///             )
@@ -140,9 +140,9 @@ struct CookieConfiguration {
 
 /// Describes how long a session should last.
 ///
-/// Used by [`SessionMiddlewareBuilder::session_length`].
+/// Used by [`SessionMiddlewareBuilder::session_lifecycle`].
 #[derive(Clone, Debug)]
-pub enum SessionLength {
+pub enum SessionLifecycle {
     /// The session cookie will expire when the current browser session ends.
     ///
     /// When does a browser session end? It depends on the browser! Chrome, for example, will often
@@ -159,19 +159,19 @@ pub enum SessionLength {
     PersistentSession(PersistentSession),
 }
 
-impl From<BrowserSession> for SessionLength {
+impl From<BrowserSession> for SessionLifecycle {
     fn from(b: BrowserSession) -> Self {
         Self::BrowserSession(b)
     }
 }
 
-impl From<PersistentSession> for SessionLength {
+impl From<PersistentSession> for SessionLifecycle {
     fn from(p: PersistentSession) -> Self {
         Self::PersistentSession(p)
     }
 }
 
-/// One of the available options for [`SessionLength`].
+/// One of the available options for [`SessionLifecycle`].
 ///
 /// The session cookie will expire when the current browser session ends.
 ///
@@ -216,7 +216,7 @@ impl Default for BrowserSession {
 }
 
 #[derive(Clone, Debug)]
-/// One of the available options for [`SessionLength`].
+/// One of the available options for [`SessionLifecycle`].
 ///
 /// The session cookie will be a [persistent cookie].
 ///
@@ -225,7 +225,7 @@ impl Default for BrowserSession {
 ///
 /// [persistent cookie]: https://www.whitehatsec.com/glossary/content/persistent-session-cookie
 pub struct PersistentSession {
-    max_session_length: Duration,
+    session_ttl: Duration,
     ttl_extension_policy: TtlExtensionPolicy,
 }
 
@@ -233,10 +233,13 @@ impl PersistentSession {
     /// Specify how long the session cookie should live.
     /// It will default to 1 day if left unspecified.
     ///
-    /// The maximum session length is also used as the TTL for the session state in the
+    /// The session TTL is also used as the TTL for the session state in the
     /// storage backend.
-    pub fn max_session_length(mut self, max_session_length: Duration) -> Self {
-        self.max_session_length = max_session_length;
+    ///
+    /// A persistent session can live more than the specified TTL if the TTL is extended.
+    /// Check out [`PersistentSession::ttl_extension_policy`] for more details.
+    pub fn session_ttl(mut self, session_ttl: Duration) -> Self {
+        self.session_ttl = session_ttl;
         self
     }
 
@@ -253,7 +256,7 @@ impl PersistentSession {
 impl Default for PersistentSession {
     fn default() -> Self {
         Self {
-            max_session_length: Duration::days(1),
+            session_ttl: Duration::days(1),
             ttl_extension_policy: TtlExtensionPolicy::OnStateChanges,
         }
     }
@@ -383,18 +386,18 @@ impl<Store: SessionStore> SessionMiddlewareBuilder<Store> {
         self
     }
 
-    /// Determine how long a session should last - check out [`SessionLength`]'s documentation for
+    /// Determine how long a session should last - check out [`SessionLifecycle`]'s documentation for
     /// more details on the available options.
     ///
-    /// Default is [`SessionLength::BrowserSession`].
-    pub fn session_length<S: Into<SessionLength>>(mut self, session_length: S) -> Self {
-        match session_length.into() {
-            SessionLength::BrowserSession(BrowserSession { state_ttl }) => {
+    /// Default is [`SessionLifecycle::BrowserSession`].
+    pub fn session_lifecycle<S: Into<SessionLifecycle>>(mut self, session_lifecycle: S) -> Self {
+        match session_lifecycle.into() {
+            SessionLifecycle::BrowserSession(BrowserSession { state_ttl }) => {
                 self.configuration.cookie.max_age = None;
                 self.configuration.session.state_ttl = state_ttl;
             }
-            SessionLength::PersistentSession(PersistentSession {
-                max_session_length,
+            SessionLifecycle::PersistentSession(PersistentSession {
+                session_ttl: max_session_length,
                 ttl_extension_policy,
             }) => {
                 self.configuration.cookie.max_age = Some(max_session_length);
