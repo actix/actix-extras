@@ -1,6 +1,6 @@
 use actix::Addr;
 use actix_redis::{resp_array, Command, RedisActor, RespValue};
-use time::{self, Duration};
+use actix_web::cookie::time::Duration;
 
 use super::SessionKey;
 use crate::storage::{
@@ -259,10 +259,10 @@ impl SessionStore for RedisActorSessionStore {
 
 #[cfg(test)]
 mod test {
-    use std::collections::HashMap;
-
     use super::*;
     use crate::test_helpers::acceptance_test_suite;
+    use actix_web::cookie::time::Duration;
+    use std::collections::HashMap;
 
     fn redis_actor_store() -> RedisActorSessionStore {
         RedisActorSessionStore::new("127.0.0.1:6379")
@@ -286,7 +286,7 @@ mod test {
         let session_key = generate_session_key();
         let initial_session_key = session_key.as_ref().to_owned();
         let updated_session_key = store
-            .update(session_key, HashMap::new(), &time::Duration::seconds(1))
+            .update(session_key, HashMap::new(), &Duration::seconds(1))
             .await
             .unwrap();
         assert_ne!(initial_session_key, updated_session_key.as_ref());

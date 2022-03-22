@@ -3,12 +3,11 @@ use std::{collections::HashMap, convert::TryInto, fmt, future::Future, pin::Pin,
 use actix_utils::future::{ready, Ready};
 use actix_web::{
     body::MessageBody,
-    cookie::{Cookie, CookieJar, Key, SameSite},
+    cookie::{time::Duration, Cookie, CookieJar, Key, SameSite},
     dev::{forward_ready, ResponseHead, Service, ServiceRequest, ServiceResponse, Transform},
     http::header::{HeaderValue, SET_COOKIE},
 };
 use anyhow::Context;
-use time::Duration;
 
 use crate::{
     storage::{LoadError, SessionKey, SessionStore},

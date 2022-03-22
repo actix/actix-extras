@@ -1,12 +1,10 @@
-use std::convert::TryInto;
-
-use time::Duration;
-
 use super::SessionKey;
 use crate::storage::{
     interface::{LoadError, SaveError, SessionState, UpdateError},
     SessionStore,
 };
+use actix_web::cookie::time::Duration;
+use std::convert::TryInto;
 
 /// Use the session key, stored in the session cookie, as storage backend for the session state.
 ///

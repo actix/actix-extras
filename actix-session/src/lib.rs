@@ -196,6 +196,7 @@ pub mod test_helpers {
     }
 
     mod acceptance_tests {
+        use actix_web::cookie::time;
         use actix_web::dev::ServiceResponse;
         use actix_web::{
             dev::Service,
@@ -205,7 +206,6 @@ pub mod test_helpers {
         };
         use serde::{Deserialize, Serialize};
         use serde_json::json;
-        use time::Duration;
 
         use crate::{
             storage::SessionStore, test_helpers::key, CookieContentSecurity, PersistentSession,
@@ -332,7 +332,7 @@ pub mod test_helpers {
             let request = test::TestRequest::get().to_request();
             let response = app.call(request).await.unwrap();
             let cookie_1 = response.get_cookie("id").expect("Cookie is set");
-            assert_eq!(cookie_1.max_age(), Some(Duration::seconds(60)));
+            assert_eq!(cookie_1.max_age(), Some(time::Duration::seconds(60)));
 
             let request = test::TestRequest::with_uri("/test/")
                 .cookie(cookie_1.clone())
@@ -343,7 +343,7 @@ pub mod test_helpers {
             let request = test::TestRequest::get().cookie(cookie_1).to_request();
             let response = app.call(request).await.unwrap();
             let cookie_2 = response.get_cookie("id").expect("Cookie is set");
-            assert_eq!(cookie_2.max_age(), Some(Duration::seconds(60)));
+            assert_eq!(cookie_2.max_age(), Some(time::Duration::seconds(60)));
         }
 
         pub(super) async fn complex_workflow<F, Store>(
@@ -409,7 +409,7 @@ pub mod test_helpers {
                 .into_iter()
                 .find(|c| c.name() == "test-session")
                 .unwrap();
-            assert_eq!(cookie_1.max_age(), Some(Duration::days(7)));
+            assert_eq!(cookie_1.max_age(), Some(time::Duration::days(7)));
 
             // Step 3:  GET index, including session cookie #1 in request
             //   - set-cookie will *not* be in response
