@@ -64,8 +64,8 @@ use crate::{
 /// If you want to customise use [`builder`](Self::builder) instead of [`new`](Self::new):
 ///
 /// ```no_run
-/// use actix_web::{cookie::Key, web, App, HttpServer, HttpResponse, Error};
-/// use actix_session::{Session, SessionMiddleware, storage::RedisActorSessionStore, SessionLength};
+/// use actix_web::{cookie::{Key, time}, web, App, HttpServer, HttpResponse, Error};
+/// use actix_session::{Session, SessionMiddleware, storage::RedisActorSessionStore, PersistentSession};
 ///
 /// // The secret key would usually be read from a configuration file/environment variables.
 /// fn get_secret_key() -> Key {
@@ -85,10 +85,10 @@ use crate::{
 ///                     RedisActorSessionStore::new(redis_connection_string),
 ///                     secret_key.clone()
 ///                 )
-///                 .session_length(SessionLength::PersistentSession {
-///                     max_session_length: Some(time::Duration::days(5)),
-///                     refresh_session_ttl_when_active: None
-///                 })
+///                 .session_length(
+///                     PersistentSession::default()
+///                         .max_session_length(time::Duration::days(5))
+///                 )
 ///                 .build(),
 ///             )
 ///             .default_service(web::to(|| HttpResponse::Ok())))
