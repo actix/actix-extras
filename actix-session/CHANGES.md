@@ -1,7 +1,10 @@
 # Changes
 
 ## Unreleased - 2021-xx-xx
-
+### Fixed
+- Do not leak internal implementation details to callers when errors occur. [#236]
+ 
+[#236]: https://github.com/actix/actix-extras/pull/236
 
 ## 0.6.1 - 2022-03-21
 - No significant changes since `0.6.0`.
