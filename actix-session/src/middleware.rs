@@ -252,7 +252,7 @@ impl PersistentSession {
     /// storage backend.
     ///
     /// A persistent session can live more than the specified TTL if the TTL is extended.
-    /// Check out [`PersistentSession::ttl_extension_policy`] for more details.
+    /// Check out [`PersistentSession::session_ttl_extension_policy`] for more details.
     pub fn session_ttl(mut self, session_ttl: Duration) -> Self {
         self.session_ttl = session_ttl;
         self
