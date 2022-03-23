@@ -275,7 +275,9 @@ pub mod test_helpers {
                             .session_lifecycle(
                                 PersistentSession::default()
                                     .session_ttl(session_ttl)
-                                    .ttl_extension_policy(TtlExtensionPolicy::OnEveryRequest),
+                                    .session_ttl_extension_policy(
+                                        TtlExtensionPolicy::OnEveryRequest,
+                                    ),
                             )
                             .build(),
                     )

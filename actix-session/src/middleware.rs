@@ -182,6 +182,7 @@ impl From<PersistentSession> for SessionLifecycle {
 #[derive(Clone, Debug)]
 pub struct BrowserSession {
     state_ttl: Duration,
+    ttl_extension_policy: TtlExtensionPolicy,
 }
 
 impl BrowserSession {
@@ -201,8 +202,21 @@ impl BrowserSession {
     /// what TTL should be used for session state when the lifecycle of the session cookie is
     /// tied to the browser session length. [`SessionMiddleware`] will default to 1 day if
     /// `state_ttl` is left unspecified.
+    ///
+    /// You can mitigate the risk of the session cookie outliving the session state by
+    /// specifying a more aggressive state TTL extension policy - check out
+    /// [`BrowserSession::state_ttl_extension_policy`] for more details.
     pub fn state_ttl(mut self, ttl: Duration) -> Self {
         self.state_ttl = ttl;
+        self
+    }
+
+    /// Determine under what circumstances the TTL of your session state should be extended.
+    /// See [`TtlExtensionPolicy`] for more details.
+    ///
+    /// It defaults to [`TtlExtensionPolicy::OnStateChanges`] if left unspecified.
+    pub fn state_ttl_extension_policy(mut self, ttl_extension_policy: TtlExtensionPolicy) -> Self {
+        self.state_ttl_extension_policy = ttl_extension_policy;
         self
     }
 }
@@ -211,6 +225,7 @@ impl Default for BrowserSession {
     fn default() -> Self {
         Self {
             state_ttl: default_ttl(),
+            ttl_extension_policy: default_ttl_extension_policy(),
         }
     }
 }
@@ -247,7 +262,10 @@ impl PersistentSession {
     /// See [`TtlExtensionPolicy`] for more details.
     ///
     /// It defaults to [`TtlExtensionPolicy::OnStateChanges`] if left unspecified.
-    pub fn ttl_extension_policy(mut self, ttl_extension_policy: TtlExtensionPolicy) -> Self {
+    pub fn session_ttl_extension_policy(
+        mut self,
+        ttl_extension_policy: TtlExtensionPolicy,
+    ) -> Self {
         self.ttl_extension_policy = ttl_extension_policy;
         self
     }
@@ -396,7 +414,10 @@ impl<Store: SessionStore> SessionMiddlewareBuilder<Store> {
     /// Default is [`SessionLifecycle::BrowserSession`].
     pub fn session_lifecycle<S: Into<SessionLifecycle>>(mut self, session_lifecycle: S) -> Self {
         match session_lifecycle.into() {
-            SessionLifecycle::BrowserSession(BrowserSession { state_ttl }) => {
+            SessionLifecycle::BrowserSession(BrowserSession {
+                state_ttl,
+                ttl_extension_policy,
+            }) => {
                 self.configuration.cookie.max_age = None;
                 self.configuration.session.state_ttl = state_ttl;
             }
@@ -609,12 +630,14 @@ where
                                     .update_ttl(&session_key, &configuration.session.state_ttl)
                                     .await
                                     .map_err(e500)?;
-                                set_session_cookie(
-                                    res.response_mut().head_mut(),
-                                    session_key,
-                                    &configuration.cookie,
-                                )
-                                .map_err(e500)?;
+                                if !configuration.cookie.max_age.is_none() {
+                                    set_session_cookie(
+                                        res.response_mut().head_mut(),
+                                        session_key,
+                                        &configuration.cookie,
+                                    )
+                                    .map_err(e500)?;
+                                }
                             }
                         }
                     };
