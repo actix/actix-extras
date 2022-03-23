@@ -138,7 +138,7 @@ struct CookieConfiguration {
     key: Key,
 }
 
-/// Describes how long a session should last.
+/// Determines what type of session cookie should be used and how its lifecycle should be managed.
 ///
 /// Used by [`SessionMiddlewareBuilder::session_lifecycle`].
 #[derive(Clone, Debug)]
@@ -220,7 +220,7 @@ impl Default for BrowserSession {
 ///
 /// The session cookie will be a [persistent cookie].
 ///
-/// Persistent cookies have a pre-determined lifetime, specified via the `Max-Age` or `Expires`
+/// Persistent cookies have a pre-determined expiration, specified via the `Max-Age` or `Expires`
 /// attribute. They do not disappear when the current browser session ends.
 ///
 /// [persistent cookie]: https://www.whitehatsec.com/glossary/content/persistent-session-cookie
@@ -390,8 +390,8 @@ impl<Store: SessionStore> SessionMiddlewareBuilder<Store> {
         self
     }
 
-    /// Determine how long a session should last - check out [`SessionLifecycle`]'s documentation for
-    /// more details on the available options.
+    /// Determines what type of session cookie should be used and how its lifecycle should be managed.
+    /// Check out [`SessionLifecycle`]'s documentation for more details on the available options.
     ///
     /// Default is [`SessionLifecycle::BrowserSession`].
     pub fn session_lifecycle<S: Into<SessionLifecycle>>(mut self, session_lifecycle: S) -> Self {
@@ -401,11 +401,11 @@ impl<Store: SessionStore> SessionMiddlewareBuilder<Store> {
                 self.configuration.session.state_ttl = state_ttl;
             }
             SessionLifecycle::PersistentSession(PersistentSession {
-                session_ttl: max_session_length,
+                session_ttl,
                 ttl_extension_policy,
             }) => {
-                self.configuration.cookie.max_age = Some(max_session_length);
-                self.configuration.session.state_ttl = max_session_length;
+                self.configuration.cookie.max_age = Some(session_ttl);
+                self.configuration.session.state_ttl = session_ttl;
                 self.configuration.ttl_extension_policy = ttl_extension_policy;
             }
         }
