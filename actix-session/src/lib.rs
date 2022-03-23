@@ -139,21 +139,20 @@
 #![doc(html_favicon_url = "https://actix.rs/favicon.ico")]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
+pub mod configuration;
 mod middleware;
 mod session;
 mod session_ext;
 pub mod storage;
 
-pub use self::middleware::{
-    BrowserSession, CookieContentSecurity, PersistentSession, SessionLifecycle, SessionMiddleware,
-    SessionMiddlewareBuilder, TtlExtensionPolicy,
-};
+pub use self::middleware::SessionMiddleware;
 pub use self::session::{Session, SessionStatus};
 pub use self::session_ext::SessionExt;
 
 #[cfg(test)]
 pub mod test_helpers {
-    use crate::{storage::SessionStore, CookieContentSecurity};
+    use crate::configuration::CookieContentSecurity;
+    use crate::storage::SessionStore;
     use actix_web::cookie::Key;
 
     /// Generate a random cookie signing/encryption key.
@@ -207,10 +206,8 @@ pub mod test_helpers {
         use serde::{Deserialize, Serialize};
         use serde_json::json;
 
-        use crate::{
-            storage::SessionStore, test_helpers::key, CookieContentSecurity, PersistentSession,
-            Session, SessionMiddleware, TtlExtensionPolicy,
-        };
+        use crate::configuration::{CookieContentSecurity, PersistentSession, TtlExtensionPolicy};
+        use crate::{storage::SessionStore, test_helpers::key, Session, SessionMiddleware};
 
         pub(super) async fn basic_workflow<F, Store>(
             store_builder: F,
