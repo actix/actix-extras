@@ -147,7 +147,7 @@ pub enum SessionLength {
     /// When does a browser session end? It depends on the browser! Chrome, for example, will often
     /// continue running in the background when the browser is closed—session cookies are not
     /// deleted and they will still be available when the browser is opened again. Check the
-    /// documentation of the browser you are targeting for up-to-date information.
+    /// documentation of the browsers you are targeting for up-to-date information.
     BrowserSession {
         /// We must provide a time-to-live (TTL) when storing the session state in the storage
         /// backend—we do not want to store session states indefinitely, otherwise we will
@@ -188,15 +188,16 @@ pub enum SessionLength {
 /// the content of the session cookie.
 #[derive(Debug, Clone, Copy)]
 pub enum CookieContentSecurity {
-    /// `CookieContentSecurity::Private` selects encrypted cookie content.
+    /// The cookie content is encrypted when using `CookieContentSecurity::Private`.
     ///
-    /// The client cannot tamper with its contents nor decode it (i.e., preserves confidentiality as
-    /// long the as the encryption key is not breached).
+    /// Encryption guarantees confidentiality and integrity: the client cannot tamper with the
+    /// cookie content nor decode it, as long as the encryption key remains confidential.
     Private,
 
-    /// `CookieContentSecurity::Signed` selects signed cookie content.
+    /// The cookie content is signed when using `CookieContentSecurity::Signed`.
     ///
-    /// The client cannot tamper with its contents, but they can read it (i.e., no confidentiality).
+    /// Signing guarantees integrity, but it doesn't ensure confidentiality: the client cannot
+    /// tamper with the cookie content, but they can read it.
     Signed,
 }
 
