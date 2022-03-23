@@ -1,7 +1,10 @@
 # Changes
 
 ## Unreleased - 2021-xx-xx
+### Fixed
+- `RedisSessionStore` will prevent connection timeouts from causing user-visible errors [#235]
 
+[#235]: https://github.com/actix/actix-extras/pull/235
 
 ## 0.6.0 - 2022-03-15
 ### Added
