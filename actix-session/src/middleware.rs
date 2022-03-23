@@ -605,12 +605,8 @@ where
                             if let TtlExtensionPolicy::OnEveryRequest =
                                 configuration.ttl_extension_policy
                             {
-                                let session_key = storage_backend
-                                    .update(
-                                        session_key,
-                                        session_state,
-                                        &configuration.session.state_ttl,
-                                    )
+                                storage_backend
+                                    .update_ttl(&session_key, &configuration.session.state_ttl)
                                     .await
                                     .map_err(e500)?;
                                 set_session_cookie(
