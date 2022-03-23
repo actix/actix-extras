@@ -2,6 +2,7 @@
 
 ## Unreleased - 2021-xx-xx
 
+- Implement `SessionExt` for `GuardContext`.
 
 ## 0.6.1 - 2022-03-21
 - No significant changes since `0.6.0`.
