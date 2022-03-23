@@ -1,6 +1,7 @@
 use actix::Addr;
 use actix_redis::{resp_array, Command, RedisActor, RespValue};
 use actix_web::cookie::time::Duration;
+use anyhow::Error;
 
 use super::SessionKey;
 use crate::storage::{
@@ -235,6 +236,24 @@ impl SessionStore for RedisActorSessionStore {
                 "Failed to update session state. {:?}",
                 val
             ))),
+        }
+    }
+
+    async fn update_ttl(&self, session_key: &SessionKey, ttl: &Duration) -> Result<(), Error> {
+        let cache_key = (self.configuration.cache_keygen)(session_key.as_ref());
+
+        let cmd = Command(resp_array![
+            "EXPIRE",
+            cache_key,
+            format!("{}", ttl.whole_seconds())
+        ]);
+
+        match self.addr.send(cmd).await? {
+            Ok(RespValue::Integer(_)) => Ok(()),
+            val => Err(anyhow::anyhow!(
+                "Failed to update the session state TTL. {:?}",
+                val
+            )),
         }
     }
 

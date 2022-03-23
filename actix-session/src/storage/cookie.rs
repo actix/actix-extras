@@ -4,6 +4,7 @@ use crate::storage::{
     SessionStore,
 };
 use actix_web::cookie::time::Duration;
+use anyhow::Error;
 use std::convert::TryInto;
 
 /// Use the session key, stored in the session cookie, as storage backend for the session state.
@@ -85,6 +86,10 @@ impl SessionStore for CookieSessionStore {
                 SaveError::Serialization(err) => UpdateError::Serialization(err),
                 SaveError::Other(err) => UpdateError::Other(err),
             })
+    }
+
+    async fn update_ttl(&self, _session_key: &SessionKey, _ttl: &Duration) -> Result<(), Error> {
+        Ok(())
     }
 
     async fn delete(&self, _session_key: &SessionKey) -> Result<(), anyhow::Error> {

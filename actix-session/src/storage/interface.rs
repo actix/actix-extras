@@ -35,6 +35,13 @@ pub trait SessionStore {
         ttl: &Duration,
     ) -> Result<SessionKey, UpdateError>;
 
+    /// Updates the TTL of the session state associated to a pre-existing session key.
+    async fn update_ttl(
+        &self,
+        session_key: &SessionKey,
+        ttl: &Duration,
+    ) -> Result<(), anyhow::Error>;
+
     /// Deletes a session from the store.
     async fn delete(&self, session_key: &SessionKey) -> Result<(), anyhow::Error>;
 }
