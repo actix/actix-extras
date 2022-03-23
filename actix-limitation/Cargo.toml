@@ -1,7 +1,10 @@
 [package]
 name = "actix-limitation"
-version = "0.1.4"
-authors = ["0xmad <0xmad@users.noreply.github.com>"]
+version = "0.2.0"
+authors = [
+    "0xmad <0xmad@users.noreply.github.com>",
+    "Rob Ede <robjtede@icloud.com>",
+]
 description = "Rate limiter using a fixed window counter for arbitrary keys, backed by Redis for Actix Web"
 keywords = ["actix-web", "rate-api", "rate-limit", "limitation"]
 categories = ["asynchronous", "web-programming"]
