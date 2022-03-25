@@ -302,9 +302,41 @@
 <span id="295">295</span>
 <span id="296">296</span>
 <span id="297">297</span>
+<span id="298">298</span>
+<span id="299">299</span>
+<span id="300">300</span>
+<span id="301">301</span>
+<span id="302">302</span>
+<span id="303">303</span>
+<span id="304">304</span>
+<span id="305">305</span>
+<span id="306">306</span>
+<span id="307">307</span>
+<span id="308">308</span>
+<span id="309">309</span>
+<span id="310">310</span>
+<span id="311">311</span>
+<span id="312">312</span>
+<span id="313">313</span>
+<span id="314">314</span>
+<span id="315">315</span>
+<span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::sync::Arc</span>;
 
-<span class="kw">use</span> <span class="ident">redis</span>::{<span class="ident">aio::ConnectionManager</span>, <span class="ident">AsyncCommands</span>, <span class="ident">Value</span>};
+<span class="kw">use</span> <span class="ident">redis</span>::{<span class="ident">aio::ConnectionManager</span>, <span class="ident">Cmd</span>, <span class="ident">FromRedisValue</span>, <span class="ident">RedisResult</span>, <span class="ident">Value</span>};
 <span class="kw">use</span> <span class="ident">time</span>::{<span class="self">self</span>, <span class="ident">Duration</span>};
 
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::SessionKey</span>;
@@ -440,10 +472,9 @@
 <span class="kw">impl</span> <span class="ident">SessionStore</span> <span class="kw">for</span> <span class="ident">RedisSessionStore</span> {
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">load</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">session_key</span>: <span class="kw-2">&amp;</span><span class="ident">SessionKey</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">SessionState</span><span class="op">&gt;</span>, <span class="ident">LoadError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">cache_key</span> <span class="op">=</span> (<span class="self">self</span>.<span class="ident">configuration</span>.<span class="ident">cache_keygen</span>)(<span class="ident">session_key</span>.<span class="ident">as_ref</span>());
+
         <span class="kw">let</span> <span class="ident">value</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">client</span>
-            .<span class="ident">clone</span>()
-            .<span class="ident">get</span>(<span class="ident">cache_key</span>)
+            .<span class="ident">execute_command</span>(<span class="ident">redis::cmd</span>(<span class="string">&quot;GET&quot;</span>).<span class="ident">arg</span>(<span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">cache_key</span>]))
             .<span class="kw">await</span>
             .<span class="ident">map_err</span>(<span class="ident">Into::into</span>)
             .<span class="ident">map_err</span>(<span class="ident">LoadError::Other</span>)<span class="question-mark">?</span>;
@@ -467,18 +498,16 @@
         <span class="kw">let</span> <span class="ident">session_key</span> <span class="op">=</span> <span class="ident">generate_session_key</span>();
         <span class="kw">let</span> <span class="ident">cache_key</span> <span class="op">=</span> (<span class="self">self</span>.<span class="ident">configuration</span>.<span class="ident">cache_keygen</span>)(<span class="ident">session_key</span>.<span class="ident">as_ref</span>());
 
-        <span class="ident">redis::cmd</span>(<span class="string">&quot;SET&quot;</span>)
-            .<span class="ident">arg</span>(<span class="kw-2">&amp;</span>[
-                <span class="kw-2">&amp;</span><span class="ident">cache_key</span>,
-                <span class="kw-2">&amp;</span><span class="ident">body</span>,
-                <span class="string">&quot;NX&quot;</span>, <span class="comment">// NX: only set the key if it does not already exist</span>
-                <span class="string">&quot;EX&quot;</span>, <span class="comment">// EX: set expiry</span>
-                <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">ttl</span>.<span class="ident">whole_seconds</span>()),
-            ])
-            .<span class="ident">query_async</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">client</span>.<span class="ident">clone</span>())
-            .<span class="kw">await</span>
-            .<span class="ident">map_err</span>(<span class="ident">Into::into</span>)
-            .<span class="ident">map_err</span>(<span class="ident">SaveError::Other</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.<span class="ident">execute_command</span>(<span class="ident">redis::cmd</span>(<span class="string">&quot;SET&quot;</span>).<span class="ident">arg</span>(<span class="kw-2">&amp;</span>[
+            <span class="kw-2">&amp;</span><span class="ident">cache_key</span>,
+            <span class="kw-2">&amp;</span><span class="ident">body</span>,
+            <span class="string">&quot;NX&quot;</span>, <span class="comment">// NX: only set the key if it does not already exist</span>
+            <span class="string">&quot;EX&quot;</span>, <span class="comment">// EX: set expiry</span>
+            <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">ttl</span>.<span class="ident">whole_seconds</span>()),
+        ]))
+        .<span class="kw">await</span>
+        .<span class="ident">map_err</span>(<span class="ident">Into::into</span>)
+        .<span class="ident">map_err</span>(<span class="ident">SaveError::Other</span>)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(<span class="ident">session_key</span>)
     }
@@ -495,15 +524,14 @@
 
         <span class="kw">let</span> <span class="ident">cache_key</span> <span class="op">=</span> (<span class="self">self</span>.<span class="ident">configuration</span>.<span class="ident">cache_keygen</span>)(<span class="ident">session_key</span>.<span class="ident">as_ref</span>());
 
-        <span class="kw">let</span> <span class="ident">v</span>: <span class="ident">redis::Value</span> <span class="op">=</span> <span class="ident">redis::cmd</span>(<span class="string">&quot;SET&quot;</span>)
-            .<span class="ident">arg</span>(<span class="kw-2">&amp;</span>[
+        <span class="kw">let</span> <span class="ident">v</span>: <span class="ident">redis::Value</span> <span class="op">=</span> <span class="self">self</span>
+            .<span class="ident">execute_command</span>(<span class="ident">redis::cmd</span>(<span class="string">&quot;SET&quot;</span>).<span class="ident">arg</span>(<span class="kw-2">&amp;</span>[
                 <span class="kw-2">&amp;</span><span class="ident">cache_key</span>,
                 <span class="kw-2">&amp;</span><span class="ident">body</span>,
                 <span class="string">&quot;XX&quot;</span>, <span class="comment">// XX: Only set the key if it already exist.</span>
                 <span class="string">&quot;EX&quot;</span>, <span class="comment">// EX: set expiry</span>
                 <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">ttl</span>.<span class="ident">whole_seconds</span>()),
-            ])
-            .<span class="ident">query_async</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">client</span>.<span class="ident">clone</span>())
+            ]))
             .<span class="kw">await</span>
             .<span class="ident">map_err</span>(<span class="ident">Into::into</span>)
             .<span class="ident">map_err</span>(<span class="ident">UpdateError::Other</span>)<span class="question-mark">?</span>;
@@ -531,15 +559,51 @@
 
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">delete</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">session_key</span>: <span class="kw-2">&amp;</span><span class="ident">SessionKey</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">anyhow::Error</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">cache_key</span> <span class="op">=</span> (<span class="self">self</span>.<span class="ident">configuration</span>.<span class="ident">cache_keygen</span>)(<span class="ident">session_key</span>.<span class="ident">as_ref</span>());
-
-        <span class="self">self</span>.<span class="ident">client</span>
-            .<span class="ident">clone</span>()
-            .<span class="ident">del</span>(<span class="kw-2">&amp;</span><span class="ident">cache_key</span>)
+        <span class="self">self</span>.<span class="ident">execute_command</span>(<span class="ident">redis::cmd</span>(<span class="string">&quot;DEL&quot;</span>).<span class="ident">arg</span>(<span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">cache_key</span>]))
             .<span class="kw">await</span>
             .<span class="ident">map_err</span>(<span class="ident">Into::into</span>)
             .<span class="ident">map_err</span>(<span class="ident">UpdateError::Other</span>)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">RedisSessionStore</span> {
+    <span class="doccomment">/// Execute Redis command and retry once in certain cases.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// `ConnectionManager` automatically reconnects when it encounters an error talking to Redis.</span>
+    <span class="doccomment">/// The request that bumped into the error, though, fails.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// This is generally OK, but there is an unpleasant edge case: Redis client timeouts. The</span>
+    <span class="doccomment">/// server is configured to drop connections who have been active longer than a pre-determined</span>
+    <span class="doccomment">/// threshold. `redis-rs` does not proactively detect that the connection has been dropped - you</span>
+    <span class="doccomment">/// only find out when you try to use it.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// This helper method catches this case (`.is_connection_dropped`) to execute a retry. The</span>
+    <span class="doccomment">/// retry will be executed on a fresh connection, therefore it is likely to succeed (or fail for</span>
+    <span class="doccomment">/// a different more meaningful reason).</span>
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">execute_command</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">FromRedisValue</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">cmd</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Cmd</span>) -&gt; <span class="ident">RedisResult</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">can_retry</span> <span class="op">=</span> <span class="bool-val">true</span>;
+
+        <span class="kw">loop</span> {
+            <span class="kw">match</span> <span class="ident">cmd</span>.<span class="ident">query_async</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">client</span>.<span class="ident">clone</span>()).<span class="kw">await</span> {
+                <span class="prelude-val">Ok</span>(<span class="ident">value</span>) =&gt; <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">value</span>),
+                <span class="prelude-val">Err</span>(<span class="ident">err</span>) =&gt; {
+                    <span class="kw">if</span> <span class="ident">can_retry</span> <span class="op">&amp;&amp;</span> <span class="ident">err</span>.<span class="ident">is_connection_dropped</span>() {
+                        <span class="macro">tracing::debug!</span>(
+                            <span class="string">&quot;Connection dropped while trying to talk to Redis. Retrying.&quot;</span>
+                        );
+
+                        <span class="comment">// Retry at most once</span>
+                        <span class="ident">can_retry</span> <span class="op">=</span> <span class="bool-val">false</span>;
+
+                        <span class="kw">continue</span>;
+                    } <span class="kw">else</span> {
+                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>);
+                    }
+                }
+            }
+        }
     }
 }
 
