@@ -4,11 +4,11 @@
 - Implement `SessionExt` for `GuardContext`. [#234]
 - `RedisSessionStore` will prevent connection timeouts from causing user-visible errors. [#235]
 - Do not leak internal implementation details to callers when errors occur. [#236]
- 
+
 [#234]: https://github.com/actix/actix-extras/pull/234
 [#236]: https://github.com/actix/actix-extras/pull/236
-
 [#235]: https://github.com/actix/actix-extras/pull/235
+
 
 ## 0.6.1 - 2022-03-21
 - No significant changes since `0.6.0`.

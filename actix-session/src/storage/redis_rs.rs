@@ -1,12 +1,14 @@
+use std::sync::Arc;
+
+use redis::{aio::ConnectionManager, Cmd, FromRedisValue, RedisResult, Value};
+use time::{self, Duration};
+
 use super::SessionKey;
 use crate::storage::{
     interface::{LoadError, SaveError, SessionState, UpdateError},
     utils::generate_session_key,
     SessionStore,
 };
-use redis::{aio::ConnectionManager, Cmd, FromRedisValue, RedisResult, Value};
-use std::sync::Arc;
-use time::{self, Duration};
 
 /// Use Redis as session storage backend.
 ///
@@ -231,32 +233,37 @@ impl SessionStore for RedisSessionStore {
 }
 
 impl RedisSessionStore {
+    /// Execute Redis command and retry once in certain cases.
+    ///
     /// `ConnectionManager` automatically reconnects when it encounters an error talking to Redis.
     /// The request that bumped into the error, though, fails.
     ///
-    /// This is generally OK, but there is an unpleasant edge case: Redis client timeouts.
-    /// The server is configured to drop connections who have been active longer than a
-    /// pre-determined threshold.
-    /// `redis-rs` does not proactively detect that the connection has been dropped - you only find
-    /// out when you try to use it.
-    /// This helper method catches this case (`.is_connection_dropped`) to execute a retry.
-    /// The retry will be executed on a fresh connection, therefore it is likely to succeed
-    /// (or fail for a different more meaningful reason).
+    /// This is generally OK, but there is an unpleasant edge case: Redis client timeouts. The
+    /// server is configured to drop connections who have been active longer than a pre-determined
+    /// threshold. `redis-rs` does not proactively detect that the connection has been dropped - you
+    /// only find out when you try to use it.
+    ///
+    /// This helper method catches this case (`.is_connection_dropped`) to execute a retry. The
+    /// retry will be executed on a fresh connection, therefore it is likely to succeed (or fail for
+    /// a different more meaningful reason).
     async fn execute_command<T: FromRedisValue>(&self, cmd: &mut Cmd) -> RedisResult<T> {
         let mut can_retry = true;
+
         loop {
             match cmd.query_async(&mut self.client.clone()).await {
                 Ok(value) => return Ok(value),
-                Err(e) => {
-                    if can_retry && e.is_connection_dropped() {
+                Err(err) => {
+                    if can_retry && err.is_connection_dropped() {
                         tracing::debug!(
                             "Connection dropped while trying to talk to Redis. Retrying."
                         );
+
                         // Retry at most once
                         can_retry = false;
+
                         continue;
                     } else {
-                        return Err(e);
+                        return Err(err);
                     }
                 }
             }
