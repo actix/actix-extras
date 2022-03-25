@@ -654,6 +654,17 @@
 <span id="647">647</span>
 <span id="648">648</span>
 <span id="649">649</span>
+<span id="650">650</span>
+<span id="651">651</span>
+<span id="652">652</span>
+<span id="653">653</span>
+<span id="654">654</span>
+<span id="655">655</span>
+<span id="656">656</span>
+<span id="657">657</span>
+<span id="658">658</span>
+<span id="659">659</span>
+<span id="660">660</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections::HashMap</span>, <span class="ident">convert::TryInto</span>, <span class="ident">fmt</span>, <span class="ident">future::Future</span>, <span class="ident">pin::Pin</span>, <span class="ident">rc::Rc</span>};
 
 <span class="kw">use</span> <span class="ident">actix_utils::future</span>::{<span class="ident">ready</span>, <span class="ident">Ready</span>};
@@ -662,6 +673,7 @@
     <span class="ident">cookie</span>::{<span class="ident">Cookie</span>, <span class="ident">CookieJar</span>, <span class="ident">Key</span>, <span class="ident">SameSite</span>},
     <span class="ident">dev</span>::{<span class="ident">forward_ready</span>, <span class="ident">ResponseHead</span>, <span class="ident">Service</span>, <span class="ident">ServiceRequest</span>, <span class="ident">ServiceResponse</span>, <span class="ident">Transform</span>},
     <span class="ident">http::header</span>::{<span class="ident">HeaderValue</span>, <span class="ident">SET_COOKIE</span>},
+    <span class="ident">HttpResponse</span>,
 };
 <span class="kw">use</span> <span class="ident">anyhow::Context</span>;
 <span class="kw">use</span> <span class="ident">time::Duration</span>;
@@ -1049,7 +1061,17 @@
 <span class="doccomment">/// Short-hand to create an `actix_web::Error` instance that will result in an `Internal Server</span>
 <span class="doccomment">/// Error` response while preserving the error root cause (e.g. in logs).</span>
 <span class="kw">fn</span> <span class="ident">e500</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">fmt::Debug</span> <span class="op">+</span> <span class="ident">fmt::Display</span> <span class="op">+</span> <span class="lifetime">&#39;static</span><span class="op">&gt;</span>(<span class="ident">err</span>: <span class="ident">E</span>) -&gt; <span class="ident">actix_web::Error</span> {
-    <span class="ident">actix_web::error::ErrorInternalServerError</span>(<span class="ident">err</span>)
+    <span class="comment">// We do not use `actix_web::error::ErrorInternalServerError` because we do not want to</span>
+    <span class="comment">// leak internal implementation details to the caller.</span>
+    <span class="comment">//</span>
+    <span class="comment">// `actix_web::error::ErrorInternalServerError` includes the error Display representation</span>
+    <span class="comment">// as body of the error responses, leading to messages like &quot;There was an issue persisting</span>
+    <span class="comment">// the session state&quot; reaching API clients. We don&#39;t want that, we want opaque 500s.</span>
+    <span class="ident">actix_web::error::InternalError::from_response</span>(
+        <span class="ident">err</span>,
+        <span class="ident">HttpResponse::InternalServerError</span>().<span class="ident">finish</span>(),
+    )
+    .<span class="ident">into</span>()
 }
 
 <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
@@ -1304,5 +1326,5 @@
     <span class="prelude-val">Ok</span>(())
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_session" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (8d60bf427 2022-03-19)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_session" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (63b8f01bb 2022-03-24)" ></div>
 </body></html>
