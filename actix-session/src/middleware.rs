@@ -6,6 +6,7 @@ use actix_web::{
     cookie::{Cookie, CookieJar, Key, SameSite},
     dev::{forward_ready, ResponseHead, Service, ServiceRequest, ServiceResponse, Transform},
     http::header::{HeaderValue, SET_COOKIE},
+    HttpResponse,
 };
 use anyhow::Context;
 use time::Duration;
@@ -393,7 +394,17 @@ where
 /// Short-hand to create an `actix_web::Error` instance that will result in an `Internal Server
 /// Error` response while preserving the error root cause (e.g. in logs).
 fn e500<E: fmt::Debug + fmt::Display + 'static>(err: E) -> actix_web::Error {
-    actix_web::error::ErrorInternalServerError(err)
+    // We do not use `actix_web::error::ErrorInternalServerError` because we do not want to
+    // leak internal implementation details to the caller.
+    //
+    // `actix_web::error::ErrorInternalServerError` includes the error Display representation
+    // as body of the error responses, leading to messages like "There was an issue persisting
+    // the session state" reaching API clients. We don't want that, we want opaque 500s.
+    actix_web::error::InternalError::from_response(
+        err,
+        HttpResponse::InternalServerError().finish(),
+    )
+    .into()
 }
 
 #[doc(hidden)]

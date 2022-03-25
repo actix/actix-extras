@@ -1,6 +1,9 @@
 # Changes
 
 ## Unreleased - 2022-xx-xx
+
+
+## 0.2.0 - 2022-03-22
 - Update Actix Web dependency to v4 ecosystem. [#229]
 - Update Tokio dependencies to v1 ecosystem. [#229]
 - Rename `Limiter::{build => builder}()`. [#232]
