@@ -1,6 +1,9 @@
 # Changes
 
 ## Unreleased - 2021-xx-xx
+
+
+## 0.6.2 - 2022-03-25
 - Implement `SessionExt` for `GuardContext`. [#234]
 - `RedisSessionStore` will prevent connection timeouts from causing user-visible errors. [#235]
 - Do not leak internal implementation details to callers when errors occur. [#236]
