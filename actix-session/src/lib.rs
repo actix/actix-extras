@@ -191,23 +191,25 @@ pub mod test_helpers {
                 *policy,
             )
             .await;
+            acceptance_tests::guard(store_builder.clone(), *policy).await;
         }
     }
 
     mod acceptance_tests {
+        use crate::configuration::{CookieContentSecurity, PersistentSession, TtlExtensionPolicy};
+        use crate::{
+            storage::SessionStore, test_helpers::key, Session, SessionExt, SessionMiddleware,
+        };
         use actix_web::cookie::time;
         use actix_web::dev::ServiceResponse;
         use actix_web::{
             dev::Service,
-            middleware, test,
+            guard, middleware, test,
             web::{self, get, post, resource, Bytes},
             App, HttpResponse, Result,
         };
         use serde::{Deserialize, Serialize};
         use serde_json::json;
-
-        use crate::configuration::{CookieContentSecurity, PersistentSession, TtlExtensionPolicy};
-        use crate::{storage::SessionStore, test_helpers::key, Session, SessionMiddleware};
 
         pub(super) async fn basic_workflow<F, Store>(
             store_builder: F,
@@ -343,6 +345,91 @@ pub mod test_helpers {
             let response = app.call(request).await.unwrap();
             let cookie_2 = response.get_cookie("id").expect("Cookie is set");
             assert_eq!(cookie_2.max_age(), Some(session_ttl));
+        }
+
+        pub(super) async fn guard<F, Store>(store_builder: F, policy: CookieContentSecurity)
+        where
+            Store: SessionStore + 'static,
+            F: Fn() -> Store + Clone + Send + 'static,
+        {
+            let srv = actix_test::start(move || {
+                App::new()
+                    .wrap(
+                        SessionMiddleware::builder(store_builder(), key())
+                            .cookie_name("test-session".into())
+                            .cookie_content_security(policy)
+                            .session_lifecycle(
+                                PersistentSession::default().session_ttl(time::Duration::days(7)),
+                            )
+                            .build(),
+                    )
+                    .wrap(middleware::Logger::default())
+                    .service(resource("/").route(get().to(index)))
+                    .service(resource("/do_something").route(post().to(do_something)))
+                    .service(resource("/login").route(post().to(login)))
+                    .service(resource("/logout").route(post().to(logout)))
+                    .service(
+                        web::scope("/protected")
+                            .guard(guard::fn_guard(|g| {
+                                g.get_session().get::<String>("user_id").unwrap().is_some()
+                            }))
+                            .service(resource("/count").route(get().to(count))),
+                    )
+            });
+
+            // Step 1: GET without session info
+            //   - response should be a unsuccessful status
+            let req_1 = srv.get("/protected/count").send();
+            let resp_1 = req_1.await.unwrap();
+            assert!(!resp_1.status().is_success());
+
+            // Step 2: POST to login
+            //   - set-cookie actix-session will be in response  (session cookie #1)
+            //   - updates session state: {"counter": 0, "user_id": "ferris"}
+            let req_2 = srv.post("/login").send_json(&json!({"user_id": "ferris"}));
+            let resp_2 = req_2.await.unwrap();
+            let cookie_1 = resp_2
+                .cookies()
+                .unwrap()
+                .clone()
+                .into_iter()
+                .find(|c| c.name() == "test-session")
+                .unwrap();
+
+            // Step 3: POST to do_something
+            //   - adds new session state:  {"counter": 1, "user_id": "ferris" }
+            //   - set-cookie actix-session should be in response (session cookie #2)
+            //   - response should be: {"counter": 1, "user_id": None}
+            let req_3 = srv.post("/do_something").cookie(cookie_1.clone()).send();
+            let mut resp_3 = req_3.await.unwrap();
+            let result_3 = resp_3.json::<IndexResponse>().await.unwrap();
+            assert_eq!(
+                result_3,
+                IndexResponse {
+                    user_id: Some("ferris".into()),
+                    counter: 1
+                }
+            );
+            let cookie_2 = resp_3
+                .cookies()
+                .unwrap()
+                .clone()
+                .into_iter()
+                .find(|c| c.name() == "test-session")
+                .unwrap();
+
+            // Step 4: GET using a existing user id
+            //   - response should be: {"counter": 3, "user_id": "ferris"}
+            let req_4 = srv.get("/protected/count").cookie(cookie_2.clone()).send();
+            let mut resp_4 = req_4.await.unwrap();
+            let result_4 = resp_4.json::<IndexResponse>().await.unwrap();
+            assert_eq!(
+                result_4,
+                IndexResponse {
+                    user_id: Some("ferris".into()),
+                    counter: 1
+                }
+            );
         }
 
         pub(super) async fn complex_workflow<F, Store>(
@@ -583,6 +670,13 @@ pub mod test_helpers {
                 .unwrap_or(Some(0))
                 .map_or(1, |inner| inner + 1);
             session.insert("counter", &counter)?;
+
+            Ok(HttpResponse::Ok().json(&IndexResponse { user_id, counter }))
+        }
+
+        async fn count(session: Session) -> Result<HttpResponse> {
+            let user_id: Option<String> = session.get::<String>("user_id").unwrap();
+            let counter: i32 = session.get::<i32>("counter").unwrap().unwrap();
 
             Ok(HttpResponse::Ok().json(&IndexResponse { user_id, counter }))
         }

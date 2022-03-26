@@ -1,6 +1,6 @@
 [package]
 name = "actix-session"
-version = "0.6.1"
+version = "0.6.2"
 authors = [
   "Nikolay Kim <fafhrd91@gmail.com>",
   "Luca Palmieri <rust@lpalmieri.com>",

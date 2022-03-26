@@ -1,5 +1,6 @@
 use actix_web::{
     dev::{ServiceRequest, ServiceResponse},
+    guard::GuardContext,
     HttpMessage, HttpRequest,
 };
 
@@ -27,5 +28,11 @@ impl SessionExt for ServiceRequest {
 impl SessionExt for ServiceResponse {
     fn get_session(&self) -> Session {
         self.request().get_session()
+    }
+}
+
+impl<'a> SessionExt for GuardContext<'a> {
+    fn get_session(&self) -> Session {
+        Session::get_session(&mut *self.req_data_mut())
     }
 }
