@@ -277,11 +277,13 @@ impl SessionStore for RedisActorSessionStore {
 }
 
 #[cfg(test)]
-mod test {
+mod tests {
+    use std::collections::HashMap;
+
+    use actix_web::cookie::time::Duration;
+
     use super::*;
     use crate::test_helpers::acceptance_test_suite;
-    use actix_web::cookie::time::Duration;
-    use std::collections::HashMap;
 
     fn redis_actor_store() -> RedisActorSessionStore {
         RedisActorSessionStore::new("127.0.0.1:6379")

@@ -10,12 +10,11 @@ use actix_web::{
 };
 use anyhow::Context;
 
-use crate::configuration::{
-    Configuration, CookieConfiguration, CookieContentSecurity, SessionMiddlewareBuilder,
-    TtlExtensionPolicy,
-};
 use crate::{
-    configuration,
+    configuration::{
+        self, Configuration, CookieConfiguration, CookieContentSecurity, SessionMiddlewareBuilder,
+        TtlExtensionPolicy,
+    },
     storage::{LoadError, SessionKey, SessionStore},
     Session, SessionStatus,
 };
@@ -253,6 +252,7 @@ where
                                 )
                                 .await
                                 .map_err(e500)?;
+
                             set_session_cookie(
                                 res.response_mut().head_mut(),
                                 session_key,
@@ -274,6 +274,7 @@ where
                                 .save(session_state, &configuration.session.state_ttl)
                                 .await
                                 .map_err(e500)?;
+
                             set_session_cookie(
                                 res.response_mut().head_mut(),
                                 session_key,
@@ -289,7 +290,8 @@ where
                                     .update_ttl(&session_key, &configuration.session.state_ttl)
                                     .await
                                     .map_err(e500)?;
-                                if !configuration.cookie.max_age.is_none() {
+
+                                if configuration.cookie.max_age.is_some() {
                                     set_session_cookie(
                                         res.response_mut().head_mut(),
                                         session_key,

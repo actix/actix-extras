@@ -1,8 +1,8 @@
+use std::{convert::TryInto, sync::Arc};
+
 use actix_web::cookie::time::Duration;
 use anyhow::{Context, Error};
 use redis::{aio::ConnectionManager, AsyncCommands, Cmd, FromRedisValue, RedisResult, Value};
-use std::convert::TryInto;
-use std::sync::Arc;
 
 use super::SessionKey;
 use crate::storage::{
@@ -288,12 +288,14 @@ impl RedisSessionStore {
 }
 
 #[cfg(test)]
-mod test {
-    use super::*;
-    use crate::test_helpers::acceptance_test_suite;
+mod tests {
+    use std::collections::HashMap;
+
     use actix_web::cookie::time;
     use redis::AsyncCommands;
-    use std::collections::HashMap;
+
+    use super::*;
+    use crate::test_helpers::acceptance_test_suite;
 
     async fn redis_store() -> RedisSessionStore {
         RedisSessionStore::new("redis://127.0.0.1:6379")

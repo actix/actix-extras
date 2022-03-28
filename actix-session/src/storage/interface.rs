@@ -1,6 +1,7 @@
+use std::collections::HashMap;
+
 use actix_web::cookie::time::Duration;
 use derive_more::Display;
-use std::collections::HashMap;
 
 use super::SessionKey;
 

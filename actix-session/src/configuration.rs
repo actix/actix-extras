@@ -1,8 +1,8 @@
 //! Configuration options to tune the behaviour of [`SessionMiddleware`].
-use crate::storage::SessionStore;
-use crate::SessionMiddleware;
-use actix_web::cookie::time::Duration;
-use actix_web::cookie::{Key, SameSite};
+
+use actix_web::cookie::{time::Duration, Key, SameSite};
+
+use crate::{storage::SessionStore, SessionMiddleware};
 
 /// Determines what type of session cookie should be used and how its lifecycle should be managed.
 ///
