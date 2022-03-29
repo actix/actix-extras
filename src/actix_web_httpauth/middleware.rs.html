@@ -415,6 +415,7 @@
 <span id="410">410</span>
 <span id="411">411</span>
 <span id="412">412</span>
+<span id="413">413</span>
 </pre><pre class="rust"><code><span class="doccomment">//! HTTP Authentication middleware.</span>
 
 <span class="kw">use</span> <span class="ident">std</span>::{
@@ -656,14 +657,15 @@
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::extractors::basic::BasicAuth</span>;
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::extractors::bearer::BearerAuth</span>;
     <span class="kw">use</span> <span class="ident">actix_service</span>::{<span class="ident">into_service</span>, <span class="ident">Service</span>};
     <span class="kw">use</span> <span class="ident">actix_web::error::ErrorForbidden</span>;
     <span class="kw">use</span> <span class="ident">actix_web::http::StatusCode</span>;
     <span class="kw">use</span> <span class="ident">actix_web::test::TestRequest</span>;
     <span class="kw">use</span> <span class="ident">actix_web</span>::{<span class="ident">error</span>, <span class="ident">web</span>, <span class="ident">App</span>, <span class="ident">HttpResponse</span>};
+
+    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::extractors::basic::BasicAuth</span>;
+    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::extractors::bearer::BearerAuth</span>;
 
     <span class="doccomment">/// This is a test for https://github.com/actix/actix-extras/issues/10</span>
     <span class="attribute">#[<span class="ident">actix_web::test</span>]</span>
@@ -828,5 +830,5 @@
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_web_httpauth" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (ab0c2e18d 2022-03-27)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_web_httpauth" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (ee915c34e 2022-03-28)" ></div>
 </body></html>
