@@ -4,9 +4,8 @@
 #![warn(future_incompatible)]
 
 mod redis;
-pub use redis::{Command, RedisActor};
-
 use derive_more::{Display, Error, From};
+pub use redis::{Command, RedisActor};
 
 /// General purpose `actix-redis` error.
 #[derive(Debug, Display, Error, From)]

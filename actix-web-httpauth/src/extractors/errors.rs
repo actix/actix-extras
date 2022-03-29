@@ -65,9 +65,10 @@ impl<C: 'static + Challenge> ResponseError for AuthenticationError<C> {
 
 #[cfg(test)]
 mod tests {
+    use actix_web::Error;
+
     use super::*;
     use crate::headers::www_authenticate::basic::Basic;
-    use actix_web::Error;
 
     #[test]
     fn test_status_code_is_preserved_across_error_conversions() {

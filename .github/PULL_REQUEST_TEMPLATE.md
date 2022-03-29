@@ -14,7 +14,7 @@ INSERT_PR_TYPE
 - [ ] Tests for the changes have been added / updated.
 - [ ] Documentation comments have been added / updated.
 - [ ] A changelog entry has been made for the appropriate packages.
-- [ ] Format code with the latest stable rustfmt.
+- [ ] Format code with the nightly rustfmt (`cargo +nightly fmt`).
 
 
 ## Overview

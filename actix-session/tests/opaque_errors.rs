@@ -1,3 +1,6 @@
+use std::collections::HashMap;
+use std::convert::TryInto;
+
 use actix_session::storage::{LoadError, SaveError, SessionKey, SessionStore, UpdateError};
 use actix_session::{Session, SessionMiddleware};
 use actix_web::body::MessageBody;
@@ -8,8 +11,6 @@ use actix_web::{
     test, web, App, Responder,
 };
 use anyhow::Error;
-use std::collections::HashMap;
-use std::convert::TryInto;
 
 #[actix_web::test]
 async fn errors_are_opaque() {
