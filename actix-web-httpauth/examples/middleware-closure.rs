@@ -1,5 +1,4 @@
 use actix_web::{middleware, web, App, HttpServer};
-
 use actix_web_httpauth::middleware::HttpAuthentication;
 
 #[actix_web::main]

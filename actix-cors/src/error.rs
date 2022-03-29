@@ -1,5 +1,4 @@
 use actix_web::{http::StatusCode, HttpResponse, ResponseError};
-
 use derive_more::{Display, Error};
 
 /// Errors that can occur when processing CORS guarded requests.
