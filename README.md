@@ -27,6 +27,7 @@ These crates are provided by the community.
 
 | Crate                      |                                                                                                                                                                                                                                                                                        |                                                                                                   |
 | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| [actix-web-lab]            | [![crates.io](https://img.shields.io/crates/v/actix-web-lab?label=latest)](https://crates.io/crates/actix-web-lab) [![dependency status](https://deps.rs/crate/actix-web-lab/0.15.0/status.svg)](https://deps.rs/crate/actix-web-lab/0.15.0)                                           | Experimental extractors, middleware, and other extras for possible inclusion in Actix Web.        |
 | [actix-form-data]          | [![crates.io](https://img.shields.io/crates/v/actix-form-data?label=latest)](https://crates.io/crates/actix-form-data) [![dependency status](https://deps.rs/crate/actix-form-data/0.6.2/status.svg)](https://deps.rs/crate/actix-form-data/0.6.2)                                     | Rate-limiting backed by form-data.                                                                |
 | [actix-governor]           | [![crates.io](https://img.shields.io/crates/v/actix-governor?label=latest)](https://crates.io/crates/actix-governor) [![dependency status](https://deps.rs/crate/actix-governor/0.3.0/status.svg)](https://deps.rs/crate/actix-governor/0.3.0)                                         | Rate-limiting backed by governor.                                                                 |
 | [actix-casbin]             | [![crates.io](https://img.shields.io/crates/v/actix-casbin?label=latest)](https://crates.io/crates/actix-casbin) [![dependency status](https://deps.rs/crate/actix-casbin/0.4.2/status.svg)](https://deps.rs/crate/actix-casbin/0.4.2)                                                 | Authorization library that supports access control models like ACL, RBAC & ABAC.                  |
@@ -38,13 +39,14 @@ These crates are provided by the community.
 | [awmp]                     | [![crates.io](https://img.shields.io/crates/v/awmp?label=latest)](https://crates.io/crates/awmp) [![dependency status](https://deps.rs/crate/awmp/0.8.1/status.svg)](https://deps.rs/crate/awmp/0.8.1)                                                                                 | An easy to use wrapper around multipart fields for Actix Web.                                     |
 | [tracing-actix-web]        | [![crates.io](https://img.shields.io/crates/v/tracing-actix-web?label=latest)](https://crates.io/crates/tracing-actix-web) [![dependency status](https://deps.rs/crate/tracing-actix-web/0.5.1/status.svg)](https://deps.rs/crate/tracing-actix-web/0.5.1)                             | A middleware to collect telemetry data from applications built on top of the actix-web framework. |
 | [actix-ws]                 | [![crates.io](https://img.shields.io/crates/v/actix-ws?label=latest)](https://crates.io/crates/actix-ws) [![dependency status](https://deps.rs/crate/actix-ws/0.2.5/status.svg)](https://deps.rs/crate/actix-ws/0.2.5)                                                                 | A middleware to collect telemetry data from applications built on top of the actix-web framework. |
+| [actix-hash]               | [![crates.io](https://img.shields.io/crates/v/actix-hash?label=latest)](https://crates.io/crates/actix-hash) [![dependency status](https://deps.rs/crate/actix-hash/0.3.0/status.svg)](https://deps.rs/crate/actix-hash/0.3.0)                                                         | Hashing utilities for Actix Web.                                                                  |
 
 To add a crate to this list, submit a pull request.
 
 <!-- REFERENCES -->
 
 [actix]: https://github.com/actix/actix
-[Actix Web]: https://github.com/actix/actix-web
+[actix web]: https://github.com/actix/actix-web
 [actix-extras]: https://github.com/actix/actix-extras
 [actix-cors]: actix-cors
 [actix-identity]: actix-identity
@@ -53,6 +55,7 @@ To add a crate to this list, submit a pull request.
 [actix-redis]: actix-redis
 [actix-session]: actix-session
 [actix-web-httpauth]: actix-web-httpauth
+[actix-web-lab]: https://github.com/robjtede/actix-web-lab/tree/main/actix-web-lab
 [actix-form-data]: https://git.asonix.dog/asonix/actix-form-data
 [actix-casbin]: https://github.com/casbin-rs/actix-casbin
 [actix-ip-filter]: https://github.com/jhen0409/actix-ip-filter
@@ -64,3 +67,4 @@ To add a crate to this list, submit a pull request.
 [awmp]: https://github.com/kardeiz/awmp
 [tracing-actix-web]: https://github.com/LukeMathWalker/tracing-actix-web
 [actix-ws]: https://git.asonix.dog/asonix/actix-actorless-websockets
+[actix-hash]: https://github.com/robjtede/actix-web-lab/tree/main/actix-hash
