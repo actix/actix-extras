@@ -20,9 +20,7 @@ mod utils;
 
 #[cfg(feature = "cookie-session")]
 pub use cookie::CookieSessionStore;
-
 #[cfg(feature = "redis-actor-session")]
 pub use redis_actor::{RedisActorSessionStore, RedisActorSessionStoreBuilder};
-
 #[cfg(feature = "redis-rs-session")]
 pub use redis_rs::{RedisSessionStore, RedisSessionStoreBuilder};

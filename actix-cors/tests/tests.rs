@@ -1,3 +1,4 @@
+use actix_cors::Cors;
 use actix_utils::future::ok;
 use actix_web::dev::fn_service;
 use actix_web::{
@@ -10,8 +11,6 @@ use actix_web::{
     HttpResponse,
 };
 use regex::bytes::Regex;
-
-use actix_cors::Cors;
 
 fn val_as_str(val: &HeaderValue) -> &str {
     val.to_str().unwrap()

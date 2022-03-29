@@ -268,9 +268,10 @@ impl ProtoBufResponseBuilder for HttpResponseBuilder {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use actix_web::http::header;
     use actix_web::test::TestRequest;
+
+    use super::*;
 
     impl PartialEq for ProtoBufPayloadError {
         fn eq(&self, other: &ProtoBufPayloadError) -> bool {

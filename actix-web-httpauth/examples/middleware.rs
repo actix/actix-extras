@@ -1,6 +1,5 @@
 use actix_web::dev::ServiceRequest;
 use actix_web::{middleware, web, App, Error, HttpServer};
-
 use actix_web_httpauth::extractors::basic::BasicAuth;
 use actix_web_httpauth::middleware::HttpAuthentication;
 

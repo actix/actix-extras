@@ -1,9 +1,6 @@
 use std::{rc::Rc, time::SystemTime};
 
 use actix_utils::future::{ready, Ready};
-use serde::{Deserialize, Serialize};
-use time::Duration;
-
 use actix_web::{
     cookie::{Cookie, CookieJar, Key, SameSite},
     dev::{ServiceRequest, ServiceResponse},
@@ -11,6 +8,8 @@ use actix_web::{
     http::header::{self, HeaderValue},
     HttpMessage,
 };
+use serde::{Deserialize, Serialize};
+use time::Duration;
 
 use crate::IdentityPolicy;
 

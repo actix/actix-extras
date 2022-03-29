@@ -239,14 +239,15 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::extractors::basic::BasicAuth;
-    use crate::extractors::bearer::BearerAuth;
     use actix_service::{into_service, Service};
     use actix_web::error::ErrorForbidden;
     use actix_web::http::StatusCode;
     use actix_web::test::TestRequest;
     use actix_web::{error, web, App, HttpResponse};
+
+    use super::*;
+    use crate::extractors::basic::BasicAuth;
+    use crate::extractors::bearer::BearerAuth;
 
     /// This is a test for https://github.com/actix/actix-extras/issues/10
     #[actix_web::test]
