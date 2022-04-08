@@ -1,15 +1,10 @@
 # Changes
 
 ## Unreleased - 2021-xx-xx
-### Added
-- `TtlExtensionPolicy`, to support different strategies for extending the TTL attached to the session state.  
-  `TtlExtensionPolicy::OnEveryRequest` now allows for long-lived sessions that do not expire if the user remains active. [#233]
-  
-### Breaking
+- Added `TtlExtensionPolicy` enum to support different strategies for extending the TTL attached to the session state. `TtlExtensionPolicy::OnEveryRequest` now allows for long-lived sessions that do not expire if the user remains active. [#233]
 - `SessionLength` is now called `SessionLifecycle`. [#233]
 - `SessionLength::Predetermined` is now called `SessionLifecycle::PersistentSession`. [#233]
-- The fields for Both `SessionLength` variants have been extracted into separate types (`PersistentSession` and `BrowserSession`).
-  All fields are now private, manipulated via methods, to allow adding more configuration parameters in the future in a non-breaking fashion. [#233]
+- The fields for Both `SessionLength` variants have been extracted into separate types (`PersistentSession` and `BrowserSession`). All fields are now private, manipulated via methods, to allow adding more configuration parameters in the future in a non-breaking fashion. [#233]
 - `SessionLength::Predetermined::max_session_length` is now called `PersistentSession::session_ttl`. [#233]
 - `SessionLength::BrowserSession::state_ttl` is now called `BrowserSession::session_state_ttl`. [#233]
 - `SessionMiddlewareBuilder::max_session_length` is now called `SessionMiddlewareBuilder::session_lifecycle`. [#233]
@@ -17,6 +12,7 @@
 - All types used to configure `SessionMiddleware` have been moved to the `configuration` sub-module [#233]
 
 [#233]: https://github.com/actix/actix-extras/pull/233
+
 
 ## 0.6.2 - 2022-03-25
 - Implement `SessionExt` for `GuardContext`. [#234]
