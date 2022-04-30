@@ -48,6 +48,7 @@ impl IdentityMiddleware {
         }
     }
 
+    /// A fluent API to configure [`IdentityMiddleware`].
     pub fn builder() -> IdentityMiddlewareBuilder {
         IdentityMiddlewareBuilder::new()
     }

@@ -49,7 +49,7 @@
 //! }
 //! ```
 
-#![deny(rust_2018_idioms, nonstandard_style)]
+#![deny(rust_2018_idioms, nonstandard_style, missing_docs)]
 #![warn(future_incompatible)]
 
 pub mod configuration;

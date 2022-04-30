@@ -1,3 +1,4 @@
+//! Configuration options to tune the behaviour of [`IdentityMiddleware`].
 use crate::IdentityMiddleware;
 
 pub(crate) struct Configuration {

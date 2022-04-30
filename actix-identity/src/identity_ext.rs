@@ -7,6 +7,7 @@ use crate::Identity;
 
 /// Helper trait to retrieve an [`Identity`] instance from various `actix-web`'s types.
 pub trait IdentityExt {
+    /// Retrieve the identity attached to the current session, if available.
     fn get_identity(&self) -> Result<Identity, anyhow::Error>;
 }
 
