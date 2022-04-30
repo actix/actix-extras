@@ -38,6 +38,7 @@ use serde::{de::DeserializeOwned, Serialize};
 /// [`SessionExt`].
 ///
 /// [`SessionExt`]: crate::SessionExt
+#[derive(Clone)]
 pub struct Session(Rc<RefCell<SessionInner>>);
 
 /// Status of a [`Session`].
