@@ -1,20 +1,17 @@
-//! Opinionated request identity service for Actix Web apps.
+//! Identity management for Actix Web.
 //!
-//! [`IdentityService`] middleware can be used with different policies types to store
-//! identity information.
+//! // TODO: blurb on identity management + link to middleware
 //!
-//! A cookie based policy is provided. [`CookieIdentityPolicy`] uses cookies as identity storage.
-//!
-//! To access current request identity, use the [`Identity`] extractor.
+//! Use the [`Identity`] extractor to access the user identity attached to the current session, if any.
 //!
 //! ```
 //! use actix_web::*;
-//! use actix_identity::{Identity, CookieIdentityPolicy, IdentityService};
+//! use actix_identity::{Identity, IdentityMiddleware};
 //!
 //! #[get("/")]
 //! async fn index(id: Identity) -> String {
 //!     // access request identity
-//!     if let Some(id) = id.identity() {
+//!     if let Some(id) = id.id() {
 //!         format!("Welcome! {}", id)
 //!     } else {
 //!         "Welcome Anonymous!".to_owned()
@@ -43,7 +40,7 @@
 //!
 //!     App::new()
 //!         // wrap policy into middleware identity middleware
-//!         .wrap(IdentityService::new(policy))
+//!         .wrap(IdentityMiddleware::new(policy))
 //!         .service(services![index, login, logout])
 //! })
 //! # ;
@@ -52,58 +49,14 @@
 #![deny(rust_2018_idioms, nonstandard_style)]
 #![warn(future_incompatible)]
 
-use std::future::Future;
-
-use actix_web::{
-    dev::{ServiceRequest, ServiceResponse},
-    Error, HttpMessage, Result,
-};
-
-mod cookie;
+pub mod configuration;
 mod identity;
+mod identity_ext;
 mod middleware;
 
-pub use self::cookie::CookieIdentityPolicy;
 pub use self::identity::Identity;
-pub use self::middleware::IdentityService;
-
-/// Identity policy.
-pub trait IdentityPolicy: Sized + 'static {
-    /// The return type of the middleware
-    type Future: Future<Output = Result<Option<String>, Error>>;
-
-    /// The return type of the middleware
-    type ResponseFuture: Future<Output = Result<(), Error>>;
-
-    /// Parse the session from request and load data from a service identity.
-    #[allow(clippy::wrong_self_convention)]
-    fn from_request(&self, req: &mut ServiceRequest) -> Self::Future;
-
-    /// Write changes to response
-    fn to_response<B>(
-        &self,
-        identity: Option<String>,
-        changed: bool,
-        response: &mut ServiceResponse<B>,
-    ) -> Self::ResponseFuture;
-}
-
-/// Helper trait that allows to get Identity.
-///
-/// It could be used in middleware but identity policy must be set before any other middleware that
-/// needs identity. RequestIdentity is implemented both for `ServiceRequest` and `HttpRequest`.
-pub trait RequestIdentity {
-    fn get_identity(&self) -> Option<String>;
-}
-
-impl<T> RequestIdentity for T
-where
-    T: HttpMessage,
-{
-    fn get_identity(&self) -> Option<String> {
-        Identity::get_identity(&self.extensions())
-    }
-}
+pub use self::identity_ext::IdentityExt;
+pub use self::middleware::IdentityMiddleware;
 
 #[cfg(test)]
 mod tests {
@@ -145,13 +98,13 @@ mod tests {
     > {
         test::init_service(
             App::new()
-                .wrap(IdentityService::new(f(CookieIdentityPolicy::new(
+                .wrap(IdentityMiddleware::new(f(CookieIdentityPolicy::new(
                     &COOKIE_KEY_MASTER,
                 )
                 .secure(false)
                 .name(COOKIE_NAME))))
                 .service(web::resource("/").to(|id: Identity| async move {
-                    let identity = id.identity();
+                    let identity = id.id();
                     if identity.is_none() {
                         id.remember(COOKIE_LOGIN.to_string())
                     }

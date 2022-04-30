@@ -1,20 +1,21 @@
-use std::rc::Rc;
-
+use crate::configuration::{Configuration, IdentityMiddlewareBuilder};
+use crate::identity::IdentityInner;
+use actix_session::SessionExt;
 use actix_utils::future::{ready, Ready};
 use actix_web::{
-    body::{EitherBody, MessageBody},
+    body::MessageBody,
     dev::{Service, ServiceRequest, ServiceResponse, Transform},
-    Error, HttpMessage, Result,
+    Error, HttpMessage as _, Result,
 };
-use futures_util::future::{FutureExt as _, LocalBoxFuture};
-
-use crate::{identity::IdentityItem, IdentityPolicy};
+use std::future::Future;
+use std::pin::Pin;
+use std::rc::Rc;
 
 /// Request identity middleware
 ///
 /// ```
 /// use actix_web::App;
-/// use actix_identity::{CookieIdentityPolicy, IdentityService};
+/// use actix_identity::{CookieIdentityPolicy, IdentityMiddleware};
 ///
 /// // create cookie identity backend
 /// let policy = CookieIdentityPolicy::new(&[0; 32])
@@ -23,96 +24,84 @@ use crate::{identity::IdentityItem, IdentityPolicy};
 ///
 /// let app = App::new()
 ///     // wrap policy into identity middleware
-///     .wrap(IdentityService::new(policy));
+///     .wrap(IdentityMiddleware::new(policy));
 /// ```
-pub struct IdentityService<T> {
-    backend: Rc<T>,
+#[derive(Default)]
+pub struct IdentityMiddleware {
+    configuration: Rc<Configuration>,
 }
 
-impl<T> IdentityService<T> {
-    /// Create new identity service with specified backend.
-    pub fn new(backend: T) -> Self {
-        IdentityService {
-            backend: Rc::new(backend),
+impl IdentityMiddleware {
+    pub(crate) fn new(configuration: Configuration) -> Self {
+        Self {
+            configuration: Rc::new(configuration),
         }
+    }
+
+    pub fn builder() -> IdentityMiddlewareBuilder {
+        IdentityMiddlewareBuilder::new()
     }
 }
 
-impl<S, T, B> Transform<S, ServiceRequest> for IdentityService<T>
+impl<S, B> Transform<S, ServiceRequest> for IdentityMiddleware
 where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
     S::Future: 'static,
-    T: IdentityPolicy,
     B: MessageBody + 'static,
 {
-    type Response = ServiceResponse<EitherBody<B>>;
+    type Response = ServiceResponse<B>;
     type Error = Error;
+    type Transform = InnerIdentityMiddleware<S>;
     type InitError = ();
-    type Transform = IdentityServiceMiddleware<S, T>;
     type Future = Ready<Result<Self::Transform, Self::InitError>>;
 
     fn new_transform(&self, service: S) -> Self::Future {
-        ready(Ok(IdentityServiceMiddleware {
-            backend: self.backend.clone(),
+        ready(Ok(InnerIdentityMiddleware {
             service: Rc::new(service),
+            configuration: Rc::clone(&self.configuration),
         }))
     }
 }
 
-pub struct IdentityServiceMiddleware<S, T> {
-    pub(crate) service: Rc<S>,
-    pub(crate) backend: Rc<T>,
+#[doc(hidden)]
+pub struct InnerIdentityMiddleware<S> {
+    service: Rc<S>,
+    configuration: Rc<Configuration>,
 }
 
-impl<S, T> Clone for IdentityServiceMiddleware<S, T> {
+impl<S> Clone for InnerIdentityMiddleware<S> {
     fn clone(&self) -> Self {
         Self {
-            backend: Rc::clone(&self.backend),
             service: Rc::clone(&self.service),
+            configuration: Rc::clone(&self.configuration),
         }
     }
 }
 
-impl<S, T, B> Service<ServiceRequest> for IdentityServiceMiddleware<S, T>
+impl<S, B> Service<ServiceRequest> for InnerIdentityMiddleware<S>
 where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
     S::Future: 'static,
-    T: IdentityPolicy,
     B: MessageBody + 'static,
 {
-    type Response = ServiceResponse<EitherBody<B>>;
+    type Response = ServiceResponse<B>;
     type Error = Error;
-    type Future = LocalBoxFuture<'static, Result<Self::Response, Self::Error>>;
+    #[allow(clippy::type_complexity)]
+    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>>>>;
 
     actix_service::forward_ready!(service);
 
-    fn call(&self, mut req: ServiceRequest) -> Self::Future {
+    fn call(&self, req: ServiceRequest) -> Self::Future {
         let srv = Rc::clone(&self.service);
-        let backend = Rc::clone(&self.backend);
-        let fut = self.backend.from_request(&mut req);
-
-        async move {
-            match fut.await {
-                Ok(id) => {
-                    req.extensions_mut()
-                        .insert(IdentityItem { id, changed: false });
-
-                    let mut res = srv.call(req).await?;
-                    let id = res.request().extensions_mut().remove::<IdentityItem>();
-
-                    if let Some(id) = id {
-                        match backend.to_response(id.id, id.changed, &mut res).await {
-                            Ok(_) => Ok(res.map_into_left_body()),
-                            Err(err) => Ok(res.error_response(err).map_into_right_body()),
-                        }
-                    } else {
-                        Ok(res.map_into_left_body())
-                    }
-                }
-                Err(err) => Ok(req.error_response(err).map_into_right_body()),
-            }
-        }
-        .boxed_local()
+        let configuration = Rc::clone(&self.configuration);
+        Box::pin(async move {
+            let identity_inner = IdentityInner {
+                session: req.get_session(),
+                logout_behaviour: configuration.on_logout.clone(),
+            };
+            req.extensions_mut().insert(identity_inner);
+            srv.call(req).await
+        })
     }
 }
 
@@ -149,7 +138,7 @@ mod tests {
             }
         }
 
-        let srv = crate::middleware::IdentityServiceMiddleware {
+        let srv = crate::middleware::InnerIdentityMiddleware {
             backend: Rc::new(Ident),
             service: Rc::new(into_service(|_: dev::ServiceRequest| async move {
                 actix_web::rt::time::sleep(Duration::from_secs(100)).await;
