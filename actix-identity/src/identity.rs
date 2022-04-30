@@ -2,8 +2,10 @@ use crate::configuration::LogoutBehaviour;
 use actix_session::Session;
 use actix_utils::future::{ready, Ready};
 use actix_web::dev::Extensions;
-use actix_web::HttpMessage;
+use actix_web::http::StatusCode;
 use actix_web::{dev::Payload, Error, FromRequest, HttpRequest};
+use actix_web::{HttpMessage, HttpResponse};
+use anyhow::{anyhow, Context};
 
 /// The extractor type to obtain your identity from a request.
 ///
@@ -43,13 +45,28 @@ pub(crate) struct IdentityInner {
     pub(crate) logout_behaviour: LogoutBehaviour,
 }
 
+impl IdentityInner {
+    /// Retrieve the user id attached to the current session.
+    fn get_identity(&self) -> Result<String, anyhow::Error> {
+        self.session
+            .get::<String>(ID_KEY)
+            .context("Failed to deserialize the user identifier attached to the current session")?
+            .ok_or_else(|| {
+                anyhow!("There is no identity information attached to the current session")
+            })
+    }
+}
+
 pub(crate) const ID_KEY: &str = "user_id";
+// pub(crate) const LAST_VISIT_KEY: &str = "last_visited_at";
+// pub(crate) const LOGIN_TIMESTAMP_KEY: &str = "logged_in_at";
 
 impl Identity {
-    /// Return the claimed identity of the user associated request or `None` if no identity can be
-    /// found associated with the request.
-    pub fn id(&self) -> Option<String> {
-        self.0.session.get(ID_KEY).ok().flatten()
+    /// Return the user id associated to the current session.  
+    pub fn id(&self) -> Result<String, anyhow::Error> {
+        self.0.session.get(ID_KEY)?.ok_or_else(|| {
+            anyhow!("Bug: the identity information attached to the current session has disappeared")
+        })
     }
 
     /// Attach a valid user identity to the current session.  
@@ -57,10 +74,11 @@ impl Identity {
     /// `login` has been called, the user will be able to access all routes that require a
     /// valid [`Identity`].
     // TODO: what happens if the user is already logged in?
-    pub fn login(extensions: &Extensions, id: String) -> Result<Self, anyhow::Error> {
-        let identity = Self::extract(&extensions);
-        identity.0.session.insert(ID_KEY, id)?;
-        Ok(identity)
+    pub fn login(e: &Extensions, id: String) -> Result<Self, anyhow::Error> {
+        // TODO: review unwrap
+        let inner = e.get::<IdentityInner>().unwrap().to_owned();
+        inner.session.insert(ID_KEY, id)?;
+        Ok(Self(inner))
     }
 
     /// Remove the user identity from the current session.  
@@ -80,10 +98,11 @@ impl Identity {
         }
     }
 
-    pub(crate) fn extract(e: &Extensions) -> Self {
+    pub(crate) fn extract(e: &Extensions) -> Result<Self, anyhow::Error> {
         // TODO: review unwrap
         let inner = e.get::<IdentityInner>().unwrap().to_owned();
-        Self(inner)
+        inner.get_identity()?;
+        Ok(Self(inner))
     }
 }
 
@@ -109,6 +128,13 @@ impl FromRequest for Identity {
 
     #[inline]
     fn from_request(req: &HttpRequest, _: &mut Payload) -> Self::Future {
-        ready(Ok(Identity::extract(&req.extensions())))
+        let r = Identity::extract(&req.extensions()).map_err(|e| {
+            let e = actix_web::error::InternalError::from_response(
+                e,
+                HttpResponse::new(StatusCode::UNAUTHORIZED),
+            );
+            actix_web::Error::from(e)
+        });
+        ready(r)
     }
 }

@@ -6,23 +6,23 @@ use actix_web::HttpRequest;
 
 /// Helper trait to retrieve an [`Identity`] instance from various `actix-web`'s types.
 pub trait IdentityExt {
-    fn get_identity(&self) -> Identity;
+    fn get_identity(&self) -> Result<Identity, anyhow::Error>;
 }
 
 impl IdentityExt for HttpRequest {
-    fn get_identity(&self) -> Identity {
+    fn get_identity(&self) -> Result<Identity, anyhow::Error> {
         Identity::extract(&self.extensions())
     }
 }
 
 impl IdentityExt for ServiceRequest {
-    fn get_identity(&self) -> Identity {
+    fn get_identity(&self) -> Result<Identity, anyhow::Error> {
         Identity::extract(&self.extensions())
     }
 }
 
 impl<'a> IdentityExt for GuardContext<'a> {
-    fn get_identity(&self) -> Identity {
+    fn get_identity(&self) -> Result<Identity, anyhow::Error> {
         Identity::extract(&self.req_data())
     }
 }
