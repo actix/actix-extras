@@ -4,46 +4,49 @@
 //!
 //! Use the [`Identity`] extractor to access the user identity attached to the current session, if any.
 //!
-//! ```
+//! ```no_run
 //! use actix_web::*;
+//! use actix_web::cookie::Key;
 //! use actix_identity::{Identity, IdentityMiddleware};
+//! use actix_session::{Session, SessionMiddleware};
+//! use actix_session::storage::RedisSessionStore;
 //!
 //! #[get("/")]
-//! async fn index(id: Identity) -> String {
-//!     // access request identity
-//!     if let Some(id) = id.id() {
-//!         format!("Welcome! {}", id)
+//! async fn index(user: Option<Identity>) -> impl Responder {
+//!     if let Some(user) = user {
+//!         format!("Welcome! {}", user.id().unwrap())
 //!     } else {
 //!         "Welcome Anonymous!".to_owned()
 //!     }
 //! }
 //!
 //! #[post("/login")]
-//! async fn login(id: Identity) -> HttpResponse {
-//!     // remember identity
-//!     id.remember("User1".to_owned());
-//!     HttpResponse::Ok().finish()
+//! async fn login(request: HttpRequest) -> impl Responder {
+//!     Identity::login(&request.extensions(), "User1".into());
+//!     HttpResponse::Ok()
 //! }
 //!
 //! #[post("/logout")]
-//! async fn logout(id: Identity) -> HttpResponse {
-//!     // remove identity
-//!     id.forget();
-//!     HttpResponse::Ok().finish()
+//! async fn logout(user: Identity) -> impl Responder {
+//!     user.logout();
+//!     HttpResponse::Ok()
 //! }
 //!
-//! HttpServer::new(move || {
-//!     // create cookie identity backend (inside closure, since policy is not Clone)
-//!     let policy = CookieIdentityPolicy::new(&[0; 32])
-//!         .name("auth-cookie")
-//!         .secure(false);
-//!
-//!     App::new()
-//!         // wrap policy into middleware identity middleware
-//!         .wrap(IdentityMiddleware::new(policy))
-//!         .service(services![index, login, logout])
-//! })
+//! #[actix_web::main]
+//! async fn main() {
+//!     let secret_key = Key::generate();
+//!     let redis_store = RedisSessionStore::new("redis://127.0.0.1:6379").await.unwrap();
+//!     HttpServer::new(move || {
+//!        App::new()
+//!            // Install the identity framework.
+//!            .wrap(IdentityMiddleware::default())
+//!            // The identity system is built on top of sessions.
+//!            // You must install the session middleware to leverage `actix-identity`.
+//!            .wrap(SessionMiddleware::new(redis_store.clone(), secret_key.clone()))
+//!            .service(services![index, login, logout])
+//!     })
 //! # ;
+//! }
 //! ```
 
 #![deny(rust_2018_idioms, nonstandard_style)]

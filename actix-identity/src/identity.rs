@@ -1,4 +1,3 @@
-use crate::configuration::LogoutBehaviour;
 use actix_session::Session;
 use actix_utils::future::{ready, Ready};
 use actix_web::dev::Extensions;
@@ -7,32 +6,32 @@ use actix_web::{dev::Payload, Error, FromRequest, HttpRequest};
 use actix_web::{HttpMessage, HttpResponse};
 use anyhow::{anyhow, Context};
 
+use crate::configuration::LogoutBehaviour;
+
 /// The extractor type to obtain your identity from a request.
 ///
 /// ```
-/// use actix_web::*;
+/// use actix_web::{get, post, Responder, HttpRequest, HttpMessage, HttpResponse};
 /// use actix_identity::Identity;
-/// use actix_session::Session;
 ///
 /// #[get("/")]
-/// async fn index(id: Identity) -> impl Responder {
-///     // access request identity
-///     if let Some(id) = id.id() {
-///         format!("Welcome! {}", id)
+/// async fn index(user: Option<Identity>) -> impl Responder {
+///     if let Some(user) = user {
+///         format!("Welcome! {}", user.id().unwrap())
 ///     } else {
 ///         "Welcome Anonymous!".to_owned()
 ///     }
 /// }
 ///
 /// #[post("/login")]
-/// async fn login(session: Session) -> impl Responder {
-///     Identity::login("User1".to_owned(), session);
+/// async fn login(request: HttpRequest) -> impl Responder {
+///     Identity::login(&request.extensions(), "User1".into());
 ///     HttpResponse::Ok()
 /// }
 ///
 /// #[post("/logout")]
-/// async fn logout(id: Identity) -> impl Responder {
-///     id.logout();
+/// async fn logout(user: Identity) -> impl Responder {
+///     user.logout();
 ///     HttpResponse::Ok()
 /// }
 /// ```
@@ -63,6 +62,20 @@ pub(crate) const ID_KEY: &str = "user_id";
 
 impl Identity {
     /// Return the user id associated to the current session.  
+    ///
+    /// ```
+    /// use actix_web::{get, Responder};
+    /// use actix_identity::Identity;
+    ///
+    /// #[get("/")]
+    /// async fn index(user: Option<Identity>) -> impl Responder {
+    ///     if let Some(user) = user {
+    ///         format!("Welcome! {}", user.id().unwrap())
+    ///     } else {
+    ///         "Welcome Anonymous!".to_owned()
+    ///     }
+    /// }
+    /// ```
     pub fn id(&self) -> Result<String, anyhow::Error> {
         self.0.session.get(ID_KEY)?.ok_or_else(|| {
             anyhow!("Bug: the identity information attached to the current session has disappeared")
@@ -73,6 +86,17 @@ impl Identity {
     /// This method should be called after you have successfully authenticated the user. After
     /// `login` has been called, the user will be able to access all routes that require a
     /// valid [`Identity`].
+    ///
+    /// ```
+    /// use actix_web::{post, Responder, HttpRequest, HttpMessage, HttpResponse};
+    /// use actix_identity::Identity;
+    ///
+    /// #[post("/login")]
+    /// async fn login(request: HttpRequest) -> impl Responder {
+    ///     Identity::login(&request.extensions(), "User1".into());
+    ///     HttpResponse::Ok()
+    /// }
+    /// ```
     // TODO: what happens if the user is already logged in?
     pub fn login(e: &Extensions, id: String) -> Result<Self, anyhow::Error> {
         // TODO: review unwrap
@@ -87,6 +111,17 @@ impl Identity {
     ///
     /// The behaviour on logout is determined by
     /// [`IdentityMiddlewareBuilder::logout_behaviour`](crate::configuration::IdentityMiddlewareBuilder::logout_behaviour).
+    ///
+    /// ```
+    /// use actix_web::{post, Responder, HttpResponse};
+    /// use actix_identity::Identity;
+    ///
+    /// #[post("/logout")]
+    /// async fn logout(user: Identity) -> impl Responder {
+    ///     user.logout();
+    ///     HttpResponse::Ok()
+    /// }
+    /// ```
     pub fn logout(self) {
         match self.0.logout_behaviour {
             LogoutBehaviour::PurgeSession => {
@@ -109,14 +144,13 @@ impl Identity {
 /// Extractor implementation for [`Identity`].
 ///
 /// ```
-/// # use actix_web::*;
+/// use actix_web::{get, Responder};
 /// use actix_identity::Identity;
 ///
 /// #[get("/")]
-/// async fn index(id: Identity) -> impl Responder {
-///     // access request identity
-///     if let Some(id) = id.id() {
-///         format!("Welcome! {}", id)
+/// async fn index(user: Option<Identity>) -> impl Responder {
+///     if let Some(user) = user {
+///         format!("Welcome! {}", user.id().unwrap())
 ///     } else {
 ///         "Welcome Anonymous!".to_owned()
 ///     }

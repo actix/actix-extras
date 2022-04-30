@@ -1,8 +1,9 @@
-use crate::Identity;
 use actix_web::dev::ServiceRequest;
 use actix_web::guard::GuardContext;
 use actix_web::HttpMessage;
 use actix_web::HttpRequest;
+
+use crate::Identity;
 
 /// Helper trait to retrieve an [`Identity`] instance from various `actix-web`'s types.
 pub trait IdentityExt {

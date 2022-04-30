@@ -1,5 +1,7 @@
-use crate::configuration::{Configuration, IdentityMiddlewareBuilder};
-use crate::identity::IdentityInner;
+use std::future::Future;
+use std::pin::Pin;
+use std::rc::Rc;
+
 use actix_session::SessionExt;
 use actix_utils::future::{ready, Ready};
 use actix_web::{
@@ -7,24 +9,32 @@ use actix_web::{
     dev::{Service, ServiceRequest, ServiceResponse, Transform},
     Error, HttpMessage as _, Result,
 };
-use std::future::Future;
-use std::pin::Pin;
-use std::rc::Rc;
+
+use crate::configuration::{Configuration, IdentityMiddlewareBuilder};
+use crate::identity::IdentityInner;
 
 /// Request identity middleware
 ///
-/// ```
-/// use actix_web::App;
-/// use actix_identity::{CookieIdentityPolicy, IdentityMiddleware};
+/// ```no_run
+/// use actix_web::{HttpServer, cookie::Key, App};
+/// use actix_session::storage::RedisSessionStore;
+/// use actix_identity::{Identity, IdentityMiddleware};
+/// use actix_session::{Session, SessionMiddleware};
 ///
-/// // create cookie identity backend
-/// let policy = CookieIdentityPolicy::new(&[0; 32])
-///            .name("auth-cookie")
-///            .secure(false);
-///
-/// let app = App::new()
-///     // wrap policy into identity middleware
-///     .wrap(IdentityMiddleware::new(policy));
+/// #[actix_web::main]
+/// async fn main() {
+///     let secret_key = Key::generate();
+///     let redis_store = RedisSessionStore::new("redis://127.0.0.1:6379").await.unwrap();
+///     HttpServer::new(move || {
+///        App::new()
+///            // Install the identity framework.
+///            .wrap(IdentityMiddleware::default())
+///            // The identity system is built on top of sessions.
+///            // You must install the session middleware to leverage `actix-identity`.
+///            .wrap(SessionMiddleware::new(redis_store.clone(), secret_key.clone()))
+///     })
+/// # ;
+/// }
 /// ```
 #[derive(Default)]
 pub struct IdentityMiddleware {
