@@ -48,10 +48,8 @@
 //! # ;
 //! }
 //! ```
-
 #![deny(rust_2018_idioms, nonstandard_style, missing_docs)]
 #![warn(future_incompatible)]
-
 pub mod configuration;
 mod identity;
 mod identity_ext;
@@ -60,60 +58,3 @@ mod middleware;
 pub use self::identity::Identity;
 pub use self::identity_ext::IdentityExt;
 pub use self::middleware::IdentityMiddleware;
-
-#[cfg(test)]
-mod tests {
-    use std::time::SystemTime;
-
-    use actix_web::{
-        body::{BoxBody, EitherBody},
-        dev::ServiceResponse,
-        test, web, App, Error,
-    };
-
-    use super::*;
-
-    pub(crate) const COOKIE_KEY_MASTER: [u8; 32] = [0; 32];
-    pub(crate) const COOKIE_NAME: &str = "actix_auth";
-    pub(crate) const COOKIE_LOGIN: &str = "test";
-
-    #[allow(clippy::enum_variant_names)]
-    pub(crate) enum LoginTimestampCheck {
-        NoTimestamp,
-        NewTimestamp,
-        OldTimestamp(SystemTime),
-    }
-
-    #[allow(clippy::enum_variant_names)]
-    pub(crate) enum VisitTimeStampCheck {
-        NoTimestamp,
-        NewTimestamp,
-    }
-
-    pub(crate) async fn create_identity_server<
-        F: Fn(CookieIdentityPolicy) -> CookieIdentityPolicy + Sync + Send + Clone + 'static,
-    >(
-        f: F,
-    ) -> impl actix_service::Service<
-        actix_http::Request,
-        Response = ServiceResponse<EitherBody<BoxBody>>,
-        Error = Error,
-    > {
-        test::init_service(
-            App::new()
-                .wrap(IdentityMiddleware::new(f(CookieIdentityPolicy::new(
-                    &COOKIE_KEY_MASTER,
-                )
-                .secure(false)
-                .name(COOKIE_NAME))))
-                .service(web::resource("/").to(|id: Identity| async move {
-                    let identity = id.id();
-                    if identity.is_none() {
-                        id.remember(COOKIE_LOGIN.to_string())
-                    }
-                    web::Json(identity)
-                })),
-        )
-        .await
-    }
-}
