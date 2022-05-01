@@ -1,6 +1,6 @@
 use crate::fixtures::session_middleware;
 use actix_identity::{Identity, IdentityMiddleware};
-use actix_session::Session;
+use actix_session::{Session, SessionStatus};
 use actix_web::{web, App, HttpMessage, HttpRequest, HttpResponse, HttpServer};
 use serde::{Deserialize, Serialize};
 use std::net::TcpListener;
@@ -65,6 +65,16 @@ impl TestApp {
             .unwrap()
     }
 
+    pub async fn post_increment(&self) -> EndpointResponse {
+        let response = self
+            .api_client
+            .post(format!("{}/increment", &self.url()))
+            .send()
+            .await
+            .unwrap();
+        response.json().await.unwrap()
+    }
+
     pub async fn post_login(&self, user_id: String) -> EndpointResponse {
         let response = self
             .api_client
@@ -89,6 +99,7 @@ impl TestApp {
 pub struct EndpointResponse {
     pub user_id: Option<String>,
     pub counter: i32,
+    pub session_status: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
@@ -103,7 +114,11 @@ async fn show(user: Option<Identity>, session: Session) -> HttpResponse {
         .unwrap_or(Some(0))
         .unwrap_or(0);
 
-    HttpResponse::Ok().json(&EndpointResponse { user_id, counter })
+    HttpResponse::Ok().json(&EndpointResponse {
+        user_id,
+        counter,
+        session_status: session_status(session),
+    })
 }
 
 async fn increment(session: Session, user: Option<Identity>) -> HttpResponse {
@@ -114,7 +129,11 @@ async fn increment(session: Session, user: Option<Identity>) -> HttpResponse {
         .map_or(1, |inner| inner + 1);
     session.insert("counter", &counter).unwrap();
 
-    HttpResponse::Ok().json(&EndpointResponse { user_id, counter })
+    HttpResponse::Ok().json(&EndpointResponse {
+        user_id,
+        counter,
+        session_status: session_status(session),
+    })
 }
 
 async fn login(
@@ -133,6 +152,7 @@ async fn login(
     HttpResponse::Ok().json(&EndpointResponse {
         user_id: Some(user.id().unwrap()),
         counter,
+        session_status: session_status(session),
     })
 }
 
@@ -145,4 +165,14 @@ async fn logout(user: Option<Identity>) -> HttpResponse {
 
 async fn identity_required(_identity: Identity) -> HttpResponse {
     HttpResponse::Ok().finish()
+}
+
+fn session_status(session: Session) -> String {
+    match session.status() {
+        SessionStatus::Changed => "changed",
+        SessionStatus::Purged => "purged",
+        SessionStatus::Renewed => "renewed",
+        SessionStatus::Unchanged => "unchanged",
+    }
+    .into()
 }

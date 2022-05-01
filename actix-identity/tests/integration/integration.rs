@@ -44,6 +44,24 @@ async fn logging_in_again_replaces_the_current_identity() {
 }
 
 #[actix_web::test]
+async fn session_key_is_renewed_on_login() {
+    let app = TestApp::spawn();
+    let user_id = user_id();
+
+    // Create an anonymous session
+    let body = app.post_increment().await;
+    assert_eq!(body.user_id, None);
+    assert_eq!(body.counter, 1);
+    assert_eq!(body.session_status, "changed");
+
+    // Log-in
+    let body = app.post_login(user_id.clone()).await;
+    assert_eq!(body.user_id, Some(user_id.clone()));
+    assert_eq!(body.counter, 1);
+    assert_eq!(body.session_status, "renewed");
+}
+
+#[actix_web::test]
 async fn logout_works() {
     let app = TestApp::spawn();
     let user_id = user_id();
