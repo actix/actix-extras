@@ -26,6 +26,24 @@ async fn login_works() {
 }
 
 #[actix_web::test]
+async fn logging_in_again_replaces_the_current_identity() {
+    let app = TestApp::spawn();
+    let first_user_id = user_id();
+    let second_user_id = user_id();
+
+    // Log-in
+    let body = app.post_login(first_user_id.clone()).await;
+    assert_eq!(body.user_id, Some(first_user_id.clone()));
+
+    // Log-in again
+    let body = app.post_login(second_user_id.clone()).await;
+    assert_eq!(body.user_id, Some(second_user_id.clone()));
+
+    let body = app.get_current().await;
+    assert_eq!(body.user_id, Some(second_user_id.clone()));
+}
+
+#[actix_web::test]
 async fn logout_works() {
     let app = TestApp::spawn();
     let user_id = user_id();

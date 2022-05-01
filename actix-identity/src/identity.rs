@@ -97,7 +97,6 @@ impl Identity {
     ///     HttpResponse::Ok()
     /// }
     /// ```
-    // TODO: what happens if the user is already logged in?
     pub fn login(e: &Extensions, id: String) -> Result<Self, anyhow::Error> {
         // TODO: review unwrap
         let inner = e.get::<IdentityInner>().unwrap().to_owned();

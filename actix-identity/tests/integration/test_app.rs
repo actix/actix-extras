@@ -20,7 +20,7 @@ impl TestApp {
                 .wrap(session_middleware())
                 .wrap(IdentityMiddleware::default())
                 .route("/increment", web::post().to(increment))
-                .route("/count", web::get().to(show_count))
+                .route("/current", web::get().to(show))
                 .route("/login", web::post().to(login))
                 .route("/logout", web::post().to(logout))
                 .route("/identity_required", web::get().to(identity_required))
@@ -50,6 +50,17 @@ impl TestApp {
         self.api_client
             .get(format!("{}/identity_required", &self.url()))
             .send()
+            .await
+            .unwrap()
+    }
+
+    pub async fn get_current(&self) -> EndpointResponse {
+        self.api_client
+            .get(format!("{}/current", &self.url()))
+            .send()
+            .await
+            .unwrap()
+            .json()
             .await
             .unwrap()
     }
@@ -85,7 +96,7 @@ struct LoginRequest {
     user_id: String,
 }
 
-async fn show_count(user: Option<Identity>, session: Session) -> HttpResponse {
+async fn show(user: Option<Identity>, session: Session) -> HttpResponse {
     let user_id = user.map(|u| u.id().unwrap());
     let counter: i32 = session
         .get::<i32>("counter")
