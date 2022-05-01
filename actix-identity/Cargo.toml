@@ -28,4 +28,6 @@ anyhow = "1.0.56"
 [dev-dependencies]
 actix-http = "3.0.0-rc.1"
 actix-web = { version = "4", default_features = false, features = ["macros", "cookies", "secure-cookies"] }
-actix-session = { path = "../actix-session", features = ["redis-rs-session"] }
+actix-session = { path = "../actix-session", features = ["redis-rs-session", "cookie-session"] }
+uuid = { version = "1.0.0", features = ["v4"] }
+reqwest = { version = "0.11.10", default_features = false, features = ["cookies", "json"] }

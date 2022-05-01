@@ -36,7 +36,7 @@ use crate::identity::IdentityInner;
 /// # ;
 /// }
 /// ```
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct IdentityMiddleware {
     configuration: Rc<Configuration>,
 }
