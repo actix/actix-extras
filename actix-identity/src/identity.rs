@@ -102,6 +102,7 @@ impl Identity {
         // TODO: review unwrap
         let inner = e.get::<IdentityInner>().unwrap().to_owned();
         inner.session.insert(ID_KEY, id)?;
+        inner.session.renew();
         Ok(Self(inner))
     }
 

@@ -64,6 +64,14 @@ impl TestApp {
             .unwrap();
         response.json().await.unwrap()
     }
+
+    pub async fn post_logout(&self) -> reqwest::Response {
+        self.api_client
+            .post(format!("{}/logout", &self.url()))
+            .send()
+            .await
+            .unwrap()
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
