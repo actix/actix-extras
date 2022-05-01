@@ -35,7 +35,6 @@ use crate::configuration::LogoutBehaviour;
 ///     HttpResponse::Ok()
 /// }
 /// ```
-#[derive(Clone)]
 pub struct Identity(IdentityInner);
 
 #[derive(Clone)]
