@@ -1,4 +1,5 @@
 use crate::fixtures::session_middleware;
+use actix_identity::configuration::IdentityMiddlewareBuilder;
 use actix_identity::{Identity, IdentityMiddleware};
 use actix_session::{Session, SessionStatus};
 use actix_web::{web, App, HttpMessage, HttpRequest, HttpResponse, HttpServer};
@@ -11,14 +12,15 @@ pub struct TestApp {
 }
 
 impl TestApp {
-    pub fn spawn() -> Self {
+    /// Spawn a test application using a custom configuration for `IdentityMiddleware`.
+    pub fn spawn_with_config(builder: IdentityMiddlewareBuilder) -> Self {
         // Random OS port
         let listener = TcpListener::bind("localhost:0").unwrap();
         let port = listener.local_addr().unwrap().port();
         let server = HttpServer::new(move || {
             App::new()
                 .wrap(session_middleware())
-                .wrap(IdentityMiddleware::default())
+                .wrap(builder.clone().build())
                 .route("/increment", web::post().to(increment))
                 .route("/current", web::get().to(show))
                 .route("/login", web::post().to(login))
@@ -40,6 +42,11 @@ impl TestApp {
             port,
             api_client: client,
         }
+    }
+
+    /// Spawn a test application using the default configuration settings for `IdentityMiddleware`.
+    pub fn spawn() -> Self {
+        Self::spawn_with_config(IdentityMiddleware::builder())
     }
 
     fn url(&self) -> String {

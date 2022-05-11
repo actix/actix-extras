@@ -1,6 +1,7 @@
 //! Configuration options to tune the behaviour of [`IdentityMiddleware`].
 use crate::IdentityMiddleware;
 
+#[derive(Clone, Debug)]
 pub(crate) struct Configuration {
     pub(crate) on_logout: LogoutBehaviour,
 }
@@ -14,7 +15,7 @@ impl Default for Configuration {
 }
 
 #[non_exhaustive]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 /// `LogoutBehaviour` controls what actions are going to be performed when [`Identity::logout`]
 /// is invoked.
 pub enum LogoutBehaviour {
@@ -34,6 +35,7 @@ pub enum LogoutBehaviour {
 
 /// A fluent builder to construct an [`IdentityMiddleware`] instance with custom configuration
 /// parameters.
+#[derive(Clone, Debug)]
 pub struct IdentityMiddlewareBuilder {
     configuration: Configuration,
 }
