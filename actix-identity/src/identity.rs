@@ -5,6 +5,7 @@ use actix_web::http::StatusCode;
 use actix_web::{dev::Payload, Error, FromRequest, HttpRequest};
 use actix_web::{HttpMessage, HttpResponse};
 use anyhow::{anyhow, Context};
+use std::time::SystemTime;
 
 use crate::configuration::LogoutBehaviour;
 
@@ -57,7 +58,7 @@ impl IdentityInner {
 
 pub(crate) const ID_KEY: &str = "user_id";
 // pub(crate) const LAST_VISIT_KEY: &str = "last_visited_at";
-// pub(crate) const LOGIN_TIMESTAMP_KEY: &str = "logged_in_at";
+pub(crate) const LOGIN_TIMESTAMP_KEY: &str = "logged_in_at";
 
 impl Identity {
     /// Return the user id associated to the current session.  
@@ -100,6 +101,9 @@ impl Identity {
         // TODO: review unwrap
         let inner = e.get::<IdentityInner>().unwrap().to_owned();
         inner.session.insert(ID_KEY, id)?;
+        inner
+            .session
+            .insert(LOGIN_TIMESTAMP_KEY, std::time::SystemTime::now())?;
         inner.session.renew();
         Ok(Self(inner))
     }
@@ -137,6 +141,10 @@ impl Identity {
         let inner = e.get::<IdentityInner>().unwrap().to_owned();
         inner.get_identity()?;
         Ok(Self(inner))
+    }
+
+    pub(crate) fn logged_at(&self) -> Option<SystemTime> {
+        self.0.session.get(LOGIN_TIMESTAMP_KEY).ok().flatten()
     }
 }
 

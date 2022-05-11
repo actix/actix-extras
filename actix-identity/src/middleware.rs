@@ -12,6 +12,7 @@ use actix_web::{
 
 use crate::configuration::{Configuration, IdentityMiddlewareBuilder};
 use crate::identity::IdentityInner;
+use crate::Identity;
 
 /// Request identity middleware
 ///
@@ -111,6 +112,22 @@ where
                 logout_behaviour: configuration.on_logout.clone(),
             };
             req.extensions_mut().insert(identity_inner);
+            if let Some(login_deadline) = configuration.login_deadline {
+                if let Ok(identity) = Identity::extract(&req.extensions()) {
+                    match identity.logged_at() {
+                        // TODO: add log lines here.
+                        None => {
+                            identity.logout();
+                        }
+                        Some(logged_at) => {
+                            // TODO: review unwrap
+                            if logged_at.elapsed().unwrap() > login_deadline {
+                                identity.logout();
+                            }
+                        }
+                    }
+                }
+            }
             srv.call(req).await
         })
     }

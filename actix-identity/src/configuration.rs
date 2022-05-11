@@ -1,15 +1,18 @@
 //! Configuration options to tune the behaviour of [`IdentityMiddleware`].
 use crate::IdentityMiddleware;
+use std::time::Duration;
 
 #[derive(Clone, Debug)]
 pub(crate) struct Configuration {
     pub(crate) on_logout: LogoutBehaviour,
+    pub(crate) login_deadline: Option<Duration>,
 }
 
 impl Default for Configuration {
     fn default() -> Self {
         Self {
             on_logout: LogoutBehaviour::PurgeSession,
+            login_deadline: None,
         }
     }
 }
@@ -52,6 +55,19 @@ impl IdentityMiddlewareBuilder {
     /// By default, the current session is purged ([`LogoutBehaviour::PurgeSession`]).
     pub fn logout_behaviour(mut self, logout_behaviour: LogoutBehaviour) -> Self {
         self.configuration.on_logout = logout_behaviour;
+        self
+    }
+
+    /// Automatically log out users after a certain amount of time has passed since they logged in,
+    /// regardless of their activity pattern.
+    ///
+    /// If set to `None`, login deadline is disabled.
+    /// If set to `Some(duration)`, login deadline is enabled and users will be logged out after
+    /// `duration` has passed since their login.
+    ///
+    /// By default, login deadline is disabled.
+    pub fn login_deadline(mut self, deadline: Option<Duration>) -> Self {
+        self.configuration.login_deadline = deadline;
         self
     }
 
