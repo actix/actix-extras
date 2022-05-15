@@ -71,9 +71,9 @@ impl IdentityInner {
     }
 }
 
-pub(crate) const ID_KEY: &str = "user_id";
+pub(crate) const ID_KEY: &str = "actix_identity.user_id";
 // pub(crate) const LAST_VISIT_KEY: &str = "last_visited_at";
-pub(crate) const LOGIN_TIMESTAMP_KEY: &str = "logged_in_at";
+pub(crate) const LOGIN_TIMESTAMP_KEY: &str = "actix_identity.logged_in_at";
 
 impl Identity {
     /// Return the user id associated to the current session.  
