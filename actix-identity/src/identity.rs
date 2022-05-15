@@ -9,10 +9,14 @@ use anyhow::{anyhow, Context};
 
 use crate::configuration::LogoutBehaviour;
 
-/// The extractor type to obtain your identity from a request.
+/// A verified user identity. It can be used as a request extractor.
+///
+/// # Example
 ///
 /// ```
-/// use actix_web::{get, post, Responder, HttpRequest, HttpMessage, HttpResponse};
+/// use actix_web::{
+///     get, post, Responder, HttpRequest, HttpMessage, HttpResponse
+/// };
 /// use actix_identity::Identity;
 ///
 /// #[get("/")]
@@ -34,6 +38,34 @@ use crate::configuration::LogoutBehaviour;
 /// async fn logout(user: Identity) -> impl Responder {
 ///     user.logout();
 ///     HttpResponse::Ok()
+/// }
+/// ```
+///
+/// # Extractor Behaviour
+///
+/// What happens if you try to extract an `Identity` out of a request that does not have a
+/// valid identity attached?
+/// The API will return a `401 UNAUTHORIZED` to the caller.
+///
+/// If you want to customise this behaviour, consider extracting `Option<Identity>` or
+/// `Result<Identity, actix_web::Error>` instead of a bare `Identity`: you will then be
+/// fully in control of the error path.
+///
+/// ```
+/// use actix_web::{get, Responder, HttpResponse};
+/// use actix_web::http::{StatusCode, header::LOCATION};
+/// use actix_identity::Identity;
+///
+/// #[get("/")]
+/// async fn index(user: Option<Identity>) -> impl Responder {
+///     if let Some(user) = user {
+///         HttpResponse::new(StatusCode::OK)
+///     } else {
+///         // Redirect to login page if unauthenticated
+///         HttpResponse::build(StatusCode::TEMPORARY_REDIRECT)
+///             .insert_header((LOCATION, "/login"))
+///             .finish()
+///     }
 /// }
 /// ```
 pub struct Identity(IdentityInner);

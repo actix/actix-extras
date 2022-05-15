@@ -41,6 +41,8 @@ pub enum LogoutBehaviour {
 
 /// A fluent builder to construct an [`IdentityMiddleware`] instance with custom configuration
 /// parameters.
+///
+/// Use [`IdentityMiddleware::builder`] to get started!
 #[derive(Clone, Debug)]
 pub struct IdentityMiddlewareBuilder {
     configuration: Configuration,

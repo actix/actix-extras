@@ -16,7 +16,7 @@ use crate::configuration::{Configuration, IdentityMiddlewareBuilder};
 use crate::identity::IdentityInner;
 use crate::Identity;
 
-/// Request identity middleware
+/// Identity management middleware.
 ///
 /// ```no_run
 /// use actix_web::{HttpServer, cookie::Key, App};
