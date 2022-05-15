@@ -123,7 +123,8 @@ where
 }
 
 fn enforce_policies(req: &ServiceRequest, configuration: &Configuration) {
-    let must_extract_identity = configuration.login_deadline.is_some() || configuration.visit_deadline.is_some();
+    let must_extract_identity =
+        configuration.login_deadline.is_some() || configuration.visit_deadline.is_some();
     if !must_extract_identity {
         return;
     }

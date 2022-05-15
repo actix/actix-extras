@@ -1,14 +1,48 @@
 //! Identity management for Actix Web.
 //!
-//! // TODO: blurb on identity management + link to middleware
+//! `actix-identity` can be used to store the outcome of user authentication across multiple requests.
+//! It is built on top of HTTP sessions, via `actix-session`.
 //!
-//! Use the [`Identity`] extractor to access the user identity attached to the current session, if any.
+//! # Getting started
+//!
+//! To start using identity management in your Actix Web application you must register [`IdentityMiddleware`]
+//! and `SessionMiddleware` as middlewares on your `App`:
 //!
 //! ```no_run
-//! use actix_web::*;
+//! use actix_web::{web, App, HttpServer};
+//! # use actix_web::HttpResponse;
 //! use actix_web::cookie::Key;
-//! use actix_identity::{Identity, IdentityMiddleware};
-//! use actix_session::{Session, SessionMiddleware};
+//! use actix_identity::IdentityMiddleware;
+//! use actix_session::SessionMiddleware;
+//! use actix_session::storage::RedisSessionStore;
+//!
+//! #[actix_web::main]
+//! async fn main() {
+//!     let secret_key = Key::generate();
+//!     let redis_store = RedisSessionStore::new("redis://127.0.0.1:6379").await.unwrap();
+//!     HttpServer::new(move || {
+//!        App::new()
+//!            // Install the identity framework.
+//!            .wrap(IdentityMiddleware::default())
+//!            // The identity system is built on top of sessions.
+//!            // You must install the session middleware to leverage `actix-identity`.
+//!            // The session middleware must be mounted AFTER the identity middleware:
+//!            // `actix-web` invokes middlewares in the OPPOSITE order of registration when
+//!            // it receives an incoming request.
+//!            .wrap(SessionMiddleware::new(redis_store.clone(), secret_key.clone()))
+//!            // Your request handlers [...]
+//!            # .default_service(web::to(|| HttpResponse::Ok()))
+//!     })
+//! # ;
+//! }
+//! ```
+//!
+//! User identities can be created, accessed and destroyed using the [`Identity`] extractor in your
+//! request handlers:
+//!
+//! ```no_run
+//! use actix_web::{HttpResponse, Responder, HttpRequest, get, post, HttpMessage};
+//! use actix_identity::Identity;
 //! use actix_session::storage::RedisSessionStore;
 //!
 //! #[get("/")]
@@ -31,26 +65,18 @@
 //!     user.logout();
 //!     HttpResponse::Ok()
 //! }
-//!
-//! #[actix_web::main]
-//! async fn main() {
-//!     let secret_key = Key::generate();
-//!     let redis_store = RedisSessionStore::new("redis://127.0.0.1:6379").await.unwrap();
-//!     HttpServer::new(move || {
-//!        App::new()
-//!            // Install the identity framework.
-//!            .wrap(IdentityMiddleware::default())
-//!            // The identity system is built on top of sessions.
-//!            // You must install the session middleware to leverage `actix-identity`.
-//!            // The session middleware must be mounted AFTER the identity middleware:
-//!            // `actix-web` invokes middlewares in the OPPOSITE order of registration when
-//!            // it receives an incoming request.
-//!            .wrap(SessionMiddleware::new(redis_store.clone(), secret_key.clone()))
-//!            .service(services![index, login, logout])
-//!     })
-//! # ;
-//! }
 //! ```
+//!
+//! # Advanced configuration
+//!
+//! By default, `actix-identity` does not automatically log out users.
+//! You can change this behaviour by customising the configuration for [`IdentityMiddleware`] via
+//! [`IdentityMiddleware::builder`].
+//!
+//! In particular, you can automatically log out users:
+//!
+//! - who have been inactive for a while (see [`configuration::IdentityMiddlewareBuilder::visit_deadline`];
+//! - who logged in too long ago (see [`configuration::IdentityMiddlewareBuilder::login_deadline`]).
 #![deny(rust_2018_idioms, nonstandard_style, missing_docs)]
 #![warn(future_incompatible)]
 pub mod configuration;

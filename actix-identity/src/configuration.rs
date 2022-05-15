@@ -22,16 +22,16 @@ impl Default for Configuration {
 
 #[non_exhaustive]
 #[derive(Clone, Debug)]
-/// `LogoutBehaviour` controls what actions are going to be performed when [`Identity::logout`]
+/// `LogoutBehaviour` controls what actions are going to be performed when [`Identity::logout`](crate::Identity::logout)
 /// is invoked.
 pub enum LogoutBehaviour {
-    /// When [`Identity::logout`] is called, purge the current session.
+    /// When [`Identity::logout`](crate::Identity::logout) is called, purge the current session.
     ///
     /// This behaviour might be desirable when you have stored additional information
     /// in the session state that are tied to the user's identity and should not be
     /// retained after logout.
     PurgeSession,
-    /// When [`Identity::logout`] is called, remove the identity information from
+    /// When [`Identity::logout`](crate::Identity::logout) is called, remove the identity information from
     /// the current session state. The session itself is not destroyed.
     ///
     /// This behaviour might be desirable when you have stored information in the session state
@@ -53,7 +53,7 @@ impl IdentityMiddlewareBuilder {
         }
     }
 
-    /// Determine how [`Identity::logout`] affects the current session.
+    /// Determine how [`Identity::logout`](crate::Identity::logout) affects the current session.
     ///
     /// By default, the current session is purged ([`LogoutBehaviour::PurgeSession`]).
     pub fn logout_behaviour(mut self, logout_behaviour: LogoutBehaviour) -> Self {
