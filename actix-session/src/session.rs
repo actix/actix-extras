@@ -6,12 +6,10 @@ use std::{
 };
 
 use actix_utils::future::{ready, Ready};
-use actix_web::{
-    dev::{Extensions, Payload, ServiceRequest, ServiceResponse},
-    error::Error,
-    FromRequest, HttpMessage, HttpRequest,
-};
-use anyhow::{Context};
+use actix_web::{dev::{Extensions, Payload, ServiceRequest, ServiceResponse}, error::Error, FromRequest, HttpMessage, HttpRequest, HttpResponse, ResponseError};
+use actix_web::body::BoxBody;
+use actix_web::http::StatusCode;
+use anyhow::Context;
 use serde::{de::DeserializeOwned, Serialize};
 
 /// The primary interface to access and modify session state.
@@ -80,7 +78,7 @@ impl Session {
     /// Get a `value` from the session.
     ///
     /// It returns an error if it fails to deserialize as `T` the JSON value associated with `key`.
-    pub fn get<T: DeserializeOwned>(&self, key: &str) -> Result<Option<T>, anyhow::Error> {
+    pub fn get<T: DeserializeOwned>(&self, key: &str) -> Result<Option<T>, SessionGetError> {
         if let Some(val_str) = self.0.borrow().state.get(key) {
             Ok(Some(serde_json::from_str(val_str).with_context(|| {
                 format!(
@@ -88,7 +86,7 @@ impl Session {
                     key,
                     std::any::type_name::<T>()
                 )
-            })?))
+            }).map_err(SessionGetError)?))
         } else {
             Ok(None)
         }
@@ -116,7 +114,7 @@ impl Session {
         &self,
         key: impl Into<String>,
         value: T,
-    ) -> Result<(), anyhow::Error> {
+    ) -> Result<(), SessionInsertError> {
         let mut inner = self.0.borrow_mut();
 
         if inner.status != SessionStatus::Purged {
@@ -128,7 +126,7 @@ impl Session {
                     std::any::type_name::<T>(),
                     &key
                 )
-            })?;
+            }).map_err(SessionInsertError)?;
             inner.state.insert(key, val);
         }
 
@@ -267,5 +265,47 @@ impl FromRequest for Session {
     #[inline]
     fn from_request(req: &HttpRequest, _: &mut Payload) -> Self::Future {
         ready(Ok(Session::get_session(&mut *req.extensions_mut())))
+    }
+}
+
+#[derive(Debug, derive_more::Display, derive_more::From)]
+#[display(fmt = "{}", _0)]
+/// Error returned by [`Session::get`].
+pub struct SessionGetError(anyhow::Error);
+
+impl std::error::Error for SessionGetError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        Some(self.0.as_ref())
+    }
+}
+
+impl ResponseError for SessionGetError {
+    fn status_code(&self) -> StatusCode {
+        StatusCode::INTERNAL_SERVER_ERROR
+    }
+
+    fn error_response(&self) -> HttpResponse<BoxBody> {
+        HttpResponse::new(self.status_code())
+    }
+}
+
+#[derive(Debug, derive_more::Display, derive_more::From)]
+#[display(fmt = "{}", _0)]
+/// Error returned by [`Session::insert`].
+pub struct SessionInsertError(anyhow::Error);
+
+impl std::error::Error for SessionInsertError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        Some(self.0.as_ref())
+    }
+}
+
+impl ResponseError for SessionInsertError {
+    fn status_code(&self) -> StatusCode {
+        StatusCode::INTERNAL_SERVER_ERROR
+    }
+
+    fn error_response(&self) -> HttpResponse<BoxBody> {
+        HttpResponse::new(self.status_code())
     }
 }
