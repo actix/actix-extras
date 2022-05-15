@@ -11,6 +11,10 @@ use crate::configuration::LogoutBehaviour;
 
 /// A verified user identity. It can be used as a request extractor.
 ///
+/// The lifecycle of a user identity is tied to the lifecycle of the underlying session.
+/// If the session is destroyed (e.g. the session expired), the user identity will be forgotten,
+/// de facto forcing a user log out.
+///
 /// # Example
 ///
 /// ```
