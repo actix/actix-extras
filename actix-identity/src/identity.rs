@@ -1,11 +1,11 @@
 use actix_session::Session;
 use actix_utils::future::{ready, Ready};
+use actix_web::cookie::time::OffsetDateTime;
 use actix_web::dev::Extensions;
 use actix_web::http::StatusCode;
 use actix_web::{dev::Payload, Error, FromRequest, HttpRequest};
 use actix_web::{HttpMessage, HttpResponse};
 use anyhow::{anyhow, Context};
-use std::time::SystemTime;
 
 use crate::configuration::LogoutBehaviour;
 
@@ -101,9 +101,10 @@ impl Identity {
         // TODO: review unwrap
         let inner = e.get::<IdentityInner>().unwrap().to_owned();
         inner.session.insert(ID_KEY, id)?;
-        inner
-            .session
-            .insert(LOGIN_TIMESTAMP_KEY, std::time::SystemTime::now())?;
+        inner.session.insert(
+            LOGIN_TIMESTAMP_KEY,
+            OffsetDateTime::now_utc().unix_timestamp(),
+        )?;
         inner.session.renew();
         Ok(Self(inner))
     }
@@ -143,8 +144,13 @@ impl Identity {
         Ok(Self(inner))
     }
 
-    pub(crate) fn logged_at(&self) -> Option<SystemTime> {
-        self.0.session.get(LOGIN_TIMESTAMP_KEY).ok().flatten()
+    pub(crate) fn logged_at(&self) -> Result<Option<OffsetDateTime>, anyhow::Error> {
+        self.0
+            .session
+            .get(LOGIN_TIMESTAMP_KEY)?
+            .map(OffsetDateTime::from_unix_timestamp)
+            .transpose()
+            .map_err(anyhow::Error::from)
     }
 }
 

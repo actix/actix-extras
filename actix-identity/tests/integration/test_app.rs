@@ -1,10 +1,12 @@
-use crate::fixtures::session_middleware;
+use std::net::TcpListener;
+
 use actix_identity::configuration::IdentityMiddlewareBuilder;
 use actix_identity::{Identity, IdentityMiddleware};
 use actix_session::{Session, SessionStatus};
 use actix_web::{web, App, HttpMessage, HttpRequest, HttpResponse, HttpServer};
 use serde::{Deserialize, Serialize};
-use std::net::TcpListener;
+
+use crate::fixtures::session_middleware;
 
 pub struct TestApp {
     port: u16,

@@ -1,6 +1,7 @@
 //! Configuration options to tune the behaviour of [`IdentityMiddleware`].
-use crate::IdentityMiddleware;
 use std::time::Duration;
+
+use crate::IdentityMiddleware;
 
 #[derive(Clone, Debug)]
 pub(crate) struct Configuration {

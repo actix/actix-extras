@@ -9,6 +9,7 @@ use actix_web::{
     dev::{Service, ServiceRequest, ServiceResponse, Transform},
     Error, HttpMessage as _, Result,
 };
+use time::OffsetDateTime;
 
 use crate::configuration::{Configuration, IdentityMiddlewareBuilder};
 use crate::identity::IdentityInner;
@@ -115,13 +116,18 @@ where
             if let Some(login_deadline) = configuration.login_deadline {
                 if let Ok(identity) = Identity::extract(&req.extensions()) {
                     match identity.logged_at() {
-                        // TODO: add log lines here.
-                        None => {
+                        Ok(None) => {
+                            // TODO: add log lines here.
                             identity.logout();
                         }
-                        Some(logged_at) => {
-                            // TODO: review unwrap
-                            if logged_at.elapsed().unwrap() > login_deadline {
+                        Err(_) => {
+                            // TODO: add log lines here.
+                            identity.logout();
+                        }
+                        Ok(Some(logged_at)) => {
+                            let elapsed = OffsetDateTime::now_utc() - logged_at;
+                            if elapsed > login_deadline {
+                                // TODO: add log lines here.
                                 identity.logout();
                             }
                         }
