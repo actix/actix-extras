@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use actix_identity::configuration::LogoutBehaviour;
 use actix_identity::IdentityMiddleware;
 use actix_web::http::StatusCode;
@@ -108,4 +110,25 @@ async fn logout_can_avoid_destroying_the_whole_session() {
     assert_eq!(body.user_id, None);
     // It would be 0 if the session state had been entirely lost!
     assert_eq!(body.counter, 1);
+}
+
+#[actix_web::test]
+async fn login_deadline_works() {
+    let login_deadline = Duration::from_millis(10);
+    let app = TestApp::spawn_with_config(
+        IdentityMiddleware::builder().login_deadline(Some(login_deadline)),
+    );
+    let user_id = user_id();
+
+    // Log-in
+    let body = app.post_login(user_id.clone()).await;
+    assert_eq!(body.user_id, Some(user_id.clone()));
+
+    // Wait for deadline to pass
+    actix_web::rt::time::sleep(login_deadline * 2).await;
+
+    // Check the state of the counter attached to the session state
+    let body = app.get_current().await;
+    // We have been logged out!
+    assert_eq!(body.user_id, None);
 }
