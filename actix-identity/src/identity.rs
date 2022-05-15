@@ -42,6 +42,7 @@ pub struct Identity(IdentityInner);
 pub(crate) struct IdentityInner {
     pub(crate) session: Session,
     pub(crate) logout_behaviour: LogoutBehaviour,
+    pub(crate) is_login_deadline_enabled: bool,
 }
 
 impl IdentityInner {
@@ -133,6 +134,9 @@ impl Identity {
             }
             LogoutBehaviour::DeleteIdentityKeys => {
                 self.0.session.remove(ID_KEY);
+                if self.0.is_login_deadline_enabled {
+                    self.0.session.remove(LOGIN_TIMESTAMP_KEY);
+                }
             }
         }
     }

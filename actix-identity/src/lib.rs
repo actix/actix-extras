@@ -42,6 +42,9 @@
 //!            .wrap(IdentityMiddleware::default())
 //!            // The identity system is built on top of sessions.
 //!            // You must install the session middleware to leverage `actix-identity`.
+//!            // The session middleware must be mounted AFTER the identity middleware:
+//!            // `actix-web` invokes middlewares in the OPPOSITE order of registration when
+//!            // it receives an incoming request.
 //!            .wrap(SessionMiddleware::new(redis_store.clone(), secret_key.clone()))
 //!            .service(services![index, login, logout])
 //!     })

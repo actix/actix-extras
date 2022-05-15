@@ -24,6 +24,7 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 time = "0.3"
 anyhow = "1.0.56"
+tracing = { version = "0.1.30", default-features = false, features = ["log"] }
 
 [dev-dependencies]
 actix-http = "3.0.0-rc.1"
