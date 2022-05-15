@@ -146,7 +146,7 @@ mod session_ext;
 pub mod storage;
 
 pub use self::middleware::SessionMiddleware;
-pub use self::session::{Session, SessionStatus};
+pub use self::session::{Session, SessionStatus, SessionGetError, SessionInsertError};
 pub use self::session_ext::SessionExt;
 
 #[cfg(test)]
