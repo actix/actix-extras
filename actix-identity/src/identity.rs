@@ -46,6 +46,20 @@ pub(crate) struct IdentityInner {
 }
 
 impl IdentityInner {
+    fn extract(e: &Extensions) -> Self {
+        e.get::<Self>()
+            .expect(
+                "No `IdentityInner` instance was found in the extensions \
+                attached to the incoming request. \
+                This usually means that `IdentityMiddleware` has not been registered as an \
+                application middleware via `App::wrap`. \
+                `Identity` cannot be used unless the identity machine is properly mounted: register \
+                `IdentityMiddleware` as a middleware for your application to fix this panic. \
+                If the problem persists, please file an issue on GitHub.",
+            )
+            .to_owned()
+    }
+
     /// Retrieve the user id attached to the current session.
     fn get_identity(&self) -> Result<String, anyhow::Error> {
         self.session
@@ -99,8 +113,7 @@ impl Identity {
     /// }
     /// ```
     pub fn login(e: &Extensions, id: String) -> Result<Self, anyhow::Error> {
-        // TODO: review unwrap
-        let inner = e.get::<IdentityInner>().unwrap().to_owned();
+        let inner = IdentityInner::extract(e);
         inner.session.insert(ID_KEY, id)?;
         inner.session.insert(
             LOGIN_TIMESTAMP_KEY,
@@ -142,8 +155,7 @@ impl Identity {
     }
 
     pub(crate) fn extract(e: &Extensions) -> Result<Self, anyhow::Error> {
-        // TODO: review unwrap
-        let inner = e.get::<IdentityInner>().unwrap().to_owned();
+        let inner = IdentityInner::extract(e);
         inner.get_identity()?;
         Ok(Self(inner))
     }
