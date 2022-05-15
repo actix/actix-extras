@@ -113,7 +113,7 @@ async fn logout_can_avoid_destroying_the_whole_session() {
 }
 
 #[actix_web::test]
-async fn login_deadline_works() {
+async fn user_is_logged_out_when_login_deadline_is_elapsed() {
     let login_deadline = Duration::from_millis(10);
     let app = TestApp::spawn_with_config(
         IdentityMiddleware::builder().login_deadline(Some(login_deadline)),
@@ -131,4 +131,22 @@ async fn login_deadline_works() {
     let body = app.get_current().await;
     // We have been logged out!
     assert_eq!(body.user_id, None);
+}
+
+#[actix_web::test]
+async fn login_deadline_does_not_log_users_out_before_their_time() {
+    // 1 hour
+    let login_deadline = Duration::from_secs(60 * 60);
+    let app = TestApp::spawn_with_config(
+        IdentityMiddleware::builder().login_deadline(Some(login_deadline)),
+    );
+    let user_id = user_id();
+
+    // Log-in
+    let body = app.post_login(user_id.clone()).await;
+    assert_eq!(body.user_id, Some(user_id.clone()));
+
+    // Check the state of the counter attached to the session state
+    let body = app.get_current().await;
+    assert_eq!(body.user_id, Some(user_id));
 }
