@@ -7,6 +7,7 @@ use crate::IdentityMiddleware;
 pub(crate) struct Configuration {
     pub(crate) on_logout: LogoutBehaviour,
     pub(crate) login_deadline: Option<Duration>,
+    pub(crate) visit_deadline: Option<Duration>,
 }
 
 impl Default for Configuration {
@@ -14,6 +15,7 @@ impl Default for Configuration {
         Self {
             on_logout: LogoutBehaviour::PurgeSession,
             login_deadline: None,
+            visit_deadline: None,
         }
     }
 }
@@ -69,6 +71,18 @@ impl IdentityMiddlewareBuilder {
     /// By default, login deadline is disabled.
     pub fn login_deadline(mut self, deadline: Option<Duration>) -> Self {
         self.configuration.login_deadline = deadline;
+        self
+    }
+
+    /// Automatically log out users after a certain amount of time has passed since their last visit.
+    ///
+    /// If set to `None`, visit deadline is disabled.
+    /// If set to `Some(duration)`, visit deadline is enabled and users will be logged out after
+    /// `duration` has passed since their last visit.
+    ///
+    /// By default, visit deadline is disabled.
+    pub fn visit_deadline(mut self, deadline: Option<Duration>) -> Self {
+        self.configuration.visit_deadline = deadline;
         self
     }
 

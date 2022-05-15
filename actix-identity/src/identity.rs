@@ -43,6 +43,7 @@ pub(crate) struct IdentityInner {
     pub(crate) session: Session,
     pub(crate) logout_behaviour: LogoutBehaviour,
     pub(crate) is_login_deadline_enabled: bool,
+    pub(crate) is_visit_deadline_enabled: bool,
 }
 
 impl IdentityInner {
@@ -72,8 +73,8 @@ impl IdentityInner {
 }
 
 pub(crate) const ID_KEY: &str = "actix_identity.user_id";
-// pub(crate) const LAST_VISIT_KEY: &str = "last_visited_at";
-pub(crate) const LOGIN_TIMESTAMP_KEY: &str = "actix_identity.logged_in_at";
+pub(crate) const LAST_VISIT_UNIX_TIMESTAMP_KEY: &str = "actix_identity.last_visited_at";
+pub(crate) const LOGIN_UNIX_TIMESTAMP_KEY: &str = "actix_identity.logged_in_at";
 
 impl Identity {
     /// Return the user id associated to the current session.  
@@ -116,7 +117,7 @@ impl Identity {
         let inner = IdentityInner::extract(e);
         inner.session.insert(ID_KEY, id)?;
         inner.session.insert(
-            LOGIN_TIMESTAMP_KEY,
+            LOGIN_UNIX_TIMESTAMP_KEY,
             OffsetDateTime::now_utc().unix_timestamp(),
         )?;
         inner.session.renew();
@@ -148,7 +149,10 @@ impl Identity {
             LogoutBehaviour::DeleteIdentityKeys => {
                 self.0.session.remove(ID_KEY);
                 if self.0.is_login_deadline_enabled {
-                    self.0.session.remove(LOGIN_TIMESTAMP_KEY);
+                    self.0.session.remove(LOGIN_UNIX_TIMESTAMP_KEY);
+                }
+                if self.0.is_visit_deadline_enabled {
+                    self.0.session.remove(LAST_VISIT_UNIX_TIMESTAMP_KEY);
                 }
             }
         }
@@ -163,7 +167,16 @@ impl Identity {
     pub(crate) fn logged_at(&self) -> Result<Option<OffsetDateTime>, anyhow::Error> {
         self.0
             .session
-            .get(LOGIN_TIMESTAMP_KEY)?
+            .get(LOGIN_UNIX_TIMESTAMP_KEY)?
+            .map(OffsetDateTime::from_unix_timestamp)
+            .transpose()
+            .map_err(anyhow::Error::from)
+    }
+
+    pub(crate) fn last_visited_at(&self) -> Result<Option<OffsetDateTime>, anyhow::Error> {
+        self.0
+            .session
+            .get(LAST_VISIT_UNIX_TIMESTAMP_KEY)?
             .map(OffsetDateTime::from_unix_timestamp)
             .transpose()
             .map_err(anyhow::Error::from)

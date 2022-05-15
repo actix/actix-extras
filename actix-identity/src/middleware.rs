@@ -113,46 +113,116 @@ where
                 session: req.get_session(),
                 logout_behaviour: configuration.on_logout.clone(),
                 is_login_deadline_enabled: configuration.login_deadline.is_some(),
+                is_visit_deadline_enabled: configuration.visit_deadline.is_some(),
             };
             req.extensions_mut().insert(identity_inner);
-            if let Some(login_deadline) = configuration.login_deadline {
-                match Identity::extract(&req.extensions()) {
-                    Ok(identity) => match identity.logged_at() {
-                        Ok(None) => {
-                            tracing::info!("Login deadline is enabled, but there is no login timestamp in the session state attached to the incoming request. Logging the user out.");
-                            identity.logout();
-                        }
-                        Err(e) => {
-                            tracing::info!(
-                                error.display = %e,
-                                error.debug = ?e,
-                                "Login deadline is enabled and we failed to extract the login timestamp from the session state attached to the incoming request. Logging the user out."
-                            );
-                            identity.logout();
-                        }
-                        Ok(Some(logged_in_at)) => {
-                            let elapsed = OffsetDateTime::now_utc() - logged_in_at;
-                            if elapsed > login_deadline {
-                                tracing::info!(
-                                    user.logged_in_at = %logged_in_at.format(&Rfc3339).unwrap_or_else(|_| "".into()),
-                                    identity.login_deadline_seconds = login_deadline.as_secs(),
-                                    identity.elapsed_since_login_seconds = elapsed.whole_seconds(),
-                                    "Login deadline is enabled and too much time has passed since the user logged in. Logging the user out."
-                                );
-                                identity.logout();
-                            }
-                        }
-                    },
-                    Err(e) => {
-                        tracing::debug!(
-                            error.display = %e,
-                            error.debug = ?e,
-                            "Failed to extract an `Identity` from the incoming request."
-                        );
-                    }
-                }
-            }
+            enforce_policies(&req, &configuration);
             srv.call(req).await
         })
     }
+}
+
+fn enforce_policies(req: &ServiceRequest, configuration: &Configuration) {
+    let must_extract_identity = configuration.login_deadline.is_some() || configuration.visit_deadline.is_some();
+    if !must_extract_identity {
+        return;
+    }
+    let identity = match Identity::extract(&req.extensions()) {
+        Ok(identity) => identity,
+        Err(e) => {
+            tracing::debug!(
+                error.display = %e,
+                error.debug = ?e,
+                "Failed to extract an `Identity` from the incoming request."
+            );
+            return;
+        }
+    };
+
+    if let Some(login_deadline) = configuration.login_deadline {
+        if let PolicyDecision::LogOut = enforce_login_deadline(&identity, login_deadline) {
+            identity.logout();
+            return;
+        }
+    }
+
+    if let Some(visit_deadline) = configuration.visit_deadline {
+        if let PolicyDecision::LogOut = enforce_visit_deadline(&identity, visit_deadline) {
+            identity.logout();
+            return;
+        }
+    }
+}
+
+fn enforce_login_deadline(
+    identity: &Identity,
+    login_deadline: std::time::Duration,
+) -> PolicyDecision {
+    match identity.logged_at() {
+        Ok(None) => {
+            tracing::info!("Login deadline is enabled, but there is no login timestamp in the session state attached to the incoming request. Logging the user out.");
+            PolicyDecision::LogOut
+        }
+        Err(e) => {
+            tracing::info!(
+                error.display = %e,
+                error.debug = ?e,
+                "Login deadline is enabled but we failed to extract the login timestamp from the session state attached to the incoming request. Logging the user out."
+            );
+            PolicyDecision::LogOut
+        }
+        Ok(Some(logged_in_at)) => {
+            let elapsed = OffsetDateTime::now_utc() - logged_in_at;
+            if elapsed > login_deadline {
+                tracing::info!(
+                    user.logged_in_at = %logged_in_at.format(&Rfc3339).unwrap_or_else(|_| "".into()),
+                    identity.login_deadline_seconds = login_deadline.as_secs(),
+                    identity.elapsed_since_login_seconds = elapsed.whole_seconds(),
+                    "Login deadline is enabled and too much time has passed since the user logged in. Logging the user out."
+                );
+                PolicyDecision::LogOut
+            } else {
+                PolicyDecision::StayLoggedIn
+            }
+        }
+    }
+}
+
+fn enforce_visit_deadline(
+    identity: &Identity,
+    visit_deadline: std::time::Duration,
+) -> PolicyDecision {
+    match identity.last_visited_at() {
+        Ok(None) => {
+            tracing::info!("Last visit deadline is enabled, but there is no last visit timestamp in the session state attached to the incoming request. Logging the user out.");
+            PolicyDecision::LogOut
+        }
+        Err(e) => {
+            tracing::info!(
+                error.display = %e,
+                error.debug = ?e,
+                "Last visit deadline is enabled but we failed to extract the last visit timestamp from the session state attached to the incoming request. Logging the user out."
+            );
+            PolicyDecision::LogOut
+        }
+        Ok(Some(last_visited_at)) => {
+            let elapsed = OffsetDateTime::now_utc() - last_visited_at;
+            if elapsed > visit_deadline {
+                tracing::info!(
+                    user.last_visited_at = %last_visited_at.format(&Rfc3339).unwrap_or_else(|_| "".into()),
+                    identity.visit_deadline_seconds = visit_deadline.as_secs(),
+                    identity.elapsed_since_last_visit_seconds = elapsed.whole_seconds(),
+                    "Last visit deadline is enabled and too much time has passed since the last time the user visited. Logging the user out."
+                );
+                PolicyDecision::LogOut
+            } else {
+                PolicyDecision::StayLoggedIn
+            }
+        }
+    }
+}
+
+enum PolicyDecision {
+    StayLoggedIn,
+    LogOut,
 }
