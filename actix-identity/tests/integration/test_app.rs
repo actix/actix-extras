@@ -21,8 +21,8 @@ impl TestApp {
         let port = listener.local_addr().unwrap().port();
         let server = HttpServer::new(move || {
             App::new()
-                .wrap(session_middleware())
                 .wrap(builder.clone().build())
+                .wrap(session_middleware())
                 .route("/increment", web::post().to(increment))
                 .route("/current", web::get().to(show))
                 .route("/login", web::post().to(login))
