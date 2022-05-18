@@ -5,9 +5,3 @@ ci-check-min-tests = "hack check --workspace --no-default-features --tests --exa
 ci-check = "check --workspace --tests --examples --bins"
 ci-test = "test --workspace --lib --tests --all-features --examples --bins --no-fail-fast"
 ci-doctest = "test --workspace --doc --all-features --no-fail-fast"
-
-[source.crates-io]
-replace-with = "vendored-sources"
-
-[source.vendored-sources]
-directory = "vendor"
