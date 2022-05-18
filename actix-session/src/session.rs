@@ -6,9 +6,13 @@ use std::{
 };
 
 use actix_utils::future::{ready, Ready};
-use actix_web::{dev::{Extensions, Payload, ServiceRequest, ServiceResponse}, error::Error, FromRequest, HttpMessage, HttpRequest, HttpResponse, ResponseError};
 use actix_web::body::BoxBody;
 use actix_web::http::StatusCode;
+use actix_web::{
+    dev::{Extensions, Payload, ServiceRequest, ServiceResponse},
+    error::Error,
+    FromRequest, HttpMessage, HttpRequest, HttpResponse, ResponseError,
+};
 use anyhow::Context;
 use serde::{de::DeserializeOwned, Serialize};
 
