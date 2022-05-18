@@ -32,7 +32,7 @@ use crate::{
 /// To create a new instance of [`SessionMiddleware`] you need to provide:
 ///
 /// - an instance of the session storage backend you wish to use (i.e. an implementation of
-///   [`SessionStore]);
+///   [`SessionStore`]);
 /// - a secret key, to sign or encrypt the content of client-side session cookie.
 ///
 /// ```no_run
