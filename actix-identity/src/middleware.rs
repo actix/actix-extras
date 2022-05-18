@@ -150,6 +150,9 @@ fn enforce_policies(req: &ServiceRequest, configuration: &Configuration) {
     if let Some(visit_deadline) = configuration.visit_deadline {
         if let PolicyDecision::LogOut = enforce_visit_deadline(&identity, visit_deadline) {
             identity.logout();
+            // Easier to scan with a return here,
+            // especially if the function body were to evolve in the future.
+            #[allow(clippy::needless_return)]
             return;
         }
     }
