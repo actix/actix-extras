@@ -1,4 +1,4 @@
-var N = null;var sourcesIndex = {};
+var sourcesIndex = {};
 sourcesIndex["actix_cors"] = {"name":"","files":["all_or_some.rs","builder.rs","error.rs","inner.rs","lib.rs","middleware.rs"]};
 sourcesIndex["actix_identity"] = {"name":"","files":["cookie.rs","identity.rs","lib.rs","middleware.rs"]};
 sourcesIndex["actix_limitation"] = {"name":"","files":["builder.rs","errors.rs","lib.rs","middleware.rs","status.rs"]};
