@@ -1,7 +1,7 @@
 # Changes
 
 ## Unreleased - 2021-xx-xx
-
+- `BasicAuth::user_id()` and `BasicAuth::password()` now return `&str` instead of `Cow<str>`
 
 ## 0.6.0 - 2022-03-01
 - Update `actix-web` dependency to `4`.

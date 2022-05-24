@@ -93,13 +93,13 @@ pub struct BasicAuth(Basic);
 
 impl BasicAuth {
     /// Returns client's user-ID.
-    pub fn user_id(&self) -> &Cow<'static, str> {
-        self.0.user_id()
+    pub fn user_id(&self) -> &str {
+        self.0.user_id().as_ref()
     }
 
     /// Returns client's password.
-    pub fn password(&self) -> Option<&Cow<'static, str>> {
-        self.0.password()
+    pub fn password(&self) -> Option<&str> {
+        self.0.password().map(|s| s.as_ref())
     }
 }
 
