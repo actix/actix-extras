@@ -1,6 +1,7 @@
 # Changes
 
 ## Unreleased - 2021-xx-xx
+- impl Challenge for &str
 
 
 ## 0.6.0 - 2022-03-01
