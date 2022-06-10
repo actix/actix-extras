@@ -75,6 +75,20 @@ struct SessionInner {
 }
 
 impl Session {
+
+    /// Create an empty session. Appropriate for testing.
+    /// 
+    /// This session wraps an empty state map and status. It can be instantiated for testing purposes.
+    pub fn empty() -> Session {
+        let inner = SessionInner{
+            state: HashMap::new(),
+            status: SessionStatus::default(),
+        };
+        Session(Rc::new(RefCell::new(inner)))
+    }
+
+
+
     /// Get a `value` from the session.
     ///
     /// It returns an error if it fails to deserialize as `T` the JSON value associated with `key`.
