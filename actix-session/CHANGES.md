@@ -2,6 +2,9 @@
 
 ## Unreleased - 2021-xx-xx
 
+## Unreleased - 2022-06-09
+ - Add an `empty()` function to `Session` for simple testing
+
 
 ## 0.6.2 - 2022-03-25
 - Implement `SessionExt` for `GuardContext`. [#234]
