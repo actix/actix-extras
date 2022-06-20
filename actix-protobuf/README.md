@@ -11,7 +11,7 @@
 
 - [API Documentation](https://docs.rs/actix-protobuf)
 - [Example Project](https://github.com/actix/examples/tree/master/protobuf)
-- Minimum Supported Rust Version (MSRV): 1.54
+- Minimum Supported Rust Version (MSRV): 1.57
 
 ## Example
 
