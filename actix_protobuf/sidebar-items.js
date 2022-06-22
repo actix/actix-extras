@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["ProtoBufPayloadError",""]],"struct":[["ProtoBuf",""],["ProtoBufConfig",""],["ProtoBufMessage",""]],"trait":[["ProtoBufResponseBuilder",""]]});
+window.SIDEBAR_ITEMS = {"enum":[["ProtoBufPayloadError",""]],"struct":[["ProtoBuf",""],["ProtoBufConfig",""],["ProtoBufMessage",""]],"trait":[["ProtoBufResponseBuilder",""]]};

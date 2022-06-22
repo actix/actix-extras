@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["Basic","Challenge for `WWW-Authenticate` header with HTTP Basic auth scheme, described in RFC 7617"]]});
+window.SIDEBAR_ITEMS = {"struct":[["Basic","Challenge for `WWW-Authenticate` header with HTTP Basic auth scheme, described in RFC 7617"]]};

@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["authorization","`Authorization` header and various auth schemes"],["www_authenticate","`WWW-Authenticate` header and various auth challenges"]]});
+window.SIDEBAR_ITEMS = {"mod":[["authorization","`Authorization` header and various auth schemes"],["www_authenticate","`WWW-Authenticate` header and various auth challenges"]]};
