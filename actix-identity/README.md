@@ -10,4 +10,4 @@
 ## Documentation & community resources
 
 * [API Documentation](https://docs.rs/actix-identity)
-* Minimum Supported Rust Version (MSRV): 1.54
+* Minimum Supported Rust Version (MSRV): 1.57
