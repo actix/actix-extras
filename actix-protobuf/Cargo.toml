@@ -21,8 +21,8 @@ path = "src/lib.rs"
 actix-web = { version = "4", default_features = false }
 derive_more = "0.99.5"
 futures-util = { version = "0.3.7", default-features = false }
-prost = { version = "0.9", default_features = false }
+prost = { version = "0.10", default_features = false }
 
 [dev-dependencies]
 actix-web = { version = "4", default_features = false, features = ["macros"] }
-prost = { version = "0.9", default_features = false, features = ["prost-derive"] }
+prost = { version = "0.10", default_features = false, features = ["prost-derive"] }
