@@ -1,17 +1,16 @@
 [package]
 name = "actix-protobuf"
-version = "0.7.0"
+version = "0.8.0"
 edition = "2018"
 authors = [
     "kingxsp <jin.hb.zh@outlook.com>",
-    "Yuki Okushi <huyuumi.dev@gmail.com>"
+    "Yuki Okushi <huyuumi.dev@gmail.com>",
 ]
 description = "Protobuf support for Actix web"
-keywords = ["actix", "protobuf", "protocol", "rpc"]
+keywords = ["actix", "web", "protobuf", "protocol", "rpc"]
 homepage = "https://actix.rs"
 repository = "https://github.com/actix/actix-extras.git"
 license = "MIT OR Apache-2.0"
-exclude = [".cargo/config", "/examples/**"]
 
 [lib]
 name = "actix_protobuf"

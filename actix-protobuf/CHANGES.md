@@ -1,8 +1,11 @@
 # Changes
 
 ## Unreleased - 2022-xx-xx
+
+
+## 0.8.0 - 2022-06-25
+- Update `prost` dependency to `0.10`.
 - Minimum supported Rust version (MSRV) is now 1.57 due to transitive `time` dependency.
-- Update `prost` dependency to `0.10`
 
 
 ## 0.7.0 - 2022-03-01
