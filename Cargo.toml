@@ -32,7 +32,7 @@ actix-web = { version = "4", default-features = false }
 pin-project = "1.0.0"
 tracing = "0.1.19"
 tracing-futures = "0.2.4"
-uuid = { version = "0.8.1", features = ["v4"] }
+uuid = { version = "1", features = ["v4"] }
 opentelemetry_0_13_pkg = { package = "opentelemetry", version = "0.13", optional = true }
 opentelemetry_0_14_pkg = { package = "opentelemetry", version = "0.14", optional = true }
 opentelemetry_0_15_pkg = { package = "opentelemetry", version = "0.15", optional = true }
