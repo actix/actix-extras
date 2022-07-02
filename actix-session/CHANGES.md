@@ -1,6 +1,6 @@
 # Changes
 
-## Unreleased - 2021-xx-xx
+## Unreleased - 2022-xx-xx
 - Added `TtlExtensionPolicy` enum to support different strategies for extending the TTL attached to the session state. `TtlExtensionPolicy::OnEveryRequest` now allows for long-lived sessions that do not expire if the user remains active. [#233]
 - `SessionLength` is now called `SessionLifecycle`. [#233]
 - `SessionLength::Predetermined` is now called `SessionLifecycle::PersistentSession`. [#233]
@@ -10,6 +10,7 @@
 - `SessionMiddlewareBuilder::max_session_length` is now called `SessionMiddlewareBuilder::session_lifecycle`. [#233]
 - The `SessionStore` trait requires the implementation of a new method, `SessionStore::update_ttl`. [#233]
 - All types used to configure `SessionMiddleware` have been moved to the `configuration` sub-module [#233]
+- Minimum supported Rust version (MSRV) is now 1.57 due to transitive `time` dependency.
 
 [#233]: https://github.com/actix/actix-extras/pull/233
 

@@ -25,7 +25,7 @@ jobs:
         options: --entrypoint redis-server
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Install ${{ matrix.version }}
         uses: actions-rs/toolchain@v1
@@ -51,9 +51,9 @@ jobs:
         uses: actions-rs/cargo@v1
         with: { command: ci-min }
 
-      - name: check minimal + tests
+      - name: check minimal + examples
         uses: actions-rs/cargo@v1
-        with: { command: ci-check-min-tests }
+        with: { command: ci-check-min-examples }
 
       - name: check default
         uses: actions-rs/cargo@v1
@@ -83,7 +83,7 @@ jobs:
     runs-on: ${{ matrix.target.os }}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Install ${{ matrix.version }}
         uses: actions-rs/toolchain@v1
@@ -109,9 +109,9 @@ jobs:
         uses: actions-rs/cargo@v1
         with: { command: ci-min }
 
-      - name: check minimal + tests
+      - name: check minimal + examples
         uses: actions-rs/cargo@v1
-        with: { command: ci-check-min-tests }
+        with: { command: ci-check-min-examples }
 
       - name: check default
         uses: actions-rs/cargo@v1
