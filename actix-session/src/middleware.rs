@@ -11,7 +11,7 @@ use actix_web::{
 use anyhow::Context;
 
 use crate::{
-    configuration::{
+    config::{
         self, Configuration, CookieConfiguration, CookieContentSecurity, SessionMiddlewareBuilder,
         TtlExtensionPolicy,
     },
@@ -138,7 +138,7 @@ impl<Store: SessionStore> SessionMiddleware<Store> {
     ///   [`SessionStore]);
     /// - a secret key, to sign or encrypt the content of client-side session cookie.
     pub fn builder(store: Store, key: Key) -> SessionMiddlewareBuilder<Store> {
-        SessionMiddlewareBuilder::new(store, configuration::default_configuration(key))
+        SessionMiddlewareBuilder::new(store, config::default_configuration(key))
     }
 
     pub(crate) fn from_parts(store: Store, configuration: Configuration) -> Self {

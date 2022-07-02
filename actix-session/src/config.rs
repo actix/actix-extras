@@ -16,6 +16,7 @@ pub enum SessionLifecycle {
     /// deleted and they will still be available when the browser is opened again.
     /// Check the documentation of the browsers you are targeting for up-to-date information.
     BrowserSession(BrowserSession),
+
     /// The session cookie will be a [persistent cookie].
     ///
     /// Persistent cookies have a pre-determined lifetime, specified via the `Max-Age` or `Expires`
@@ -78,9 +79,10 @@ impl BrowserSession {
     }
 
     /// Determine under what circumstances the TTL of your session state should be extended.
-    /// See [`TtlExtensionPolicy`] for more details.
     ///
-    /// It defaults to [`TtlExtensionPolicy::OnStateChanges`] if left unspecified.
+    /// Defaults to [`TtlExtensionPolicy::OnStateChanges`] if left unspecified.
+    ///
+    /// See [`TtlExtensionPolicy`] for more details.
     pub fn state_ttl_extension_policy(mut self, ttl_extension_policy: TtlExtensionPolicy) -> Self {
         self.state_ttl_extension_policy = ttl_extension_policy;
         self
@@ -96,7 +98,6 @@ impl Default for BrowserSession {
     }
 }
 
-#[derive(Clone, Debug)]
 /// One of the available options for [`SessionLifecycle`].
 ///
 /// The session cookie will be a [persistent cookie].
@@ -105,29 +106,30 @@ impl Default for BrowserSession {
 /// attribute. They do not disappear when the current browser session ends.
 ///
 /// [persistent cookie]: https://www.whitehatsec.com/glossary/content/persistent-session-cookie
+#[derive(Clone, Debug)]
 pub struct PersistentSession {
     session_ttl: Duration,
     ttl_extension_policy: TtlExtensionPolicy,
 }
 
 impl PersistentSession {
-    /// Specify how long the session cookie should live.
-    /// It will default to 1 day if left unspecified.
+    /// Specifies how long the session cookie should live.
     ///
-    /// The session TTL is also used as the TTL for the session state in the
-    /// storage backend.
+    /// Defaults to 1 day if left unspecified.
+    ///
+    /// The session TTL is also used as the TTL for the session state in the storage backend.
     ///
     /// A persistent session can live more than the specified TTL if the TTL is extended.
-    /// Check out [`PersistentSession::session_ttl_extension_policy`] for more details.
+    /// See [`session_ttl_extension_policy`](Self::session_ttl_extension_policy) for more details.
     pub fn session_ttl(mut self, session_ttl: Duration) -> Self {
         self.session_ttl = session_ttl;
         self
     }
 
-    /// Determine under what circumstances the TTL of your session should be extended.
+    /// Determines under what circumstances the TTL of your session should be extended.
     /// See [`TtlExtensionPolicy`] for more details.
     ///
-    /// It defaults to [`TtlExtensionPolicy::OnStateChanges`] if left unspecified.
+    /// Defaults to [`TtlExtensionPolicy::OnStateChanges`] if left unspecified.
     pub fn session_ttl_extension_policy(
         mut self,
         ttl_extension_policy: TtlExtensionPolicy,

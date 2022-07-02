@@ -46,7 +46,7 @@ use crate::storage::{
 /// There is no way to invalidate a session before its natural expiry when using cookies as the
 /// storage backend.
 ///
-/// [`CookieContentSecurity::Private`]: crate::configuration::CookieContentSecurity::Private
+/// [`CookieContentSecurity::Private`]: crate::config::CookieContentSecurity::Private
 #[cfg_attr(docsrs, doc(cfg(feature = "cookie-session")))]
 #[derive(Default)]
 #[non_exhaustive]

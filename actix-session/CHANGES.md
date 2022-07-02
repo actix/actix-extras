@@ -9,7 +9,7 @@
 - `SessionLength::BrowserSession::state_ttl` is now called `BrowserSession::session_state_ttl`. [#233]
 - `SessionMiddlewareBuilder::max_session_length` is now called `SessionMiddlewareBuilder::session_lifecycle`. [#233]
 - The `SessionStore` trait requires the implementation of a new method, `SessionStore::update_ttl`. [#233]
-- All types used to configure `SessionMiddleware` have been moved to the `configuration` sub-module [#233]
+- All types used to configure `SessionMiddleware` have been moved to the `config` sub-module [#233]
 - Minimum supported Rust version (MSRV) is now 1.57 due to transitive `time` dependency.
 
 [#233]: https://github.com/actix/actix-extras/pull/233
