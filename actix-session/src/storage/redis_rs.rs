@@ -1,7 +1,8 @@
-use std::sync::Arc;
+use std::{convert::TryInto, sync::Arc};
 
-use redis::{aio::ConnectionManager, Cmd, FromRedisValue, RedisResult, Value};
-use time::{self, Duration};
+use actix_web::cookie::time::Duration;
+use anyhow::{Context, Error};
+use redis::{aio::ConnectionManager, AsyncCommands, Cmd, FromRedisValue, RedisResult, Value};
 
 use super::SessionKey;
 use crate::storage::{
@@ -28,6 +29,7 @@ use crate::storage::{
 ///     let secret_key = get_secret_key();
 ///     let redis_connection_string = "redis://127.0.0.1:6379";
 ///     let store = RedisSessionStore::new(redis_connection_string).await.unwrap();
+///
 ///     HttpServer::new(move ||
 ///             App::new()
 ///             .wrap(SessionMiddleware::new(
@@ -221,6 +223,21 @@ impl SessionStore for RedisSessionStore {
         }
     }
 
+    async fn update_ttl(&self, session_key: &SessionKey, ttl: &Duration) -> Result<(), Error> {
+        let cache_key = (self.configuration.cache_keygen)(session_key.as_ref());
+
+        self.client
+            .clone()
+            .expire(
+                &cache_key,
+                ttl.whole_seconds().try_into().context(
+                    "Failed to convert the state TTL into the number of whole seconds remaining",
+                )?,
+            )
+            .await?;
+        Ok(())
+    }
+
     async fn delete(&self, session_key: &SessionKey) -> Result<(), anyhow::Error> {
         let cache_key = (self.configuration.cache_keygen)(session_key.as_ref());
         self.execute_command(redis::cmd("DEL").arg(&[&cache_key]))
@@ -272,9 +289,10 @@ impl RedisSessionStore {
 }
 
 #[cfg(test)]
-mod test {
+mod tests {
     use std::collections::HashMap;
 
+    use actix_web::cookie::time;
     use redis::AsyncCommands;
 
     use super::*;

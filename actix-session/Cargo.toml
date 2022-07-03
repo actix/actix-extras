@@ -38,7 +38,6 @@ derive_more = "0.99.5"
 rand = { version = "0.8", optional = true }
 serde = { version = "1" }
 serde_json = { version = "1" }
-time = "0.3"
 tracing = { version = "0.1.30", default-features = false, features = ["log"] }
 
 # redis-actor-session
