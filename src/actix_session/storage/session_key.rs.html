@@ -4,7 +4,7 @@
     <nav class="sidebar"><a class="sidebar-logo" href="../../../actix_session/index.html"><div class="logo-container">
                     <img src="https://actix.rs/img/logo.png" alt="logo"></div>
         </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../actix_session/index.html">
-                        <img src="https://actix.rs/img/logo.png" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><div id="settings-menu" tabindex="-1">
+                        <img src="https://actix.rs/img/logo.png" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
                                 <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
                         </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
@@ -64,21 +64,19 @@
 <span id="56">56</span>
 <span id="57">57</span>
 <span id="58">58</span>
-<span id="59">59</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
 
 <span class="kw">use</span> <span class="ident">derive_more</span>::{<span class="ident">Display</span>, <span class="ident">From</span>};
 
-<span class="doccomment">/// A session key, the string stored in a client-side cookie to associate a user</span>
-<span class="doccomment">/// with its session state on the backend.</span>
+<span class="doccomment">/// A session key, the string stored in a client-side cookie to associate a user with its session</span>
+<span class="doccomment">/// state on the backend.</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// ## Validation</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Session keys are stored as cookies, therefore they cannot be arbitrary long.</span>
-<span class="doccomment">/// We require session keys to be smaller than 4064 bytes.</span>
+<span class="doccomment">/// # Validation</span>
+<span class="doccomment">/// Session keys are stored as cookies, therefore they cannot be arbitrary long. Session keys are</span>
+<span class="doccomment">/// required to be smaller than 4064 bytes.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// ```rust</span>
-<span class="doccomment">/// use std::convert::TryInto;</span>
+<span class="doccomment">/// # use std::convert::TryInto;</span>
 <span class="doccomment">/// use actix_session::storage::SessionKey;</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// let key: String = std::iter::repeat(&#39;a&#39;).take(4065).collect();</span>
@@ -91,15 +89,15 @@
 <span class="kw">impl</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">SessionKey</span> {
     <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">InvalidSessionKeyError</span>;
 
-    <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">v</span>: <span class="ident">String</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="ident">v</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="number">4064</span> {
+    <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">val</span>: <span class="ident">String</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
+        <span class="kw">if</span> <span class="ident">val</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="number">4064</span> {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="macro">anyhow::anyhow!</span>(
                 <span class="string">&quot;The session key is bigger than 4064 bytes, the upper limit on cookie content.&quot;</span>
             )
             .<span class="ident">into</span>());
         }
 
-        <span class="prelude-val">Ok</span>(<span class="ident">SessionKey</span>(<span class="ident">v</span>))
+        <span class="prelude-val">Ok</span>(<span class="ident">SessionKey</span>(<span class="ident">val</span>))
     }
 }
 
@@ -110,8 +108,8 @@
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">SessionKey</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">String</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">k</span>: <span class="ident">SessionKey</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident">k</span>.<span class="number">0</span>
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">key</span>: <span class="ident">SessionKey</span>) -&gt; <span class="self">Self</span> {
+        <span class="ident">key</span>.<span class="number">0</span>
     }
 }
 
@@ -125,5 +123,5 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="actix_session" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0-nightly (fdca237d5 2022-06-24)" ></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="actix_session" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (f2d93935f 2022-07-02)" ></div>
 </body></html>

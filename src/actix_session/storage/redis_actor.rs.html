@@ -4,7 +4,7 @@
     <nav class="sidebar"><a class="sidebar-logo" href="../../../actix_session/index.html"><div class="logo-container">
                     <img src="https://actix.rs/img/logo.png" alt="logo"></div>
         </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../actix_session/index.html">
-                        <img src="https://actix.rs/img/logo.png" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><div id="settings-menu" tabindex="-1">
+                        <img src="https://actix.rs/img/logo.png" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
                                 <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
                         </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
@@ -300,9 +300,31 @@
 <span id="292">292</span>
 <span id="293">293</span>
 <span id="294">294</span>
+<span id="295">295</span>
+<span id="296">296</span>
+<span id="297">297</span>
+<span id="298">298</span>
+<span id="299">299</span>
+<span id="300">300</span>
+<span id="301">301</span>
+<span id="302">302</span>
+<span id="303">303</span>
+<span id="304">304</span>
+<span id="305">305</span>
+<span id="306">306</span>
+<span id="307">307</span>
+<span id="308">308</span>
+<span id="309">309</span>
+<span id="310">310</span>
+<span id="311">311</span>
+<span id="312">312</span>
+<span id="313">313</span>
+<span id="314">314</span>
+<span id="315">315</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">actix::Addr</span>;
 <span class="kw">use</span> <span class="ident">actix_redis</span>::{<span class="ident">resp_array</span>, <span class="ident">Command</span>, <span class="ident">RedisActor</span>, <span class="ident">RespValue</span>};
-<span class="kw">use</span> <span class="ident">time</span>::{<span class="self">self</span>, <span class="ident">Duration</span>};
+<span class="kw">use</span> <span class="ident">actix_web::cookie::time::Duration</span>;
+<span class="kw">use</span> <span class="ident">anyhow::Error</span>;
 
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::SessionKey</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::storage</span>::{
@@ -540,6 +562,24 @@
         }
     }
 
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">update_ttl</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">session_key</span>: <span class="kw-2">&amp;</span><span class="ident">SessionKey</span>, <span class="ident">ttl</span>: <span class="kw-2">&amp;</span><span class="ident">Duration</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">cache_key</span> <span class="op">=</span> (<span class="self">self</span>.<span class="ident">configuration</span>.<span class="ident">cache_keygen</span>)(<span class="ident">session_key</span>.<span class="ident">as_ref</span>());
+
+        <span class="kw">let</span> <span class="ident">cmd</span> <span class="op">=</span> <span class="ident">Command</span>(<span class="macro">resp_array!</span>[
+            <span class="string">&quot;EXPIRE&quot;</span>,
+            <span class="ident">cache_key</span>,
+            <span class="ident">ttl</span>.<span class="ident">whole_seconds</span>().<span class="ident">to_string</span>()
+        ]);
+
+        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">addr</span>.<span class="ident">send</span>(<span class="ident">cmd</span>).<span class="kw">await</span><span class="question-mark">?</span> {
+            <span class="prelude-val">Ok</span>(<span class="ident">RespValue::Integer</span>(<span class="kw">_</span>)) =&gt; <span class="prelude-val">Ok</span>(()),
+            <span class="ident">val</span> =&gt; <span class="prelude-val">Err</span>(<span class="macro">anyhow::anyhow!</span>(
+                <span class="string">&quot;Failed to update the session state TTL: {:?}&quot;</span>,
+                <span class="ident">val</span>
+            )),
+        }
+    }
+
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">delete</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">session_key</span>: <span class="kw-2">&amp;</span><span class="ident">SessionKey</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">anyhow::Error</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">cache_key</span> <span class="op">=</span> (<span class="self">self</span>.<span class="ident">configuration</span>.<span class="ident">cache_keygen</span>)(<span class="ident">session_key</span>.<span class="ident">as_ref</span>());
 
@@ -560,8 +600,10 @@
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">test</span> {
+<span class="kw">mod</span> <span class="ident">tests</span> {
     <span class="kw">use</span> <span class="ident">std::collections::HashMap</span>;
+
+    <span class="kw">use</span> <span class="ident">actix_web::cookie::time::Duration</span>;
 
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
     <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::test_helpers::acceptance_test_suite</span>;
@@ -588,12 +630,12 @@
         <span class="kw">let</span> <span class="ident">session_key</span> <span class="op">=</span> <span class="ident">generate_session_key</span>();
         <span class="kw">let</span> <span class="ident">initial_session_key</span> <span class="op">=</span> <span class="ident">session_key</span>.<span class="ident">as_ref</span>().<span class="ident">to_owned</span>();
         <span class="kw">let</span> <span class="ident">updated_session_key</span> <span class="op">=</span> <span class="ident">store</span>
-            .<span class="ident">update</span>(<span class="ident">session_key</span>, <span class="ident">HashMap::new</span>(), <span class="kw-2">&amp;</span><span class="ident">time::Duration::seconds</span>(<span class="number">1</span>))
+            .<span class="ident">update</span>(<span class="ident">session_key</span>, <span class="ident">HashMap::new</span>(), <span class="kw-2">&amp;</span><span class="ident">Duration::seconds</span>(<span class="number">1</span>))
             .<span class="kw">await</span>
             .<span class="ident">unwrap</span>();
         <span class="macro">assert_ne!</span>(<span class="ident">initial_session_key</span>, <span class="ident">updated_session_key</span>.<span class="ident">as_ref</span>());
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="actix_session" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0-nightly (fdca237d5 2022-06-24)" ></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="actix_session" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (f2d93935f 2022-07-02)" ></div>
 </body></html>

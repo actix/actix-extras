@@ -4,7 +4,7 @@
     <nav class="sidebar"><a class="sidebar-logo" href="../../../actix_session/index.html"><div class="logo-container">
                     <img src="https://actix.rs/img/logo.png" alt="logo"></div>
         </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../actix_session/index.html">
-                        <img src="https://actix.rs/img/logo.png" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><div id="settings-menu" tabindex="-1">
+                        <img src="https://actix.rs/img/logo.png" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
                                 <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
                         </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
@@ -114,10 +114,17 @@
 <span id="106">106</span>
 <span id="107">107</span>
 <span id="108">108</span>
+<span id="109">109</span>
+<span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::collections::HashMap</span>;
 
+<span class="kw">use</span> <span class="ident">actix_web::cookie::time::Duration</span>;
 <span class="kw">use</span> <span class="ident">derive_more::Display</span>;
-<span class="kw">use</span> <span class="ident">time::Duration</span>;
 
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::SessionKey</span>;
 
@@ -151,6 +158,13 @@
         <span class="ident">session_state</span>: <span class="ident">SessionState</span>,
         <span class="ident">ttl</span>: <span class="kw-2">&amp;</span><span class="ident">Duration</span>,
     ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">SessionKey</span>, <span class="ident">UpdateError</span><span class="op">&gt;</span>;
+
+    <span class="doccomment">/// Updates the TTL of the session state associated to a pre-existing session key.</span>
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">update_ttl</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">session_key</span>: <span class="kw-2">&amp;</span><span class="ident">SessionKey</span>,
+        <span class="ident">ttl</span>: <span class="kw-2">&amp;</span><span class="ident">Duration</span>,
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">anyhow::Error</span><span class="op">&gt;</span>;
 
     <span class="doccomment">/// Deletes a session from the store.</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">delete</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">session_key</span>: <span class="kw-2">&amp;</span><span class="ident">SessionKey</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">anyhow::Error</span><span class="op">&gt;</span>;
@@ -223,5 +237,5 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="actix_session" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0-nightly (fdca237d5 2022-06-24)" ></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="actix_session" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (f2d93935f 2022-07-02)" ></div>
 </body></html>

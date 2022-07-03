@@ -4,7 +4,7 @@
     <nav class="sidebar"><a class="sidebar-logo" href="../../actix_session/index.html"><div class="logo-container">
                     <img src="https://actix.rs/img/logo.png" alt="logo"></div>
         </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../actix_session/index.html">
-                        <img src="https://actix.rs/img/logo.png" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><div id="settings-menu" tabindex="-1">
+                        <img src="https://actix.rs/img/logo.png" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
                                 <a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div>
                         </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
@@ -469,217 +469,23 @@
 <span id="461">461</span>
 <span id="462">462</span>
 <span id="463">463</span>
-<span id="464">464</span>
-<span id="465">465</span>
-<span id="466">466</span>
-<span id="467">467</span>
-<span id="468">468</span>
-<span id="469">469</span>
-<span id="470">470</span>
-<span id="471">471</span>
-<span id="472">472</span>
-<span id="473">473</span>
-<span id="474">474</span>
-<span id="475">475</span>
-<span id="476">476</span>
-<span id="477">477</span>
-<span id="478">478</span>
-<span id="479">479</span>
-<span id="480">480</span>
-<span id="481">481</span>
-<span id="482">482</span>
-<span id="483">483</span>
-<span id="484">484</span>
-<span id="485">485</span>
-<span id="486">486</span>
-<span id="487">487</span>
-<span id="488">488</span>
-<span id="489">489</span>
-<span id="490">490</span>
-<span id="491">491</span>
-<span id="492">492</span>
-<span id="493">493</span>
-<span id="494">494</span>
-<span id="495">495</span>
-<span id="496">496</span>
-<span id="497">497</span>
-<span id="498">498</span>
-<span id="499">499</span>
-<span id="500">500</span>
-<span id="501">501</span>
-<span id="502">502</span>
-<span id="503">503</span>
-<span id="504">504</span>
-<span id="505">505</span>
-<span id="506">506</span>
-<span id="507">507</span>
-<span id="508">508</span>
-<span id="509">509</span>
-<span id="510">510</span>
-<span id="511">511</span>
-<span id="512">512</span>
-<span id="513">513</span>
-<span id="514">514</span>
-<span id="515">515</span>
-<span id="516">516</span>
-<span id="517">517</span>
-<span id="518">518</span>
-<span id="519">519</span>
-<span id="520">520</span>
-<span id="521">521</span>
-<span id="522">522</span>
-<span id="523">523</span>
-<span id="524">524</span>
-<span id="525">525</span>
-<span id="526">526</span>
-<span id="527">527</span>
-<span id="528">528</span>
-<span id="529">529</span>
-<span id="530">530</span>
-<span id="531">531</span>
-<span id="532">532</span>
-<span id="533">533</span>
-<span id="534">534</span>
-<span id="535">535</span>
-<span id="536">536</span>
-<span id="537">537</span>
-<span id="538">538</span>
-<span id="539">539</span>
-<span id="540">540</span>
-<span id="541">541</span>
-<span id="542">542</span>
-<span id="543">543</span>
-<span id="544">544</span>
-<span id="545">545</span>
-<span id="546">546</span>
-<span id="547">547</span>
-<span id="548">548</span>
-<span id="549">549</span>
-<span id="550">550</span>
-<span id="551">551</span>
-<span id="552">552</span>
-<span id="553">553</span>
-<span id="554">554</span>
-<span id="555">555</span>
-<span id="556">556</span>
-<span id="557">557</span>
-<span id="558">558</span>
-<span id="559">559</span>
-<span id="560">560</span>
-<span id="561">561</span>
-<span id="562">562</span>
-<span id="563">563</span>
-<span id="564">564</span>
-<span id="565">565</span>
-<span id="566">566</span>
-<span id="567">567</span>
-<span id="568">568</span>
-<span id="569">569</span>
-<span id="570">570</span>
-<span id="571">571</span>
-<span id="572">572</span>
-<span id="573">573</span>
-<span id="574">574</span>
-<span id="575">575</span>
-<span id="576">576</span>
-<span id="577">577</span>
-<span id="578">578</span>
-<span id="579">579</span>
-<span id="580">580</span>
-<span id="581">581</span>
-<span id="582">582</span>
-<span id="583">583</span>
-<span id="584">584</span>
-<span id="585">585</span>
-<span id="586">586</span>
-<span id="587">587</span>
-<span id="588">588</span>
-<span id="589">589</span>
-<span id="590">590</span>
-<span id="591">591</span>
-<span id="592">592</span>
-<span id="593">593</span>
-<span id="594">594</span>
-<span id="595">595</span>
-<span id="596">596</span>
-<span id="597">597</span>
-<span id="598">598</span>
-<span id="599">599</span>
-<span id="600">600</span>
-<span id="601">601</span>
-<span id="602">602</span>
-<span id="603">603</span>
-<span id="604">604</span>
-<span id="605">605</span>
-<span id="606">606</span>
-<span id="607">607</span>
-<span id="608">608</span>
-<span id="609">609</span>
-<span id="610">610</span>
-<span id="611">611</span>
-<span id="612">612</span>
-<span id="613">613</span>
-<span id="614">614</span>
-<span id="615">615</span>
-<span id="616">616</span>
-<span id="617">617</span>
-<span id="618">618</span>
-<span id="619">619</span>
-<span id="620">620</span>
-<span id="621">621</span>
-<span id="622">622</span>
-<span id="623">623</span>
-<span id="624">624</span>
-<span id="625">625</span>
-<span id="626">626</span>
-<span id="627">627</span>
-<span id="628">628</span>
-<span id="629">629</span>
-<span id="630">630</span>
-<span id="631">631</span>
-<span id="632">632</span>
-<span id="633">633</span>
-<span id="634">634</span>
-<span id="635">635</span>
-<span id="636">636</span>
-<span id="637">637</span>
-<span id="638">638</span>
-<span id="639">639</span>
-<span id="640">640</span>
-<span id="641">641</span>
-<span id="642">642</span>
-<span id="643">643</span>
-<span id="644">644</span>
-<span id="645">645</span>
-<span id="646">646</span>
-<span id="647">647</span>
-<span id="648">648</span>
-<span id="649">649</span>
-<span id="650">650</span>
-<span id="651">651</span>
-<span id="652">652</span>
-<span id="653">653</span>
-<span id="654">654</span>
-<span id="655">655</span>
-<span id="656">656</span>
-<span id="657">657</span>
-<span id="658">658</span>
-<span id="659">659</span>
-<span id="660">660</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections::HashMap</span>, <span class="ident">convert::TryInto</span>, <span class="ident">fmt</span>, <span class="ident">future::Future</span>, <span class="ident">pin::Pin</span>, <span class="ident">rc::Rc</span>};
 
 <span class="kw">use</span> <span class="ident">actix_utils::future</span>::{<span class="ident">ready</span>, <span class="ident">Ready</span>};
 <span class="kw">use</span> <span class="ident">actix_web</span>::{
     <span class="ident">body::MessageBody</span>,
-    <span class="ident">cookie</span>::{<span class="ident">Cookie</span>, <span class="ident">CookieJar</span>, <span class="ident">Key</span>, <span class="ident">SameSite</span>},
+    <span class="ident">cookie</span>::{<span class="ident">Cookie</span>, <span class="ident">CookieJar</span>, <span class="ident">Key</span>},
     <span class="ident">dev</span>::{<span class="ident">forward_ready</span>, <span class="ident">ResponseHead</span>, <span class="ident">Service</span>, <span class="ident">ServiceRequest</span>, <span class="ident">ServiceResponse</span>, <span class="ident">Transform</span>},
     <span class="ident">http::header</span>::{<span class="ident">HeaderValue</span>, <span class="ident">SET_COOKIE</span>},
     <span class="ident">HttpResponse</span>,
 };
 <span class="kw">use</span> <span class="ident">anyhow::Context</span>;
-<span class="kw">use</span> <span class="ident">time::Duration</span>;
 
 <span class="kw">use</span> <span class="kw">crate</span>::{
+    <span class="ident">config</span>::{
+        <span class="self">self</span>, <span class="ident">Configuration</span>, <span class="ident">CookieConfiguration</span>, <span class="ident">CookieContentSecurity</span>, <span class="ident">SessionMiddlewareBuilder</span>,
+        <span class="ident">TtlExtensionPolicy</span>,
+    },
     <span class="ident">storage</span>::{<span class="ident">LoadError</span>, <span class="ident">SessionKey</span>, <span class="ident">SessionStore</span>},
     <span class="ident">Session</span>, <span class="ident">SessionStatus</span>,
 };
@@ -734,8 +540,9 @@
 <span class="doccomment">/// If you want to customise use [`builder`](Self::builder) instead of [`new`](Self::new):</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// ```no_run</span>
-<span class="doccomment">/// use actix_web::{cookie::Key, web, App, HttpServer, HttpResponse, Error};</span>
-<span class="doccomment">/// use actix_session::{Session, SessionMiddleware, storage::RedisActorSessionStore, SessionLength};</span>
+<span class="doccomment">/// use actix_web::{App, cookie::{Key, time}, Error, HttpResponse, HttpServer, web};</span>
+<span class="doccomment">/// use actix_session::{Session, SessionMiddleware, storage::RedisActorSessionStore};</span>
+<span class="doccomment">/// use actix_session::config::PersistentSession;</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// // The secret key would usually be read from a configuration file/environment variables.</span>
 <span class="doccomment">/// fn get_secret_key() -&gt; Key {</span>
@@ -755,9 +562,10 @@
 <span class="doccomment">///                     RedisActorSessionStore::new(redis_connection_string),</span>
 <span class="doccomment">///                     secret_key.clone()</span>
 <span class="doccomment">///                 )</span>
-<span class="doccomment">///                 .session_length(SessionLength::Predetermined {</span>
-<span class="doccomment">///                     max_session_length: Some(time::Duration::days(5)),</span>
-<span class="doccomment">///                 })</span>
+<span class="doccomment">///                 .session_lifecycle(</span>
+<span class="doccomment">///                     PersistentSession::default()</span>
+<span class="doccomment">///                         .session_ttl(time::Duration::days(5))</span>
+<span class="doccomment">///                 )</span>
 <span class="doccomment">///                 .build(),</span>
 <span class="doccomment">///             )</span>
 <span class="doccomment">///             .default_service(web::to(|| HttpResponse::Ok())))</span>
@@ -782,117 +590,6 @@
     <span class="ident">configuration</span>: <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Configuration</span><span class="op">&gt;</span>,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
-<span class="kw">struct</span> <span class="ident">Configuration</span> {
-    <span class="ident">cookie</span>: <span class="ident">CookieConfiguration</span>,
-    <span class="ident">session</span>: <span class="ident">SessionConfiguration</span>,
-}
-
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
-<span class="kw">struct</span> <span class="ident">SessionConfiguration</span> {
-    <span class="ident">state_ttl</span>: <span class="ident">Duration</span>,
-}
-
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
-<span class="kw">struct</span> <span class="ident">CookieConfiguration</span> {
-    <span class="ident">secure</span>: <span class="ident">bool</span>,
-    <span class="ident">http_only</span>: <span class="ident">bool</span>,
-    <span class="ident">name</span>: <span class="ident">String</span>,
-    <span class="ident">same_site</span>: <span class="ident">SameSite</span>,
-    <span class="ident">path</span>: <span class="ident">String</span>,
-    <span class="ident">domain</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-    <span class="ident">max_age</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Duration</span><span class="op">&gt;</span>,
-    <span class="ident">content_security</span>: <span class="ident">CookieContentSecurity</span>,
-    <span class="ident">key</span>: <span class="ident">Key</span>,
-}
-
-<span class="doccomment">/// Describes how long a session should last.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Used by [`SessionMiddlewareBuilder::session_length`].</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">SessionLength</span> {
-    <span class="doccomment">/// The session cookie will expire when the current browser session ends.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// When does a browser session end? It depends on the browser! Chrome, for example, will often</span>
-    <span class="doccomment">/// continue running in the background when the browser is closed—session cookies are not</span>
-    <span class="doccomment">/// deleted and they will still be available when the browser is opened again. Check the</span>
-    <span class="doccomment">/// documentation of the browsers you are targeting for up-to-date information.</span>
-    <span class="ident">BrowserSession</span> {
-        <span class="doccomment">/// We must provide a time-to-live (TTL) when storing the session state in the storage</span>
-        <span class="doccomment">/// backend—we do not want to store session states indefinitely, otherwise we will</span>
-        <span class="doccomment">/// inevitably run out of storage by holding on to the state of countless abandoned or</span>
-        <span class="doccomment">/// expired sessions!</span>
-        <span class="doccomment">///</span>
-        <span class="doccomment">/// We are dealing with the lifecycle of two uncorrelated object here: the session cookie</span>
-        <span class="doccomment">/// and the session state. It is not a big issue if the session state outlives the cookie—</span>
-        <span class="doccomment">/// we are wasting some space in the backend storage, but it will be cleaned up eventually.</span>
-        <span class="doccomment">/// What happens, instead, if the cookie outlives the session state? A new session starts—</span>
-        <span class="doccomment">/// e.g. if sessions are being used for authentication, the user is de-facto logged out.</span>
-        <span class="doccomment">///</span>
-        <span class="doccomment">/// It is not possible to predict with certainty how long a browser session is going to</span>
-        <span class="doccomment">/// last—you need to provide a reasonable upper bound. You do so via `state_ttl`—it dictates</span>
-        <span class="doccomment">/// what TTL should be used for session state when the lifecycle of the session cookie is</span>
-        <span class="doccomment">/// tied to the browser session length. [`SessionMiddleware`] will default to 1 day if</span>
-        <span class="doccomment">/// `state_ttl` is left unspecified.</span>
-        <span class="ident">state_ttl</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Duration</span><span class="op">&gt;</span>,
-    },
-
-    <span class="doccomment">/// The session cookie will be a [persistent cookie].</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Persistent cookies have a pre-determined lifetime, specified via the `Max-Age` or `Expires`</span>
-    <span class="doccomment">/// attribute. They do not disappear when the current browser session ends.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [persistent cookie]: https://www.whitehatsec.com/glossary/content/persistent-session-cookie</span>
-    <span class="ident">Predetermined</span> {
-        <span class="doccomment">/// Set `max_session_length` to specify how long the session cookie should live.</span>
-        <span class="doccomment">/// [`SessionMiddleware`] will default to 1 day if `max_session_length` is set to `None`.</span>
-        <span class="doccomment">///</span>
-        <span class="doccomment">/// `max_session_length` is also used as the TTL for the session state in the</span>
-        <span class="doccomment">/// storage backend.</span>
-        <span class="ident">max_session_length</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Duration</span><span class="op">&gt;</span>,
-    },
-}
-
-<span class="doccomment">/// Used by [`SessionMiddlewareBuilder::cookie_content_security`] to determine how to secure</span>
-<span class="doccomment">/// the content of the session cookie.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">CookieContentSecurity</span> {
-    <span class="doccomment">/// The cookie content is encrypted when using `CookieContentSecurity::Private`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Encryption guarantees confidentiality and integrity: the client cannot tamper with the</span>
-    <span class="doccomment">/// cookie content nor decode it, as long as the encryption key remains confidential.</span>
-    <span class="ident">Private</span>,
-
-    <span class="doccomment">/// The cookie content is signed when using `CookieContentSecurity::Signed`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Signing guarantees integrity, but it doesn&#39;t ensure confidentiality: the client cannot</span>
-    <span class="doccomment">/// tamper with the cookie content, but they can read it.</span>
-    <span class="ident">Signed</span>,
-}
-
-<span class="kw">fn</span> <span class="ident">default_configuration</span>(<span class="ident">key</span>: <span class="ident">Key</span>) -&gt; <span class="ident">Configuration</span> {
-    <span class="ident">Configuration</span> {
-        <span class="ident">cookie</span>: <span class="ident">CookieConfiguration</span> {
-            <span class="ident">secure</span>: <span class="bool-val">true</span>,
-            <span class="ident">http_only</span>: <span class="bool-val">true</span>,
-            <span class="ident">name</span>: <span class="string">&quot;id&quot;</span>.<span class="ident">into</span>(),
-            <span class="ident">same_site</span>: <span class="ident">SameSite::Lax</span>,
-            <span class="ident">path</span>: <span class="string">&quot;/&quot;</span>.<span class="ident">into</span>(),
-            <span class="ident">domain</span>: <span class="prelude-val">None</span>,
-            <span class="ident">max_age</span>: <span class="prelude-val">None</span>,
-            <span class="ident">content_security</span>: <span class="ident">CookieContentSecurity::Private</span>,
-            <span class="ident">key</span>,
-        },
-        <span class="ident">session</span>: <span class="ident">SessionConfiguration</span> {
-            <span class="ident">state_ttl</span>: <span class="ident">default_ttl</span>(),
-        },
-    }
-}
-
-<span class="kw">fn</span> <span class="ident">default_ttl</span>() -&gt; <span class="ident">Duration</span> {
-    <span class="ident">Duration::days</span>(<span class="number">1</span>)
-}
-
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Store</span>: <span class="ident">SessionStore</span><span class="op">&gt;</span> <span class="ident">SessionMiddleware</span><span class="op">&lt;</span><span class="ident">Store</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Use [`SessionMiddleware::new`] to initialize the session framework using the default</span>
     <span class="doccomment">/// parameters.</span>
@@ -902,10 +599,7 @@
     <span class="doccomment">///   [`SessionStore]);</span>
     <span class="doccomment">/// - a secret key, to sign or encrypt the content of client-side session cookie.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">store</span>: <span class="ident">Store</span>, <span class="ident">key</span>: <span class="ident">Key</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">storage_backend</span>: <span class="ident">Rc::new</span>(<span class="ident">store</span>),
-            <span class="ident">configuration</span>: <span class="ident">Rc::new</span>(<span class="ident">default_configuration</span>(<span class="ident">key</span>)),
-        }
+        <span class="ident"><span class="self">Self</span>::builder</span>(<span class="ident">store</span>, <span class="ident">key</span>).<span class="ident">build</span>()
     }
 
     <span class="doccomment">/// A fluent API to configure [`SessionMiddleware`].</span>
@@ -915,124 +609,13 @@
     <span class="doccomment">///   [`SessionStore]);</span>
     <span class="doccomment">/// - a secret key, to sign or encrypt the content of client-side session cookie.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">builder</span>(<span class="ident">store</span>: <span class="ident">Store</span>, <span class="ident">key</span>: <span class="ident">Key</span>) -&gt; <span class="ident">SessionMiddlewareBuilder</span><span class="op">&lt;</span><span class="ident">Store</span><span class="op">&gt;</span> {
-        <span class="ident">SessionMiddlewareBuilder</span> {
+        <span class="ident">SessionMiddlewareBuilder::new</span>(<span class="ident">store</span>, <span class="ident">config::default_configuration</span>(<span class="ident">key</span>))
+    }
+
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">from_parts</span>(<span class="ident">store</span>: <span class="ident">Store</span>, <span class="ident">configuration</span>: <span class="ident">Configuration</span>) -&gt; <span class="self">Self</span> {
+        <span class="self">Self</span> {
             <span class="ident">storage_backend</span>: <span class="ident">Rc::new</span>(<span class="ident">store</span>),
-            <span class="ident">configuration</span>: <span class="ident">default_configuration</span>(<span class="ident">key</span>),
-        }
-    }
-}
-
-<span class="doccomment">/// A fluent builder to construct a [`SessionMiddleware`] instance with custom configuration</span>
-<span class="doccomment">/// parameters.</span>
-<span class="attribute">#[<span class="ident">must_use</span>]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SessionMiddlewareBuilder</span><span class="op">&lt;</span><span class="ident">Store</span>: <span class="ident">SessionStore</span><span class="op">&gt;</span> {
-    <span class="ident">storage_backend</span>: <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Store</span><span class="op">&gt;</span>,
-    <span class="ident">configuration</span>: <span class="ident">Configuration</span>,
-}
-
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Store</span>: <span class="ident">SessionStore</span><span class="op">&gt;</span> <span class="ident">SessionMiddlewareBuilder</span><span class="op">&lt;</span><span class="ident">Store</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Set the name of the cookie used to store the session ID.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Defaults to `id`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cookie_name</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">name</span>: <span class="ident">String</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">configuration</span>.<span class="ident">cookie</span>.<span class="ident">name</span> <span class="op">=</span> <span class="ident">name</span>;
-        <span class="self">self</span>
-    }
-
-    <span class="doccomment">/// Set the `Secure` attribute for the cookie used to store the session ID.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// If the cookie is set as secure, it will only be transmitted when the connection is secure</span>
-    <span class="doccomment">/// (using `https`).</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Default is `true`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cookie_secure</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">secure</span>: <span class="ident">bool</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">configuration</span>.<span class="ident">cookie</span>.<span class="ident">secure</span> <span class="op">=</span> <span class="ident">secure</span>;
-        <span class="self">self</span>
-    }
-
-    <span class="doccomment">/// Determine how long a session should last - check out [`SessionLength`]&#39;s documentation for</span>
-    <span class="doccomment">/// more details on the available options.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Default is [`SessionLength::BrowserSession`].</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">session_length</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">session_length</span>: <span class="ident">SessionLength</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">match</span> <span class="ident">session_length</span> {
-            <span class="ident">SessionLength::BrowserSession</span> { <span class="ident">state_ttl</span> } =&gt; {
-                <span class="self">self</span>.<span class="ident">configuration</span>.<span class="ident">cookie</span>.<span class="ident">max_age</span> <span class="op">=</span> <span class="prelude-val">None</span>;
-                <span class="self">self</span>.<span class="ident">configuration</span>.<span class="ident">session</span>.<span class="ident">state_ttl</span> <span class="op">=</span> <span class="ident">state_ttl</span>.<span class="ident">unwrap_or_else</span>(<span class="ident">default_ttl</span>);
-            }
-            <span class="ident">SessionLength::Predetermined</span> { <span class="ident">max_session_length</span> } =&gt; {
-                <span class="kw">let</span> <span class="ident">ttl</span> <span class="op">=</span> <span class="ident">max_session_length</span>.<span class="ident">unwrap_or_else</span>(<span class="ident">default_ttl</span>);
-                <span class="self">self</span>.<span class="ident">configuration</span>.<span class="ident">cookie</span>.<span class="ident">max_age</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">ttl</span>);
-                <span class="self">self</span>.<span class="ident">configuration</span>.<span class="ident">session</span>.<span class="ident">state_ttl</span> <span class="op">=</span> <span class="ident">ttl</span>;
-            }
-        }
-
-        <span class="self">self</span>
-    }
-
-    <span class="doccomment">/// Set the `SameSite` attribute for the cookie used to store the session ID.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// By default, the attribute is set to `Lax`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cookie_same_site</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">same_site</span>: <span class="ident">SameSite</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">configuration</span>.<span class="ident">cookie</span>.<span class="ident">same_site</span> <span class="op">=</span> <span class="ident">same_site</span>;
-        <span class="self">self</span>
-    }
-
-    <span class="doccomment">/// Set the `Path` attribute for the cookie used to store the session ID.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// By default, the attribute is set to `/`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cookie_path</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">path</span>: <span class="ident">String</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">configuration</span>.<span class="ident">cookie</span>.<span class="ident">path</span> <span class="op">=</span> <span class="ident">path</span>;
-        <span class="self">self</span>
-    }
-
-    <span class="doccomment">/// Set the `Domain` attribute for the cookie used to store the session ID.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Use `None` to leave the attribute unspecified. If unspecified, the attribute defaults</span>
-    <span class="doccomment">/// to the same host that set the cookie, excluding subdomains.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// By default, the attribute is left unspecified.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cookie_domain</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">domain</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">configuration</span>.<span class="ident">cookie</span>.<span class="ident">domain</span> <span class="op">=</span> <span class="ident">domain</span>;
-        <span class="self">self</span>
-    }
-
-    <span class="doccomment">/// Choose how the session cookie content should be secured.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// - [`CookieContentSecurity::Private`] selects encrypted cookie content.</span>
-    <span class="doccomment">/// - [`CookieContentSecurity::Signed`] selects signed cookie content.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Default</span>
-    <span class="doccomment">/// By default, the cookie content is encrypted. Encrypted was chosen instead of signed as</span>
-    <span class="doccomment">/// default because it reduces the chances of sensitive information being exposed in the session</span>
-    <span class="doccomment">/// key by accident, regardless of [`SessionStore`] implementation you chose to use.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// For example, if you are using cookie-based storage, you definitely want the cookie content</span>
-    <span class="doccomment">/// to be encrypted—the whole session state is embedded in the cookie! If you are using</span>
-    <span class="doccomment">/// Redis-based storage, signed is more than enough - the cookie content is just a unique</span>
-    <span class="doccomment">/// tamper-proof session key.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cookie_content_security</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">content_security</span>: <span class="ident">CookieContentSecurity</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">configuration</span>.<span class="ident">cookie</span>.<span class="ident">content_security</span> <span class="op">=</span> <span class="ident">content_security</span>;
-        <span class="self">self</span>
-    }
-
-    <span class="doccomment">/// Set the `HttpOnly` attribute for the cookie used to store the session ID.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// If the cookie is set as `HttpOnly`, it will not be visible to any JavaScript snippets</span>
-    <span class="doccomment">/// running in the browser.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Default is `true`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cookie_http_only</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">http_only</span>: <span class="ident">bool</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">configuration</span>.<span class="ident">cookie</span>.<span class="ident">http_only</span> <span class="op">=</span> <span class="ident">http_only</span>;
-        <span class="self">self</span>
-    }
-
-    <span class="doccomment">/// Finalise the builder and return a [`SessionMiddleware`] instance.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">build</span>(<span class="self">self</span>) -&gt; <span class="ident">SessionMiddleware</span><span class="op">&lt;</span><span class="ident">Store</span><span class="op">&gt;</span> {
-        <span class="ident">SessionMiddleware</span> {
-            <span class="ident">storage_backend</span>: <span class="self">self</span>.<span class="ident">storage_backend</span>,
-            <span class="ident">configuration</span>: <span class="ident">Rc::new</span>(<span class="self">self</span>.<span class="ident">configuration</span>),
+            <span class="ident">configuration</span>: <span class="ident">Rc::new</span>(<span class="ident">configuration</span>),
         }
     }
 }
@@ -1177,16 +760,39 @@
                         }
 
                         <span class="ident">SessionStatus::Unchanged</span> =&gt; {
-                            <span class="comment">// Nothing to do; we avoid the unnecessary call to the storage.</span>
+                            <span class="kw">if</span> <span class="macro">matches!</span>(
+                                <span class="ident">configuration</span>.<span class="ident">ttl_extension_policy</span>,
+                                <span class="ident">TtlExtensionPolicy::OnEveryRequest</span>
+                            ) {
+                                <span class="ident">storage_backend</span>
+                                    .<span class="ident">update_ttl</span>(<span class="kw-2">&amp;</span><span class="ident">session_key</span>, <span class="kw-2">&amp;</span><span class="ident">configuration</span>.<span class="ident">session</span>.<span class="ident">state_ttl</span>)
+                                    .<span class="kw">await</span>
+                                    .<span class="ident">map_err</span>(<span class="ident">e500</span>)<span class="question-mark">?</span>;
+
+                                <span class="kw">if</span> <span class="ident">configuration</span>.<span class="ident">cookie</span>.<span class="ident">max_age</span>.<span class="ident">is_some</span>() {
+                                    <span class="ident">set_session_cookie</span>(
+                                        <span class="ident">res</span>.<span class="ident">response_mut</span>().<span class="ident">head_mut</span>(),
+                                        <span class="ident">session_key</span>,
+                                        <span class="kw-2">&amp;</span><span class="ident">configuration</span>.<span class="ident">cookie</span>,
+                                    )
+                                    .<span class="ident">map_err</span>(<span class="ident">e500</span>)<span class="question-mark">?</span>;
+                                }
+                            }
                         }
-                    }
+                    };
                 }
-            };
+            }
+
             <span class="prelude-val">Ok</span>(<span class="ident">res</span>)
         })
     }
 }
 
+<span class="doccomment">/// Examines the session cookie attached to the incoming request, if there is one, and tries</span>
+<span class="doccomment">/// to extract the session key.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// It returns `None` if there is no session cookie or if the session cookie is considered invalid</span>
+<span class="doccomment">/// (e.g., when failing a signature check).</span>
 <span class="kw">fn</span> <span class="ident">extract_session_key</span>(<span class="ident">req</span>: <span class="kw-2">&amp;</span><span class="ident">ServiceRequest</span>, <span class="ident">config</span>: <span class="kw-2">&amp;</span><span class="ident">CookieConfiguration</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">SessionKey</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">cookies</span> <span class="op">=</span> <span class="ident">req</span>.<span class="ident">cookies</span>().<span class="ident">ok</span>()<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">session_cookie</span> <span class="op">=</span> <span class="ident">cookies</span>
@@ -1327,5 +933,5 @@
     <span class="prelude-val">Ok</span>(())
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_session" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0-nightly (fdca237d5 2022-06-24)" ></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_session" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (f2d93935f 2022-07-02)" ></div>
 </body></html>
