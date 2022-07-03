@@ -245,13 +245,13 @@ impl SessionStore for RedisActorSessionStore {
         let cmd = Command(resp_array![
             "EXPIRE",
             cache_key,
-            format!("{}", ttl.whole_seconds())
+            ttl.whole_seconds().to_string()
         ]);
 
         match self.addr.send(cmd).await? {
             Ok(RespValue::Integer(_)) => Ok(()),
             val => Err(anyhow::anyhow!(
-                "Failed to update the session state TTL. {:?}",
+                "Failed to update the session state TTL: {:?}",
                 val
             )),
         }

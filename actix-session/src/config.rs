@@ -7,7 +7,7 @@ use crate::{storage::SessionStore, SessionMiddleware};
 /// Determines what type of session cookie should be used and how its lifecycle should be managed.
 ///
 /// Used by [`SessionMiddlewareBuilder::session_lifecycle`].
-#[derive(Clone, Debug)]
+#[derive(Debug, Clone)]
 pub enum SessionLifecycle {
     /// The session cookie will expire when the current browser session ends.
     ///
@@ -27,36 +27,35 @@ pub enum SessionLifecycle {
 }
 
 impl From<BrowserSession> for SessionLifecycle {
-    fn from(b: BrowserSession) -> Self {
-        Self::BrowserSession(b)
+    fn from(session: BrowserSession) -> Self {
+        Self::BrowserSession(session)
     }
 }
 
 impl From<PersistentSession> for SessionLifecycle {
-    fn from(p: PersistentSession) -> Self {
-        Self::PersistentSession(p)
+    fn from(session: PersistentSession) -> Self {
+        Self::PersistentSession(session)
     }
 }
 
-/// One of the available options for [`SessionLifecycle`].
+/// A [session lifecycle](SessionLifecycle) strategy where the session cookie expires when the
+/// browser's current session ends.
 ///
-/// The session cookie will expire when the current browser session ends.
-///
-/// When does a browser session end? It depends on the browser! Chrome, for example, will often
-/// continue running in the background when the browser is closed—session cookies are not
-/// deleted and they will still be available when the browser is opened again.
-/// Check the documentation of the browsers you are targeting for up-to-date information.
-#[derive(Clone, Debug)]
+/// When does a browser session end? It depends on the browser. Chrome, for example, will often
+/// continue running in the background when the browser is closed—session cookies are not deleted
+/// and they will still be available when the browser is opened again. Check the documentation of
+/// the browsers you are targeting for up-to-date information.
+#[derive(Debug, Clone)]
 pub struct BrowserSession {
     state_ttl: Duration,
     state_ttl_extension_policy: TtlExtensionPolicy,
 }
 
 impl BrowserSession {
-    /// We set a time-to-live (TTL) when storing the session state in the storage
-    /// backend. We do not want to store session states indefinitely, otherwise we will
-    /// inevitably run out of storage by holding on to the state of countless abandoned or
-    /// expired sessions!
+    /// Sets a time-to-live (TTL) when storing the session state in the storage backend.
+    ///
+    /// We do not want to store session states indefinitely, otherwise we will inevitably run out of
+    /// storage by holding on to the state of countless abandoned or expired sessions!
     ///
     /// We are dealing with the lifecycle of two uncorrelated object here: the session cookie
     /// and the session state. It is not a big issue if the session state outlives the cookie—
@@ -98,15 +97,13 @@ impl Default for BrowserSession {
     }
 }
 
-/// One of the available options for [`SessionLifecycle`].
-///
-/// The session cookie will be a [persistent cookie].
+/// A [session lifecycle](SessionLifecycle) strategy where the session cookie will be [persistent].
 ///
 /// Persistent cookies have a pre-determined expiration, specified via the `Max-Age` or `Expires`
 /// attribute. They do not disappear when the current browser session ends.
 ///
-/// [persistent cookie]: https://www.whitehatsec.com/glossary/content/persistent-session-cookie
-#[derive(Clone, Debug)]
+/// [persistent]: https://www.whitehatsec.com/glossary/content/persistent-session-cookie
+#[derive(Debug, Clone)]
 pub struct PersistentSession {
     session_ttl: Duration,
     ttl_extension_policy: TtlExtensionPolicy,
@@ -148,8 +145,7 @@ impl Default for PersistentSession {
     }
 }
 
-/// `TtlExtensionPolicy` is used to configure what events should trigger an extension of the
-/// time-to-live for your session.
+/// Configuration for which events should trigger an extension of the time-to-live for your session.
 ///
 /// If you are using a [`BrowserSession`], `TtlExtensionPolicy` controls how often the TTL of
 /// the session state should be refreshed. The browser is in control of the lifecycle of the
@@ -163,19 +159,20 @@ pub enum TtlExtensionPolicy {
     /// The TTL is refreshed every time the server receives a request associated with a session.
     ///
     /// # Performance impact
-    ///
     /// Refreshing the TTL on every request is not free.
     /// It implies a refresh of the TTL on the session state. This translates into a request over
     /// the network if you are using a remote system as storage backend (e.g. Redis).
     /// This impacts both the total load on your storage backend (i.e. number of
     /// queries it has to handle) and the latency of the requests served by your server.
     OnEveryRequest,
+
     /// The TTL is refreshed every time the session state changes or the session key is renewed.
     OnStateChanges,
 }
 
-/// Used by [`SessionMiddlewareBuilder::cookie_content_security`] to determine how to secure
-/// the content of the session cookie.
+/// Determines how to secure the content of the session cookie.
+///
+/// Used by [`SessionMiddlewareBuilder::cookie_content_security`].
 #[derive(Debug, Clone, Copy)]
 pub enum CookieContentSecurity {
     /// The cookie content is encrypted when using `CookieContentSecurity::Private`.
@@ -191,11 +188,11 @@ pub enum CookieContentSecurity {
     Signed,
 }
 
-pub(crate) fn default_ttl() -> Duration {
+pub(crate) const fn default_ttl() -> Duration {
     Duration::days(1)
 }
 
-pub(crate) fn default_ttl_extension_policy() -> TtlExtensionPolicy {
+pub(crate) const fn default_ttl_extension_policy() -> TtlExtensionPolicy {
     TtlExtensionPolicy::OnStateChanges
 }
 

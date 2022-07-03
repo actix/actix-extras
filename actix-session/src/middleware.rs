@@ -71,7 +71,7 @@ use crate::{
 /// ```no_run
 /// use actix_web::{App, cookie::{Key, time}, Error, HttpResponse, HttpServer, web};
 /// use actix_session::{Session, SessionMiddleware, storage::RedisActorSessionStore};
-/// use actix_session::configuration::PersistentSession;
+/// use actix_session::config::PersistentSession;
 ///
 /// // The secret key would usually be read from a configuration file/environment variables.
 /// fn get_secret_key() -> Key {
@@ -241,6 +241,7 @@ where
                         .map_err(e500)?;
                     }
                 }
+
                 Some(session_key) => {
                     match status {
                         SessionStatus::Changed => {
@@ -260,16 +261,20 @@ where
                             )
                             .map_err(e500)?;
                         }
+
                         SessionStatus::Purged => {
                             storage_backend.delete(&session_key).await.map_err(e500)?;
+
                             delete_session_cookie(
                                 res.response_mut().head_mut(),
                                 &configuration.cookie,
                             )
                             .map_err(e500)?;
                         }
+
                         SessionStatus::Renewed => {
                             storage_backend.delete(&session_key).await.map_err(e500)?;
+
                             let session_key = storage_backend
                                 .save(session_state, &configuration.session.state_ttl)
                                 .await
@@ -282,10 +287,12 @@ where
                             )
                             .map_err(e500)?;
                         }
+
                         SessionStatus::Unchanged => {
-                            if let TtlExtensionPolicy::OnEveryRequest =
-                                configuration.ttl_extension_policy
-                            {
+                            if matches!(
+                                configuration.ttl_extension_policy,
+                                TtlExtensionPolicy::OnEveryRequest
+                            ) {
                                 storage_backend
                                     .update_ttl(&session_key, &configuration.session.state_ttl)
                                     .await
@@ -304,16 +311,17 @@ where
                     };
                 }
             }
+
             Ok(res)
         })
     }
 }
 
-/// It examines the session cookie attached to the incoming request, if there is any, and tries
+/// Examines the session cookie attached to the incoming request, if there is one, and tries
 /// to extract the session key.
 ///
 /// It returns `None` if there is no session cookie or if the session cookie is considered invalid
-/// (e.g. it fails a signature check).
+/// (e.g., when failing a signature check).
 fn extract_session_key(req: &ServiceRequest, config: &CookieConfiguration) -> Option<SessionKey> {
     let cookies = req.cookies().ok()?;
     let session_cookie = cookies

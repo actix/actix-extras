@@ -35,9 +35,9 @@ use crate::storage::{
 /// ```
 ///
 /// # Limitations
-/// Cookies are subject to size limits - we require session keys to be shorter than 4096 bytes. This
-/// translates into a limit on the maximum size of the session state when using cookies as storage
-/// backend.
+/// Cookies are subject to size limits so we require session keys to be shorter than 4096 bytes.
+/// This translates into a limit on the maximum size of the session state when using cookies as
+/// storage backend.
 ///
 /// The session cookie can always be inspected by end users via the developer tools exposed by their
 /// browsers. We strongly recommend setting the policy to [`CookieContentSecurity::Private`] when
