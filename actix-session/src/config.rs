@@ -8,6 +8,7 @@ use crate::{storage::SessionStore, SessionMiddleware};
 ///
 /// Used by [`SessionMiddlewareBuilder::session_lifecycle`].
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub enum SessionLifecycle {
     /// The session cookie will expire when the current browser session ends.
     ///
