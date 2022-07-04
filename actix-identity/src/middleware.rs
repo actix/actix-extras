@@ -123,18 +123,23 @@ where
     }
 }
 
+// easier to scan with returns where they are
+// especially if the function body were to evolve in the future
+#[allow(clippy::needless_return)]
 fn enforce_policies(req: &ServiceRequest, configuration: &Configuration) {
     let must_extract_identity =
         configuration.login_deadline.is_some() || configuration.visit_deadline.is_some();
+
     if !must_extract_identity {
         return;
     }
+
     let identity = match Identity::extract(&req.extensions()) {
         Ok(identity) => identity,
-        Err(e) => {
+        Err(err) => {
             tracing::debug!(
-                error.display = %e,
-                error.debug = ?e,
+                error.display = %err,
+                error.debug = ?err,
                 "Failed to extract an `Identity` from the incoming request."
             );
             return;
@@ -151,9 +156,6 @@ fn enforce_policies(req: &ServiceRequest, configuration: &Configuration) {
     if let Some(visit_deadline) = configuration.visit_deadline {
         if let PolicyDecision::LogOut = enforce_visit_deadline(&identity, visit_deadline) {
             identity.logout();
-            // Easier to scan with a return here,
-            // especially if the function body were to evolve in the future.
-            #[allow(clippy::needless_return)]
             return;
         }
     }
@@ -165,14 +167,18 @@ fn enforce_login_deadline(
 ) -> PolicyDecision {
     match identity.logged_at() {
         Ok(None) => {
-            tracing::info!("Login deadline is enabled, but there is no login timestamp in the session state attached to the incoming request. Logging the user out.");
+            tracing::info!(
+                "Login deadline is enabled, but there is no login timestamp in the session \
+                state attached to the incoming request. Logging the user out."
+            );
             PolicyDecision::LogOut
         }
         Err(e) => {
             tracing::info!(
                 error.display = %e,
                 error.debug = ?e,
-                "Login deadline is enabled but we failed to extract the login timestamp from the session state attached to the incoming request. Logging the user out."
+                "Login deadline is enabled but we failed to extract the login timestamp from the \
+                session state attached to the incoming request. Logging the user out."
             );
             PolicyDecision::LogOut
         }
@@ -180,10 +186,11 @@ fn enforce_login_deadline(
             let elapsed = OffsetDateTime::now_utc() - logged_in_at;
             if elapsed > login_deadline {
                 tracing::info!(
-                    user.logged_in_at = %logged_in_at.format(&Rfc3339).unwrap_or_else(|_| "".into()),
+                    user.logged_in_at = %logged_in_at.format(&Rfc3339).unwrap_or_default(),
                     identity.login_deadline_seconds = login_deadline.as_secs(),
                     identity.elapsed_since_login_seconds = elapsed.whole_seconds(),
-                    "Login deadline is enabled and too much time has passed since the user logged in. Logging the user out."
+                    "Login deadline is enabled and too much time has passed since the user logged \
+                    in. Logging the user out."
                 );
                 PolicyDecision::LogOut
             } else {
@@ -199,14 +206,18 @@ fn enforce_visit_deadline(
 ) -> PolicyDecision {
     match identity.last_visited_at() {
         Ok(None) => {
-            tracing::info!("Last visit deadline is enabled, but there is no last visit timestamp in the session state attached to the incoming request. Logging the user out.");
+            tracing::info!(
+                "Last visit deadline is enabled, but there is no last visit timestamp in the \
+                session state attached to the incoming request. Logging the user out."
+            );
             PolicyDecision::LogOut
         }
         Err(e) => {
             tracing::info!(
                 error.display = %e,
                 error.debug = ?e,
-                "Last visit deadline is enabled but we failed to extract the last visit timestamp from the session state attached to the incoming request. Logging the user out."
+                "Last visit deadline is enabled but we failed to extract the last visit timestamp \
+                from the session state attached to the incoming request. Logging the user out."
             );
             PolicyDecision::LogOut
         }
@@ -214,10 +225,11 @@ fn enforce_visit_deadline(
             let elapsed = OffsetDateTime::now_utc() - last_visited_at;
             if elapsed > visit_deadline {
                 tracing::info!(
-                    user.last_visited_at = %last_visited_at.format(&Rfc3339).unwrap_or_else(|_| "".into()),
+                    user.last_visited_at = %last_visited_at.format(&Rfc3339).unwrap_or_default(),
                     identity.visit_deadline_seconds = visit_deadline.as_secs(),
                     identity.elapsed_since_last_visit_seconds = elapsed.whole_seconds(),
-                    "Last visit deadline is enabled and too much time has passed since the last time the user visited. Logging the user out."
+                    "Last visit deadline is enabled and too much time has passed since the last \
+                    time the user visited. Logging the user out."
                 );
                 PolicyDecision::LogOut
             } else {
