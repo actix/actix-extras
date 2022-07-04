@@ -1,7 +1,4 @@
-use actix_web::dev::ServiceRequest;
-use actix_web::guard::GuardContext;
-use actix_web::HttpMessage;
-use actix_web::HttpRequest;
+use actix_web::{dev::ServiceRequest, guard::GuardContext, HttpMessage, HttpRequest};
 
 use crate::Identity;
 

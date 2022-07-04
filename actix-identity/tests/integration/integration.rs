@@ -1,11 +1,9 @@
 use std::time::Duration;
 
-use actix_identity::config::LogoutBehaviour;
-use actix_identity::IdentityMiddleware;
+use actix_identity::{config::LogoutBehaviour, IdentityMiddleware};
 use actix_web::http::StatusCode;
 
-use crate::fixtures::user_id;
-use crate::test_app::TestApp;
+use crate::{fixtures::user_id, test_app::TestApp};
 
 #[actix_web::test]
 async fn opaque_401_is_returned_for_unauthenticated_users() {

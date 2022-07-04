@@ -1,6 +1,4 @@
-use std::future::Future;
-use std::pin::Pin;
-use std::rc::Rc;
+use std::{future::Future, pin::Pin, rc::Rc};
 
 use actix_session::SessionExt;
 use actix_utils::future::{ready, Ready};
@@ -12,14 +10,16 @@ use actix_web::{
 };
 use time::OffsetDateTime;
 
-use crate::config::{Configuration, IdentityMiddlewareBuilder};
-use crate::identity::IdentityInner;
-use crate::Identity;
+use crate::{
+    config::{Configuration, IdentityMiddlewareBuilder},
+    identity::IdentityInner,
+    Identity,
+};
 
 /// Identity management middleware.
 ///
 /// ```no_run
-/// use actix_web::{HttpServer, cookie::Key, App};
+/// use actix_web::{cookie::Key, App, HttpServer};
 /// use actix_session::storage::RedisSessionStore;
 /// use actix_identity::{Identity, IdentityMiddleware};
 /// use actix_session::{Session, SessionMiddleware};
@@ -28,9 +28,10 @@ use crate::Identity;
 /// async fn main() {
 ///     let secret_key = Key::generate();
 ///     let redis_store = RedisSessionStore::new("redis://127.0.0.1:6379").await.unwrap();
+///
 ///     HttpServer::new(move || {
 ///        App::new()
-///            // Install the identity framework.
+///            // Install the identity framework, first.
 ///            .wrap(IdentityMiddleware::default())
 ///            // The identity system is built on top of sessions.
 ///            // You must install the session middleware to leverage `actix-identity`.

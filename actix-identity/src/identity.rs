@@ -1,22 +1,22 @@
 use actix_session::Session;
 use actix_utils::future::{ready, Ready};
-use actix_web::cookie::time::OffsetDateTime;
-use actix_web::dev::Extensions;
-use actix_web::http::StatusCode;
-use actix_web::{dev::Payload, Error, FromRequest, HttpRequest};
-use actix_web::{HttpMessage, HttpResponse};
+use actix_web::{
+    cookie::time::OffsetDateTime,
+    dev::{Extensions, Payload},
+    http::StatusCode,
+    Error, FromRequest, HttpMessage, HttpRequest, HttpResponse,
+};
 use anyhow::{anyhow, Context};
 
 use crate::config::LogoutBehaviour;
 
 /// A verified user identity. It can be used as a request extractor.
 ///
-/// The lifecycle of a user identity is tied to the lifecycle of the underlying session.
-/// If the session is destroyed (e.g. the session expired), the user identity will be forgotten,
-/// de facto forcing a user log out.
+/// The lifecycle of a user identity is tied to the lifecycle of the underlying session. If the
+/// session is destroyed (e.g. the session expired), the user identity will be forgotten, de-facto
+/// forcing a user log out.
 ///
-/// # Example
-///
+/// # Examples
 /// ```
 /// use actix_web::{
 ///     get, post, Responder, HttpRequest, HttpMessage, HttpResponse
@@ -46,18 +46,16 @@ use crate::config::LogoutBehaviour;
 /// ```
 ///
 /// # Extractor Behaviour
-///
-/// What happens if you try to extract an `Identity` out of a request that does not have a
-/// valid identity attached?
-/// The API will return a `401 UNAUTHORIZED` to the caller.
+/// What happens if you try to extract an `Identity` out of a request that does not have a valid
+/// identity attached? The API will return a `401 UNAUTHORIZED` to the caller.
 ///
 /// If you want to customise this behaviour, consider extracting `Option<Identity>` or
-/// `Result<Identity, actix_web::Error>` instead of a bare `Identity`: you will then be
-/// fully in control of the error path.
+/// `Result<Identity, actix_web::Error>` instead of a bare `Identity`: you will then be fully in
+/// control of the error path.
 ///
+/// ## Examples
 /// ```
-/// use actix_web::{get, Responder, HttpResponse};
-/// use actix_web::http::{StatusCode, header::LOCATION};
+/// use actix_web::{header::LOCATION, get, HttpResponse, Responder};
 /// use actix_identity::Identity;
 ///
 /// #[get("/")]
@@ -66,7 +64,7 @@ use crate::config::LogoutBehaviour;
 ///         HttpResponse::new(StatusCode::OK)
 ///     } else {
 ///         // Redirect to login page if unauthenticated
-///         HttpResponse::build(StatusCode::TEMPORARY_REDIRECT)
+///         HttpResponse::TemporaryRedirect(StatusCode::TEMPORARY_REDIRECT)
 ///             .insert_header((LOCATION, "/login"))
 ///             .finish()
 ///     }
@@ -83,16 +81,15 @@ pub(crate) struct IdentityInner {
 }
 
 impl IdentityInner {
-    fn extract(e: &Extensions) -> Self {
-        e.get::<Self>()
+    fn extract(ext: &Extensions) -> Self {
+        ext.get::<Self>()
             .expect(
-                "No `IdentityInner` instance was found in the extensions \
-                attached to the incoming request. \
-                This usually means that `IdentityMiddleware` has not been registered as an \
-                application middleware via `App::wrap`. \
-                `Identity` cannot be used unless the identity machine is properly mounted: register \
-                `IdentityMiddleware` as a middleware for your application to fix this panic. \
-                If the problem persists, please file an issue on GitHub.",
+                "No `IdentityInner` instance was found in the extensions attached to the \
+                incoming request. This usually means that `IdentityMiddleware` has not been \
+                registered as an application middleware via `App::wrap`. `Identity` cannot be used \
+                unless the identity machine is properly mounted: register `IdentityMiddleware` as \
+                a middleware for your application to fix this panic. If the problem persists, \
+                please file an issue on GitHub.",
             )
             .to_owned()
     }
@@ -115,6 +112,7 @@ pub(crate) const LOGIN_UNIX_TIMESTAMP_KEY: &str = "actix_identity.logged_in_at";
 impl Identity {
     /// Return the user id associated to the current session.
     ///
+    /// # Examples
     /// ```
     /// use actix_web::{get, Responder};
     /// use actix_identity::Identity;
@@ -135,10 +133,12 @@ impl Identity {
     }
 
     /// Attach a valid user identity to the current session.
-    /// This method should be called after you have successfully authenticated the user. After
-    /// `login` has been called, the user will be able to access all routes that require a
-    /// valid [`Identity`].
     ///
+    /// This method should be called after you have successfully authenticated the user. After
+    /// `login` has been called, the user will be able to access all routes that require a valid
+    /// [`Identity`].
+    ///
+    /// # Examples
     /// ```
     /// use actix_web::{post, Responder, HttpRequest, HttpMessage, HttpResponse};
     /// use actix_identity::Identity;
@@ -161,12 +161,13 @@ impl Identity {
     }
 
     /// Remove the user identity from the current session.
+    ///
     /// After `logout` has been called, the user will no longer be able to access routes that
     /// require a valid [`Identity`].
     ///
-    /// The behaviour on logout is determined by
-    /// [`IdentityMiddlewareBuilder::logout_behaviour`](crate::configuration::IdentityMiddlewareBuilder::logout_behaviour).
+    /// The behaviour on logout is determined by [`IdentityMiddlewareBuilder::logout_behaviour`].
     ///
+    /// # Examples
     /// ```
     /// use actix_web::{post, Responder, HttpResponse};
     /// use actix_identity::Identity;
@@ -177,6 +178,8 @@ impl Identity {
     ///     HttpResponse::Ok()
     /// }
     /// ```
+    ///
+    /// [`IdentityMiddlewareBuilder::logout_behaviour`]: crate::config::IdentityMiddlewareBuilder::logout_behaviour
     pub fn logout(self) {
         match self.0.logout_behaviour {
             LogoutBehaviour::PurgeSession => {
@@ -221,6 +224,7 @@ impl Identity {
 
 /// Extractor implementation for [`Identity`].
 ///
+/// # Examples
 /// ```
 /// use actix_web::{get, Responder};
 /// use actix_identity::Identity;
@@ -240,13 +244,13 @@ impl FromRequest for Identity {
 
     #[inline]
     fn from_request(req: &HttpRequest, _: &mut Payload) -> Self::Future {
-        let r = Identity::extract(&req.extensions()).map_err(|e| {
-            let e = actix_web::error::InternalError::from_response(
-                e,
+        ready(Identity::extract(&req.extensions()).map_err(|err| {
+            let res = actix_web::error::InternalError::from_response(
+                err,
                 HttpResponse::new(StatusCode::UNAUTHORIZED),
             );
-            actix_web::Error::from(e)
-        });
-        ready(r)
+
+            actix_web::Error::from(res)
+        }))
     }
 }

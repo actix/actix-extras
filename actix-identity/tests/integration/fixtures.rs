@@ -1,5 +1,4 @@
-use actix_session::storage::CookieSessionStore;
-use actix_session::SessionMiddleware;
+use actix_session::{storage::CookieSessionStore, SessionMiddleware};
 use actix_web::cookie::Key;
 use uuid::Uuid;
 
