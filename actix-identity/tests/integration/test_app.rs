@@ -1,6 +1,6 @@
 use std::net::TcpListener;
 
-use actix_identity::configuration::IdentityMiddlewareBuilder;
+use actix_identity::config::IdentityMiddlewareBuilder;
 use actix_identity::{Identity, IdentityMiddleware};
 use actix_session::{Session, SessionStatus};
 use actix_web::{web, App, HttpMessage, HttpRequest, HttpResponse, HttpServer};

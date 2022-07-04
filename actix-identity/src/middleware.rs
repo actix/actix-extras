@@ -12,7 +12,7 @@ use actix_web::{
 };
 use time::OffsetDateTime;
 
-use crate::configuration::{Configuration, IdentityMiddlewareBuilder};
+use crate::config::{Configuration, IdentityMiddlewareBuilder};
 use crate::identity::IdentityInner;
 use crate::Identity;
 

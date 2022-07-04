@@ -1,7 +1,10 @@
 [package]
 name = "actix-identity"
 version = "0.4.0"
-authors = ["Nikolay Kim <fafhrd91@gmail.com>"]
+authors = [
+    "Nikolay Kim <fafhrd91@gmail.com>",
+    "Luca Palmieri <rust@lpalmieri.com>",
+]
 description = "Identity service for Actix Web"
 keywords = ["actix", "auth", "identity", "web", "security"]
 homepage = "https://actix.rs"
@@ -17,7 +20,7 @@ path = "src/lib.rs"
 actix-service = "2"
 actix-utils = "3"
 actix-web = { version = "4", default-features = false, features = ["cookies", "secure-cookies"] }
-actix-session = { path = "../actix-session" }
+actix-session = "0.6.2" # update to 0.7 with release of -session
 
 futures-util = { version = "0.3.7", default-features = false }
 serde = { version = "1", features = ["derive"] }
@@ -27,8 +30,8 @@ anyhow = "1.0.56"
 tracing = { version = "0.1.30", default-features = false, features = ["log"] }
 
 [dev-dependencies]
-actix-http = "3.0.0-rc.1"
+actix-http = "3"
 actix-web = { version = "4", default_features = false, features = ["macros", "cookies", "secure-cookies"] }
-actix-session = { path = "../actix-session", features = ["redis-rs-session", "cookie-session"] }
-uuid = { version = "1.0.0", features = ["v4"] }
-reqwest = { version = "0.11.10", default_features = false, features = ["cookies", "json"] }
+actix-session = { version = "0.6.2", features = ["redis-rs-session", "cookie-session"] } # update to 0.7 with release of -session
+uuid = { version = "1", features = ["v4"] }
+reqwest = { version = "0.11", default_features = false, features = ["cookies", "json"] }

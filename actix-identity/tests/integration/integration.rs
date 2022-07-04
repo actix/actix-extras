@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use actix_identity::configuration::LogoutBehaviour;
+use actix_identity::config::LogoutBehaviour;
 use actix_identity::IdentityMiddleware;
 use actix_web::http::StatusCode;
 

@@ -7,7 +7,7 @@ use actix_web::{dev::Payload, Error, FromRequest, HttpRequest};
 use actix_web::{HttpMessage, HttpResponse};
 use anyhow::{anyhow, Context};
 
-use crate::configuration::LogoutBehaviour;
+use crate::config::LogoutBehaviour;
 
 /// A verified user identity. It can be used as a request extractor.
 ///
@@ -113,7 +113,7 @@ pub(crate) const LAST_VISIT_UNIX_TIMESTAMP_KEY: &str = "actix_identity.last_visi
 pub(crate) const LOGIN_UNIX_TIMESTAMP_KEY: &str = "actix_identity.logged_in_at";
 
 impl Identity {
-    /// Return the user id associated to the current session.  
+    /// Return the user id associated to the current session.
     ///
     /// ```
     /// use actix_web::{get, Responder};
@@ -134,7 +134,7 @@ impl Identity {
         })
     }
 
-    /// Attach a valid user identity to the current session.  
+    /// Attach a valid user identity to the current session.
     /// This method should be called after you have successfully authenticated the user. After
     /// `login` has been called, the user will be able to access all routes that require a
     /// valid [`Identity`].
@@ -160,7 +160,7 @@ impl Identity {
         Ok(Self(inner))
     }
 
-    /// Remove the user identity from the current session.  
+    /// Remove the user identity from the current session.
     /// After `logout` has been called, the user will no longer be able to access routes that
     /// require a valid [`Identity`].
     ///

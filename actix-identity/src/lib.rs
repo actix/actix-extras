@@ -94,7 +94,7 @@
 //! - who logged in too long ago (see [`IdentityMiddlewareBuilder::login_deadline`](configuration::IdentityMiddlewareBuilder::login_deadline)).
 #![deny(rust_2018_idioms, nonstandard_style, missing_docs)]
 #![warn(future_incompatible)]
-pub mod configuration;
+pub mod config;
 mod identity;
 mod identity_ext;
 mod middleware;

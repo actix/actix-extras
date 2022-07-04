@@ -1,4 +1,5 @@
 //! Configuration options to tune the behaviour of [`IdentityMiddleware`].
+
 use std::time::Duration;
 
 use crate::IdentityMiddleware;
