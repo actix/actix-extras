@@ -8,7 +8,8 @@
 //! [`IdentityMiddleware`] and `SessionMiddleware` as middleware on your `App`:
 //!
 //! ```no_run
-//! use actix_web::{cookie::Key, web, App, HttpServer, HttpResponse};
+//! # use actix_web::web;
+//! use actix_web::{cookie::Key, App, HttpServer, HttpResponse};
 //! use actix_identity::IdentityMiddleware;
 //! use actix_session::{storage::RedisSessionStore, SessionMiddleware};
 //!
@@ -21,7 +22,7 @@
 //!
 //!     HttpServer::new(move || {
 //!         App::new()
-//!             // Install the identity framework.
+//!             // Install the identity framework first.
 //!             .wrap(IdentityMiddleware::default())
 //!             // The identity system is built on top of sessions. You must install the session
 //!             // middleware to leverage `actix-identity`. The session middleware must be mounted
@@ -57,13 +58,12 @@
 //!
 //! #[post("/login")]
 //! async fn login(request: HttpRequest) -> impl Responder {
-//!     // Some kind of authentication should happen here -
+//!     // Some kind of authentication should happen here
 //!     // e.g. password-based, biometric, etc.
 //!     // [...]
 //!
-//!     // Attached a verified user identity to the active
-//!     // session.
-//!     Identity::login(&request.extensions(), "User1".into());
+//!     // attach a verified user identity to the active session
+//!     Identity::login(&request.extensions(), "User1".into()).unwrap();
 //!
 //!     HttpResponse::Ok()
 //! }

@@ -31,7 +31,7 @@ use crate::{
 ///
 ///     HttpServer::new(move || {
 ///        App::new()
-///            // Install the identity framework, first.
+///            // Install the identity framework first.
 ///            .wrap(IdentityMiddleware::default())
 ///            // The identity system is built on top of sessions.
 ///            // You must install the session middleware to leverage `actix-identity`.

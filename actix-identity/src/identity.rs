@@ -55,16 +55,16 @@ use crate::config::LogoutBehaviour;
 ///
 /// ## Examples
 /// ```
-/// use actix_web::{header::LOCATION, get, HttpResponse, Responder};
+/// use actix_web::{http::header::LOCATION, get, HttpResponse, Responder};
 /// use actix_identity::Identity;
 ///
 /// #[get("/")]
 /// async fn index(user: Option<Identity>) -> impl Responder {
 ///     if let Some(user) = user {
-///         HttpResponse::new(StatusCode::OK)
+///         HttpResponse::Ok().finish()
 ///     } else {
 ///         // Redirect to login page if unauthenticated
-///         HttpResponse::TemporaryRedirect(StatusCode::TEMPORARY_REDIRECT)
+///         HttpResponse::TemporaryRedirect()
 ///             .insert_header((LOCATION, "/login"))
 ///             .finish()
 ///     }
@@ -149,8 +149,8 @@ impl Identity {
     ///     HttpResponse::Ok()
     /// }
     /// ```
-    pub fn login(e: &Extensions, id: String) -> Result<Self, anyhow::Error> {
-        let inner = IdentityInner::extract(e);
+    pub fn login(ext: &Extensions, id: String) -> Result<Self, anyhow::Error> {
+        let inner = IdentityInner::extract(ext);
         inner.session.insert(ID_KEY, id)?;
         inner.session.insert(
             LOGIN_UNIX_TIMESTAMP_KEY,
@@ -197,8 +197,8 @@ impl Identity {
         }
     }
 
-    pub(crate) fn extract(e: &Extensions) -> Result<Self, anyhow::Error> {
-        let inner = IdentityInner::extract(e);
+    pub(crate) fn extract(ext: &Extensions) -> Result<Self, anyhow::Error> {
+        let inner = IdentityInner::extract(ext);
         inner.get_identity()?;
         Ok(Self(inner))
     }
