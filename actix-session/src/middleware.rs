@@ -11,7 +11,7 @@ use actix_web::{
 use anyhow::Context;
 
 use crate::{
-    configuration::{
+    config::{
         self, Configuration, CookieConfiguration, CookieContentSecurity, SessionMiddlewareBuilder,
         TtlExtensionPolicy,
     },
@@ -32,7 +32,7 @@ use crate::{
 /// To create a new instance of [`SessionMiddleware`] you need to provide:
 ///
 /// - an instance of the session storage backend you wish to use (i.e. an implementation of
-///   [`SessionStore]);
+///   [`SessionStore`]);
 /// - a secret key, to sign or encrypt the content of client-side session cookie.
 ///
 /// ```no_run
@@ -71,7 +71,7 @@ use crate::{
 /// ```no_run
 /// use actix_web::{App, cookie::{Key, time}, Error, HttpResponse, HttpServer, web};
 /// use actix_session::{Session, SessionMiddleware, storage::RedisActorSessionStore};
-/// use actix_session::configuration::PersistentSession;
+/// use actix_session::config::PersistentSession;
 ///
 /// // The secret key would usually be read from a configuration file/environment variables.
 /// fn get_secret_key() -> Key {
@@ -138,7 +138,7 @@ impl<Store: SessionStore> SessionMiddleware<Store> {
     ///   [`SessionStore]);
     /// - a secret key, to sign or encrypt the content of client-side session cookie.
     pub fn builder(store: Store, key: Key) -> SessionMiddlewareBuilder<Store> {
-        SessionMiddlewareBuilder::new(store, configuration::default_configuration(key))
+        SessionMiddlewareBuilder::new(store, config::default_configuration(key))
     }
 
     pub(crate) fn from_parts(store: Store, configuration: Configuration) -> Self {
@@ -283,9 +283,10 @@ where
                             .map_err(e500)?;
                         }
                         SessionStatus::Unchanged => {
-                            if let TtlExtensionPolicy::OnEveryRequest =
-                                configuration.ttl_extension_policy
-                            {
+                            if matches!(
+                                configuration.ttl_extension_policy,
+                                TtlExtensionPolicy::OnEveryRequest
+                            ) {
                                 storage_backend
                                     .update_ttl(&session_key, &configuration.session.state_ttl)
                                     .await
@@ -309,11 +310,11 @@ where
     }
 }
 
-/// It examines the session cookie attached to the incoming request, if there is any, and tries
+/// Examines the session cookie attached to the incoming request, if there is one, and tries
 /// to extract the session key.
 ///
 /// It returns `None` if there is no session cookie or if the session cookie is considered invalid
-/// (e.g. it fails a signature check).
+/// (e.g., when failing a signature check).
 fn extract_session_key(req: &ServiceRequest, config: &CookieConfiguration) -> Option<SessionKey> {
     let cookies = req.cookies().ok()?;
     let session_cookie = cookies

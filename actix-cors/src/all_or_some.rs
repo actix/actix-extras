@@ -1,5 +1,5 @@
 /// An enum signifying that some of type `T` is allowed, or `All` (anything is allowed).
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AllOrSome<T> {
     /// Everything is allowed. Usually equivalent to the `*` value.
     All,

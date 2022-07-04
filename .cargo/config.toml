@@ -1,7 +1,7 @@
 [alias]
 lint = "clippy --workspace --tests --examples --bins -- -Dclippy::todo"
 ci-min = "hack check --workspace --no-default-features"
-ci-check-min-tests = "hack check --workspace --no-default-features --tests --examples"
+ci-check-min-examples = "hack check --workspace --no-default-features --examples"
 ci-check = "check --workspace --tests --examples --bins"
 ci-test = "test --workspace --lib --tests --all-features --examples --bins --no-fail-fast"
 ci-doctest = "test --workspace --doc --all-features --no-fail-fast"

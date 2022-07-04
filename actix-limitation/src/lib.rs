@@ -73,7 +73,7 @@ pub const DEFAULT_COOKIE_NAME: &str = "sid";
 pub const DEFAULT_SESSION_KEY: &str = "rate-api-id";
 
 /// Rate limiter.
-#[derive(Clone, Debug)]
+#[derive(Debug, Clone)]
 pub struct Limiter {
     client: Client,
     limit: usize,

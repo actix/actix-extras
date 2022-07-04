@@ -139,7 +139,7 @@
 #![doc(html_favicon_url = "https://actix.rs/favicon.ico")]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
-pub mod configuration;
+pub mod config;
 mod middleware;
 mod session;
 mod session_ext;
@@ -153,7 +153,7 @@ pub use self::session_ext::SessionExt;
 pub mod test_helpers {
     use actix_web::cookie::Key;
 
-    use crate::{configuration::CookieContentSecurity, storage::SessionStore};
+    use crate::{config::CookieContentSecurity, storage::SessionStore};
 
     /// Generate a random cookie signing/encryption key.
     pub fn key() -> Key {
@@ -206,7 +206,7 @@ pub mod test_helpers {
         use serde::{Deserialize, Serialize};
         use serde_json::json;
 
-        use crate::configuration::{CookieContentSecurity, PersistentSession, TtlExtensionPolicy};
+        use crate::config::{CookieContentSecurity, PersistentSession, TtlExtensionPolicy};
         use crate::{
             storage::SessionStore, test_helpers::key, Session, SessionExt, SessionMiddleware,
         };

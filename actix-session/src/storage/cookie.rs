@@ -35,9 +35,9 @@ use crate::storage::{
 /// ```
 ///
 /// # Limitations
-/// Cookies are subject to size limits - we require session keys to be shorter than 4096 bytes. This
-/// translates into a limit on the maximum size of the session state when using cookies as storage
-/// backend.
+/// Cookies are subject to size limits so we require session keys to be shorter than 4096 bytes.
+/// This translates into a limit on the maximum size of the session state when using cookies as
+/// storage backend.
 ///
 /// The session cookie can always be inspected by end users via the developer tools exposed by their
 /// browsers. We strongly recommend setting the policy to [`CookieContentSecurity::Private`] when
@@ -46,7 +46,7 @@ use crate::storage::{
 /// There is no way to invalidate a session before its natural expiry when using cookies as the
 /// storage backend.
 ///
-/// [`CookieContentSecurity::Private`]: crate::configuration::CookieContentSecurity::Private
+/// [`CookieContentSecurity::Private`]: crate::config::CookieContentSecurity::Private
 #[cfg_attr(docsrs, doc(cfg(feature = "cookie-session")))]
 #[derive(Default)]
 #[non_exhaustive]
