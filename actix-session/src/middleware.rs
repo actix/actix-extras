@@ -241,6 +241,7 @@ where
                         .map_err(e500)?;
                     }
                 }
+
                 Some(session_key) => {
                     match status {
                         SessionStatus::Changed => {
@@ -260,16 +261,20 @@ where
                             )
                             .map_err(e500)?;
                         }
+
                         SessionStatus::Purged => {
                             storage_backend.delete(&session_key).await.map_err(e500)?;
+
                             delete_session_cookie(
                                 res.response_mut().head_mut(),
                                 &configuration.cookie,
                             )
                             .map_err(e500)?;
                         }
+
                         SessionStatus::Renewed => {
                             storage_backend.delete(&session_key).await.map_err(e500)?;
+
                             let session_key = storage_backend
                                 .save(session_state, &configuration.session.state_ttl)
                                 .await
@@ -282,6 +287,7 @@ where
                             )
                             .map_err(e500)?;
                         }
+
                         SessionStatus::Unchanged => {
                             if matches!(
                                 configuration.ttl_extension_policy,
@@ -305,6 +311,7 @@ where
                     };
                 }
             }
+
             Ok(res)
         })
     }

@@ -18,16 +18,16 @@ path = "src/lib.rs"
 
 [dependencies]
 actix-service = "2"
+actix-session = "0.6.2" # update to 0.7 with release of -session
 actix-utils = "3"
 actix-web = { version = "4", default-features = false, features = ["cookies", "secure-cookies"] }
-actix-session = "0.6.2" # update to 0.7 with release of -session
 
+anyhow = "1"
 env_logger = "0.9"
-futures-util = { version = "0.3.7", default-features = false }
+futures-core = "0.3.7"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 time = "0.3"
-anyhow = "1.0.56"
 tracing = { version = "0.1.30", default-features = false, features = ["log"] }
 
 [dev-dependencies]

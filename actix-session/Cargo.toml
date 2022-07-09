@@ -32,7 +32,7 @@ actix-service = "2"
 actix-utils = "3"
 actix-web = { version = "4", default_features = false, features = ["cookies", "secure-cookies"] }
 
-anyhow = "1.0.56"
+anyhow = "1"
 async-trait = "0.1"
 derive_more = "0.99.5"
 rand = { version = "0.8", optional = true }

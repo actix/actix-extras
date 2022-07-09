@@ -1,4 +1,4 @@
-use std::{future::Future, pin::Pin, rc::Rc};
+use std::rc::Rc;
 
 use actix_session::SessionExt;
 use actix_utils::future::{ready, Ready};
@@ -8,6 +8,7 @@ use actix_web::{
     dev::{Service, ServiceRequest, ServiceResponse, Transform},
     Error, HttpMessage as _, Result,
 };
+use futures_core::future::LocalBoxFuture;
 use time::OffsetDateTime;
 
 use crate::{
@@ -101,8 +102,7 @@ where
 {
     type Response = ServiceResponse<B>;
     type Error = Error;
-    #[allow(clippy::type_complexity)]
-    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>>>>;
+    type Future = LocalBoxFuture<'static, Result<Self::Response, Self::Error>>;
 
     actix_service::forward_ready!(service);
 
@@ -147,14 +147,20 @@ fn enforce_policies(req: &ServiceRequest, configuration: &Configuration) {
     };
 
     if let Some(login_deadline) = configuration.login_deadline {
-        if let PolicyDecision::LogOut = enforce_login_deadline(&identity, login_deadline) {
+        if matches!(
+            enforce_login_deadline(&identity, login_deadline),
+            PolicyDecision::LogOut
+        ) {
             identity.logout();
             return;
         }
     }
 
     if let Some(visit_deadline) = configuration.visit_deadline {
-        if let PolicyDecision::LogOut = enforce_visit_deadline(&identity, visit_deadline) {
+        if matches!(
+            enforce_visit_deadline(&identity, visit_deadline),
+            PolicyDecision::LogOut
+        ) {
             identity.logout();
             return;
         }
@@ -173,10 +179,10 @@ fn enforce_login_deadline(
             );
             PolicyDecision::LogOut
         }
-        Err(e) => {
+        Err(err) => {
             tracing::info!(
-                error.display = %e,
-                error.debug = ?e,
+                error.display = %err,
+                error.debug = ?err,
                 "Login deadline is enabled but we failed to extract the login timestamp from the \
                 session state attached to the incoming request. Logging the user out."
             );
@@ -212,10 +218,10 @@ fn enforce_visit_deadline(
             );
             PolicyDecision::LogOut
         }
-        Err(e) => {
+        Err(err) => {
             tracing::info!(
-                error.display = %e,
-                error.debug = ?e,
+                error.display = %err,
+                error.debug = ?err,
                 "Last visit deadline is enabled but we failed to extract the last visit timestamp \
                 from the session state attached to the incoming request. Logging the user out."
             );
