@@ -1,6 +1,7 @@
 # Changes
 
 ## Unreleased - 2022-xx-xx
+- Updated `session-session` dependency to `0.7`.
 
 
 ## 0.2.0 - 2022-03-22

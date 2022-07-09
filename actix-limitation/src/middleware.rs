@@ -1,6 +1,6 @@
 use std::{future::Future, pin::Pin, rc::Rc};
 
-use actix_session::UserSession;
+use actix_session::SessionExt as _;
 use actix_utils::future::{ok, Ready};
 use actix_web::{
     body::EitherBody,
