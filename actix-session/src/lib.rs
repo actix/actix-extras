@@ -133,6 +133,7 @@
 //! [`RedisSessionStore`]: storage::RedisSessionStore
 //! [`RedisActorSessionStore`]: storage::RedisActorSessionStore
 
+#![forbid(unsafe_code)]
 #![deny(rust_2018_idioms, nonstandard_style)]
 #![warn(future_incompatible, missing_docs)]
 #![doc(html_logo_url = "https://actix.rs/img/logo.png")]

@@ -86,6 +86,7 @@
 //! [`IdentityMiddlewareBuilder::visit_deadline`]: config::IdentityMiddlewareBuilder::visit_deadline
 //! [`IdentityMiddlewareBuilder::login_deadline`]: config::IdentityMiddlewareBuilder::login_deadline
 
+#![forbid(unsafe_code)]
 #![deny(rust_2018_idioms, nonstandard_style, missing_docs)]
 #![warn(future_incompatible)]
 
