@@ -13,7 +13,7 @@ license = "MIT OR Apache-2.0"
 edition = "2018"
 
 [dependencies]
-actix-session = "0.7"
+actix-session = "0.5"
 actix-utils = "3"
 actix-web = { version = "4", default-features = false }
 
