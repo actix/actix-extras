@@ -1,60 +1,90 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Opinionated request identity service for Actix Web apps."><meta name="keywords" content="rust, rustlang, rust-lang, actix_identity"><title>actix_identity - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../dark.css" disabled><link rel="stylesheet" type="text/css" href="../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../storage.js"></script><script defer src="../crates.js"></script><script defer src="../main.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../favicon.svg"></head><body class="rustdoc mod crate"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../actix_identity/index.html"><div class="logo-container"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></div>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Identity management for Actix Web."><meta name="keywords" content="rust, rustlang, rust-lang, actix_identity"><title>actix_identity - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../dark.css" disabled><link rel="stylesheet" type="text/css" href="../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../storage.js"></script><script defer src="../crates.js"></script><script defer src="../main.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../favicon.svg"></head><body class="rustdoc mod crate"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../actix_identity/index.html"><div class="logo-container"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></div>
         </a><h2 class="location"></h2>
     </nav>
     <nav class="sidebar"><a class="sidebar-logo" href="../actix_identity/index.html"><div class="logo-container"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"><a href="#">Crate actix_identity</a></h2><div class="sidebar-elems"><div class="block"><ul><li class="version">Version 0.4.0</li><li><a id="all-types" href="all.html">All Items</a></li></ul></div><section><div class="block"><ul><li><a href="#structs">Structs</a></li><li><a href="#traits">Traits</a></li></ul></div></section></div></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../actix_identity/index.html"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
+        </a><h2 class="location"><a href="#">Crate actix_identity</a></h2><div class="sidebar-elems"><div class="block"><ul><li class="version">Version 0.4.0</li><li><a id="all-types" href="all.html">All Items</a></li></ul></div><section><div class="block"><ul><li><a href="#modules">Modules</a></li><li><a href="#structs">Structs</a></li><li><a href="#traits">Traits</a></li></ul></div></section></div></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../actix_identity/index.html"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
                                 <a href="../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../wheel.svg"></a></div>
                         </div></form></nav></div><section id="main-content" class="content"><div class="main-heading">
-    <h1 class="fqn"><span class="in-band">Crate <a class="mod" href="#">actix_identity</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../clipboard.svg" width="19" height="18" alt="Copy item path"></button></span></h1><span class="out-of-band"><a class="srclink" href="../src/actix_identity/lib.rs.html#1-163">source</a> · <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span></div><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Opinionated request identity service for Actix Web apps.</p>
-<p><a href="struct.IdentityService.html" title="IdentityService"><code>IdentityService</code></a> middleware can be used with different policies types to store
-identity information.</p>
-<p>A cookie based policy is provided. <a href="struct.CookieIdentityPolicy.html" title="CookieIdentityPolicy"><code>CookieIdentityPolicy</code></a> uses cookies as identity storage.</p>
-<p>To access current request identity, use the <a href="struct.Identity.html" title="Identity"><code>Identity</code></a> extractor.</p>
+    <h1 class="fqn"><span class="in-band">Crate <a class="mod" href="#">actix_identity</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../clipboard.svg" width="19" height="18" alt="Copy item path"></button></span></h1><span class="out-of-band"><a class="srclink" href="../src/actix_identity/lib.rs.html#1-99">source</a> · <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span></div><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Identity management for Actix Web.</p>
+<p><code>actix-identity</code> can be used to track identity of a user across multiple requests. It is built
+on top of HTTP sessions, via <a href="https://docs.rs/actix-session"><code>actix-session</code></a>.</p>
+<h2 id="getting-started"><a href="#getting-started">Getting started</a></h2>
+<p>To start using identity management in your Actix Web application you must register
+<a href="struct.IdentityMiddleware.html" title="IdentityMiddleware"><code>IdentityMiddleware</code></a> and <code>SessionMiddleware</code> as middleware on your <code>App</code>:</p>
 
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">actix_web</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident">actix_identity</span>::{<span class="ident">Identity</span>, <span class="ident">CookieIdentityPolicy</span>, <span class="ident">IdentityService</span>};
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">actix_web</span>::{<span class="ident">cookie::Key</span>, <span class="ident">App</span>, <span class="ident">HttpServer</span>, <span class="ident">HttpResponse</span>};
+<span class="kw">use</span> <span class="ident">actix_identity::IdentityMiddleware</span>;
+<span class="kw">use</span> <span class="ident">actix_session</span>::{<span class="ident">storage::RedisSessionStore</span>, <span class="ident">SessionMiddleware</span>};
+
+<span class="attribute">#[<span class="ident">actix_web::main</span>]</span>
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">main</span>() {
+    <span class="kw">let</span> <span class="ident">secret_key</span> <span class="op">=</span> <span class="ident">Key::generate</span>();
+    <span class="kw">let</span> <span class="ident">redis_store</span> <span class="op">=</span> <span class="ident">RedisSessionStore::new</span>(<span class="string">&quot;redis://127.0.0.1:6379&quot;</span>)
+        .<span class="kw">await</span>
+        .<span class="ident">unwrap</span>();
+
+    <span class="ident">HttpServer::new</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
+        <span class="ident">App::new</span>()
+            <span class="comment">// Install the identity framework first.</span>
+            .<span class="ident">wrap</span>(<span class="ident">IdentityMiddleware::default</span>())
+            <span class="comment">// The identity system is built on top of sessions. You must install the session</span>
+            <span class="comment">// middleware to leverage `actix-identity`. The session middleware must be mounted</span>
+            <span class="comment">// AFTER the identity middleware: `actix-web` invokes middleware in the OPPOSITE</span>
+            <span class="comment">// order of registration when it receives an incoming request.</span>
+            .<span class="ident">wrap</span>(<span class="ident">SessionMiddleware::new</span>(
+                 <span class="ident">redis_store</span>.<span class="ident">clone</span>(),
+                 <span class="ident">secret_key</span>.<span class="ident">clone</span>()
+            ))
+            <span class="comment">// Your request handlers [...]</span>
+    })
+}</code></pre></div>
+<p>User identities can be created, accessed and destroyed using the <a href="struct.Identity.html" title="Identity"><code>Identity</code></a> extractor in your
+request handlers:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">actix_web</span>::{<span class="ident">get</span>, <span class="ident">post</span>, <span class="ident">HttpResponse</span>, <span class="ident">Responder</span>, <span class="ident">HttpRequest</span>, <span class="ident">HttpMessage</span>};
+<span class="kw">use</span> <span class="ident">actix_identity::Identity</span>;
+<span class="kw">use</span> <span class="ident">actix_session::storage::RedisSessionStore</span>;
 
 <span class="attribute">#[<span class="ident">get</span>(<span class="string">&quot;/&quot;</span>)]</span>
-<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">index</span>(<span class="ident">id</span>: <span class="ident">Identity</span>) -&gt; <span class="ident">String</span> {
-    <span class="comment">// access request identity</span>
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">id</span>) <span class="op">=</span> <span class="ident">id</span>.<span class="ident">identity</span>() {
-        <span class="macro">format!</span>(<span class="string">&quot;Welcome! {}&quot;</span>, <span class="ident">id</span>)
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">index</span>(<span class="ident">user</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Identity</span><span class="op">&gt;</span>) -&gt; <span class="kw">impl</span> <span class="ident">Responder</span> {
+    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">user</span>) <span class="op">=</span> <span class="ident">user</span> {
+        <span class="macro">format!</span>(<span class="string">&quot;Welcome! {}&quot;</span>, <span class="ident">user</span>.<span class="ident">id</span>().<span class="ident">unwrap</span>())
     } <span class="kw">else</span> {
         <span class="string">&quot;Welcome Anonymous!&quot;</span>.<span class="ident">to_owned</span>()
     }
 }
 
 <span class="attribute">#[<span class="ident">post</span>(<span class="string">&quot;/login&quot;</span>)]</span>
-<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">login</span>(<span class="ident">id</span>: <span class="ident">Identity</span>) -&gt; <span class="ident">HttpResponse</span> {
-    <span class="comment">// remember identity</span>
-    <span class="ident">id</span>.<span class="ident">remember</span>(<span class="string">&quot;User1&quot;</span>.<span class="ident">to_owned</span>());
-    <span class="ident">HttpResponse::Ok</span>().<span class="ident">finish</span>()
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">login</span>(<span class="ident">request</span>: <span class="ident">HttpRequest</span>) -&gt; <span class="kw">impl</span> <span class="ident">Responder</span> {
+    <span class="comment">// Some kind of authentication should happen here</span>
+    <span class="comment">// e.g. password-based, biometric, etc.</span>
+    <span class="comment">// [...]</span>
+
+    <span class="comment">// attach a verified user identity to the active session</span>
+    <span class="ident">Identity::login</span>(<span class="kw-2">&amp;</span><span class="ident">request</span>.<span class="ident">extensions</span>(), <span class="string">&quot;User1&quot;</span>.<span class="ident">into</span>()).<span class="ident">unwrap</span>();
+
+    <span class="ident">HttpResponse::Ok</span>()
 }
 
 <span class="attribute">#[<span class="ident">post</span>(<span class="string">&quot;/logout&quot;</span>)]</span>
-<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">logout</span>(<span class="ident">id</span>: <span class="ident">Identity</span>) -&gt; <span class="ident">HttpResponse</span> {
-    <span class="comment">// remove identity</span>
-    <span class="ident">id</span>.<span class="ident">forget</span>();
-    <span class="ident">HttpResponse::Ok</span>().<span class="ident">finish</span>()
-}
-
-<span class="ident">HttpServer::new</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
-    <span class="comment">// create cookie identity backend (inside closure, since policy is not Clone)</span>
-    <span class="kw">let</span> <span class="ident">policy</span> <span class="op">=</span> <span class="ident">CookieIdentityPolicy::new</span>(<span class="kw-2">&amp;</span>[<span class="number">0</span>; <span class="number">32</span>])
-        .<span class="ident">name</span>(<span class="string">&quot;auth-cookie&quot;</span>)
-        .<span class="ident">secure</span>(<span class="bool-val">false</span>);
-
-    <span class="ident">App::new</span>()
-        <span class="comment">// wrap policy into middleware identity middleware</span>
-        .<span class="ident">wrap</span>(<span class="ident">IdentityService::new</span>(<span class="ident">policy</span>))
-        .<span class="ident">service</span>(<span class="macro">services!</span>[<span class="ident">index</span>, <span class="ident">login</span>, <span class="ident">logout</span>])
-})</code></pre></div>
-</div></details><h2 id="structs" class="small-section-header"><a href="#structs">Structs</a></h2>
-<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.CookieIdentityPolicy.html" title="actix_identity::CookieIdentityPolicy struct">CookieIdentityPolicy</a></div><div class="item-right docblock-short"><p>Use cookies for request identity storage.</p>
-</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Identity.html" title="actix_identity::Identity struct">Identity</a></div><div class="item-right docblock-short"><p>The extractor type to obtain your identity from a request.</p>
-</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.IdentityService.html" title="actix_identity::IdentityService struct">IdentityService</a></div><div class="item-right docblock-short"><p>Request identity middleware</p>
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">logout</span>(<span class="ident">user</span>: <span class="ident">Identity</span>) -&gt; <span class="kw">impl</span> <span class="ident">Responder</span> {
+    <span class="ident">user</span>.<span class="ident">logout</span>();
+    <span class="ident">HttpResponse::Ok</span>()
+}</code></pre></div>
+<h2 id="advanced-configuration"><a href="#advanced-configuration">Advanced configuration</a></h2>
+<p>By default, <code>actix-identity</code> does not automatically log out users. You can change this behaviour
+by customising the configuration for <a href="struct.IdentityMiddleware.html" title="IdentityMiddleware"><code>IdentityMiddleware</code></a> via <a href="struct.IdentityMiddleware.html#method.builder" title="IdentityMiddleware::builder"><code>IdentityMiddleware::builder</code></a>.</p>
+<p>In particular, you can automatically log out users who:</p>
+<ul>
+<li>have been inactive for a while (see <a href="config/struct.IdentityMiddlewareBuilder.html#method.visit_deadline"><code>IdentityMiddlewareBuilder::visit_deadline</code></a>;</li>
+<li>logged in too long ago (see <a href="config/struct.IdentityMiddlewareBuilder.html#method.login_deadline"><code>IdentityMiddlewareBuilder::login_deadline</code></a>).</li>
+</ul>
+</div></details><h2 id="modules" class="small-section-header"><a href="#modules">Modules</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="mod" href="config/index.html" title="actix_identity::config mod">config</a></div><div class="item-right docblock-short"><p>Configuration options to tune the behaviour of <a href="struct.IdentityMiddleware.html" title="IdentityMiddleware"><code>IdentityMiddleware</code></a>.</p>
+</div></div></div><h2 id="structs" class="small-section-header"><a href="#structs">Structs</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Identity.html" title="actix_identity::Identity struct">Identity</a></div><div class="item-right docblock-short"><p>A verified user identity. It can be used as a request extractor.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.IdentityMiddleware.html" title="actix_identity::IdentityMiddleware struct">IdentityMiddleware</a></div><div class="item-right docblock-short"><p>Identity management middleware.</p>
 </div></div></div><h2 id="traits" class="small-section-header"><a href="#traits">Traits</a></h2>
-<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.IdentityPolicy.html" title="actix_identity::IdentityPolicy trait">IdentityPolicy</a></div><div class="item-right docblock-short"><p>Identity policy.</p>
-</div></div><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.RequestIdentity.html" title="actix_identity::RequestIdentity trait">RequestIdentity</a></div><div class="item-right docblock-short"><p>Helper trait that allows to get Identity.</p>
-</div></div></div></section></div></main><div id="rustdoc-vars" data-root-path="../" data-current-crate="actix_identity" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (495b21669 2022-07-03)" ></div>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.IdentityExt.html" title="actix_identity::IdentityExt trait">IdentityExt</a></div><div class="item-right docblock-short"><p>Helper trait to retrieve an <a href="struct.Identity.html" title="Identity"><code>Identity</code></a> instance from various <code>actix-web</code>’s types.</p>
+</div></div></div></section></div></main><div id="rustdoc-vars" data-root-path="../" data-current-crate="actix_identity" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (06754d885 2022-07-08)" ></div>
 </body></html>

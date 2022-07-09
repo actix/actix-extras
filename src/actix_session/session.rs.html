@@ -262,19 +262,85 @@
 <span id="254">254</span>
 <span id="255">255</span>
 <span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
+<span id="288">288</span>
+<span id="289">289</span>
+<span id="290">290</span>
+<span id="291">291</span>
+<span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
+<span id="295">295</span>
+<span id="296">296</span>
+<span id="297">297</span>
+<span id="298">298</span>
+<span id="299">299</span>
+<span id="300">300</span>
+<span id="301">301</span>
+<span id="302">302</span>
+<span id="303">303</span>
+<span id="304">304</span>
+<span id="305">305</span>
+<span id="306">306</span>
+<span id="307">307</span>
+<span id="308">308</span>
+<span id="309">309</span>
+<span id="310">310</span>
+<span id="311">311</span>
+<span id="312">312</span>
+<span id="313">313</span>
+<span id="314">314</span>
+<span id="315">315</span>
+<span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">cell</span>::{<span class="ident">Ref</span>, <span class="ident">RefCell</span>},
     <span class="ident">collections::HashMap</span>,
+    <span class="ident">error::Error</span> <span class="kw">as</span> <span class="ident">StdError</span>,
     <span class="ident">mem</span>,
     <span class="ident">rc::Rc</span>,
 };
 
 <span class="kw">use</span> <span class="ident">actix_utils::future</span>::{<span class="ident">ready</span>, <span class="ident">Ready</span>};
 <span class="kw">use</span> <span class="ident">actix_web</span>::{
+    <span class="ident">body::BoxBody</span>,
     <span class="ident">dev</span>::{<span class="ident">Extensions</span>, <span class="ident">Payload</span>, <span class="ident">ServiceRequest</span>, <span class="ident">ServiceResponse</span>},
     <span class="ident">error::Error</span>,
-    <span class="ident">FromRequest</span>, <span class="ident">HttpMessage</span>, <span class="ident">HttpRequest</span>,
+    <span class="ident">FromRequest</span>, <span class="ident">HttpMessage</span>, <span class="ident">HttpRequest</span>, <span class="ident">HttpResponse</span>, <span class="ident">ResponseError</span>,
 };
+<span class="kw">use</span> <span class="ident">anyhow::Context</span>;
+<span class="kw">use</span> <span class="ident">derive_more</span>::{<span class="ident">Display</span>, <span class="ident">From</span>};
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">de::DeserializeOwned</span>, <span class="ident">Serialize</span>};
 
 <span class="doccomment">/// The primary interface to access and modify session state.</span>
@@ -302,6 +368,7 @@
 <span class="doccomment">/// [`SessionExt`].</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// [`SessionExt`]: crate::SessionExt</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Session</span>(<span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">SessionInner</span><span class="op">&gt;</span><span class="op">&gt;</span>);
 
 <span class="doccomment">/// Status of a [`Session`].</span>
@@ -342,9 +409,20 @@
     <span class="doccomment">/// Get a `value` from the session.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// It returns an error if it fails to deserialize as `T` the JSON value associated with `key`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">DeserializeOwned</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">serde_json::Error</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">DeserializeOwned</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">SessionGetError</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">val_str</span>) <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">borrow</span>().<span class="ident">state</span>.<span class="ident">get</span>(<span class="ident">key</span>) {
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">serde_json::from_str</span>(<span class="ident">val_str</span>)<span class="question-mark">?</span>))
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(
+                <span class="ident">serde_json::from_str</span>(<span class="ident">val_str</span>)
+                    .<span class="ident">with_context</span>(<span class="op">|</span><span class="op">|</span> {
+                        <span class="macro">format!</span>(
+                            <span class="string">&quot;Failed to deserialize the JSON-encoded session data attached to key \
+                            `{}` as a `{}` type&quot;</span>,
+                            <span class="ident">key</span>,
+                            <span class="ident">std::any::type_name</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>()
+                        )
+                    })
+                    .<span class="ident">map_err</span>(<span class="ident">SessionGetError</span>)<span class="question-mark">?</span>,
+            ))
         } <span class="kw">else</span> {
             <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>)
         }
@@ -368,17 +446,29 @@
     <span class="doccomment">/// only a reference to the value is taken.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// It returns an error if it fails to serialize `value` to JSON.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">insert</span>(
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">insert</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Serialize</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">key</span>: <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-        <span class="ident">value</span>: <span class="kw">impl</span> <span class="ident">Serialize</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">serde_json::Error</span><span class="op">&gt;</span> {
+        <span class="ident">value</span>: <span class="ident">T</span>,
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">SessionInsertError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">inner</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">borrow_mut</span>();
 
         <span class="kw">if</span> <span class="ident">inner</span>.<span class="ident">status</span> <span class="op">!</span><span class="op">=</span> <span class="ident">SessionStatus::Purged</span> {
             <span class="ident">inner</span>.<span class="ident">status</span> <span class="op">=</span> <span class="ident">SessionStatus::Changed</span>;
-            <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="ident">serde_json::to_string</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>)<span class="question-mark">?</span>;
-            <span class="ident">inner</span>.<span class="ident">state</span>.<span class="ident">insert</span>(<span class="ident">key</span>.<span class="ident">into</span>(), <span class="ident">val</span>);
+
+            <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">key</span>.<span class="ident">into</span>();
+            <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="ident">serde_json::to_string</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>)
+                .<span class="ident">with_context</span>(<span class="op">|</span><span class="op">|</span> {
+                    <span class="macro">format!</span>(
+                        <span class="string">&quot;Failed to serialize the provided `{}` type instance as JSON in order to \
+                        attach as session data to the `{}` key&quot;</span>,
+                        <span class="ident">std::any::type_name</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(),
+                        <span class="kw-2">&amp;</span><span class="ident">key</span>
+                    )
+                })
+                .<span class="ident">map_err</span>(<span class="ident">SessionInsertError</span>)<span class="question-mark">?</span>;
+
+            <span class="ident">inner</span>.<span class="ident">state</span>.<span class="ident">insert</span>(<span class="ident">key</span>, <span class="ident">val</span>);
         }
 
         <span class="prelude-val">Ok</span>(())
@@ -400,7 +490,7 @@
 
     <span class="doccomment">/// Remove value from the session and deserialize.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// Returns None if key was not present in session. Returns `T` if deserialization succeeds,</span>
+    <span class="doccomment">/// Returns `None` if key was not present in session. Returns `T` if deserialization succeeds,</span>
     <span class="doccomment">/// otherwise returns un-deserialized JSON string.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">remove_as</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">DeserializeOwned</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">remove</span>(<span class="ident">key</span>)
@@ -408,7 +498,7 @@
                 <span class="prelude-val">Ok</span>(<span class="ident">val</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">val</span>),
                 <span class="prelude-val">Err</span>(<span class="ident">_err</span>) =&gt; {
                     <span class="macro">tracing::debug!</span>(
-                        <span class="string">&quot;removed value (key: {}) could not be deserialized as {}&quot;</span>,
+                        <span class="string">&quot;Removed value (key: {}) could not be deserialized as {}&quot;</span>,
                         <span class="ident">key</span>,
                         <span class="ident">std::any::type_name</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>()
                     );
@@ -459,9 +549,9 @@
 
     <span class="doccomment">/// Returns session status and iterator of key-value pairs of changes.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// This is a destructive operation - the session state is removed from the request extensions typemap,</span>
-    <span class="doccomment">/// leaving behind a new empty map. It should only be used when the session is being finalised (i.e.</span>
-    <span class="doccomment">/// in `SessionMiddleware`).</span>
+    <span class="doccomment">/// This is a destructive operation - the session state is removed from the request extensions</span>
+    <span class="doccomment">/// typemap, leaving behind a new empty map. It should only be used when the session is being</span>
+    <span class="doccomment">/// finalised (i.e. in `SessionMiddleware`).</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">get_changes</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>(
         <span class="ident">res</span>: <span class="kw-2">&amp;mut</span> <span class="ident">ServiceResponse</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>,
     ) -&gt; (<span class="ident">SessionStatus</span>, <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">String</span><span class="op">&gt;</span>) {
@@ -518,6 +608,40 @@
         <span class="ident">ready</span>(<span class="prelude-val">Ok</span>(<span class="ident">Session::get_session</span>(<span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="ident">req</span>.<span class="ident">extensions_mut</span>())))
     }
 }
+
+<span class="doccomment">/// Error returned by [`Session::get`].</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Display</span>, <span class="ident">From</span>)]</span>
+<span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;{}&quot;</span>, <span class="ident">_0</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SessionGetError</span>(<span class="ident">anyhow::Error</span>);
+
+<span class="kw">impl</span> <span class="ident">StdError</span> <span class="kw">for</span> <span class="ident">SessionGetError</span> {
+    <span class="kw">fn</span> <span class="ident">source</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span>(<span class="kw">dyn</span> <span class="ident">StdError</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>)<span class="op">&gt;</span> {
+        <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">as_ref</span>())
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">ResponseError</span> <span class="kw">for</span> <span class="ident">SessionGetError</span> {
+    <span class="kw">fn</span> <span class="ident">error_response</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">HttpResponse</span><span class="op">&lt;</span><span class="ident">BoxBody</span><span class="op">&gt;</span> {
+        <span class="ident">HttpResponse::new</span>(<span class="self">self</span>.<span class="ident">status_code</span>())
+    }
+}
+
+<span class="doccomment">/// Error returned by [`Session::insert`].</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Display</span>, <span class="ident">From</span>)]</span>
+<span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;{}&quot;</span>, <span class="ident">_0</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SessionInsertError</span>(<span class="ident">anyhow::Error</span>);
+
+<span class="kw">impl</span> <span class="ident">StdError</span> <span class="kw">for</span> <span class="ident">SessionInsertError</span> {
+    <span class="kw">fn</span> <span class="ident">source</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span>(<span class="kw">dyn</span> <span class="ident">StdError</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>)<span class="op">&gt;</span> {
+        <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">as_ref</span>())
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">ResponseError</span> <span class="kw">for</span> <span class="ident">SessionInsertError</span> {
+    <span class="kw">fn</span> <span class="ident">error_response</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">HttpResponse</span><span class="op">&lt;</span><span class="ident">BoxBody</span><span class="op">&gt;</span> {
+        <span class="ident">HttpResponse::new</span>(<span class="self">self</span>.<span class="ident">status_code</span>())
+    }
+}
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_session" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (495b21669 2022-07-03)" ></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_session" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (06754d885 2022-07-08)" ></div>
 </body></html>

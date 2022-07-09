@@ -1,6 +1,6 @@
 var sourcesIndex = {};
 sourcesIndex["actix_cors"] = {"name":"","files":["all_or_some.rs","builder.rs","error.rs","inner.rs","lib.rs","middleware.rs"]};
-sourcesIndex["actix_identity"] = {"name":"","files":["cookie.rs","identity.rs","lib.rs","middleware.rs"]};
+sourcesIndex["actix_identity"] = {"name":"","files":["config.rs","identity.rs","identity_ext.rs","lib.rs","middleware.rs"]};
 sourcesIndex["actix_limitation"] = {"name":"","files":["builder.rs","errors.rs","lib.rs","middleware.rs","status.rs"]};
 sourcesIndex["actix_protobuf"] = {"name":"","files":["lib.rs"]};
 sourcesIndex["actix_redis"] = {"name":"","files":["lib.rs","redis.rs"]};

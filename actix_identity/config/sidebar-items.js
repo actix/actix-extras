@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":[["LogoutBehaviour","`LogoutBehaviour` controls what actions are going to be performed when `Identity::logout` is invoked."]],"struct":[["IdentityMiddlewareBuilder","A fluent builder to construct an [`IdentityMiddleware`] instance with custom configuration parameters."]]};
