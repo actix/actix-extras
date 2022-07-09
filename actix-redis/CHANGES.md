@@ -1,6 +1,9 @@
 # Changes
 
 ## Unreleased - 2022-xx-xx
+
+
+## 0.12.0 - 2022-07-09
 - Update `actix` dependency to `0.13`.
 - Update `redis-async` dependency to `0.13`.
 - Update `tokio-util` dependency to `0.7`.
