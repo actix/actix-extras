@@ -1,16 +1,20 @@
 use std::{
     cell::{Ref, RefCell},
     collections::HashMap,
+    error::Error as StdError,
     mem,
     rc::Rc,
 };
 
 use actix_utils::future::{ready, Ready};
 use actix_web::{
+    body::BoxBody,
     dev::{Extensions, Payload, ServiceRequest, ServiceResponse},
     error::Error,
-    FromRequest, HttpMessage, HttpRequest,
+    FromRequest, HttpMessage, HttpRequest, HttpResponse, ResponseError,
 };
+use anyhow::Context;
+use derive_more::{Display, From};
 use serde::{de::DeserializeOwned, Serialize};
 
 /// The primary interface to access and modify session state.
@@ -38,6 +42,7 @@ use serde::{de::DeserializeOwned, Serialize};
 /// [`SessionExt`].
 ///
 /// [`SessionExt`]: crate::SessionExt
+#[derive(Clone)]
 pub struct Session(Rc<RefCell<SessionInner>>);
 
 /// Status of a [`Session`].
@@ -78,9 +83,20 @@ impl Session {
     /// Get a `value` from the session.
     ///
     /// It returns an error if it fails to deserialize as `T` the JSON value associated with `key`.
-    pub fn get<T: DeserializeOwned>(&self, key: &str) -> Result<Option<T>, serde_json::Error> {
+    pub fn get<T: DeserializeOwned>(&self, key: &str) -> Result<Option<T>, SessionGetError> {
         if let Some(val_str) = self.0.borrow().state.get(key) {
-            Ok(Some(serde_json::from_str(val_str)?))
+            Ok(Some(
+                serde_json::from_str(val_str)
+                    .with_context(|| {
+                        format!(
+                            "Failed to deserialize the JSON-encoded session data attached to key \
+                            `{}` as a `{}` type",
+                            key,
+                            std::any::type_name::<T>()
+                        )
+                    })
+                    .map_err(SessionGetError)?,
+            ))
         } else {
             Ok(None)
         }
@@ -104,17 +120,29 @@ impl Session {
     /// only a reference to the value is taken.
     ///
     /// It returns an error if it fails to serialize `value` to JSON.
-    pub fn insert(
+    pub fn insert<T: Serialize>(
         &self,
         key: impl Into<String>,
-        value: impl Serialize,
-    ) -> Result<(), serde_json::Error> {
+        value: T,
+    ) -> Result<(), SessionInsertError> {
         let mut inner = self.0.borrow_mut();
 
         if inner.status != SessionStatus::Purged {
             inner.status = SessionStatus::Changed;
-            let val = serde_json::to_string(&value)?;
-            inner.state.insert(key.into(), val);
+
+            let key = key.into();
+            let val = serde_json::to_string(&value)
+                .with_context(|| {
+                    format!(
+                        "Failed to serialize the provided `{}` type instance as JSON in order to \
+                        attach as session data to the `{}` key",
+                        std::any::type_name::<T>(),
+                        &key
+                    )
+                })
+                .map_err(SessionInsertError)?;
+
+            inner.state.insert(key, val);
         }
 
         Ok(())
@@ -136,7 +164,7 @@ impl Session {
 
     /// Remove value from the session and deserialize.
     ///
-    /// Returns None if key was not present in session. Returns `T` if deserialization succeeds,
+    /// Returns `None` if key was not present in session. Returns `T` if deserialization succeeds,
     /// otherwise returns un-deserialized JSON string.
     pub fn remove_as<T: DeserializeOwned>(&self, key: &str) -> Option<Result<T, String>> {
         self.remove(key)
@@ -144,7 +172,7 @@ impl Session {
                 Ok(val) => Ok(val),
                 Err(_err) => {
                     tracing::debug!(
-                        "removed value (key: {}) could not be deserialized as {}",
+                        "Removed value (key: {}) could not be deserialized as {}",
                         key,
                         std::any::type_name::<T>()
                     );
@@ -195,9 +223,9 @@ impl Session {
 
     /// Returns session status and iterator of key-value pairs of changes.
     ///
-    /// This is a destructive operation - the session state is removed from the request extensions typemap,
-    /// leaving behind a new empty map. It should only be used when the session is being finalised (i.e.
-    /// in `SessionMiddleware`).
+    /// This is a destructive operation - the session state is removed from the request extensions
+    /// typemap, leaving behind a new empty map. It should only be used when the session is being
+    /// finalised (i.e. in `SessionMiddleware`).
     pub(crate) fn get_changes<B>(
         res: &mut ServiceResponse<B>,
     ) -> (SessionStatus, HashMap<String, String>) {
@@ -252,5 +280,39 @@ impl FromRequest for Session {
     #[inline]
     fn from_request(req: &HttpRequest, _: &mut Payload) -> Self::Future {
         ready(Ok(Session::get_session(&mut *req.extensions_mut())))
+    }
+}
+
+/// Error returned by [`Session::get`].
+#[derive(Debug, Display, From)]
+#[display(fmt = "{}", _0)]
+pub struct SessionGetError(anyhow::Error);
+
+impl StdError for SessionGetError {
+    fn source(&self) -> Option<&(dyn StdError + 'static)> {
+        Some(self.0.as_ref())
+    }
+}
+
+impl ResponseError for SessionGetError {
+    fn error_response(&self) -> HttpResponse<BoxBody> {
+        HttpResponse::new(self.status_code())
+    }
+}
+
+/// Error returned by [`Session::insert`].
+#[derive(Debug, Display, From)]
+#[display(fmt = "{}", _0)]
+pub struct SessionInsertError(anyhow::Error);
+
+impl StdError for SessionInsertError {
+    fn source(&self) -> Option<&(dyn StdError + 'static)> {
+        Some(self.0.as_ref())
+    }
+}
+
+impl ResponseError for SessionInsertError {
+    fn error_response(&self) -> HttpResponse<BoxBody> {
+        HttpResponse::new(self.status_code())
     }
 }

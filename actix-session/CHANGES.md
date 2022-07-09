@@ -1,6 +1,6 @@
 # Changes
 
-## Unreleased - 2022-xx-xx
+## Unreleased - 2021-xx-xx
 - Added `TtlExtensionPolicy` enum to support different strategies for extending the TTL attached to the session state. `TtlExtensionPolicy::OnEveryRequest` now allows for long-lived sessions that do not expire if the user remains active. [#233]
 - `SessionLength` is now called `SessionLifecycle`. [#233]
 - `SessionLength::Predetermined` is now called `SessionLifecycle::PersistentSession`. [#233]
