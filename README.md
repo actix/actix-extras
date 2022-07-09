@@ -49,13 +49,13 @@ To add a crate to this list, submit a pull request.
 [actix]: https://github.com/actix/actix
 [actix web]: https://github.com/actix/actix-web
 [actix-extras]: https://github.com/actix/actix-extras
-[actix-cors]: actix-cors
-[actix-identity]: actix-identity
-[actix-limitation]: actix-limitation
-[actix-protobuf]: actix-protobuf
-[actix-redis]: actix-redis
-[actix-session]: actix-session
-[actix-web-httpauth]: actix-web-httpauth
+[actix-cors]: ./actix-cors
+[actix-identity]: ./actix-identity
+[actix-limitation]: ./actix-limitation
+[actix-protobuf]: ./actix-protobuf
+[actix-redis]: ./actix-redis
+[actix-session]: ./actix-session
+[actix-web-httpauth]: ./actix-web-httpauth
 [actix-web-lab]: https://crates.io/crates/actix-web-lab
 [actix-multipart-extract]: https://crates.io/crates/actix-multipart-extract
 [actix-form-data]: https://crates.io/crates/actix-form-data
