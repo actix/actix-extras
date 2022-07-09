@@ -8,7 +8,6 @@ keywords = ["actix", "redis", "async", "session"]
 homepage = "https://actix.rs"
 repository = "https://github.com/actix/actix-extras.git"
 categories = ["network-programming", "asynchronous"]
-exclude = [".cargo/config"]
 edition = "2018"
 
 [lib]
@@ -22,7 +21,7 @@ default = ["web"]
 web = ["actix-web"]
 
 [dependencies]
-actix = { version = "0.12", default-features = false }
+actix = { version = "0.13", default-features = false }
 actix-rt = { version = "2.1", default-features = false }
 actix-service = "2"
 actix-tls = { version = "3", default-features = false, features = ["connect"] }
@@ -31,10 +30,10 @@ log = "0.4.6"
 backoff = "0.4.0"
 derive_more = "0.99.5"
 futures-core = { version = "0.3.7", default-features = false }
-redis-async = { version = "0.12", default-features = false, features = ["tokio10"] }
+redis-async = "0.13"
 time = "0.3"
 tokio = { version = "1.13.1", features = ["sync"] }
-tokio-util = "0.6.1"
+tokio-util = "0.7"
 actix-web = { version = "4", default_features = false, optional = true }
 
 [dev-dependencies]
