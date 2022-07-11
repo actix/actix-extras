@@ -4,9 +4,9 @@
 > Originally based on <https://github.com/fnichol/limitation>.
 
 [![crates.io](https://img.shields.io/crates/v/actix-limitation?label=latest)](https://crates.io/crates/actix-limitation)
-[![Documentation](https://docs.rs/actix-limitation/badge.svg?version=0.2.0)](https://docs.rs/actix-limitation/0.2.0)
+[![Documentation](https://docs.rs/actix-limitation/badge.svg?version=0.3.0)](https://docs.rs/actix-limitation/0.3.0)
 ![Apache 2.0 or MIT licensed](https://img.shields.io/crates/l/actix-limitation)
-[![Dependency Status](https://deps.rs/crate/actix-limitation/0.2.0/status.svg)](https://deps.rs/crate/actix-limitation/0.2.0)
+[![Dependency Status](https://deps.rs/crate/actix-limitation/0.3.0/status.svg)](https://deps.rs/crate/actix-limitation/0.3.0)
 
 ## Examples
 

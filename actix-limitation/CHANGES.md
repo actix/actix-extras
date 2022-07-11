@@ -1,6 +1,9 @@
 # Changes
 
 ## Unreleased - 2022-xx-xx
+
+
+## 0.3.0 - 2022-07-11
 - `Limiter::builder` now takes an `impl Into<String>`.
 - Removed lifetime from `Builder`.
 - Updated `actix-session` dependency to `0.7`.
