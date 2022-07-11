@@ -3,7 +3,7 @@
 //! ```toml
 //! [dependencies]
 //! actix-web = "4"
-//! actix-limitation = "0.1.4"
+#![doc = concat!("actix-limitation = \"", env!("CARGO_PKG_VERSION_MAJOR"), ".", env!("CARGO_PKG_VERSION_MINOR"),"\"")]
 //! ```
 //!
 //! ```no_run
@@ -34,7 +34,7 @@
 //!             .app_data(limiter.clone())
 //!             .service(index)
 //!     })
-//!     .bind("127.0.0.1:8080")?
+//!     .bind(("127.0.0.1", 8080))?
 //!     .run()
 //!     .await
 //! }
