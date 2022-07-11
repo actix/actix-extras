@@ -23,16 +23,15 @@ actix-utils = "3"
 actix-web = { version = "4", default-features = false, features = ["cookies", "secure-cookies"] }
 
 anyhow = "1"
-env_logger = "0.9"
 futures-core = "0.3.7"
 serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-time = "0.3"
 tracing = { version = "0.1.30", default-features = false, features = ["log"] }
 
 [dev-dependencies]
 actix-http = "3"
 actix-web = { version = "4", default_features = false, features = ["macros", "cookies", "secure-cookies"] }
 actix-session = { version = "0.7", features = ["redis-rs-session", "cookie-session"] }
-uuid = { version = "1", features = ["v4"] }
+
+env_logger = "0.9"
 reqwest = { version = "0.11", default_features = false, features = ["cookies", "json"] }
+uuid = { version = "1", features = ["v4"] }

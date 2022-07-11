@@ -4,12 +4,11 @@ use actix_session::SessionExt;
 use actix_utils::future::{ready, Ready};
 use actix_web::{
     body::MessageBody,
-    cookie::time::format_description::well_known::Rfc3339,
+    cookie::time::{format_description::well_known::Rfc3339, OffsetDateTime},
     dev::{Service, ServiceRequest, ServiceResponse, Transform},
     Error, HttpMessage as _, Result,
 };
 use futures_core::future::LocalBoxFuture;
-use time::OffsetDateTime;
 
 use crate::{
     config::{Configuration, IdentityMiddlewareBuilder},
