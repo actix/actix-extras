@@ -1,37 +1,40 @@
 # Changes
 
-## 0.5.0 - 2022-xx-xx
+## Unreleased - 2022-xx-xx
 
-`actix-identity:0.5.0` is a complete rewrite. The goal is to streamline user experience and reduce maintenance overhead.  
 
-`actix-identity:0.5.0` is designed as an additional layer on top of `actix-session:0.7.x`, focused on identity management.  
-The identity information is stored in the session state, which is managed by `actix-session` and can be stored using any of the supported `SessionStore` implementations. This reduces the surface area in `actix-identity` (it is no longer concerned with cookies!) and provides a smooth upgrade path for users: if you need to work with sessions, you no longer need to choose between `actix-session` and `actix-identity`; they work together now!
+## 0.5.0 - 2022-07-11
+`actix-identity` v0.5 is a complete rewrite. The goal is to streamline user experience and reduce maintenance overhead.
 
-`actix-identity:0.5.0` has feature-parity with `actix-identity:0.4.x` - if you bump into any blocker when upgrading, please open an issue.
+`actix-identity` is now designed as an additional layer on top of `actix-session` v0.7, focused on identity management. The identity information is stored in the session state, which is managed by `actix-session` and can be stored using any of the supported `SessionStore` implementations. This reduces the surface area in `actix-identity` (e.g., it is no longer concerned with cookies!) and provides a smooth upgrade path for users: if you need to work with sessions, you no longer need to choose between `actix-session` and `actix-identity`; they work together now!
+
+`actix-identity` v0.5 has feature-parity with `actix-identity` v0.4; if you bump into any blocker when upgrading, please open an issue.
 
 Changes:
 
 - Minimum supported Rust version (MSRV) is now 1.57 due to transitive `time` dependency.
 - `IdentityService`, `IdentityPolicy` and `CookieIdentityPolicy` have been replaced by `IdentityMiddleware`. [#246]
-- `RequestIdentity` has been replaced by `IdentityExt`. [#246]
-- Trying to extract an `Identity` for an unauthenticated user will return a `401` response to the caller. Extract an `Option<Identity>` or a `Result<Identity, actix_web::Error>` if you need to work with users that may or may not be authenticated [#246]. Example:
+- Rename `RequestIdentity` trait to `IdentityExt`. [#246]
+- Trying to extract an `Identity` for an unauthenticated user will return a `401 Unauthorized` response to the client. Extract an `Option<Identity>` or a `Result<Identity, actix_web::Error>` if you need to handle cases where requests may or may not be authenticated. [#246]
+  
+  Example:
+  
+  ```rust
+  use actix_web::{http::header::LOCATION, get, HttpResponse, Responder};
+  use actix_identity::Identity;
 
-```rust
-use actix_web::{http::header::LOCATION, get, HttpResponse, Responder};
-use actix_identity::Identity;
-
-#[get("/")]
-async fn index(user: Option<Identity>) -> impl Responder {
-    if let Some(user) = user {
-        HttpResponse::Ok().finish()
-    } else {
-        // Redirect to login page if unauthenticated
-        HttpResponse::TemporaryRedirect()
-            .insert_header((LOCATION, "/login"))
-            .finish()
-    }
-}
-```
+  #[get("/")]
+  async fn index(user: Option<Identity>) -> impl Responder {
+      if let Some(user) = user {
+          HttpResponse::Ok().finish()
+      } else {
+          // Redirect to login page if unauthenticated
+          HttpResponse::TemporaryRedirect()
+              .insert_header((LOCATION, "/login"))
+              .finish()
+      }
+  }
+  ```
 
 [#246]: https://github.com/actix/actix-extras/pull/246
 
