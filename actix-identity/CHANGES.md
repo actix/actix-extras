@@ -7,7 +7,7 @@
 `actix-identity:0.5.0` is designed as an additional layer on top of `actix-session:0.7.x`, focused on identity management.  
 The identity information is stored in the session state, which is managed by `actix-session` and can be stored using any of the supported `SessionStore` implementations. This reduces the surface area in `actix-identity` (it is no longer concerned with cookies!) and provides a smooth upgrade path for users: if you need to work with sessions, you no longer need to choose between `actix-session` and `actix-identity`; they work together now!
 
-`actix-identity:0.5.0` has features parity with `actix-identity:0.4.0` - if you bump into any blocker when upgrading, please open an issue.
+`actix-identity:0.5.0` has feature-parity with `actix-identity:0.4.x` - if you bump into any blocker when upgrading, please open an issue.
 
 Changes:
 
