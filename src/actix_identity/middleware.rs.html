@@ -254,19 +254,17 @@
 <span id="248">248</span>
 <span id="249">249</span>
 <span id="250">250</span>
-<span id="251">251</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::rc::Rc</span>;
 
 <span class="kw">use</span> <span class="ident">actix_session::SessionExt</span>;
 <span class="kw">use</span> <span class="ident">actix_utils::future</span>::{<span class="ident">ready</span>, <span class="ident">Ready</span>};
 <span class="kw">use</span> <span class="ident">actix_web</span>::{
     <span class="ident">body::MessageBody</span>,
-    <span class="ident">cookie::time::format_description::well_known::Rfc3339</span>,
+    <span class="ident">cookie::time</span>::{<span class="ident">format_description::well_known::Rfc3339</span>, <span class="ident">OffsetDateTime</span>},
     <span class="ident">dev</span>::{<span class="ident">Service</span>, <span class="ident">ServiceRequest</span>, <span class="ident">ServiceResponse</span>, <span class="ident">Transform</span>},
     <span class="ident">Error</span>, <span class="ident">HttpMessage</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="prelude-ty">Result</span>,
 };
 <span class="kw">use</span> <span class="ident">futures_core::future::LocalBoxFuture</span>;
-<span class="kw">use</span> <span class="ident">time::OffsetDateTime</span>;
 
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">config</span>::{<span class="ident">Configuration</span>, <span class="ident">IdentityMiddlewareBuilder</span>},
