@@ -170,7 +170,7 @@
 <span class="doccomment">//! ```toml</span>
 <span class="doccomment">//! [dependencies]</span>
 <span class="doccomment">//! actix-web = &quot;4&quot;</span>
-<span class="doccomment">//! actix-limitation = &quot;0.1.4&quot;</span>
+<span class="attribute">#![<span class="ident">doc</span> <span class="op">=</span> <span class="macro">concat!</span>(<span class="string">&quot;actix-limitation = \&quot;&quot;</span>, <span class="macro">env!</span>(<span class="string">&quot;CARGO_PKG_VERSION_MAJOR&quot;</span>), <span class="string">&quot;.&quot;</span>, <span class="macro">env!</span>(<span class="string">&quot;CARGO_PKG_VERSION_MINOR&quot;</span>),<span class="string">&quot;\&quot;&quot;</span>)]</span>
 <span class="doccomment">//! ```</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! ```no_run</span>
@@ -201,7 +201,7 @@
 <span class="doccomment">//!             .app_data(limiter.clone())</span>
 <span class="doccomment">//!             .service(index)</span>
 <span class="doccomment">//!     })</span>
-<span class="doccomment">//!     .bind(&quot;127.0.0.1:8080&quot;)?</span>
+<span class="doccomment">//!     .bind((&quot;127.0.0.1&quot;, 8080))?</span>
 <span class="doccomment">//!     .run()</span>
 <span class="doccomment">//!     .await</span>
 <span class="doccomment">//! }</span>

@@ -10,7 +10,7 @@
     <h1 class="fqn"><span class="in-band">Crate <a class="mod" href="#">actix_limitation</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../clipboard.svg" width="19" height="18" alt="Copy item path"></button></span></h1><span class="out-of-band"><a class="srclink" href="../src/actix_limitation/lib.rs.html#1-159">source</a> · <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span></div><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Rate limiter using a fixed window counter for arbitrary keys, backed by Redis for Actix Web.</p>
 <div class="example-wrap"><pre class="language-toml"><code>[dependencies]
 actix-web = &quot;4&quot;
-actix-limitation = &quot;0.1.4&quot;</code></pre></div>
+actix-limitation = &quot;0.3&quot;</code></pre></div>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">std::time::Duration</span>;
 <span class="kw">use</span> <span class="ident">actix_web</span>::{<span class="ident">get</span>, <span class="ident">web</span>, <span class="ident">App</span>, <span class="ident">HttpServer</span>, <span class="ident">Responder</span>};
 <span class="kw">use</span> <span class="ident">actix_limitation</span>::{<span class="ident">Limiter</span>, <span class="ident">RateLimiter</span>};
@@ -38,7 +38,7 @@ actix-limitation = &quot;0.1.4&quot;</code></pre></div>
             .<span class="ident">app_data</span>(<span class="ident">limiter</span>.<span class="ident">clone</span>())
             .<span class="ident">service</span>(<span class="ident">index</span>)
     })
-    .<span class="ident">bind</span>(<span class="string">&quot;127.0.0.1:8080&quot;</span>)<span class="question-mark">?</span>
+    .<span class="ident">bind</span>((<span class="string">&quot;127.0.0.1&quot;</span>, <span class="number">8080</span>))<span class="question-mark">?</span>
     .<span class="ident">run</span>()
     .<span class="kw">await</span>
 }</code></pre></div>
