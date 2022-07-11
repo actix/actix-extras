@@ -88,9 +88,9 @@ impl Limiter {
     /// See [`redis-rs` docs](https://docs.rs/redis/0.21/redis/#connection-parameters) on connection
     /// parameters for how to set the Redis URL.
     #[must_use]
-    pub fn builder(redis_url: &str) -> Builder<'_> {
+    pub fn builder(redis_url: impl Into<String>) -> Builder {
         Builder {
-            redis_url,
+            redis_url: redis_url.into(),
             limit: DEFAULT_REQUEST_LIMIT,
             period: Duration::from_secs(DEFAULT_PERIOD_SECS),
             cookie_name: Cow::Borrowed(DEFAULT_COOKIE_NAME),

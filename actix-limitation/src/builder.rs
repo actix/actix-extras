@@ -4,17 +4,17 @@ use redis::Client;
 
 use crate::{errors::Error, Limiter};
 
-/// Rate limit builder.
+/// Rate limiter builder.
 #[derive(Debug)]
-pub struct Builder<'a> {
-    pub(crate) redis_url: &'a str,
+pub struct Builder {
+    pub(crate) redis_url: String,
     pub(crate) limit: usize,
     pub(crate) period: Duration,
     pub(crate) cookie_name: Cow<'static, str>,
     pub(crate) session_key: Cow<'static, str>,
 }
 
-impl Builder<'_> {
+impl Builder {
     /// Set upper limit.
     pub fn limit(&mut self, limit: usize) -> &mut Self {
         self.limit = limit;
@@ -45,7 +45,7 @@ impl Builder<'_> {
     /// **synchronous** operation.
     pub fn build(&self) -> Result<Limiter, Error> {
         Ok(Limiter {
-            client: Client::open(self.redis_url)?,
+            client: Client::open(self.redis_url.as_str())?,
             limit: self.limit,
             period: self.period,
             cookie_name: self.cookie_name.clone(),
@@ -63,7 +63,7 @@ mod tests {
         let redis_url = "redis://127.0.0.1";
         let period = Duration::from_secs(10);
         let builder = Builder {
-            redis_url,
+            redis_url: redis_url.to_owned(),
             limit: 100,
             period,
             cookie_name: Cow::Owned("session".to_string()),
@@ -82,7 +82,7 @@ mod tests {
         let redis_url = "redis://127.0.0.1";
         let period = Duration::from_secs(20);
         let mut builder = Builder {
-            redis_url,
+            redis_url: redis_url.to_owned(),
             limit: 100,
             period: Duration::from_secs(10),
             session_key: Cow::Borrowed("key"),
@@ -109,7 +109,7 @@ mod tests {
         let redis_url = "127.0.0.1";
         let period = Duration::from_secs(20);
         let mut builder = Builder {
-            redis_url,
+            redis_url: redis_url.to_owned(),
             limit: 100,
             period: Duration::from_secs(10),
             session_key: Cow::Borrowed("key"),
