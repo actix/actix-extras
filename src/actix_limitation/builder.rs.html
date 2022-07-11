@@ -133,17 +133,17 @@
 
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">errors::Error</span>, <span class="ident">Limiter</span>};
 
-<span class="doccomment">/// Rate limit builder.</span>
+<span class="doccomment">/// Rate limiter builder.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Builder</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">redis_url</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span>,
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Builder</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">redis_url</span>: <span class="ident">String</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">limit</span>: <span class="ident">usize</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">period</span>: <span class="ident">Duration</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">cookie_name</span>: <span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">str</span><span class="op">&gt;</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">session_key</span>: <span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">str</span><span class="op">&gt;</span>,
 }
 
-<span class="kw">impl</span> <span class="ident">Builder</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
+<span class="kw">impl</span> <span class="ident">Builder</span> {
     <span class="doccomment">/// Set upper limit.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">limit</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">limit</span>: <span class="ident">usize</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">limit</span> <span class="op">=</span> <span class="ident">limit</span>;
@@ -174,7 +174,7 @@
     <span class="doccomment">/// **synchronous** operation.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">build</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Limiter</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="prelude-val">Ok</span>(<span class="ident">Limiter</span> {
-            <span class="ident">client</span>: <span class="ident">Client::open</span>(<span class="self">self</span>.<span class="ident">redis_url</span>)<span class="question-mark">?</span>,
+            <span class="ident">client</span>: <span class="ident">Client::open</span>(<span class="self">self</span>.<span class="ident">redis_url</span>.<span class="ident">as_str</span>())<span class="question-mark">?</span>,
             <span class="ident">limit</span>: <span class="self">self</span>.<span class="ident">limit</span>,
             <span class="ident">period</span>: <span class="self">self</span>.<span class="ident">period</span>,
             <span class="ident">cookie_name</span>: <span class="self">self</span>.<span class="ident">cookie_name</span>.<span class="ident">clone</span>(),
@@ -192,7 +192,7 @@
         <span class="kw">let</span> <span class="ident">redis_url</span> <span class="op">=</span> <span class="string">&quot;redis://127.0.0.1&quot;</span>;
         <span class="kw">let</span> <span class="ident">period</span> <span class="op">=</span> <span class="ident">Duration::from_secs</span>(<span class="number">10</span>);
         <span class="kw">let</span> <span class="ident">builder</span> <span class="op">=</span> <span class="ident">Builder</span> {
-            <span class="ident">redis_url</span>,
+            <span class="ident">redis_url</span>: <span class="ident">redis_url</span>.<span class="ident">to_owned</span>(),
             <span class="ident">limit</span>: <span class="number">100</span>,
             <span class="ident">period</span>,
             <span class="ident">cookie_name</span>: <span class="ident">Cow::Owned</span>(<span class="string">&quot;session&quot;</span>.<span class="ident">to_string</span>()),
@@ -211,7 +211,7 @@
         <span class="kw">let</span> <span class="ident">redis_url</span> <span class="op">=</span> <span class="string">&quot;redis://127.0.0.1&quot;</span>;
         <span class="kw">let</span> <span class="ident">period</span> <span class="op">=</span> <span class="ident">Duration::from_secs</span>(<span class="number">20</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">builder</span> <span class="op">=</span> <span class="ident">Builder</span> {
-            <span class="ident">redis_url</span>,
+            <span class="ident">redis_url</span>: <span class="ident">redis_url</span>.<span class="ident">to_owned</span>(),
             <span class="ident">limit</span>: <span class="number">100</span>,
             <span class="ident">period</span>: <span class="ident">Duration::from_secs</span>(<span class="number">10</span>),
             <span class="ident">session_key</span>: <span class="ident">Cow::Borrowed</span>(<span class="string">&quot;key&quot;</span>),
@@ -238,7 +238,7 @@
         <span class="kw">let</span> <span class="ident">redis_url</span> <span class="op">=</span> <span class="string">&quot;127.0.0.1&quot;</span>;
         <span class="kw">let</span> <span class="ident">period</span> <span class="op">=</span> <span class="ident">Duration::from_secs</span>(<span class="number">20</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">builder</span> <span class="op">=</span> <span class="ident">Builder</span> {
-            <span class="ident">redis_url</span>,
+            <span class="ident">redis_url</span>: <span class="ident">redis_url</span>.<span class="ident">to_owned</span>(),
             <span class="ident">limit</span>: <span class="number">100</span>,
             <span class="ident">period</span>: <span class="ident">Duration::from_secs</span>(<span class="number">10</span>),
             <span class="ident">session_key</span>: <span class="ident">Cow::Borrowed</span>(<span class="string">&quot;key&quot;</span>),
@@ -249,5 +249,5 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_limitation" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (06754d885 2022-07-08)" ></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_limitation" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (c396bb3b8 2022-07-10)" ></div>
 </body></html>
