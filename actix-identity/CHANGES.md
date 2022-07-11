@@ -1,6 +1,9 @@
 # Changes
 
 ## Unreleased - 2022-xx-xx
+- Remove unnecessary dependencies. [#???]
+
+[#???]: https://github.com/actix/actix-extras/pull/???
 
 
 ## 0.5.0 - 2022-07-11
