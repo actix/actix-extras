@@ -375,7 +375,7 @@ mod tests {
         let srv = actix_web::test::init_service(
             App::new()
                 .wrap(middleware)
-                .route("/", web::get().to(|| HttpResponse::Ok())),
+                .route("/", web::get().to(HttpResponse::Ok)),
         )
         .await;
 
@@ -401,7 +401,7 @@ mod tests {
             App::new().service(
                 web::scope("/")
                     .wrap(middleware)
-                    .route("/", web::get().to(|| HttpResponse::Ok())),
+                    .route("/", web::get().to(HttpResponse::Ok)),
             ),
         )
         .await;
