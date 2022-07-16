@@ -153,8 +153,12 @@ impl Identity {
         let inner = IdentityInner::extract(ext);
         inner.session.insert(ID_KEY, id)?;
         let now = OffsetDateTime::now_utc().unix_timestamp();
-        inner.session.insert(LOGIN_UNIX_TIMESTAMP_KEY, now)?;
-        inner.session.insert(LAST_VISIT_UNIX_TIMESTAMP_KEY, now)?;
+        if inner.is_login_deadline_enabled {
+            inner.session.insert(LOGIN_UNIX_TIMESTAMP_KEY, now)?;
+        }
+        if inner.is_visit_deadline_enabled {
+            inner.session.insert(LAST_VISIT_UNIX_TIMESTAMP_KEY, now)?;
+        }
         inner.session.renew();
         Ok(Self(inner))
     }
