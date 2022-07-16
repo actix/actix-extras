@@ -154,7 +154,7 @@ impl Identity {
         inner.session.insert(ID_KEY, id)?;
         let now = OffsetDateTime::now_utc().unix_timestamp();
         inner.session.insert(LOGIN_UNIX_TIMESTAMP_KEY, now)?;
-        inner.session.insert(LAST_VISIT_UNIX_TIMESTAMP_KEY, now);
+        inner.session.insert(LAST_VISIT_UNIX_TIMESTAMP_KEY, now)?;
         inner.session.renew();
         Ok(Self(inner))
     }
@@ -218,6 +218,12 @@ impl Identity {
             .map(OffsetDateTime::from_unix_timestamp)
             .transpose()
             .map_err(anyhow::Error::from)
+    }
+
+    pub(crate) fn set_last_visited_at(&self) -> Result<(), anyhow::Error> {
+        let now = OffsetDateTime::now_utc().unix_timestamp();
+        self.0.session.insert(LAST_VISIT_UNIX_TIMESTAMP_KEY, now)?;
+        Ok(())
     }
 }
 
