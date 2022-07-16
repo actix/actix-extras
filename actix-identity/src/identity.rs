@@ -152,10 +152,9 @@ impl Identity {
     pub fn login(ext: &Extensions, id: String) -> Result<Self, anyhow::Error> {
         let inner = IdentityInner::extract(ext);
         inner.session.insert(ID_KEY, id)?;
-        inner.session.insert(
-            LOGIN_UNIX_TIMESTAMP_KEY,
-            OffsetDateTime::now_utc().unix_timestamp(),
-        )?;
+        let now = OffsetDateTime::now_utc().unix_timestamp();
+        inner.session.insert(LOGIN_UNIX_TIMESTAMP_KEY, now)?;
+        inner.session.insert(LAST_VISIT_UNIX_TIMESTAMP_KEY, now);
         inner.session.renew();
         Ok(Self(inner))
     }
