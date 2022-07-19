@@ -10,9 +10,6 @@ members = [
     "actix-web-httpauth",
 ]
 
-# TODO: move this example to examples repo
-# "actix-protobuf/examples/prost-example",
-
 [patch.crates-io]
 actix-cors = { path = "./actix-cors" }
 actix-identity = { path = "./actix-identity" }

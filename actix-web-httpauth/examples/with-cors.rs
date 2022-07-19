@@ -5,7 +5,7 @@ use actix_web_httpauth::{extractors::bearer::BearerAuth, middleware::HttpAuthent
 async fn ok_validator(
     req: ServiceRequest,
     credentials: BearerAuth,
-) -> Result<ServiceRequest, Error> {
+) -> Result<ServiceRequest, (Error, ServiceRequest)> {
     eprintln!("{:?}", credentials);
     Ok(req)
 }

@@ -1,4 +1,4 @@
-name: CI (master only)
+name: CI (post-merge)
 
 on:
   push:
@@ -25,7 +25,7 @@ jobs:
         options: --entrypoint redis-server
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Install ${{ matrix.version }}
         uses: actions-rs/toolchain@v1
@@ -34,6 +34,9 @@ jobs:
           profile: minimal
           override: true
 
+      - name: Install cargo-hack
+        uses: taiki-e/install-action@cargo-hack
+
       - name: Generate Cargo.lock
         uses: actions-rs/cargo@v1
         with:
@@ -41,19 +44,13 @@ jobs:
       - name: Cache Dependencies
         uses: Swatinem/rust-cache@v1.2.0
 
-      - name: Install cargo-hack
-        uses: actions-rs/cargo@v1
-        with:
-          command: install
-          args: cargo-hack
-
       - name: check minimal
         uses: actions-rs/cargo@v1
         with: { command: ci-min }
 
-      - name: check minimal + tests
+      - name: check minimal + examples
         uses: actions-rs/cargo@v1
-        with: { command: ci-check-min-tests }
+        with: { command: ci-check-min-examples }
 
       - name: check default
         uses: actions-rs/cargo@v1
@@ -83,7 +80,7 @@ jobs:
     runs-on: ${{ matrix.target.os }}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Install ${{ matrix.version }}
         uses: actions-rs/toolchain@v1
@@ -92,6 +89,9 @@ jobs:
           profile: minimal
           override: true
 
+      - name: Install cargo-hack
+        uses: taiki-e/install-action@cargo-hack
+
       - name: Generate Cargo.lock
         uses: actions-rs/cargo@v1
         with:
@@ -99,19 +99,13 @@ jobs:
       - name: Cache Dependencies
         uses: Swatinem/rust-cache@v1.2.0
 
-      - name: Install cargo-hack
-        uses: actions-rs/cargo@v1
-        with:
-          command: install
-          args: cargo-hack
-
       - name: check minimal
         uses: actions-rs/cargo@v1
         with: { command: ci-min }
 
-      - name: check minimal + tests
+      - name: check minimal + examples
         uses: actions-rs/cargo@v1
-        with: { command: ci-check-min-tests }
+        with: { command: ci-check-min-examples }
 
       - name: check default
         uses: actions-rs/cargo@v1

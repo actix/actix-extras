@@ -1,6 +1,13 @@
 # Changes
 
-## Unreleased - 2021-xx-xx
+## Unreleased - 2022-xx-xx
+
+
+## 0.12.0 - 2022-07-09
+- Update `actix` dependency to `0.13`.
+- Update `redis-async` dependency to `0.13`.
+- Update `tokio-util` dependency to `0.7`.
+- Minimum supported Rust version (MSRV) is now 1.57 due to transitive `time` dependency.
 
 
 ## 0.11.0 - 2022-03-15

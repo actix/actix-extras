@@ -1,7 +1,18 @@
 # Changes
 
-## Unreleased - 2021-xx-xx
-- `BasicAuth::user_id()` and `BasicAuth::password()` now return `&str` instead of `Cow<str>`
+## Unreleased - 2022-xx-xx
+- `BasicAuth::user_id()` now returns a `&str`. [#249]
+- `BasicAuth::password()` now returns a `&str`. [#249]
+
+[#249]: https://github.com/actix/actix-extras/pull/249
+
+
+## 0.7.0 - 2022-07-19
+- Auth validator functions now need to return `(Error, ServiceRequest)` in error cases. [#260]
+- Minimum supported Rust version (MSRV) is now 1.57 due to transitive `time` dependency.
+
+[#260]: https://github.com/actix/actix-extras/pull/260
+
 
 ## 0.6.0 - 2022-03-01
 - Update `actix-web` dependency to `4`.

@@ -1,17 +1,16 @@
 [package]
 name = "actix-protobuf"
-version = "0.7.0"
+version = "0.8.0"
 edition = "2018"
 authors = [
     "kingxsp <jin.hb.zh@outlook.com>",
-    "Yuki Okushi <huyuumi.dev@gmail.com>"
+    "Yuki Okushi <huyuumi.dev@gmail.com>",
 ]
-description = "Protobuf support for Actix web"
-keywords = ["actix", "protobuf", "protocol", "rpc"]
+description = "Protobuf support for Actix Web"
+keywords = ["actix", "web", "protobuf", "protocol", "rpc"]
 homepage = "https://actix.rs"
 repository = "https://github.com/actix/actix-extras.git"
 license = "MIT OR Apache-2.0"
-exclude = [".cargo/config", "/examples/**"]
 
 [lib]
 name = "actix_protobuf"
@@ -21,8 +20,8 @@ path = "src/lib.rs"
 actix-web = { version = "4", default_features = false }
 derive_more = "0.99.5"
 futures-util = { version = "0.3.7", default-features = false }
-prost = { version = "0.9", default_features = false }
+prost = { version = "0.10", default_features = false }
 
 [dev-dependencies]
 actix-web = { version = "4", default_features = false, features = ["macros"] }
-prost = { version = "0.9", default_features = false, features = ["prost-derive"] }
+prost = { version = "0.10", default_features = false, features = ["prost-derive"] }

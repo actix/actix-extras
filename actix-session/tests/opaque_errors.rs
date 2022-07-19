@@ -71,6 +71,10 @@ impl SessionStore for MockStore {
         todo!()
     }
 
+    async fn update_ttl(&self, _session_key: &SessionKey, _ttl: &Duration) -> Result<(), Error> {
+        todo!()
+    }
+
     async fn delete(&self, _session_key: &SessionKey) -> Result<(), Error> {
         todo!()
     }
