@@ -1,7 +1,7 @@
 # Changes
 
 ## Unreleased - 2022-xx-xx
-- Auth validator functions now need to return `(Error, SerivceRequest)` in error cases. [#260]
+- Auth validator functions now need to return `(Error, ServiceRequest)` in error cases. [#260]
 - Minimum supported Rust version (MSRV) is now 1.57 due to transitive `time` dependency.
 
 [#260]: https://github.com/actix/actix-extras/pull/260
