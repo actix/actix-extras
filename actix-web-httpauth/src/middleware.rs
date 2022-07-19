@@ -39,7 +39,7 @@ impl<T, F, O> HttpAuthentication<T, F>
 where
     T: AuthExtractor,
     F: Fn(ServiceRequest, T) -> O,
-    O: Future<Output = Result<ServiceRequest, Error>>,
+    O: Future<Output = Result<ServiceRequest, (Error, ServiceRequest)>>,
 {
     /// Construct `HttpAuthentication` middleware with the provided auth extractor `T` and
     /// validation callback `F`.
@@ -54,7 +54,7 @@ where
 impl<F, O> HttpAuthentication<basic::BasicAuth, F>
 where
     F: Fn(ServiceRequest, basic::BasicAuth) -> O,
-    O: Future<Output = Result<ServiceRequest, Error>>,
+    O: Future<Output = Result<ServiceRequest, (Error, ServiceRequest)>>,
 {
     /// Construct `HttpAuthentication` middleware for the HTTP "Basic" authentication scheme.
     ///
@@ -70,7 +70,7 @@ where
     /// async fn validator(
     ///     req: ServiceRequest,
     ///     credentials: BasicAuth,
-    /// ) -> Result<ServiceRequest, Error> {
+    /// ) -> Result<ServiceRequest, (Error, ServiceRequest)> {
     ///     // All users are great and more than welcome!
     ///     Ok(req)
     /// }
@@ -85,7 +85,7 @@ where
 impl<F, O> HttpAuthentication<bearer::BearerAuth, F>
 where
     F: Fn(ServiceRequest, bearer::BearerAuth) -> O,
-    O: Future<Output = Result<ServiceRequest, Error>>,
+    O: Future<Output = Result<ServiceRequest, (Error, ServiceRequest)>>,
 {
     /// Construct `HttpAuthentication` middleware for the HTTP "Bearer" authentication scheme.
     ///
@@ -96,7 +96,7 @@ where
     /// # use actix_web_httpauth::middleware::HttpAuthentication;
     /// # use actix_web_httpauth::extractors::bearer::{Config, BearerAuth};
     /// # use actix_web_httpauth::extractors::{AuthenticationError, AuthExtractorConfig};
-    /// async fn validator(req: ServiceRequest, credentials: BearerAuth) -> Result<ServiceRequest, Error> {
+    /// async fn validator(req: ServiceRequest, credentials: BearerAuth) -> Result<ServiceRequest, (Error, ServiceRequest)> {
     ///     if credentials.token() == "mF_9.B5f-4.1JqM" {
     ///         Ok(req)
     ///     } else {
@@ -105,7 +105,7 @@ where
     ///             .unwrap_or_else(Default::default)
     ///             .scope("urn:example:channel=HBO&urn:example:rating=G,PG-13");
     ///
-    ///         Err(AuthenticationError::from(config).into())
+    ///         Err((AuthenticationError::from(config).into(), req))
     ///     }
     /// }
     ///
@@ -121,7 +121,7 @@ where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
     S::Future: 'static,
     F: Fn(ServiceRequest, T) -> O + 'static,
-    O: Future<Output = Result<ServiceRequest, Error>> + 'static,
+    O: Future<Output = Result<ServiceRequest, (Error, ServiceRequest)>> + 'static,
     T: AuthExtractor + 'static,
     B: MessageBody + 'static,
 {
@@ -155,7 +155,7 @@ where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
     S::Future: 'static,
     F: Fn(ServiceRequest, T) -> O + 'static,
-    O: Future<Output = Result<ServiceRequest, Error>> + 'static,
+    O: Future<Output = Result<ServiceRequest, (Error, ServiceRequest)>> + 'static,
     T: AuthExtractor + 'static,
     B: MessageBody + 'static,
 {
@@ -178,9 +178,12 @@ where
                 }
             };
 
-            // TODO: alter to remove ? operator; an error response is required for downstream
-            // middleware to do their thing (eg. cors adding headers)
-            let req = process_fn(req, credentials).await?;
+            let req = match process_fn(req, credentials).await {
+                Ok(req) => req,
+                Err((err, req)) => {
+                    return Ok(req.error_response(err).map_into_right_body());
+                }
+            };
 
             service.call(req).await.map(|res| res.map_into_left_body())
         }
@@ -362,10 +365,10 @@ mod tests {
     #[actix_web::test]
     async fn test_middleware_works_with_app() {
         async fn validator(
-            _req: ServiceRequest,
+            req: ServiceRequest,
             _credentials: BasicAuth,
-        ) -> Result<ServiceRequest, actix_web::Error> {
-            Err(ErrorForbidden("You are not welcome!"))
+        ) -> Result<ServiceRequest, (actix_web::Error, ServiceRequest)> {
+            Err((ErrorForbidden("You are not welcome!"), req))
         }
         let middleware = HttpAuthentication::basic(validator);
 
@@ -387,10 +390,10 @@ mod tests {
     #[actix_web::test]
     async fn test_middleware_works_with_scope() {
         async fn validator(
-            _req: ServiceRequest,
+            req: ServiceRequest,
             _credentials: BasicAuth,
-        ) -> Result<ServiceRequest, actix_web::Error> {
-            Err(ErrorForbidden("You are not welcome!"))
+        ) -> Result<ServiceRequest, (actix_web::Error, ServiceRequest)> {
+            Err((ErrorForbidden("You are not welcome!"), req))
         }
         let middleware = actix_web::middleware::Compat::new(HttpAuthentication::basic(validator));
 

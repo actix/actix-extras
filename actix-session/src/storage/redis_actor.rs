@@ -1,6 +1,7 @@
 use actix::Addr;
 use actix_redis::{resp_array, Command, RedisActor, RespValue};
-use time::{self, Duration};
+use actix_web::cookie::time::Duration;
+use anyhow::Error;
 
 use super::SessionKey;
 use crate::storage::{
@@ -238,6 +239,24 @@ impl SessionStore for RedisActorSessionStore {
         }
     }
 
+    async fn update_ttl(&self, session_key: &SessionKey, ttl: &Duration) -> Result<(), Error> {
+        let cache_key = (self.configuration.cache_keygen)(session_key.as_ref());
+
+        let cmd = Command(resp_array![
+            "EXPIRE",
+            cache_key,
+            ttl.whole_seconds().to_string()
+        ]);
+
+        match self.addr.send(cmd).await? {
+            Ok(RespValue::Integer(_)) => Ok(()),
+            val => Err(anyhow::anyhow!(
+                "Failed to update the session state TTL: {:?}",
+                val
+            )),
+        }
+    }
+
     async fn delete(&self, session_key: &SessionKey) -> Result<(), anyhow::Error> {
         let cache_key = (self.configuration.cache_keygen)(session_key.as_ref());
 
@@ -258,8 +277,10 @@ impl SessionStore for RedisActorSessionStore {
 }
 
 #[cfg(test)]
-mod test {
+mod tests {
     use std::collections::HashMap;
+
+    use actix_web::cookie::time::Duration;
 
     use super::*;
     use crate::test_helpers::acceptance_test_suite;
@@ -286,7 +307,7 @@ mod test {
         let session_key = generate_session_key();
         let initial_session_key = session_key.as_ref().to_owned();
         let updated_session_key = store
-            .update(session_key, HashMap::new(), &time::Duration::seconds(1))
+            .update(session_key, HashMap::new(), &Duration::seconds(1))
             .await
             .unwrap();
         assert_ne!(initial_session_key, updated_session_key.as_ref());

@@ -1,163 +1,100 @@
-//! Opinionated request identity service for Actix Web apps.
+//! Identity management for Actix Web.
 //!
-//! [`IdentityService`] middleware can be used with different policies types to store
-//! identity information.
+//! `actix-identity` can be used to track identity of a user across multiple requests. It is built
+//! on top of HTTP sessions, via [`actix-session`](https://docs.rs/actix-session).
 //!
-//! A cookie based policy is provided. [`CookieIdentityPolicy`] uses cookies as identity storage.
+//! # Getting started
+//! To start using identity management in your Actix Web application you must register
+//! [`IdentityMiddleware`] and `SessionMiddleware` as middleware on your `App`:
 //!
-//! To access current request identity, use the [`Identity`] extractor.
+//! ```no_run
+//! # use actix_web::web;
+//! use actix_web::{cookie::Key, App, HttpServer, HttpResponse};
+//! use actix_identity::IdentityMiddleware;
+//! use actix_session::{storage::RedisSessionStore, SessionMiddleware};
 //!
+//! #[actix_web::main]
+//! async fn main() {
+//!     let secret_key = Key::generate();
+//!     let redis_store = RedisSessionStore::new("redis://127.0.0.1:6379")
+//!         .await
+//!         .unwrap();
+//!
+//!     HttpServer::new(move || {
+//!         App::new()
+//!             // Install the identity framework first.
+//!             .wrap(IdentityMiddleware::default())
+//!             // The identity system is built on top of sessions. You must install the session
+//!             // middleware to leverage `actix-identity`. The session middleware must be mounted
+//!             // AFTER the identity middleware: `actix-web` invokes middleware in the OPPOSITE
+//!             // order of registration when it receives an incoming request.
+//!             .wrap(SessionMiddleware::new(
+//!                  redis_store.clone(),
+//!                  secret_key.clone()
+//!             ))
+//!             // Your request handlers [...]
+//!             # .default_service(web::to(|| HttpResponse::Ok()))
+//!     })
+//! # ;
+//! }
 //! ```
-//! use actix_web::*;
-//! use actix_identity::{Identity, CookieIdentityPolicy, IdentityService};
+//!
+//! User identities can be created, accessed and destroyed using the [`Identity`] extractor in your
+//! request handlers:
+//!
+//! ```no_run
+//! use actix_web::{get, post, HttpResponse, Responder, HttpRequest, HttpMessage};
+//! use actix_identity::Identity;
+//! use actix_session::storage::RedisSessionStore;
 //!
 //! #[get("/")]
-//! async fn index(id: Identity) -> String {
-//!     // access request identity
-//!     if let Some(id) = id.identity() {
-//!         format!("Welcome! {}", id)
+//! async fn index(user: Option<Identity>) -> impl Responder {
+//!     if let Some(user) = user {
+//!         format!("Welcome! {}", user.id().unwrap())
 //!     } else {
 //!         "Welcome Anonymous!".to_owned()
 //!     }
 //! }
 //!
 //! #[post("/login")]
-//! async fn login(id: Identity) -> HttpResponse {
-//!     // remember identity
-//!     id.remember("User1".to_owned());
-//!     HttpResponse::Ok().finish()
+//! async fn login(request: HttpRequest) -> impl Responder {
+//!     // Some kind of authentication should happen here
+//!     // e.g. password-based, biometric, etc.
+//!     // [...]
+//!
+//!     // attach a verified user identity to the active session
+//!     Identity::login(&request.extensions(), "User1".into()).unwrap();
+//!
+//!     HttpResponse::Ok()
 //! }
 //!
 //! #[post("/logout")]
-//! async fn logout(id: Identity) -> HttpResponse {
-//!     // remove identity
-//!     id.forget();
-//!     HttpResponse::Ok().finish()
+//! async fn logout(user: Identity) -> impl Responder {
+//!     user.logout();
+//!     HttpResponse::Ok()
 //! }
-//!
-//! HttpServer::new(move || {
-//!     // create cookie identity backend (inside closure, since policy is not Clone)
-//!     let policy = CookieIdentityPolicy::new(&[0; 32])
-//!         .name("auth-cookie")
-//!         .secure(false);
-//!
-//!     App::new()
-//!         // wrap policy into middleware identity middleware
-//!         .wrap(IdentityService::new(policy))
-//!         .service(services![index, login, logout])
-//! })
-//! # ;
 //! ```
+//!
+//! # Advanced configuration
+//! By default, `actix-identity` does not automatically log out users. You can change this behaviour
+//! by customising the configuration for [`IdentityMiddleware`] via [`IdentityMiddleware::builder`].
+//!
+//! In particular, you can automatically log out users who:
+//! - have been inactive for a while (see [`IdentityMiddlewareBuilder::visit_deadline`];
+//! - logged in too long ago (see [`IdentityMiddlewareBuilder::login_deadline`]).
+//!
+//! [`IdentityMiddlewareBuilder::visit_deadline`]: config::IdentityMiddlewareBuilder::visit_deadline
+//! [`IdentityMiddlewareBuilder::login_deadline`]: config::IdentityMiddlewareBuilder::login_deadline
 
-#![deny(rust_2018_idioms, nonstandard_style)]
+#![forbid(unsafe_code)]
+#![deny(rust_2018_idioms, nonstandard_style, missing_docs)]
 #![warn(future_incompatible)]
 
-use std::future::Future;
-
-use actix_web::{
-    dev::{ServiceRequest, ServiceResponse},
-    Error, HttpMessage, Result,
-};
-
-mod cookie;
+pub mod config;
 mod identity;
+mod identity_ext;
 mod middleware;
 
-pub use self::cookie::CookieIdentityPolicy;
 pub use self::identity::Identity;
-pub use self::middleware::IdentityService;
-
-/// Identity policy.
-pub trait IdentityPolicy: Sized + 'static {
-    /// The return type of the middleware
-    type Future: Future<Output = Result<Option<String>, Error>>;
-
-    /// The return type of the middleware
-    type ResponseFuture: Future<Output = Result<(), Error>>;
-
-    /// Parse the session from request and load data from a service identity.
-    #[allow(clippy::wrong_self_convention)]
-    fn from_request(&self, req: &mut ServiceRequest) -> Self::Future;
-
-    /// Write changes to response
-    fn to_response<B>(
-        &self,
-        identity: Option<String>,
-        changed: bool,
-        response: &mut ServiceResponse<B>,
-    ) -> Self::ResponseFuture;
-}
-
-/// Helper trait that allows to get Identity.
-///
-/// It could be used in middleware but identity policy must be set before any other middleware that
-/// needs identity. RequestIdentity is implemented both for `ServiceRequest` and `HttpRequest`.
-pub trait RequestIdentity {
-    fn get_identity(&self) -> Option<String>;
-}
-
-impl<T> RequestIdentity for T
-where
-    T: HttpMessage,
-{
-    fn get_identity(&self) -> Option<String> {
-        Identity::get_identity(&self.extensions())
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use std::time::SystemTime;
-
-    use actix_web::{
-        body::{BoxBody, EitherBody},
-        dev::ServiceResponse,
-        test, web, App, Error,
-    };
-
-    use super::*;
-
-    pub(crate) const COOKIE_KEY_MASTER: [u8; 32] = [0; 32];
-    pub(crate) const COOKIE_NAME: &str = "actix_auth";
-    pub(crate) const COOKIE_LOGIN: &str = "test";
-
-    #[allow(clippy::enum_variant_names)]
-    pub(crate) enum LoginTimestampCheck {
-        NoTimestamp,
-        NewTimestamp,
-        OldTimestamp(SystemTime),
-    }
-
-    #[allow(clippy::enum_variant_names)]
-    pub(crate) enum VisitTimeStampCheck {
-        NoTimestamp,
-        NewTimestamp,
-    }
-
-    pub(crate) async fn create_identity_server<
-        F: Fn(CookieIdentityPolicy) -> CookieIdentityPolicy + Sync + Send + Clone + 'static,
-    >(
-        f: F,
-    ) -> impl actix_service::Service<
-        actix_http::Request,
-        Response = ServiceResponse<EitherBody<BoxBody>>,
-        Error = Error,
-    > {
-        test::init_service(
-            App::new()
-                .wrap(IdentityService::new(f(CookieIdentityPolicy::new(
-                    &COOKIE_KEY_MASTER,
-                )
-                .secure(false)
-                .name(COOKIE_NAME))))
-                .service(web::resource("/").to(|id: Identity| async move {
-                    let identity = id.identity();
-                    if identity.is_none() {
-                        id.remember(COOKIE_LOGIN.to_string())
-                    }
-                    web::Json(identity)
-                })),
-        )
-        .await
-    }
-}
+pub use self::identity_ext::IdentityExt;
+pub use self::middleware::IdentityMiddleware;
