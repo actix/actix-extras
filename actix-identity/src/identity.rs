@@ -152,10 +152,13 @@ impl Identity {
     pub fn login(ext: &Extensions, id: String) -> Result<Self, anyhow::Error> {
         let inner = IdentityInner::extract(ext);
         inner.session.insert(ID_KEY, id)?;
-        inner.session.insert(
-            LOGIN_UNIX_TIMESTAMP_KEY,
-            OffsetDateTime::now_utc().unix_timestamp(),
-        )?;
+        let now = OffsetDateTime::now_utc().unix_timestamp();
+        if inner.is_login_deadline_enabled {
+            inner.session.insert(LOGIN_UNIX_TIMESTAMP_KEY, now)?;
+        }
+        if inner.is_visit_deadline_enabled {
+            inner.session.insert(LAST_VISIT_UNIX_TIMESTAMP_KEY, now)?;
+        }
         inner.session.renew();
         Ok(Self(inner))
     }
@@ -219,6 +222,12 @@ impl Identity {
             .map(OffsetDateTime::from_unix_timestamp)
             .transpose()
             .map_err(anyhow::Error::from)
+    }
+
+    pub(crate) fn set_last_visited_at(&self) -> Result<(), anyhow::Error> {
+        let now = OffsetDateTime::now_utc().unix_timestamp();
+        self.0.session.insert(LAST_VISIT_UNIX_TIMESTAMP_KEY, now)?;
+        Ok(())
     }
 }
 

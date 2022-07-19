@@ -1,7 +1,9 @@
 # Changes
 
 ## Unreleased - 2022-xx-xx
-
+- Fix visit deadline. [#263]
+ 
+[#263]: https://github.com/actix/actix-extras/pull/263
 
 ## 0.5.1 - 2022-07-11
 - Remove unnecessary dependencies. [#259]

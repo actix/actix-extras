@@ -162,6 +162,14 @@ fn enforce_policies(req: &ServiceRequest, configuration: &Configuration) {
         ) {
             identity.logout();
             return;
+        } else {
+            if let Err(err) = identity.set_last_visited_at() {
+                tracing::warn!(
+                    error.display = %err,
+                    error.debug = ?err,
+                    "Failed to set the last visited timestamp on `Identity` for an incoming request."
+                );
+            }
         }
     }
 }
