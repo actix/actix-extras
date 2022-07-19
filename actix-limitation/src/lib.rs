@@ -3,7 +3,7 @@
 //! ```toml
 //! [dependencies]
 //! actix-web = "4"
-//! actix-limitation = "0.1.4"
+#![doc = concat!("actix-limitation = \"", env!("CARGO_PKG_VERSION_MAJOR"), ".", env!("CARGO_PKG_VERSION_MINOR"),"\"")]
 //! ```
 //!
 //! ```no_run
@@ -34,7 +34,7 @@
 //!             .app_data(limiter.clone())
 //!             .service(index)
 //!     })
-//!     .bind("127.0.0.1:8080")?
+//!     .bind(("127.0.0.1", 8080))?
 //!     .run()
 //!     .await
 //! }
@@ -73,7 +73,7 @@ pub const DEFAULT_COOKIE_NAME: &str = "sid";
 pub const DEFAULT_SESSION_KEY: &str = "rate-api-id";
 
 /// Rate limiter.
-#[derive(Clone, Debug)]
+#[derive(Debug, Clone)]
 pub struct Limiter {
     client: Client,
     limit: usize,
@@ -88,9 +88,9 @@ impl Limiter {
     /// See [`redis-rs` docs](https://docs.rs/redis/0.21/redis/#connection-parameters) on connection
     /// parameters for how to set the Redis URL.
     #[must_use]
-    pub fn builder(redis_url: &str) -> Builder<'_> {
+    pub fn builder(redis_url: impl Into<String>) -> Builder {
         Builder {
-            redis_url,
+            redis_url: redis_url.into(),
             limit: DEFAULT_REQUEST_LIMIT,
             period: Duration::from_secs(DEFAULT_PERIOD_SECS),
             cookie_name: Cow::Borrowed(DEFAULT_COOKIE_NAME),

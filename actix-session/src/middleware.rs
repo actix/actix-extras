@@ -3,15 +3,18 @@ use std::{collections::HashMap, convert::TryInto, fmt, future::Future, pin::Pin,
 use actix_utils::future::{ready, Ready};
 use actix_web::{
     body::MessageBody,
-    cookie::{Cookie, CookieJar, Key, SameSite},
+    cookie::{Cookie, CookieJar, Key},
     dev::{forward_ready, ResponseHead, Service, ServiceRequest, ServiceResponse, Transform},
     http::header::{HeaderValue, SET_COOKIE},
     HttpResponse,
 };
 use anyhow::Context;
-use time::Duration;
 
 use crate::{
+    config::{
+        self, Configuration, CookieConfiguration, CookieContentSecurity, SessionMiddlewareBuilder,
+        TtlExtensionPolicy,
+    },
     storage::{LoadError, SessionKey, SessionStore},
     Session, SessionStatus,
 };
@@ -66,8 +69,9 @@ use crate::{
 /// If you want to customise use [`builder`](Self::builder) instead of [`new`](Self::new):
 ///
 /// ```no_run
-/// use actix_web::{cookie::Key, web, App, HttpServer, HttpResponse, Error};
-/// use actix_session::{Session, SessionMiddleware, storage::RedisActorSessionStore, SessionLength};
+/// use actix_web::{App, cookie::{Key, time}, Error, HttpResponse, HttpServer, web};
+/// use actix_session::{Session, SessionMiddleware, storage::RedisActorSessionStore};
+/// use actix_session::config::PersistentSession;
 ///
 /// // The secret key would usually be read from a configuration file/environment variables.
 /// fn get_secret_key() -> Key {
@@ -87,9 +91,10 @@ use crate::{
 ///                     RedisActorSessionStore::new(redis_connection_string),
 ///                     secret_key.clone()
 ///                 )
-///                 .session_length(SessionLength::Predetermined {
-///                     max_session_length: Some(time::Duration::days(5)),
-///                 })
+///                 .session_lifecycle(
+///                     PersistentSession::default()
+///                         .session_ttl(time::Duration::days(5))
+///                 )
 ///                 .build(),
 ///             )
 ///             .default_service(web::to(|| HttpResponse::Ok())))
@@ -114,117 +119,6 @@ pub struct SessionMiddleware<Store: SessionStore> {
     configuration: Rc<Configuration>,
 }
 
-#[derive(Clone)]
-struct Configuration {
-    cookie: CookieConfiguration,
-    session: SessionConfiguration,
-}
-
-#[derive(Clone)]
-struct SessionConfiguration {
-    state_ttl: Duration,
-}
-
-#[derive(Clone)]
-struct CookieConfiguration {
-    secure: bool,
-    http_only: bool,
-    name: String,
-    same_site: SameSite,
-    path: String,
-    domain: Option<String>,
-    max_age: Option<Duration>,
-    content_security: CookieContentSecurity,
-    key: Key,
-}
-
-/// Describes how long a session should last.
-///
-/// Used by [`SessionMiddlewareBuilder::session_length`].
-#[derive(Clone, Debug)]
-pub enum SessionLength {
-    /// The session cookie will expire when the current browser session ends.
-    ///
-    /// When does a browser session end? It depends on the browser! Chrome, for example, will often
-    /// continue running in the background when the browser is closed—session cookies are not
-    /// deleted and they will still be available when the browser is opened again. Check the
-    /// documentation of the browsers you are targeting for up-to-date information.
-    BrowserSession {
-        /// We must provide a time-to-live (TTL) when storing the session state in the storage
-        /// backend—we do not want to store session states indefinitely, otherwise we will
-        /// inevitably run out of storage by holding on to the state of countless abandoned or
-        /// expired sessions!
-        ///
-        /// We are dealing with the lifecycle of two uncorrelated object here: the session cookie
-        /// and the session state. It is not a big issue if the session state outlives the cookie—
-        /// we are wasting some space in the backend storage, but it will be cleaned up eventually.
-        /// What happens, instead, if the cookie outlives the session state? A new session starts—
-        /// e.g. if sessions are being used for authentication, the user is de-facto logged out.
-        ///
-        /// It is not possible to predict with certainty how long a browser session is going to
-        /// last—you need to provide a reasonable upper bound. You do so via `state_ttl`—it dictates
-        /// what TTL should be used for session state when the lifecycle of the session cookie is
-        /// tied to the browser session length. [`SessionMiddleware`] will default to 1 day if
-        /// `state_ttl` is left unspecified.
-        state_ttl: Option<Duration>,
-    },
-
-    /// The session cookie will be a [persistent cookie].
-    ///
-    /// Persistent cookies have a pre-determined lifetime, specified via the `Max-Age` or `Expires`
-    /// attribute. They do not disappear when the current browser session ends.
-    ///
-    /// [persistent cookie]: https://www.whitehatsec.com/glossary/content/persistent-session-cookie
-    Predetermined {
-        /// Set `max_session_length` to specify how long the session cookie should live.
-        /// [`SessionMiddleware`] will default to 1 day if `max_session_length` is set to `None`.
-        ///
-        /// `max_session_length` is also used as the TTL for the session state in the
-        /// storage backend.
-        max_session_length: Option<Duration>,
-    },
-}
-
-/// Used by [`SessionMiddlewareBuilder::cookie_content_security`] to determine how to secure
-/// the content of the session cookie.
-#[derive(Debug, Clone, Copy)]
-pub enum CookieContentSecurity {
-    /// The cookie content is encrypted when using `CookieContentSecurity::Private`.
-    ///
-    /// Encryption guarantees confidentiality and integrity: the client cannot tamper with the
-    /// cookie content nor decode it, as long as the encryption key remains confidential.
-    Private,
-
-    /// The cookie content is signed when using `CookieContentSecurity::Signed`.
-    ///
-    /// Signing guarantees integrity, but it doesn't ensure confidentiality: the client cannot
-    /// tamper with the cookie content, but they can read it.
-    Signed,
-}
-
-fn default_configuration(key: Key) -> Configuration {
-    Configuration {
-        cookie: CookieConfiguration {
-            secure: true,
-            http_only: true,
-            name: "id".into(),
-            same_site: SameSite::Lax,
-            path: "/".into(),
-            domain: None,
-            max_age: None,
-            content_security: CookieContentSecurity::Private,
-            key,
-        },
-        session: SessionConfiguration {
-            state_ttl: default_ttl(),
-        },
-    }
-}
-
-fn default_ttl() -> Duration {
-    Duration::days(1)
-}
-
 impl<Store: SessionStore> SessionMiddleware<Store> {
     /// Use [`SessionMiddleware::new`] to initialize the session framework using the default
     /// parameters.
@@ -234,10 +128,7 @@ impl<Store: SessionStore> SessionMiddleware<Store> {
     ///   [`SessionStore]);
     /// - a secret key, to sign or encrypt the content of client-side session cookie.
     pub fn new(store: Store, key: Key) -> Self {
-        Self {
-            storage_backend: Rc::new(store),
-            configuration: Rc::new(default_configuration(key)),
-        }
+        Self::builder(store, key).build()
     }
 
     /// A fluent API to configure [`SessionMiddleware`].
@@ -247,124 +138,13 @@ impl<Store: SessionStore> SessionMiddleware<Store> {
     ///   [`SessionStore]);
     /// - a secret key, to sign or encrypt the content of client-side session cookie.
     pub fn builder(store: Store, key: Key) -> SessionMiddlewareBuilder<Store> {
-        SessionMiddlewareBuilder {
+        SessionMiddlewareBuilder::new(store, config::default_configuration(key))
+    }
+
+    pub(crate) fn from_parts(store: Store, configuration: Configuration) -> Self {
+        Self {
             storage_backend: Rc::new(store),
-            configuration: default_configuration(key),
-        }
-    }
-}
-
-/// A fluent builder to construct a [`SessionMiddleware`] instance with custom configuration
-/// parameters.
-#[must_use]
-pub struct SessionMiddlewareBuilder<Store: SessionStore> {
-    storage_backend: Rc<Store>,
-    configuration: Configuration,
-}
-
-impl<Store: SessionStore> SessionMiddlewareBuilder<Store> {
-    /// Set the name of the cookie used to store the session ID.
-    ///
-    /// Defaults to `id`.
-    pub fn cookie_name(mut self, name: String) -> Self {
-        self.configuration.cookie.name = name;
-        self
-    }
-
-    /// Set the `Secure` attribute for the cookie used to store the session ID.
-    ///
-    /// If the cookie is set as secure, it will only be transmitted when the connection is secure
-    /// (using `https`).
-    ///
-    /// Default is `true`.
-    pub fn cookie_secure(mut self, secure: bool) -> Self {
-        self.configuration.cookie.secure = secure;
-        self
-    }
-
-    /// Determine how long a session should last - check out [`SessionLength`]'s documentation for
-    /// more details on the available options.
-    ///
-    /// Default is [`SessionLength::BrowserSession`].
-    pub fn session_length(mut self, session_length: SessionLength) -> Self {
-        match session_length {
-            SessionLength::BrowserSession { state_ttl } => {
-                self.configuration.cookie.max_age = None;
-                self.configuration.session.state_ttl = state_ttl.unwrap_or_else(default_ttl);
-            }
-            SessionLength::Predetermined { max_session_length } => {
-                let ttl = max_session_length.unwrap_or_else(default_ttl);
-                self.configuration.cookie.max_age = Some(ttl);
-                self.configuration.session.state_ttl = ttl;
-            }
-        }
-
-        self
-    }
-
-    /// Set the `SameSite` attribute for the cookie used to store the session ID.
-    ///
-    /// By default, the attribute is set to `Lax`.
-    pub fn cookie_same_site(mut self, same_site: SameSite) -> Self {
-        self.configuration.cookie.same_site = same_site;
-        self
-    }
-
-    /// Set the `Path` attribute for the cookie used to store the session ID.
-    ///
-    /// By default, the attribute is set to `/`.
-    pub fn cookie_path(mut self, path: String) -> Self {
-        self.configuration.cookie.path = path;
-        self
-    }
-
-    /// Set the `Domain` attribute for the cookie used to store the session ID.
-    ///
-    /// Use `None` to leave the attribute unspecified. If unspecified, the attribute defaults
-    /// to the same host that set the cookie, excluding subdomains.
-    ///
-    /// By default, the attribute is left unspecified.
-    pub fn cookie_domain(mut self, domain: Option<String>) -> Self {
-        self.configuration.cookie.domain = domain;
-        self
-    }
-
-    /// Choose how the session cookie content should be secured.
-    ///
-    /// - [`CookieContentSecurity::Private`] selects encrypted cookie content.
-    /// - [`CookieContentSecurity::Signed`] selects signed cookie content.
-    ///
-    /// # Default
-    /// By default, the cookie content is encrypted. Encrypted was chosen instead of signed as
-    /// default because it reduces the chances of sensitive information being exposed in the session
-    /// key by accident, regardless of [`SessionStore`] implementation you chose to use.
-    ///
-    /// For example, if you are using cookie-based storage, you definitely want the cookie content
-    /// to be encrypted—the whole session state is embedded in the cookie! If you are using
-    /// Redis-based storage, signed is more than enough - the cookie content is just a unique
-    /// tamper-proof session key.
-    pub fn cookie_content_security(mut self, content_security: CookieContentSecurity) -> Self {
-        self.configuration.cookie.content_security = content_security;
-        self
-    }
-
-    /// Set the `HttpOnly` attribute for the cookie used to store the session ID.
-    ///
-    /// If the cookie is set as `HttpOnly`, it will not be visible to any JavaScript snippets
-    /// running in the browser.
-    ///
-    /// Default is `true`.
-    pub fn cookie_http_only(mut self, http_only: bool) -> Self {
-        self.configuration.cookie.http_only = http_only;
-        self
-    }
-
-    /// Finalise the builder and return a [`SessionMiddleware`] instance.
-    #[must_use]
-    pub fn build(self) -> SessionMiddleware<Store> {
-        SessionMiddleware {
-            storage_backend: self.storage_backend,
-            configuration: Rc::new(self.configuration),
+            configuration: Rc::new(configuration),
         }
     }
 }
@@ -509,16 +289,39 @@ where
                         }
 
                         SessionStatus::Unchanged => {
-                            // Nothing to do; we avoid the unnecessary call to the storage.
+                            if matches!(
+                                configuration.ttl_extension_policy,
+                                TtlExtensionPolicy::OnEveryRequest
+                            ) {
+                                storage_backend
+                                    .update_ttl(&session_key, &configuration.session.state_ttl)
+                                    .await
+                                    .map_err(e500)?;
+
+                                if configuration.cookie.max_age.is_some() {
+                                    set_session_cookie(
+                                        res.response_mut().head_mut(),
+                                        session_key,
+                                        &configuration.cookie,
+                                    )
+                                    .map_err(e500)?;
+                                }
+                            }
                         }
-                    }
+                    };
                 }
-            };
+            }
+
             Ok(res)
         })
     }
 }
 
+/// Examines the session cookie attached to the incoming request, if there is one, and tries
+/// to extract the session key.
+///
+/// It returns `None` if there is no session cookie or if the session cookie is considered invalid
+/// (e.g., when failing a signature check).
 fn extract_session_key(req: &ServiceRequest, config: &CookieConfiguration) -> Option<SessionKey> {
     let cookies = req.cookies().ok()?;
     let session_cookie = cookies

@@ -1,6 +1,6 @@
 [package]
 name = "actix-limitation"
-version = "0.2.0"
+version = "0.3.0"
 authors = [
     "0xmad <0xmad@users.noreply.github.com>",
     "Rob Ede <robjtede@icloud.com>",
@@ -13,7 +13,7 @@ license = "MIT OR Apache-2.0"
 edition = "2018"
 
 [dependencies]
-actix-session = "0.5"
+actix-session = "0.7"
 actix-utils = "3"
 actix-web = { version = "4", default-features = false }
 
@@ -25,5 +25,5 @@ time = "0.3"
 
 [dev-dependencies]
 actix-web = "4"
-uuid = { version = "0.8", features = ["v4"] }
 static_assertions = "1"
+uuid = { version = "1", features = ["v4"] }

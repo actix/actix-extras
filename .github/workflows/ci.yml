@@ -14,7 +14,7 @@ jobs:
         target:
           - { name: Linux, os: ubuntu-latest, triple: x86_64-unknown-linux-gnu }
         version:
-          - 1.54.0 # MSRV
+          - 1.57 # MSRV
           - stable
 
     name: ${{ matrix.target.name }} / ${{ matrix.version }}
@@ -33,7 +33,7 @@ jobs:
           --entrypoint redis-server
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Install ${{ matrix.version }}
         uses: actions-rs/toolchain@v1
@@ -42,6 +42,9 @@ jobs:
           profile: minimal
           override: true
 
+      - name: Install cargo-hack
+        uses: taiki-e/install-action@cargo-hack
+
       - name: Generate Cargo.lock
         uses: actions-rs/cargo@v1
         with:
@@ -49,19 +52,13 @@ jobs:
       - name: Cache Dependencies
         uses: Swatinem/rust-cache@v1.2.0
 
-      - name: Install cargo-hack
-        uses: actions-rs/cargo@v1
-        with:
-          command: install
-          args: cargo-hack
-
       - name: check minimal
         uses: actions-rs/cargo@v1
         with: { command: ci-min }
 
-      - name: check minimal + tests
+      - name: check minimal + examples
         uses: actions-rs/cargo@v1
-        with: { command: ci-check-min-tests }
+        with: { command: ci-check-min-examples }
 
       - name: check default
         uses: actions-rs/cargo@v1
@@ -85,14 +82,14 @@ jobs:
           - { name: macOS, os: macos-latest, triple: x86_64-apple-darwin }
           - { name: Windows, os: windows-latest, triple: x86_64-pc-windows-msvc }
         version:
-          - 1.54.0 # MSRV
+          - 1.57 # MSRV
           - stable
 
     name: ${{ matrix.target.name }} / ${{ matrix.version }}
     runs-on: ${{ matrix.target.os }}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Install ${{ matrix.version }}
         uses: actions-rs/toolchain@v1
@@ -101,6 +98,9 @@ jobs:
           profile: minimal
           override: true
 
+      - name: Install cargo-hack
+        uses: taiki-e/install-action@cargo-hack
+
       - name: Generate Cargo.lock
         uses: actions-rs/cargo@v1
         with:
@@ -108,19 +108,13 @@ jobs:
       - name: Cache Dependencies
         uses: Swatinem/rust-cache@v1.2.0
 
-      - name: Install cargo-hack
-        uses: actions-rs/cargo@v1
-        with:
-          command: install
-          args: cargo-hack
-
       - name: check minimal
         uses: actions-rs/cargo@v1
         with: { command: ci-min }
 
-      - name: check minimal + tests
+      - name: check minimal + examples
         uses: actions-rs/cargo@v1
-        with: { command: ci-check-min-tests }
+        with: { command: ci-check-min-examples }
 
       - name: check default
         uses: actions-rs/cargo@v1
@@ -145,7 +139,7 @@ jobs:
     name: doc tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Install Rust (nightly)
         uses: actions-rs/toolchain@v1

@@ -3,6 +3,23 @@
 ## Unreleased - 2021-xx-xx
 
 
+## 0.7.0 - 2022-07-09
+- Added `TtlExtensionPolicy` enum to support different strategies for extending the TTL attached to the session state. `TtlExtensionPolicy::OnEveryRequest` now allows for long-lived sessions that do not expire if the user remains active. [#233]
+- `SessionLength` is now called `SessionLifecycle`. [#233]
+- `SessionLength::Predetermined` is now called `SessionLifecycle::PersistentSession`. [#233]
+- The fields for Both `SessionLength` variants have been extracted into separate types (`PersistentSession` and `BrowserSession`). All fields are now private, manipulated via methods, to allow adding more configuration parameters in the future in a non-breaking fashion. [#233]
+- `SessionLength::Predetermined::max_session_length` is now called `PersistentSession::session_ttl`. [#233]
+- `SessionLength::BrowserSession::state_ttl` is now called `BrowserSession::session_state_ttl`. [#233]
+- `SessionMiddlewareBuilder::max_session_length` is now called `SessionMiddlewareBuilder::session_lifecycle`. [#233]
+- The `SessionStore` trait requires the implementation of a new method, `SessionStore::update_ttl`. [#233]
+- All types used to configure `SessionMiddleware` have been moved to the `config` sub-module. [#233]
+- Update `actix` dependency to `0.13`.
+- Update `actix-redis` dependency to `0.12`.
+- Minimum supported Rust version (MSRV) is now 1.57 due to transitive `time` dependency.
+
+[#233]: https://github.com/actix/actix-extras/pull/233
+
+
 ## 0.6.2 - 2022-03-25
 - Implement `SessionExt` for `GuardContext`. [#234]
 - `RedisSessionStore` will prevent connection timeouts from causing user-visible errors. [#235]
