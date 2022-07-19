@@ -1,9 +1,9 @@
 # Changes
 
-## Unreleased - 2021-xx-xx
+## Unreleased - 2022-xx-xx
+ - Add an `empty()` function to `Session` for simple testing. [#253]
 
-## Unreleased - 2022-06-09
- - Add an `empty()` function to `Session` for simple testing
+[#253]: https://github.com/actix/actix-extras/pull/253
 
 
 ## 0.7.0 - 2022-07-09
