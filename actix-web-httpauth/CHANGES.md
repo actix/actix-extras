@@ -1,6 +1,10 @@
 # Changes
 
 ## Unreleased - 2022-xx-xx
+- `BasicAuth::user_id()` now returns a `&str`. [#249]
+- `BasicAuth::password()` now returns a `&str`. [#249]
+
+[#249]: https://github.com/actix/actix-extras/pull/249
 
 
 ## 0.7.0 - 2022-07-19
