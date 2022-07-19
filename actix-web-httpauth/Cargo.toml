@@ -30,3 +30,5 @@ pin-project-lite = "0.2.7"
 [dev-dependencies]
 actix-cors = "0.6.0"
 actix-web = { version = "4", default_features = false, features = ["macros"] }
+proptest = "1.0.0"
+test-strategy = "0.2.0"

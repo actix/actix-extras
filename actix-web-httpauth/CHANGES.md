@@ -1,6 +1,9 @@
 # Changes
 
 ## Unreleased - 2022-xx-xx
+- Implement `Challenge` for `&str`. [#248]
+
+[#248]: https://github.com/actix/actix-extras/pull/248
 
 
 ## 0.7.0 - 2022-07-19
