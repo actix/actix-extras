@@ -417,6 +417,9 @@
 <span id="411">411</span>
 <span id="412">412</span>
 <span id="413">413</span>
+<span id="414">414</span>
+<span id="415">415</span>
+<span id="416">416</span>
 </pre><pre class="rust"><code><span class="doccomment">//! HTTP Authentication middleware.</span>
 
 <span class="kw">use</span> <span class="ident">std</span>::{
@@ -458,7 +461,7 @@
 <span class="kw">where</span>
     <span class="ident">T</span>: <span class="ident">AuthExtractor</span>,
     <span class="ident">F</span>: <span class="ident">Fn</span>(<span class="ident">ServiceRequest</span>, <span class="ident">T</span>) -&gt; <span class="ident">O</span>,
-    <span class="ident">O</span>: <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ServiceRequest</span>, <span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">O</span>: <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ServiceRequest</span>, (<span class="ident">Error</span>, <span class="ident">ServiceRequest</span>)<span class="op">&gt;</span><span class="op">&gt;</span>,
 {
     <span class="doccomment">/// Construct `HttpAuthentication` middleware with the provided auth extractor `T` and</span>
     <span class="doccomment">/// validation callback `F`.</span>
@@ -473,7 +476,7 @@
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">O</span><span class="op">&gt;</span> <span class="ident">HttpAuthentication</span><span class="op">&lt;</span><span class="ident">basic::BasicAuth</span>, <span class="ident">F</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">F</span>: <span class="ident">Fn</span>(<span class="ident">ServiceRequest</span>, <span class="ident">basic::BasicAuth</span>) -&gt; <span class="ident">O</span>,
-    <span class="ident">O</span>: <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ServiceRequest</span>, <span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">O</span>: <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ServiceRequest</span>, (<span class="ident">Error</span>, <span class="ident">ServiceRequest</span>)<span class="op">&gt;</span><span class="op">&gt;</span>,
 {
     <span class="doccomment">/// Construct `HttpAuthentication` middleware for the HTTP &quot;Basic&quot; authentication scheme.</span>
     <span class="doccomment">///</span>
@@ -489,7 +492,7 @@
     <span class="doccomment">/// async fn validator(</span>
     <span class="doccomment">///     req: ServiceRequest,</span>
     <span class="doccomment">///     credentials: BasicAuth,</span>
-    <span class="doccomment">/// ) -&gt; Result&lt;ServiceRequest, Error&gt; {</span>
+    <span class="doccomment">/// ) -&gt; Result&lt;ServiceRequest, (Error, ServiceRequest)&gt; {</span>
     <span class="doccomment">///     // All users are great and more than welcome!</span>
     <span class="doccomment">///     Ok(req)</span>
     <span class="doccomment">/// }</span>
@@ -504,7 +507,7 @@
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">O</span><span class="op">&gt;</span> <span class="ident">HttpAuthentication</span><span class="op">&lt;</span><span class="ident">bearer::BearerAuth</span>, <span class="ident">F</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">F</span>: <span class="ident">Fn</span>(<span class="ident">ServiceRequest</span>, <span class="ident">bearer::BearerAuth</span>) -&gt; <span class="ident">O</span>,
-    <span class="ident">O</span>: <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ServiceRequest</span>, <span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">O</span>: <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ServiceRequest</span>, (<span class="ident">Error</span>, <span class="ident">ServiceRequest</span>)<span class="op">&gt;</span><span class="op">&gt;</span>,
 {
     <span class="doccomment">/// Construct `HttpAuthentication` middleware for the HTTP &quot;Bearer&quot; authentication scheme.</span>
     <span class="doccomment">///</span>
@@ -515,7 +518,7 @@
     <span class="doccomment">/// # use actix_web_httpauth::middleware::HttpAuthentication;</span>
     <span class="doccomment">/// # use actix_web_httpauth::extractors::bearer::{Config, BearerAuth};</span>
     <span class="doccomment">/// # use actix_web_httpauth::extractors::{AuthenticationError, AuthExtractorConfig};</span>
-    <span class="doccomment">/// async fn validator(req: ServiceRequest, credentials: BearerAuth) -&gt; Result&lt;ServiceRequest, Error&gt; {</span>
+    <span class="doccomment">/// async fn validator(req: ServiceRequest, credentials: BearerAuth) -&gt; Result&lt;ServiceRequest, (Error, ServiceRequest)&gt; {</span>
     <span class="doccomment">///     if credentials.token() == &quot;mF_9.B5f-4.1JqM&quot; {</span>
     <span class="doccomment">///         Ok(req)</span>
     <span class="doccomment">///     } else {</span>
@@ -524,7 +527,7 @@
     <span class="doccomment">///             .unwrap_or_else(Default::default)</span>
     <span class="doccomment">///             .scope(&quot;urn:example:channel=HBO&amp;urn:example:rating=G,PG-13&quot;);</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">///         Err(AuthenticationError::from(config).into())</span>
+    <span class="doccomment">///         Err((AuthenticationError::from(config).into(), req))</span>
     <span class="doccomment">///     }</span>
     <span class="doccomment">/// }</span>
     <span class="doccomment">///</span>
@@ -540,7 +543,7 @@
     <span class="ident">S</span>: <span class="ident">Service</span><span class="op">&lt;</span><span class="ident">ServiceRequest</span>, <span class="ident">Response</span> <span class="op">=</span> <span class="ident">ServiceResponse</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>, <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Error</span><span class="op">&gt;</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
     <span class="ident">S::Future</span>: <span class="lifetime">&#39;static</span>,
     <span class="ident">F</span>: <span class="ident">Fn</span>(<span class="ident">ServiceRequest</span>, <span class="ident">T</span>) -&gt; <span class="ident">O</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
-    <span class="ident">O</span>: <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ServiceRequest</span>, <span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+    <span class="ident">O</span>: <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ServiceRequest</span>, (<span class="ident">Error</span>, <span class="ident">ServiceRequest</span>)<span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
     <span class="ident">T</span>: <span class="ident">AuthExtractor</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
     <span class="ident">B</span>: <span class="ident">MessageBody</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
 {
@@ -574,7 +577,7 @@
     <span class="ident">S</span>: <span class="ident">Service</span><span class="op">&lt;</span><span class="ident">ServiceRequest</span>, <span class="ident">Response</span> <span class="op">=</span> <span class="ident">ServiceResponse</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>, <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Error</span><span class="op">&gt;</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
     <span class="ident">S::Future</span>: <span class="lifetime">&#39;static</span>,
     <span class="ident">F</span>: <span class="ident">Fn</span>(<span class="ident">ServiceRequest</span>, <span class="ident">T</span>) -&gt; <span class="ident">O</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
-    <span class="ident">O</span>: <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ServiceRequest</span>, <span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+    <span class="ident">O</span>: <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ServiceRequest</span>, (<span class="ident">Error</span>, <span class="ident">ServiceRequest</span>)<span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
     <span class="ident">T</span>: <span class="ident">AuthExtractor</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
     <span class="ident">B</span>: <span class="ident">MessageBody</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
 {
@@ -597,9 +600,12 @@
                 }
             };
 
-            <span class="comment">// TODO: alter to remove ? operator; an error response is required for downstream</span>
-            <span class="comment">// middleware to do their thing (eg. cors adding headers)</span>
-            <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="ident">process_fn</span>(<span class="ident">req</span>, <span class="ident">credentials</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">process_fn</span>(<span class="ident">req</span>, <span class="ident">credentials</span>).<span class="kw">await</span> {
+                <span class="prelude-val">Ok</span>(<span class="ident">req</span>) =&gt; <span class="ident">req</span>,
+                <span class="prelude-val">Err</span>((<span class="ident">err</span>, <span class="ident">req</span>)) =&gt; {
+                    <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">req</span>.<span class="ident">error_response</span>(<span class="ident">err</span>).<span class="ident">map_into_right_body</span>());
+                }
+            };
 
             <span class="ident">service</span>.<span class="ident">call</span>(<span class="ident">req</span>).<span class="kw">await</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">res</span><span class="op">|</span> <span class="ident">res</span>.<span class="ident">map_into_left_body</span>())
         }
@@ -781,10 +787,10 @@
     <span class="attribute">#[<span class="ident">actix_web::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">test_middleware_works_with_app</span>() {
         <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">validator</span>(
-            <span class="ident">_req</span>: <span class="ident">ServiceRequest</span>,
+            <span class="ident">req</span>: <span class="ident">ServiceRequest</span>,
             <span class="ident">_credentials</span>: <span class="ident">BasicAuth</span>,
-        ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ServiceRequest</span>, <span class="ident">actix_web::Error</span><span class="op">&gt;</span> {
-            <span class="prelude-val">Err</span>(<span class="ident">ErrorForbidden</span>(<span class="string">&quot;You are not welcome!&quot;</span>))
+        ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ServiceRequest</span>, (<span class="ident">actix_web::Error</span>, <span class="ident">ServiceRequest</span>)<span class="op">&gt;</span> {
+            <span class="prelude-val">Err</span>((<span class="ident">ErrorForbidden</span>(<span class="string">&quot;You are not welcome!&quot;</span>), <span class="ident">req</span>))
         }
         <span class="kw">let</span> <span class="ident">middleware</span> <span class="op">=</span> <span class="ident">HttpAuthentication::basic</span>(<span class="ident">validator</span>);
 
@@ -806,10 +812,10 @@
     <span class="attribute">#[<span class="ident">actix_web::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">test_middleware_works_with_scope</span>() {
         <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">validator</span>(
-            <span class="ident">_req</span>: <span class="ident">ServiceRequest</span>,
+            <span class="ident">req</span>: <span class="ident">ServiceRequest</span>,
             <span class="ident">_credentials</span>: <span class="ident">BasicAuth</span>,
-        ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ServiceRequest</span>, <span class="ident">actix_web::Error</span><span class="op">&gt;</span> {
-            <span class="prelude-val">Err</span>(<span class="ident">ErrorForbidden</span>(<span class="string">&quot;You are not welcome!&quot;</span>))
+        ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ServiceRequest</span>, (<span class="ident">actix_web::Error</span>, <span class="ident">ServiceRequest</span>)<span class="op">&gt;</span> {
+            <span class="prelude-val">Err</span>((<span class="ident">ErrorForbidden</span>(<span class="string">&quot;You are not welcome!&quot;</span>), <span class="ident">req</span>))
         }
         <span class="kw">let</span> <span class="ident">middleware</span> <span class="op">=</span> <span class="ident">actix_web::middleware::Compat::new</span>(<span class="ident">HttpAuthentication::basic</span>(<span class="ident">validator</span>));
 
