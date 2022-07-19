@@ -148,6 +148,23 @@ async fn login_deadline_does_not_log_users_out_before_their_time() {
 }
 
 #[actix_web::test]
+async fn visit_deadline_does_not_log_users_out_before_their_time() {
+    // 1 hour
+    let visit_deadline = Duration::from_secs(60 * 60);
+    let app = TestApp::spawn_with_config(
+        IdentityMiddleware::builder().visit_deadline(Some(visit_deadline)),
+    );
+    let user_id = user_id();
+
+    // Log-in
+    let body = app.post_login(user_id.clone()).await;
+    assert_eq!(body.user_id, Some(user_id.clone()));
+
+    let body = app.get_current().await;
+    assert_eq!(body.user_id, Some(user_id));
+}
+
+#[actix_web::test]
 async fn user_is_logged_out_when_visit_deadline_is_elapsed() {
     let visit_deadline = Duration::from_millis(10);
     let app = TestApp::spawn_with_config(
