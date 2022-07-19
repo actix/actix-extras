@@ -260,6 +260,15 @@
 <span id="254">254</span>
 <span id="255">255</span>
 <span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">actix_session::Session</span>;
 <span class="kw">use</span> <span class="ident">actix_utils::future</span>::{<span class="ident">ready</span>, <span class="ident">Ready</span>};
 <span class="kw">use</span> <span class="ident">actix_web</span>::{
@@ -414,10 +423,13 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">login</span>(<span class="ident">ext</span>: <span class="kw-2">&amp;</span><span class="ident">Extensions</span>, <span class="ident">id</span>: <span class="ident">String</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">anyhow::Error</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">inner</span> <span class="op">=</span> <span class="ident">IdentityInner::extract</span>(<span class="ident">ext</span>);
         <span class="ident">inner</span>.<span class="ident">session</span>.<span class="ident">insert</span>(<span class="ident">ID_KEY</span>, <span class="ident">id</span>)<span class="question-mark">?</span>;
-        <span class="ident">inner</span>.<span class="ident">session</span>.<span class="ident">insert</span>(
-            <span class="ident">LOGIN_UNIX_TIMESTAMP_KEY</span>,
-            <span class="ident">OffsetDateTime::now_utc</span>().<span class="ident">unix_timestamp</span>(),
-        )<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">now</span> <span class="op">=</span> <span class="ident">OffsetDateTime::now_utc</span>().<span class="ident">unix_timestamp</span>();
+        <span class="kw">if</span> <span class="ident">inner</span>.<span class="ident">is_login_deadline_enabled</span> {
+            <span class="ident">inner</span>.<span class="ident">session</span>.<span class="ident">insert</span>(<span class="ident">LOGIN_UNIX_TIMESTAMP_KEY</span>, <span class="ident">now</span>)<span class="question-mark">?</span>;
+        }
+        <span class="kw">if</span> <span class="ident">inner</span>.<span class="ident">is_visit_deadline_enabled</span> {
+            <span class="ident">inner</span>.<span class="ident">session</span>.<span class="ident">insert</span>(<span class="ident">LAST_VISIT_UNIX_TIMESTAMP_KEY</span>, <span class="ident">now</span>)<span class="question-mark">?</span>;
+        }
         <span class="ident">inner</span>.<span class="ident">session</span>.<span class="ident">renew</span>();
         <span class="prelude-val">Ok</span>(<span class="self">Self</span>(<span class="ident">inner</span>))
     }
@@ -482,6 +494,12 @@
             .<span class="ident">transpose</span>()
             .<span class="ident">map_err</span>(<span class="ident">anyhow::Error::from</span>)
     }
+
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">set_last_visited_at</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">anyhow::Error</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">now</span> <span class="op">=</span> <span class="ident">OffsetDateTime::now_utc</span>().<span class="ident">unix_timestamp</span>();
+        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">session</span>.<span class="ident">insert</span>(<span class="ident">LAST_VISIT_UNIX_TIMESTAMP_KEY</span>, <span class="ident">now</span>)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(())
+    }
 }
 
 <span class="doccomment">/// Extractor implementation for [`Identity`].</span>
@@ -517,5 +535,5 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_identity" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (c396bb3b8 2022-07-10)" ></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_identity" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (263edd43c 2022-07-17)" ></div>
 </body></html>
