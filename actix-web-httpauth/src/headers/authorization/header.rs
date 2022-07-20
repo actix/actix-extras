@@ -14,14 +14,11 @@ use crate::headers::authorization::scheme::Scheme;
 /// credentials containing the authentication information of the user
 /// agent for the realm of the resource being requested.
 ///
-/// `Authorization` header is generic over [authentication
-/// scheme](./trait.Scheme.html).
+/// `Authorization` header is generic over [authentication scheme](Scheme).
 ///
 /// # Example
-///
 /// ```
-/// # use actix_web::http::header::Header;
-/// # use actix_web::{HttpRequest, Result};
+/// # use actix_web::{HttpRequest, Result, http::header::Header};
 /// # use actix_web_httpauth::headers::authorization::{Authorization, Basic};
 /// fn handler(req: HttpRequest) -> Result<String> {
 ///     let auth = Authorization::<Basic>::parse(&req)?;
@@ -29,46 +26,40 @@ use crate::headers::authorization::scheme::Scheme;
 ///     Ok(format!("Hello, {}!", auth.as_ref().user_id()))
 /// }
 /// ```
-#[derive(Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Authorization<S: Scheme>(S);
 
 impl<S> Authorization<S>
 where
     S: Scheme,
 {
-    /// Consumes `Authorization` header and returns inner [`Scheme`]
-    /// implementation.
-    ///
-    /// [`Scheme`]: ./trait.Scheme.html
+    /// Consumes `Authorization` header and returns inner [`Scheme`] implementation.
     pub fn into_scheme(self) -> S {
         self.0
     }
 }
 
-impl<S> From<S> for Authorization<S>
-where
-    S: Scheme,
-{
+impl<S: Scheme> From<S> for Authorization<S> {
     fn from(scheme: S) -> Authorization<S> {
         Authorization(scheme)
     }
 }
 
-impl<S> AsRef<S> for Authorization<S>
-where
-    S: Scheme,
-{
+impl<S: Scheme> AsRef<S> for Authorization<S> {
     fn as_ref(&self) -> &S {
         &self.0
     }
 }
 
-impl<S> AsMut<S> for Authorization<S>
-where
-    S: Scheme,
-{
+impl<S: Scheme> AsMut<S> for Authorization<S> {
     fn as_mut(&mut self) -> &mut S {
         &mut self.0
+    }
+}
+
+impl<S: Scheme> fmt::Display for Authorization<S> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Display::fmt(&self.0, f)
     }
 }
 
@@ -91,11 +82,5 @@ impl<S: Scheme> TryIntoHeaderValue for Authorization<S> {
 
     fn try_into_value(self) -> Result<HeaderValue, Self::Error> {
         self.0.try_into_value()
-    }
-}
-
-impl<S: Scheme> fmt::Display for Authorization<S> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Display::fmt(&self.0, f)
     }
 }
