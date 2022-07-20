@@ -103,14 +103,14 @@ impl TestApp {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct EndpointResponse {
     pub user_id: Option<String>,
     pub counter: i32,
     pub session_status: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 struct LoginRequest {
     user_id: String,
 }

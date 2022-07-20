@@ -287,7 +287,7 @@ mod tests {
         }
     }
 
-    #[derive(Clone, PartialEq, Message)]
+    #[derive(Clone, PartialEq, Eq, Message)]
     pub struct MyObject {
         #[prost(int32, tag = "1")]
         pub number: i32,

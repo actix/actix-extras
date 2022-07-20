@@ -648,7 +648,7 @@ pub mod test_helpers {
             );
         }
 
-        #[derive(Serialize, Deserialize, Debug, PartialEq)]
+        #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
         pub struct IndexResponse {
             user_id: Option<String>,
             counter: i32,
