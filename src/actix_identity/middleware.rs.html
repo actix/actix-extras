@@ -260,8 +260,6 @@
 <span id="254">254</span>
 <span id="255">255</span>
 <span id="256">256</span>
-<span id="257">257</span>
-<span id="258">258</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::rc::Rc</span>;
 
 <span class="kw">use</span> <span class="ident">actix_session::SessionExt</span>;
@@ -426,14 +424,12 @@
         ) {
             <span class="ident">identity</span>.<span class="ident">logout</span>();
             <span class="kw">return</span>;
-        } <span class="kw">else</span> {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span> <span class="ident">identity</span>.<span class="ident">set_last_visited_at</span>() {
-                <span class="macro">tracing::warn!</span>(
-                    <span class="ident">error</span>.<span class="ident">display</span> <span class="op">=</span> <span class="op">%</span><span class="ident">err</span>,
-                    <span class="ident">error</span>.<span class="ident">debug</span> <span class="op">=</span> <span class="question-mark">?</span><span class="ident">err</span>,
-                    <span class="string">&quot;Failed to set the last visited timestamp on `Identity` for an incoming request.&quot;</span>
-                );
-            }
+        } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span> <span class="ident">identity</span>.<span class="ident">set_last_visited_at</span>() {
+            <span class="macro">tracing::warn!</span>(
+                <span class="ident">error</span>.<span class="ident">display</span> <span class="op">=</span> <span class="op">%</span><span class="ident">err</span>,
+                <span class="ident">error</span>.<span class="ident">debug</span> <span class="op">=</span> <span class="question-mark">?</span><span class="ident">err</span>,
+                <span class="string">&quot;Failed to set the last visited timestamp on `Identity` for an incoming request.&quot;</span>
+            );
         }
     }
 }
@@ -521,5 +517,5 @@
     <span class="ident">LogOut</span>,
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_identity" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (f8588549c 2022-07-18)" ></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_identity" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (9a7b7d5e5 2022-07-19)" ></div>
 </body></html>
