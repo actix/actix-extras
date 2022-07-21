@@ -1,6 +1,6 @@
 # actix-identity
 
-> Identity service for actix-web framework.
+> Identity management for Actix Web.
 
 [![crates.io](https://img.shields.io/crates/v/actix-identity?label=latest)](https://crates.io/crates/actix-identity)
 [![Documentation](https://docs.rs/actix-identity/badge.svg?version=0.5.2)](https://docs.rs/actix-identity/0.5.2)
@@ -9,5 +9,5 @@
 
 ## Documentation & community resources
 
-* [API Documentation](https://docs.rs/actix-identity)
-* Minimum Supported Rust Version (MSRV): 1.57
+- [API Documentation](https://docs.rs/actix-identity)
+- Minimum Supported Rust Version (MSRV): 1.57

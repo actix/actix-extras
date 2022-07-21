@@ -1,3 +1,5 @@
+//! Protobuf payload extractor for Actix Web.
+
 #![forbid(unsafe_code)]
 #![deny(rust_2018_idioms, nonstandard_style)]
 #![warn(future_incompatible)]

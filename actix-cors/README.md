@@ -1,6 +1,6 @@
 # actix-cors
 
-> Cross-origin resource sharing (CORS) for Actix Web.
+> Cross-Origin Resource Sharing (CORS) controls for Actix Web.
 
 [![crates.io](https://img.shields.io/crates/v/actix-cors?label=latest)](https://crates.io/crates/actix-cors)
 [![Documentation](https://docs.rs/actix-cors/badge.svg?version=0.6.1)](https://docs.rs/actix-cors/0.6.1)

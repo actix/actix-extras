@@ -1,6 +1,6 @@
 # actix-web-httpauth
 
-> HTTP authentication schemes for [actix-web](https://github.com/actix/actix-web).
+> HTTP authentication schemes for [Actix Web](https://actix.rs).
 
 [![crates.io](https://img.shields.io/crates/v/actix-web-httpauth?label=latest)](https://crates.io/crates/actix-web-httpauth)
 [![Documentation](https://docs.rs/actix-web-httpauth/badge.svg?version=0.8.0)](https://docs.rs/actix-web-httpauth/0.8.0)
@@ -13,6 +13,7 @@
 - Minimum Supported Rust Version (MSRV): 1.57
 
 ## Features
+
 - Typed [Authorization] and [WWW-Authenticate] headers
 - [Extractors] for authorization headers
 - [Middleware] for easier authorization checking
@@ -20,9 +21,9 @@
 All supported schemas can be used in both middleware and request handlers.
 
 ## Supported Schemes
+
 - [HTTP Basic](https://tools.ietf.org/html/rfc7617)
 - [OAuth Bearer](https://tools.ietf.org/html/rfc6750)
-
 
 <!-- LINKS -->
 

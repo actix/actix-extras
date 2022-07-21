@@ -1,22 +1,24 @@
-use std::collections::VecDeque;
-use std::io;
+use std::{collections::VecDeque, io};
 
 use actix::prelude::*;
 use actix_rt::net::TcpStream;
 use actix_service::boxed::{self, BoxService};
 use actix_tls::connect::{ConnectError, ConnectInfo, Connection, ConnectorService};
-use backoff::backoff::Backoff;
-use backoff::ExponentialBackoff;
+use backoff::{backoff::Backoff, ExponentialBackoff};
 use log::{error, info, warn};
-use redis_async::error::Error as RespError;
-use redis_async::resp::{RespCodec, RespValue};
-use tokio::io::{split, WriteHalf};
-use tokio::sync::oneshot;
+use redis_async::{
+    error::Error as RespError,
+    resp::{RespCodec, RespValue},
+};
+use tokio::{
+    io::{split, WriteHalf},
+    sync::oneshot,
+};
 use tokio_util::codec::FramedRead;
 
 use crate::Error;
 
-/// Command for send data to Redis
+/// Command for sending data to Redis.
 #[derive(Debug)]
 pub struct Command(pub RespValue);
 
@@ -24,7 +26,7 @@ impl Message for Command {
     type Result = Result<RespValue, Error>;
 }
 
-/// Redis communication actor
+/// Redis communication actor.
 pub struct RedisActor {
     addr: String,
     connector: BoxService<ConnectInfo<String>, Connection<String, TcpStream>, ConnectError>,

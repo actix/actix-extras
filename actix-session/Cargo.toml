@@ -5,7 +5,7 @@ authors = [
   "Nikolay Kim <fafhrd91@gmail.com>",
   "Luca Palmieri <rust@lpalmieri.com>",
 ]
-description = "Session management for Actix Web"
+description = "Session management for Actix We"
 keywords = ["http", "web", "framework", "async", "session"]
 homepage = "https://actix.rs"
 repository = "https://github.com/actix/actix-extras.git"

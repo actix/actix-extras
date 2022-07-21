@@ -1,6 +1,6 @@
 # actix-protobuf
 
-> Protobuf support for Actix Web.
+> Protobuf payload extractor for Actix Web.
 
 [![crates.io](https://img.shields.io/crates/v/actix-protobuf?label=latest)](https://crates.io/crates/actix-protobuf)
 [![Documentation](https://docs.rs/actix-protobuf/badge.svg?version=0.8.0)](https://docs.rs/actix-protobuf/0.8.0)
@@ -23,6 +23,7 @@ use actix_web::*;
 pub struct MyObj {
     #[prost(int32, tag = "1")]
     pub number: i32,
+
     #[prost(string, tag = "2")]
     pub name: String,
 }
@@ -33,7 +34,7 @@ async fn index(msg: ProtoBuf<MyObj>) -> Result<HttpResponse> {
 }
 ```
 
-See [here](https://github.com/actix/actix-extras/tree/master/actix-protobuf/examples/prost-example) for the complete example.
+See [here](https://github.com/actix/examples/tree/master/protobuf) for the complete example.
 
 ## License
 

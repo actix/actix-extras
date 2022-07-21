@@ -1,6 +1,6 @@
 # actix-redis
 
-> Redis integration for Actix.
+> Actor-based Redis client.
 
 [![crates.io](https://img.shields.io/crates/v/actix-redis?label=latest)](https://crates.io/crates/actix-redis)
 [![Documentation](https://docs.rs/actix-redis/badge.svg?version=0.12.0)](https://docs.rs/actix-redis/0.12.0)
