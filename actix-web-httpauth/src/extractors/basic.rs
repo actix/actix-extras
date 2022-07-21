@@ -3,13 +3,9 @@
 use std::borrow::Cow;
 
 use actix_utils::future::{ready, Ready};
-use actix_web::{
-    dev::{Payload, ServiceRequest},
-    http::header::Header,
-    FromRequest, HttpRequest,
-};
+use actix_web::{dev::Payload, http::header::Header, FromRequest, HttpRequest};
 
-use super::{config::AuthExtractorConfig, errors::AuthenticationError, AuthExtractor};
+use super::{config::AuthExtractorConfig, errors::AuthenticationError};
 use crate::headers::{
     authorization::{Authorization, Basic},
     www_authenticate::basic::Basic as Challenge,
@@ -104,26 +100,10 @@ impl FromRequest for BasicAuth {
                 .map_err(|err| {
                     log::debug!("`BasicAuth` extract error: {}", err);
 
-                    let challenge = req.app_data::<Config>().cloned().unwrap_or_default();
-
-                    AuthenticationError::new(challenge)
-                }),
-        )
-    }
-}
-
-impl AuthExtractor for BasicAuth {
-    type Error = AuthenticationError<Challenge>;
-    type Future = Ready<Result<Self, Self::Error>>;
-
-    fn from_service_request(req: &ServiceRequest) -> Self::Future {
-        ready(
-            Authorization::<Basic>::parse(req)
-                .map(|auth| BasicAuth(auth.into_scheme()))
-                .map_err(|err| {
-                    log::debug!("`BasicAuth` extract error: {}", err);
-
-                    let challenge = req.app_data::<Config>().cloned().unwrap_or_default();
+                    let challenge = req
+                        .app_data::<Config>()
+                        .map(|config| config.0.clone())
+                        .unwrap_or_default();
 
                     AuthenticationError::new(challenge)
                 }),

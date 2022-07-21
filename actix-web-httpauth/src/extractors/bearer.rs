@@ -3,13 +3,9 @@
 use std::{borrow::Cow, default::Default};
 
 use actix_utils::future::{ready, Ready};
-use actix_web::{
-    dev::{Payload, ServiceRequest},
-    http::header::Header,
-    FromRequest, HttpRequest,
-};
+use actix_web::{dev::Payload, http::header::Header, FromRequest, HttpRequest};
 
-use super::{config::AuthExtractorConfig, errors::AuthenticationError, AuthExtractor};
+use super::{config::AuthExtractorConfig, errors::AuthenticationError};
 pub use crate::headers::www_authenticate::bearer::Error;
 use crate::headers::{authorization, www_authenticate::bearer};
 
@@ -99,26 +95,6 @@ impl FromRequest for BearerAuth {
     type Error = AuthenticationError<bearer::Bearer>;
 
     fn from_request(req: &HttpRequest, _payload: &mut Payload) -> <Self as FromRequest>::Future {
-        ready(
-            authorization::Authorization::<authorization::Bearer>::parse(req)
-                .map(|auth| BearerAuth(auth.into_scheme()))
-                .map_err(|_| {
-                    let bearer = req
-                        .app_data::<Config>()
-                        .map(|config| config.0.clone())
-                        .unwrap_or_else(Default::default);
-
-                    AuthenticationError::new(bearer)
-                }),
-        )
-    }
-}
-
-impl AuthExtractor for BearerAuth {
-    type Future = Ready<Result<Self, Self::Error>>;
-    type Error = AuthenticationError<bearer::Bearer>;
-
-    fn from_service_request(req: &ServiceRequest) -> Self::Future {
         ready(
             authorization::Authorization::<authorization::Bearer>::parse(req)
                 .map(|auth| BearerAuth(auth.into_scheme()))

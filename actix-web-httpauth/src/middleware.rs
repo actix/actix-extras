@@ -12,12 +12,12 @@ use std::{
 use actix_web::{
     body::{EitherBody, MessageBody},
     dev::{Service, ServiceRequest, ServiceResponse, Transform},
-    Error,
+    Error, FromRequest,
 };
 use futures_core::ready;
 use futures_util::future::{self, FutureExt as _, LocalBoxFuture, TryFutureExt as _};
 
-use crate::extractors::{basic, bearer, AuthExtractor};
+use crate::extractors::{basic, bearer};
 
 /// Middleware for checking HTTP authentication.
 ///
@@ -29,7 +29,7 @@ use crate::extractors::{basic, bearer, AuthExtractor};
 #[derive(Debug, Clone)]
 pub struct HttpAuthentication<T, F>
 where
-    T: AuthExtractor,
+    T: FromRequest,
 {
     process_fn: Arc<F>,
     _extractor: PhantomData<T>,
@@ -37,7 +37,7 @@ where
 
 impl<T, F, O> HttpAuthentication<T, F>
 where
-    T: AuthExtractor,
+    T: FromRequest,
     F: Fn(ServiceRequest, T) -> O,
     O: Future<Output = Result<ServiceRequest, (Error, ServiceRequest)>>,
 {
@@ -60,10 +60,8 @@ where
     ///
     /// # Examples
     /// ```
-    /// # use actix_web::Error;
-    /// # use actix_web::dev::ServiceRequest;
-    /// # use actix_web_httpauth::middleware::HttpAuthentication;
-    /// # use actix_web_httpauth::extractors::basic::BasicAuth;
+    /// # use actix_web::{Error, dev::ServiceRequest};
+    /// # use actix_web_httpauth::{extractors::basic::BasicAuth, middleware::HttpAuthentication};
     /// // In this example validator returns immediately, but since it is required to return
     /// // anything that implements `IntoFuture` trait, it can be extended to query database or to
     /// // do something else in a async manner.
@@ -91,18 +89,21 @@ where
     ///
     /// # Examples
     /// ```
-    /// # use actix_web::Error;
-    /// # use actix_web::dev::ServiceRequest;
-    /// # use actix_web_httpauth::middleware::HttpAuthentication;
-    /// # use actix_web_httpauth::extractors::bearer::{Config, BearerAuth};
-    /// # use actix_web_httpauth::extractors::{AuthenticationError, AuthExtractorConfig};
-    /// async fn validator(req: ServiceRequest, credentials: BearerAuth) -> Result<ServiceRequest, (Error, ServiceRequest)> {
+    /// # use actix_web::{Error, dev::ServiceRequest};
+    /// # use actix_web_httpauth::{
+    /// #     extractors::{AuthenticationError, AuthExtractorConfig, bearer::{self, BearerAuth}},
+    /// #     middleware::HttpAuthentication,
+    /// # };
+    /// async fn validator(
+    ///     req: ServiceRequest,
+    ///     credentials: BearerAuth
+    /// ) -> Result<ServiceRequest, (Error, ServiceRequest)> {
     ///     if credentials.token() == "mF_9.B5f-4.1JqM" {
     ///         Ok(req)
     ///     } else {
-    ///         let config = req.app_data::<Config>()
-    ///             .map(|data| data.clone())
-    ///             .unwrap_or_else(Default::default)
+    ///         let config = req.app_data::<bearer::Config>()
+    ///             .cloned()
+    ///             .unwrap_or_default()
     ///             .scope("urn:example:channel=HBO&urn:example:rating=G,PG-13");
     ///
     ///         Err((AuthenticationError::from(config).into(), req))
@@ -122,7 +123,7 @@ where
     S::Future: 'static,
     F: Fn(ServiceRequest, T) -> O + 'static,
     O: Future<Output = Result<ServiceRequest, (Error, ServiceRequest)>> + 'static,
-    T: AuthExtractor + 'static,
+    T: FromRequest + 'static,
     B: MessageBody + 'static,
 {
     type Response = ServiceResponse<EitherBody<B>>;
@@ -143,7 +144,7 @@ where
 #[doc(hidden)]
 pub struct AuthenticationMiddleware<S, F, T>
 where
-    T: AuthExtractor,
+    T: FromRequest,
 {
     service: Rc<S>,
     process_fn: Arc<F>,
@@ -156,7 +157,7 @@ where
     S::Future: 'static,
     F: Fn(ServiceRequest, T) -> O + 'static,
     O: Future<Output = Result<ServiceRequest, (Error, ServiceRequest)>> + 'static,
-    T: AuthExtractor + 'static,
+    T: FromRequest + 'static,
     B: MessageBody + 'static,
 {
     type Response = ServiceResponse<EitherBody<B>>;
@@ -192,7 +193,7 @@ where
 
 struct Extract<T> {
     req: Option<ServiceRequest>,
-    f: Option<LocalBoxFuture<'static, Result<T, Error>>>,
+    fut: Option<LocalBoxFuture<'static, Result<T, Error>>>,
     _extractor: PhantomData<fn() -> T>,
 }
 
@@ -200,7 +201,7 @@ impl<T> Extract<T> {
     pub fn new(req: ServiceRequest) -> Self {
         Extract {
             req: Some(req),
-            f: None,
+            fut: None,
             _extractor: PhantomData,
         }
     }
@@ -208,25 +209,25 @@ impl<T> Extract<T> {
 
 impl<T> Future for Extract<T>
 where
-    T: AuthExtractor,
+    T: FromRequest,
     T::Future: 'static,
     T::Error: 'static,
 {
     type Output = Result<(ServiceRequest, T), (Error, ServiceRequest)>;
 
     fn poll(mut self: Pin<&mut Self>, ctx: &mut Context<'_>) -> Poll<Self::Output> {
-        if self.f.is_none() {
-            let req = self.req.as_ref().expect("Extract future was polled twice!");
-            let f = T::from_service_request(req).map_err(Into::into);
-            self.f = Some(f.boxed_local());
+        if self.fut.is_none() {
+            let req = self.req.as_mut().expect("Extract future was polled twice!");
+            let fut = req.extract::<T>().map_err(Into::into);
+            self.fut = Some(fut.boxed_local());
         }
 
-        let f = self
-            .f
+        let fut = self
+            .fut
             .as_mut()
             .expect("Extraction future should be initialized at this point");
 
-        let credentials = ready!(f.as_mut().poll(ctx)).map_err(|err| {
+        let credentials = ready!(fut.as_mut().poll(ctx)).map_err(|err| {
             (
                 err,
                 // returning request allows a proper error response to be created
@@ -344,7 +345,7 @@ mod tests {
                 Ok::<ServiceResponse, _>(req.into_response(HttpResponse::Ok().finish()))
             })),
             process_fn: Arc::new(
-                |req, auth: Result<BearerAuth, <BearerAuth as AuthExtractor>::Error>| {
+                |req, auth: Result<BearerAuth, <BearerAuth as FromRequest>::Error>| {
                     assert!(auth.is_err());
                     async { Ok(req) }
                 },

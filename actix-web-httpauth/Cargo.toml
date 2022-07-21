@@ -19,7 +19,7 @@ path = "src/lib.rs"
 
 [dependencies]
 actix-utils = "3"
-actix-web = { version = "4", default_features = false }
+actix-web = { version = "4.1", default_features = false }
 
 base64 = "0.13"
 futures-core = "0.3.7"
