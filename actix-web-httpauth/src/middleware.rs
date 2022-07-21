@@ -15,7 +15,7 @@ use actix_web::{
     Error, FromRequest,
 };
 use futures_core::ready;
-use futures_util::future::{self, FutureExt as _, LocalBoxFuture, TryFutureExt as _};
+use futures_util::future::{self, LocalBoxFuture, TryFutureExt as _};
 
 use crate::extractors::{basic, bearer};
 
@@ -170,7 +170,7 @@ where
         let process_fn = Arc::clone(&self.process_fn);
         let service = Rc::clone(&self.service);
 
-        async move {
+        Box::pin(async move {
             let (req, credentials) = match Extract::<T>::new(req).await {
                 Ok(req) => req,
                 Err((err, req)) => {
@@ -186,8 +186,7 @@ where
             };
 
             service.call(req).await.map(|res| res.map_into_left_body())
-        }
-        .boxed_local()
+        })
     }
 }
 
@@ -219,7 +218,7 @@ where
         if self.fut.is_none() {
             let req = self.req.as_mut().expect("Extract future was polled twice!");
             let fut = req.extract::<T>().map_err(Into::into);
-            self.fut = Some(fut.boxed_local());
+            self.fut = Some(Box::pin(fut));
         }
 
         let fut = self

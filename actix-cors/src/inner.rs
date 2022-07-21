@@ -15,6 +15,7 @@ use crate::{AllOrSome, CorsError};
 
 #[derive(Clone)]
 pub(crate) struct OriginFn {
+    #[allow(clippy::type_complexity)]
     pub(crate) boxed_fn: Rc<dyn Fn(&HeaderValue, &RequestHead) -> bool>,
 }
 
