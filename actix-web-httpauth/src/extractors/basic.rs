@@ -3,30 +3,29 @@
 use std::borrow::Cow;
 
 use actix_utils::future::{ready, Ready};
-use actix_web::dev::{Payload, ServiceRequest};
-use actix_web::http::header::Header;
-use actix_web::{FromRequest, HttpRequest};
+use actix_web::{
+    dev::{Payload, ServiceRequest},
+    http::header::Header,
+    FromRequest, HttpRequest,
+};
 
-use super::config::AuthExtractorConfig;
-use super::errors::AuthenticationError;
-use super::AuthExtractor;
-use crate::headers::authorization::{Authorization, Basic};
-use crate::headers::www_authenticate::basic::Basic as Challenge;
+use super::{config::AuthExtractorConfig, errors::AuthenticationError, AuthExtractor};
+use crate::headers::{
+    authorization::{Authorization, Basic},
+    www_authenticate::basic::Basic as Challenge,
+};
 
-/// [`BasicAuth`] extractor configuration,
-/// used for [`WWW-Authenticate`] header later.
+/// [`BasicAuth`] extractor configuration used for [`WWW-Authenticate`] header later.
 ///
-/// [`BasicAuth`]: ./struct.BasicAuth.html
-/// [`WWW-Authenticate`]:
-/// ../../headers/www_authenticate/struct.WwwAuthenticate.html
+/// [`WWW-Authenticate`]: crate::headers::www_authenticate::WwwAuthenticate
 #[derive(Debug, Clone, Default)]
 pub struct Config(Challenge);
 
 impl Config {
     /// Set challenge `realm` attribute.
     ///
-    /// The "realm" attribute indicates the scope of protection in the manner
-    /// described in HTTP/1.1 [RFC2617](https://tools.ietf.org/html/rfc2617#section-1.2).
+    /// The "realm" attribute indicates the scope of protection in the manner described in HTTP/1.1
+    /// [RFC 2617 §1.2](https://tools.ietf.org/html/rfc2617#section-1.2).
     pub fn realm<T>(mut self, value: T) -> Config
     where
         T: Into<Cow<'static, str>>,
@@ -103,12 +102,9 @@ impl FromRequest for BasicAuth {
             Authorization::<Basic>::parse(req)
                 .map(|auth| BasicAuth(auth.into_scheme()))
                 .map_err(|err| {
-                    log::debug!("`BasicAuth` extract error: {err}");
+                    log::debug!("`BasicAuth` extract error: {}", err);
 
-                    let challenge = req
-                        .app_data::<Config>()
-                        .map(|config| config.0.clone())
-                        .unwrap_or_default();
+                    let challenge = req.app_data::<Config>().cloned().unwrap_or_default();
 
                     AuthenticationError::new(challenge)
                 }),
@@ -124,13 +120,10 @@ impl AuthExtractor for BasicAuth {
         ready(
             Authorization::<Basic>::parse(req)
                 .map(|auth| BasicAuth(auth.into_scheme()))
-                .map_err(|_| {
-                    // TODO: debug! the original error
-                    let challenge = req
-                        .app_data::<Config>()
-                        .map(|config| config.0.clone())
-                        // TODO: Add trace! about `Default::default` call
-                        .unwrap_or_else(Default::default);
+                .map_err(|err| {
+                    log::debug!("`BasicAuth` extract error: {}", err);
+
+                    let challenge = req.app_data::<Config>().cloned().unwrap_or_default();
 
                     AuthenticationError::new(challenge)
                 }),

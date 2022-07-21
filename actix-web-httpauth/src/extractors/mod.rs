@@ -19,15 +19,14 @@ mod errors;
 pub use self::config::AuthExtractorConfig;
 pub use self::errors::AuthenticationError;
 
-/// Trait implemented by types that can extract
-/// HTTP authentication scheme credentials from the request.
+// TODO: this probably isn't needed
+
+/// Interface for types that can extract HTTP authentication scheme credentials from a request.
 ///
-/// It is very similar to actix' `FromRequest` trait,
-/// except it operates with a `ServiceRequest` struct instead,
-/// therefore it can be used in the middlewares.
+/// It is very similar to actix' `FromRequest` trait, except it operates with a `ServiceRequest`
+/// struct instead, therefore it can be used in the middleware.
 ///
-/// You will not need it unless you want to implement your own
-/// authentication scheme.
+/// You will not need it unless you want to implement your own authentication scheme.
 pub trait AuthExtractor: Sized {
     /// The associated error which can be returned.
     type Error: Into<Error>;

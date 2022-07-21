@@ -13,7 +13,7 @@ use super::{config::AuthExtractorConfig, errors::AuthenticationError, AuthExtrac
 pub use crate::headers::www_authenticate::bearer::Error;
 use crate::headers::{authorization, www_authenticate::bearer};
 
-/// [BearerAuth](./struct/BearerAuth.html) extractor configuration.
+/// [`BearerAuth`] extractor configuration.
 #[derive(Debug, Clone, Default)]
 pub struct Config(bearer::Bearer);
 
@@ -31,7 +31,7 @@ impl Config {
     /// Set challenge `realm` attribute.
     ///
     /// The "realm" attribute indicates the scope of protection in the manner
-    /// described in HTTP/1.1 [RFC2617](https://tools.ietf.org/html/rfc2617#section-1.2).
+    /// described in HTTP/1.1 [RFC 2617](https://tools.ietf.org/html/rfc2617#section-1.2).
     pub fn realm<T: Into<Cow<'static, str>>>(mut self, value: T) -> Config {
         self.0.realm = Some(value.into());
         self

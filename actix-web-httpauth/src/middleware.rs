@@ -163,11 +163,10 @@ where
     type Error = S::Error;
     type Future = LocalBoxFuture<'static, Result<Self::Response, Self::Error>>;
 
-    actix_service::forward_ready!(service);
+    actix_web::dev::forward_ready!(service);
 
     fn call(&self, req: ServiceRequest) -> Self::Future {
         let process_fn = Arc::clone(&self.process_fn);
-
         let service = Rc::clone(&self.service);
 
         async move {
@@ -242,15 +241,17 @@ where
 
 #[cfg(test)]
 mod tests {
-    use actix_service::{into_service, Service};
-    use actix_web::error::ErrorForbidden;
-    use actix_web::http::StatusCode;
-    use actix_web::test::TestRequest;
-    use actix_web::{error, web, App, HttpResponse};
+    use actix_service::into_service;
+    use actix_web::{
+        dev::Service,
+        error::{self, ErrorForbidden},
+        http::StatusCode,
+        test::TestRequest,
+        web, App, HttpResponse,
+    };
 
     use super::*;
-    use crate::extractors::basic::BasicAuth;
-    use crate::extractors::bearer::BearerAuth;
+    use crate::extractors::{basic::BasicAuth, bearer::BearerAuth};
 
     /// This is a test for https://github.com/actix/actix-extras/issues/10
     #[actix_web::test]

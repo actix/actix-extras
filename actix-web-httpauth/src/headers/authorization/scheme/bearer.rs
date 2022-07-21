@@ -7,11 +7,11 @@ use actix_web::{
 
 use crate::headers::authorization::{errors::ParseError, scheme::Scheme};
 
-/// Credentials for `Bearer` authentication scheme, defined in [RFC6750].
+/// Credentials for `Bearer` authentication scheme, defined in [RFC 6750].
 ///
 /// Should be used in combination with [`Authorization`](super::Authorization) header.
 ///
-/// [RFC6750]: https://tools.ietf.org/html/rfc6750
+/// [RFC 6750]: https://tools.ietf.org/html/rfc6750
 #[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Bearer {
     token: Cow<'static, str>,

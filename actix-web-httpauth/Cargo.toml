@@ -18,7 +18,6 @@ name = "actix_web_httpauth"
 path = "src/lib.rs"
 
 [dependencies]
-actix-service = "2"
 actix-utils = "3"
 actix-web = { version = "4", default_features = false }
 
@@ -30,4 +29,5 @@ pin-project-lite = "0.2.7"
 
 [dev-dependencies]
 actix-cors = "0.6"
+actix-service = "2"
 actix-web = { version = "4", default_features = false, features = ["macros"] }

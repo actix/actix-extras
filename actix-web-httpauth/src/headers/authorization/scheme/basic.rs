@@ -18,8 +18,7 @@ impl Basic {
     /// Creates `Basic` credentials with provided `user_id` and optional
     /// `password`.
     ///
-    /// ## Example
-    ///
+    /// # Examples
     /// ```
     /// # use actix_web_httpauth::headers::authorization::Basic;
     /// let credentials = Basic::new("Alladin", Some("open sesame"));
@@ -66,6 +65,7 @@ impl Scheme for Basic {
             .next()
             .ok_or(ParseError::MissingField("user_id"))
             .map(|user_id| user_id.to_string().into())?;
+
         let password = credentials
             .next()
             .ok_or(ParseError::MissingField("password"))

@@ -1,12 +1,11 @@
 //! Challenge for the "Basic" HTTP Authentication Scheme
 
-use std::borrow::Cow;
-use std::default::Default;
-use std::fmt;
-use std::str;
+use std::{borrow::Cow, fmt, str};
 
-use actix_web::http::header::{HeaderValue, InvalidHeaderValue, TryIntoHeaderValue};
-use actix_web::web::{BufMut, Bytes, BytesMut};
+use actix_web::{
+    http::header::{HeaderValue, InvalidHeaderValue, TryIntoHeaderValue},
+    web::{BufMut, Bytes, BytesMut},
+};
 
 use super::Challenge;
 use crate::utils;

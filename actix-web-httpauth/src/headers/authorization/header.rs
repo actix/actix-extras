@@ -1,20 +1,21 @@
 use std::fmt;
 
-use actix_web::error::ParseError;
-use actix_web::http::header::{Header, HeaderName, HeaderValue, TryIntoHeaderValue, AUTHORIZATION};
-use actix_web::HttpMessage;
+use actix_web::{
+    error::ParseError,
+    http::header::{Header, HeaderName, HeaderValue, TryIntoHeaderValue, AUTHORIZATION},
+    HttpMessage,
+};
 
 use crate::headers::authorization::scheme::Scheme;
 
 /// `Authorization` header, defined in [RFC 7235](https://tools.ietf.org/html/rfc7235#section-4.2)
 ///
-/// The "Authorization" header field allows a user agent to authenticate
-/// itself with an origin server -- usually, but not necessarily, after
-/// receiving a 401 (Unauthorized) response.  Its value consists of
-/// credentials containing the authentication information of the user
-/// agent for the realm of the resource being requested.
+/// The "Authorization" header field allows a user agent to authenticate itself with an origin
+/// server—usually, but not necessarily, after receiving a 401 (Unauthorized) response. Its value
+/// consists of credentials containing the authentication information of the user agent for the
+/// realm of the resource being requested.
 ///
-/// `Authorization` header is generic over [authentication scheme](Scheme).
+/// `Authorization` is generic over an [authentication scheme](Scheme).
 ///
 /// # Example
 /// ```
@@ -29,10 +30,7 @@ use crate::headers::authorization::scheme::Scheme;
 #[derive(Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Authorization<S: Scheme>(S);
 
-impl<S> Authorization<S>
-where
-    S: Scheme,
-{
+impl<S: Scheme> Authorization<S> {
     /// Consumes `Authorization` header and returns inner [`Scheme`] implementation.
     pub fn into_scheme(self) -> S {
         self.0
@@ -70,7 +68,7 @@ impl<S: Scheme> Header for Authorization<S> {
     }
 
     fn parse<T: HttpMessage>(msg: &T) -> Result<Self, ParseError> {
-        let header = msg.headers().get(AUTHORIZATION).ok_or(ParseError::Header)?;
+        let header = msg.headers().get(Self::name()).ok_or(ParseError::Header)?;
         let scheme = S::parse(header).map_err(|_| ParseError::Header)?;
 
         Ok(Authorization(scheme))
