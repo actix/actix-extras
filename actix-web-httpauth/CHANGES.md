@@ -1,6 +1,7 @@
 # Changes
 
 ## Unreleased - 2022-xx-xx
+- Removed `AuthExtractor` trait; implement `FromRequest` for your custom auth types. [#264]
 - `BasicAuth::user_id()` now returns `&str`. [#249]
 - `BasicAuth::password()` now returns `Option<&str>`. [#249]
 - `Basic::user_id()` now returns `&str`. [#264]
