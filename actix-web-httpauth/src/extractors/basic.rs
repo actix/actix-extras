@@ -1,4 +1,4 @@
-//! Extractor for the "Basic" HTTP Authentication Scheme
+//! Extractor for the "Basic" HTTP Authentication Scheme.
 
 use std::borrow::Cow;
 

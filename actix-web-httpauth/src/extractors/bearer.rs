@@ -1,4 +1,4 @@
-//! Extractor for the "Bearer" HTTP Authentication Scheme
+//! Extractor for the "Bearer" HTTP Authentication Scheme.
 
 use std::{borrow::Cow, default::Default};
 

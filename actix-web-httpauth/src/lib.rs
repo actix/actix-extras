@@ -1,4 +1,4 @@
-//! HTTP authentication schemes for [actix-web](https://actix.rs).
+//! HTTP authentication schemes for [Actix Web](https://actix.rs).
 //!
 //! Provides:
 //! - Typed [Authorization] and [WWW-Authenticate] headers
@@ -6,9 +6,8 @@
 //! - [Middleware] for easier authorization checking
 //!
 //! ## Supported schemes
-//!
-//! - `Basic`, as defined in [RFC 7617](https://tools.ietf.org/html/rfc7617)
-//! - `Bearer`, as defined in [RFC 6750](https://tools.ietf.org/html/rfc6750)
+//! - `Bearer` as defined in [RFC 6750](https://tools.ietf.org/html/rfc6750).
+//! - `Basic` as defined in [RFC 7617](https://tools.ietf.org/html/rfc7617).
 //!
 //! [Authorization]: `self::headers::authorization::Authorization`
 //! [WWW-Authenticate]: `self::headers::www_authenticate::WwwAuthenticate`

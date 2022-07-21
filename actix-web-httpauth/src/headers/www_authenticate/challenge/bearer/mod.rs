@@ -1,4 +1,4 @@
-//! Challenge for the "Bearer" HTTP Authentication Scheme
+//! Challenge for the "Bearer" HTTP Authentication Scheme.
 
 mod builder;
 mod challenge;

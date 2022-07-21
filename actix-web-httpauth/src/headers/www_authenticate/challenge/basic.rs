@@ -1,4 +1,4 @@
-//! Challenge for the "Basic" HTTP Authentication Scheme
+//! Challenge for the "Basic" HTTP Authentication Scheme.
 
 use std::{borrow::Cow, fmt, str};
 

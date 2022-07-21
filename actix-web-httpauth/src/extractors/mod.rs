@@ -1,4 +1,4 @@
-//! Type-safe authentication information extractors
+//! Type-safe authentication information extractors.
 
 use std::{
     future::Future,
