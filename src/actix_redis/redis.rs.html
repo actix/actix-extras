@@ -145,25 +145,29 @@
 <span id="139">139</span>
 <span id="140">140</span>
 <span id="141">141</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::collections::VecDeque</span>;
-<span class="kw">use</span> <span class="ident">std::io</span>;
+<span id="142">142</span>
+<span id="143">143</span>
+</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections::VecDeque</span>, <span class="ident">io</span>};
 
 <span class="kw">use</span> <span class="ident">actix::prelude</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">actix_rt::net::TcpStream</span>;
 <span class="kw">use</span> <span class="ident">actix_service::boxed</span>::{<span class="self">self</span>, <span class="ident">BoxService</span>};
 <span class="kw">use</span> <span class="ident">actix_tls::connect</span>::{<span class="ident">ConnectError</span>, <span class="ident">ConnectInfo</span>, <span class="ident">Connection</span>, <span class="ident">ConnectorService</span>};
-<span class="kw">use</span> <span class="ident">backoff::backoff::Backoff</span>;
-<span class="kw">use</span> <span class="ident">backoff::ExponentialBackoff</span>;
+<span class="kw">use</span> <span class="ident">backoff</span>::{<span class="ident">backoff::Backoff</span>, <span class="ident">ExponentialBackoff</span>};
 <span class="kw">use</span> <span class="ident">log</span>::{<span class="ident">error</span>, <span class="ident">info</span>, <span class="ident">warn</span>};
-<span class="kw">use</span> <span class="ident">redis_async::error::Error</span> <span class="kw">as</span> <span class="ident">RespError</span>;
-<span class="kw">use</span> <span class="ident">redis_async::resp</span>::{<span class="ident">RespCodec</span>, <span class="ident">RespValue</span>};
-<span class="kw">use</span> <span class="ident">tokio::io</span>::{<span class="ident">split</span>, <span class="ident">WriteHalf</span>};
-<span class="kw">use</span> <span class="ident">tokio::sync::oneshot</span>;
+<span class="kw">use</span> <span class="ident">redis_async</span>::{
+    <span class="ident">error::Error</span> <span class="kw">as</span> <span class="ident">RespError</span>,
+    <span class="ident">resp</span>::{<span class="ident">RespCodec</span>, <span class="ident">RespValue</span>},
+};
+<span class="kw">use</span> <span class="ident">tokio</span>::{
+    <span class="ident">io</span>::{<span class="ident">split</span>, <span class="ident">WriteHalf</span>},
+    <span class="ident">sync::oneshot</span>,
+};
 <span class="kw">use</span> <span class="ident">tokio_util::codec::FramedRead</span>;
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::Error</span>;
 
-<span class="doccomment">/// Command for send data to Redis</span>
+<span class="doccomment">/// Command for sending data to Redis.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Command</span>(<span class="kw">pub</span> <span class="ident">RespValue</span>);
 
@@ -171,7 +175,7 @@
     <span class="kw">type</span> <span class="prelude-ty">Result</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RespValue</span>, <span class="ident">Error</span><span class="op">&gt;</span>;
 }
 
-<span class="doccomment">/// Redis communication actor</span>
+<span class="doccomment">/// Redis communication actor.</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RedisActor</span> {
     <span class="ident">addr</span>: <span class="ident">String</span>,
     <span class="ident">connector</span>: <span class="ident">BoxService</span><span class="op">&lt;</span><span class="ident">ConnectInfo</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>, <span class="ident">Connection</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">TcpStream</span><span class="op">&gt;</span>, <span class="ident">ConnectError</span><span class="op">&gt;</span>,
