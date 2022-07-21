@@ -17,7 +17,7 @@ use crate::headers::authorization::scheme::Scheme;
 ///
 /// `Authorization` is generic over an [authentication scheme](Scheme).
 ///
-/// # Example
+/// # Examples
 /// ```
 /// # use actix_web::{HttpRequest, Result, http::header::Header};
 /// # use actix_web_httpauth::headers::authorization::{Authorization, Basic};

@@ -52,12 +52,9 @@ impl AuthExtractorConfig for Config {
     }
 }
 
-// Needs `fn main` to display complete example.
-#[allow(clippy::needless_doctest_main)]
 /// Extractor for HTTP Bearer auth
 ///
-/// # Example
-///
+/// # Examples
 /// ```
 /// use actix_web_httpauth::extractors::bearer::BearerAuth;
 ///
@@ -70,25 +67,22 @@ impl AuthExtractorConfig for Config {
 /// from the [app data] in order to properly form the `WWW-Authenticate`
 /// response header.
 ///
-/// ## Example
-///
+/// # Examples
 /// ```
 /// use actix_web::{web, App};
-/// use actix_web_httpauth::extractors::bearer::{BearerAuth, Config};
+/// use actix_web_httpauth::extractors::bearer::{self, BearerAuth};
 ///
 /// async fn index(auth: BearerAuth) -> String {
 ///     format!("Hello, {}!", auth.token())
 /// }
 ///
-/// fn main() {
-///     let app = App::new()
-///         .app_data(
-///             Config::default()
-///                 .realm("Restricted area")
-///                 .scope("email photo"),
-///         )
-///         .service(web::resource("/index.html").route(web::get().to(index)));
-/// }
+/// App::new()
+///     .app_data(
+///         bearer::Config::default()
+///             .realm("Restricted area")
+///             .scope("email photo"),
+///     )
+///     .service(web::resource("/index.html").route(web::get().to(index)));
 /// ```
 #[derive(Debug, Clone)]
 pub struct BearerAuth(authorization::Bearer);

@@ -58,7 +58,7 @@ where
 {
     /// Construct `HttpAuthentication` middleware for the HTTP "Basic" authentication scheme.
     ///
-    /// # Example
+    /// # Examples
     /// ```
     /// # use actix_web::Error;
     /// # use actix_web::dev::ServiceRequest;
@@ -89,7 +89,7 @@ where
 {
     /// Construct `HttpAuthentication` middleware for the HTTP "Bearer" authentication scheme.
     ///
-    /// # Example
+    /// # Examples
     /// ```
     /// # use actix_web::Error;
     /// # use actix_web::dev::ServiceRequest;

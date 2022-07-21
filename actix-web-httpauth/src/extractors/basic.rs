@@ -66,14 +66,14 @@ impl AuthExtractorConfig for Config {
 /// # Examples
 /// ```
 /// use actix_web::{web, App};
-/// use actix_web_httpauth::extractors::basic::{BasicAuth, Config};
+/// use actix_web_httpauth::extractors::basic::{self, BasicAuth};
 ///
 /// async fn index(auth: BasicAuth) -> String {
 ///     format!("Hello, {}!", auth.user_id())
 /// }
 ///
 /// App::new()
-///     .app_data(Config::default().realm("Restricted area"))
+///     .app_data(basic::Config::default().realm("Restricted area"))
 ///     .service(web::resource("/index.html").route(web::get().to(index)));
 /// ```
 ///

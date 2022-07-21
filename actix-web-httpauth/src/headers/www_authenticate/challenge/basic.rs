@@ -13,8 +13,7 @@ use crate::utils;
 /// Challenge for [`WWW-Authenticate`] header with HTTP Basic auth scheme,
 /// described in [RFC 7617](https://tools.ietf.org/html/rfc7617)
 ///
-/// ## Example
-///
+/// # Examples
 /// ```
 /// # use actix_web::{web, App, HttpRequest, HttpResponse, HttpServer};
 /// use actix_web_httpauth::headers::www_authenticate::basic::Basic;
@@ -39,8 +38,7 @@ pub struct Basic {
 impl Basic {
     /// Creates new `Basic` challenge with an empty `realm` field.
     ///
-    /// ## Example
-    ///
+    /// # Examples
     /// ```
     /// # use actix_web_httpauth::headers::www_authenticate::basic::Basic;
     /// let challenge = Basic::new();
@@ -51,7 +49,7 @@ impl Basic {
 
     /// Creates new `Basic` challenge from the provided `realm` field value.
     ///
-    /// ## Examples
+    /// # Examples
     ///
     /// ```
     /// # use actix_web_httpauth::headers::www_authenticate::basic::Basic;
