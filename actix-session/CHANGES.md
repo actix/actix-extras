@@ -1,7 +1,9 @@
 # Changes
 
 ## Unreleased - 2021-xx-xx
+- Fix bad interaction between session state changes and renewal. [#265]
 
+[#265]: https://github.com/actix/actix-extras/pull/265
 
 ## 0.7.0 - 2022-07-09
 - Added `TtlExtensionPolicy` enum to support different strategies for extending the TTL attached to the session state. `TtlExtensionPolicy::OnEveryRequest` now allows for long-lived sessions that do not expire if the user remains active. [#233]
