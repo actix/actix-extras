@@ -128,7 +128,9 @@ impl Session {
         let mut inner = self.0.borrow_mut();
 
         if inner.status != SessionStatus::Purged {
-            inner.status = SessionStatus::Changed;
+            if inner.status != SessionStatus::Renewed {
+                inner.status = SessionStatus::Changed;
+            }
 
             let key = key.into();
             let val = serde_json::to_string(&value)
@@ -155,7 +157,9 @@ impl Session {
         let mut inner = self.0.borrow_mut();
 
         if inner.status != SessionStatus::Purged {
-            inner.status = SessionStatus::Changed;
+            if inner.status != SessionStatus::Renewed {
+                inner.status = SessionStatus::Changed;
+            }
             return inner.state.remove(key);
         }
 
@@ -187,7 +191,9 @@ impl Session {
         let mut inner = self.0.borrow_mut();
 
         if inner.status != SessionStatus::Purged {
-            inner.status = SessionStatus::Changed;
+            if inner.status != SessionStatus::Renewed {
+                inner.status = SessionStatus::Changed;
+            }
             inner.state.clear()
         }
     }
