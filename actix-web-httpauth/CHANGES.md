@@ -1,10 +1,15 @@
 # Changes
 
 ## Unreleased - 2022-xx-xx
-- `BasicAuth::user_id()` now returns a `&str`. [#249]
-- `BasicAuth::password()` now returns a `&str`. [#249]
+- Removed `AuthExtractor` trait; implement `FromRequest` for your custom auth types. [#264]
+- `BasicAuth::user_id()` now returns `&str`. [#249]
+- `BasicAuth::password()` now returns `Option<&str>`. [#249]
+- `Basic::user_id()` now returns `&str`. [#264]
+- `Basic::password()` now returns `Option<&str>`. [#264]
+- `Bearer::token()` now returns `&str`. [#264]
 
 [#249]: https://github.com/actix/actix-extras/pull/249
+[#264]: https://github.com/actix/actix-extras/pull/264
 
 
 ## 0.7.0 - 2022-07-19

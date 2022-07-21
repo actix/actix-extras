@@ -1,16 +1,13 @@
-use std::error::Error;
-use std::fmt;
+use std::{error::Error, fmt};
 
-use actix_web::http::StatusCode;
-use actix_web::{HttpResponse, ResponseError};
+use actix_web::{http::StatusCode, HttpResponse, ResponseError};
 
-use crate::headers::www_authenticate::Challenge;
-use crate::headers::www_authenticate::WwwAuthenticate;
+use crate::headers::www_authenticate::{Challenge, WwwAuthenticate};
 
 /// Authentication error returned by authentication extractors.
 ///
-/// Different extractors may extend `AuthenticationError` implementation
-/// in order to provide access to inner challenge fields.
+/// Different extractors may extend `AuthenticationError` implementation in order to provide access
+/// inner challenge fields.
 #[derive(Debug)]
 pub struct AuthenticationError<C: Challenge> {
     challenge: C,
@@ -35,8 +32,8 @@ impl<C: Challenge> AuthenticationError<C> {
 
     /// Returns mutable reference to the inner status code.
     ///
-    /// Can be used to override returned status code, but by default
-    /// this lib tries to stick to the RFC, so it might be unreasonable.
+    /// Can be used to override returned status code, but by default this lib tries to stick to the
+    /// RFC, so it might be unreasonable.
     pub fn status_code_mut(&mut self) -> &mut StatusCode {
         &mut self.status_code
     }
@@ -48,18 +45,17 @@ impl<C: Challenge> fmt::Display for AuthenticationError<C> {
     }
 }
 
-impl<C: 'static + Challenge> Error for AuthenticationError<C> {}
+impl<C: Challenge + 'static> Error for AuthenticationError<C> {}
 
-impl<C: 'static + Challenge> ResponseError for AuthenticationError<C> {
-    fn error_response(&self) -> HttpResponse {
-        HttpResponse::build(self.status_code)
-            // TODO: Get rid of the `.clone()`
-            .insert_header(WwwAuthenticate(self.challenge.clone()))
-            .finish()
-    }
-
+impl<C: Challenge + 'static> ResponseError for AuthenticationError<C> {
     fn status_code(&self) -> StatusCode {
         self.status_code
+    }
+
+    fn error_response(&self) -> HttpResponse {
+        HttpResponse::build(self.status_code())
+            .insert_header(WwwAuthenticate(self.challenge.clone()))
+            .finish()
     }
 }
 
@@ -72,12 +68,12 @@ mod tests {
 
     #[test]
     fn test_status_code_is_preserved_across_error_conversions() {
-        let ae: AuthenticationError<Basic> = AuthenticationError::new(Basic::default());
+        let ae = AuthenticationError::new(Basic::default());
         let expected = ae.status_code;
 
         // Converting the AuthenticationError into a ResponseError should preserve the status code.
-        let e = Error::from(ae);
-        let re = e.as_response_error();
-        assert_eq!(expected, re.status_code());
+        let err = Error::from(ae);
+        let res_err = err.as_response_error();
+        assert_eq!(expected, res_err.status_code());
     }
 }

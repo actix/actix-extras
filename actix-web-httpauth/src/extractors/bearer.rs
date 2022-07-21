@@ -1,19 +1,15 @@
-//! Extractor for the "Bearer" HTTP Authentication Scheme
+//! Extractor for the "Bearer" HTTP Authentication Scheme.
 
 use std::{borrow::Cow, default::Default};
 
 use actix_utils::future::{ready, Ready};
-use actix_web::{
-    dev::{Payload, ServiceRequest},
-    http::header::Header,
-    FromRequest, HttpRequest,
-};
+use actix_web::{dev::Payload, http::header::Header, FromRequest, HttpRequest};
 
-use super::{config::AuthExtractorConfig, errors::AuthenticationError, AuthExtractor};
+use super::{config::AuthExtractorConfig, errors::AuthenticationError};
 pub use crate::headers::www_authenticate::bearer::Error;
 use crate::headers::{authorization, www_authenticate::bearer};
 
-/// [BearerAuth](./struct/BearerAuth.html) extractor configuration.
+/// [`BearerAuth`] extractor configuration.
 #[derive(Debug, Clone, Default)]
 pub struct Config(bearer::Bearer);
 
@@ -31,7 +27,7 @@ impl Config {
     /// Set challenge `realm` attribute.
     ///
     /// The "realm" attribute indicates the scope of protection in the manner
-    /// described in HTTP/1.1 [RFC2617](https://tools.ietf.org/html/rfc2617#section-1.2).
+    /// described in HTTP/1.1 [RFC 2617](https://tools.ietf.org/html/rfc2617#section-1.2).
     pub fn realm<T: Into<Cow<'static, str>>>(mut self, value: T) -> Config {
         self.0.realm = Some(value.into());
         self
@@ -52,12 +48,9 @@ impl AuthExtractorConfig for Config {
     }
 }
 
-// Needs `fn main` to display complete example.
-#[allow(clippy::needless_doctest_main)]
 /// Extractor for HTTP Bearer auth
 ///
-/// # Example
-///
+/// # Examples
 /// ```
 /// use actix_web_httpauth::extractors::bearer::BearerAuth;
 ///
@@ -70,25 +63,22 @@ impl AuthExtractorConfig for Config {
 /// from the [app data] in order to properly form the `WWW-Authenticate`
 /// response header.
 ///
-/// ## Example
-///
+/// # Examples
 /// ```
 /// use actix_web::{web, App};
-/// use actix_web_httpauth::extractors::bearer::{BearerAuth, Config};
+/// use actix_web_httpauth::extractors::bearer::{self, BearerAuth};
 ///
 /// async fn index(auth: BearerAuth) -> String {
 ///     format!("Hello, {}!", auth.token())
 /// }
 ///
-/// fn main() {
-///     let app = App::new()
-///         .app_data(
-///             Config::default()
-///                 .realm("Restricted area")
-///                 .scope("email photo"),
-///         )
-///         .service(web::resource("/index.html").route(web::get().to(index)));
-/// }
+/// App::new()
+///     .app_data(
+///         bearer::Config::default()
+///             .realm("Restricted area")
+///             .scope("email photo"),
+///     )
+///     .service(web::resource("/index.html").route(web::get().to(index)));
 /// ```
 #[derive(Debug, Clone)]
 pub struct BearerAuth(authorization::Bearer);
@@ -105,26 +95,6 @@ impl FromRequest for BearerAuth {
     type Error = AuthenticationError<bearer::Bearer>;
 
     fn from_request(req: &HttpRequest, _payload: &mut Payload) -> <Self as FromRequest>::Future {
-        ready(
-            authorization::Authorization::<authorization::Bearer>::parse(req)
-                .map(|auth| BearerAuth(auth.into_scheme()))
-                .map_err(|_| {
-                    let bearer = req
-                        .app_data::<Config>()
-                        .map(|config| config.0.clone())
-                        .unwrap_or_else(Default::default);
-
-                    AuthenticationError::new(bearer)
-                }),
-        )
-    }
-}
-
-impl AuthExtractor for BearerAuth {
-    type Future = Ready<Result<Self, Self::Error>>;
-    type Error = AuthenticationError<bearer::Bearer>;
-
-    fn from_service_request(req: &ServiceRequest) -> Self::Future {
         ready(
             authorization::Authorization::<authorization::Bearer>::parse(req)
                 .map(|auth| BearerAuth(auth.into_scheme()))

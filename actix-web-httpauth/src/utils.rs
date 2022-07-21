@@ -27,12 +27,13 @@ impl<'a> Iterator for Quoted<'a> {
     fn next(&mut self) -> Option<Self::Item> {
         match self.state {
             State::YieldStr => match self.inner.next() {
-                Some(s) => {
+                Some(val) => {
                     self.state = State::YieldQuote;
-                    Some(s)
+                    Some(val)
                 }
                 None => None,
             },
+
             State::YieldQuote => match self.inner.peek() {
                 Some(_) => {
                     self.state = State::YieldStr;
@@ -44,9 +45,9 @@ impl<'a> Iterator for Quoted<'a> {
     }
 }
 
-/// Tries to quote the quotes in the passed `value`
-pub fn put_quoted(buf: &mut BytesMut, value: &str) {
-    for part in Quoted::new(value) {
+/// Escapes the quotes in `val`.
+pub fn put_quoted(buf: &mut BytesMut, val: &str) {
+    for part in Quoted::new(val) {
         buf.extend_from_slice(part.as_bytes());
     }
 }

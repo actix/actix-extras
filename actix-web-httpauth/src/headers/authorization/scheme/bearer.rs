@@ -1,16 +1,17 @@
-use std::borrow::Cow;
-use std::fmt;
+use std::{borrow::Cow, fmt};
 
-use actix_web::http::header::{HeaderValue, InvalidHeaderValue, TryIntoHeaderValue};
-use actix_web::web::{BufMut, BytesMut};
+use actix_web::{
+    http::header::{HeaderValue, InvalidHeaderValue, TryIntoHeaderValue},
+    web::{BufMut, BytesMut},
+};
 
-use crate::headers::authorization::errors::ParseError;
-use crate::headers::authorization::scheme::Scheme;
+use crate::headers::authorization::{errors::ParseError, scheme::Scheme};
 
-/// Credentials for `Bearer` authentication scheme, defined in [RFC6750](https://tools.ietf.org/html/rfc6750)
+/// Credentials for `Bearer` authentication scheme, defined in [RFC 6750].
 ///
-/// Should be used in combination with
-/// [`Authorization`](./struct.Authorization.html) header.
+/// Should be used in combination with [`Authorization`](super::Authorization) header.
+///
+/// [RFC 6750]: https://tools.ietf.org/html/rfc6750
 #[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Bearer {
     token: Cow<'static, str>,
@@ -19,8 +20,7 @@ pub struct Bearer {
 impl Bearer {
     /// Creates new `Bearer` credentials with the token provided.
     ///
-    /// ## Example
-    ///
+    /// # Example
     /// ```
     /// # use actix_web_httpauth::headers::authorization::Bearer;
     /// let credentials = Bearer::new("mF_9.B5f-4.1JqM");
@@ -35,8 +35,8 @@ impl Bearer {
     }
 
     /// Gets reference to the credentials token.
-    pub fn token(&self) -> &Cow<'static, str> {
-        &self.token
+    pub fn token(&self) -> &str {
+        self.token.as_ref()
     }
 }
 
@@ -48,8 +48,9 @@ impl Scheme for Bearer {
         }
 
         let mut parts = header.to_str()?.splitn(2, ' ');
+
         match parts.next() {
-            Some(scheme) if scheme == "Bearer" => (),
+            Some(scheme) if scheme == "Bearer" => {}
             _ => return Err(ParseError::MissingScheme),
         }
 

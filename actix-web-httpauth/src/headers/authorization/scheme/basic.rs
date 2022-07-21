@@ -8,7 +8,7 @@ use actix_web::{
 use crate::headers::authorization::{errors::ParseError, Scheme};
 
 /// Credentials for `Basic` authentication scheme, defined in [RFC 7617](https://tools.ietf.org/html/rfc7617)
-#[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Basic {
     user_id: Cow<'static, str>,
     password: Option<Cow<'static, str>>,
@@ -18,8 +18,7 @@ impl Basic {
     /// Creates `Basic` credentials with provided `user_id` and optional
     /// `password`.
     ///
-    /// ## Example
-    ///
+    /// # Examples
     /// ```
     /// # use actix_web_httpauth::headers::authorization::Basic;
     /// let credentials = Basic::new("Alladin", Some("open sesame"));
@@ -36,13 +35,13 @@ impl Basic {
     }
 
     /// Returns client's user-ID.
-    pub fn user_id(&self) -> &Cow<'static, str> {
-        &self.user_id
+    pub fn user_id(&self) -> &str {
+        self.user_id.as_ref()
     }
 
     /// Returns client's password if provided.
-    pub fn password(&self) -> Option<&Cow<'static, str>> {
-        self.password.as_ref()
+    pub fn password(&self) -> Option<&str> {
+        self.password.as_deref()
     }
 }
 
@@ -66,6 +65,7 @@ impl Scheme for Basic {
             .next()
             .ok_or(ParseError::MissingField("user_id"))
             .map(|user_id| user_id.to_string().into())?;
+
         let password = credentials
             .next()
             .ok_or(ParseError::MissingField("password"))

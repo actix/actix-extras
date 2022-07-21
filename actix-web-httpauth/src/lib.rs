@@ -1,4 +1,4 @@
-//! HTTP authentication schemes for [actix-web](https://actix.rs).
+//! HTTP authentication schemes for [Actix Web](https://actix.rs).
 //!
 //! Provides:
 //! - Typed [Authorization] and [WWW-Authenticate] headers
@@ -6,14 +6,13 @@
 //! - [Middleware] for easier authorization checking
 //!
 //! ## Supported schemes
+//! - `Bearer` as defined in [RFC 6750](https://tools.ietf.org/html/rfc6750).
+//! - `Basic` as defined in [RFC 7617](https://tools.ietf.org/html/rfc7617).
 //!
-//! - `Basic`, as defined in [RFC7617](https://tools.ietf.org/html/rfc7617)
-//! - `Bearer`, as defined in [RFC6750](https://tools.ietf.org/html/rfc6750)
-//!
-//! [Authorization]: `crate::headers::authorization::Authorization`
-//! [WWW-Authenticate]: `crate::headers::www_authenticate::WwwAuthenticate`
-//! [Extractors]: https://actix.rs/docs/extractors/
-//! [Middleware]: ./middleware
+//! [Authorization]: `self::headers::authorization::Authorization`
+//! [WWW-Authenticate]: `self::headers::www_authenticate::WwwAuthenticate`
+//! [Extractors]: https://actix.rs/docs/extractors
+//! [Middleware]: self::middleware
 
 #![forbid(unsafe_code)]
 #![deny(rust_2018_idioms, nonstandard_style)]
