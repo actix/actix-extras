@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["BasicAuth","Extractor for HTTP Basic auth."],["Config","`BasicAuth` extractor configuration, used for `WWW-Authenticate` header later."]]};
+window.SIDEBAR_ITEMS = {"struct":[["BasicAuth","Extractor for HTTP Basic auth."],["Config","[`BasicAuth`] extractor configuration used for `WWW-Authenticate` header later."]]};

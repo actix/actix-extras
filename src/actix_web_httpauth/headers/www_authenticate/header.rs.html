@@ -37,6 +37,8 @@
 <span id="31">31</span>
 <span id="32">32</span>
 <span id="33">33</span>
+<span id="34">34</span>
+<span id="35">35</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">actix_web</span>::{
     <span class="ident">error::ParseError</span>,
     <span class="ident">http::header</span>::{<span class="ident">Header</span>, <span class="ident">HeaderName</span>, <span class="ident">HeaderValue</span>, <span class="ident">TryIntoHeaderValue</span>, <span class="ident">WWW_AUTHENTICATE</span>},
@@ -45,15 +47,17 @@
 
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::Challenge</span>;
 
-<span class="doccomment">/// `WWW-Authenticate` header, described in [RFC 7235](https://tools.ietf.org/html/rfc7235#section-4.1)</span>
+<span class="doccomment">/// `WWW-Authenticate` header, described in [RFC 7235].</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// This header is generic over [Challenge](./trait.Challenge.html) trait,</span>
-<span class="doccomment">/// see [Basic](./basic/struct.Basic.html) and</span>
-<span class="doccomment">/// [Bearer](./bearer/struct.Bearer.html) challenges for details.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">Ord</span>, <span class="ident">PartialOrd</span>, <span class="ident">Hash</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>, <span class="ident">Clone</span>)]</span>
+<span class="doccomment">/// This header is generic over the [`Challenge`] trait, see [`Basic`](super::basic::Basic) and</span>
+<span class="doccomment">/// [`Bearer`](super::bearer::Bearer) challenges for details.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// [RFC 7235]: https://tools.ietf.org/html/rfc7235#section-4.1</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Default</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">PartialOrd</span>, <span class="ident">Ord</span>, <span class="ident">Hash</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">WwwAuthenticate</span><span class="op">&lt;</span><span class="ident">C</span>: <span class="ident">Challenge</span><span class="op">&gt;</span>(<span class="kw">pub</span> <span class="ident">C</span>);
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">C</span>: <span class="ident">Challenge</span><span class="op">&gt;</span> <span class="ident">Header</span> <span class="kw">for</span> <span class="ident">WwwAuthenticate</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span> {
+    <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">fn</span> <span class="ident">name</span>() -&gt; <span class="ident">HeaderName</span> {
         <span class="ident">WWW_AUTHENTICATE</span>
     }
@@ -71,5 +75,5 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="actix_web_httpauth" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (9a7b7d5e5 2022-07-19)" ></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="actix_web_httpauth" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (d68e7ebc3 2022-07-20)" ></div>
 </body></html>

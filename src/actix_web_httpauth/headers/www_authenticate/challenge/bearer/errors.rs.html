@@ -54,26 +54,24 @@
 <span id="48">48</span>
 <span id="49">49</span>
 <span id="50">50</span>
-<span id="51">51</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::fmt</span>;
 
 <span class="kw">use</span> <span class="ident">actix_web::http::StatusCode</span>;
 
-<span class="doccomment">/// Bearer authorization error types, described in [RFC 6750](https://tools.ietf.org/html/rfc6750#section-3.1)</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">Ord</span>, <span class="ident">PartialOrd</span>, <span class="ident">Hash</span>, <span class="ident">Debug</span>)]</span>
+<span class="doccomment">/// Bearer authorization error types, described in [RFC 6750].</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// [RFC 6750]: https://tools.ietf.org/html/rfc6750#section-3.1</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">PartialOrd</span>, <span class="ident">Ord</span>, <span class="ident">Hash</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span> {
-    <span class="doccomment">/// The request is missing a required parameter, includes an unsupported</span>
-    <span class="doccomment">/// parameter or parameter value, repeats the same parameter, uses more</span>
-    <span class="doccomment">/// than one method for including an access token, or is otherwise</span>
-    <span class="doccomment">/// malformed.</span>
+    <span class="doccomment">/// The request is missing a required parameter, includes an unsupported parameter or parameter</span>
+    <span class="doccomment">/// value, repeats the same parameter, uses more than one method for including an access token,</span>
+    <span class="doccomment">/// or is otherwise malformed.</span>
     <span class="ident">InvalidRequest</span>,
 
-    <span class="doccomment">/// The access token provided is expired, revoked, malformed, or invalid</span>
-    <span class="doccomment">/// for other reasons.</span>
+    <span class="doccomment">/// The access token provided is expired, revoked, malformed, or invalid for other reasons.</span>
     <span class="ident">InvalidToken</span>,
 
-    <span class="doccomment">/// The request requires higher privileges than provided by the access</span>
-    <span class="doccomment">/// token.</span>
+    <span class="doccomment">/// The request requires higher privileges than provided by the access token.</span>
     <span class="ident">InsufficientScope</span>,
 }
 
@@ -107,5 +105,5 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../../../" data-current-crate="actix_web_httpauth" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (9a7b7d5e5 2022-07-19)" ></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../../../" data-current-crate="actix_web_httpauth" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (d68e7ebc3 2022-07-20)" ></div>
 </body></html>

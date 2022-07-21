@@ -115,6 +115,7 @@
 <span id="109">109</span>
 <span id="110">110</span>
 <span id="111">111</span>
+<span id="112">112</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::str</span>;
 
 <span class="kw">use</span> <span class="ident">actix_web::web::BytesMut</span>;
@@ -144,12 +145,13 @@
     <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Item</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">state</span> {
             <span class="ident">State::YieldStr</span> =&gt; <span class="kw">match</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">next</span>() {
-                <span class="prelude-val">Some</span>(<span class="ident">s</span>) =&gt; {
+                <span class="prelude-val">Some</span>(<span class="ident">val</span>) =&gt; {
                     <span class="self">self</span>.<span class="ident">state</span> <span class="op">=</span> <span class="ident">State::YieldQuote</span>;
-                    <span class="prelude-val">Some</span>(<span class="ident">s</span>)
+                    <span class="prelude-val">Some</span>(<span class="ident">val</span>)
                 }
                 <span class="prelude-val">None</span> =&gt; <span class="prelude-val">None</span>,
             },
+
             <span class="ident">State::YieldQuote</span> =&gt; <span class="kw">match</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">peek</span>() {
                 <span class="prelude-val">Some</span>(<span class="kw">_</span>) =&gt; {
                     <span class="self">self</span>.<span class="ident">state</span> <span class="op">=</span> <span class="ident">State::YieldStr</span>;
@@ -161,9 +163,9 @@
     }
 }
 
-<span class="doccomment">/// Tries to quote the quotes in the passed `value`</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">put_quoted</span>(<span class="ident">buf</span>: <span class="kw-2">&amp;mut</span> <span class="ident">BytesMut</span>, <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) {
-    <span class="kw">for</span> <span class="ident">part</span> <span class="kw">in</span> <span class="ident">Quoted::new</span>(<span class="ident">value</span>) {
+<span class="doccomment">/// Escapes the quotes in `val`.</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">put_quoted</span>(<span class="ident">buf</span>: <span class="kw-2">&amp;mut</span> <span class="ident">BytesMut</span>, <span class="ident">val</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) {
+    <span class="kw">for</span> <span class="ident">part</span> <span class="kw">in</span> <span class="ident">Quoted::new</span>(<span class="ident">val</span>) {
         <span class="ident">buf</span>.<span class="ident">extend_from_slice</span>(<span class="ident">part</span>.<span class="ident">as_bytes</span>());
     }
 }
@@ -227,5 +229,5 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_web_httpauth" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (9a7b7d5e5 2022-07-19)" ></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_web_httpauth" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (d68e7ebc3 2022-07-20)" ></div>
 </body></html>

@@ -140,18 +140,14 @@
 <span id="134">134</span>
 <span id="135">135</span>
 <span id="136">136</span>
-<span id="137">137</span>
-<span id="138">138</span>
-<span id="139">139</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Challenge for the &quot;Basic&quot; HTTP Authentication Scheme</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Challenge for the &quot;Basic&quot; HTTP Authentication Scheme.</span>
 
-<span class="kw">use</span> <span class="ident">std::borrow::Cow</span>;
-<span class="kw">use</span> <span class="ident">std::default::Default</span>;
-<span class="kw">use</span> <span class="ident">std::fmt</span>;
-<span class="kw">use</span> <span class="ident">std::str</span>;
+<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">borrow::Cow</span>, <span class="ident">fmt</span>, <span class="ident">str</span>};
 
-<span class="kw">use</span> <span class="ident">actix_web::http::header</span>::{<span class="ident">HeaderValue</span>, <span class="ident">InvalidHeaderValue</span>, <span class="ident">TryIntoHeaderValue</span>};
-<span class="kw">use</span> <span class="ident">actix_web::web</span>::{<span class="ident">BufMut</span>, <span class="ident">Bytes</span>, <span class="ident">BytesMut</span>};
+<span class="kw">use</span> <span class="ident">actix_web</span>::{
+    <span class="ident">http::header</span>::{<span class="ident">HeaderValue</span>, <span class="ident">InvalidHeaderValue</span>, <span class="ident">TryIntoHeaderValue</span>},
+    <span class="ident">web</span>::{<span class="ident">BufMut</span>, <span class="ident">Bytes</span>, <span class="ident">BytesMut</span>},
+};
 
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::Challenge</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils</span>;
@@ -159,8 +155,7 @@
 <span class="doccomment">/// Challenge for [`WWW-Authenticate`] header with HTTP Basic auth scheme,</span>
 <span class="doccomment">/// described in [RFC 7617](https://tools.ietf.org/html/rfc7617)</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// ## Example</span>
-<span class="doccomment">///</span>
+<span class="doccomment">/// # Examples</span>
 <span class="doccomment">/// ```</span>
 <span class="doccomment">/// # use actix_web::{web, App, HttpRequest, HttpResponse, HttpServer};</span>
 <span class="doccomment">/// use actix_web_httpauth::headers::www_authenticate::basic::Basic;</span>
@@ -185,8 +180,7 @@
 <span class="kw">impl</span> <span class="ident">Basic</span> {
     <span class="doccomment">/// Creates new `Basic` challenge with an empty `realm` field.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// ## Example</span>
-    <span class="doccomment">///</span>
+    <span class="doccomment">/// # Examples</span>
     <span class="doccomment">/// ```</span>
     <span class="doccomment">/// # use actix_web_httpauth::headers::www_authenticate::basic::Basic;</span>
     <span class="doccomment">/// let challenge = Basic::new();</span>
@@ -197,7 +191,7 @@
 
     <span class="doccomment">/// Creates new `Basic` challenge from the provided `realm` field value.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// ## Examples</span>
+    <span class="doccomment">/// # Examples</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// ```</span>
     <span class="doccomment">/// # use actix_web_httpauth::headers::www_authenticate::basic::Basic;</span>
@@ -283,5 +277,5 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="actix_web_httpauth" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (9a7b7d5e5 2022-07-19)" ></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="actix_web_httpauth" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (d68e7ebc3 2022-07-20)" ></div>
 </body></html>

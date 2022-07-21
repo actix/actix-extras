@@ -73,44 +73,48 @@
 <span id="67">67</span>
 <span id="68">68</span>
 <span id="69">69</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::convert::From</span>;
-<span class="kw">use</span> <span class="ident">std::error::Error</span>;
-<span class="kw">use</span> <span class="ident">std::fmt</span>;
-<span class="kw">use</span> <span class="ident">std::str</span>;
+<span id="70">70</span>
+<span id="71">71</span>
+<span id="72">72</span>
+</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">convert::From</span>, <span class="ident">error::Error</span>, <span class="ident">fmt</span>, <span class="ident">str</span>};
 
 <span class="kw">use</span> <span class="ident">actix_web::http::header</span>;
 
 <span class="doccomment">/// Possible errors while parsing `Authorization` header.</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// Should not be used directly unless you are implementing</span>
-<span class="doccomment">/// your own [authentication scheme](./trait.Scheme.html).</span>
+<span class="doccomment">/// Should not be used directly unless you are implementing your own</span>
+<span class="doccomment">/// [authentication scheme](super::Scheme).</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ParseError</span> {
-    <span class="doccomment">/// Header value is malformed</span>
+    <span class="doccomment">/// Header value is malformed.</span>
     <span class="ident">Invalid</span>,
-    <span class="doccomment">/// Authentication scheme is missing</span>
+
+    <span class="doccomment">/// Authentication scheme is missing.</span>
     <span class="ident">MissingScheme</span>,
-    <span class="doccomment">/// Required authentication field is missing</span>
+
+    <span class="doccomment">/// Required authentication field is missing.</span>
     <span class="ident">MissingField</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>),
-    <span class="doccomment">/// Unable to convert header into the str</span>
+
+    <span class="doccomment">/// Unable to convert header into the str.</span>
     <span class="ident">ToStrError</span>(<span class="ident">header::ToStrError</span>),
-    <span class="doccomment">/// Malformed base64 string</span>
+
+    <span class="doccomment">/// Malformed base64 string.</span>
     <span class="ident">Base64DecodeError</span>(<span class="ident">base64::DecodeError</span>),
-    <span class="doccomment">/// Malformed UTF-8 string</span>
+
+    <span class="doccomment">/// Malformed UTF-8 string.</span>
     <span class="ident">Utf8Error</span>(<span class="ident">str::Utf8Error</span>),
 }
 
 <span class="kw">impl</span> <span class="ident">fmt::Display</span> <span class="kw">for</span> <span class="ident">ParseError</span> {
     <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="kw">let</span> <span class="ident">display</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">ParseError::Invalid</span> =&gt; <span class="string">&quot;Invalid header value&quot;</span>.<span class="ident">to_string</span>(),
-            <span class="ident">ParseError::MissingScheme</span> =&gt; <span class="string">&quot;Missing authorization scheme&quot;</span>.<span class="ident">to_string</span>(),
-            <span class="ident">ParseError::MissingField</span>(<span class="kw">_</span>) =&gt; <span class="string">&quot;Missing header field&quot;</span>.<span class="ident">to_string</span>(),
-            <span class="ident">ParseError::ToStrError</span>(<span class="ident">e</span>) =&gt; <span class="ident">e</span>.<span class="ident">to_string</span>(),
-            <span class="ident">ParseError::Base64DecodeError</span>(<span class="ident">e</span>) =&gt; <span class="ident">e</span>.<span class="ident">to_string</span>(),
-            <span class="ident">ParseError::Utf8Error</span>(<span class="ident">e</span>) =&gt; <span class="ident">e</span>.<span class="ident">to_string</span>(),
-        };
-        <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="kw-2">&amp;</span><span class="ident">display</span>)
+        <span class="kw">match</span> <span class="self">self</span> {
+            <span class="ident">ParseError::Invalid</span> =&gt; <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Invalid header value&quot;</span>),
+            <span class="ident">ParseError::MissingScheme</span> =&gt; <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Missing authorization scheme&quot;</span>),
+            <span class="ident">ParseError::MissingField</span>(<span class="ident">field</span>) =&gt; <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;Missing header field ({})&quot;</span>, <span class="ident">field</span>),
+            <span class="ident">ParseError::ToStrError</span>(<span class="ident">err</span>) =&gt; <span class="ident">fmt::Display::fmt</span>(<span class="ident">err</span>, <span class="ident">f</span>),
+            <span class="ident">ParseError::Base64DecodeError</span>(<span class="ident">err</span>) =&gt; <span class="ident">fmt::Display::fmt</span>(<span class="ident">err</span>, <span class="ident">f</span>),
+            <span class="ident">ParseError::Utf8Error</span>(<span class="ident">err</span>) =&gt; <span class="ident">fmt::Display::fmt</span>(<span class="ident">err</span>, <span class="ident">f</span>),
+        }
     }
 }
 
@@ -120,28 +124,30 @@
             <span class="ident">ParseError::Invalid</span> =&gt; <span class="prelude-val">None</span>,
             <span class="ident">ParseError::MissingScheme</span> =&gt; <span class="prelude-val">None</span>,
             <span class="ident">ParseError::MissingField</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
-            <span class="ident">ParseError::ToStrError</span>(<span class="ident">e</span>) =&gt; <span class="prelude-val">Some</span>(<span class="ident">e</span>),
-            <span class="ident">ParseError::Base64DecodeError</span>(<span class="ident">e</span>) =&gt; <span class="prelude-val">Some</span>(<span class="ident">e</span>),
-            <span class="ident">ParseError::Utf8Error</span>(<span class="ident">e</span>) =&gt; <span class="prelude-val">Some</span>(<span class="ident">e</span>),
+            <span class="ident">ParseError::ToStrError</span>(<span class="ident">err</span>) =&gt; <span class="prelude-val">Some</span>(<span class="ident">err</span>),
+            <span class="ident">ParseError::Base64DecodeError</span>(<span class="ident">err</span>) =&gt; <span class="prelude-val">Some</span>(<span class="ident">err</span>),
+            <span class="ident">ParseError::Utf8Error</span>(<span class="ident">err</span>) =&gt; <span class="prelude-val">Some</span>(<span class="ident">err</span>),
         }
     }
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">header::ToStrError</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">ParseError</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">e</span>: <span class="ident">header::ToStrError</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident">ParseError::ToStrError</span>(<span class="ident">e</span>)
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">header::ToStrError</span>) -&gt; <span class="self">Self</span> {
+        <span class="ident">ParseError::ToStrError</span>(<span class="ident">err</span>)
     }
 }
+
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">base64::DecodeError</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">ParseError</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">e</span>: <span class="ident">base64::DecodeError</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident">ParseError::Base64DecodeError</span>(<span class="ident">e</span>)
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">base64::DecodeError</span>) -&gt; <span class="self">Self</span> {
+        <span class="ident">ParseError::Base64DecodeError</span>(<span class="ident">err</span>)
     }
 }
+
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">str::Utf8Error</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">ParseError</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">e</span>: <span class="ident">str::Utf8Error</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident">ParseError::Utf8Error</span>(<span class="ident">e</span>)
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">str::Utf8Error</span>) -&gt; <span class="self">Self</span> {
+        <span class="ident">ParseError::Utf8Error</span>(<span class="ident">err</span>)
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="actix_web_httpauth" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (9a7b7d5e5 2022-07-19)" ></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="actix_web_httpauth" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (d68e7ebc3 2022-07-20)" ></div>
 </body></html>

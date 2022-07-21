@@ -67,21 +67,29 @@
 <span id="61">61</span>
 <span id="62">62</span>
 <span id="63">63</span>
+<span id="64">64</span>
+<span id="65">65</span>
+<span id="66">66</span>
+<span id="67">67</span>
+<span id="68">68</span>
+<span id="69">69</span>
+<span id="70">70</span>
+<span id="71">71</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::borrow::Cow</span>;
 
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">Bearer</span>, <span class="ident">Error</span>};
 
 <span class="doccomment">/// Builder for the [`Bearer`] challenge.</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// It is up to implementor to fill all required fields,</span>
-<span class="doccomment">/// neither this `Builder` or [`Bearer`] does not provide any validation.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [`Bearer`]: struct.Bearer.html</span>
+<span class="doccomment">/// It is up to implementor to fill all required fields, neither this `Builder` nor [`Bearer`]</span>
+<span class="doccomment">/// provide any validation.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BearerBuilder</span>(<span class="ident">Bearer</span>);
 
 <span class="kw">impl</span> <span class="ident">BearerBuilder</span> {
-    <span class="doccomment">/// Provides the `scope` attribute, as defined in [RFC6749, Section 3.3](https://tools.ietf.org/html/rfc6749#section-3.3)</span>
+    <span class="doccomment">/// Provides the `scope` attribute, as defined in [RFC 6749 §3.3].</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// [RFC 6749 §3.3]: https://tools.ietf.org/html/rfc6749#section-3.3</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">scope</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="ident">T</span>) -&gt; <span class="self">Self</span>
     <span class="kw">where</span>
         <span class="ident">T</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span>,
@@ -90,7 +98,9 @@
         <span class="self">self</span>
     }
 
-    <span class="doccomment">/// Provides the `realm` attribute, as defined in [RFC2617](https://tools.ietf.org/html/rfc2617)</span>
+    <span class="doccomment">/// Provides the `realm` attribute, as defined in [RFC 2617].</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// [RFC 2617]: https://tools.ietf.org/html/rfc2617</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">realm</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="ident">T</span>) -&gt; <span class="self">Self</span>
     <span class="kw">where</span>
         <span class="ident">T</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span>,
@@ -99,13 +109,17 @@
         <span class="self">self</span>
     }
 
-    <span class="doccomment">/// Provides the `error` attribute, as defined in [RFC6750, Section 3.1](https://tools.ietf.org/html/rfc6750#section-3.1)</span>
+    <span class="doccomment">/// Provides the `error` attribute, as defined in [RFC 6750, Section 3.1].</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// [RFC 6750 §3.1]: https://tools.ietf.org/html/rfc6750#section-3.1</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">error</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="ident">Error</span>) -&gt; <span class="self">Self</span> {
         <span class="self">self</span>.<span class="number">0</span>.<span class="ident">error</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">value</span>);
         <span class="self">self</span>
     }
 
-    <span class="doccomment">/// Provides the `error_description` attribute, as defined in [RFC6750, Section 3](https://tools.ietf.org/html/rfc6750#section-3)</span>
+    <span class="doccomment">/// Provides the `error_description` attribute, as defined in [RFC 6750, Section 3].</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// [RFC 6750 §3]: https://tools.ietf.org/html/rfc6750#section-3</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">error_description</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="ident">T</span>) -&gt; <span class="self">Self</span>
     <span class="kw">where</span>
         <span class="ident">T</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span>,
@@ -114,9 +128,11 @@
         <span class="self">self</span>
     }
 
-    <span class="doccomment">/// Provides the `error_uri` attribute, as defined in [RFC6750, Section 3](https://tools.ietf.org/html/rfc6750#section-3)</span>
+    <span class="doccomment">/// Provides the `error_uri` attribute, as defined in [RFC 6750 §3].</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// It is up to implementor to provide properly-formed absolute URI.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// [RFC 6750 §3](https://tools.ietf.org/html/rfc6750#section-3)</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">error_uri</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="ident">T</span>) -&gt; <span class="self">Self</span>
     <span class="kw">where</span>
         <span class="ident">T</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span>,
@@ -131,5 +147,5 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../../../" data-current-crate="actix_web_httpauth" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (9a7b7d5e5 2022-07-19)" ></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../../../" data-current-crate="actix_web_httpauth" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (d68e7ebc3 2022-07-20)" ></div>
 </body></html>
