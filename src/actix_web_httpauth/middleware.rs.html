@@ -421,7 +421,6 @@
 <span id="415">415</span>
 <span id="416">416</span>
 <span id="417">417</span>
-<span id="418">418</span>
 </pre><pre class="rust"><code><span class="doccomment">//! HTTP Authentication middleware.</span>
 
 <span class="kw">use</span> <span class="ident">std</span>::{
@@ -439,7 +438,7 @@
     <span class="ident">Error</span>, <span class="ident">FromRequest</span>,
 };
 <span class="kw">use</span> <span class="ident">futures_core::ready</span>;
-<span class="kw">use</span> <span class="ident">futures_util::future</span>::{<span class="self">self</span>, <span class="ident">FutureExt</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">LocalBoxFuture</span>, <span class="ident">TryFutureExt</span> <span class="kw">as</span> <span class="kw">_</span>};
+<span class="kw">use</span> <span class="ident">futures_util::future</span>::{<span class="self">self</span>, <span class="ident">LocalBoxFuture</span>, <span class="ident">TryFutureExt</span> <span class="kw">as</span> <span class="kw">_</span>};
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::extractors</span>::{<span class="ident">basic</span>, <span class="ident">bearer</span>};
 
@@ -594,7 +593,7 @@
         <span class="kw">let</span> <span class="ident">process_fn</span> <span class="op">=</span> <span class="ident">Arc::clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">process_fn</span>);
         <span class="kw">let</span> <span class="ident">service</span> <span class="op">=</span> <span class="ident">Rc::clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">service</span>);
 
-        <span class="kw">async</span> <span class="kw">move</span> {
+        <span class="ident">Box::pin</span>(<span class="kw">async</span> <span class="kw">move</span> {
             <span class="kw">let</span> (<span class="ident">req</span>, <span class="ident">credentials</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">Extract</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::new</span>(<span class="ident">req</span>).<span class="kw">await</span> {
                 <span class="prelude-val">Ok</span>(<span class="ident">req</span>) =&gt; <span class="ident">req</span>,
                 <span class="prelude-val">Err</span>((<span class="ident">err</span>, <span class="ident">req</span>)) =&gt; {
@@ -610,8 +609,7 @@
             };
 
             <span class="ident">service</span>.<span class="ident">call</span>(<span class="ident">req</span>).<span class="kw">await</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">res</span><span class="op">|</span> <span class="ident">res</span>.<span class="ident">map_into_left_body</span>())
-        }
-        .<span class="ident">boxed_local</span>()
+        })
     }
 }
 
@@ -643,7 +641,7 @@
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">fut</span>.<span class="ident">is_none</span>() {
             <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">req</span>.<span class="ident">as_mut</span>().<span class="ident">expect</span>(<span class="string">&quot;Extract future was polled twice!&quot;</span>);
             <span class="kw">let</span> <span class="ident">fut</span> <span class="op">=</span> <span class="ident">req</span>.<span class="ident">extract</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>().<span class="ident">map_err</span>(<span class="ident">Into::into</span>);
-            <span class="self">self</span>.<span class="ident">fut</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">fut</span>.<span class="ident">boxed_local</span>());
+            <span class="self">self</span>.<span class="ident">fut</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">Box::pin</span>(<span class="ident">fut</span>));
         }
 
         <span class="kw">let</span> <span class="ident">fut</span> <span class="op">=</span> <span class="self">self</span>
@@ -841,5 +839,5 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_web_httpauth" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (d68e7ebc3 2022-07-20)" ></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_web_httpauth" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (62b272d25 2022-07-21)" ></div>
 </body></html>
