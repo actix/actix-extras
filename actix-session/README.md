@@ -3,9 +3,9 @@
 > Session management for Actix Web.
 
 [![crates.io](https://img.shields.io/crates/v/actix-session?label=latest)](https://crates.io/crates/actix-session)
-[![Documentation](https://docs.rs/actix-session/badge.svg?version=0.7.0)](https://docs.rs/actix-session/0.7.0)
+[![Documentation](https://docs.rs/actix-session/badge.svg?version=0.7.1)](https://docs.rs/actix-session/0.7.1)
 ![Apache 2.0 or MIT licensed](https://img.shields.io/crates/l/actix-session)
-[![Dependency Status](https://deps.rs/crate/actix-session/0.7.0/status.svg)](https://deps.rs/crate/actix-session/0.7.0)
+[![Dependency Status](https://deps.rs/crate/actix-session/0.7.1/status.svg)](https://deps.rs/crate/actix-session/0.7.1)
 
 ## Documentation & Resources
 
