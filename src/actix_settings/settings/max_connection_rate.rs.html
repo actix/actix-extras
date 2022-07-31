@@ -59,15 +59,31 @@
 <span id="57">57</span>
 <span id="58">58</span>
 <span id="59">59</span>
+<span id="60">60</span>
+<span id="61">61</span>
+<span id="62">62</span>
+<span id="63">63</span>
+<span id="64">64</span>
+<span id="65">65</span>
+<span id="66">66</span>
+<span id="67">67</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::fmt</span>;
 
 <span class="kw">use</span> <span class="ident">serde::de</span>;
 
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">AtError</span>, <span class="ident">AtResult</span>, <span class="ident">Parse</span>};
 
+<span class="doccomment">/// The maximum per-worker concurrent TLS connection limit.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// All listeners will stop accepting connections when this limit is reached. It can be used to</span>
+<span class="doccomment">/// limit the global TLS CPU usage. By default max connections is set to a 256. Takes a string</span>
+<span class="doccomment">/// value: Either &quot;default&quot;, or an integer N &gt; 0 e.g. &quot;6&quot;.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">MaxConnectionRate</span> {
+    <span class="doccomment">/// The default connection limit. See struct docs.</span>
     <span class="ident">Default</span>,
+
+    <span class="doccomment">/// A specific connection limit.</span>
     <span class="ident">Manual</span>(<span class="ident">usize</span>),
 }
 

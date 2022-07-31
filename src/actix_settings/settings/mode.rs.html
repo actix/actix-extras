@@ -23,14 +23,22 @@
 <span id="21">21</span>
 <span id="22">22</span>
 <span id="23">23</span>
+<span id="24">24</span>
+<span id="25">25</span>
+<span id="26">26</span>
+<span id="27">27</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">serde::Deserialize</span>;
 
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">AtResult</span>, <span class="ident">Parse</span>};
 
+<span class="doccomment">/// Marker of intended deployment environment.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>, <span class="ident">Deserialize</span>)]</span>
 <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename_all</span> <span class="op">=</span> <span class="string">&quot;lowercase&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Mode</span> {
+    <span class="doccomment">/// Marks development environment.</span>
     <span class="ident">Development</span>,
+
+    <span class="doccomment">/// Marks production environment.</span>
     <span class="ident">Production</span>,
 }
 

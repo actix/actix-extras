@@ -40,6 +40,31 @@
 <span id="38">38</span>
 <span id="39">39</span>
 <span id="40">40</span>
+<span id="41">41</span>
+<span id="42">42</span>
+<span id="43">43</span>
+<span id="44">44</span>
+<span id="45">45</span>
+<span id="46">46</span>
+<span id="47">47</span>
+<span id="48">48</span>
+<span id="49">49</span>
+<span id="50">50</span>
+<span id="51">51</span>
+<span id="52">52</span>
+<span id="53">53</span>
+<span id="54">54</span>
+<span id="55">55</span>
+<span id="56">56</span>
+<span id="57">57</span>
+<span id="58">58</span>
+<span id="59">59</span>
+<span id="60">60</span>
+<span id="61">61</span>
+<span id="62">62</span>
+<span id="63">63</span>
+<span id="64">64</span>
+<span id="65">65</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">serde::Deserialize</span>;
 
 <span class="kw">mod</span> <span class="ident">address</span>;
@@ -66,18 +91,43 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>, <span class="ident">Deserialize</span>)]</span>
 <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename_all</span> <span class="op">=</span> <span class="string">&quot;kebab-case&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ActixSettings</span> {
+    <span class="doccomment">/// List of addresses for the server to bind to.</span>
     <span class="kw">pub</span> <span class="ident">hosts</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">mode</span>: <span class="ident">mode::Mode</span>,
+
+    <span class="doccomment">/// Marker of intended deployment environment.</span>
+    <span class="kw">pub</span> <span class="ident">mode</span>: <span class="ident">Mode</span>,
+
+    <span class="doccomment">/// True if the [`Compress`](actix_web::middleware::Compress) middleware should be enabled.</span>
     <span class="kw">pub</span> <span class="ident">enable_compression</span>: <span class="ident">bool</span>,
+
+    <span class="doccomment">/// True if the [`Logger`](actix_web::middleware::Logger) middleware should be enabled.</span>
     <span class="kw">pub</span> <span class="ident">enable_log</span>: <span class="ident">bool</span>,
+
+    <span class="doccomment">/// The number of workers that the server should start.</span>
     <span class="kw">pub</span> <span class="ident">num_workers</span>: <span class="ident">NumWorkers</span>,
+
+    <span class="doccomment">/// The maximum number of pending connections.</span>
     <span class="kw">pub</span> <span class="ident">backlog</span>: <span class="ident">Backlog</span>,
+
+    <span class="doccomment">/// The per-worker maximum number of concurrent connections.</span>
     <span class="kw">pub</span> <span class="ident">max_connections</span>: <span class="ident">MaxConnections</span>,
+
+    <span class="doccomment">/// The per-worker maximum concurrent TLS connection limit.</span>
     <span class="kw">pub</span> <span class="ident">max_connection_rate</span>: <span class="ident">MaxConnectionRate</span>,
+
+    <span class="doccomment">/// Server keep-alive preference.</span>
     <span class="kw">pub</span> <span class="ident">keep_alive</span>: <span class="ident">KeepAlive</span>,
+
+    <span class="doccomment">/// Timeout duration for reading client request header.</span>
     <span class="kw">pub</span> <span class="ident">client_timeout</span>: <span class="ident">Timeout</span>,
+
+    <span class="doccomment">/// Timeout duration for connection shutdown.</span>
     <span class="kw">pub</span> <span class="ident">client_shutdown</span>: <span class="ident">Timeout</span>,
+
+    <span class="doccomment">/// Timeout duration for graceful worker shutdown.</span>
     <span class="kw">pub</span> <span class="ident">shutdown_timeout</span>: <span class="ident">Timeout</span>,
+
+    <span class="doccomment">/// TLS (HTTPS) configuration.</span>
     <span class="kw">pub</span> <span class="ident">tls</span>: <span class="ident">Tls</span>,
 }
 </code></pre></div>
