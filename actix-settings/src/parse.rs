@@ -1,6 +1,6 @@
 use std::{path::PathBuf, str::FromStr};
 
-use crate::error::AtError;
+use crate::AtError;
 
 pub trait Parse: Sized {
     fn parse(string: &str) -> Result<Self, AtError>;

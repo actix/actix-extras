@@ -20,17 +20,17 @@ use serde::{de, Deserialize};
 
 #[macro_use]
 mod error;
-mod actix;
-mod core;
+mod parse;
+mod settings;
 
-pub use self::actix::{
+pub use self::error::{AtError, AtResult};
+pub use self::parse::Parse;
+pub use self::settings::{
     ActixSettings, Address, Backlog, KeepAlive, MaxConnectionRate, MaxConnections, Mode,
     NumWorkers, Timeout, Tls,
 };
-pub use self::core::Parse;
-pub use self::error::{AtError, AtResult};
 
-#[derive(Debug, Clone, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize)]
 #[serde(bound = "A: Deserialize<'de>")]
 pub struct BasicSettings<A> {
     pub actix: ActixSettings,
@@ -648,10 +648,9 @@ mod tests {
         }
 
         #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+        #[serde(rename_all = "kebab-case")]
         struct AppSettings {
-            #[serde(rename = "example-name")]
             example_name: String,
-            #[serde(rename = "nested-field")]
             nested_field: NestedSetting,
         }
 

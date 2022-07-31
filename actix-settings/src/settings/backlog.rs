@@ -2,7 +2,7 @@ use std::fmt;
 
 use serde::de;
 
-use crate::{core::Parse, error::AtError};
+use crate::{AtError, AtResult, Parse};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Backlog {
@@ -11,7 +11,7 @@ pub enum Backlog {
 }
 
 impl Parse for Backlog {
-    fn parse(string: &str) -> std::result::Result<Self, AtError> {
+    fn parse(string: &str) -> AtResult<Self> {
         match string {
             "default" => Ok(Backlog::Default),
             string => match string.parse::<usize>() {

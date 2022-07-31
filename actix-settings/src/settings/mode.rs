@@ -1,18 +1,17 @@
 use serde::Deserialize;
 
-use crate::{core::Parse, error::AtError};
+use crate::{AtResult, Parse};
 
+///
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize)]
+#[serde(rename_all = "lowercase")]
 pub enum Mode {
-    #[serde(rename = "development")]
     Development,
-
-    #[serde(rename = "production")]
     Production,
 }
 
 impl Parse for Mode {
-    fn parse(string: &str) -> std::result::Result<Self, AtError> {
+    fn parse(string: &str) -> AtResult<Self> {
         match string {
             "development" => Ok(Self::Development),
             "production" => Ok(Self::Production),

@@ -2,22 +2,22 @@ use std::fmt;
 
 use serde::de;
 
-use crate::{core::Parse, error::AtError};
+use crate::{AtError, AtResult, Parse};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub enum MaxConnections {
+pub enum NumWorkers {
     Default,
     Manual(usize),
 }
 
-impl Parse for MaxConnections {
-    fn parse(string: &str) -> std::result::Result<Self, AtError> {
+impl Parse for NumWorkers {
+    fn parse(string: &str) -> AtResult<Self> {
         match string {
-            "default" => Ok(MaxConnections::Default),
+            "default" => Ok(NumWorkers::Default),
             string => match string.parse::<usize>() {
-                Ok(val) => Ok(MaxConnections::Manual(val)),
+                Ok(val) => Ok(NumWorkers::Manual(val)),
                 Err(_) => Err(InvalidValue! {
-                    expected: "an integer > 0",
+                    expected: "a positive integer",
                     got: string,
                 }),
             },
@@ -25,15 +25,15 @@ impl Parse for MaxConnections {
     }
 }
 
-impl<'de> de::Deserialize<'de> for MaxConnections {
+impl<'de> de::Deserialize<'de> for NumWorkers {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: de::Deserializer<'de>,
     {
-        struct MaxConnectionsVisitor;
+        struct NumWorkersVisitor;
 
-        impl<'de> de::Visitor<'de> for MaxConnectionsVisitor {
-            type Value = MaxConnections;
+        impl<'de> de::Visitor<'de> for NumWorkersVisitor {
+            type Value = NumWorkers;
 
             fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
                 let msg = "Either \"default\" or a string containing an integer > 0";
@@ -44,8 +44,8 @@ impl<'de> de::Deserialize<'de> for MaxConnections {
             where
                 E: de::Error,
             {
-                match MaxConnections::parse(value) {
-                    Ok(max_connections) => Ok(max_connections),
+                match NumWorkers::parse(value) {
+                    Ok(num_workers) => Ok(num_workers),
                     Err(AtError::InvalidValue { expected, got, .. }) => Err(
                         de::Error::invalid_value(de::Unexpected::Str(&got), &expected),
                     ),
@@ -54,6 +54,6 @@ impl<'de> de::Deserialize<'de> for MaxConnections {
             }
         }
 
-        deserializer.deserialize_string(MaxConnectionsVisitor)
+        deserializer.deserialize_string(NumWorkersVisitor)
     }
 }

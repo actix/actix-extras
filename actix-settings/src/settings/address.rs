@@ -2,7 +2,7 @@ use once_cell::sync::Lazy;
 use regex::Regex;
 use serde::Deserialize;
 
-use crate::{core::Parse, error::AtError};
+use crate::{AtError, Parse};
 
 static ADDR_REGEX: Lazy<Regex> = Lazy::new(|| {
     Regex::new(

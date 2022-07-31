@@ -4,7 +4,7 @@ use once_cell::sync::Lazy;
 use regex::Regex;
 use serde::de;
 
-use crate::{core::Parse, error::AtError};
+use crate::{AtError, AtResult, Parse};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum KeepAlive {
@@ -15,7 +15,7 @@ pub enum KeepAlive {
 }
 
 impl Parse for KeepAlive {
-    fn parse(string: &str) -> std::result::Result<Self, AtError> {
+    fn parse(string: &str) -> AtResult<Self> {
         pub(crate) static FMT: Lazy<Regex> =
             Lazy::new(|| Regex::new(r"^\d+ seconds$").expect("Failed to compile regex: FMT"));
 
