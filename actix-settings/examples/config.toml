@@ -1,0 +1,72 @@
+[actix]
+# For more info, see: https://docs.rs/actix-web/4/actix_web/struct.HttpServer.html.
+
+hosts = [
+    ["0.0.0.0", 8080]      # This should work for both development and deployment...
+    #                      # ... but other entries are possible, as well.
+]
+mode = "development"       # Either "development" or "production".
+enable-compression = true  # Toggle compression middleware.
+enable-log = true          # Toggle logging middleware.
+
+# The number of workers that the server should start.
+# By default the number of available logical cpu cores is used.
+# Takes a string value: Either "default", or an integer N > 0 e.g. "6".
+num-workers = "default"
+
+# The maximum number of pending connections. This refers to the number of clients
+# that can be waiting to be served. Exceeding this number results in the client
+# getting an error when attempting to connect. It should only affect servers under
+# significant load. Generally set in the 64-2048 range. The default value is 2048.
+# Takes a string value: Either "default", or an integer N > 0 e.g. "6".
+backlog = "default"
+
+# Sets the per-worker maximum number of concurrent connections. All socket listeners
+# will stop accepting connections when this limit is reached for each worker.
+# By default max connections is set to a 25k.
+# Takes a string value: Either "default", or an integer N > 0 e.g. "6".
+max-connections = "default"
+
+# Sets the per-worker maximum concurrent connection establish process. All listeners
+# will stop accepting connections when this limit is reached. It can be used to limit
+# the global TLS CPU usage. By default max connections is set to a 256.
+# Takes a string value: Either "default", or an integer N > 0 e.g. "6".
+max-connection-rate = "default"
+
+# Set server keep-alive preference. By default keep alive is set to 5 seconds.
+# Takes a string value: Either "default", "disabled", "os",
+# or a string of the format "N seconds" where N is an integer > 0 e.g. "6 seconds".
+keep-alive = "default"
+
+# Set server client timeout in milliseconds for first request. Defines a timeout
+# for reading client request header. If a client does not transmit the entire set of
+# headers within this time, the request is terminated with the 408 (Request Time-out)
+# error. To disable timeout, set the value to 0.
+# By default client timeout is set to 5000 milliseconds.
+# Takes a string value: Either "default", or a string of the format "N milliseconds"
+# where N is an integer > 0 e.g. "6 milliseconds".
+client-timeout = "default"
+
+# Set server connection shutdown timeout in milliseconds. Defines a timeout for
+# shutdown connection. If a shutdown procedure does not complete within this time,
+# the request is dropped. To disable timeout set value to 0.
+# By default client timeout is set to 5000 milliseconds.
+# Takes a string value: Either "default", or a string of the format "N milliseconds"
+# where N is an integer > 0 e.g. "6 milliseconds".
+client-shutdown = "default"
+
+# Timeout for graceful workers shutdown. After receiving a stop signal, workers have
+# this much time to finish serving requests. Workers still alive after the timeout
+# are force dropped. By default shutdown timeout sets to 30 seconds.
+# Takes a string value: Either "default", or a string of the format "N seconds"
+# where N is an integer > 0 e.g. "6 seconds".
+shutdown-timeout = "default"
+
+[actix.tls] # TLS is disabled by default because the certs don't exist
+enabled = false
+certificate = "path/to/cert/cert.pem"
+private-key = "path/to/cert/key.pem"
+
+# The `application` table be used to express application-specific settings.
+# See the `README.md` file for more details on how to use this.
+[application]

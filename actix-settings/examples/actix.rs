@@ -30,8 +30,8 @@ async fn index(settings: web::Data<Settings>) -> impl Responder {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    let mut settings = Settings::parse_toml("./examples/Server.toml")
-        .expect("Failed to parse `Settings` from Server.toml");
+    let mut settings = Settings::parse_toml("./examples/config.toml")
+        .expect("Failed to parse `Settings` from config.toml");
 
     // If the environment variable `$APPLICATION__HOSTS` is set,
     // have its value override the `settings.actix.hosts` setting:
