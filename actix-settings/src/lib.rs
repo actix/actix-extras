@@ -1,9 +1,68 @@
 //! Easily manage Actix Web's settings from a TOML file and environment variables.
+//!
+//! To get started add a [`Settings::parse_toml("./Server.toml")`](Settings::parse_toml) call to the
+//! top of your main function. This will create a template file with descriptions of all the
+//! configurable settings. You can change or remove anything in that file and it will be picked up
+//! the next time you run your application.
+//!
+//! Overriding parts of the file can be done from values using [`Settings::override_field`] or from
+//! the environment using [`Settings::override_field_with_env_var`].
+//!
+//! # Examples
+//!
+//! See examples folder on GitHub for complete example.
+//!
+//! ```ignore
+//! # use actix_web::{
+//! #     get,
+//! #     middleware::{Compress, Condition, Logger},
+//! #     web, App, HttpServer,
+//! # };
+//! use actix_settings::{ApplySettings as _, Mode, Settings};
+//!
+//! #[actix_web::main]
+//! async fn main() -> std::io::Result<()> {
+//!     let mut settings = Settings::parse_toml("./Server.toml")
+//!         .expect("Failed to parse `Settings` from Server.toml");
+//!
+//!     // If the environment variable `$APPLICATION__HOSTS` is set,
+//!     // have its value override the `settings.actix.hosts` setting:
+//!     Settings::override_field_with_env_var(&mut settings.actix.hosts, "APPLICATION__HOSTS")?;
+//!
+//!     init_logger(&settings);
+//!
+//!     HttpServer::new({
+//!         // clone settings into each worker thread
+//!         let settings = settings.clone();
+//!
+//!         move || {
+//!             App::new()
+//!                 // Include this `.wrap()` call for compression settings to take effect
+//!                 .wrap(Condition::new(
+//!                     settings.actix.enable_compression,
+//!                     Compress::default(),
+//!                 ))
+//!
+//!                 // add request logger
+//!                 .wrap(Logger::default())
+//!
+//!                 // make `Settings` available to handlers
+//!                 .app_data(web::Data::new(settings.clone()))
+//!
+//!                 // add request handlers as normal
+//!                 .service(index)
+//!         }
+//!     })
+//!     // apply the `Settings` to Actix Web's `HttpServer`
+//!     .apply_settings(&settings)
+//!     .run()
+//!     .await
+//! }
+//! ```
 
 #![forbid(unsafe_code)]
 #![deny(rust_2018_idioms, nonstandard_style)]
-#![warn(future_incompatible, missing_debug_implementations)]
-// #![warn(missing_docs)]
+#![warn(future_incompatible, missing_docs, missing_debug_implementations)]
 #![doc(html_logo_url = "https://actix.rs/img/logo.png")]
 #![doc(html_favicon_url = "https://actix.rs/favicon.ico")]
 
@@ -37,15 +96,21 @@ pub use self::settings::{
     NumWorkers, Timeout, Tls,
 };
 
+/// Wrapper for server and application-specific settings.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize)]
 #[serde(bound = "A: Deserialize<'de>")]
 pub struct BasicSettings<A> {
+    /// Actix Web server settings.
     pub actix: ActixSettings,
+
+    /// Application-specific settings.
     pub application: A,
 }
 
+/// Convenience type alias for [`BasicSettings`] with no defined application-specific settings.
 pub type Settings = BasicSettings<NoSettings>;
 
+/// Marker type representing no defined application-specific settings.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize)]
 #[non_exhaustive]
 pub struct NoSettings {/* NOTE: turning this into a unit struct will cause deserialization failures. */}
@@ -54,14 +119,16 @@ impl<A> BasicSettings<A>
 where
     A: de::DeserializeOwned,
 {
-    /// NOTE **DO NOT** mess with the ordering of the tables in this template.
-    ///      Especially the `[application]` table needs to be last in order
-    ///      for some tests to keep working.
+    // NOTE **DO NOT** mess with the ordering of the tables in the default template.
+    //      Especially the `[application]` table needs to be last in order
+    //      for some tests to keep working.
+    /// Default settings file contents.
     pub(crate) const DEFAULT_TOML_TEMPLATE: &'static str = include_str!("./defaults.toml");
 
-    /// Parse an instance of `Self` from a `TOML` file located at `filepath`.
-    /// If the file doesn't exist, it is generated from the default `TOML`
-    /// template, after which the newly generated file is read in and parsed.
+    /// Parse an instance of `Self` from a TOML file located at `filepath`.
+    ///
+    /// If the file doesn't exist, it is generated from the default TOML template, after which the
+    /// newly generated file is read in and parsed.
     pub fn parse_toml<P>(filepath: P) -> AtResult<Self>
     where
         P: AsRef<Path>,
@@ -73,43 +140,62 @@ where
         }
 
         let mut f = File::open(filepath)?;
+        // TODO: don't bail on metadata fail
         let mut contents = String::with_capacity(f.metadata()?.len() as usize);
         f.read_to_string(&mut contents)?;
 
         Ok(toml::from_str::<Self>(&contents)?)
     }
 
-    /// Parse an instance of `Self` straight from the default `TOML` template.
+    /// Parse an instance of `Self` straight from the default TOML template.
+    // TODO: make infallible
+    // TODO: consider "template" rename
     pub fn from_default_template() -> AtResult<Self> {
         Self::from_template(Self::DEFAULT_TOML_TEMPLATE)
     }
 
-    /// Parse an instance of `Self` straight from the default `TOML` template.
+    /// Parse an instance of `Self` straight from the default TOML template.
+    // TODO: consider "template" rename
     pub fn from_template(template: &str) -> AtResult<Self> {
         Ok(toml::from_str(template)?)
     }
 
-    /// Write the default `TOML` template to a new file, to be located
-    /// at `filepath`.  Return a `Error::FileExists(_)` error if a
-    /// file already exists at that location.
+    /// Writes the default TOML template to a new file, located at `filepath`.
+    ///
+    /// # Errors
+    /// Returns a [`FileExists`](crate::AtError::FileExists) error if a file already exists at that
+    /// location.
     pub fn write_toml_file<P>(filepath: P) -> AtResult<()>
     where
         P: AsRef<Path>,
     {
         let filepath = filepath.as_ref();
-        let contents = Self::DEFAULT_TOML_TEMPLATE.trim();
 
         if filepath.exists() {
             return Err(AtError::FileExists(filepath.to_path_buf()));
         }
 
         let mut file = File::create(filepath)?;
-        file.write_all(contents.as_bytes())?;
+        file.write_all(Self::DEFAULT_TOML_TEMPLATE.trim().as_bytes())?;
         file.flush()?;
 
         Ok(())
     }
 
+    /// Attempts to parse `value` and override the referenced `field`.
+    ///
+    /// # Examples
+    /// ```
+    /// use actix_settings::{Settings, Mode};
+    ///
+    /// # fn inner() -> actix_settings::AtResult<()> {
+    /// let mut settings = Settings::from_default_template()?;
+    /// assert_eq!(settings.actix.mode, Mode::Development);
+    ///
+    /// Settings::override_field(&mut settings.actix.mode, "production")?;
+    /// assert_eq!(settings.actix.mode, Mode::Production);
+    /// # Ok(()) }
+    /// ```
     pub fn override_field<F, V>(field: &mut F, value: V) -> AtResult<()>
     where
         F: Parse,
@@ -119,6 +205,22 @@ where
         Ok(())
     }
 
+    /// Attempts to read an environment variable, parse it, and override the referenced `field`.
+    ///
+    /// # Examples
+    /// ```
+    /// use actix_settings::{Settings, Mode};
+    ///
+    /// std::env::set_var("OVERRIDE__MODE", "production");
+    ///
+    /// # fn inner() -> actix_settings::AtResult<()> {
+    /// let mut settings = Settings::from_default_template()?;
+    /// assert_eq!(settings.actix.mode, Mode::Development);
+    ///
+    /// Settings::override_field_with_env_var(&mut settings.actix.mode, "OVERRIDE__MODE")?;
+    /// assert_eq!(settings.actix.mode, Mode::Production);
+    /// # Ok(()) }
+    /// ```
     pub fn override_field_with_env_var<F, N>(field: &mut F, var_name: N) -> AtResult<()>
     where
         F: Parse,
@@ -132,6 +234,7 @@ where
     }
 }
 
+/// Extension trait for applying parsed settings to the server object.
 pub trait ApplySettings {
     /// Apply a [`BasicSettings`] value to `self`.
     ///
@@ -200,9 +303,9 @@ where
         self = match settings.actix.client_timeout {
             Timeout::Default => self,
             Timeout::Milliseconds(n) => {
-                self.client_disconnect_timeout(Duration::from_millis(n as u64))
+                self.client_request_timeout(Duration::from_millis(n as u64))
             }
-            Timeout::Seconds(n) => self.client_disconnect_timeout(Duration::from_secs(n as u64)),
+            Timeout::Seconds(n) => self.client_request_timeout(Duration::from_secs(n as u64)),
         };
 
         self = match settings.actix.client_shutdown {

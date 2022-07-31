@@ -37,9 +37,13 @@ static ADDR_LIST_REGEX: Lazy<Regex> = Lazy::new(|| {
     .expect("Failed to compile regex: ADDRS_REGEX")
 });
 
+/// A host/port pair for the server to bind to.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize)]
 pub struct Address {
+    /// Host part of address.
     pub host: String,
+
+    /// Port part of address.
     pub port: u16,
 }
 

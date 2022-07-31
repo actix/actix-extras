@@ -21,19 +21,19 @@ num-workers = "default"
 # Takes a string value: Either "default", or an integer N > 0 e.g. "6".
 backlog = "default"
 
-# Sets the maximum per-worker number of concurrent connections. All socket listeners
+# Sets the per-worker maximum number of concurrent connections. All socket listeners
 # will stop accepting connections when this limit is reached for each worker.
 # By default max connections is set to a 25k.
 # Takes a string value: Either "default", or an integer N > 0 e.g. "6".
 max-connections = "default"
 
-# Sets the maximum per-worker concurrent connection establish process. All listeners
+# Sets the per-worker maximum concurrent connection establish process. All listeners
 # will stop accepting connections when this limit is reached. It can be used to limit
 # the global TLS CPU usage. By default max connections is set to a 256.
 # Takes a string value: Either "default", or an integer N > 0 e.g. "6".
 max-connection-rate = "default"
 
-# Set server keep-alive setting. By default keep alive is set to 5 seconds.
+# Set server keep-alive preference. By default keep alive is set to 5 seconds.
 # Takes a string value: Either "default", "disabled", "os",
 # or a string of the format "N seconds" where N is an integer > 0 e.g. "6 seconds".
 keep-alive = "default"

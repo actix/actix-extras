@@ -2,12 +2,20 @@ use std::{env::VarError, io, num::ParseIntError, path::PathBuf, str::ParseBoolEr
 
 use toml::de::Error as TomlError;
 
+/// Convenience type alias for `Result<T, AtError>`.
 pub type AtResult<T> = std::result::Result<T, AtError>;
 
-#[derive(Clone, Debug)]
+/// Errors that can be returned from methods in this crate.
+#[derive(Debug, Clone)]
 pub enum AtError {
+    /// Environment variable does not exists or is invalid.
     EnvVarError(VarError),
+
+    /// File already exists on disk.
     FileExists(PathBuf),
+
+    /// Invalid value.
+    #[allow(missing_docs)]
     InvalidValue {
         expected: &'static str,
         got: String,
@@ -15,10 +23,20 @@ pub enum AtError {
         line: u32,
         column: u32,
     },
+
+    /// I/O error.
     IoError(ioe::IoError),
+
+    /// Value is not a boolean.
     ParseBoolError(ParseBoolError),
+
+    /// Value is not an integer.
     ParseIntError(ParseIntError),
+
+    /// Value is not an address.
     ParseAddressError(String),
+
+    /// Error deserializing as TOML.
     TomlError(TomlError),
 }
 

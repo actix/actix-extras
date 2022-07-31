@@ -4,9 +4,17 @@ use serde::de;
 
 use crate::{AtError, AtResult, Parse};
 
+/// The maximum per-worker number of concurrent connections.
+///
+/// All socket listeners will stop accepting connections when this limit is reached for each worker.
+/// By default max connections is set to a 25k. Takes a string value: Either "default", or an
+/// integer N > 0 e.g. "6".
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum MaxConnections {
+    /// The default number of connections. See struct docs.
     Default,
+
+    /// A specific number of connections.
     Manual(usize),
 }
 

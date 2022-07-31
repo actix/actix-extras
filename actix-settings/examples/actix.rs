@@ -62,7 +62,7 @@ async fn main() -> std::io::Result<()> {
     .await
 }
 
-/// Initialize the logging infrastructure
+/// Initialize the logging infrastructure.
 fn init_logger(settings: &Settings) {
     if !settings.actix.enable_log {
         return;

@@ -6,10 +6,16 @@ use serde::de;
 
 use crate::{AtError, AtResult, Parse};
 
+/// A timeout duration in milliseconds or seconds.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Timeout {
+    /// The default timeout. Depends on context.
     Default,
+
+    /// Timeout in milliseconds.
     Milliseconds(usize),
+
+    /// Timeout in seconds.
     Seconds(usize),
 }
 
@@ -34,18 +40,22 @@ impl Parse for Timeout {
                 })
             }
         }
+
         match string {
             "default" => Ok(Timeout::Default),
+
             string if !FMT.is_match(string) => invalid_value!(string),
+
             string => match (DIGITS.find(string), UNIT.find(string)) {
-                (None, _) => invalid_value!(string),
-                (_, None) => invalid_value!(string),
-                (Some(dmatch), Some(umatch)) => {
-                    let digits = &string[dmatch.start()..dmatch.end()];
-                    let unit = &string[umatch.start()..umatch.end()];
+                (None, _) | (_, None) => invalid_value!(string),
+
+                (Some(digits), Some(unit)) => {
+                    let digits = &string[digits.range()];
+                    let unit = &string[unit.range()];
+
                     match (digits.parse(), unit) {
-                        (Ok(v), "milliseconds") => Ok(Timeout::Milliseconds(v)),
-                        (Ok(v), "seconds") => Ok(Timeout::Seconds(v)),
+                        (Ok(n), "milliseconds") => Ok(Timeout::Milliseconds(n)),
+                        (Ok(n), "seconds") => Ok(Timeout::Seconds(n)),
                         _ => invalid_value!(string),
                     }
                 }
