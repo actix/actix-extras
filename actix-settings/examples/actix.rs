@@ -50,8 +50,8 @@ async fn main() -> std::io::Result<()> {
                     settings.actix.enable_compression,
                     Compress::default(),
                 ))
-                // make `Settings` available to handlers
                 .wrap(Logger::default())
+                // make `Settings` available to handlers
                 .app_data(web::Data::new(settings.clone()))
                 .service(index)
         }
