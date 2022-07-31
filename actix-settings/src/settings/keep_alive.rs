@@ -31,7 +31,7 @@ impl Parse for KeepAlive {
             };
         }
 
-        let digits_in = |m: regex::Match| &string[m.start()..m.end()];
+        let digits_in = |m: regex::Match<'_>| &string[m.start()..m.end()];
         match string {
             "default" => Ok(KeepAlive::Default),
             "disabled" => Ok(KeepAlive::Disabled),
@@ -58,7 +58,7 @@ impl<'de> de::Deserialize<'de> for KeepAlive {
         impl<'de> de::Visitor<'de> for KeepAliveVisitor {
             type Value = KeepAlive;
 
-            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
                 let msg = "Either \"default\", \"disabled\", \"os\", or a string of the format \"N seconds\" where N is an integer > 0";
                 formatter.write_str(msg)
             }

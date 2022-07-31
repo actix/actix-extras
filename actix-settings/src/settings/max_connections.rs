@@ -35,7 +35,7 @@ impl<'de> de::Deserialize<'de> for MaxConnections {
         impl<'de> de::Visitor<'de> for MaxConnectionsVisitor {
             type Value = MaxConnections;
 
-            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
                 let msg = "Either \"default\" or a string containing an integer > 0";
                 formatter.write_str(msg)
             }

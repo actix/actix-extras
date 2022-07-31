@@ -64,7 +64,7 @@ impl<'de> de::Deserialize<'de> for Timeout {
         impl<'de> de::Visitor<'de> for TimeoutVisitor {
             type Value = Timeout;
 
-            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
                 let msg = "Either \"default\", \"disabled\", \"os\", or a string of the format \"N seconds\" where N is an integer > 0";
                 formatter.write_str(msg)
             }

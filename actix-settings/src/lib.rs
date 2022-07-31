@@ -1,5 +1,12 @@
 //! Easily manage Actix Web's settings from a TOML file and environment variables.
 
+#![forbid(unsafe_code)]
+#![deny(rust_2018_idioms, nonstandard_style)]
+#![warn(future_incompatible, missing_debug_implementations)]
+// #![warn(missing_docs)]
+#![doc(html_logo_url = "https://actix.rs/img/logo.png")]
+#![doc(html_favicon_url = "https://actix.rs/favicon.ico")]
+
 use std::{
     env, fmt,
     fs::File,
