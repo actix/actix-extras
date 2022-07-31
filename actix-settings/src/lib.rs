@@ -1,4 +1,5 @@
-/// A library to process Server.toml files
+//! Easily manage Actix Web's settings from a TOML file and environment variables.
+
 use std::{
     env, fmt,
     fs::File,
@@ -22,7 +23,10 @@ mod error;
 mod actix;
 mod core;
 
-pub use self::actix::*;
+pub use self::actix::{
+    ActixSettings, Address, Backlog, KeepAlive, MaxConnectionRate, MaxConnections, Mode,
+    NumWorkers, Timeout, Tls,
+};
 pub use self::core::Parse;
 pub use self::error::{AtError, AtResult};
 
@@ -214,15 +218,11 @@ where
 
 #[cfg(test)]
 mod tests {
-    #![allow(non_snake_case)]
+    use super::*;
 
     use std::path::Path;
 
     use actix_web::{App, HttpServer};
-    use serde::Deserialize;
-
-    use crate::actix::*; // used for value construction in assertions
-    use crate::{ApplySettings, AtResult, BasicSettings, Settings};
 
     #[test]
     fn apply_settings() -> AtResult<()> {
@@ -657,12 +657,12 @@ mod tests {
 
     #[test]
     fn override_extended_field_with_custom_type() -> AtResult<()> {
-        #[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
+        #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
         struct NestedSetting {
             foo: String,
             bar: bool,
         }
-        #[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
+        #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
         struct AppSettings {
             #[serde(rename = "example-name")]
             example_name: String,
