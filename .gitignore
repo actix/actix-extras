@@ -12,3 +12,5 @@ guide/build/
 *.sock
 *~
 .DS_Store
+
+Server.toml
