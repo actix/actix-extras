@@ -68,6 +68,7 @@ async fn session_entries() {
     map.contains_key("test_str");
     map.contains_key("test_num");
 }
+
 #[actix_web::test]
 async fn insert_session_after_renew() {
     let session = test::TestRequest::default().to_srv_request().get_session();
@@ -81,6 +82,7 @@ async fn insert_session_after_renew() {
     session.insert("test_val1", "val1").unwrap();
     assert_eq!(session.status(), SessionStatus::Renewed);
 }
+
 #[actix_web::test]
 async fn remove_session_after_renew() {
     let session = test::TestRequest::default().to_srv_request().get_session();

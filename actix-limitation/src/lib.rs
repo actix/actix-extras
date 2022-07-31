@@ -30,7 +30,7 @@
 //!
 //!     HttpServer::new(move || {
 //!         App::new()
-//!             .wrap(RateLimiter)
+//!             .wrap(RateLimiter::default())
 //!             .app_data(limiter.clone())
 //!             .service(index)
 //!     })
