@@ -17,6 +17,7 @@
 | [actix-protobuf]     | [![crates.io](https://img.shields.io/crates/v/actix-protobuf?label=latest)](https://crates.io/crates/actix-protobuf) [![dependency status](https://deps.rs/crate/actix-protobuf/0.8.0/status.svg)](https://deps.rs/crate/actix-protobuf/0.8.0)                 | Protobuf payload extractor.                                                     |
 | [actix-redis]        | [![crates.io](https://img.shields.io/crates/v/actix-redis?label=latest)](https://crates.io/crates/actix-redis) [![dependency status](https://deps.rs/crate/actix-redis/0.12.0/status.svg)](https://deps.rs/crate/actix-redis/0.12.0)                           | Actor-based Redis client.                                                       |
 | [actix-session]      | [![crates.io](https://img.shields.io/crates/v/actix-session?label=latest)](https://crates.io/crates/actix-session) [![dependency status](https://deps.rs/crate/actix-session/0.7.1/status.svg)](https://deps.rs/crate/actix-session/0.7.1)                     | Session management.                                                             |
+| [actix-settings]     | [![crates.io](https://img.shields.io/crates/v/actix-settings?label=latest)](https://crates.io/crates/actix-settings) [![dependency status](https://deps.rs/crate/actix-settings/0.5.2/status.svg)](https://deps.rs/crate/actix-settings/0.5.2)                 | Easily manage Actix Web's settings from a TOML file and environment variables.  |
 | [actix-web-httpauth] | [![crates.io](https://img.shields.io/crates/v/actix-web-httpauth?label=latest)](https://crates.io/crates/actix-web-httpauth) [![dependency status](https://deps.rs/crate/actix-web-httpauth/0.8.0/status.svg)](https://deps.rs/crate/actix-web-httpauth/0.8.0) | HTTP authentication schemes.                                                    |
 
 ---
@@ -55,6 +56,7 @@ To add a crate to this list, submit a pull request.
 [actix-protobuf]: ./actix-protobuf
 [actix-redis]: ./actix-redis
 [actix-session]: ./actix-session
+[actix-settings]: ./actix-settings
 [actix-web-httpauth]: ./actix-web-httpauth
 [actix-web-lab]: https://crates.io/crates/actix-web-lab
 [actix-multipart-extract]: https://crates.io/crates/actix-multipart-extract
