@@ -1,6 +1,9 @@
 # Changes
 
 ## Unreleased - 2022-xx-xx
+
+
+## 0.6.0 - 2022-07-31
 - Update Actix Web dependencies to v4 ecosystem.
 - Rename `actix.ssl` settings object to `actix.tls`.
 - `NoSettings` is now marked `#[non_exhaustive]`.
