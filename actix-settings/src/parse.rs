@@ -2,7 +2,9 @@ use std::{path::PathBuf, str::FromStr};
 
 use crate::AtError;
 
+/// A specialized `FromStr` trait that returns [`AtError`] errors
 pub trait Parse: Sized {
+    /// Parse `Self` from `string`.
     fn parse(string: &str) -> Result<Self, AtError>;
 }
 

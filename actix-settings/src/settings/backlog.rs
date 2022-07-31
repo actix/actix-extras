@@ -4,9 +4,20 @@ use serde::de;
 
 use crate::{AtError, AtResult, Parse};
 
+/// The maximum number of pending connections.
+///
+/// This refers to the number of clients that can be waiting to be served. Exceeding this number
+/// results in the client getting an error when attempting to connect. It should only affect servers
+/// under significant load.
+///
+/// Generally set in the 64–2048 range. The default value is 2048. Takes a string value: Either
+/// "default", or an integer N > 0 e.g. "6".
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Backlog {
+    /// The default number of connections. See struct docs.
     Default,
+
+    /// A specific number of connections.
     Manual(usize),
 }
 

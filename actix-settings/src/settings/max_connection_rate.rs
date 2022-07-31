@@ -4,9 +4,17 @@ use serde::de;
 
 use crate::{AtError, AtResult, Parse};
 
+/// The maximum per-worker concurrent TLS connection limit.
+///
+/// All listeners will stop accepting connections when this limit is reached. It can be used to
+/// limit the global TLS CPU usage. By default max connections is set to a 256. Takes a string
+/// value: Either "default", or an integer N > 0 e.g. "6".
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum MaxConnectionRate {
+    /// The default connection limit. See struct docs.
     Default,
+
+    /// A specific connection limit.
     Manual(usize),
 }
 

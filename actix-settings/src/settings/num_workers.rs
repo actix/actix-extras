@@ -4,9 +4,16 @@ use serde::de;
 
 use crate::{AtError, AtResult, Parse};
 
+/// The number of workers that the server should start.
+///
+/// By default the number of available logical cpu cores is used. Takes a string value: Either
+/// "default", or an integer N > 0 e.g. "6".
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum NumWorkers {
+    /// The default number of workers. See struct docs.
     Default,
+
+    /// A specific number of workers.
     Manual(usize),
 }
 

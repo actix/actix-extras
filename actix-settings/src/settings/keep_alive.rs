@@ -6,11 +6,24 @@ use serde::de;
 
 use crate::{AtError, AtResult, Parse};
 
+/// The server keep-alive preference.
+///
+/// By default keep alive is set to 5 seconds. Takes a string value: Either "default", "disabled",
+/// "os", or a string of the format "N seconds" where N is an integer > 0 e.g. "6 seconds".
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum KeepAlive {
+    /// The default keep-alive as defined by Actix Web.
     Default,
+
+    /// Disable keep-alive.
     Disabled,
+
+    /// Let the OS determine keep-alive duration.
+    ///
+    /// Note: this is usually quite long.
     Os,
+
+    /// A specific keep-alive duration (in seconds).
     Seconds(usize),
 }
 
