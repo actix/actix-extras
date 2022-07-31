@@ -129,7 +129,7 @@ mod tests {
 
         SledSessionStore::new(
             [
-                env!("CARGO_TARGET_DIR"),
+                option_env!("CARGO_TARGET_DIR").unwrap_or("target"),
                 "/tmp-actix-session-tests/",
                 &db_name,
                 "-",
