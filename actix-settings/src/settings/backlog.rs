@@ -35,9 +35,9 @@ impl<'de> de::Deserialize<'de> for Backlog {
         impl<'de> de::Visitor<'de> for BacklogVisitor {
             type Value = Backlog;
 
-            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+            fn expecting(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
                 let msg = "Either \"default\" or a string containing an integer > 0";
-                formatter.write_str(msg)
+                f.write_str(msg)
             }
 
             fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
