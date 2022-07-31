@@ -2,8 +2,10 @@ use actix::Addr;
 use actix_redis::{resp_array, Command, RedisActor, RespValue};
 use actix_web::cookie::time::Duration;
 
-use super::{LoadError, SaveError, SessionKey, SessionState, UpdateError};
-use crate::storage::{utils::generate_session_key, SessionStore};
+use super::{
+    interface::SessionState, utils::generate_session_key, LoadError, SaveError, SessionKey,
+    SessionStore, UpdateError,
+};
 
 /// Use Redis as session storage backend.
 ///

@@ -159,6 +159,7 @@ pub mod test_helpers {
     /// Prints name of function it is called in.
     ///
     /// Taken from: https://docs.rs/stdext/0.3.1/src/stdext/macros.rs.html
+    #[allow(unused_macros)]
     macro_rules! function_name {
         () => {{
             // Okay, this is ugly, I get it. However, this is the best we can get on a stable rust.
@@ -171,6 +172,8 @@ pub mod test_helpers {
             &name[..name.len() - 3]
         }};
     }
+
+    #[allow(unused_imports)]
     pub(crate) use function_name;
 
     /// Generate a random cookie signing/encryption key.

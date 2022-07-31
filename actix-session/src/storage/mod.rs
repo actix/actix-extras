@@ -3,7 +3,6 @@
 mod interface;
 mod session_key;
 
-pub(crate) use self::interface::SessionState;
 pub use self::interface::{LoadError, SaveError, SessionStore, UpdateError};
 pub use self::session_key::SessionKey;
 

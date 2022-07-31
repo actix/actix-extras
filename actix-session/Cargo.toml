@@ -21,7 +21,7 @@ name = "actix_session"
 path = "src/lib.rs"
 
 [features]
-default = ["sled-session"]
+default = []
 cookie-session = []
 sled-session = ["sled"]
 redis-actor-session = ["actix-redis", "actix", "futures-core", "rand"]

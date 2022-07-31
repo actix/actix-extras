@@ -4,8 +4,8 @@ use actix_web::cookie::time::Duration;
 use async_trait::async_trait;
 
 use super::{
-    utils::generate_session_key, LoadError, SaveError, SessionKey, SessionState, SessionStore,
-    UpdateError,
+    interface::SessionState, utils::generate_session_key, LoadError, SaveError, SessionKey,
+    SessionStore, UpdateError,
 };
 
 #[derive(Clone)]
