@@ -2,7 +2,7 @@ use std::fmt;
 
 use once_cell::sync::Lazy;
 use regex::Regex;
-use serde::{de, Deserialize};
+use serde::de;
 
 use crate::{core::Parse, error::AtError};
 
@@ -48,10 +48,10 @@ impl Parse for KeepAlive {
     }
 }
 
-impl<'de> serde::Deserialize<'de> for KeepAlive {
+impl<'de> de::Deserialize<'de> for KeepAlive {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
-        D: serde::Deserializer<'de>,
+        D: de::Deserializer<'de>,
     {
         struct KeepAliveVisitor;
 

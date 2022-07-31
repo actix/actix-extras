@@ -1,6 +1,6 @@
 use std::fmt;
 
-use serde::{de, Deserialize};
+use serde::de;
 
 use crate::{core::Parse, error::AtError};
 
@@ -25,10 +25,10 @@ impl Parse for MaxConnections {
     }
 }
 
-impl<'de> serde::Deserialize<'de> for MaxConnections {
+impl<'de> de::Deserialize<'de> for MaxConnections {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
-        D: serde::Deserializer<'de>,
+        D: de::Deserializer<'de>,
     {
         struct MaxConnectionsVisitor;
 

@@ -54,10 +54,10 @@ impl Parse for Timeout {
     }
 }
 
-impl<'de> serde::Deserialize<'de> for Timeout {
+impl<'de> de::Deserialize<'de> for Timeout {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
-        D: serde::Deserializer<'de>,
+        D: de::Deserializer<'de>,
     {
         struct TimeoutVisitor;
 

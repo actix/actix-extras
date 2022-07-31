@@ -1,6 +1,6 @@
-use crate::{core::Parse, error::AtError};
-
 use serde::Deserialize;
+
+use crate::{core::Parse, error::AtError};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize)]
 pub enum Mode {
