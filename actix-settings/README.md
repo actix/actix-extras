@@ -2,7 +2,10 @@
 
 > Easily manage Actix Web's settings from a TOML file and environment variables.
 
-[![crates.io](https://img.shields.io/crates/v/actix-settings?label=latest)](https://crates.io/crates/actix-settings) [![Documentation](https://docs.rs/actix-settings/badge.svg?version=0.5.2)](https://docs.rs/actix-settings/0.5.2) ![Apache 2.0 or MIT licensed](https://img.shields.io/crates/l/actix-settings) [![Dependency Status](https://deps.rs/crate/actix-settings/0.5.2/status.svg)](https://deps.rs/crate/actix-settings/0.5.2)
+[![crates.io](https://img.shields.io/crates/v/actix-settings?label=latest)](https://crates.io/crates/actix-settings)
+[![Documentation](https://docs.rs/actix-settings/badge.svg?version=0.5.2)](https://docs.rs/actix-settings/0.5.2)
+![Apache 2.0 or MIT licensed](https://img.shields.io/crates/l/actix-settings)
+[![Dependency Status](https://deps.rs/crate/actix-settings/0.5.2/status.svg)](https://deps.rs/crate/actix-settings/0.5.2)
 
 ## Documentation & Resources
 
