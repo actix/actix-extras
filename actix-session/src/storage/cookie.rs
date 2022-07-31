@@ -1,13 +1,9 @@
-use std::convert::TryInto;
+use std::convert::TryInto as _;
 
 use actix_web::cookie::time::Duration;
-use anyhow::Error;
 
-use super::SessionKey;
-use crate::storage::{
-    interface::{LoadError, SaveError, SessionState, UpdateError},
-    SessionStore,
-};
+use super::{LoadError, SaveError, SessionKey, SessionState, UpdateError};
+use crate::storage::SessionStore;
 
 /// Use the session key, stored in the session cookie, as storage backend for the session state.
 ///
@@ -67,7 +63,7 @@ impl SessionStore for CookieSessionStore {
         _ttl: &Duration,
     ) -> Result<SessionKey, SaveError> {
         let session_key = serde_json::to_string(&session_state)
-            .map_err(anyhow::Error::new)
+            .map_err(Into::into)
             .map_err(SaveError::Serialization)?;
 
         Ok(session_key
@@ -90,7 +86,11 @@ impl SessionStore for CookieSessionStore {
             })
     }
 
-    async fn update_ttl(&self, _session_key: &SessionKey, _ttl: &Duration) -> Result<(), Error> {
+    async fn update_ttl(
+        &self,
+        _session_key: &SessionKey,
+        _ttl: &Duration,
+    ) -> Result<(), anyhow::Error> {
         Ok(())
     }
 

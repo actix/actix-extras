@@ -101,7 +101,7 @@ pub enum UpdateError {
     Serialization(anyhow::Error),
 
     /// Something went wrong when updating the session state.
-    #[display(fmt = "Something went wrong when updating the session state.")]
+    #[display(fmt = "Something went wrong when updating the session state")]
     Other(anyhow::Error),
 }
 

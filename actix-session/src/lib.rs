@@ -156,6 +156,23 @@ pub mod test_helpers {
 
     use crate::{config::CookieContentSecurity, storage::SessionStore};
 
+    /// Prints name of function it is called in.
+    ///
+    /// Taken from: https://docs.rs/stdext/0.3.1/src/stdext/macros.rs.html
+    macro_rules! function_name {
+        () => {{
+            // Okay, this is ugly, I get it. However, this is the best we can get on a stable rust.
+            fn f() {}
+            fn type_name_of<T>(_: T) -> &'static str {
+                std::any::type_name::<T>()
+            }
+            let name = type_name_of(f);
+            // `3` is the length of the `::f`.
+            &name[..name.len() - 3]
+        }};
+    }
+    pub(crate) use function_name;
+
     /// Generate a random cookie signing/encryption key.
     pub fn key() -> Key {
         Key::generate()
