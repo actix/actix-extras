@@ -15,7 +15,7 @@ use actix_web::{
     http::KeepAlive as ActixKeepAlive,
     Error as WebError, HttpServer,
 };
-use serde::Deserialize;
+use serde::{de, Deserialize};
 
 #[macro_use]
 mod error;
@@ -27,7 +27,7 @@ pub use self::core::Parse;
 pub use self::error::{AtError, AtResult};
 
 #[derive(Debug, Clone, Deserialize, PartialEq, Eq, Hash)]
-#[serde(bound = "A: serde::de::Deserialize<'de>")]
+#[serde(bound = "A: Deserialize<'de>")]
 pub struct BasicSettings<A> {
     pub actix: ActixSettings,
     pub application: A,
@@ -37,11 +37,11 @@ pub type Settings = BasicSettings<NoSettings>;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize)]
 #[non_exhaustive]
-pub struct NoSettings;
+pub struct NoSettings {/* NOTE: turning this into a unit struct will cause deserialization failures. */}
 
 impl<A> BasicSettings<A>
 where
-    A: for<'de> Deserialize<'de>,
+    A: de::DeserializeOwned,
 {
     /// NOTE **DO NOT** mess with the ordering of the tables in this template.
     ///      Especially the `[application]` table needs to be last in order
@@ -56,12 +56,15 @@ where
         P: AsRef<Path>,
     {
         let filepath = filepath.as_ref();
+
         if !filepath.exists() {
             Self::write_toml_file(filepath)?;
         }
+
         let mut f = File::open(filepath)?;
         let mut contents = String::with_capacity(f.metadata()?.len() as usize);
         f.read_to_string(&mut contents)?;
+
         Ok(toml::from_str::<Self>(&contents)?)
     }
 
@@ -72,7 +75,7 @@ where
 
     /// Parse an instance of `Self` straight from the default `TOML` template.
     pub fn from_template(template: &str) -> AtResult<Self> {
-        Ok(toml::from_str::<Self>(template)?)
+        Ok(toml::from_str(template)?)
     }
 
     /// Write the default `TOML` template to a new file, to be located
@@ -125,7 +128,7 @@ pub trait ApplySettings {
     #[must_use]
     fn apply_settings<A>(self, settings: &BasicSettings<A>) -> Self
     where
-        A: for<'de> Deserialize<'de>;
+        A: de::DeserializeOwned;
 }
 
 impl<F, I, S, B> ApplySettings for HttpServer<F, I, S, B>
@@ -141,7 +144,7 @@ where
 {
     fn apply_settings<A>(mut self, settings: &BasicSettings<A>) -> Self
     where
-        A: for<'de> serde::de::Deserialize<'de>,
+        A: de::DeserializeOwned,
     {
         if settings.actix.tls.enabled {
             // for Address { host, port } in &settings.actix.hosts {
@@ -229,8 +232,9 @@ mod tests {
     }
 
     #[test]
-    fn override_field__hosts() -> AtResult<()> {
-        let mut settings = Settings::from_default_template()?;
+    fn override_field__hosts() {
+        let mut settings = Settings::from_default_template().unwrap();
+
         assert_eq!(
             settings.actix.hosts,
             vec![Address {
@@ -238,13 +242,16 @@ mod tests {
                 port: 9000
             },]
         );
+
         Settings::override_field(
             &mut settings.actix.hosts,
             r#"[
             ["0.0.0.0",   1234],
             ["localhost", 2345]
         ]"#,
-        )?;
+        )
+        .unwrap();
+
         assert_eq!(
             settings.actix.hosts,
             vec![
@@ -258,12 +265,12 @@ mod tests {
                 },
             ]
         );
-        Ok(())
     }
 
     #[test]
-    fn override_field_with_env_var__hosts() -> AtResult<()> {
-        let mut settings = Settings::from_default_template()?;
+    fn override_field_with_env_var__hosts() {
+        let mut settings = Settings::from_default_template().unwrap();
+
         assert_eq!(
             settings.actix.hosts,
             vec![Address {
@@ -271,6 +278,7 @@ mod tests {
                 port: 9000
             },]
         );
+
         std::env::set_var(
             "OVERRIDE__HOSTS",
             r#"[
@@ -278,7 +286,10 @@ mod tests {
             ["localhost", 2345]
         ]"#,
         );
-        Settings::override_field_with_env_var(&mut settings.actix.hosts, "OVERRIDE__HOSTS")?;
+
+        Settings::override_field_with_env_var(&mut settings.actix.hosts, "OVERRIDE__HOSTS")
+            .unwrap();
+
         assert_eq!(
             settings.actix.hosts,
             vec![
@@ -292,7 +303,6 @@ mod tests {
                 },
             ]
         );
-        Ok(())
     }
 
     #[test]

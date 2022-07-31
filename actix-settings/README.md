@@ -1,90 +1,28 @@
-# actix_settings
+# actix-settings
 
-A Rust crate that allows for configuring `actix-web`'s [HttpServer](https://docs.rs/actix-web/4.1.0/actix_web/struct.HttpServer.html) instance through a `TOML` file.
+> Easily manage Actix Web's settings from a TOML file and environment variables.
 
-## Usage
+[![crates.io](https://img.shields.io/crates/v/actix-settings?label=latest)](https://crates.io/crates/actix-settings) [![Documentation](https://docs.rs/actix-settings/badge.svg?version=0.5.2)](https://docs.rs/actix-settings/0.5.2) ![Apache 2.0 or MIT licensed](https://img.shields.io/crates/l/actix-settings) [![Dependency Status](https://deps.rs/crate/actix-settings/0.5.2/status.svg)](https://deps.rs/crate/actix-settings/0.5.2)
 
-Add this to your `Cargo.toml`:
+## Documentation & Resources
 
-```toml
-[dependencies]
-actix-settings = "0.6"
-actix-web  = "4.1"
-env_logger = "0.8"
-```
-
-### Basic usage
-
-Import these items into your crate:
-
-```rust
-use actix_settings::{ApplySettings, AtResult, Settings};
-use actix_web::{http::ContentEncoding, web};
-
-#[actix_rt::main]
-async fn main() -> std::io::Result<()> {
-    let mut settings = Settings::parse_toml("Server.toml")
-        .expect("Failed to parse `Settings` from Server.toml");
-
-    // If the environment variable `$APPLICATION__HOSTS` is set,
-    // have its value override the `settings.actix.hosts` setting:
-    Settings::override_field_with_env_var(
-        &mut settings.actix.hosts,
-        "APPLICATION__HOSTS"
-    )?;
-
-    init_logger(&settings);
-
-    HttpServer::new({
-      let settings = settings.clone()
-      
-      move || {
-          App::new()
-              // Include this `.wrap()` call for compression settings to take effect:
-              .wrap(Condition::new(
-                  settings.actix.enable_compression,
-                  Compress::default(),
-              ))
-              .wrap(Logger::default())
-
-              // Make `Settings` available to handlers:
-              .app_data(web::Data::new(settings.clone()))
-
-              // Define routes as normal:
-              .service(index)
-          }
-    })
-    .apply_settings(&settings) // <- apply the `Settings` to actix's `HttpServer`
-    .run()
-    .await
-}
-
-/// Initialize the logging infrastructure
-fn init_logger(settings: &Settings) {
-    if !settings.actix.enable_log { return }
-    std::env::set_var("RUST_LOG", match settings.actix.mode {
-        Mode::Development => "actix_web=debug",
-        Mode::Production  => "actix_web=info",
-    });
-    std::env::set_var("RUST_BACKTRACE", "1");
-    env_logger::init();
-}
-```
+- [API Documentation](https://docs.rs/actix-settings)
+- [Usage Example][usage]
+- Minimum Supported Rust Version (MSRV): 1.57
 
 ### Custom Settings
 
-There is a way to extend the available settings. This can be used to combine
-the settings provided by `actix-web` and those provided by application server
-built using `actix`.
+There is a way to extend the available settings. This can be used to combine the settings provided by Actix Web and those provided by application server built using `actix`.
 
-Have a look at the `override_extended_field_with_custom_type` test
-in `src/lib.rs` to see how.
+Have a look at [the usage example][usage] to see how.
 
 ## WIP
 
-The main feature that would be nice to have but currently is not implemented,
-is `TLS`-support. If you're interested, please contact me or send a PR.
+Configuration options for TLS set up are not yet implemented.
 
 ## Special Thanks
 
-This crate was made possible by support from Accept B.V.
+This crate was made possible by support from Accept B.V and [@jjpe].
+
+[usage]: https://github.com/actix/actix-extras/blob/master/actix-settings/examples/actix.rs
+[@jjpe]: https://github.com/jjpe
