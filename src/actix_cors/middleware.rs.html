@@ -263,7 +263,6 @@
 <span id="261">261</span>
 <span id="262">262</span>
 <span id="263">263</span>
-<span id="264">264</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections::HashSet</span>, <span class="ident">rc::Rc</span>};
 
 <span class="kw">use</span> <span class="ident">actix_utils::future::ok</span>;
@@ -387,10 +386,9 @@
                 .<span class="ident">insert</span>(<span class="ident">header::ACCESS_CONTROL_EXPOSE_HEADERS</span>, <span class="ident">expose</span>.<span class="ident">clone</span>());
         } <span class="kw">else</span> <span class="kw">if</span> <span class="macro">matches!</span>(<span class="ident">inner</span>.<span class="ident">expose_headers</span>, <span class="ident">AllOrSome::All</span>) {
             <span class="comment">// intersperse_header_values requires that argument is non-empty</span>
-            <span class="kw">if</span> <span class="op">!</span><span class="ident">res</span>.<span class="ident">request</span>().<span class="ident">headers</span>().<span class="ident">is_empty</span>() {
+            <span class="kw">if</span> <span class="op">!</span><span class="ident">res</span>.<span class="ident">headers</span>().<span class="ident">is_empty</span>() {
                 <span class="comment">// extract header names from request</span>
                 <span class="kw">let</span> <span class="ident">expose_all_request_headers</span> <span class="op">=</span> <span class="ident">res</span>
-                    .<span class="ident">request</span>()
                     .<span class="ident">headers</span>()
                     .<span class="ident">keys</span>()
                     .<span class="ident">into_iter</span>()
@@ -529,4 +527,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_cors" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_cors" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (2befdefdd 2022-08-06)" ></div></body></html>
