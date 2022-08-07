@@ -121,10 +121,9 @@ impl<S> CorsMiddleware<S> {
                 .insert(header::ACCESS_CONTROL_EXPOSE_HEADERS, expose.clone());
         } else if matches!(inner.expose_headers, AllOrSome::All) {
             // intersperse_header_values requires that argument is non-empty
-            if !res.request().headers().is_empty() {
+            if !res.headers().is_empty() {
                 // extract header names from request
                 let expose_all_request_headers = res
-                    .request()
                     .headers()
                     .keys()
                     .into_iter()

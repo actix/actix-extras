@@ -2,7 +2,7 @@
 
 ## Unreleased - 2022-xx-xx
 - Implement `Default` for `RateLimiter`.
-- `RateLimiter` can no longer be constructed without `::default()`.
+- `RateLimiter` is marked `#[non_exhaustive]`; use `RateLimiter::default()` instead.
 
 ## 0.3.0 - 2022-07-11
 - `Limiter::builder` now takes an `impl Into<String>`.

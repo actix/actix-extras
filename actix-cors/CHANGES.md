@@ -1,7 +1,10 @@
 # Changes
 
 ## Unreleased - 2022-xx-xx
+- Fix `expose_any_header` to return list of response headers. [#???]
 - Minimum supported Rust version (MSRV) is now 1.57 due to transitive `time` dependency.
+
+[#???]: https://github.com/actix/actix-extras/pull/???
 
 
 ## 0.6.1 - 2022-03-07
