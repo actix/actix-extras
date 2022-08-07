@@ -501,7 +501,15 @@ async fn test_allow_any_origin_any_method_any_header() {
 #[actix_web::test]
 async fn expose_all_request_header_values() {
     let cors = Cors::permissive()
-        .new_transform(test::ok_service())
+        .new_transform(fn_service(|req: ServiceRequest| async move {
+            let res = req.into_response(
+                HttpResponse::Ok()
+                    .insert_header((header::CONTENT_DISPOSITION, "test disposition"))
+                    .finish(),
+            );
+
+            Ok(res)
+        }))
         .await
         .unwrap();
 
@@ -509,20 +517,17 @@ async fn expose_all_request_header_values() {
         .insert_header((header::ORIGIN, "https://www.example.com"))
         .insert_header((header::ACCESS_CONTROL_REQUEST_METHOD, "POST"))
         .insert_header((header::ACCESS_CONTROL_REQUEST_HEADERS, "content-type"))
-        .insert_header(("X-XSRF-TOKEN", "xsrf-token"))
         .to_srv_request();
 
-    let resp = test::call_service(&cors, req).await;
+    let res = test::call_service(&cors, req).await;
 
-    assert!(resp
-        .headers()
-        .contains_key(header::ACCESS_CONTROL_EXPOSE_HEADERS));
-
-    assert!(resp
+    let cd_hdr = res
         .headers()
         .get(header::ACCESS_CONTROL_EXPOSE_HEADERS)
         .unwrap()
         .to_str()
-        .unwrap()
-        .contains("xsrf-token"));
+        .unwrap();
+
+    assert!(cd_hdr.contains("content-disposition"));
+    assert!(cd_hdr.contains("access-control-allow-origin"));
 }

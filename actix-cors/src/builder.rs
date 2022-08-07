@@ -315,7 +315,7 @@ impl Cors {
         self
     }
 
-    /// Resets exposed response header list to a state where any header is accepted.
+    /// Resets exposed response header list to a state where all headers are exposed.
     ///
     /// See [`Cors::expose_headers`] for more info on exposed response headers.
     pub fn expose_any_header(mut self) -> Cors {
