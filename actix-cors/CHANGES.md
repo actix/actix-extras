@@ -1,6 +1,9 @@
 # Changes
 
 ## Unreleased - 2022-xx-xx
+
+
+## 0.6.2 - 2022-08-07
 - Fix `expose_any_header` to return list of response headers. [#273]
 - Minimum supported Rust version (MSRV) is now 1.57 due to transitive `time` dependency.
 
