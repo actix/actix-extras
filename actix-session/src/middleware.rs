@@ -35,6 +35,16 @@ use crate::{
 ///   [`SessionStore`]);
 /// - a secret key, to sign or encrypt the content of client-side session cookie.
 ///
+/// # How did we choose defaults?
+/// You should not regret adding `actix-session` to your dependencies and going to production using
+/// the default configuration. That is why, when in doubt, we opt to use the most secure option for
+/// each configuration parameter.
+///
+/// We expose knobs to change the default to suit your needs—i.e., if you know what you are doing,
+/// we will not stop you. But being a subject-matter expert should not be a requirement to deploy
+/// reasonably secure implementation of sessions.
+///
+/// # Examples
 /// ```no_run
 /// use actix_web::{web, App, HttpServer, HttpResponse, Error};
 /// use actix_session::{Session, SessionMiddleware, storage::RedisActorSessionStore};
@@ -103,16 +113,6 @@ use crate::{
 ///         .await
 /// }
 /// ```
-///
-/// ## How did we choose defaults?
-///
-/// You should not regret adding `actix-session` to your dependencies and going to production using
-/// the default configuration. That is why, when in doubt, we opt to use the most secure option for
-/// each configuration parameter.
-///
-/// We expose knobs to change the default to suit your needs—i.e., if you know what you are doing,
-/// we will not stop you. But being a subject-matter expert should not be a requirement to deploy
-/// reasonably secure implementation of sessions.
 #[derive(Clone)]
 pub struct SessionMiddleware<Store: SessionStore> {
     storage_backend: Rc<Store>,
@@ -125,7 +125,7 @@ impl<Store: SessionStore> SessionMiddleware<Store> {
     ///
     /// To create a new instance of [`SessionMiddleware`] you need to provide:
     /// - an instance of the session storage backend you wish to use (i.e. an implementation of
-    ///   [`SessionStore]);
+    ///   [`SessionStore`]);
     /// - a secret key, to sign or encrypt the content of client-side session cookie.
     pub fn new(store: Store, key: Key) -> Self {
         Self::builder(store, key).build()
@@ -135,7 +135,7 @@ impl<Store: SessionStore> SessionMiddleware<Store> {
     ///
     /// It takes as input the two required inputs to create a new instance of [`SessionMiddleware`]:
     /// - an instance of the session storage backend you wish to use (i.e. an implementation of
-    ///   [`SessionStore]);
+    ///   [`SessionStore`]);
     /// - a secret key, to sign or encrypt the content of client-side session cookie.
     pub fn builder(store: Store, key: Key) -> SessionMiddlewareBuilder<Store> {
         SessionMiddlewareBuilder::new(store, config::default_configuration(key))
