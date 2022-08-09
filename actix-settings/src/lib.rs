@@ -191,7 +191,7 @@ where
     /// ```
     /// use actix_settings::{Settings, Mode};
     ///
-    /// # fn inner() -> actix_settings::AtResult<()> {
+    /// # fn inner() -> Result<(), actix_settings::Error> {
     /// let mut settings = Settings::from_default_template()?;
     /// assert_eq!(settings.actix.mode, Mode::Development);
     ///
@@ -216,7 +216,7 @@ where
     ///
     /// std::env::set_var("OVERRIDE__MODE", "production");
     ///
-    /// # fn inner() -> actix_settings::AtResult<()> {
+    /// # fn inner() -> Result<(), actix_settings::Error> {
     /// let mut settings = Settings::from_default_template()?;
     /// assert_eq!(settings.actix.mode, Mode::Development);
     ///
