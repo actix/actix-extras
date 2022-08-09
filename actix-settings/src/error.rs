@@ -2,12 +2,9 @@ use std::{env::VarError, io, num::ParseIntError, path::PathBuf, str::ParseBoolEr
 
 use toml::de::Error as TomlError;
 
-/// Convenience type alias for `Result<T, AtError>`.
-pub type AtResult<T> = std::result::Result<T, AtError>;
-
 /// Errors that can be returned from methods in this crate.
 #[derive(Debug, Clone)]
-pub enum AtError {
+pub enum Error {
     /// Environment variable does not exists or is invalid.
     EnvVarError(VarError),
 
@@ -42,7 +39,7 @@ pub enum AtError {
 
 macro_rules! InvalidValue {
     (expected: $expected:expr, got: $got:expr,) => {
-        crate::AtError::InvalidValue {
+        crate::Error::InvalidValue {
             expected: $expected,
             got: $got.to_string(),
             file: file!(),
@@ -52,56 +49,56 @@ macro_rules! InvalidValue {
     };
 }
 
-impl From<io::Error> for AtError {
+impl From<io::Error> for Error {
     fn from(err: io::Error) -> Self {
         Self::IoError(ioe::IoError::from(err))
     }
 }
 
-impl From<ioe::IoError> for AtError {
+impl From<ioe::IoError> for Error {
     fn from(err: ioe::IoError) -> Self {
         Self::IoError(err)
     }
 }
 
-impl From<ParseBoolError> for AtError {
+impl From<ParseBoolError> for Error {
     fn from(err: ParseBoolError) -> Self {
         Self::ParseBoolError(err)
     }
 }
 
-impl From<ParseIntError> for AtError {
+impl From<ParseIntError> for Error {
     fn from(err: ParseIntError) -> Self {
         Self::ParseIntError(err)
     }
 }
 
-impl From<TomlError> for AtError {
+impl From<TomlError> for Error {
     fn from(err: TomlError) -> Self {
         Self::TomlError(err)
     }
 }
 
-impl From<VarError> for AtError {
+impl From<VarError> for Error {
     fn from(err: VarError) -> Self {
         Self::EnvVarError(err)
     }
 }
 
-impl From<AtError> for io::Error {
-    fn from(err: AtError) -> Self {
+impl From<Error> for io::Error {
+    fn from(err: Error) -> Self {
         match err {
-            AtError::EnvVarError(var_error) => {
+            Error::EnvVarError(var_error) => {
                 let msg = format!("Env var error: {}", var_error);
                 io::Error::new(io::ErrorKind::InvalidInput, msg)
             }
 
-            AtError::FileExists(path_buf) => {
+            Error::FileExists(path_buf) => {
                 let msg = format!("File exists: {}", path_buf.display());
                 io::Error::new(io::ErrorKind::AlreadyExists, msg)
             }
 
-            AtError::InvalidValue {
+            Error::InvalidValue {
                 expected,
                 ref got,
                 file,
@@ -115,24 +112,24 @@ impl From<AtError> for io::Error {
                 io::Error::new(io::ErrorKind::InvalidInput, msg)
             }
 
-            AtError::IoError(io_error) => io_error.into(),
+            Error::IoError(io_error) => io_error.into(),
 
-            AtError::ParseBoolError(parse_bool_error) => {
+            Error::ParseBoolError(parse_bool_error) => {
                 let msg = format!("Failed to parse boolean: {}", parse_bool_error);
                 io::Error::new(io::ErrorKind::InvalidInput, msg)
             }
 
-            AtError::ParseIntError(parse_int_error) => {
+            Error::ParseIntError(parse_int_error) => {
                 let msg = format!("Failed to parse integer: {}", parse_int_error);
                 io::Error::new(io::ErrorKind::InvalidInput, msg)
             }
 
-            AtError::ParseAddressError(string) => {
+            Error::ParseAddressError(string) => {
                 let msg = format!("Failed to parse address: {}", string);
                 io::Error::new(io::ErrorKind::InvalidInput, msg)
             }
 
-            AtError::TomlError(toml_error) => {
+            Error::TomlError(toml_error) => {
                 let msg = format!("TOML error: {}", toml_error);
                 io::Error::new(io::ErrorKind::InvalidInput, msg)
             }

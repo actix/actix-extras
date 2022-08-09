@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-use crate::{AtResult, Parse};
+use crate::{AsResult, Parse};
 
 /// Marker of intended deployment environment.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize)]
@@ -14,7 +14,7 @@ pub enum Mode {
 }
 
 impl Parse for Mode {
-    fn parse(string: &str) -> AtResult<Self> {
+    fn parse(string: &str) -> AsResult<Self> {
         match string {
             "development" => Ok(Self::Development),
             "production" => Ok(Self::Production),

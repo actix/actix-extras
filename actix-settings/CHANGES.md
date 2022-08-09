@@ -1,7 +1,8 @@
 # Changes
 
 ## Unreleased - 2022-xx-xx
-
+- Rename `AtError => Error`.
+- Remove `AtResult` type alias.
 
 ## 0.6.0 - 2022-07-31
 - Update Actix Web dependencies to v4 ecosystem.

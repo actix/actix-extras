@@ -2,7 +2,7 @@ use std::fmt;
 
 use serde::de;
 
-use crate::{AtError, AtResult, Parse};
+use crate::{AsResult, Error, Parse};
 
 /// The maximum number of pending connections.
 ///
@@ -22,7 +22,7 @@ pub enum Backlog {
 }
 
 impl Parse for Backlog {
-    fn parse(string: &str) -> AtResult<Self> {
+    fn parse(string: &str) -> AsResult<Self> {
         match string {
             "default" => Ok(Backlog::Default),
             string => match string.parse::<usize>() {
@@ -57,7 +57,7 @@ impl<'de> de::Deserialize<'de> for Backlog {
             {
                 match Backlog::parse(value) {
                     Ok(backlog) => Ok(backlog),
-                    Err(AtError::InvalidValue { expected, got, .. }) => Err(
+                    Err(Error::InvalidValue { expected, got, .. }) => Err(
                         de::Error::invalid_value(de::Unexpected::Str(&got), &expected),
                     ),
                     Err(_) => unreachable!(),

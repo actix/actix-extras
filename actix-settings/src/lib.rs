@@ -89,12 +89,15 @@ mod error;
 mod parse;
 mod settings;
 
-pub use self::error::{AtError, AtResult};
+pub use self::error::Error;
 pub use self::parse::Parse;
 pub use self::settings::{
     ActixSettings, Address, Backlog, KeepAlive, MaxConnectionRate, MaxConnections, Mode,
     NumWorkers, Timeout, Tls,
 };
+
+/// Convenience type alias for `Result<T, AtError>`.
+type AsResult<T> = std::result::Result<T, Error>;
 
 /// Wrapper for server and application-specific settings.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize)]
@@ -129,7 +132,7 @@ where
     ///
     /// If the file doesn't exist, it is generated from the default TOML template, after which the
     /// newly generated file is read in and parsed.
-    pub fn parse_toml<P>(filepath: P) -> AtResult<Self>
+    pub fn parse_toml<P>(filepath: P) -> AsResult<Self>
     where
         P: AsRef<Path>,
     {
@@ -150,13 +153,13 @@ where
     /// Parse an instance of `Self` straight from the default TOML template.
     // TODO: make infallible
     // TODO: consider "template" rename
-    pub fn from_default_template() -> AtResult<Self> {
+    pub fn from_default_template() -> AsResult<Self> {
         Self::from_template(Self::DEFAULT_TOML_TEMPLATE)
     }
 
     /// Parse an instance of `Self` straight from the default TOML template.
     // TODO: consider "template" rename
-    pub fn from_template(template: &str) -> AtResult<Self> {
+    pub fn from_template(template: &str) -> AsResult<Self> {
         Ok(toml::from_str(template)?)
     }
 
@@ -165,14 +168,14 @@ where
     /// # Errors
     /// Returns a [`FileExists`](crate::AtError::FileExists) error if a file already exists at that
     /// location.
-    pub fn write_toml_file<P>(filepath: P) -> AtResult<()>
+    pub fn write_toml_file<P>(filepath: P) -> AsResult<()>
     where
         P: AsRef<Path>,
     {
         let filepath = filepath.as_ref();
 
         if filepath.exists() {
-            return Err(AtError::FileExists(filepath.to_path_buf()));
+            return Err(Error::FileExists(filepath.to_path_buf()));
         }
 
         let mut file = File::create(filepath)?;
@@ -196,7 +199,7 @@ where
     /// assert_eq!(settings.actix.mode, Mode::Production);
     /// # Ok(()) }
     /// ```
-    pub fn override_field<F, V>(field: &mut F, value: V) -> AtResult<()>
+    pub fn override_field<F, V>(field: &mut F, value: V) -> AsResult<()>
     where
         F: Parse,
         V: AsRef<str>,
@@ -221,14 +224,14 @@ where
     /// assert_eq!(settings.actix.mode, Mode::Production);
     /// # Ok(()) }
     /// ```
-    pub fn override_field_with_env_var<F, N>(field: &mut F, var_name: N) -> AtResult<()>
+    pub fn override_field_with_env_var<F, N>(field: &mut F, var_name: N) -> AsResult<()>
     where
         F: Parse,
         N: AsRef<str>,
     {
         match env::var(var_name.as_ref()) {
             Err(env::VarError::NotPresent) => Ok((/*NOP*/)),
-            Err(var_error) => Err(AtError::from(var_error)),
+            Err(var_error) => Err(Error::from(var_error)),
             Ok(value) => Self::override_field(field, value),
         }
     }
