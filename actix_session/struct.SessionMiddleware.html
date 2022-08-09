@@ -15,7 +15,14 @@ To create a new instance of <a href="struct.SessionMiddleware.html" title="Sessi
 <a href="storage/trait.SessionStore.html" title="SessionStore"><code>SessionStore</code></a>);</li>
 <li>a secret key, to sign or encrypt the content of client-side session cookie.</li>
 </ul>
-
+<h2 id="how-did-we-choose-defaults"><a href="#how-did-we-choose-defaults">How did we choose defaults?</a></h2>
+<p>You should not regret adding <code>actix-session</code> to your dependencies and going to production using
+the default configuration. That is why, when in doubt, we opt to use the most secure option for
+each configuration parameter.</p>
+<p>We expose knobs to change the default to suit your needs—i.e., if you know what you are doing,
+we will not stop you. But being a subject-matter expert should not be a requirement to deploy
+reasonably secure implementation of sessions.</p>
+<h2 id="examples"><a href="#examples">Examples</a></h2>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">actix_web</span>::{<span class="ident">web</span>, <span class="ident">App</span>, <span class="ident">HttpServer</span>, <span class="ident">HttpResponse</span>, <span class="ident">Error</span>};
 <span class="kw">use</span> <span class="ident">actix_session</span>::{<span class="ident">Session</span>, <span class="ident">SessionMiddleware</span>, <span class="ident">storage::RedisActorSessionStore</span>};
 <span class="kw">use</span> <span class="ident">actix_web::cookie::Key</span>;
@@ -77,26 +84,19 @@ To create a new instance of <a href="struct.SessionMiddleware.html" title="Sessi
         .<span class="ident">run</span>()
         .<span class="kw">await</span>
 }</code></pre></div>
-<h3 id="how-did-we-choose-defaults"><a href="#how-did-we-choose-defaults">How did we choose defaults?</a></h3>
-<p>You should not regret adding <code>actix-session</code> to your dependencies and going to production using
-the default configuration. That is why, when in doubt, we opt to use the most secure option for
-each configuration parameter.</p>
-<p>We expose knobs to change the default to suit your needs—i.e., if you know what you are doing,
-we will not stop you. But being a subject-matter expert should not be a requirement to deploy
-reasonably secure implementation of sessions.</p>
 </div></details><h2 id="implementations" class="small-section-header">Implementations<a href="#implementations" class="anchor"></a></h2><div id="implementations-list"><details class="rustdoc-toggle implementors-toggle" open><summary><section id="impl-SessionMiddleware%3CStore%3E" class="impl has-srclink"><span class="rightside"><a class="srclink" href="../src/actix_session/middleware.rs.html#122-150">source</a></span><a href="#impl-SessionMiddleware%3CStore%3E" class="anchor"></a><h3 class="code-header in-band">impl&lt;Store:&nbsp;<a class="trait" href="storage/trait.SessionStore.html" title="trait actix_session::storage::SessionStore">SessionStore</a>&gt; <a class="struct" href="struct.SessionMiddleware.html" title="struct actix_session::SessionMiddleware">SessionMiddleware</a>&lt;Store&gt;</h3></section></summary><div class="impl-items"><details class="rustdoc-toggle method-toggle" open><summary><section id="method.new" class="method has-srclink"><span class="rightside"><a class="srclink" href="../src/actix_session/middleware.rs.html#130-132">source</a></span><h4 class="code-header">pub fn <a href="#method.new" class="fnname">new</a>(store: Store, key: <a class="struct" href="https://docs.rs/cookie/0.16/cookie/secure/key/struct.Key.html" title="struct cookie::secure::key::Key">Key</a>) -&gt; Self</h4></section></summary><div class="docblock"><p>Use <a href="struct.SessionMiddleware.html#method.new" title="SessionMiddleware::new"><code>SessionMiddleware::new</code></a> to initialize the session framework using the default
 parameters.</p>
 <p>To create a new instance of <a href="struct.SessionMiddleware.html" title="SessionMiddleware"><code>SessionMiddleware</code></a> you need to provide:</p>
 <ul>
 <li>an instance of the session storage backend you wish to use (i.e. an implementation of
-<a href="storage/trait.SessionStore.html" title="SessionStore">`SessionStore</a>);</li>
+<a href="storage/trait.SessionStore.html" title="SessionStore"><code>SessionStore</code></a>);</li>
 <li>a secret key, to sign or encrypt the content of client-side session cookie.</li>
 </ul>
 </div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.builder" class="method has-srclink"><span class="rightside"><a class="srclink" href="../src/actix_session/middleware.rs.html#140-142">source</a></span><h4 class="code-header">pub fn <a href="#method.builder" class="fnname">builder</a>(store: Store, key: <a class="struct" href="https://docs.rs/cookie/0.16/cookie/secure/key/struct.Key.html" title="struct cookie::secure::key::Key">Key</a>) -&gt; <a class="struct" href="config/struct.SessionMiddlewareBuilder.html" title="struct actix_session::config::SessionMiddlewareBuilder">SessionMiddlewareBuilder</a>&lt;Store&gt;</h4></section></summary><div class="docblock"><p>A fluent API to configure <a href="struct.SessionMiddleware.html" title="SessionMiddleware"><code>SessionMiddleware</code></a>.</p>
 <p>It takes as input the two required inputs to create a new instance of <a href="struct.SessionMiddleware.html" title="SessionMiddleware"><code>SessionMiddleware</code></a>:</p>
 <ul>
 <li>an instance of the session storage backend you wish to use (i.e. an implementation of
-<a href="storage/trait.SessionStore.html" title="SessionStore">`SessionStore</a>);</li>
+<a href="storage/trait.SessionStore.html" title="SessionStore"><code>SessionStore</code></a>);</li>
 <li>a secret key, to sign or encrypt the content of client-side session cookie.</li>
 </ul>
 </div></details></div></details></div><h2 id="trait-implementations" class="small-section-header">Trait Implementations<a href="#trait-implementations" class="anchor"></a></h2><div id="trait-implementations-list"><details class="rustdoc-toggle implementors-toggle" open><summary><section id="impl-Clone-for-SessionMiddleware%3CStore%3E" class="impl has-srclink"><span class="rightside"><a class="srclink" href="../src/actix_session/middleware.rs.html#116">source</a></span><a href="#impl-Clone-for-SessionMiddleware%3CStore%3E" class="anchor"></a><h3 class="code-header in-band">impl&lt;Store:&nbsp;<a class="trait" href="https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html" title="trait core::clone::Clone">Clone</a> + <a class="trait" href="storage/trait.SessionStore.html" title="trait actix_session::storage::SessionStore">SessionStore</a>&gt; <a class="trait" href="https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html" title="trait core::clone::Clone">Clone</a> for <a class="struct" href="struct.SessionMiddleware.html" title="struct actix_session::SessionMiddleware">SessionMiddleware</a>&lt;Store&gt;</h3></section></summary><div class="impl-items"><details class="rustdoc-toggle method-toggle" open><summary><section id="method.clone" class="method trait-impl has-srclink"><span class="rightside"><a class="srclink" href="../src/actix_session/middleware.rs.html#116">source</a></span><a href="#method.clone" class="anchor"></a><h4 class="code-header">fn <a href="https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#tymethod.clone" class="fnname">clone</a>(&amp;self) -&gt; <a class="struct" href="struct.SessionMiddleware.html" title="struct actix_session::SessionMiddleware">SessionMiddleware</a>&lt;Store&gt;</h4></section></summary><div class='docblock'><p>Returns a copy of the value. <a href="https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#tymethod.clone">Read more</a></p>
@@ -130,4 +130,4 @@ parameters.</p>
 <a href="https://docs.rs/tracing/0.1.36/tracing/instrument/struct.WithDispatch.html" title="WithDispatch"><code>WithDispatch</code></a> wrapper. <a href="https://docs.rs/tracing/0.1.36/tracing/instrument/trait.WithSubscriber.html#method.with_subscriber">Read more</a></p>
 </div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.with_current_subscriber" class="method trait-impl has-srclink"><span class="rightside"><a class="srclink" href="https://docs.rs/tracing/0.1.36/src/tracing/instrument.rs.html#221">source</a></span><a href="#method.with_current_subscriber" class="anchor"></a><h4 class="code-header">fn <a href="https://docs.rs/tracing/0.1.36/tracing/instrument/trait.WithSubscriber.html#method.with_current_subscriber" class="fnname">with_current_subscriber</a>(self) -&gt; <a class="struct" href="https://docs.rs/tracing/0.1.36/tracing/instrument/struct.WithDispatch.html" title="struct tracing::instrument::WithDispatch">WithDispatch</a>&lt;Self&gt;</h4></section></summary><div class='docblock'><p>Attaches the current <a href="https://docs.rs/tracing/0.1.36/tracing/dispatcher/index.html#setting-the-default-subscriber">default</a> <a href="https://docs.rs/tracing-core/0.1.22/tracing_core/subscriber/trait.Subscriber.html"><code>Subscriber</code></a> to this type, returning a
 <a href="https://docs.rs/tracing/0.1.36/tracing/instrument/struct.WithDispatch.html" title="WithDispatch"><code>WithDispatch</code></a> wrapper. <a href="https://docs.rs/tracing/0.1.36/tracing/instrument/trait.WithSubscriber.html#method.with_current_subscriber">Read more</a></p>
-</div></details></div></details></div></section></div></main><div id="rustdoc-vars" data-root-path="../" data-current-crate="actix_session" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (2befdefdd 2022-08-06)" ></div></body></html>
+</div></details></div></details></div></section></div></main><div id="rustdoc-vars" data-root-path="../" data-current-crate="actix_session" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (d394408fb 2022-08-07)" ></div></body></html>

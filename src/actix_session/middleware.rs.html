@@ -500,6 +500,16 @@
 <span class="doccomment">///   [`SessionStore`]);</span>
 <span class="doccomment">/// - a secret key, to sign or encrypt the content of client-side session cookie.</span>
 <span class="doccomment">///</span>
+<span class="doccomment">/// # How did we choose defaults?</span>
+<span class="doccomment">/// You should not regret adding `actix-session` to your dependencies and going to production using</span>
+<span class="doccomment">/// the default configuration. That is why, when in doubt, we opt to use the most secure option for</span>
+<span class="doccomment">/// each configuration parameter.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// We expose knobs to change the default to suit your needs—i.e., if you know what you are doing,</span>
+<span class="doccomment">/// we will not stop you. But being a subject-matter expert should not be a requirement to deploy</span>
+<span class="doccomment">/// reasonably secure implementation of sessions.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// # Examples</span>
 <span class="doccomment">/// ```no_run</span>
 <span class="doccomment">/// use actix_web::{web, App, HttpServer, HttpResponse, Error};</span>
 <span class="doccomment">/// use actix_session::{Session, SessionMiddleware, storage::RedisActorSessionStore};</span>
@@ -568,16 +578,6 @@
 <span class="doccomment">///         .await</span>
 <span class="doccomment">/// }</span>
 <span class="doccomment">/// ```</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ## How did we choose defaults?</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// You should not regret adding `actix-session` to your dependencies and going to production using</span>
-<span class="doccomment">/// the default configuration. That is why, when in doubt, we opt to use the most secure option for</span>
-<span class="doccomment">/// each configuration parameter.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// We expose knobs to change the default to suit your needs—i.e., if you know what you are doing,</span>
-<span class="doccomment">/// we will not stop you. But being a subject-matter expert should not be a requirement to deploy</span>
-<span class="doccomment">/// reasonably secure implementation of sessions.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SessionMiddleware</span><span class="op">&lt;</span><span class="ident">Store</span>: <span class="ident">SessionStore</span><span class="op">&gt;</span> {
     <span class="ident">storage_backend</span>: <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Store</span><span class="op">&gt;</span>,
@@ -590,7 +590,7 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// To create a new instance of [`SessionMiddleware`] you need to provide:</span>
     <span class="doccomment">/// - an instance of the session storage backend you wish to use (i.e. an implementation of</span>
-    <span class="doccomment">///   [`SessionStore]);</span>
+    <span class="doccomment">///   [`SessionStore`]);</span>
     <span class="doccomment">/// - a secret key, to sign or encrypt the content of client-side session cookie.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">store</span>: <span class="ident">Store</span>, <span class="ident">key</span>: <span class="ident">Key</span>) -&gt; <span class="self">Self</span> {
         <span class="ident"><span class="self">Self</span>::builder</span>(<span class="ident">store</span>, <span class="ident">key</span>).<span class="ident">build</span>()
@@ -600,7 +600,7 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// It takes as input the two required inputs to create a new instance of [`SessionMiddleware`]:</span>
     <span class="doccomment">/// - an instance of the session storage backend you wish to use (i.e. an implementation of</span>
-    <span class="doccomment">///   [`SessionStore]);</span>
+    <span class="doccomment">///   [`SessionStore`]);</span>
     <span class="doccomment">/// - a secret key, to sign or encrypt the content of client-side session cookie.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">builder</span>(<span class="ident">store</span>: <span class="ident">Store</span>, <span class="ident">key</span>: <span class="ident">Key</span>) -&gt; <span class="ident">SessionMiddlewareBuilder</span><span class="op">&lt;</span><span class="ident">Store</span><span class="op">&gt;</span> {
         <span class="ident">SessionMiddlewareBuilder::new</span>(<span class="ident">store</span>, <span class="ident">config::default_configuration</span>(<span class="ident">key</span>))
@@ -927,4 +927,4 @@
     <span class="prelude-val">Ok</span>(())
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_session" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (2befdefdd 2022-08-06)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_session" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (d394408fb 2022-08-07)" ></div></body></html>

@@ -369,16 +369,44 @@
 <span id="367">367</span>
 <span id="368">368</span>
 <span id="369">369</span>
+<span id="370">370</span>
+<span id="371">371</span>
+<span id="372">372</span>
+<span id="373">373</span>
+<span id="374">374</span>
+<span id="375">375</span>
+<span id="376">376</span>
+<span id="377">377</span>
+<span id="378">378</span>
+<span id="379">379</span>
+<span id="380">380</span>
+<span id="381">381</span>
+<span id="382">382</span>
+<span id="383">383</span>
+<span id="384">384</span>
+<span id="385">385</span>
+<span id="386">386</span>
+<span id="387">387</span>
+<span id="388">388</span>
+<span id="389">389</span>
+<span id="390">390</span>
+<span id="391">391</span>
+<span id="392">392</span>
+<span id="393">393</span>
+<span id="394">394</span>
+<span id="395">395</span>
+<span id="396">396</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Configuration options to tune the behaviour of [`SessionMiddleware`].</span>
 
 <span class="kw">use</span> <span class="ident">actix_web::cookie</span>::{<span class="ident">time::Duration</span>, <span class="ident">Key</span>, <span class="ident">SameSite</span>};
+<span class="kw">use</span> <span class="ident">derive_more::From</span>;
 
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">storage::SessionStore</span>, <span class="ident">SessionMiddleware</span>};
 
 <span class="doccomment">/// Determines what type of session cookie should be used and how its lifecycle should be managed.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// Used by [`SessionMiddlewareBuilder::session_lifecycle`].</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">From</span>)]</span>
 <span class="attribute">#[<span class="ident">non_exhaustive</span>]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">SessionLifecycle</span> {
     <span class="doccomment">/// The session cookie will expire when the current browser session ends.</span>
@@ -398,18 +426,6 @@
     <span class="ident">PersistentSession</span>(<span class="ident">PersistentSession</span>),
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">BrowserSession</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">SessionLifecycle</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">session</span>: <span class="ident">BrowserSession</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident"><span class="self">Self</span>::BrowserSession</span>(<span class="ident">session</span>)
-    }
-}
-
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">PersistentSession</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">SessionLifecycle</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">session</span>: <span class="ident">PersistentSession</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident"><span class="self">Self</span>::PersistentSession</span>(<span class="ident">session</span>)
-    }
-}
-
 <span class="doccomment">/// A [session lifecycle](SessionLifecycle) strategy where the session cookie expires when the</span>
 <span class="doccomment">/// browser&#39;s current session ends.</span>
 <span class="doccomment">///</span>
@@ -417,6 +433,9 @@
 <span class="doccomment">/// continue running in the background when the browser is closed—session cookies are not deleted</span>
 <span class="doccomment">/// and they will still be available when the browser is opened again. Check the documentation of</span>
 <span class="doccomment">/// the browsers you are targeting for up-to-date information.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Due to its `Into&lt;SessionLifecycle&gt;` implementation, a `BrowserSession` can be passed directly</span>
+<span class="doccomment">/// to [`SessionMiddlewareBuilder::session_lifecycle()`].</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BrowserSession</span> {
     <span class="ident">state_ttl</span>: <span class="ident">Duration</span>,
@@ -474,6 +493,26 @@
 <span class="doccomment">/// Persistent cookies have a pre-determined expiration, specified via the `Max-Age` or `Expires`</span>
 <span class="doccomment">/// attribute. They do not disappear when the current browser session ends.</span>
 <span class="doccomment">///</span>
+<span class="doccomment">/// Due to its `Into&lt;SessionLifecycle&gt;` implementation, a `PersistentSession` can be passed directly</span>
+<span class="doccomment">/// to [`SessionMiddlewareBuilder::session_lifecycle()`].</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// # Examples</span>
+<span class="doccomment">/// ```</span>
+<span class="doccomment">/// use actix_web::cookie::time::Duration;</span>
+<span class="doccomment">/// use actix_session::SessionMiddleware;</span>
+<span class="doccomment">/// use actix_session::config::{PersistentSession, TtlExtensionPolicy};</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// const SECS_IN_WEEK: i64 = 60 * 60 * 24 * 7;</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// // a session lifecycle with a time-to-live (expiry) of 1 week and default extension policy</span>
+<span class="doccomment">/// PersistentSession::default().session_ttl(Duration::seconds(SECS_IN_WEEK));</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// // a session lifecycle with the default time-to-live (expiry) and a custom extension policy</span>
+<span class="doccomment">/// PersistentSession::default()</span>
+<span class="doccomment">///     // this policy causes the session state&#39;s TTL to be refreshed on every request</span>
+<span class="doccomment">///     .session_ttl_extension_policy(TtlExtensionPolicy::OnEveryRequest);</span>
+<span class="doccomment">/// ```</span>
+<span class="doccomment">///</span>
 <span class="doccomment">/// [persistent]: https://www.whitehatsec.com/glossary/content/persistent-session-cookie</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PersistentSession</span> {
@@ -484,9 +523,9 @@
 <span class="kw">impl</span> <span class="ident">PersistentSession</span> {
     <span class="doccomment">/// Specifies how long the session cookie should live.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// Defaults to 1 day if left unspecified.</span>
-    <span class="doccomment">///</span>
     <span class="doccomment">/// The session TTL is also used as the TTL for the session state in the storage backend.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Defaults to 1 day.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// A persistent session can live more than the specified TTL if the TTL is extended.</span>
     <span class="doccomment">/// See [`session_ttl_extension_policy`](Self::session_ttl_extension_policy) for more details.</span>
@@ -498,7 +537,7 @@
     <span class="doccomment">/// Determines under what circumstances the TTL of your session should be extended.</span>
     <span class="doccomment">/// See [`TtlExtensionPolicy`] for more details.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// Defaults to [`TtlExtensionPolicy::OnStateChanges`] if left unspecified.</span>
+    <span class="doccomment">/// Defaults to [`TtlExtensionPolicy::OnStateChanges`].</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">session_ttl_extension_policy</span>(
         <span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">ttl_extension_policy</span>: <span class="ident">TtlExtensionPolicy</span>,
@@ -519,23 +558,23 @@
 
 <span class="doccomment">/// Configuration for which events should trigger an extension of the time-to-live for your session.</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// If you are using a [`BrowserSession`], `TtlExtensionPolicy` controls how often the TTL of</span>
-<span class="doccomment">/// the session state should be refreshed. The browser is in control of the lifecycle of the</span>
-<span class="doccomment">/// session cookie.</span>
+<span class="doccomment">/// If you are using a [`BrowserSession`], `TtlExtensionPolicy` controls how often the TTL of the</span>
+<span class="doccomment">/// session state should be refreshed. The browser is in control of the lifecycle of the session</span>
+<span class="doccomment">/// cookie.</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// If you are using a [`PersistentSession`], `TtlExtensionPolicy` controls both the expiration</span>
-<span class="doccomment">/// of the session cookie and the TTL of the session state.</span>
+<span class="doccomment">/// If you are using a [`PersistentSession`], `TtlExtensionPolicy` controls both the expiration of</span>
+<span class="doccomment">/// the session cookie and the TTL of the session state on the storage backend.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
 <span class="attribute">#[<span class="ident">non_exhaustive</span>]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">TtlExtensionPolicy</span> {
     <span class="doccomment">/// The TTL is refreshed every time the server receives a request associated with a session.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Performance impact</span>
-    <span class="doccomment">/// Refreshing the TTL on every request is not free.</span>
-    <span class="doccomment">/// It implies a refresh of the TTL on the session state. This translates into a request over</span>
-    <span class="doccomment">/// the network if you are using a remote system as storage backend (e.g. Redis).</span>
-    <span class="doccomment">/// This impacts both the total load on your storage backend (i.e. number of</span>
-    <span class="doccomment">/// queries it has to handle) and the latency of the requests served by your server.</span>
+    <span class="doccomment">/// Refreshing the TTL on every request is not free. It implies a refresh of the TTL on the</span>
+    <span class="doccomment">/// session state. This translates into a request over the network if you are using a remote</span>
+    <span class="doccomment">/// system as storage backend (e.g. Redis). This impacts both the total load on your storage</span>
+    <span class="doccomment">/// backend (i.e. number of queries it has to handle) and the latency of the requests served by</span>
+    <span class="doccomment">/// your server.</span>
     <span class="ident">OnEveryRequest</span>,
 
     <span class="doccomment">/// The TTL is refreshed every time the session state changes or the session key is renewed.</span>
@@ -568,8 +607,7 @@
     <span class="ident">TtlExtensionPolicy::OnStateChanges</span>
 }
 
-<span class="doccomment">/// A fluent builder to construct a [`SessionMiddleware`] instance with custom configuration</span>
-<span class="doccomment">/// parameters.</span>
+<span class="doccomment">/// A fluent, customized [`SessionMiddleware`] builder.</span>
 <span class="attribute">#[<span class="ident">must_use</span>]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SessionMiddlewareBuilder</span><span class="op">&lt;</span><span class="ident">Store</span>: <span class="ident">SessionStore</span><span class="op">&gt;</span> {
     <span class="ident">storage_backend</span>: <span class="ident">Store</span>,
@@ -607,6 +645,22 @@
     <span class="doccomment">/// Check out [`SessionLifecycle`]&#39;s documentation for more details on the available options.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Default is [`SessionLifecycle::BrowserSession`].</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// # Examples</span>
+    <span class="doccomment">/// ```</span>
+    <span class="doccomment">/// use actix_web::cookie::{Key, time::Duration};</span>
+    <span class="doccomment">/// use actix_session::{SessionMiddleware, config::PersistentSession};</span>
+    <span class="doccomment">/// use actix_session::storage::CookieSessionStore;</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// const SECS_IN_WEEK: i64 = 60 * 60 * 24 * 7;</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// // creates a session middleware with a time-to-live (expiry) of 1 week</span>
+    <span class="doccomment">/// SessionMiddleware::builder(CookieSessionStore::default(), Key::from(&amp;[0; 64]))</span>
+    <span class="doccomment">///     .session_lifecycle(</span>
+    <span class="doccomment">///         PersistentSession::default().session_ttl(Duration::seconds(SECS_IN_WEEK))</span>
+    <span class="doccomment">///     )</span>
+    <span class="doccomment">///     .build();</span>
+    <span class="doccomment">/// ```</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">session_lifecycle</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">SessionLifecycle</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">session_lifecycle</span>: <span class="ident">S</span>) -&gt; <span class="self">Self</span> {
         <span class="kw">match</span> <span class="ident">session_lifecycle</span>.<span class="ident">into</span>() {
             <span class="ident">SessionLifecycle::BrowserSession</span>(<span class="ident">BrowserSession</span> {
@@ -739,4 +793,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_session" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (2befdefdd 2022-08-06)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_session" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (d394408fb 2022-08-07)" ></div></body></html>
