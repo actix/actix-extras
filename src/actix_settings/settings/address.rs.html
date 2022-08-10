@@ -97,7 +97,7 @@
 <span class="kw">use</span> <span class="ident">regex::Regex</span>;
 <span class="kw">use</span> <span class="ident">serde::Deserialize</span>;
 
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">AtError</span>, <span class="ident">Parse</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">Error</span>, <span class="ident">Parse</span>};
 
 <span class="kw">static</span> <span class="ident">ADDR_REGEX</span>: <span class="ident">Lazy</span><span class="op">&lt;</span><span class="ident">Regex</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Lazy::new</span>(<span class="op">|</span><span class="op">|</span> {
     <span class="ident">Regex::new</span>(
@@ -143,14 +143,14 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Parse</span> <span class="kw">for</span> <span class="ident">Address</span> {
-    <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">string</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">AtError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">string</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">items</span> <span class="op">=</span> <span class="ident">string</span>
             .<span class="ident">trim</span>()
             .<span class="ident">trim_start_matches</span>(<span class="string">&#39;[&#39;</span>)
             .<span class="ident">trim_end_matches</span>(<span class="string">&#39;]&#39;</span>)
             .<span class="ident">split</span>(<span class="string">&#39;,&#39;</span>);
 
-        <span class="kw">let</span> <span class="ident">parse_error</span> <span class="op">=</span> <span class="op">|</span><span class="op">|</span> <span class="ident">AtError::ParseAddressError</span>(<span class="ident">string</span>.<span class="ident">to_string</span>());
+        <span class="kw">let</span> <span class="ident">parse_error</span> <span class="op">=</span> <span class="op">|</span><span class="op">|</span> <span class="ident">Error::ParseAddressError</span>(<span class="ident">string</span>.<span class="ident">to_string</span>());
 
         <span class="kw">if</span> <span class="op">!</span><span class="ident">ADDR_REGEX</span>.<span class="ident">is_match</span>(<span class="ident">string</span>) {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">parse_error</span>());
@@ -164,8 +164,8 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Parse</span> <span class="kw">for</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">string</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">AtError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">parse_error</span> <span class="op">=</span> <span class="op">|</span><span class="op">|</span> <span class="ident">AtError::ParseAddressError</span>(<span class="ident">string</span>.<span class="ident">to_string</span>());
+    <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">string</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">parse_error</span> <span class="op">=</span> <span class="op">|</span><span class="op">|</span> <span class="ident">Error::ParseAddressError</span>(<span class="ident">string</span>.<span class="ident">to_string</span>());
 
         <span class="kw">if</span> <span class="op">!</span><span class="ident">ADDR_LIST_REGEX</span>.<span class="ident">is_match</span>(<span class="ident">string</span>) {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">parse_error</span>());
@@ -187,4 +187,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="actix_settings" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (d394408fb 2022-08-07)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="actix_settings" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (34a6cae28 2022-08-09)" ></div></body></html>

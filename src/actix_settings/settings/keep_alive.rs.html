@@ -101,7 +101,7 @@
 <span class="kw">use</span> <span class="ident">regex::Regex</span>;
 <span class="kw">use</span> <span class="ident">serde::de</span>;
 
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">AtError</span>, <span class="ident">AtResult</span>, <span class="ident">Parse</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">AsResult</span>, <span class="ident">Error</span>, <span class="ident">Parse</span>};
 
 <span class="doccomment">/// The server keep-alive preference.</span>
 <span class="doccomment">///</span>
@@ -125,7 +125,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Parse</span> <span class="kw">for</span> <span class="ident">KeepAlive</span> {
-    <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">string</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">AtResult</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">string</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">AsResult</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">static</span> <span class="ident">FMT</span>: <span class="ident">Lazy</span><span class="op">&lt;</span><span class="ident">Regex</span><span class="op">&gt;</span> <span class="op">=</span>
             <span class="ident">Lazy::new</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">Regex::new</span>(<span class="string">r&quot;^\d+ seconds$&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;Failed to compile regex: FMT&quot;</span>));
 
@@ -179,7 +179,7 @@
             {
                 <span class="kw">match</span> <span class="ident">KeepAlive::parse</span>(<span class="ident">value</span>) {
                     <span class="prelude-val">Ok</span>(<span class="ident">keep_alive</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">keep_alive</span>),
-                    <span class="prelude-val">Err</span>(<span class="ident">AtError::InvalidValue</span> { <span class="ident">expected</span>, <span class="ident">got</span>, .. }) =&gt; <span class="prelude-val">Err</span>(
+                    <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidValue</span> { <span class="ident">expected</span>, <span class="ident">got</span>, .. }) =&gt; <span class="prelude-val">Err</span>(
                         <span class="ident">de::Error::invalid_value</span>(<span class="ident">de::Unexpected::Str</span>(<span class="kw-2">&amp;</span><span class="ident">got</span>), <span class="kw-2">&amp;</span><span class="ident">expected</span>),
                     ),
                     <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="macro">unreachable!</span>(),
@@ -191,4 +191,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="actix_settings" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (d394408fb 2022-08-07)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="actix_settings" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (34a6cae28 2022-08-09)" ></div></body></html>

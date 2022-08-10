@@ -42,17 +42,17 @@
 <span id="40">40</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">path::PathBuf</span>, <span class="ident">str::FromStr</span>};
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::AtError</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::Error</span>;
 
 <span class="doccomment">/// A specialized `FromStr` trait that returns [`AtError`] errors</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Parse</span>: <span class="ident">Sized</span> {
     <span class="doccomment">/// Parse `Self` from `string`.</span>
-    <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">string</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">AtError</span><span class="op">&gt;</span>;
+    <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">string</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">Error</span><span class="op">&gt;</span>;
 }
 
 <span class="kw">impl</span> <span class="ident">Parse</span> <span class="kw">for</span> <span class="ident">bool</span> {
-    <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">string</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">AtError</span><span class="op">&gt;</span> {
-        <span class="ident"><span class="self">Self</span>::from_str</span>(<span class="ident">string</span>).<span class="ident">map_err</span>(<span class="ident">AtError::from</span>)
+    <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">string</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
+        <span class="ident"><span class="self">Self</span>::from_str</span>(<span class="ident">string</span>).<span class="ident">map_err</span>(<span class="ident">Error::from</span>)
     }
 }
 
@@ -60,8 +60,8 @@
     ($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">int_type</span>:<span class="ident">ty</span>),<span class="op">+</span> $(,)<span class="question-mark">?</span>) =&gt; {
         $(
             <span class="kw">impl</span> <span class="ident">Parse</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">int_type</span> {
-                <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">string</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">AtError</span><span class="op">&gt;</span> {
-                    <span class="ident"><span class="self">Self</span>::from_str</span>(<span class="ident">string</span>).<span class="ident">map_err</span>(<span class="ident">AtError::from</span>)
+                <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">string</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
+                    <span class="ident"><span class="self">Self</span>::from_str</span>(<span class="ident">string</span>).<span class="ident">map_err</span>(<span class="ident">Error::from</span>)
                 }
             }
         )<span class="op">+</span>
@@ -70,15 +70,15 @@
 <span class="macro">impl_parse_for_int_type!</span>[<span class="ident">i8</span>, <span class="ident">i16</span>, <span class="ident">i32</span>, <span class="ident">i64</span>, <span class="ident">i128</span>, <span class="ident">u8</span>, <span class="ident">u16</span>, <span class="ident">u32</span>, <span class="ident">u64</span>, <span class="ident">u128</span>];
 
 <span class="kw">impl</span> <span class="ident">Parse</span> <span class="kw">for</span> <span class="ident">String</span> {
-    <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">string</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">AtError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">string</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="prelude-val">Ok</span>(<span class="ident">string</span>.<span class="ident">to_string</span>())
     }
 }
 
 <span class="kw">impl</span> <span class="ident">Parse</span> <span class="kw">for</span> <span class="ident">PathBuf</span> {
-    <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">string</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">AtError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">string</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="prelude-val">Ok</span>(<span class="ident">PathBuf::from</span>(<span class="ident">string</span>))
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_settings" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (d394408fb 2022-08-07)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_settings" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (34a6cae28 2022-08-09)" ></div></body></html>

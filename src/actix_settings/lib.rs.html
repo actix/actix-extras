@@ -805,6 +805,10 @@
 <span id="803">803</span>
 <span id="804">804</span>
 <span id="805">805</span>
+<span id="806">806</span>
+<span id="807">807</span>
+<span id="808">808</span>
+<span id="809">809</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Easily manage Actix Web&#39;s settings from a TOML file and environment variables.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! To get started add a [`Settings::parse_toml(&quot;./Server.toml&quot;)`](Settings::parse_toml) call to the</span>
@@ -896,12 +900,15 @@
 <span class="kw">mod</span> <span class="ident">parse</span>;
 <span class="kw">mod</span> <span class="ident">settings</span>;
 
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::error</span>::{<span class="ident">AtError</span>, <span class="ident">AtResult</span>};
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::error::Error</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::parse::Parse</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::settings</span>::{
     <span class="ident">ActixSettings</span>, <span class="ident">Address</span>, <span class="ident">Backlog</span>, <span class="ident">KeepAlive</span>, <span class="ident">MaxConnectionRate</span>, <span class="ident">MaxConnections</span>, <span class="ident">Mode</span>,
     <span class="ident">NumWorkers</span>, <span class="ident">Timeout</span>, <span class="ident">Tls</span>,
 };
+
+<span class="doccomment">/// Convenience type alias for `Result&lt;T, AtError&gt;`.</span>
+<span class="kw">type</span> <span class="ident">AsResult</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Error</span><span class="op">&gt;</span>;
 
 <span class="doccomment">/// Wrapper for server and application-specific settings.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>, <span class="ident">Deserialize</span>)]</span>
@@ -936,7 +943,7 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// If the file doesn&#39;t exist, it is generated from the default TOML template, after which the</span>
     <span class="doccomment">/// newly generated file is read in and parsed.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse_toml</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>(<span class="ident">filepath</span>: <span class="ident">P</span>) -&gt; <span class="ident">AtResult</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse_toml</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>(<span class="ident">filepath</span>: <span class="ident">P</span>) -&gt; <span class="ident">AsResult</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">P</span>: <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>,
     {
@@ -947,8 +954,9 @@
         }
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">f</span> <span class="op">=</span> <span class="ident">File::open</span>(<span class="ident">filepath</span>)<span class="question-mark">?</span>;
-        <span class="comment">// TODO: don&#39;t bail on metadata fail</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">contents</span> <span class="op">=</span> <span class="ident">String::with_capacity</span>(<span class="ident">f</span>.<span class="ident">metadata</span>()<span class="question-mark">?</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">usize</span>);
+        <span class="kw">let</span> <span class="ident">len_guess</span> <span class="op">=</span> <span class="ident">f</span>.<span class="ident">metadata</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">md</span><span class="op">|</span> <span class="ident">md</span>.<span class="ident">len</span>()).<span class="ident">unwrap_or</span>(<span class="number">128</span>);
+
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">contents</span> <span class="op">=</span> <span class="ident">String::with_capacity</span>(<span class="ident">len_guess</span> <span class="kw">as</span> <span class="ident">usize</span>);
         <span class="ident">f</span>.<span class="ident">read_to_string</span>(<span class="kw-2">&amp;mut</span> <span class="ident">contents</span>)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(<span class="ident">toml::from_str</span>::<span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">contents</span>)<span class="question-mark">?</span>)
@@ -957,13 +965,13 @@
     <span class="doccomment">/// Parse an instance of `Self` straight from the default TOML template.</span>
     <span class="comment">// TODO: make infallible</span>
     <span class="comment">// TODO: consider &quot;template&quot; rename</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_default_template</span>() -&gt; <span class="ident">AtResult</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_default_template</span>() -&gt; <span class="ident">AsResult</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="ident"><span class="self">Self</span>::from_template</span>(<span class="ident"><span class="self">Self</span>::DEFAULT_TOML_TEMPLATE</span>)
     }
 
     <span class="doccomment">/// Parse an instance of `Self` straight from the default TOML template.</span>
     <span class="comment">// TODO: consider &quot;template&quot; rename</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_template</span>(<span class="ident">template</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">AtResult</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_template</span>(<span class="ident">template</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">AsResult</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="prelude-val">Ok</span>(<span class="ident">toml::from_str</span>(<span class="ident">template</span>)<span class="question-mark">?</span>)
     }
 
@@ -972,14 +980,14 @@
     <span class="doccomment">/// # Errors</span>
     <span class="doccomment">/// Returns a [`FileExists`](crate::AtError::FileExists) error if a file already exists at that</span>
     <span class="doccomment">/// location.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">write_toml_file</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>(<span class="ident">filepath</span>: <span class="ident">P</span>) -&gt; <span class="ident">AtResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">write_toml_file</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>(<span class="ident">filepath</span>: <span class="ident">P</span>) -&gt; <span class="ident">AsResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">P</span>: <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>,
     {
         <span class="kw">let</span> <span class="ident">filepath</span> <span class="op">=</span> <span class="ident">filepath</span>.<span class="ident">as_ref</span>();
 
         <span class="kw">if</span> <span class="ident">filepath</span>.<span class="ident">exists</span>() {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">AtError::FileExists</span>(<span class="ident">filepath</span>.<span class="ident">to_path_buf</span>()));
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::FileExists</span>(<span class="ident">filepath</span>.<span class="ident">to_path_buf</span>()));
         }
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">File::create</span>(<span class="ident">filepath</span>)<span class="question-mark">?</span>;
@@ -995,7 +1003,7 @@
     <span class="doccomment">/// ```</span>
     <span class="doccomment">/// use actix_settings::{Settings, Mode};</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// # fn inner() -&gt; actix_settings::AtResult&lt;()&gt; {</span>
+    <span class="doccomment">/// # fn inner() -&gt; Result&lt;(), actix_settings::Error&gt; {</span>
     <span class="doccomment">/// let mut settings = Settings::from_default_template()?;</span>
     <span class="doccomment">/// assert_eq!(settings.actix.mode, Mode::Development);</span>
     <span class="doccomment">///</span>
@@ -1003,7 +1011,7 @@
     <span class="doccomment">/// assert_eq!(settings.actix.mode, Mode::Production);</span>
     <span class="doccomment">/// # Ok(()) }</span>
     <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">override_field</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">V</span><span class="op">&gt;</span>(<span class="ident">field</span>: <span class="kw-2">&amp;mut</span> <span class="ident">F</span>, <span class="ident">value</span>: <span class="ident">V</span>) -&gt; <span class="ident">AtResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">override_field</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">V</span><span class="op">&gt;</span>(<span class="ident">field</span>: <span class="kw-2">&amp;mut</span> <span class="ident">F</span>, <span class="ident">value</span>: <span class="ident">V</span>) -&gt; <span class="ident">AsResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">F</span>: <span class="ident">Parse</span>,
         <span class="ident">V</span>: <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>,
@@ -1020,7 +1028,7 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// std::env::set_var(&quot;OVERRIDE__MODE&quot;, &quot;production&quot;);</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// # fn inner() -&gt; actix_settings::AtResult&lt;()&gt; {</span>
+    <span class="doccomment">/// # fn inner() -&gt; Result&lt;(), actix_settings::Error&gt; {</span>
     <span class="doccomment">/// let mut settings = Settings::from_default_template()?;</span>
     <span class="doccomment">/// assert_eq!(settings.actix.mode, Mode::Development);</span>
     <span class="doccomment">///</span>
@@ -1028,14 +1036,14 @@
     <span class="doccomment">/// assert_eq!(settings.actix.mode, Mode::Production);</span>
     <span class="doccomment">/// # Ok(()) }</span>
     <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">override_field_with_env_var</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">N</span><span class="op">&gt;</span>(<span class="ident">field</span>: <span class="kw-2">&amp;mut</span> <span class="ident">F</span>, <span class="ident">var_name</span>: <span class="ident">N</span>) -&gt; <span class="ident">AtResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">override_field_with_env_var</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">N</span><span class="op">&gt;</span>(<span class="ident">field</span>: <span class="kw-2">&amp;mut</span> <span class="ident">F</span>, <span class="ident">var_name</span>: <span class="ident">N</span>) -&gt; <span class="ident">AsResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">F</span>: <span class="ident">Parse</span>,
         <span class="ident">N</span>: <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>,
     {
         <span class="kw">match</span> <span class="ident">env::var</span>(<span class="ident">var_name</span>.<span class="ident">as_ref</span>()) {
             <span class="prelude-val">Err</span>(<span class="ident">env::VarError::NotPresent</span>) =&gt; <span class="prelude-val">Ok</span>((<span class="comment">/*NOP*/</span>)),
-            <span class="prelude-val">Err</span>(<span class="ident">var_error</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">AtError::from</span>(<span class="ident">var_error</span>)),
+            <span class="prelude-val">Err</span>(<span class="ident">var_error</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">Error::from</span>(<span class="ident">var_error</span>)),
             <span class="prelude-val">Ok</span>(<span class="ident">value</span>) =&gt; <span class="ident"><span class="self">Self</span>::override_field</span>(<span class="ident">field</span>, <span class="ident">value</span>),
         }
     }
@@ -1611,4 +1619,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_settings" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (d394408fb 2022-08-07)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_settings" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (34a6cae28 2022-08-09)" ></div></body></html>
