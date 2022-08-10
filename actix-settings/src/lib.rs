@@ -143,8 +143,9 @@ where
         }
 
         let mut f = File::open(filepath)?;
-        // TODO: don't bail on metadata fail
-        let mut contents = String::with_capacity(f.metadata()?.len() as usize);
+        let len_guess = f.metadata().map(|md| md.len()).unwrap_or(128);
+
+        let mut contents = String::with_capacity(len_guess as usize);
         f.read_to_string(&mut contents)?;
 
         Ok(toml::from_str::<Self>(&contents)?)
