@@ -2,7 +2,7 @@ use std::fmt;
 
 use serde::de;
 
-use crate::{AtError, AtResult, Parse};
+use crate::{AsResult, Error, Parse};
 
 /// The number of workers that the server should start.
 ///
@@ -18,7 +18,7 @@ pub enum NumWorkers {
 }
 
 impl Parse for NumWorkers {
-    fn parse(string: &str) -> AtResult<Self> {
+    fn parse(string: &str) -> AsResult<Self> {
         match string {
             "default" => Ok(NumWorkers::Default),
             string => match string.parse::<usize>() {
@@ -53,7 +53,7 @@ impl<'de> de::Deserialize<'de> for NumWorkers {
             {
                 match NumWorkers::parse(value) {
                     Ok(num_workers) => Ok(num_workers),
-                    Err(AtError::InvalidValue { expected, got, .. }) => Err(
+                    Err(Error::InvalidValue { expected, got, .. }) => Err(
                         de::Error::invalid_value(de::Unexpected::Str(&got), &expected),
                     ),
                     Err(_) => unreachable!(),
