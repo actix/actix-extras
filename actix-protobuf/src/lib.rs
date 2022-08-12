@@ -172,9 +172,9 @@ pub struct ProtoBufMessage<T: Message + Default> {
 impl<T: Message + Default> ProtoBufMessage<T> {
     /// Create `ProtoBufMessage` for request.
     pub fn new(req: &HttpRequest, payload: &mut Payload) -> Self {
-      if    req.content_type() != "application/protobuf" &&
-	        req.content_type() != "application/x-protobuf"
-	{
+        if req.content_type() != "application/protobuf"
+            && req.content_type() != "application/x-protobuf"
+        {
             return ProtoBufMessage {
                 limit: 262_144,
                 length: None,
