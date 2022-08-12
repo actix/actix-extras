@@ -24,4 +24,4 @@ prost = { version = "0.11", default_features = false }
 
 [dev-dependencies]
 actix-web = { version = "4", default_features = false, features = ["macros"] }
-prost = { version = "0.11.0", default_features = false, features = ["prost-derive"] }
+prost = { version = "0.11", default_features = false, features = ["prost-derive"] }
