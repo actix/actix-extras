@@ -18,10 +18,9 @@ path = "src/lib.rs"
 
 [dependencies]
 actix-web = { version = "4", default_features = false }
-derive_more = "0.99.5"
-futures-util = { version = "0.3.7", default-features = false }
-prost = { version = "0.11.0", default_features = false }
-log = "0.4.17"
+derive_more = "0.99"
+futures-util = { version = "0.3", default-features = false }
+prost = { version = "0.11", default_features = false }
 
 [dev-dependencies]
 actix-web = { version = "4", default_features = false, features = ["macros"] }
