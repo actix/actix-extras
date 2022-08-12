@@ -1,6 +1,6 @@
 [package]
 name = "actix-protobuf"
-version = "0.8.0"
+version = "0.8.1"
 edition = "2018"
 authors = [
     "kingxsp <jin.hb.zh@outlook.com>",
