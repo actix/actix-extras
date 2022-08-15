@@ -1,6 +1,6 @@
 [package]
 name = "actix-protobuf"
-version = "0.8.0"
+version = "0.8.0-experiment"
 edition = "2018"
 authors = [
     "kingxsp <jin.hb.zh@outlook.com>",
@@ -12,16 +12,11 @@ homepage = "https://actix.rs"
 repository = "https://github.com/actix/actix-extras.git"
 license = "MIT OR Apache-2.0"
 
-[lib]
-name = "actix_protobuf"
-path = "src/lib.rs"
-
 [dependencies]
 actix-web = { version = "4", default_features = false }
-derive_more = "0.99.5"
-futures-util = { version = "0.3.7", default-features = false }
-prost = { version = "0.10", default_features = false }
-
-[dev-dependencies]
-actix-web = { version = "4", default_features = false, features = ["macros"] }
-prost = { version = "0.10", default_features = false, features = ["prost-derive"] }
+prost = { version = "0.10"}
+futures-core = "0.3.21"
+cfg-if = "1.0.0"
+actix-http = "3.2.1"
+derive_more = "0.99.17"
+actix-rt = "2.7.0"
