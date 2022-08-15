@@ -2,7 +2,7 @@ use std::fmt;
 
 use serde::de;
 
-use crate::{AtError, AtResult, Parse};
+use crate::{AsResult, Error, Parse};
 
 /// The maximum per-worker number of concurrent connections.
 ///
@@ -19,7 +19,7 @@ pub enum MaxConnections {
 }
 
 impl Parse for MaxConnections {
-    fn parse(string: &str) -> AtResult<Self> {
+    fn parse(string: &str) -> AsResult<Self> {
         match string {
             "default" => Ok(MaxConnections::Default),
             string => match string.parse::<usize>() {
@@ -54,7 +54,7 @@ impl<'de> de::Deserialize<'de> for MaxConnections {
             {
                 match MaxConnections::parse(value) {
                     Ok(max_connections) => Ok(max_connections),
-                    Err(AtError::InvalidValue { expected, got, .. }) => Err(
+                    Err(Error::InvalidValue { expected, got, .. }) => Err(
                         de::Error::invalid_value(de::Unexpected::Str(&got), &expected),
                     ),
                     Err(_) => unreachable!(),

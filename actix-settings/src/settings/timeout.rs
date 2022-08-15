@@ -4,7 +4,7 @@ use once_cell::sync::Lazy;
 use regex::Regex;
 use serde::de;
 
-use crate::{AtError, AtResult, Parse};
+use crate::{AsResult, Error, Parse};
 
 /// A timeout duration in milliseconds or seconds.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -20,7 +20,7 @@ pub enum Timeout {
 }
 
 impl Parse for Timeout {
-    fn parse(string: &str) -> AtResult<Self> {
+    fn parse(string: &str) -> AsResult<Self> {
         pub static FMT: Lazy<Regex> = Lazy::new(|| {
             Regex::new(r"^\d+ (milliseconds|seconds)$").expect("Failed to compile regex: FMT")
         });
@@ -85,7 +85,7 @@ impl<'de> de::Deserialize<'de> for Timeout {
             {
                 match Timeout::parse(value) {
                     Ok(num_workers) => Ok(num_workers),
-                    Err(AtError::InvalidValue { expected, got, .. }) => Err(
+                    Err(Error::InvalidValue { expected, got, .. }) => Err(
                         de::Error::invalid_value(de::Unexpected::Str(&got), &expected),
                     ),
                     Err(_) => unreachable!(),

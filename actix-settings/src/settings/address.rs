@@ -2,7 +2,7 @@ use once_cell::sync::Lazy;
 use regex::Regex;
 use serde::Deserialize;
 
-use crate::{AtError, Parse};
+use crate::{Error, Parse};
 
 static ADDR_REGEX: Lazy<Regex> = Lazy::new(|| {
     Regex::new(
@@ -48,14 +48,14 @@ pub struct Address {
 }
 
 impl Parse for Address {
-    fn parse(string: &str) -> Result<Self, AtError> {
+    fn parse(string: &str) -> Result<Self, Error> {
         let mut items = string
             .trim()
             .trim_start_matches('[')
             .trim_end_matches(']')
             .split(',');
 
-        let parse_error = || AtError::ParseAddressError(string.to_string());
+        let parse_error = || Error::ParseAddressError(string.to_string());
 
         if !ADDR_REGEX.is_match(string) {
             return Err(parse_error());
@@ -69,8 +69,8 @@ impl Parse for Address {
 }
 
 impl Parse for Vec<Address> {
-    fn parse(string: &str) -> Result<Self, AtError> {
-        let parse_error = || AtError::ParseAddressError(string.to_string());
+    fn parse(string: &str) -> Result<Self, Error> {
+        let parse_error = || Error::ParseAddressError(string.to_string());
 
         if !ADDR_LIST_REGEX.is_match(string) {
             return Err(parse_error());

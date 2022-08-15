@@ -4,7 +4,7 @@ use once_cell::sync::Lazy;
 use regex::Regex;
 use serde::de;
 
-use crate::{AtError, AtResult, Parse};
+use crate::{AsResult, Error, Parse};
 
 /// The server keep-alive preference.
 ///
@@ -28,7 +28,7 @@ pub enum KeepAlive {
 }
 
 impl Parse for KeepAlive {
-    fn parse(string: &str) -> AtResult<Self> {
+    fn parse(string: &str) -> AsResult<Self> {
         pub(crate) static FMT: Lazy<Regex> =
             Lazy::new(|| Regex::new(r"^\d+ seconds$").expect("Failed to compile regex: FMT"));
 
@@ -82,7 +82,7 @@ impl<'de> de::Deserialize<'de> for KeepAlive {
             {
                 match KeepAlive::parse(value) {
                     Ok(keep_alive) => Ok(keep_alive),
-                    Err(AtError::InvalidValue { expected, got, .. }) => Err(
+                    Err(Error::InvalidValue { expected, got, .. }) => Err(
                         de::Error::invalid_value(de::Unexpected::Str(&got), &expected),
                     ),
                     Err(_) => unreachable!(),

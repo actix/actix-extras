@@ -1,13 +1,14 @@
 //! Configuration options to tune the behaviour of [`SessionMiddleware`].
 
 use actix_web::cookie::{time::Duration, Key, SameSite};
+use derive_more::From;
 
 use crate::{storage::SessionStore, SessionMiddleware};
 
 /// Determines what type of session cookie should be used and how its lifecycle should be managed.
 ///
 /// Used by [`SessionMiddlewareBuilder::session_lifecycle`].
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, From)]
 #[non_exhaustive]
 pub enum SessionLifecycle {
     /// The session cookie will expire when the current browser session ends.
@@ -27,18 +28,6 @@ pub enum SessionLifecycle {
     PersistentSession(PersistentSession),
 }
 
-impl From<BrowserSession> for SessionLifecycle {
-    fn from(session: BrowserSession) -> Self {
-        Self::BrowserSession(session)
-    }
-}
-
-impl From<PersistentSession> for SessionLifecycle {
-    fn from(session: PersistentSession) -> Self {
-        Self::PersistentSession(session)
-    }
-}
-
 /// A [session lifecycle](SessionLifecycle) strategy where the session cookie expires when the
 /// browser's current session ends.
 ///
@@ -46,6 +35,9 @@ impl From<PersistentSession> for SessionLifecycle {
 /// continue running in the background when the browser is closed—session cookies are not deleted
 /// and they will still be available when the browser is opened again. Check the documentation of
 /// the browsers you are targeting for up-to-date information.
+///
+/// Due to its `Into<SessionLifecycle>` implementation, a `BrowserSession` can be passed directly
+/// to [`SessionMiddlewareBuilder::session_lifecycle()`].
 #[derive(Debug, Clone)]
 pub struct BrowserSession {
     state_ttl: Duration,
@@ -103,6 +95,26 @@ impl Default for BrowserSession {
 /// Persistent cookies have a pre-determined expiration, specified via the `Max-Age` or `Expires`
 /// attribute. They do not disappear when the current browser session ends.
 ///
+/// Due to its `Into<SessionLifecycle>` implementation, a `PersistentSession` can be passed directly
+/// to [`SessionMiddlewareBuilder::session_lifecycle()`].
+///
+/// # Examples
+/// ```
+/// use actix_web::cookie::time::Duration;
+/// use actix_session::SessionMiddleware;
+/// use actix_session::config::{PersistentSession, TtlExtensionPolicy};
+///
+/// const SECS_IN_WEEK: i64 = 60 * 60 * 24 * 7;
+///
+/// // a session lifecycle with a time-to-live (expiry) of 1 week and default extension policy
+/// PersistentSession::default().session_ttl(Duration::seconds(SECS_IN_WEEK));
+///
+/// // a session lifecycle with the default time-to-live (expiry) and a custom extension policy
+/// PersistentSession::default()
+///     // this policy causes the session state's TTL to be refreshed on every request
+///     .session_ttl_extension_policy(TtlExtensionPolicy::OnEveryRequest);
+/// ```
+///
 /// [persistent]: https://www.whitehatsec.com/glossary/content/persistent-session-cookie
 #[derive(Debug, Clone)]
 pub struct PersistentSession {
@@ -113,9 +125,9 @@ pub struct PersistentSession {
 impl PersistentSession {
     /// Specifies how long the session cookie should live.
     ///
-    /// Defaults to 1 day if left unspecified.
-    ///
     /// The session TTL is also used as the TTL for the session state in the storage backend.
+    ///
+    /// Defaults to 1 day.
     ///
     /// A persistent session can live more than the specified TTL if the TTL is extended.
     /// See [`session_ttl_extension_policy`](Self::session_ttl_extension_policy) for more details.
@@ -127,7 +139,7 @@ impl PersistentSession {
     /// Determines under what circumstances the TTL of your session should be extended.
     /// See [`TtlExtensionPolicy`] for more details.
     ///
-    /// Defaults to [`TtlExtensionPolicy::OnStateChanges`] if left unspecified.
+    /// Defaults to [`TtlExtensionPolicy::OnStateChanges`].
     pub fn session_ttl_extension_policy(
         mut self,
         ttl_extension_policy: TtlExtensionPolicy,
@@ -148,23 +160,23 @@ impl Default for PersistentSession {
 
 /// Configuration for which events should trigger an extension of the time-to-live for your session.
 ///
-/// If you are using a [`BrowserSession`], `TtlExtensionPolicy` controls how often the TTL of
-/// the session state should be refreshed. The browser is in control of the lifecycle of the
-/// session cookie.
+/// If you are using a [`BrowserSession`], `TtlExtensionPolicy` controls how often the TTL of the
+/// session state should be refreshed. The browser is in control of the lifecycle of the session
+/// cookie.
 ///
-/// If you are using a [`PersistentSession`], `TtlExtensionPolicy` controls both the expiration
-/// of the session cookie and the TTL of the session state.
+/// If you are using a [`PersistentSession`], `TtlExtensionPolicy` controls both the expiration of
+/// the session cookie and the TTL of the session state on the storage backend.
 #[derive(Debug, Clone)]
 #[non_exhaustive]
 pub enum TtlExtensionPolicy {
     /// The TTL is refreshed every time the server receives a request associated with a session.
     ///
     /// # Performance impact
-    /// Refreshing the TTL on every request is not free.
-    /// It implies a refresh of the TTL on the session state. This translates into a request over
-    /// the network if you are using a remote system as storage backend (e.g. Redis).
-    /// This impacts both the total load on your storage backend (i.e. number of
-    /// queries it has to handle) and the latency of the requests served by your server.
+    /// Refreshing the TTL on every request is not free. It implies a refresh of the TTL on the
+    /// session state. This translates into a request over the network if you are using a remote
+    /// system as storage backend (e.g. Redis). This impacts both the total load on your storage
+    /// backend (i.e. number of queries it has to handle) and the latency of the requests served by
+    /// your server.
     OnEveryRequest,
 
     /// The TTL is refreshed every time the session state changes or the session key is renewed.
@@ -197,8 +209,7 @@ pub(crate) const fn default_ttl_extension_policy() -> TtlExtensionPolicy {
     TtlExtensionPolicy::OnStateChanges
 }
 
-/// A fluent builder to construct a [`SessionMiddleware`] instance with custom configuration
-/// parameters.
+/// A fluent, customized [`SessionMiddleware`] builder.
 #[must_use]
 pub struct SessionMiddlewareBuilder<Store: SessionStore> {
     storage_backend: Store,
@@ -236,6 +247,22 @@ impl<Store: SessionStore> SessionMiddlewareBuilder<Store> {
     /// Check out [`SessionLifecycle`]'s documentation for more details on the available options.
     ///
     /// Default is [`SessionLifecycle::BrowserSession`].
+    ///
+    /// # Examples
+    /// ```
+    /// use actix_web::cookie::{Key, time::Duration};
+    /// use actix_session::{SessionMiddleware, config::PersistentSession};
+    /// use actix_session::storage::CookieSessionStore;
+    ///
+    /// const SECS_IN_WEEK: i64 = 60 * 60 * 24 * 7;
+    ///
+    /// // creates a session middleware with a time-to-live (expiry) of 1 week
+    /// SessionMiddleware::builder(CookieSessionStore::default(), Key::from(&[0; 64]))
+    ///     .session_lifecycle(
+    ///         PersistentSession::default().session_ttl(Duration::seconds(SECS_IN_WEEK))
+    ///     )
+    ///     .build();
+    /// ```
     pub fn session_lifecycle<S: Into<SessionLifecycle>>(mut self, session_lifecycle: S) -> Self {
         match session_lifecycle.into() {
             SessionLifecycle::BrowserSession(BrowserSession {
