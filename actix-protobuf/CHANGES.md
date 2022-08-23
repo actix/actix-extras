@@ -1,10 +1,9 @@
 # Changes
 
 ## Unreleased - 2022-xx-xx
-- Updated `prost` dependency to `0.11`.
-- Updated `future-utils` dependency to remove the patch version.
-- Updated `derive_more` dependency to remove the patch version.
 - Added `application/x-protobuf` as an acceptable header.
+- Updated `prost` dependency to `0.11`.
+
 
 ## 0.8.0 - 2022-06-25
 - Update `prost` dependency to `0.10`.
