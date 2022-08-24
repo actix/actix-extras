@@ -1,6 +1,9 @@
 # Changes
 
 ## Unreleased - 2022-xx-xx
+
+
+## 0.9.0 - 2022-08-24
 - Added `application/x-protobuf` as an acceptable header.
 - Updated `prost` dependency to `0.11`.
 
