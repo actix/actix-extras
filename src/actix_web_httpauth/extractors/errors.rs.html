@@ -77,84 +77,84 @@
 <span id="77">77</span>
 <span id="78">78</span>
 <span id="79">79</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">error::Error</span>, <span class="ident">fmt</span>};
+</pre><pre class="rust"><code><span class="kw">use </span>std::{error::Error, fmt};
 
-<span class="kw">use</span> <span class="ident">actix_web</span>::{<span class="ident">http::StatusCode</span>, <span class="ident">HttpResponse</span>, <span class="ident">ResponseError</span>};
+<span class="kw">use </span>actix_web::{http::StatusCode, HttpResponse, ResponseError};
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::headers::www_authenticate</span>::{<span class="ident">Challenge</span>, <span class="ident">WwwAuthenticate</span>};
+<span class="kw">use </span><span class="kw">crate</span>::headers::www_authenticate::{Challenge, WwwAuthenticate};
 
-<span class="doccomment">/// Authentication error returned by authentication extractors.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Different extractors may extend `AuthenticationError` implementation in order to provide access</span>
-<span class="doccomment">/// inner challenge fields.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AuthenticationError</span><span class="op">&lt;</span><span class="ident">C</span>: <span class="ident">Challenge</span><span class="op">&gt;</span> {
-    <span class="ident">challenge</span>: <span class="ident">C</span>,
-    <span class="ident">status_code</span>: <span class="ident">StatusCode</span>,
+<span class="doccomment">/// Authentication error returned by authentication extractors.
+///
+/// Different extractors may extend `AuthenticationError` implementation in order to provide access
+/// inner challenge fields.
+</span><span class="attribute">#[derive(Debug)]
+</span><span class="kw">pub struct </span>AuthenticationError&lt;C: Challenge&gt; {
+    challenge: C,
+    status_code: StatusCode,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">C</span>: <span class="ident">Challenge</span><span class="op">&gt;</span> <span class="ident">AuthenticationError</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Creates new authentication error from the provided `challenge`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// By default returned error will resolve into the `HTTP 401` status code.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">challenge</span>: <span class="ident">C</span>) -&gt; <span class="ident">AuthenticationError</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span> {
-        <span class="ident">AuthenticationError</span> {
-            <span class="ident">challenge</span>,
-            <span class="ident">status_code</span>: <span class="ident">StatusCode::UNAUTHORIZED</span>,
+<span class="kw">impl</span>&lt;C: Challenge&gt; AuthenticationError&lt;C&gt; {
+    <span class="doccomment">/// Creates new authentication error from the provided `challenge`.
+    ///
+    /// By default returned error will resolve into the `HTTP 401` status code.
+    </span><span class="kw">pub fn </span>new(challenge: C) -&gt; AuthenticationError&lt;C&gt; {
+        AuthenticationError {
+            challenge,
+            status_code: StatusCode::UNAUTHORIZED,
         }
     }
 
-    <span class="doccomment">/// Returns mutable reference to the inner challenge instance.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">challenge_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident">C</span> {
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">challenge</span>
+    <span class="doccomment">/// Returns mutable reference to the inner challenge instance.
+    </span><span class="kw">pub fn </span>challenge_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>C {
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>.challenge
     }
 
-    <span class="doccomment">/// Returns mutable reference to the inner status code.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Can be used to override returned status code, but by default this lib tries to stick to the</span>
-    <span class="doccomment">/// RFC, so it might be unreasonable.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">status_code_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident">StatusCode</span> {
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">status_code</span>
-    }
-}
-
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">C</span>: <span class="ident">Challenge</span><span class="op">&gt;</span> <span class="ident">fmt::Display</span> <span class="kw">for</span> <span class="ident">AuthenticationError</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="ident">fmt::Display::fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">status_code</span>, <span class="ident">f</span>)
+    <span class="doccomment">/// Returns mutable reference to the inner status code.
+    ///
+    /// Can be used to override returned status code, but by default this lib tries to stick to the
+    /// RFC, so it might be unreasonable.
+    </span><span class="kw">pub fn </span>status_code_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>StatusCode {
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>.status_code
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">C</span>: <span class="ident">Challenge</span> <span class="op">+</span> <span class="lifetime">&#39;static</span><span class="op">&gt;</span> <span class="ident">Error</span> <span class="kw">for</span> <span class="ident">AuthenticationError</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span> {}
-
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">C</span>: <span class="ident">Challenge</span> <span class="op">+</span> <span class="lifetime">&#39;static</span><span class="op">&gt;</span> <span class="ident">ResponseError</span> <span class="kw">for</span> <span class="ident">AuthenticationError</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">status_code</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">StatusCode</span> {
-        <span class="self">self</span>.<span class="ident">status_code</span>
-    }
-
-    <span class="kw">fn</span> <span class="ident">error_response</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">HttpResponse</span> {
-        <span class="ident">HttpResponse::build</span>(<span class="self">self</span>.<span class="ident">status_code</span>())
-            .<span class="ident">insert_header</span>(<span class="ident">WwwAuthenticate</span>(<span class="self">self</span>.<span class="ident">challenge</span>.<span class="ident">clone</span>()))
-            .<span class="ident">finish</span>()
+<span class="kw">impl</span>&lt;C: Challenge&gt; fmt::Display <span class="kw">for </span>AuthenticationError&lt;C&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+        fmt::Display::fmt(<span class="kw-2">&amp;</span><span class="self">self</span>.status_code, f)
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="ident">actix_web::Error</span>;
+<span class="kw">impl</span>&lt;C: Challenge + <span class="lifetime">&#39;static</span>&gt; Error <span class="kw">for </span>AuthenticationError&lt;C&gt; {}
 
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::headers::www_authenticate::basic::Basic</span>;
+<span class="kw">impl</span>&lt;C: Challenge + <span class="lifetime">&#39;static</span>&gt; ResponseError <span class="kw">for </span>AuthenticationError&lt;C&gt; {
+    <span class="kw">fn </span>status_code(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; StatusCode {
+        <span class="self">self</span>.status_code
+    }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_status_code_is_preserved_across_error_conversions</span>() {
-        <span class="kw">let</span> <span class="ident">ae</span> <span class="op">=</span> <span class="ident">AuthenticationError::new</span>(<span class="ident">Basic::default</span>());
-        <span class="kw">let</span> <span class="ident">expected</span> <span class="op">=</span> <span class="ident">ae</span>.<span class="ident">status_code</span>;
+    <span class="kw">fn </span>error_response(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; HttpResponse {
+        HttpResponse::build(<span class="self">self</span>.status_code())
+            .insert_header(WwwAuthenticate(<span class="self">self</span>.challenge.clone()))
+            .finish()
+    }
+}
 
-        <span class="comment">// Converting the AuthenticationError into a ResponseError should preserve the status code.</span>
-        <span class="kw">let</span> <span class="ident">err</span> <span class="op">=</span> <span class="ident">Error::from</span>(<span class="ident">ae</span>);
-        <span class="kw">let</span> <span class="ident">res_err</span> <span class="op">=</span> <span class="ident">err</span>.<span class="ident">as_response_error</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">expected</span>, <span class="ident">res_err</span>.<span class="ident">status_code</span>());
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use </span>actix_web::Error;
+
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use </span><span class="kw">crate</span>::headers::www_authenticate::basic::Basic;
+
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_status_code_is_preserved_across_error_conversions() {
+        <span class="kw">let </span>ae = AuthenticationError::new(Basic::default());
+        <span class="kw">let </span>expected = ae.status_code;
+
+        <span class="comment">// Converting the AuthenticationError into a ResponseError should preserve the status code.
+        </span><span class="kw">let </span>err = Error::from(ae);
+        <span class="kw">let </span>res_err = err.as_response_error();
+        <span class="macro">assert_eq!</span>(expected, res_err.status_code());
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="actix_web_httpauth" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (34a6cae28 2022-08-09)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="actix_web_httpauth" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (060e47f74 2022-08-23)" ></div></body></html>

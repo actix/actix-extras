@@ -6,37 +6,37 @@
 <code>Scope::wrap()</code>, or <code>Resource::wrap()</code> methods.</p>
 <p>This CORS middleware automatically handles <code>OPTIONS</code> preflight requests.</p>
 <h2 id="example"><a href="#example">Example</a></h2>
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">actix_cors::Cors</span>;
-<span class="kw">use</span> <span class="ident">actix_web</span>::{<span class="ident">get</span>, <span class="ident">http</span>, <span class="ident">web</span>, <span class="ident">App</span>, <span class="ident">HttpRequest</span>, <span class="ident">HttpResponse</span>, <span class="ident">HttpServer</span>};
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>actix_cors::Cors;
+<span class="kw">use </span>actix_web::{get, http, web, App, HttpRequest, HttpResponse, HttpServer};
 
-<span class="attribute">#[<span class="ident">get</span>(<span class="string">&quot;/index.html&quot;</span>)]</span>
-<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">index</span>(<span class="ident">req</span>: <span class="ident">HttpRequest</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
-    <span class="string">&quot;&lt;p&gt;Hello World!&lt;/p&gt;&quot;</span>
-}
+<span class="attribute">#[get(<span class="string">&quot;/index.html&quot;</span>)]
+</span><span class="kw">async fn </span>index(req: HttpRequest) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str {
+    <span class="string">&quot;&lt;p&gt;Hello World!&lt;/p&gt;&quot;
+</span>}
 
-<span class="attribute">#[<span class="ident">actix_web::main</span>]</span>
-<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">main</span>() -&gt; <span class="ident">std::io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="ident">HttpServer::new</span>(<span class="op">|</span><span class="op">|</span> {
-        <span class="kw">let</span> <span class="ident">cors</span> <span class="op">=</span> <span class="ident">Cors::default</span>()
-              .<span class="ident">allowed_origin</span>(<span class="string">&quot;https://www.rust-lang.org/&quot;</span>)
-              .<span class="ident">allowed_origin_fn</span>(<span class="op">|</span><span class="ident">origin</span>, <span class="ident">_req_head</span><span class="op">|</span> {
-                  <span class="ident">origin</span>.<span class="ident">as_bytes</span>().<span class="ident">ends_with</span>(<span class="string">b&quot;.rust-lang.org&quot;</span>)
+<span class="attribute">#[actix_web::main]
+</span><span class="kw">async fn </span>main() -&gt; std::io::Result&lt;()&gt; {
+    HttpServer::new(|| {
+        <span class="kw">let </span>cors = Cors::default()
+              .allowed_origin(<span class="string">&quot;https://www.rust-lang.org/&quot;</span>)
+              .allowed_origin_fn(|origin, _req_head| {
+                  origin.as_bytes().ends_with(<span class="string">b&quot;.rust-lang.org&quot;</span>)
               })
-              .<span class="ident">allowed_methods</span>(<span class="macro">vec!</span>[<span class="string">&quot;GET&quot;</span>, <span class="string">&quot;POST&quot;</span>])
-              .<span class="ident">allowed_headers</span>(<span class="macro">vec!</span>[<span class="ident">http::header::AUTHORIZATION</span>, <span class="ident">http::header::ACCEPT</span>])
-              .<span class="ident">allowed_header</span>(<span class="ident">http::header::CONTENT_TYPE</span>)
-              .<span class="ident">max_age</span>(<span class="number">3600</span>);
+              .allowed_methods(<span class="macro">vec!</span>[<span class="string">&quot;GET&quot;</span>, <span class="string">&quot;POST&quot;</span>])
+              .allowed_headers(<span class="macro">vec!</span>[http::header::AUTHORIZATION, http::header::ACCEPT])
+              .allowed_header(http::header::CONTENT_TYPE)
+              .max_age(<span class="number">3600</span>);
 
-        <span class="ident">App::new</span>()
-            .<span class="ident">wrap</span>(<span class="ident">cors</span>)
-            .<span class="ident">service</span>(<span class="ident">index</span>)
+        App::new()
+            .wrap(cors)
+            .service(index)
     })
-    .<span class="ident">bind</span>((<span class="string">&quot;127.0.0.1&quot;</span>, <span class="number">8080</span>))<span class="question-mark">?</span>
-    .<span class="ident">run</span>()
+    .bind((<span class="string">&quot;127.0.0.1&quot;</span>, <span class="number">8080</span>))<span class="question-mark">?
+    </span>.run()
     .<span class="kw">await</span>;
 
     <span class="prelude-val">Ok</span>(())
 }</code></pre></div>
 </div></details><h2 id="structs" class="small-section-header"><a href="#structs">Structs</a></h2><div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Cors.html" title="actix_cors::Cors struct">Cors</a></div><div class="item-right docblock-short"><p>Builder for CORS middleware.</p>
 </div></div></div><h2 id="enums" class="small-section-header"><a href="#enums">Enums</a></h2><div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.CorsError.html" title="actix_cors::CorsError enum">CorsError</a></div><div class="item-right docblock-short"><p>Errors that can occur when processing CORS guarded requests.</p>
-</div></div></div></section></div></main><div id="rustdoc-vars" data-root-path="../" data-current-crate="actix_cors" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (34a6cae28 2022-08-09)" ></div></body></html>
+</div></div></div></section></div></main><div id="rustdoc-vars" data-root-path="../" data-current-crate="actix_cors" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (060e47f74 2022-08-23)" ></div></body></html>

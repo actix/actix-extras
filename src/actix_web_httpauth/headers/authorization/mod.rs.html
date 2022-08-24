@@ -7,14 +7,14 @@
 <span id="7">7</span>
 <span id="8">8</span>
 <span id="9">9</span>
-</pre><pre class="rust"><code><span class="doccomment">//! `Authorization` header and various auth schemes.</span>
+</pre><pre class="rust"><code><span class="doccomment">//! `Authorization` header and various auth schemes.
 
-<span class="kw">mod</span> <span class="ident">errors</span>;
-<span class="kw">mod</span> <span class="ident">header</span>;
-<span class="kw">mod</span> <span class="ident">scheme</span>;
+</span><span class="kw">mod </span>errors;
+<span class="kw">mod </span>header;
+<span class="kw">mod </span>scheme;
 
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::errors::ParseError</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::header::Authorization</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::scheme</span>::{<span class="ident">basic::Basic</span>, <span class="ident">bearer::Bearer</span>, <span class="ident">Scheme</span>};
+<span class="kw">pub use </span><span class="self">self</span>::errors::ParseError;
+<span class="kw">pub use </span><span class="self">self</span>::header::Authorization;
+<span class="kw">pub use </span><span class="self">self</span>::scheme::{basic::Basic, bearer::Bearer, Scheme};
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="actix_web_httpauth" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (34a6cae28 2022-08-09)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="actix_web_httpauth" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (060e47f74 2022-08-23)" ></div></body></html>

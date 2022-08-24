@@ -383,388 +383,388 @@
 <span id="381">381</span>
 <span id="382">382</span>
 <span id="383">383</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections::HashSet</span>, <span class="ident">convert::TryFrom</span>, <span class="ident">convert::TryInto</span>, <span class="ident">fmt</span>, <span class="ident">rc::Rc</span>};
+</pre><pre class="rust"><code><span class="kw">use </span>std::{collections::HashSet, convert::TryFrom, convert::TryInto, fmt, rc::Rc};
 
-<span class="kw">use</span> <span class="ident">actix_web</span>::{
-    <span class="ident">dev::RequestHead</span>,
-    <span class="ident">error::Result</span>,
-    <span class="ident">http</span>::{
-        <span class="ident">header</span>::{<span class="self">self</span>, <span class="ident">HeaderMap</span>, <span class="ident">HeaderName</span>, <span class="ident">HeaderValue</span>},
-        <span class="ident">Method</span>,
+<span class="kw">use </span>actix_web::{
+    dev::RequestHead,
+    error::Result,
+    http::{
+        header::{<span class="self">self</span>, HeaderMap, HeaderName, HeaderValue},
+        Method,
     },
 };
-<span class="kw">use</span> <span class="ident">once_cell::sync::Lazy</span>;
-<span class="kw">use</span> <span class="ident">smallvec::SmallVec</span>;
+<span class="kw">use </span>once_cell::sync::Lazy;
+<span class="kw">use </span>smallvec::SmallVec;
 
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">AllOrSome</span>, <span class="ident">CorsError</span>};
+<span class="kw">use crate</span>::{AllOrSome, CorsError};
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">OriginFn</span> {
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::type_complexity</span>)]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">boxed_fn</span>: <span class="ident">Rc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Fn</span>(<span class="kw-2">&amp;</span><span class="ident">HeaderValue</span>, <span class="kw-2">&amp;</span><span class="ident">RequestHead</span>) -&gt; <span class="ident">bool</span><span class="op">&gt;</span>,
+<span class="attribute">#[derive(Clone)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>OriginFn {
+    <span class="attribute">#[allow(clippy::type_complexity)]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) boxed_fn: Rc&lt;<span class="kw">dyn </span>Fn(<span class="kw-2">&amp;</span>HeaderValue, <span class="kw-2">&amp;</span>RequestHead) -&gt; bool&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">OriginFn</span> {
-    <span class="doccomment">/// Dummy default for use in tiny_vec. Do not use.</span>
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">boxed_fn</span>: <span class="ident">Rc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Fn</span>(<span class="kw-2">&amp;</span><span class="kw">_</span>, <span class="kw-2">&amp;</span><span class="kw">_</span>) -&gt; <span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Rc::new</span>(<span class="op">|</span><span class="ident">_origin</span>, <span class="ident">_req_head</span><span class="op">|</span> <span class="bool-val">false</span>);
-        <span class="self">Self</span> { <span class="ident">boxed_fn</span> }
+<span class="kw">impl </span>Default <span class="kw">for </span>OriginFn {
+    <span class="doccomment">/// Dummy default for use in tiny_vec. Do not use.
+    </span><span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>boxed_fn: Rc&lt;<span class="kw">dyn </span>Fn(<span class="kw-2">&amp;</span><span class="kw">_</span>, <span class="kw-2">&amp;</span><span class="kw">_</span>) -&gt; <span class="kw">_</span>&gt; = Rc::new(|_origin, _req_head| <span class="bool-val">false</span>);
+        <span class="self">Self </span>{ boxed_fn }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">fmt::Debug</span> <span class="kw">for</span> <span class="ident">OriginFn</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;origin_fn&quot;</span>)
+<span class="kw">impl </span>fmt::Debug <span class="kw">for </span>OriginFn {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+        f.write_str(<span class="string">&quot;origin_fn&quot;</span>)
     }
 }
 
-<span class="doccomment">/// Try to parse header value as HTTP method.</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">header_value_try_into_method</span>(<span class="ident">hdr</span>: <span class="kw-2">&amp;</span><span class="ident">HeaderValue</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Method</span><span class="op">&gt;</span> {
-    <span class="ident">hdr</span>.<span class="ident">to_str</span>()
-        .<span class="ident">ok</span>()
-        .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">meth</span><span class="op">|</span> <span class="ident">Method::try_from</span>(<span class="ident">meth</span>).<span class="ident">ok</span>())
+<span class="doccomment">/// Try to parse header value as HTTP method.
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>header_value_try_into_method(hdr: <span class="kw-2">&amp;</span>HeaderValue) -&gt; <span class="prelude-ty">Option</span>&lt;Method&gt; {
+    hdr.to_str()
+        .ok()
+        .and_then(|meth| Method::try_from(meth).ok())
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">Inner</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">allowed_origins</span>: <span class="ident">AllOrSome</span><span class="op">&lt;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">HeaderValue</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">allowed_origins_fns</span>: <span class="ident">SmallVec</span><span class="op">&lt;</span>[<span class="ident">OriginFn</span>; <span class="number">4</span>]<span class="op">&gt;</span>,
+<span class="attribute">#[derive(Debug, Clone)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Inner {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) allowed_origins: AllOrSome&lt;HashSet&lt;HeaderValue&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) allowed_origins_fns: SmallVec&lt;[OriginFn; <span class="number">4</span>]&gt;,
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">allowed_methods</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Method</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">allowed_methods_baked</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">HeaderValue</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) allowed_methods: HashSet&lt;Method&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) allowed_methods_baked: <span class="prelude-ty">Option</span>&lt;HeaderValue&gt;,
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">allowed_headers</span>: <span class="ident">AllOrSome</span><span class="op">&lt;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">HeaderName</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">allowed_headers_baked</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">HeaderValue</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) allowed_headers: AllOrSome&lt;HashSet&lt;HeaderName&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) allowed_headers_baked: <span class="prelude-ty">Option</span>&lt;HeaderValue&gt;,
 
-    <span class="doccomment">/// `All` will echo back `Access-Control-Request-Header` list.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">expose_headers</span>: <span class="ident">AllOrSome</span><span class="op">&lt;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">HeaderName</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">expose_headers_baked</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">HeaderValue</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// `All` will echo back `Access-Control-Request-Header` list.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) expose_headers: AllOrSome&lt;HashSet&lt;HeaderName&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) expose_headers_baked: <span class="prelude-ty">Option</span>&lt;HeaderValue&gt;,
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">max_age</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">preflight</span>: <span class="ident">bool</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">send_wildcard</span>: <span class="ident">bool</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">supports_credentials</span>: <span class="ident">bool</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">vary_header</span>: <span class="ident">bool</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) max_age: <span class="prelude-ty">Option</span>&lt;usize&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) preflight: bool,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) send_wildcard: bool,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) supports_credentials: bool,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) vary_header: bool,
 }
 
-<span class="kw">static</span> <span class="ident">EMPTY_ORIGIN_SET</span>: <span class="ident">Lazy</span><span class="op">&lt;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">HeaderValue</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Lazy::new</span>(<span class="ident">HashSet::new</span>);
+<span class="kw">static </span>EMPTY_ORIGIN_SET: Lazy&lt;HashSet&lt;HeaderValue&gt;&gt; = Lazy::new(HashSet::new);
 
-<span class="kw">impl</span> <span class="ident">Inner</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">validate_origin</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">req</span>: <span class="kw-2">&amp;</span><span class="ident">RequestHead</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CorsError</span><span class="op">&gt;</span> {
-        <span class="comment">// return early if all origins are allowed or get ref to allowed origins set</span>
-        <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::mutable_key_type</span>)]</span>
-        <span class="kw">let</span> <span class="ident">allowed_origins</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">allowed_origins</span> {
-            <span class="ident">AllOrSome::All</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">allowed_origins_fns</span>.<span class="ident">is_empty</span>() =&gt; <span class="kw">return</span> <span class="prelude-val">Ok</span>(()),
-            <span class="ident">AllOrSome::Some</span>(<span class="ident">allowed_origins</span>) =&gt; <span class="ident">allowed_origins</span>,
-            <span class="comment">// only function origin validators are defined</span>
-            <span class="kw">_</span> =&gt; <span class="kw-2">&amp;</span><span class="ident">EMPTY_ORIGIN_SET</span>,
+<span class="kw">impl </span>Inner {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>validate_origin(<span class="kw-2">&amp;</span><span class="self">self</span>, req: <span class="kw-2">&amp;</span>RequestHead) -&gt; <span class="prelude-ty">Result</span>&lt;(), CorsError&gt; {
+        <span class="comment">// return early if all origins are allowed or get ref to allowed origins set
+        </span><span class="attribute">#[allow(clippy::mutable_key_type)]
+        </span><span class="kw">let </span>allowed_origins = <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.allowed_origins {
+            AllOrSome::All <span class="kw">if </span><span class="self">self</span>.allowed_origins_fns.is_empty() =&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(()),
+            AllOrSome::Some(allowed_origins) =&gt; allowed_origins,
+            <span class="comment">// only function origin validators are defined
+            </span><span class="kw">_ </span>=&gt; <span class="kw-2">&amp;</span>EMPTY_ORIGIN_SET,
         };
 
-        <span class="comment">// get origin header and try to parse as string</span>
-        <span class="kw">match</span> <span class="ident">req</span>.<span class="ident">headers</span>().<span class="ident">get</span>(<span class="ident">header::ORIGIN</span>) {
-            <span class="comment">// origin header exists and is a string</span>
-            <span class="prelude-val">Some</span>(<span class="ident">origin</span>) =&gt; {
-                <span class="kw">if</span> <span class="ident">allowed_origins</span>.<span class="ident">contains</span>(<span class="ident">origin</span>) <span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">validate_origin_fns</span>(<span class="ident">origin</span>, <span class="ident">req</span>) {
+        <span class="comment">// get origin header and try to parse as string
+        </span><span class="kw">match </span>req.headers().get(header::ORIGIN) {
+            <span class="comment">// origin header exists and is a string
+            </span><span class="prelude-val">Some</span>(origin) =&gt; {
+                <span class="kw">if </span>allowed_origins.contains(origin) || <span class="self">self</span>.validate_origin_fns(origin, req) {
                     <span class="prelude-val">Ok</span>(())
-                } <span class="kw">else</span> {
-                    <span class="prelude-val">Err</span>(<span class="ident">CorsError::OriginNotAllowed</span>)
+                } <span class="kw">else </span>{
+                    <span class="prelude-val">Err</span>(CorsError::OriginNotAllowed)
                 }
             }
 
-            <span class="comment">// origin header is missing</span>
-            <span class="comment">// note: with our implementation, the origin header is required for OPTIONS request or</span>
-            <span class="comment">// else this would be unreachable</span>
-            <span class="prelude-val">None</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">CorsError::MissingOrigin</span>),
+            <span class="comment">// origin header is missing
+            // note: with our implementation, the origin header is required for OPTIONS request or
+            // else this would be unreachable
+            </span><span class="prelude-val">None </span>=&gt; <span class="prelude-val">Err</span>(CorsError::MissingOrigin),
         }
     }
 
-    <span class="doccomment">/// Accepts origin if _ANY_ functions return true. Only called when Origin exists.</span>
-    <span class="kw">fn</span> <span class="ident">validate_origin_fns</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">origin</span>: <span class="kw-2">&amp;</span><span class="ident">HeaderValue</span>, <span class="ident">req</span>: <span class="kw-2">&amp;</span><span class="ident">RequestHead</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">allowed_origins_fns</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">any</span>(<span class="op">|</span><span class="ident">origin_fn</span><span class="op">|</span> (<span class="ident">origin_fn</span>.<span class="ident">boxed_fn</span>)(<span class="ident">origin</span>, <span class="ident">req</span>))
+    <span class="doccomment">/// Accepts origin if _ANY_ functions return true. Only called when Origin exists.
+    </span><span class="kw">fn </span>validate_origin_fns(<span class="kw-2">&amp;</span><span class="self">self</span>, origin: <span class="kw-2">&amp;</span>HeaderValue, req: <span class="kw-2">&amp;</span>RequestHead) -&gt; bool {
+        <span class="self">self</span>.allowed_origins_fns
+            .iter()
+            .any(|origin_fn| (origin_fn.boxed_fn)(origin, req))
     }
 
-    <span class="doccomment">/// Only called if origin exists and always after it&#39;s validated.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">access_control_allow_origin</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">req</span>: <span class="kw-2">&amp;</span><span class="ident">RequestHead</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">HeaderValue</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">origin</span> <span class="op">=</span> <span class="ident">req</span>.<span class="ident">headers</span>().<span class="ident">get</span>(<span class="ident">header::ORIGIN</span>);
+    <span class="doccomment">/// Only called if origin exists and always after it&#39;s validated.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>access_control_allow_origin(<span class="kw-2">&amp;</span><span class="self">self</span>, req: <span class="kw-2">&amp;</span>RequestHead) -&gt; <span class="prelude-ty">Option</span>&lt;HeaderValue&gt; {
+        <span class="kw">let </span>origin = req.headers().get(header::ORIGIN);
 
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">allowed_origins</span> {
-            <span class="ident">AllOrSome::All</span> =&gt; {
-                <span class="kw">if</span> <span class="self">self</span>.<span class="ident">send_wildcard</span> {
-                    <span class="prelude-val">Some</span>(<span class="ident">HeaderValue::from_static</span>(<span class="string">&quot;*&quot;</span>))
-                } <span class="kw">else</span> {
-                    <span class="comment">// see note below about why `.cloned()` is correct</span>
-                    <span class="ident">origin</span>.<span class="ident">cloned</span>()
+        <span class="kw">match </span><span class="self">self</span>.allowed_origins {
+            AllOrSome::All =&gt; {
+                <span class="kw">if </span><span class="self">self</span>.send_wildcard {
+                    <span class="prelude-val">Some</span>(HeaderValue::from_static(<span class="string">&quot;*&quot;</span>))
+                } <span class="kw">else </span>{
+                    <span class="comment">// see note below about why `.cloned()` is correct
+                    </span>origin.cloned()
                 }
             }
 
-            <span class="ident">AllOrSome::Some</span>(<span class="kw">_</span>) =&gt; {
-                <span class="comment">// since origin (if it exists) is known to be allowed if this method is called</span>
-                <span class="comment">// then cloning the option is all that is required to be used as an echoed back</span>
-                <span class="comment">// header value (or omitted if None)</span>
-                <span class="ident">origin</span>.<span class="ident">cloned</span>()
+            AllOrSome::Some(<span class="kw">_</span>) =&gt; {
+                <span class="comment">// since origin (if it exists) is known to be allowed if this method is called
+                // then cloning the option is all that is required to be used as an echoed back
+                // header value (or omitted if None)
+                </span>origin.cloned()
             }
         }
     }
 
-    <span class="doccomment">/// Use in preflight checks and therefore operates on header list in</span>
-    <span class="doccomment">/// `Access-Control-Request-Headers` not the actual header set.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">validate_allowed_method</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">req</span>: <span class="kw-2">&amp;</span><span class="ident">RequestHead</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CorsError</span><span class="op">&gt;</span> {
-        <span class="comment">// extract access control header and try to parse as method</span>
-        <span class="kw">let</span> <span class="ident">request_method</span> <span class="op">=</span> <span class="ident">req</span>
-            .<span class="ident">headers</span>()
-            .<span class="ident">get</span>(<span class="ident">header::ACCESS_CONTROL_REQUEST_METHOD</span>)
-            .<span class="ident">map</span>(<span class="ident">header_value_try_into_method</span>);
+    <span class="doccomment">/// Use in preflight checks and therefore operates on header list in
+    /// `Access-Control-Request-Headers` not the actual header set.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>validate_allowed_method(<span class="kw-2">&amp;</span><span class="self">self</span>, req: <span class="kw-2">&amp;</span>RequestHead) -&gt; <span class="prelude-ty">Result</span>&lt;(), CorsError&gt; {
+        <span class="comment">// extract access control header and try to parse as method
+        </span><span class="kw">let </span>request_method = req
+            .headers()
+            .get(header::ACCESS_CONTROL_REQUEST_METHOD)
+            .map(header_value_try_into_method);
 
-        <span class="kw">match</span> <span class="ident">request_method</span> {
-            <span class="comment">// method valid and allowed</span>
-            <span class="prelude-val">Some</span>(<span class="prelude-val">Some</span>(<span class="ident">method</span>)) <span class="kw">if</span> <span class="self">self</span>.<span class="ident">allowed_methods</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">method</span>) =&gt; <span class="prelude-val">Ok</span>(()),
+        <span class="kw">match </span>request_method {
+            <span class="comment">// method valid and allowed
+            </span><span class="prelude-val">Some</span>(<span class="prelude-val">Some</span>(method)) <span class="kw">if </span><span class="self">self</span>.allowed_methods.contains(<span class="kw-2">&amp;</span>method) =&gt; <span class="prelude-val">Ok</span>(()),
 
-            <span class="comment">// method valid but not allowed</span>
-            <span class="prelude-val">Some</span>(<span class="prelude-val">Some</span>(<span class="kw">_</span>)) =&gt; <span class="prelude-val">Err</span>(<span class="ident">CorsError::MethodNotAllowed</span>),
+            <span class="comment">// method valid but not allowed
+            </span><span class="prelude-val">Some</span>(<span class="prelude-val">Some</span>(<span class="kw">_</span>)) =&gt; <span class="prelude-val">Err</span>(CorsError::MethodNotAllowed),
 
-            <span class="comment">// method invalid</span>
-            <span class="prelude-val">Some</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">CorsError::BadRequestMethod</span>),
+            <span class="comment">// method invalid
+            </span><span class="prelude-val">Some</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(CorsError::BadRequestMethod),
 
-            <span class="comment">// method missing so this is not a preflight request</span>
-            <span class="prelude-val">None</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">CorsError::MissingRequestMethod</span>),
+            <span class="comment">// method missing so this is not a preflight request
+            </span><span class="prelude-val">None </span>=&gt; <span class="prelude-val">Err</span>(CorsError::MissingRequestMethod),
         }
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">validate_allowed_headers</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">req</span>: <span class="kw-2">&amp;</span><span class="ident">RequestHead</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CorsError</span><span class="op">&gt;</span> {
-        <span class="comment">// return early if all headers are allowed or get ref to allowed origins set</span>
-        <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::mutable_key_type</span>)]</span>
-        <span class="kw">let</span> <span class="ident">allowed_headers</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">allowed_headers</span> {
-            <span class="ident">AllOrSome::All</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Ok</span>(()),
-            <span class="ident">AllOrSome::Some</span>(<span class="ident">allowed_headers</span>) =&gt; <span class="ident">allowed_headers</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>validate_allowed_headers(<span class="kw-2">&amp;</span><span class="self">self</span>, req: <span class="kw-2">&amp;</span>RequestHead) -&gt; <span class="prelude-ty">Result</span>&lt;(), CorsError&gt; {
+        <span class="comment">// return early if all headers are allowed or get ref to allowed origins set
+        </span><span class="attribute">#[allow(clippy::mutable_key_type)]
+        </span><span class="kw">let </span>allowed_headers = <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.allowed_headers {
+            AllOrSome::All =&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(()),
+            AllOrSome::Some(allowed_headers) =&gt; allowed_headers,
         };
 
-        <span class="comment">// extract access control header as string</span>
-        <span class="comment">// header format should be comma separated header names</span>
-        <span class="kw">let</span> <span class="ident">request_headers</span> <span class="op">=</span> <span class="ident">req</span>
-            .<span class="ident">headers</span>()
-            .<span class="ident">get</span>(<span class="ident">header::ACCESS_CONTROL_REQUEST_HEADERS</span>)
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">hdr</span><span class="op">|</span> <span class="ident">hdr</span>.<span class="ident">to_str</span>());
+        <span class="comment">// extract access control header as string
+        // header format should be comma separated header names
+        </span><span class="kw">let </span>request_headers = req
+            .headers()
+            .get(header::ACCESS_CONTROL_REQUEST_HEADERS)
+            .map(|hdr| hdr.to_str());
 
-        <span class="kw">match</span> <span class="ident">request_headers</span> {
-            <span class="comment">// header list is valid string</span>
-            <span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(<span class="ident">headers</span>)) =&gt; {
-                <span class="comment">// the set is ephemeral we take care not to mutate the</span>
-                <span class="comment">// inserted keys so this lint exception is acceptable</span>
-                <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::mutable_key_type</span>)]</span>
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">request_headers</span> <span class="op">=</span> <span class="ident">HashSet::with_capacity</span>(<span class="number">8</span>);
+        <span class="kw">match </span>request_headers {
+            <span class="comment">// header list is valid string
+            </span><span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(headers)) =&gt; {
+                <span class="comment">// the set is ephemeral we take care not to mutate the
+                // inserted keys so this lint exception is acceptable
+                </span><span class="attribute">#[allow(clippy::mutable_key_type)]
+                </span><span class="kw">let </span><span class="kw-2">mut </span>request_headers = HashSet::with_capacity(<span class="number">8</span>);
 
-                <span class="comment">// try to convert each header name in the comma-separated list</span>
-                <span class="kw">for</span> <span class="ident">hdr</span> <span class="kw">in</span> <span class="ident">headers</span>.<span class="ident">split</span>(<span class="string">&#39;,&#39;</span>) {
-                    <span class="kw">match</span> <span class="ident">hdr</span>.<span class="ident">trim</span>().<span class="ident">try_into</span>() {
-                        <span class="prelude-val">Ok</span>(<span class="ident">hdr</span>) =&gt; <span class="ident">request_headers</span>.<span class="ident">insert</span>(<span class="ident">hdr</span>),
-                        <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">CorsError::BadRequestHeaders</span>),
+                <span class="comment">// try to convert each header name in the comma-separated list
+                </span><span class="kw">for </span>hdr <span class="kw">in </span>headers.split(<span class="string">&#39;,&#39;</span>) {
+                    <span class="kw">match </span>hdr.trim().try_into() {
+                        <span class="prelude-val">Ok</span>(hdr) =&gt; request_headers.insert(hdr),
+                        <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(CorsError::BadRequestHeaders),
                     };
                 }
 
-                <span class="comment">// header list must contain 1 or more header name</span>
-                <span class="kw">if</span> <span class="ident">request_headers</span>.<span class="ident">is_empty</span>() {
-                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">CorsError::BadRequestHeaders</span>);
+                <span class="comment">// header list must contain 1 or more header name
+                </span><span class="kw">if </span>request_headers.is_empty() {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(CorsError::BadRequestHeaders);
                 }
 
-                <span class="comment">// request header list must be a subset of allowed headers</span>
-                <span class="kw">if</span> <span class="op">!</span><span class="ident">request_headers</span>.<span class="ident">is_subset</span>(<span class="ident">allowed_headers</span>) {
-                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">CorsError::HeadersNotAllowed</span>);
+                <span class="comment">// request header list must be a subset of allowed headers
+                </span><span class="kw">if </span>!request_headers.is_subset(allowed_headers) {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(CorsError::HeadersNotAllowed);
                 }
 
                 <span class="prelude-val">Ok</span>(())
             }
 
-            <span class="comment">// header list is not a string</span>
-            <span class="prelude-val">Some</span>(<span class="prelude-val">Err</span>(<span class="kw">_</span>)) =&gt; <span class="prelude-val">Err</span>(<span class="ident">CorsError::BadRequestHeaders</span>),
+            <span class="comment">// header list is not a string
+            </span><span class="prelude-val">Some</span>(<span class="prelude-val">Err</span>(<span class="kw">_</span>)) =&gt; <span class="prelude-val">Err</span>(CorsError::BadRequestHeaders),
 
-            <span class="comment">// header list missing</span>
-            <span class="prelude-val">None</span> =&gt; <span class="prelude-val">Ok</span>(()),
+            <span class="comment">// header list missing
+            </span><span class="prelude-val">None </span>=&gt; <span class="prelude-val">Ok</span>(()),
         }
     }
 }
 
-<span class="doccomment">/// Add CORS related request headers to response&#39;s Vary header.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// See &lt;https://fetch.spec.whatwg.org/#cors-protocol-and-http-caches&gt;.</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">add_vary_header</span>(<span class="ident">headers</span>: <span class="kw-2">&amp;mut</span> <span class="ident">HeaderMap</span>) {
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">headers</span>.<span class="ident">get</span>(<span class="ident">header::VARY</span>) {
-        <span class="prelude-val">Some</span>(<span class="ident">hdr</span>) =&gt; {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">val</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec::with_capacity</span>(<span class="ident">hdr</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="number">71</span>);
-            <span class="ident">val</span>.<span class="ident">extend</span>(<span class="ident">hdr</span>.<span class="ident">as_bytes</span>());
-            <span class="ident">val</span>.<span class="ident">extend</span>(<span class="string">b&quot;, Origin, Access-Control-Request-Method, Access-Control-Request-Headers&quot;</span>);
-            <span class="ident">val</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>()
+<span class="doccomment">/// Add CORS related request headers to response&#39;s Vary header.
+///
+/// See &lt;https://fetch.spec.whatwg.org/#cors-protocol-and-http-caches&gt;.
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>add_vary_header(headers: <span class="kw-2">&amp;mut </span>HeaderMap) {
+    <span class="kw">let </span>value = <span class="kw">match </span>headers.get(header::VARY) {
+        <span class="prelude-val">Some</span>(hdr) =&gt; {
+            <span class="kw">let </span><span class="kw-2">mut </span>val: Vec&lt;u8&gt; = Vec::with_capacity(hdr.len() + <span class="number">71</span>);
+            val.extend(hdr.as_bytes());
+            val.extend(<span class="string">b&quot;, Origin, Access-Control-Request-Method, Access-Control-Request-Headers&quot;</span>);
+            val.try_into().unwrap()
         }
-        <span class="prelude-val">None</span> =&gt; <span class="ident">HeaderValue::from_static</span>(
+        <span class="prelude-val">None </span>=&gt; HeaderValue::from_static(
             <span class="string">&quot;Origin, Access-Control-Request-Method, Access-Control-Request-Headers&quot;</span>,
         ),
     };
 
-    <span class="ident">headers</span>.<span class="ident">insert</span>(<span class="ident">header::VARY</span>, <span class="ident">value</span>);
+    headers.insert(header::VARY, value);
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">test</span> {
-    <span class="kw">use</span> <span class="ident">std::rc::Rc</span>;
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>test {
+    <span class="kw">use </span>std::rc::Rc;
 
-    <span class="kw">use</span> <span class="ident">actix_web</span>::{
-        <span class="ident">dev::Transform</span>,
-        <span class="ident">http</span>::{
-            <span class="ident">header</span>::{<span class="self">self</span>, <span class="ident">HeaderValue</span>},
-            <span class="ident">Method</span>, <span class="ident">StatusCode</span>,
+    <span class="kw">use </span>actix_web::{
+        dev::Transform,
+        http::{
+            header::{<span class="self">self</span>, HeaderValue},
+            Method, StatusCode,
         },
-        <span class="ident">test</span>::{<span class="self">self</span>, <span class="ident">TestRequest</span>},
+        test::{<span class="self">self</span>, TestRequest},
     };
 
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::Cors</span>;
+    <span class="kw">use </span><span class="kw">crate</span>::Cors;
 
-    <span class="kw">fn</span> <span class="ident">val_as_str</span>(<span class="ident">val</span>: <span class="kw-2">&amp;</span><span class="ident">HeaderValue</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">str</span> {
-        <span class="ident">val</span>.<span class="ident">to_str</span>().<span class="ident">unwrap</span>()
+    <span class="kw">fn </span>val_as_str(val: <span class="kw-2">&amp;</span>HeaderValue) -&gt; <span class="kw-2">&amp;</span>str {
+        val.to_str().unwrap()
     }
 
-    <span class="attribute">#[<span class="ident">actix_web::test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">test_validate_not_allowed_origin</span>() {
-        <span class="kw">let</span> <span class="ident">cors</span> <span class="op">=</span> <span class="ident">Cors::default</span>()
-            .<span class="ident">allowed_origin</span>(<span class="string">&quot;https://www.example.com&quot;</span>)
-            .<span class="ident">new_transform</span>(<span class="ident">test::ok_service</span>())
-            .<span class="kw">await</span>
-            .<span class="ident">unwrap</span>();
+    <span class="attribute">#[actix_web::test]
+    </span><span class="kw">async fn </span>test_validate_not_allowed_origin() {
+        <span class="kw">let </span>cors = Cors::default()
+            .allowed_origin(<span class="string">&quot;https://www.example.com&quot;</span>)
+            .new_transform(test::ok_service())
+            .<span class="kw">await
+            </span>.unwrap();
 
-        <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="ident">TestRequest::get</span>()
-            .<span class="ident">insert_header</span>((<span class="ident">header::ORIGIN</span>, <span class="string">&quot;https://www.unknown.com&quot;</span>))
-            .<span class="ident">insert_header</span>((<span class="ident">header::ACCESS_CONTROL_REQUEST_HEADERS</span>, <span class="string">&quot;DNT&quot;</span>))
-            .<span class="ident">to_srv_request</span>();
+        <span class="kw">let </span>req = TestRequest::get()
+            .insert_header((header::ORIGIN, <span class="string">&quot;https://www.unknown.com&quot;</span>))
+            .insert_header((header::ACCESS_CONTROL_REQUEST_HEADERS, <span class="string">&quot;DNT&quot;</span>))
+            .to_srv_request();
 
-        <span class="macro">assert!</span>(<span class="ident">cors</span>.<span class="ident">inner</span>.<span class="ident">validate_origin</span>(<span class="ident">req</span>.<span class="ident">head</span>()).<span class="ident">is_err</span>());
-        <span class="macro">assert!</span>(<span class="ident">cors</span>.<span class="ident">inner</span>.<span class="ident">validate_allowed_method</span>(<span class="ident">req</span>.<span class="ident">head</span>()).<span class="ident">is_err</span>());
-        <span class="macro">assert!</span>(<span class="ident">cors</span>.<span class="ident">inner</span>.<span class="ident">validate_allowed_headers</span>(<span class="ident">req</span>.<span class="ident">head</span>()).<span class="ident">is_err</span>());
+        <span class="macro">assert!</span>(cors.inner.validate_origin(req.head()).is_err());
+        <span class="macro">assert!</span>(cors.inner.validate_allowed_method(req.head()).is_err());
+        <span class="macro">assert!</span>(cors.inner.validate_allowed_headers(req.head()).is_err());
     }
 
-    <span class="attribute">#[<span class="ident">actix_web::test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">test_preflight</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cors</span> <span class="op">=</span> <span class="ident">Cors::default</span>()
-            .<span class="ident">allow_any_origin</span>()
-            .<span class="ident">send_wildcard</span>()
-            .<span class="ident">max_age</span>(<span class="number">3600</span>)
-            .<span class="ident">allowed_methods</span>(<span class="macro">vec!</span>[<span class="ident">Method::GET</span>, <span class="ident">Method::OPTIONS</span>, <span class="ident">Method::POST</span>])
-            .<span class="ident">allowed_headers</span>(<span class="macro">vec!</span>[<span class="ident">header::AUTHORIZATION</span>, <span class="ident">header::ACCEPT</span>])
-            .<span class="ident">allowed_header</span>(<span class="ident">header::CONTENT_TYPE</span>)
-            .<span class="ident">new_transform</span>(<span class="ident">test::ok_service</span>())
-            .<span class="kw">await</span>
-            .<span class="ident">unwrap</span>();
+    <span class="attribute">#[actix_web::test]
+    </span><span class="kw">async fn </span>test_preflight() {
+        <span class="kw">let </span><span class="kw-2">mut </span>cors = Cors::default()
+            .allow_any_origin()
+            .send_wildcard()
+            .max_age(<span class="number">3600</span>)
+            .allowed_methods(<span class="macro">vec!</span>[Method::GET, Method::OPTIONS, Method::POST])
+            .allowed_headers(<span class="macro">vec!</span>[header::AUTHORIZATION, header::ACCEPT])
+            .allowed_header(header::CONTENT_TYPE)
+            .new_transform(test::ok_service())
+            .<span class="kw">await
+            </span>.unwrap();
 
-        <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="ident">TestRequest::default</span>()
-            .<span class="ident">method</span>(<span class="ident">Method::OPTIONS</span>)
-            .<span class="ident">insert_header</span>((<span class="string">&quot;Origin&quot;</span>, <span class="string">&quot;https://www.example.com&quot;</span>))
-            .<span class="ident">insert_header</span>((<span class="ident">header::ACCESS_CONTROL_REQUEST_HEADERS</span>, <span class="string">&quot;X-Not-Allowed&quot;</span>))
-            .<span class="ident">to_srv_request</span>();
+        <span class="kw">let </span>req = TestRequest::default()
+            .method(Method::OPTIONS)
+            .insert_header((<span class="string">&quot;Origin&quot;</span>, <span class="string">&quot;https://www.example.com&quot;</span>))
+            .insert_header((header::ACCESS_CONTROL_REQUEST_HEADERS, <span class="string">&quot;X-Not-Allowed&quot;</span>))
+            .to_srv_request();
 
-        <span class="macro">assert!</span>(<span class="ident">cors</span>.<span class="ident">inner</span>.<span class="ident">validate_allowed_method</span>(<span class="ident">req</span>.<span class="ident">head</span>()).<span class="ident">is_err</span>());
-        <span class="macro">assert!</span>(<span class="ident">cors</span>.<span class="ident">inner</span>.<span class="ident">validate_allowed_headers</span>(<span class="ident">req</span>.<span class="ident">head</span>()).<span class="ident">is_err</span>());
-        <span class="kw">let</span> <span class="ident">resp</span> <span class="op">=</span> <span class="ident">test::call_service</span>(<span class="kw-2">&amp;</span><span class="ident">cors</span>, <span class="ident">req</span>).<span class="kw">await</span>;
-        <span class="macro">assert_eq!</span>(<span class="ident">resp</span>.<span class="ident">status</span>(), <span class="ident">StatusCode::OK</span>);
+        <span class="macro">assert!</span>(cors.inner.validate_allowed_method(req.head()).is_err());
+        <span class="macro">assert!</span>(cors.inner.validate_allowed_headers(req.head()).is_err());
+        <span class="kw">let </span>resp = test::call_service(<span class="kw-2">&amp;</span>cors, req).<span class="kw">await</span>;
+        <span class="macro">assert_eq!</span>(resp.status(), StatusCode::OK);
 
-        <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="ident">TestRequest::default</span>()
-            .<span class="ident">method</span>(<span class="ident">Method::OPTIONS</span>)
-            .<span class="ident">insert_header</span>((<span class="string">&quot;Origin&quot;</span>, <span class="string">&quot;https://www.example.com&quot;</span>))
-            .<span class="ident">insert_header</span>((<span class="ident">header::ACCESS_CONTROL_REQUEST_METHOD</span>, <span class="string">&quot;put&quot;</span>))
-            .<span class="ident">to_srv_request</span>();
+        <span class="kw">let </span>req = TestRequest::default()
+            .method(Method::OPTIONS)
+            .insert_header((<span class="string">&quot;Origin&quot;</span>, <span class="string">&quot;https://www.example.com&quot;</span>))
+            .insert_header((header::ACCESS_CONTROL_REQUEST_METHOD, <span class="string">&quot;put&quot;</span>))
+            .to_srv_request();
 
-        <span class="macro">assert!</span>(<span class="ident">cors</span>.<span class="ident">inner</span>.<span class="ident">validate_allowed_method</span>(<span class="ident">req</span>.<span class="ident">head</span>()).<span class="ident">is_err</span>());
-        <span class="macro">assert!</span>(<span class="ident">cors</span>.<span class="ident">inner</span>.<span class="ident">validate_allowed_headers</span>(<span class="ident">req</span>.<span class="ident">head</span>()).<span class="ident">is_ok</span>());
+        <span class="macro">assert!</span>(cors.inner.validate_allowed_method(req.head()).is_err());
+        <span class="macro">assert!</span>(cors.inner.validate_allowed_headers(req.head()).is_ok());
 
-        <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="ident">TestRequest::default</span>()
-            .<span class="ident">method</span>(<span class="ident">Method::OPTIONS</span>)
-            .<span class="ident">insert_header</span>((<span class="string">&quot;Origin&quot;</span>, <span class="string">&quot;https://www.example.com&quot;</span>))
-            .<span class="ident">insert_header</span>((<span class="ident">header::ACCESS_CONTROL_REQUEST_METHOD</span>, <span class="string">&quot;POST&quot;</span>))
-            .<span class="ident">insert_header</span>((
-                <span class="ident">header::ACCESS_CONTROL_REQUEST_HEADERS</span>,
+        <span class="kw">let </span>req = TestRequest::default()
+            .method(Method::OPTIONS)
+            .insert_header((<span class="string">&quot;Origin&quot;</span>, <span class="string">&quot;https://www.example.com&quot;</span>))
+            .insert_header((header::ACCESS_CONTROL_REQUEST_METHOD, <span class="string">&quot;POST&quot;</span>))
+            .insert_header((
+                header::ACCESS_CONTROL_REQUEST_HEADERS,
                 <span class="string">&quot;AUTHORIZATION,ACCEPT&quot;</span>,
             ))
-            .<span class="ident">to_srv_request</span>();
+            .to_srv_request();
 
-        <span class="kw">let</span> <span class="ident">resp</span> <span class="op">=</span> <span class="ident">test::call_service</span>(<span class="kw-2">&amp;</span><span class="ident">cors</span>, <span class="ident">req</span>).<span class="kw">await</span>;
+        <span class="kw">let </span>resp = test::call_service(<span class="kw-2">&amp;</span>cors, req).<span class="kw">await</span>;
         <span class="macro">assert_eq!</span>(
             <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="string">b&quot;*&quot;</span>[..]),
-            <span class="ident">resp</span>.<span class="ident">headers</span>()
-                .<span class="ident">get</span>(<span class="ident">header::ACCESS_CONTROL_ALLOW_ORIGIN</span>)
-                .<span class="ident">map</span>(<span class="ident">HeaderValue::as_bytes</span>)
+            resp.headers()
+                .get(header::ACCESS_CONTROL_ALLOW_ORIGIN)
+                .map(HeaderValue::as_bytes)
         );
         <span class="macro">assert_eq!</span>(
             <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="string">b&quot;3600&quot;</span>[..]),
-            <span class="ident">resp</span>.<span class="ident">headers</span>()
-                .<span class="ident">get</span>(<span class="ident">header::ACCESS_CONTROL_MAX_AGE</span>)
-                .<span class="ident">map</span>(<span class="ident">HeaderValue::as_bytes</span>)
+            resp.headers()
+                .get(header::ACCESS_CONTROL_MAX_AGE)
+                .map(HeaderValue::as_bytes)
         );
 
-        <span class="kw">let</span> <span class="ident">hdr</span> <span class="op">=</span> <span class="ident">resp</span>
-            .<span class="ident">headers</span>()
-            .<span class="ident">get</span>(<span class="ident">header::ACCESS_CONTROL_ALLOW_HEADERS</span>)
-            .<span class="ident">map</span>(<span class="ident">val_as_str</span>)
-            .<span class="ident">unwrap</span>();
-        <span class="macro">assert!</span>(<span class="ident">hdr</span>.<span class="ident">contains</span>(<span class="string">&quot;authorization&quot;</span>));
-        <span class="macro">assert!</span>(<span class="ident">hdr</span>.<span class="ident">contains</span>(<span class="string">&quot;accept&quot;</span>));
-        <span class="macro">assert!</span>(<span class="ident">hdr</span>.<span class="ident">contains</span>(<span class="string">&quot;content-type&quot;</span>));
+        <span class="kw">let </span>hdr = resp
+            .headers()
+            .get(header::ACCESS_CONTROL_ALLOW_HEADERS)
+            .map(val_as_str)
+            .unwrap();
+        <span class="macro">assert!</span>(hdr.contains(<span class="string">&quot;authorization&quot;</span>));
+        <span class="macro">assert!</span>(hdr.contains(<span class="string">&quot;accept&quot;</span>));
+        <span class="macro">assert!</span>(hdr.contains(<span class="string">&quot;content-type&quot;</span>));
 
-        <span class="kw">let</span> <span class="ident">methods</span> <span class="op">=</span> <span class="ident">resp</span>
-            .<span class="ident">headers</span>()
-            .<span class="ident">get</span>(<span class="ident">header::ACCESS_CONTROL_ALLOW_METHODS</span>)
-            .<span class="ident">unwrap</span>()
-            .<span class="ident">to_str</span>()
-            .<span class="ident">unwrap</span>();
-        <span class="macro">assert!</span>(<span class="ident">methods</span>.<span class="ident">contains</span>(<span class="string">&quot;POST&quot;</span>));
-        <span class="macro">assert!</span>(<span class="ident">methods</span>.<span class="ident">contains</span>(<span class="string">&quot;GET&quot;</span>));
-        <span class="macro">assert!</span>(<span class="ident">methods</span>.<span class="ident">contains</span>(<span class="string">&quot;OPTIONS&quot;</span>));
+        <span class="kw">let </span>methods = resp
+            .headers()
+            .get(header::ACCESS_CONTROL_ALLOW_METHODS)
+            .unwrap()
+            .to_str()
+            .unwrap();
+        <span class="macro">assert!</span>(methods.contains(<span class="string">&quot;POST&quot;</span>));
+        <span class="macro">assert!</span>(methods.contains(<span class="string">&quot;GET&quot;</span>));
+        <span class="macro">assert!</span>(methods.contains(<span class="string">&quot;OPTIONS&quot;</span>));
 
-        <span class="ident">Rc::get_mut</span>(<span class="kw-2">&amp;mut</span> <span class="ident">cors</span>.<span class="ident">inner</span>).<span class="ident">unwrap</span>().<span class="ident">preflight</span> <span class="op">=</span> <span class="bool-val">false</span>;
+        Rc::get_mut(<span class="kw-2">&amp;mut </span>cors.inner).unwrap().preflight = <span class="bool-val">false</span>;
 
-        <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="ident">TestRequest::default</span>()
-            .<span class="ident">method</span>(<span class="ident">Method::OPTIONS</span>)
-            .<span class="ident">insert_header</span>((<span class="string">&quot;Origin&quot;</span>, <span class="string">&quot;https://www.example.com&quot;</span>))
-            .<span class="ident">insert_header</span>((<span class="ident">header::ACCESS_CONTROL_REQUEST_METHOD</span>, <span class="string">&quot;POST&quot;</span>))
-            .<span class="ident">insert_header</span>((
-                <span class="ident">header::ACCESS_CONTROL_REQUEST_HEADERS</span>,
+        <span class="kw">let </span>req = TestRequest::default()
+            .method(Method::OPTIONS)
+            .insert_header((<span class="string">&quot;Origin&quot;</span>, <span class="string">&quot;https://www.example.com&quot;</span>))
+            .insert_header((header::ACCESS_CONTROL_REQUEST_METHOD, <span class="string">&quot;POST&quot;</span>))
+            .insert_header((
+                header::ACCESS_CONTROL_REQUEST_HEADERS,
                 <span class="string">&quot;AUTHORIZATION,ACCEPT&quot;</span>,
             ))
-            .<span class="ident">to_srv_request</span>();
+            .to_srv_request();
 
-        <span class="kw">let</span> <span class="ident">resp</span> <span class="op">=</span> <span class="ident">test::call_service</span>(<span class="kw-2">&amp;</span><span class="ident">cors</span>, <span class="ident">req</span>).<span class="kw">await</span>;
-        <span class="macro">assert_eq!</span>(<span class="ident">resp</span>.<span class="ident">status</span>(), <span class="ident">StatusCode::OK</span>);
+        <span class="kw">let </span>resp = test::call_service(<span class="kw-2">&amp;</span>cors, req).<span class="kw">await</span>;
+        <span class="macro">assert_eq!</span>(resp.status(), StatusCode::OK);
     }
 
-    <span class="attribute">#[<span class="ident">actix_web::test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">allow_fn_origin_equals_head_origin</span>() {
-        <span class="kw">let</span> <span class="ident">cors</span> <span class="op">=</span> <span class="ident">Cors::default</span>()
-            .<span class="ident">allowed_origin_fn</span>(<span class="op">|</span><span class="ident">origin</span>, <span class="ident">head</span><span class="op">|</span> {
-                <span class="kw">let</span> <span class="ident">head_origin</span> <span class="op">=</span> <span class="ident">head</span>
-                    .<span class="ident">headers</span>()
-                    .<span class="ident">get</span>(<span class="ident">header::ORIGIN</span>)
-                    .<span class="ident">expect</span>(<span class="string">&quot;unwrapping origin header should never fail in allowed_origin_fn&quot;</span>);
-                <span class="macro">assert!</span>(<span class="ident">origin</span> <span class="op">==</span> <span class="ident">head_origin</span>);
-                <span class="bool-val">true</span>
-            })
-            .<span class="ident">allow_any_method</span>()
-            .<span class="ident">allow_any_header</span>()
-            .<span class="ident">new_transform</span>(<span class="ident">test::status_service</span>(<span class="ident">StatusCode::NO_CONTENT</span>))
-            .<span class="kw">await</span>
-            .<span class="ident">unwrap</span>();
+    <span class="attribute">#[actix_web::test]
+    </span><span class="kw">async fn </span>allow_fn_origin_equals_head_origin() {
+        <span class="kw">let </span>cors = Cors::default()
+            .allowed_origin_fn(|origin, head| {
+                <span class="kw">let </span>head_origin = head
+                    .headers()
+                    .get(header::ORIGIN)
+                    .expect(<span class="string">&quot;unwrapping origin header should never fail in allowed_origin_fn&quot;</span>);
+                <span class="macro">assert!</span>(origin == head_origin);
+                <span class="bool-val">true
+            </span>})
+            .allow_any_method()
+            .allow_any_header()
+            .new_transform(test::status_service(StatusCode::NO_CONTENT))
+            .<span class="kw">await
+            </span>.unwrap();
 
-        <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="ident">TestRequest::default</span>()
-            .<span class="ident">method</span>(<span class="ident">Method::OPTIONS</span>)
-            .<span class="ident">insert_header</span>((<span class="string">&quot;Origin&quot;</span>, <span class="string">&quot;https://www.example.com&quot;</span>))
-            .<span class="ident">insert_header</span>((<span class="ident">header::ACCESS_CONTROL_REQUEST_METHOD</span>, <span class="string">&quot;POST&quot;</span>))
-            .<span class="ident">to_srv_request</span>();
-        <span class="kw">let</span> <span class="ident">resp</span> <span class="op">=</span> <span class="ident">test::call_service</span>(<span class="kw-2">&amp;</span><span class="ident">cors</span>, <span class="ident">req</span>).<span class="kw">await</span>;
-        <span class="macro">assert_eq!</span>(<span class="ident">resp</span>.<span class="ident">status</span>(), <span class="ident">StatusCode::OK</span>);
+        <span class="kw">let </span>req = TestRequest::default()
+            .method(Method::OPTIONS)
+            .insert_header((<span class="string">&quot;Origin&quot;</span>, <span class="string">&quot;https://www.example.com&quot;</span>))
+            .insert_header((header::ACCESS_CONTROL_REQUEST_METHOD, <span class="string">&quot;POST&quot;</span>))
+            .to_srv_request();
+        <span class="kw">let </span>resp = test::call_service(<span class="kw-2">&amp;</span>cors, req).<span class="kw">await</span>;
+        <span class="macro">assert_eq!</span>(resp.status(), StatusCode::OK);
 
-        <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="ident">TestRequest::default</span>()
-            .<span class="ident">method</span>(<span class="ident">Method::GET</span>)
-            .<span class="ident">insert_header</span>((<span class="string">&quot;Origin&quot;</span>, <span class="string">&quot;https://www.example.com&quot;</span>))
-            .<span class="ident">to_srv_request</span>();
-        <span class="kw">let</span> <span class="ident">resp</span> <span class="op">=</span> <span class="ident">test::call_service</span>(<span class="kw-2">&amp;</span><span class="ident">cors</span>, <span class="ident">req</span>).<span class="kw">await</span>;
-        <span class="macro">assert_eq!</span>(<span class="ident">resp</span>.<span class="ident">status</span>(), <span class="ident">StatusCode::NO_CONTENT</span>);
+        <span class="kw">let </span>req = TestRequest::default()
+            .method(Method::GET)
+            .insert_header((<span class="string">&quot;Origin&quot;</span>, <span class="string">&quot;https://www.example.com&quot;</span>))
+            .to_srv_request();
+        <span class="kw">let </span>resp = test::call_service(<span class="kw-2">&amp;</span>cors, req).<span class="kw">await</span>;
+        <span class="macro">assert_eq!</span>(resp.status(), StatusCode::NO_CONTENT);
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_cors" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (34a6cae28 2022-08-09)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_cors" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (060e47f74 2022-08-23)" ></div></body></html>

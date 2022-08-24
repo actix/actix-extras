@@ -347,239 +347,239 @@
 <span id="345">345</span>
 <span id="346">346</span>
 <span id="347">347</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">convert::TryInto</span>, <span class="ident">sync::Arc</span>};
+</pre><pre class="rust"><code><span class="kw">use </span>std::{convert::TryInto, sync::Arc};
 
-<span class="kw">use</span> <span class="ident">actix_web::cookie::time::Duration</span>;
-<span class="kw">use</span> <span class="ident">anyhow</span>::{<span class="ident">Context</span>, <span class="ident">Error</span>};
-<span class="kw">use</span> <span class="ident">redis</span>::{<span class="ident">aio::ConnectionManager</span>, <span class="ident">AsyncCommands</span>, <span class="ident">Cmd</span>, <span class="ident">FromRedisValue</span>, <span class="ident">RedisResult</span>, <span class="ident">Value</span>};
+<span class="kw">use </span>actix_web::cookie::time::Duration;
+<span class="kw">use </span>anyhow::{Context, Error};
+<span class="kw">use </span>redis::{aio::ConnectionManager, AsyncCommands, Cmd, FromRedisValue, RedisResult, Value};
 
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::SessionKey</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::storage</span>::{
-    <span class="ident">interface</span>::{<span class="ident">LoadError</span>, <span class="ident">SaveError</span>, <span class="ident">SessionState</span>, <span class="ident">UpdateError</span>},
-    <span class="ident">utils::generate_session_key</span>,
-    <span class="ident">SessionStore</span>,
+<span class="kw">use </span><span class="kw">super</span>::SessionKey;
+<span class="kw">use </span><span class="kw">crate</span>::storage::{
+    interface::{LoadError, SaveError, SessionState, UpdateError},
+    utils::generate_session_key,
+    SessionStore,
 };
 
-<span class="doccomment">/// Use Redis as session storage backend.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ```no_run</span>
-<span class="doccomment">/// use actix_web::{web, App, HttpServer, HttpResponse, Error};</span>
-<span class="doccomment">/// use actix_session::{SessionMiddleware, storage::RedisSessionStore};</span>
-<span class="doccomment">/// use actix_web::cookie::Key;</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// // The secret key would usually be read from a configuration file/environment variables.</span>
-<span class="doccomment">/// fn get_secret_key() -&gt; Key {</span>
-<span class="doccomment">///     # todo!()</span>
-<span class="doccomment">///     // [...]</span>
-<span class="doccomment">/// }</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// #[actix_web::main]</span>
-<span class="doccomment">/// async fn main() -&gt; std::io::Result&lt;()&gt; {</span>
-<span class="doccomment">///     let secret_key = get_secret_key();</span>
-<span class="doccomment">///     let redis_connection_string = &quot;redis://127.0.0.1:6379&quot;;</span>
-<span class="doccomment">///     let store = RedisSessionStore::new(redis_connection_string).await.unwrap();</span>
-<span class="doccomment">///</span>
-<span class="doccomment">///     HttpServer::new(move ||</span>
-<span class="doccomment">///             App::new()</span>
-<span class="doccomment">///             .wrap(SessionMiddleware::new(</span>
-<span class="doccomment">///                 store.clone(),</span>
-<span class="doccomment">///                 secret_key.clone()</span>
-<span class="doccomment">///             ))</span>
-<span class="doccomment">///             .default_service(web::to(|| HttpResponse::Ok())))</span>
-<span class="doccomment">///         .bind((&quot;127.0.0.1&quot;, 8080))?</span>
-<span class="doccomment">///         .run()</span>
-<span class="doccomment">///         .await</span>
-<span class="doccomment">/// }</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # TLS support</span>
-<span class="doccomment">/// Add the `redis-rs-tls-session` feature flag to enable TLS support. You can then establish a TLS</span>
-<span class="doccomment">/// connection to Redis using the `rediss://` URL scheme:</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ```no_run</span>
-<span class="doccomment">/// use actix_session::{storage::RedisSessionStore};</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # actix_web::rt::System::new().block_on(async {</span>
-<span class="doccomment">/// let redis_connection_string = &quot;rediss://127.0.0.1:6379&quot;;</span>
-<span class="doccomment">/// let store = RedisSessionStore::new(redis_connection_string).await.unwrap();</span>
-<span class="doccomment">/// # })</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Implementation notes</span>
-<span class="doccomment">/// `RedisSessionStore` leverages [`redis-rs`] as Redis client.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [`redis-rs`]: https://github.com/mitsuhiko/redis-rs</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">docsrs</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;redis-rs-session&quot;</span>)))]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RedisSessionStore</span> {
-    <span class="ident">configuration</span>: <span class="ident">CacheConfiguration</span>,
-    <span class="ident">client</span>: <span class="ident">ConnectionManager</span>,
+<span class="doccomment">/// Use Redis as session storage backend.
+///
+/// ```no_run
+/// use actix_web::{web, App, HttpServer, HttpResponse, Error};
+/// use actix_session::{SessionMiddleware, storage::RedisSessionStore};
+/// use actix_web::cookie::Key;
+///
+/// // The secret key would usually be read from a configuration file/environment variables.
+/// fn get_secret_key() -&gt; Key {
+///     # todo!()
+///     // [...]
+/// }
+///
+/// #[actix_web::main]
+/// async fn main() -&gt; std::io::Result&lt;()&gt; {
+///     let secret_key = get_secret_key();
+///     let redis_connection_string = &quot;redis://127.0.0.1:6379&quot;;
+///     let store = RedisSessionStore::new(redis_connection_string).await.unwrap();
+///
+///     HttpServer::new(move ||
+///             App::new()
+///             .wrap(SessionMiddleware::new(
+///                 store.clone(),
+///                 secret_key.clone()
+///             ))
+///             .default_service(web::to(|| HttpResponse::Ok())))
+///         .bind((&quot;127.0.0.1&quot;, 8080))?
+///         .run()
+///         .await
+/// }
+/// ```
+///
+/// # TLS support
+/// Add the `redis-rs-tls-session` feature flag to enable TLS support. You can then establish a TLS
+/// connection to Redis using the `rediss://` URL scheme:
+///
+/// ```no_run
+/// use actix_session::{storage::RedisSessionStore};
+///
+/// # actix_web::rt::System::new().block_on(async {
+/// let redis_connection_string = &quot;rediss://127.0.0.1:6379&quot;;
+/// let store = RedisSessionStore::new(redis_connection_string).await.unwrap();
+/// # })
+/// ```
+///
+/// # Implementation notes
+/// `RedisSessionStore` leverages [`redis-rs`] as Redis client.
+///
+/// [`redis-rs`]: https://github.com/mitsuhiko/redis-rs
+</span><span class="attribute">#[cfg_attr(docsrs, doc(cfg(feature = <span class="string">&quot;redis-rs-session&quot;</span>)))]
+#[derive(Clone)]
+</span><span class="kw">pub struct </span>RedisSessionStore {
+    configuration: CacheConfiguration,
+    client: ConnectionManager,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
-<span class="kw">struct</span> <span class="ident">CacheConfiguration</span> {
-    <span class="ident">cache_keygen</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Fn</span>(<span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">String</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span><span class="op">&gt;</span>,
+<span class="attribute">#[derive(Clone)]
+</span><span class="kw">struct </span>CacheConfiguration {
+    cache_keygen: Arc&lt;<span class="kw">dyn </span>Fn(<span class="kw-2">&amp;</span>str) -&gt; String + Send + Sync&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">CacheConfiguration</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">cache_keygen</span>: <span class="ident">Arc::new</span>(<span class="ident">str::to_owned</span>),
+<span class="kw">impl </span>Default <span class="kw">for </span>CacheConfiguration {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            cache_keygen: Arc::new(str::to_owned),
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">RedisSessionStore</span> {
-    <span class="doccomment">/// A fluent API to configure [`RedisSessionStore`].</span>
-    <span class="doccomment">/// It takes as input the only required input to create a new instance of [`RedisSessionStore`] - a</span>
-    <span class="doccomment">/// connection string for Redis.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">builder</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">connection_string</span>: <span class="ident">S</span>) -&gt; <span class="ident">RedisSessionStoreBuilder</span> {
-        <span class="ident">RedisSessionStoreBuilder</span> {
-            <span class="ident">configuration</span>: <span class="ident">CacheConfiguration::default</span>(),
-            <span class="ident">connection_string</span>: <span class="ident">connection_string</span>.<span class="ident">into</span>(),
+<span class="kw">impl </span>RedisSessionStore {
+    <span class="doccomment">/// A fluent API to configure [`RedisSessionStore`].
+    /// It takes as input the only required input to create a new instance of [`RedisSessionStore`] - a
+    /// connection string for Redis.
+    </span><span class="kw">pub fn </span>builder&lt;S: Into&lt;String&gt;&gt;(connection_string: S) -&gt; RedisSessionStoreBuilder {
+        RedisSessionStoreBuilder {
+            configuration: CacheConfiguration::default(),
+            connection_string: connection_string.into(),
         }
     }
 
-    <span class="doccomment">/// Create a new instance of [`RedisSessionStore`] using the default configuration.</span>
-    <span class="doccomment">/// It takes as input the only required input to create a new instance of [`RedisSessionStore`] - a</span>
-    <span class="doccomment">/// connection string for Redis.</span>
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">new</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>(
-        <span class="ident">connection_string</span>: <span class="ident">S</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RedisSessionStore</span>, <span class="ident">anyhow::Error</span><span class="op">&gt;</span> {
-        <span class="ident"><span class="self">Self</span>::builder</span>(<span class="ident">connection_string</span>).<span class="ident">build</span>().<span class="kw">await</span>
-    }
+    <span class="doccomment">/// Create a new instance of [`RedisSessionStore`] using the default configuration.
+    /// It takes as input the only required input to create a new instance of [`RedisSessionStore`] - a
+    /// connection string for Redis.
+    </span><span class="kw">pub async fn </span>new&lt;S: Into&lt;String&gt;&gt;(
+        connection_string: S,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;RedisSessionStore, anyhow::Error&gt; {
+        <span class="self">Self</span>::builder(connection_string).build().<span class="kw">await
+    </span>}
 }
 
-<span class="doccomment">/// A fluent builder to construct a [`RedisSessionStore`] instance with custom configuration</span>
-<span class="doccomment">/// parameters.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [`RedisSessionStore`]: crate::storage::RedisSessionStore</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">docsrs</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;redis-rs-session&quot;</span>)))]</span>
-<span class="attribute">#[<span class="ident">must_use</span>]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RedisSessionStoreBuilder</span> {
-    <span class="ident">connection_string</span>: <span class="ident">String</span>,
-    <span class="ident">configuration</span>: <span class="ident">CacheConfiguration</span>,
+<span class="doccomment">/// A fluent builder to construct a [`RedisSessionStore`] instance with custom configuration
+/// parameters.
+///
+/// [`RedisSessionStore`]: crate::storage::RedisSessionStore
+</span><span class="attribute">#[cfg_attr(docsrs, doc(cfg(feature = <span class="string">&quot;redis-rs-session&quot;</span>)))]
+#[must_use]
+</span><span class="kw">pub struct </span>RedisSessionStoreBuilder {
+    connection_string: String,
+    configuration: CacheConfiguration,
 }
 
-<span class="kw">impl</span> <span class="ident">RedisSessionStoreBuilder</span> {
-    <span class="doccomment">/// Set a custom cache key generation strategy, expecting a session key as input.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cache_keygen</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">keygen</span>: <span class="ident">F</span>) -&gt; <span class="self">Self</span>
-    <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">Fn</span>(<span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">String</span> <span class="op">+</span> <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
+<span class="kw">impl </span>RedisSessionStoreBuilder {
+    <span class="doccomment">/// Set a custom cache key generation strategy, expecting a session key as input.
+    </span><span class="kw">pub fn </span>cache_keygen&lt;F&gt;(<span class="kw-2">mut </span><span class="self">self</span>, keygen: F) -&gt; <span class="self">Self
+    </span><span class="kw">where
+        </span>F: Fn(<span class="kw-2">&amp;</span>str) -&gt; String + <span class="lifetime">&#39;static </span>+ Send + Sync,
     {
-        <span class="self">self</span>.<span class="ident">configuration</span>.<span class="ident">cache_keygen</span> <span class="op">=</span> <span class="ident">Arc::new</span>(<span class="ident">keygen</span>);
-        <span class="self">self</span>
-    }
+        <span class="self">self</span>.configuration.cache_keygen = Arc::new(keygen);
+        <span class="self">self
+    </span>}
 
-    <span class="doccomment">/// Finalise the builder and return a [`RedisActorSessionStore`] instance.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`RedisActorSessionStore`]: crate::storage::RedisActorSessionStore</span>
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">build</span>(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RedisSessionStore</span>, <span class="ident">anyhow::Error</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">ConnectionManager::new</span>(<span class="ident">redis::Client::open</span>(<span class="self">self</span>.<span class="ident">connection_string</span>)<span class="question-mark">?</span>).<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="ident">RedisSessionStore</span> {
-            <span class="ident">configuration</span>: <span class="self">self</span>.<span class="ident">configuration</span>,
-            <span class="ident">client</span>,
+    <span class="doccomment">/// Finalise the builder and return a [`RedisActorSessionStore`] instance.
+    ///
+    /// [`RedisActorSessionStore`]: crate::storage::RedisActorSessionStore
+    </span><span class="kw">pub async fn </span>build(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;RedisSessionStore, anyhow::Error&gt; {
+        <span class="kw">let </span>client = ConnectionManager::new(redis::Client::open(<span class="self">self</span>.connection_string)<span class="question-mark">?</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(RedisSessionStore {
+            configuration: <span class="self">self</span>.configuration,
+            client,
         })
     }
 }
 
-<span class="attribute">#[<span class="ident">async_trait::async_trait</span>(<span class="question-mark">?</span><span class="ident">Send</span>)]</span>
-<span class="kw">impl</span> <span class="ident">SessionStore</span> <span class="kw">for</span> <span class="ident">RedisSessionStore</span> {
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">load</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">session_key</span>: <span class="kw-2">&amp;</span><span class="ident">SessionKey</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">SessionState</span><span class="op">&gt;</span>, <span class="ident">LoadError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">cache_key</span> <span class="op">=</span> (<span class="self">self</span>.<span class="ident">configuration</span>.<span class="ident">cache_keygen</span>)(<span class="ident">session_key</span>.<span class="ident">as_ref</span>());
+<span class="attribute">#[async_trait::async_trait(<span class="question-mark">?</span>Send)]
+</span><span class="kw">impl </span>SessionStore <span class="kw">for </span>RedisSessionStore {
+    <span class="kw">async fn </span>load(<span class="kw-2">&amp;</span><span class="self">self</span>, session_key: <span class="kw-2">&amp;</span>SessionKey) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;SessionState&gt;, LoadError&gt; {
+        <span class="kw">let </span>cache_key = (<span class="self">self</span>.configuration.cache_keygen)(session_key.as_ref());
 
-        <span class="kw">let</span> <span class="ident">value</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">execute_command</span>(<span class="ident">redis::cmd</span>(<span class="string">&quot;GET&quot;</span>).<span class="ident">arg</span>(<span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">cache_key</span>]))
-            .<span class="kw">await</span>
-            .<span class="ident">map_err</span>(<span class="ident">Into::into</span>)
-            .<span class="ident">map_err</span>(<span class="ident">LoadError::Other</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>value: <span class="prelude-ty">Option</span>&lt;String&gt; = <span class="self">self
+            </span>.execute_command(redis::cmd(<span class="string">&quot;GET&quot;</span>).arg(<span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>cache_key]))
+            .<span class="kw">await
+            </span>.map_err(Into::into)
+            .map_err(LoadError::Other)<span class="question-mark">?</span>;
 
-        <span class="kw">match</span> <span class="ident">value</span> {
-            <span class="prelude-val">None</span> =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
-            <span class="prelude-val">Some</span>(<span class="ident">value</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">serde_json::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>)
-                .<span class="ident">map_err</span>(<span class="ident">Into::into</span>)
-                .<span class="ident">map_err</span>(<span class="ident">LoadError::Deserialization</span>)<span class="question-mark">?</span>),
+        <span class="kw">match </span>value {
+            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
+            <span class="prelude-val">Some</span>(value) =&gt; <span class="prelude-val">Ok</span>(serde_json::from_str(<span class="kw-2">&amp;</span>value)
+                .map_err(Into::into)
+                .map_err(LoadError::Deserialization)<span class="question-mark">?</span>),
         }
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">save</span>(
+    <span class="kw">async fn </span>save(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">session_state</span>: <span class="ident">SessionState</span>,
-        <span class="ident">ttl</span>: <span class="kw-2">&amp;</span><span class="ident">Duration</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">SessionKey</span>, <span class="ident">SaveError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">body</span> <span class="op">=</span> <span class="ident">serde_json::to_string</span>(<span class="kw-2">&amp;</span><span class="ident">session_state</span>)
-            .<span class="ident">map_err</span>(<span class="ident">Into::into</span>)
-            .<span class="ident">map_err</span>(<span class="ident">SaveError::Serialization</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">session_key</span> <span class="op">=</span> <span class="ident">generate_session_key</span>();
-        <span class="kw">let</span> <span class="ident">cache_key</span> <span class="op">=</span> (<span class="self">self</span>.<span class="ident">configuration</span>.<span class="ident">cache_keygen</span>)(<span class="ident">session_key</span>.<span class="ident">as_ref</span>());
+        session_state: SessionState,
+        ttl: <span class="kw-2">&amp;</span>Duration,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;SessionKey, SaveError&gt; {
+        <span class="kw">let </span>body = serde_json::to_string(<span class="kw-2">&amp;</span>session_state)
+            .map_err(Into::into)
+            .map_err(SaveError::Serialization)<span class="question-mark">?</span>;
+        <span class="kw">let </span>session_key = generate_session_key();
+        <span class="kw">let </span>cache_key = (<span class="self">self</span>.configuration.cache_keygen)(session_key.as_ref());
 
-        <span class="self">self</span>.<span class="ident">execute_command</span>(<span class="ident">redis::cmd</span>(<span class="string">&quot;SET&quot;</span>).<span class="ident">arg</span>(<span class="kw-2">&amp;</span>[
-            <span class="kw-2">&amp;</span><span class="ident">cache_key</span>,
-            <span class="kw-2">&amp;</span><span class="ident">body</span>,
-            <span class="string">&quot;NX&quot;</span>, <span class="comment">// NX: only set the key if it does not already exist</span>
-            <span class="string">&quot;EX&quot;</span>, <span class="comment">// EX: set expiry</span>
-            <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">ttl</span>.<span class="ident">whole_seconds</span>()),
+        <span class="self">self</span>.execute_command(redis::cmd(<span class="string">&quot;SET&quot;</span>).arg(<span class="kw-2">&amp;</span>[
+            <span class="kw-2">&amp;</span>cache_key,
+            <span class="kw-2">&amp;</span>body,
+            <span class="string">&quot;NX&quot;</span>, <span class="comment">// NX: only set the key if it does not already exist
+            </span><span class="string">&quot;EX&quot;</span>, <span class="comment">// EX: set expiry
+            </span><span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, ttl.whole_seconds()),
         ]))
-        .<span class="kw">await</span>
-        .<span class="ident">map_err</span>(<span class="ident">Into::into</span>)
-        .<span class="ident">map_err</span>(<span class="ident">SaveError::Other</span>)<span class="question-mark">?</span>;
+        .<span class="kw">await
+        </span>.map_err(Into::into)
+        .map_err(SaveError::Other)<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="ident">session_key</span>)
+        <span class="prelude-val">Ok</span>(session_key)
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">update</span>(
+    <span class="kw">async fn </span>update(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">session_key</span>: <span class="ident">SessionKey</span>,
-        <span class="ident">session_state</span>: <span class="ident">SessionState</span>,
-        <span class="ident">ttl</span>: <span class="kw-2">&amp;</span><span class="ident">Duration</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">SessionKey</span>, <span class="ident">UpdateError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">body</span> <span class="op">=</span> <span class="ident">serde_json::to_string</span>(<span class="kw-2">&amp;</span><span class="ident">session_state</span>)
-            .<span class="ident">map_err</span>(<span class="ident">Into::into</span>)
-            .<span class="ident">map_err</span>(<span class="ident">UpdateError::Serialization</span>)<span class="question-mark">?</span>;
+        session_key: SessionKey,
+        session_state: SessionState,
+        ttl: <span class="kw-2">&amp;</span>Duration,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;SessionKey, UpdateError&gt; {
+        <span class="kw">let </span>body = serde_json::to_string(<span class="kw-2">&amp;</span>session_state)
+            .map_err(Into::into)
+            .map_err(UpdateError::Serialization)<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">cache_key</span> <span class="op">=</span> (<span class="self">self</span>.<span class="ident">configuration</span>.<span class="ident">cache_keygen</span>)(<span class="ident">session_key</span>.<span class="ident">as_ref</span>());
+        <span class="kw">let </span>cache_key = (<span class="self">self</span>.configuration.cache_keygen)(session_key.as_ref());
 
-        <span class="kw">let</span> <span class="ident">v</span>: <span class="ident">redis::Value</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">execute_command</span>(<span class="ident">redis::cmd</span>(<span class="string">&quot;SET&quot;</span>).<span class="ident">arg</span>(<span class="kw-2">&amp;</span>[
-                <span class="kw-2">&amp;</span><span class="ident">cache_key</span>,
-                <span class="kw-2">&amp;</span><span class="ident">body</span>,
-                <span class="string">&quot;XX&quot;</span>, <span class="comment">// XX: Only set the key if it already exist.</span>
-                <span class="string">&quot;EX&quot;</span>, <span class="comment">// EX: set expiry</span>
-                <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">ttl</span>.<span class="ident">whole_seconds</span>()),
+        <span class="kw">let </span>v: redis::Value = <span class="self">self
+            </span>.execute_command(redis::cmd(<span class="string">&quot;SET&quot;</span>).arg(<span class="kw-2">&amp;</span>[
+                <span class="kw-2">&amp;</span>cache_key,
+                <span class="kw-2">&amp;</span>body,
+                <span class="string">&quot;XX&quot;</span>, <span class="comment">// XX: Only set the key if it already exist.
+                </span><span class="string">&quot;EX&quot;</span>, <span class="comment">// EX: set expiry
+                </span><span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, ttl.whole_seconds()),
             ]))
-            .<span class="kw">await</span>
-            .<span class="ident">map_err</span>(<span class="ident">Into::into</span>)
-            .<span class="ident">map_err</span>(<span class="ident">UpdateError::Other</span>)<span class="question-mark">?</span>;
+            .<span class="kw">await
+            </span>.map_err(Into::into)
+            .map_err(UpdateError::Other)<span class="question-mark">?</span>;
 
-        <span class="kw">match</span> <span class="ident">v</span> {
-            <span class="ident">Value::Nil</span> =&gt; {
-                <span class="comment">// The SET operation was not performed because the XX condition was not verified.</span>
-                <span class="comment">// This can happen if the session state expired between the load operation and the</span>
-                <span class="comment">// update operation. Unlucky, to say the least. We fall back to the `save` routine</span>
-                <span class="comment">// to ensure that the new key is unique.</span>
-                <span class="self">self</span>.<span class="ident">save</span>(<span class="ident">session_state</span>, <span class="ident">ttl</span>)
-                    .<span class="kw">await</span>
-                    .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">err</span> {
-                        <span class="ident">SaveError::Serialization</span>(<span class="ident">err</span>) =&gt; <span class="ident">UpdateError::Serialization</span>(<span class="ident">err</span>),
-                        <span class="ident">SaveError::Other</span>(<span class="ident">err</span>) =&gt; <span class="ident">UpdateError::Other</span>(<span class="ident">err</span>),
+        <span class="kw">match </span>v {
+            Value::Nil =&gt; {
+                <span class="comment">// The SET operation was not performed because the XX condition was not verified.
+                // This can happen if the session state expired between the load operation and the
+                // update operation. Unlucky, to say the least. We fall back to the `save` routine
+                // to ensure that the new key is unique.
+                </span><span class="self">self</span>.save(session_state, ttl)
+                    .<span class="kw">await
+                    </span>.map_err(|err| <span class="kw">match </span>err {
+                        SaveError::Serialization(err) =&gt; UpdateError::Serialization(err),
+                        SaveError::Other(err) =&gt; UpdateError::Other(err),
                     })
             }
-            <span class="ident">Value::Int</span>(<span class="kw">_</span>) <span class="op">|</span> <span class="ident">Value::Okay</span> <span class="op">|</span> <span class="ident">Value::Status</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">session_key</span>),
-            <span class="ident">val</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">UpdateError::Other</span>(<span class="macro">anyhow::anyhow!</span>(
+            Value::Int(<span class="kw">_</span>) | Value::Okay | Value::Status(<span class="kw">_</span>) =&gt; <span class="prelude-val">Ok</span>(session_key),
+            val =&gt; <span class="prelude-val">Err</span>(UpdateError::Other(<span class="macro">anyhow::anyhow!</span>(
                 <span class="string">&quot;Failed to update session state. {:?}&quot;</span>,
-                <span class="ident">val</span>
+                val
             ))),
         }
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">update_ttl</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">session_key</span>: <span class="kw-2">&amp;</span><span class="ident">SessionKey</span>, <span class="ident">ttl</span>: <span class="kw-2">&amp;</span><span class="ident">Duration</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">cache_key</span> <span class="op">=</span> (<span class="self">self</span>.<span class="ident">configuration</span>.<span class="ident">cache_keygen</span>)(<span class="ident">session_key</span>.<span class="ident">as_ref</span>());
+    <span class="kw">async fn </span>update_ttl(<span class="kw-2">&amp;</span><span class="self">self</span>, session_key: <span class="kw-2">&amp;</span>SessionKey, ttl: <span class="kw-2">&amp;</span>Duration) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
+        <span class="kw">let </span>cache_key = (<span class="self">self</span>.configuration.cache_keygen)(session_key.as_ref());
 
-        <span class="self">self</span>.<span class="ident">client</span>
-            .<span class="ident">clone</span>()
-            .<span class="ident">expire</span>(
-                <span class="kw-2">&amp;</span><span class="ident">cache_key</span>,
-                <span class="ident">ttl</span>.<span class="ident">whole_seconds</span>().<span class="ident">try_into</span>().<span class="ident">context</span>(
+        <span class="self">self</span>.client
+            .clone()
+            .expire(
+                <span class="kw-2">&amp;</span>cache_key,
+                ttl.whole_seconds().try_into().context(
                     <span class="string">&quot;Failed to convert the state TTL into the number of whole seconds remaining&quot;</span>,
                 )<span class="question-mark">?</span>,
             )
@@ -587,49 +587,49 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">delete</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">session_key</span>: <span class="kw-2">&amp;</span><span class="ident">SessionKey</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">anyhow::Error</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">cache_key</span> <span class="op">=</span> (<span class="self">self</span>.<span class="ident">configuration</span>.<span class="ident">cache_keygen</span>)(<span class="ident">session_key</span>.<span class="ident">as_ref</span>());
-        <span class="self">self</span>.<span class="ident">execute_command</span>(<span class="ident">redis::cmd</span>(<span class="string">&quot;DEL&quot;</span>).<span class="ident">arg</span>(<span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">cache_key</span>]))
-            .<span class="kw">await</span>
-            .<span class="ident">map_err</span>(<span class="ident">Into::into</span>)
-            .<span class="ident">map_err</span>(<span class="ident">UpdateError::Other</span>)<span class="question-mark">?</span>;
+    <span class="kw">async fn </span>delete(<span class="kw-2">&amp;</span><span class="self">self</span>, session_key: <span class="kw-2">&amp;</span>SessionKey) -&gt; <span class="prelude-ty">Result</span>&lt;(), anyhow::Error&gt; {
+        <span class="kw">let </span>cache_key = (<span class="self">self</span>.configuration.cache_keygen)(session_key.as_ref());
+        <span class="self">self</span>.execute_command(redis::cmd(<span class="string">&quot;DEL&quot;</span>).arg(<span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>cache_key]))
+            .<span class="kw">await
+            </span>.map_err(Into::into)
+            .map_err(UpdateError::Other)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
 }
 
-<span class="kw">impl</span> <span class="ident">RedisSessionStore</span> {
-    <span class="doccomment">/// Execute Redis command and retry once in certain cases.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// `ConnectionManager` automatically reconnects when it encounters an error talking to Redis.</span>
-    <span class="doccomment">/// The request that bumped into the error, though, fails.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This is generally OK, but there is an unpleasant edge case: Redis client timeouts. The</span>
-    <span class="doccomment">/// server is configured to drop connections who have been active longer than a pre-determined</span>
-    <span class="doccomment">/// threshold. `redis-rs` does not proactively detect that the connection has been dropped - you</span>
-    <span class="doccomment">/// only find out when you try to use it.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This helper method catches this case (`.is_connection_dropped`) to execute a retry. The</span>
-    <span class="doccomment">/// retry will be executed on a fresh connection, therefore it is likely to succeed (or fail for</span>
-    <span class="doccomment">/// a different more meaningful reason).</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">execute_command</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">FromRedisValue</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">cmd</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Cmd</span>) -&gt; <span class="ident">RedisResult</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">can_retry</span> <span class="op">=</span> <span class="bool-val">true</span>;
+<span class="kw">impl </span>RedisSessionStore {
+    <span class="doccomment">/// Execute Redis command and retry once in certain cases.
+    ///
+    /// `ConnectionManager` automatically reconnects when it encounters an error talking to Redis.
+    /// The request that bumped into the error, though, fails.
+    ///
+    /// This is generally OK, but there is an unpleasant edge case: Redis client timeouts. The
+    /// server is configured to drop connections who have been active longer than a pre-determined
+    /// threshold. `redis-rs` does not proactively detect that the connection has been dropped - you
+    /// only find out when you try to use it.
+    ///
+    /// This helper method catches this case (`.is_connection_dropped`) to execute a retry. The
+    /// retry will be executed on a fresh connection, therefore it is likely to succeed (or fail for
+    /// a different more meaningful reason).
+    </span><span class="kw">async fn </span>execute_command&lt;T: FromRedisValue&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, cmd: <span class="kw-2">&amp;mut </span>Cmd) -&gt; RedisResult&lt;T&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>can_retry = <span class="bool-val">true</span>;
 
-        <span class="kw">loop</span> {
-            <span class="kw">match</span> <span class="ident">cmd</span>.<span class="ident">query_async</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">client</span>.<span class="ident">clone</span>()).<span class="kw">await</span> {
-                <span class="prelude-val">Ok</span>(<span class="ident">value</span>) =&gt; <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">value</span>),
-                <span class="prelude-val">Err</span>(<span class="ident">err</span>) =&gt; {
-                    <span class="kw">if</span> <span class="ident">can_retry</span> <span class="op">&amp;&amp;</span> <span class="ident">err</span>.<span class="ident">is_connection_dropped</span>() {
+        <span class="kw">loop </span>{
+            <span class="kw">match </span>cmd.query_async(<span class="kw-2">&amp;mut </span><span class="self">self</span>.client.clone()).<span class="kw">await </span>{
+                <span class="prelude-val">Ok</span>(value) =&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(value),
+                <span class="prelude-val">Err</span>(err) =&gt; {
+                    <span class="kw">if </span>can_retry &amp;&amp; err.is_connection_dropped() {
                         <span class="macro">tracing::debug!</span>(
-                            <span class="string">&quot;Connection dropped while trying to talk to Redis. Retrying.&quot;</span>
-                        );
+                            <span class="string">&quot;Connection dropped while trying to talk to Redis. Retrying.&quot;
+                        </span>);
 
-                        <span class="comment">// Retry at most once</span>
-                        <span class="ident">can_retry</span> <span class="op">=</span> <span class="bool-val">false</span>;
+                        <span class="comment">// Retry at most once
+                        </span>can_retry = <span class="bool-val">false</span>;
 
                         <span class="kw">continue</span>;
-                    } <span class="kw">else</span> {
-                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>);
+                    } <span class="kw">else </span>{
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(err);
                     }
                 }
             }
@@ -637,62 +637,62 @@
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="ident">std::collections::HashMap</span>;
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use </span>std::collections::HashMap;
 
-    <span class="kw">use</span> <span class="ident">actix_web::cookie::time</span>;
-    <span class="kw">use</span> <span class="ident">redis::AsyncCommands</span>;
+    <span class="kw">use </span>actix_web::cookie::time;
+    <span class="kw">use </span>redis::AsyncCommands;
 
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::test_helpers::acceptance_test_suite</span>;
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use </span><span class="kw">crate</span>::test_helpers::acceptance_test_suite;
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">redis_store</span>() -&gt; <span class="ident">RedisSessionStore</span> {
-        <span class="ident">RedisSessionStore::new</span>(<span class="string">&quot;redis://127.0.0.1:6379&quot;</span>)
-            .<span class="kw">await</span>
-            .<span class="ident">unwrap</span>()
+    <span class="kw">async fn </span>redis_store() -&gt; RedisSessionStore {
+        RedisSessionStore::new(<span class="string">&quot;redis://127.0.0.1:6379&quot;</span>)
+            .<span class="kw">await
+            </span>.unwrap()
     }
 
-    <span class="attribute">#[<span class="ident">actix_web::test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">test_session_workflow</span>() {
-        <span class="kw">let</span> <span class="ident">redis_store</span> <span class="op">=</span> <span class="ident">redis_store</span>().<span class="kw">await</span>;
-        <span class="ident">acceptance_test_suite</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> <span class="ident">redis_store</span>.<span class="ident">clone</span>(), <span class="bool-val">true</span>).<span class="kw">await</span>;
+    <span class="attribute">#[actix_web::test]
+    </span><span class="kw">async fn </span>test_session_workflow() {
+        <span class="kw">let </span>redis_store = redis_store().<span class="kw">await</span>;
+        acceptance_test_suite(<span class="kw">move </span>|| redis_store.clone(), <span class="bool-val">true</span>).<span class="kw">await</span>;
     }
 
-    <span class="attribute">#[<span class="ident">actix_web::test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">loading_a_missing_session_returns_none</span>() {
-        <span class="kw">let</span> <span class="ident">store</span> <span class="op">=</span> <span class="ident">redis_store</span>().<span class="kw">await</span>;
-        <span class="kw">let</span> <span class="ident">session_key</span> <span class="op">=</span> <span class="ident">generate_session_key</span>();
-        <span class="macro">assert!</span>(<span class="ident">store</span>.<span class="ident">load</span>(<span class="kw-2">&amp;</span><span class="ident">session_key</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>().<span class="ident">is_none</span>());
+    <span class="attribute">#[actix_web::test]
+    </span><span class="kw">async fn </span>loading_a_missing_session_returns_none() {
+        <span class="kw">let </span>store = redis_store().<span class="kw">await</span>;
+        <span class="kw">let </span>session_key = generate_session_key();
+        <span class="macro">assert!</span>(store.load(<span class="kw-2">&amp;</span>session_key).<span class="kw">await</span>.unwrap().is_none());
     }
 
-    <span class="attribute">#[<span class="ident">actix_web::test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">loading_an_invalid_session_state_returns_deserialization_error</span>() {
-        <span class="kw">let</span> <span class="ident">store</span> <span class="op">=</span> <span class="ident">redis_store</span>().<span class="kw">await</span>;
-        <span class="kw">let</span> <span class="ident">session_key</span> <span class="op">=</span> <span class="ident">generate_session_key</span>();
-        <span class="ident">store</span>
-            .<span class="ident">client</span>
-            .<span class="ident">clone</span>()
-            .<span class="ident">set</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="kw">_</span>, ()<span class="op">&gt;</span>(<span class="ident">session_key</span>.<span class="ident">as_ref</span>(), <span class="string">&quot;random-thing-which-is-not-json&quot;</span>)
-            .<span class="kw">await</span>
-            .<span class="ident">unwrap</span>();
+    <span class="attribute">#[actix_web::test]
+    </span><span class="kw">async fn </span>loading_an_invalid_session_state_returns_deserialization_error() {
+        <span class="kw">let </span>store = redis_store().<span class="kw">await</span>;
+        <span class="kw">let </span>session_key = generate_session_key();
+        store
+            .client
+            .clone()
+            .set::&lt;<span class="kw">_</span>, <span class="kw">_</span>, ()&gt;(session_key.as_ref(), <span class="string">&quot;random-thing-which-is-not-json&quot;</span>)
+            .<span class="kw">await
+            </span>.unwrap();
         <span class="macro">assert!</span>(<span class="macro">matches!</span>(
-            <span class="ident">store</span>.<span class="ident">load</span>(<span class="kw-2">&amp;</span><span class="ident">session_key</span>).<span class="kw">await</span>.<span class="ident">unwrap_err</span>(),
-            <span class="ident">LoadError::Deserialization</span>(<span class="kw">_</span>),
+            store.load(<span class="kw-2">&amp;</span>session_key).<span class="kw">await</span>.unwrap_err(),
+            LoadError::Deserialization(<span class="kw">_</span>),
         ));
     }
 
-    <span class="attribute">#[<span class="ident">actix_web::test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">updating_of_an_expired_state_is_handled_gracefully</span>() {
-        <span class="kw">let</span> <span class="ident">store</span> <span class="op">=</span> <span class="ident">redis_store</span>().<span class="kw">await</span>;
-        <span class="kw">let</span> <span class="ident">session_key</span> <span class="op">=</span> <span class="ident">generate_session_key</span>();
-        <span class="kw">let</span> <span class="ident">initial_session_key</span> <span class="op">=</span> <span class="ident">session_key</span>.<span class="ident">as_ref</span>().<span class="ident">to_owned</span>();
-        <span class="kw">let</span> <span class="ident">updated_session_key</span> <span class="op">=</span> <span class="ident">store</span>
-            .<span class="ident">update</span>(<span class="ident">session_key</span>, <span class="ident">HashMap::new</span>(), <span class="kw-2">&amp;</span><span class="ident">time::Duration::seconds</span>(<span class="number">1</span>))
-            .<span class="kw">await</span>
-            .<span class="ident">unwrap</span>();
-        <span class="macro">assert_ne!</span>(<span class="ident">initial_session_key</span>, <span class="ident">updated_session_key</span>.<span class="ident">as_ref</span>());
+    <span class="attribute">#[actix_web::test]
+    </span><span class="kw">async fn </span>updating_of_an_expired_state_is_handled_gracefully() {
+        <span class="kw">let </span>store = redis_store().<span class="kw">await</span>;
+        <span class="kw">let </span>session_key = generate_session_key();
+        <span class="kw">let </span>initial_session_key = session_key.as_ref().to_owned();
+        <span class="kw">let </span>updated_session_key = store
+            .update(session_key, HashMap::new(), <span class="kw-2">&amp;</span>time::Duration::seconds(<span class="number">1</span>))
+            .<span class="kw">await
+            </span>.unwrap();
+        <span class="macro">assert_ne!</span>(initial_session_key, updated_session_key.as_ref());
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="actix_session" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (34a6cae28 2022-08-09)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="actix_session" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (060e47f74 2022-08-23)" ></div></body></html>

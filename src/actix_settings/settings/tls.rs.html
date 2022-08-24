@@ -18,23 +18,23 @@
 <span id="16">16</span>
 <span id="17">17</span>
 <span id="18">18</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::path::PathBuf</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>std::path::PathBuf;
 
-<span class="kw">use</span> <span class="ident">serde::Deserialize</span>;
+<span class="kw">use </span>serde::Deserialize;
 
-<span class="doccomment">/// TLS (HTTPS) configuration.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename_all</span> <span class="op">=</span> <span class="string">&quot;kebab-case&quot;</span>)]</span>
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;ssl&quot;</span>, <span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;https&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Tls</span> {
-    <span class="doccomment">/// Tru if accepting TLS connections should be enabled.</span>
-    <span class="kw">pub</span> <span class="ident">enabled</span>: <span class="ident">bool</span>,
+<span class="doccomment">/// TLS (HTTPS) configuration.
+</span><span class="attribute">#[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize)]
+#[serde(rename_all = <span class="string">&quot;kebab-case&quot;</span>)]
+#[doc(alias = <span class="string">&quot;ssl&quot;</span>, alias = <span class="string">&quot;https&quot;</span>)]
+</span><span class="kw">pub struct </span>Tls {
+    <span class="doccomment">/// Tru if accepting TLS connections should be enabled.
+    </span><span class="kw">pub </span>enabled: bool,
 
-    <span class="doccomment">/// Path to certificate `.pem` file.</span>
-    <span class="kw">pub</span> <span class="ident">certificate</span>: <span class="ident">PathBuf</span>,
+    <span class="doccomment">/// Path to certificate `.pem` file.
+    </span><span class="kw">pub </span>certificate: PathBuf,
 
-    <span class="doccomment">/// Path to private key `.pem` file.</span>
-    <span class="kw">pub</span> <span class="ident">private_key</span>: <span class="ident">PathBuf</span>,
+    <span class="doccomment">/// Path to private key `.pem` file.
+    </span><span class="kw">pub </span>private_key: PathBuf,
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="actix_settings" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (34a6cae28 2022-08-09)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="actix_settings" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (060e47f74 2022-08-23)" ></div></body></html>

@@ -26,31 +26,31 @@
 <span id="24">24</span>
 <span id="25">25</span>
 <span id="26">26</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Pluggable storage backends for session state.</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Pluggable storage backends for session state.
 
-<span class="kw">mod</span> <span class="ident">interface</span>;
-<span class="kw">mod</span> <span class="ident">session_key</span>;
+</span><span class="kw">mod </span>interface;
+<span class="kw">mod </span>session_key;
 
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::interface</span>::{<span class="ident">LoadError</span>, <span class="ident">SaveError</span>, <span class="ident">SessionStore</span>, <span class="ident">UpdateError</span>};
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::session_key::SessionKey</span>;
+<span class="kw">pub use </span><span class="self">self</span>::interface::{LoadError, SaveError, SessionStore, UpdateError};
+<span class="kw">pub use </span><span class="self">self</span>::session_key::SessionKey;
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;cookie-session&quot;</span>)]</span>
-<span class="kw">mod</span> <span class="ident">cookie</span>;
+<span class="attribute">#[cfg(feature = <span class="string">&quot;cookie-session&quot;</span>)]
+</span><span class="kw">mod </span>cookie;
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;redis-actor-session&quot;</span>)]</span>
-<span class="kw">mod</span> <span class="ident">redis_actor</span>;
+<span class="attribute">#[cfg(feature = <span class="string">&quot;redis-actor-session&quot;</span>)]
+</span><span class="kw">mod </span>redis_actor;
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;redis-rs-session&quot;</span>)]</span>
-<span class="kw">mod</span> <span class="ident">redis_rs</span>;
+<span class="attribute">#[cfg(feature = <span class="string">&quot;redis-rs-session&quot;</span>)]
+</span><span class="kw">mod </span>redis_rs;
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;redis-actor-session&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;redis-rs-session&quot;</span>))]</span>
-<span class="kw">mod</span> <span class="ident">utils</span>;
+<span class="attribute">#[cfg(any(feature = <span class="string">&quot;redis-actor-session&quot;</span>, feature = <span class="string">&quot;redis-rs-session&quot;</span>))]
+</span><span class="kw">mod </span>utils;
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;cookie-session&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">cookie::CookieSessionStore</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;redis-actor-session&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">redis_actor</span>::{<span class="ident">RedisActorSessionStore</span>, <span class="ident">RedisActorSessionStoreBuilder</span>};
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;redis-rs-session&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">redis_rs</span>::{<span class="ident">RedisSessionStore</span>, <span class="ident">RedisSessionStoreBuilder</span>};
+<span class="attribute">#[cfg(feature = <span class="string">&quot;cookie-session&quot;</span>)]
+</span><span class="kw">pub use </span>cookie::CookieSessionStore;
+<span class="attribute">#[cfg(feature = <span class="string">&quot;redis-actor-session&quot;</span>)]
+</span><span class="kw">pub use </span>redis_actor::{RedisActorSessionStore, RedisActorSessionStoreBuilder};
+<span class="attribute">#[cfg(feature = <span class="string">&quot;redis-rs-session&quot;</span>)]
+</span><span class="kw">pub use </span>redis_rs::{RedisSessionStore, RedisSessionStoreBuilder};
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="actix_session" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (34a6cae28 2022-08-09)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="actix_session" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (060e47f74 2022-08-23)" ></div></body></html>

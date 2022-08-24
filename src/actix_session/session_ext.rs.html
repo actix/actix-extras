@@ -38,43 +38,43 @@
 <span id="36">36</span>
 <span id="37">37</span>
 <span id="38">38</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">actix_web</span>::{
-    <span class="ident">dev</span>::{<span class="ident">ServiceRequest</span>, <span class="ident">ServiceResponse</span>},
-    <span class="ident">guard::GuardContext</span>,
-    <span class="ident">HttpMessage</span>, <span class="ident">HttpRequest</span>,
+</pre><pre class="rust"><code><span class="kw">use </span>actix_web::{
+    dev::{ServiceRequest, ServiceResponse},
+    guard::GuardContext,
+    HttpMessage, HttpRequest,
 };
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::Session</span>;
+<span class="kw">use </span><span class="kw">crate</span>::Session;
 
-<span class="doccomment">/// Extract a [`Session`] object from various `actix-web` types (e.g. `HttpRequest`,</span>
-<span class="doccomment">/// `ServiceRequest`, `ServiceResponse`).</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">SessionExt</span> {
-    <span class="doccomment">/// Extract a [`Session`] object.</span>
-    <span class="kw">fn</span> <span class="ident">get_session</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Session</span>;
+<span class="doccomment">/// Extract a [`Session`] object from various `actix-web` types (e.g. `HttpRequest`,
+/// `ServiceRequest`, `ServiceResponse`).
+</span><span class="kw">pub trait </span>SessionExt {
+    <span class="doccomment">/// Extract a [`Session`] object.
+    </span><span class="kw">fn </span>get_session(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Session;
 }
 
-<span class="kw">impl</span> <span class="ident">SessionExt</span> <span class="kw">for</span> <span class="ident">HttpRequest</span> {
-    <span class="kw">fn</span> <span class="ident">get_session</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Session</span> {
-        <span class="ident">Session::get_session</span>(<span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">extensions_mut</span>())
+<span class="kw">impl </span>SessionExt <span class="kw">for </span>HttpRequest {
+    <span class="kw">fn </span>get_session(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Session {
+        Session::get_session(<span class="kw-2">&amp;mut *</span><span class="self">self</span>.extensions_mut())
     }
 }
 
-<span class="kw">impl</span> <span class="ident">SessionExt</span> <span class="kw">for</span> <span class="ident">ServiceRequest</span> {
-    <span class="kw">fn</span> <span class="ident">get_session</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Session</span> {
-        <span class="ident">Session::get_session</span>(<span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">extensions_mut</span>())
+<span class="kw">impl </span>SessionExt <span class="kw">for </span>ServiceRequest {
+    <span class="kw">fn </span>get_session(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Session {
+        Session::get_session(<span class="kw-2">&amp;mut *</span><span class="self">self</span>.extensions_mut())
     }
 }
 
-<span class="kw">impl</span> <span class="ident">SessionExt</span> <span class="kw">for</span> <span class="ident">ServiceResponse</span> {
-    <span class="kw">fn</span> <span class="ident">get_session</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Session</span> {
-        <span class="self">self</span>.<span class="ident">request</span>().<span class="ident">get_session</span>()
+<span class="kw">impl </span>SessionExt <span class="kw">for </span>ServiceResponse {
+    <span class="kw">fn </span>get_session(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Session {
+        <span class="self">self</span>.request().get_session()
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">SessionExt</span> <span class="kw">for</span> <span class="ident">GuardContext</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">get_session</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Session</span> {
-        <span class="ident">Session::get_session</span>(<span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">req_data_mut</span>())
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; SessionExt <span class="kw">for </span>GuardContext&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">fn </span>get_session(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Session {
+        Session::get_session(<span class="kw-2">&amp;mut *</span><span class="self">self</span>.req_data_mut())
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_session" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (34a6cae28 2022-08-09)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_session" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (060e47f74 2022-08-23)" ></div></body></html>

@@ -141,148 +141,148 @@
 <span id="141">141</span>
 <span id="142">142</span>
 <span id="143">143</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections::VecDeque</span>, <span class="ident">io</span>};
+</pre><pre class="rust"><code><span class="kw">use </span>std::{collections::VecDeque, io};
 
-<span class="kw">use</span> <span class="ident">actix::prelude</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident">actix_rt::net::TcpStream</span>;
-<span class="kw">use</span> <span class="ident">actix_service::boxed</span>::{<span class="self">self</span>, <span class="ident">BoxService</span>};
-<span class="kw">use</span> <span class="ident">actix_tls::connect</span>::{<span class="ident">ConnectError</span>, <span class="ident">ConnectInfo</span>, <span class="ident">Connection</span>, <span class="ident">ConnectorService</span>};
-<span class="kw">use</span> <span class="ident">backoff</span>::{<span class="ident">backoff::Backoff</span>, <span class="ident">ExponentialBackoff</span>};
-<span class="kw">use</span> <span class="ident">log</span>::{<span class="ident">error</span>, <span class="ident">info</span>, <span class="ident">warn</span>};
-<span class="kw">use</span> <span class="ident">redis_async</span>::{
-    <span class="ident">error::Error</span> <span class="kw">as</span> <span class="ident">RespError</span>,
-    <span class="ident">resp</span>::{<span class="ident">RespCodec</span>, <span class="ident">RespValue</span>},
+<span class="kw">use </span>actix::prelude::<span class="kw-2">*</span>;
+<span class="kw">use </span>actix_rt::net::TcpStream;
+<span class="kw">use </span>actix_service::boxed::{<span class="self">self</span>, BoxService};
+<span class="kw">use </span>actix_tls::connect::{ConnectError, ConnectInfo, Connection, ConnectorService};
+<span class="kw">use </span>backoff::{backoff::Backoff, ExponentialBackoff};
+<span class="kw">use </span>log::{error, info, warn};
+<span class="kw">use </span>redis_async::{
+    error::Error <span class="kw">as </span>RespError,
+    resp::{RespCodec, RespValue},
 };
-<span class="kw">use</span> <span class="ident">tokio</span>::{
-    <span class="ident">io</span>::{<span class="ident">split</span>, <span class="ident">WriteHalf</span>},
-    <span class="ident">sync::oneshot</span>,
+<span class="kw">use </span>tokio::{
+    io::{split, WriteHalf},
+    sync::oneshot,
 };
-<span class="kw">use</span> <span class="ident">tokio_util::codec::FramedRead</span>;
+<span class="kw">use </span>tokio_util::codec::FramedRead;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::Error</span>;
+<span class="kw">use </span><span class="kw">crate</span>::Error;
 
-<span class="doccomment">/// Command for sending data to Redis.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Command</span>(<span class="kw">pub</span> <span class="ident">RespValue</span>);
+<span class="doccomment">/// Command for sending data to Redis.
+</span><span class="attribute">#[derive(Debug)]
+</span><span class="kw">pub struct </span>Command(<span class="kw">pub </span>RespValue);
 
-<span class="kw">impl</span> <span class="ident">Message</span> <span class="kw">for</span> <span class="ident">Command</span> {
-    <span class="kw">type</span> <span class="prelude-ty">Result</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RespValue</span>, <span class="ident">Error</span><span class="op">&gt;</span>;
+<span class="kw">impl </span>Message <span class="kw">for </span>Command {
+    <span class="kw">type </span><span class="prelude-ty">Result </span>= <span class="prelude-ty">Result</span>&lt;RespValue, Error&gt;;
 }
 
-<span class="doccomment">/// Redis communication actor.</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RedisActor</span> {
-    <span class="ident">addr</span>: <span class="ident">String</span>,
-    <span class="ident">connector</span>: <span class="ident">BoxService</span><span class="op">&lt;</span><span class="ident">ConnectInfo</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>, <span class="ident">Connection</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">TcpStream</span><span class="op">&gt;</span>, <span class="ident">ConnectError</span><span class="op">&gt;</span>,
-    <span class="ident">backoff</span>: <span class="ident">ExponentialBackoff</span>,
-    <span class="ident">cell</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">actix::io::FramedWrite</span><span class="op">&lt;</span><span class="ident">RespValue</span>, <span class="ident">WriteHalf</span><span class="op">&lt;</span><span class="ident">TcpStream</span><span class="op">&gt;</span>, <span class="ident">RespCodec</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">queue</span>: <span class="ident">VecDeque</span><span class="op">&lt;</span><span class="ident">oneshot::Sender</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RespValue</span>, <span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+<span class="doccomment">/// Redis communication actor.
+</span><span class="kw">pub struct </span>RedisActor {
+    addr: String,
+    connector: BoxService&lt;ConnectInfo&lt;String&gt;, Connection&lt;String, TcpStream&gt;, ConnectError&gt;,
+    backoff: ExponentialBackoff,
+    cell: <span class="prelude-ty">Option</span>&lt;actix::io::FramedWrite&lt;RespValue, WriteHalf&lt;TcpStream&gt;, RespCodec&gt;&gt;,
+    queue: VecDeque&lt;oneshot::Sender&lt;<span class="prelude-ty">Result</span>&lt;RespValue, Error&gt;&gt;&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">RedisActor</span> {
-    <span class="doccomment">/// Start new `Supervisor` with `RedisActor`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">start</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">addr</span>: <span class="ident">S</span>) -&gt; <span class="ident">Addr</span><span class="op">&lt;</span><span class="ident">RedisActor</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">addr</span>.<span class="ident">into</span>();
+<span class="kw">impl </span>RedisActor {
+    <span class="doccomment">/// Start new `Supervisor` with `RedisActor`.
+    </span><span class="kw">pub fn </span>start&lt;S: Into&lt;String&gt;&gt;(addr: S) -&gt; Addr&lt;RedisActor&gt; {
+        <span class="kw">let </span>addr = addr.into();
 
-        <span class="kw">let</span> <span class="ident">backoff</span> <span class="op">=</span> <span class="ident">ExponentialBackoff</span> {
-            <span class="ident">max_elapsed_time</span>: <span class="prelude-val">None</span>,
-            ..<span class="ident">Default::default</span>()
+        <span class="kw">let </span>backoff = ExponentialBackoff {
+            max_elapsed_time: <span class="prelude-val">None</span>,
+            ..Default::default()
         };
 
-        <span class="ident">Supervisor::start</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">RedisActor</span> {
-            <span class="ident">addr</span>,
-            <span class="ident">connector</span>: <span class="ident">boxed::service</span>(<span class="ident">ConnectorService::default</span>()),
-            <span class="ident">cell</span>: <span class="prelude-val">None</span>,
-            <span class="ident">backoff</span>,
-            <span class="ident">queue</span>: <span class="ident">VecDeque::new</span>(),
+        Supervisor::start(|<span class="kw">_</span>| RedisActor {
+            addr,
+            connector: boxed::service(ConnectorService::default()),
+            cell: <span class="prelude-val">None</span>,
+            backoff,
+            queue: VecDeque::new(),
         })
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Actor</span> <span class="kw">for</span> <span class="ident">RedisActor</span> {
-    <span class="kw">type</span> <span class="ident">Context</span> <span class="op">=</span> <span class="ident">Context</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>;
+<span class="kw">impl </span>Actor <span class="kw">for </span>RedisActor {
+    <span class="kw">type </span>Context = Context&lt;<span class="self">Self</span>&gt;;
 
-    <span class="kw">fn</span> <span class="ident">started</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">ctx</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Context</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>) {
-        <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="ident">ConnectInfo::new</span>(<span class="self">self</span>.<span class="ident">addr</span>.<span class="ident">to_owned</span>());
-        <span class="self">self</span>.<span class="ident">connector</span>
-            .<span class="ident">call</span>(<span class="ident">req</span>)
-            .<span class="ident">into_actor</span>(<span class="self">self</span>)
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">res</span>, <span class="ident">act</span>, <span class="ident">ctx</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">res</span> {
-                <span class="prelude-val">Ok</span>(<span class="ident">conn</span>) =&gt; {
-                    <span class="kw">let</span> <span class="ident">stream</span> <span class="op">=</span> <span class="ident">conn</span>.<span class="ident">into_parts</span>().<span class="number">0</span>;
-                    <span class="macro">info!</span>(<span class="string">&quot;Connected to redis server: {}&quot;</span>, <span class="ident">act</span>.<span class="ident">addr</span>);
+    <span class="kw">fn </span>started(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="self">Self</span>&gt;) {
+        <span class="kw">let </span>req = ConnectInfo::new(<span class="self">self</span>.addr.to_owned());
+        <span class="self">self</span>.connector
+            .call(req)
+            .into_actor(<span class="self">self</span>)
+            .map(|res, act, ctx| <span class="kw">match </span>res {
+                <span class="prelude-val">Ok</span>(conn) =&gt; {
+                    <span class="kw">let </span>stream = conn.into_parts().<span class="number">0</span>;
+                    <span class="macro">info!</span>(<span class="string">&quot;Connected to redis server: {}&quot;</span>, act.addr);
 
-                    <span class="kw">let</span> (<span class="ident">r</span>, <span class="ident">w</span>) <span class="op">=</span> <span class="ident">split</span>(<span class="ident">stream</span>);
+                    <span class="kw">let </span>(r, w) = split(stream);
 
-                    <span class="comment">// configure write side of the connection</span>
-                    <span class="kw">let</span> <span class="ident">framed</span> <span class="op">=</span> <span class="ident">actix::io::FramedWrite::new</span>(<span class="ident">w</span>, <span class="ident">RespCodec</span>, <span class="ident">ctx</span>);
-                    <span class="ident">act</span>.<span class="ident">cell</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">framed</span>);
+                    <span class="comment">// configure write side of the connection
+                    </span><span class="kw">let </span>framed = actix::io::FramedWrite::new(w, RespCodec, ctx);
+                    act.cell = <span class="prelude-val">Some</span>(framed);
 
-                    <span class="comment">// read side of the connection</span>
-                    <span class="ident">ctx</span>.<span class="ident">add_stream</span>(<span class="ident">FramedRead::new</span>(<span class="ident">r</span>, <span class="ident">RespCodec</span>));
+                    <span class="comment">// read side of the connection
+                    </span>ctx.add_stream(FramedRead::new(r, RespCodec));
 
-                    <span class="ident">act</span>.<span class="ident">backoff</span>.<span class="ident">reset</span>();
+                    act.backoff.reset();
                 }
-                <span class="prelude-val">Err</span>(<span class="ident">err</span>) =&gt; {
-                    <span class="macro">error!</span>(<span class="string">&quot;Can not connect to redis server: {}&quot;</span>, <span class="ident">err</span>);
-                    <span class="comment">// re-connect with backoff time.</span>
-                    <span class="comment">// we stop current context, supervisor will restart it.</span>
-                    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">timeout</span>) <span class="op">=</span> <span class="ident">act</span>.<span class="ident">backoff</span>.<span class="ident">next_backoff</span>() {
-                        <span class="ident">ctx</span>.<span class="ident">run_later</span>(<span class="ident">timeout</span>, <span class="op">|</span><span class="kw">_</span>, <span class="ident">ctx</span><span class="op">|</span> <span class="ident">ctx</span>.<span class="ident">stop</span>());
+                <span class="prelude-val">Err</span>(err) =&gt; {
+                    <span class="macro">error!</span>(<span class="string">&quot;Can not connect to redis server: {}&quot;</span>, err);
+                    <span class="comment">// re-connect with backoff time.
+                    // we stop current context, supervisor will restart it.
+                    </span><span class="kw">if let </span><span class="prelude-val">Some</span>(timeout) = act.backoff.next_backoff() {
+                        ctx.run_later(timeout, |<span class="kw">_</span>, ctx| ctx.stop());
                     }
                 }
             })
-            .<span class="ident">wait</span>(<span class="ident">ctx</span>);
+            .wait(ctx);
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Supervised</span> <span class="kw">for</span> <span class="ident">RedisActor</span> {
-    <span class="kw">fn</span> <span class="ident">restarting</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="kw">_</span>: <span class="kw-2">&amp;mut</span> <span class="ident"><span class="self">Self</span>::Context</span>) {
-        <span class="self">self</span>.<span class="ident">cell</span>.<span class="ident">take</span>();
-        <span class="kw">for</span> <span class="ident">tx</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">queue</span>.<span class="ident">drain</span>(..) {
-            <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">tx</span>.<span class="ident">send</span>(<span class="prelude-val">Err</span>(<span class="ident">Error::Disconnected</span>));
+<span class="kw">impl </span>Supervised <span class="kw">for </span>RedisActor {
+    <span class="kw">fn </span>restarting(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw">_</span>: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Context) {
+        <span class="self">self</span>.cell.take();
+        <span class="kw">for </span>tx <span class="kw">in </span><span class="self">self</span>.queue.drain(..) {
+            <span class="kw">let _ </span>= tx.send(<span class="prelude-val">Err</span>(Error::Disconnected));
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">actix::io::WriteHandler</span><span class="op">&lt;</span><span class="ident">io::Error</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">RedisActor</span> {
-    <span class="kw">fn</span> <span class="ident">error</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">err</span>: <span class="ident">io::Error</span>, <span class="kw">_</span>: <span class="kw-2">&amp;mut</span> <span class="ident"><span class="self">Self</span>::Context</span>) -&gt; <span class="ident">Running</span> {
-        <span class="macro">warn!</span>(<span class="string">&quot;Redis connection dropped: {} error: {}&quot;</span>, <span class="self">self</span>.<span class="ident">addr</span>, <span class="ident">err</span>);
-        <span class="ident">Running::Stop</span>
+<span class="kw">impl </span>actix::io::WriteHandler&lt;io::Error&gt; <span class="kw">for </span>RedisActor {
+    <span class="kw">fn </span>error(<span class="kw-2">&amp;mut </span><span class="self">self</span>, err: io::Error, <span class="kw">_</span>: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Context) -&gt; Running {
+        <span class="macro">warn!</span>(<span class="string">&quot;Redis connection dropped: {} error: {}&quot;</span>, <span class="self">self</span>.addr, err);
+        Running::Stop
     }
 }
 
-<span class="kw">impl</span> <span class="ident">StreamHandler</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RespValue</span>, <span class="ident">RespError</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">RedisActor</span> {
-    <span class="kw">fn</span> <span class="ident">handle</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">msg</span>: <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RespValue</span>, <span class="ident">RespError</span><span class="op">&gt;</span>, <span class="ident">ctx</span>: <span class="kw-2">&amp;mut</span> <span class="ident"><span class="self">Self</span>::Context</span>) {
-        <span class="kw">match</span> <span class="ident">msg</span> {
-            <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; {
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">tx</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">queue</span>.<span class="ident">pop_front</span>() {
-                    <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">tx</span>.<span class="ident">send</span>(<span class="prelude-val">Err</span>(<span class="ident">e</span>.<span class="ident">into</span>()));
+<span class="kw">impl </span>StreamHandler&lt;<span class="prelude-ty">Result</span>&lt;RespValue, RespError&gt;&gt; <span class="kw">for </span>RedisActor {
+    <span class="kw">fn </span>handle(<span class="kw-2">&amp;mut </span><span class="self">self</span>, msg: <span class="prelude-ty">Result</span>&lt;RespValue, RespError&gt;, ctx: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Context) {
+        <span class="kw">match </span>msg {
+            <span class="prelude-val">Err</span>(e) =&gt; {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(tx) = <span class="self">self</span>.queue.pop_front() {
+                    <span class="kw">let _ </span>= tx.send(<span class="prelude-val">Err</span>(e.into()));
                 }
-                <span class="ident">ctx</span>.<span class="ident">stop</span>();
+                ctx.stop();
             }
-            <span class="prelude-val">Ok</span>(<span class="ident">val</span>) =&gt; {
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">tx</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">queue</span>.<span class="ident">pop_front</span>() {
-                    <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">tx</span>.<span class="ident">send</span>(<span class="prelude-val">Ok</span>(<span class="ident">val</span>));
+            <span class="prelude-val">Ok</span>(val) =&gt; {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(tx) = <span class="self">self</span>.queue.pop_front() {
+                    <span class="kw">let _ </span>= tx.send(<span class="prelude-val">Ok</span>(val));
                 }
             }
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Handler</span><span class="op">&lt;</span><span class="ident">Command</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">RedisActor</span> {
-    <span class="kw">type</span> <span class="prelude-ty">Result</span> <span class="op">=</span> <span class="ident">ResponseFuture</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RespValue</span>, <span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span>;
+<span class="kw">impl </span>Handler&lt;Command&gt; <span class="kw">for </span>RedisActor {
+    <span class="kw">type </span><span class="prelude-ty">Result </span>= ResponseFuture&lt;<span class="prelude-ty">Result</span>&lt;RespValue, Error&gt;&gt;;
 
-    <span class="kw">fn</span> <span class="ident">handle</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">msg</span>: <span class="ident">Command</span>, <span class="kw">_</span>: <span class="kw-2">&amp;mut</span> <span class="ident"><span class="self">Self</span>::Context</span>) -&gt; <span class="ident"><span class="self">Self</span>::Result</span> {
-        <span class="kw">let</span> (<span class="ident">tx</span>, <span class="ident">rx</span>) <span class="op">=</span> <span class="ident">oneshot::channel</span>();
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">cell</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">cell</span> {
-            <span class="self">self</span>.<span class="ident">queue</span>.<span class="ident">push_back</span>(<span class="ident">tx</span>);
-            <span class="ident">cell</span>.<span class="ident">write</span>(<span class="ident">msg</span>.<span class="number">0</span>);
-        } <span class="kw">else</span> {
-            <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">tx</span>.<span class="ident">send</span>(<span class="prelude-val">Err</span>(<span class="ident">Error::NotConnected</span>));
+    <span class="kw">fn </span>handle(<span class="kw-2">&amp;mut </span><span class="self">self</span>, msg: Command, <span class="kw">_</span>: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Context) -&gt; <span class="self">Self</span>::Result {
+        <span class="kw">let </span>(tx, rx) = oneshot::channel();
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>cell) = <span class="self">self</span>.cell {
+            <span class="self">self</span>.queue.push_back(tx);
+            cell.write(msg.<span class="number">0</span>);
+        } <span class="kw">else </span>{
+            <span class="kw">let _ </span>= tx.send(<span class="prelude-val">Err</span>(Error::NotConnected));
         }
 
-        <span class="ident">Box::pin</span>(<span class="kw">async</span> <span class="kw">move</span> { <span class="ident">rx</span>.<span class="kw">await</span>.<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Error::Disconnected</span>)<span class="question-mark">?</span> })
+        Box::pin(<span class="kw">async move </span>{ rx.<span class="kw">await</span>.map_err(|<span class="kw">_</span>| Error::Disconnected)<span class="question-mark">? </span>})
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_redis" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (34a6cae28 2022-08-09)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_redis" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (060e47f74 2022-08-23)" ></div></body></html>

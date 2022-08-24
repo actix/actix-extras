@@ -324,329 +324,329 @@
 <span id="322">322</span>
 <span id="323">323</span>
 <span id="324">324</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{
-    <span class="ident">cell</span>::{<span class="ident">Ref</span>, <span class="ident">RefCell</span>},
-    <span class="ident">collections::HashMap</span>,
-    <span class="ident">error::Error</span> <span class="kw">as</span> <span class="ident">StdError</span>,
-    <span class="ident">mem</span>,
-    <span class="ident">rc::Rc</span>,
+</pre><pre class="rust"><code><span class="kw">use </span>std::{
+    cell::{Ref, RefCell},
+    collections::HashMap,
+    error::Error <span class="kw">as </span>StdError,
+    mem,
+    rc::Rc,
 };
 
-<span class="kw">use</span> <span class="ident">actix_utils::future</span>::{<span class="ident">ready</span>, <span class="ident">Ready</span>};
-<span class="kw">use</span> <span class="ident">actix_web</span>::{
-    <span class="ident">body::BoxBody</span>,
-    <span class="ident">dev</span>::{<span class="ident">Extensions</span>, <span class="ident">Payload</span>, <span class="ident">ServiceRequest</span>, <span class="ident">ServiceResponse</span>},
-    <span class="ident">error::Error</span>,
-    <span class="ident">FromRequest</span>, <span class="ident">HttpMessage</span>, <span class="ident">HttpRequest</span>, <span class="ident">HttpResponse</span>, <span class="ident">ResponseError</span>,
+<span class="kw">use </span>actix_utils::future::{ready, Ready};
+<span class="kw">use </span>actix_web::{
+    body::BoxBody,
+    dev::{Extensions, Payload, ServiceRequest, ServiceResponse},
+    error::Error,
+    FromRequest, HttpMessage, HttpRequest, HttpResponse, ResponseError,
 };
-<span class="kw">use</span> <span class="ident">anyhow::Context</span>;
-<span class="kw">use</span> <span class="ident">derive_more</span>::{<span class="ident">Display</span>, <span class="ident">From</span>};
-<span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">de::DeserializeOwned</span>, <span class="ident">Serialize</span>};
+<span class="kw">use </span>anyhow::Context;
+<span class="kw">use </span>derive_more::{Display, From};
+<span class="kw">use </span>serde::{de::DeserializeOwned, Serialize};
 
-<span class="doccomment">/// The primary interface to access and modify session state.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [`Session`] is an [extractor](#impl-FromRequest)—you can specify it as an input type for your</span>
-<span class="doccomment">/// request handlers and it will be automatically extracted from the incoming request.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// use actix_session::Session;</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// async fn index(session: Session) -&gt; actix_web::Result&lt;&amp;&#39;static str&gt; {</span>
-<span class="doccomment">///     // access session data</span>
-<span class="doccomment">///     if let Some(count) = session.get::&lt;i32&gt;(&quot;counter&quot;)? {</span>
-<span class="doccomment">///         session.insert(&quot;counter&quot;, count + 1)?;</span>
-<span class="doccomment">///     } else {</span>
-<span class="doccomment">///         session.insert(&quot;counter&quot;, 1)?;</span>
-<span class="doccomment">///     }</span>
-<span class="doccomment">///</span>
-<span class="doccomment">///     Ok(&quot;Welcome!&quot;)</span>
-<span class="doccomment">/// }</span>
-<span class="doccomment">/// # actix_web::web::to(index);</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// You can also retrieve a [`Session`] object from an `HttpRequest` or a `ServiceRequest` using</span>
-<span class="doccomment">/// [`SessionExt`].</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [`SessionExt`]: crate::SessionExt</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Session</span>(<span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">SessionInner</span><span class="op">&gt;</span><span class="op">&gt;</span>);
+<span class="doccomment">/// The primary interface to access and modify session state.
+///
+/// [`Session`] is an [extractor](#impl-FromRequest)—you can specify it as an input type for your
+/// request handlers and it will be automatically extracted from the incoming request.
+///
+/// ```
+/// use actix_session::Session;
+///
+/// async fn index(session: Session) -&gt; actix_web::Result&lt;&amp;&#39;static str&gt; {
+///     // access session data
+///     if let Some(count) = session.get::&lt;i32&gt;(&quot;counter&quot;)? {
+///         session.insert(&quot;counter&quot;, count + 1)?;
+///     } else {
+///         session.insert(&quot;counter&quot;, 1)?;
+///     }
+///
+///     Ok(&quot;Welcome!&quot;)
+/// }
+/// # actix_web::web::to(index);
+/// ```
+///
+/// You can also retrieve a [`Session`] object from an `HttpRequest` or a `ServiceRequest` using
+/// [`SessionExt`].
+///
+/// [`SessionExt`]: crate::SessionExt
+</span><span class="attribute">#[derive(Clone)]
+</span><span class="kw">pub struct </span>Session(Rc&lt;RefCell&lt;SessionInner&gt;&gt;);
 
-<span class="doccomment">/// Status of a [`Session`].</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">SessionStatus</span> {
-    <span class="doccomment">/// Session state has been updated - the changes will have to be persisted to the backend.</span>
-    <span class="ident">Changed</span>,
+<span class="doccomment">/// Status of a [`Session`].
+</span><span class="attribute">#[derive(Debug, Clone, PartialEq, Eq)]
+</span><span class="kw">pub enum </span>SessionStatus {
+    <span class="doccomment">/// Session state has been updated - the changes will have to be persisted to the backend.
+    </span>Changed,
 
-    <span class="doccomment">/// The session has been flagged for deletion - the session cookie will be removed from</span>
-    <span class="doccomment">/// the client and the session state will be deleted from the session store.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Most operations on the session after it has been marked for deletion will have no effect.</span>
-    <span class="ident">Purged</span>,
+    <span class="doccomment">/// The session has been flagged for deletion - the session cookie will be removed from
+    /// the client and the session state will be deleted from the session store.
+    ///
+    /// Most operations on the session after it has been marked for deletion will have no effect.
+    </span>Purged,
 
-    <span class="doccomment">/// The session has been flagged for renewal.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The session key will be regenerated and the time-to-live of the session state will be</span>
-    <span class="doccomment">/// extended.</span>
-    <span class="ident">Renewed</span>,
+    <span class="doccomment">/// The session has been flagged for renewal.
+    ///
+    /// The session key will be regenerated and the time-to-live of the session state will be
+    /// extended.
+    </span>Renewed,
 
-    <span class="doccomment">/// The session state has not been modified since its creation/retrieval.</span>
-    <span class="ident">Unchanged</span>,
+    <span class="doccomment">/// The session state has not been modified since its creation/retrieval.
+    </span>Unchanged,
 }
 
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">SessionStatus</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="ident">SessionStatus</span> {
-        <span class="ident">SessionStatus::Unchanged</span>
+<span class="kw">impl </span>Default <span class="kw">for </span>SessionStatus {
+    <span class="kw">fn </span>default() -&gt; SessionStatus {
+        SessionStatus::Unchanged
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
-<span class="kw">struct</span> <span class="ident">SessionInner</span> {
-    <span class="ident">state</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">String</span><span class="op">&gt;</span>,
-    <span class="ident">status</span>: <span class="ident">SessionStatus</span>,
+<span class="attribute">#[derive(Default)]
+</span><span class="kw">struct </span>SessionInner {
+    state: HashMap&lt;String, String&gt;,
+    status: SessionStatus,
 }
 
-<span class="kw">impl</span> <span class="ident">Session</span> {
-    <span class="doccomment">/// Get a `value` from the session.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// It returns an error if it fails to deserialize as `T` the JSON value associated with `key`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">DeserializeOwned</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">SessionGetError</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">val_str</span>) <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">borrow</span>().<span class="ident">state</span>.<span class="ident">get</span>(<span class="ident">key</span>) {
+<span class="kw">impl </span>Session {
+    <span class="doccomment">/// Get a `value` from the session.
+    ///
+    /// It returns an error if it fails to deserialize as `T` the JSON value associated with `key`.
+    </span><span class="kw">pub fn </span>get&lt;T: DeserializeOwned&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;T&gt;, SessionGetError&gt; {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(val_str) = <span class="self">self</span>.<span class="number">0</span>.borrow().state.get(key) {
             <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(
-                <span class="ident">serde_json::from_str</span>(<span class="ident">val_str</span>)
-                    .<span class="ident">with_context</span>(<span class="op">|</span><span class="op">|</span> {
+                serde_json::from_str(val_str)
+                    .with_context(|| {
                         <span class="macro">format!</span>(
                             <span class="string">&quot;Failed to deserialize the JSON-encoded session data attached to key \
                             `{}` as a `{}` type&quot;</span>,
-                            <span class="ident">key</span>,
-                            <span class="ident">std::any::type_name</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>()
+                            key,
+                            std::any::type_name::&lt;T&gt;()
                         )
                     })
-                    .<span class="ident">map_err</span>(<span class="ident">SessionGetError</span>)<span class="question-mark">?</span>,
+                    .map_err(SessionGetError)<span class="question-mark">?</span>,
             ))
-        } <span class="kw">else</span> {
+        } <span class="kw">else </span>{
             <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>)
         }
     }
 
-    <span class="doccomment">/// Get all raw key-value data from the session.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Note that values are JSON encoded.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">entries</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Ref</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="ident">Ref::map</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">borrow</span>(), <span class="op">|</span><span class="ident">inner</span><span class="op">|</span> <span class="kw-2">&amp;</span><span class="ident">inner</span>.<span class="ident">state</span>)
+    <span class="doccomment">/// Get all raw key-value data from the session.
+    ///
+    /// Note that values are JSON encoded.
+    </span><span class="kw">pub fn </span>entries(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Ref&lt;<span class="lifetime">&#39;_</span>, HashMap&lt;String, String&gt;&gt; {
+        Ref::map(<span class="self">self</span>.<span class="number">0</span>.borrow(), |inner| <span class="kw-2">&amp;</span>inner.state)
     }
 
-    <span class="doccomment">/// Returns session status.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">status</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">SessionStatus</span> {
-        <span class="ident">Ref::map</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">borrow</span>(), <span class="op">|</span><span class="ident">inner</span><span class="op">|</span> <span class="kw-2">&amp;</span><span class="ident">inner</span>.<span class="ident">status</span>).<span class="ident">clone</span>()
+    <span class="doccomment">/// Returns session status.
+    </span><span class="kw">pub fn </span>status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; SessionStatus {
+        Ref::map(<span class="self">self</span>.<span class="number">0</span>.borrow(), |inner| <span class="kw-2">&amp;</span>inner.status).clone()
     }
 
-    <span class="doccomment">/// Inserts a key-value pair into the session.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Any serializable value can be used and will be encoded as JSON in session data, hence why</span>
-    <span class="doccomment">/// only a reference to the value is taken.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// It returns an error if it fails to serialize `value` to JSON.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">insert</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Serialize</span><span class="op">&gt;</span>(
+    <span class="doccomment">/// Inserts a key-value pair into the session.
+    ///
+    /// Any serializable value can be used and will be encoded as JSON in session data, hence why
+    /// only a reference to the value is taken.
+    ///
+    /// It returns an error if it fails to serialize `value` to JSON.
+    </span><span class="kw">pub fn </span>insert&lt;T: Serialize&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">key</span>: <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-        <span class="ident">value</span>: <span class="ident">T</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">SessionInsertError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">inner</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">borrow_mut</span>();
+        key: <span class="kw">impl </span>Into&lt;String&gt;,
+        value: T,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), SessionInsertError&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>inner = <span class="self">self</span>.<span class="number">0</span>.borrow_mut();
 
-        <span class="kw">if</span> <span class="ident">inner</span>.<span class="ident">status</span> <span class="op">!</span><span class="op">=</span> <span class="ident">SessionStatus::Purged</span> {
-            <span class="kw">if</span> <span class="ident">inner</span>.<span class="ident">status</span> <span class="op">!</span><span class="op">=</span> <span class="ident">SessionStatus::Renewed</span> {
-                <span class="ident">inner</span>.<span class="ident">status</span> <span class="op">=</span> <span class="ident">SessionStatus::Changed</span>;
+        <span class="kw">if </span>inner.status != SessionStatus::Purged {
+            <span class="kw">if </span>inner.status != SessionStatus::Renewed {
+                inner.status = SessionStatus::Changed;
             }
 
-            <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">key</span>.<span class="ident">into</span>();
-            <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="ident">serde_json::to_string</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>)
-                .<span class="ident">with_context</span>(<span class="op">|</span><span class="op">|</span> {
+            <span class="kw">let </span>key = key.into();
+            <span class="kw">let </span>val = serde_json::to_string(<span class="kw-2">&amp;</span>value)
+                .with_context(|| {
                     <span class="macro">format!</span>(
                         <span class="string">&quot;Failed to serialize the provided `{}` type instance as JSON in order to \
                         attach as session data to the `{}` key&quot;</span>,
-                        <span class="ident">std::any::type_name</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(),
-                        <span class="kw-2">&amp;</span><span class="ident">key</span>
+                        std::any::type_name::&lt;T&gt;(),
+                        <span class="kw-2">&amp;</span>key
                     )
                 })
-                .<span class="ident">map_err</span>(<span class="ident">SessionInsertError</span>)<span class="question-mark">?</span>;
+                .map_err(SessionInsertError)<span class="question-mark">?</span>;
 
-            <span class="ident">inner</span>.<span class="ident">state</span>.<span class="ident">insert</span>(<span class="ident">key</span>, <span class="ident">val</span>);
+            inner.state.insert(key, val);
         }
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="doccomment">/// Remove value from the session.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// If present, the JSON encoded value is returned.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">inner</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">borrow_mut</span>();
+    <span class="doccomment">/// Remove value from the session.
+    ///
+    /// If present, the JSON encoded value is returned.
+    </span><span class="kw">pub fn </span>remove(<span class="kw-2">&amp;</span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;String&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>inner = <span class="self">self</span>.<span class="number">0</span>.borrow_mut();
 
-        <span class="kw">if</span> <span class="ident">inner</span>.<span class="ident">status</span> <span class="op">!</span><span class="op">=</span> <span class="ident">SessionStatus::Purged</span> {
-            <span class="kw">if</span> <span class="ident">inner</span>.<span class="ident">status</span> <span class="op">!</span><span class="op">=</span> <span class="ident">SessionStatus::Renewed</span> {
-                <span class="ident">inner</span>.<span class="ident">status</span> <span class="op">=</span> <span class="ident">SessionStatus::Changed</span>;
+        <span class="kw">if </span>inner.status != SessionStatus::Purged {
+            <span class="kw">if </span>inner.status != SessionStatus::Renewed {
+                inner.status = SessionStatus::Changed;
             }
-            <span class="kw">return</span> <span class="ident">inner</span>.<span class="ident">state</span>.<span class="ident">remove</span>(<span class="ident">key</span>);
+            <span class="kw">return </span>inner.state.remove(key);
         }
 
-        <span class="prelude-val">None</span>
-    }
+        <span class="prelude-val">None
+    </span>}
 
-    <span class="doccomment">/// Remove value from the session and deserialize.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Returns `None` if key was not present in session. Returns `T` if deserialization succeeds,</span>
-    <span class="doccomment">/// otherwise returns un-deserialized JSON string.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">remove_as</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">DeserializeOwned</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">remove</span>(<span class="ident">key</span>)
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">val_str</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">serde_json::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">val_str</span>) {
-                <span class="prelude-val">Ok</span>(<span class="ident">val</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">val</span>),
-                <span class="prelude-val">Err</span>(<span class="ident">_err</span>) =&gt; {
+    <span class="doccomment">/// Remove value from the session and deserialize.
+    ///
+    /// Returns `None` if key was not present in session. Returns `T` if deserialization succeeds,
+    /// otherwise returns un-deserialized JSON string.
+    </span><span class="kw">pub fn </span>remove_as&lt;T: DeserializeOwned&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="prelude-ty">Result</span>&lt;T, String&gt;&gt; {
+        <span class="self">self</span>.remove(key)
+            .map(|val_str| <span class="kw">match </span>serde_json::from_str(<span class="kw-2">&amp;</span>val_str) {
+                <span class="prelude-val">Ok</span>(val) =&gt; <span class="prelude-val">Ok</span>(val),
+                <span class="prelude-val">Err</span>(_err) =&gt; {
                     <span class="macro">tracing::debug!</span>(
                         <span class="string">&quot;Removed value (key: {}) could not be deserialized as {}&quot;</span>,
-                        <span class="ident">key</span>,
-                        <span class="ident">std::any::type_name</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>()
+                        key,
+                        std::any::type_name::&lt;T&gt;()
                     );
 
-                    <span class="prelude-val">Err</span>(<span class="ident">val_str</span>)
+                    <span class="prelude-val">Err</span>(val_str)
                 }
             })
     }
 
-    <span class="doccomment">/// Clear the session.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">clear</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">inner</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">borrow_mut</span>();
+    <span class="doccomment">/// Clear the session.
+    </span><span class="kw">pub fn </span>clear(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        <span class="kw">let </span><span class="kw-2">mut </span>inner = <span class="self">self</span>.<span class="number">0</span>.borrow_mut();
 
-        <span class="kw">if</span> <span class="ident">inner</span>.<span class="ident">status</span> <span class="op">!</span><span class="op">=</span> <span class="ident">SessionStatus::Purged</span> {
-            <span class="kw">if</span> <span class="ident">inner</span>.<span class="ident">status</span> <span class="op">!</span><span class="op">=</span> <span class="ident">SessionStatus::Renewed</span> {
-                <span class="ident">inner</span>.<span class="ident">status</span> <span class="op">=</span> <span class="ident">SessionStatus::Changed</span>;
+        <span class="kw">if </span>inner.status != SessionStatus::Purged {
+            <span class="kw">if </span>inner.status != SessionStatus::Renewed {
+                inner.status = SessionStatus::Changed;
             }
-            <span class="ident">inner</span>.<span class="ident">state</span>.<span class="ident">clear</span>()
+            inner.state.clear()
         }
     }
 
-    <span class="doccomment">/// Removes session both client and server side.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">purge</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">inner</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">borrow_mut</span>();
-        <span class="ident">inner</span>.<span class="ident">status</span> <span class="op">=</span> <span class="ident">SessionStatus::Purged</span>;
-        <span class="ident">inner</span>.<span class="ident">state</span>.<span class="ident">clear</span>();
+    <span class="doccomment">/// Removes session both client and server side.
+    </span><span class="kw">pub fn </span>purge(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        <span class="kw">let </span><span class="kw-2">mut </span>inner = <span class="self">self</span>.<span class="number">0</span>.borrow_mut();
+        inner.status = SessionStatus::Purged;
+        inner.state.clear();
     }
 
-    <span class="doccomment">/// Renews the session key, assigning existing session state to new key.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">renew</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">inner</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">borrow_mut</span>();
+    <span class="doccomment">/// Renews the session key, assigning existing session state to new key.
+    </span><span class="kw">pub fn </span>renew(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        <span class="kw">let </span><span class="kw-2">mut </span>inner = <span class="self">self</span>.<span class="number">0</span>.borrow_mut();
 
-        <span class="kw">if</span> <span class="ident">inner</span>.<span class="ident">status</span> <span class="op">!</span><span class="op">=</span> <span class="ident">SessionStatus::Purged</span> {
-            <span class="ident">inner</span>.<span class="ident">status</span> <span class="op">=</span> <span class="ident">SessionStatus::Renewed</span>;
+        <span class="kw">if </span>inner.status != SessionStatus::Purged {
+            inner.status = SessionStatus::Renewed;
         }
     }
 
-    <span class="doccomment">/// Adds the given key-value pairs to the session on the request.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Values that match keys already existing on the session will be overwritten. Values should</span>
-    <span class="doccomment">/// already be JSON serialized.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">set_session</span>(
-        <span class="ident">req</span>: <span class="kw-2">&amp;mut</span> <span class="ident">ServiceRequest</span>,
-        <span class="ident">data</span>: <span class="kw">impl</span> <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> (<span class="ident">String</span>, <span class="ident">String</span>)<span class="op">&gt;</span>,
+    <span class="doccomment">/// Adds the given key-value pairs to the session on the request.
+    ///
+    /// Values that match keys already existing on the session will be overwritten. Values should
+    /// already be JSON serialized.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>set_session(
+        req: <span class="kw-2">&amp;mut </span>ServiceRequest,
+        data: <span class="kw">impl </span>IntoIterator&lt;Item = (String, String)&gt;,
     ) {
-        <span class="kw">let</span> <span class="ident">session</span> <span class="op">=</span> <span class="ident">Session::get_session</span>(<span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="ident">req</span>.<span class="ident">extensions_mut</span>());
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">inner</span> <span class="op">=</span> <span class="ident">session</span>.<span class="number">0</span>.<span class="ident">borrow_mut</span>();
-        <span class="ident">inner</span>.<span class="ident">state</span>.<span class="ident">extend</span>(<span class="ident">data</span>);
+        <span class="kw">let </span>session = Session::get_session(<span class="kw-2">&amp;mut *</span>req.extensions_mut());
+        <span class="kw">let </span><span class="kw-2">mut </span>inner = session.<span class="number">0</span>.borrow_mut();
+        inner.state.extend(data);
     }
 
-    <span class="doccomment">/// Returns session status and iterator of key-value pairs of changes.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This is a destructive operation - the session state is removed from the request extensions</span>
-    <span class="doccomment">/// typemap, leaving behind a new empty map. It should only be used when the session is being</span>
-    <span class="doccomment">/// finalised (i.e. in `SessionMiddleware`).</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">get_changes</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>(
-        <span class="ident">res</span>: <span class="kw-2">&amp;mut</span> <span class="ident">ServiceResponse</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>,
-    ) -&gt; (<span class="ident">SessionStatus</span>, <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">String</span><span class="op">&gt;</span>) {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">s_impl</span>) <span class="op">=</span> <span class="ident">res</span>
-            .<span class="ident">request</span>()
-            .<span class="ident">extensions</span>()
-            .<span class="ident">get</span>::<span class="op">&lt;</span><span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">SessionInner</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>()
+    <span class="doccomment">/// Returns session status and iterator of key-value pairs of changes.
+    ///
+    /// This is a destructive operation - the session state is removed from the request extensions
+    /// typemap, leaving behind a new empty map. It should only be used when the session is being
+    /// finalised (i.e. in `SessionMiddleware`).
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>get_changes&lt;B&gt;(
+        res: <span class="kw-2">&amp;mut </span>ServiceResponse&lt;B&gt;,
+    ) -&gt; (SessionStatus, HashMap&lt;String, String&gt;) {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(s_impl) = res
+            .request()
+            .extensions()
+            .get::&lt;Rc&lt;RefCell&lt;SessionInner&gt;&gt;&gt;()
         {
-            <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">mem::take</span>(<span class="kw-2">&amp;mut</span> <span class="ident">s_impl</span>.<span class="ident">borrow_mut</span>().<span class="ident">state</span>);
-            (<span class="ident">s_impl</span>.<span class="ident">borrow</span>().<span class="ident">status</span>.<span class="ident">clone</span>(), <span class="ident">state</span>)
-        } <span class="kw">else</span> {
-            (<span class="ident">SessionStatus::Unchanged</span>, <span class="ident">HashMap::new</span>())
+            <span class="kw">let </span>state = mem::take(<span class="kw-2">&amp;mut </span>s_impl.borrow_mut().state);
+            (s_impl.borrow().status.clone(), state)
+        } <span class="kw">else </span>{
+            (SessionStatus::Unchanged, HashMap::new())
         }
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">get_session</span>(<span class="ident">extensions</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Extensions</span>) -&gt; <span class="ident">Session</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">s_impl</span>) <span class="op">=</span> <span class="ident">extensions</span>.<span class="ident">get</span>::<span class="op">&lt;</span><span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">SessionInner</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>() {
-            <span class="kw">return</span> <span class="ident">Session</span>(<span class="ident">Rc::clone</span>(<span class="ident">s_impl</span>));
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>get_session(extensions: <span class="kw-2">&amp;mut </span>Extensions) -&gt; Session {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(s_impl) = extensions.get::&lt;Rc&lt;RefCell&lt;SessionInner&gt;&gt;&gt;() {
+            <span class="kw">return </span>Session(Rc::clone(s_impl));
         }
 
-        <span class="kw">let</span> <span class="ident">inner</span> <span class="op">=</span> <span class="ident">Rc::new</span>(<span class="ident">RefCell::new</span>(<span class="ident">SessionInner::default</span>()));
-        <span class="ident">extensions</span>.<span class="ident">insert</span>(<span class="ident">inner</span>.<span class="ident">clone</span>());
+        <span class="kw">let </span>inner = Rc::new(RefCell::new(SessionInner::default()));
+        extensions.insert(inner.clone());
 
-        <span class="ident">Session</span>(<span class="ident">inner</span>)
+        Session(inner)
     }
 }
 
-<span class="doccomment">/// Extractor implementation for [`Session`]s.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Examples</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// # use actix_web::*;</span>
-<span class="doccomment">/// use actix_session::Session;</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// #[get(&quot;/&quot;)]</span>
-<span class="doccomment">/// async fn index(session: Session) -&gt; Result&lt;impl Responder&gt; {</span>
-<span class="doccomment">///     // access session data</span>
-<span class="doccomment">///     if let Some(count) = session.get::&lt;i32&gt;(&quot;counter&quot;)? {</span>
-<span class="doccomment">///         session.insert(&quot;counter&quot;, count + 1)?;</span>
-<span class="doccomment">///     } else {</span>
-<span class="doccomment">///         session.insert(&quot;counter&quot;, 1)?;</span>
-<span class="doccomment">///     }</span>
-<span class="doccomment">///</span>
-<span class="doccomment">///     let count = session.get::&lt;i32&gt;(&quot;counter&quot;)?.unwrap();</span>
-<span class="doccomment">///     Ok(format!(&quot;Counter: {}&quot;, count))</span>
-<span class="doccomment">/// }</span>
-<span class="doccomment">/// ```</span>
-<span class="kw">impl</span> <span class="ident">FromRequest</span> <span class="kw">for</span> <span class="ident">Session</span> {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Error</span>;
-    <span class="kw">type</span> <span class="ident">Future</span> <span class="op">=</span> <span class="ident">Ready</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Session</span>, <span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span>;
+<span class="doccomment">/// Extractor implementation for [`Session`]s.
+///
+/// # Examples
+/// ```
+/// # use actix_web::*;
+/// use actix_session::Session;
+///
+/// #[get(&quot;/&quot;)]
+/// async fn index(session: Session) -&gt; Result&lt;impl Responder&gt; {
+///     // access session data
+///     if let Some(count) = session.get::&lt;i32&gt;(&quot;counter&quot;)? {
+///         session.insert(&quot;counter&quot;, count + 1)?;
+///     } else {
+///         session.insert(&quot;counter&quot;, 1)?;
+///     }
+///
+///     let count = session.get::&lt;i32&gt;(&quot;counter&quot;)?.unwrap();
+///     Ok(format!(&quot;Counter: {}&quot;, count))
+/// }
+/// ```
+</span><span class="kw">impl </span>FromRequest <span class="kw">for </span>Session {
+    <span class="kw">type </span>Error = Error;
+    <span class="kw">type </span>Future = Ready&lt;<span class="prelude-ty">Result</span>&lt;Session, Error&gt;&gt;;
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">from_request</span>(<span class="ident">req</span>: <span class="kw-2">&amp;</span><span class="ident">HttpRequest</span>, <span class="kw">_</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Payload</span>) -&gt; <span class="ident"><span class="self">Self</span>::Future</span> {
-        <span class="ident">ready</span>(<span class="prelude-val">Ok</span>(<span class="ident">Session::get_session</span>(<span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="ident">req</span>.<span class="ident">extensions_mut</span>())))
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>from_request(req: <span class="kw-2">&amp;</span>HttpRequest, <span class="kw">_</span>: <span class="kw-2">&amp;mut </span>Payload) -&gt; <span class="self">Self</span>::Future {
+        ready(<span class="prelude-val">Ok</span>(Session::get_session(<span class="kw-2">&amp;mut *</span>req.extensions_mut())))
     }
 }
 
-<span class="doccomment">/// Error returned by [`Session::get`].</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Display</span>, <span class="ident">From</span>)]</span>
-<span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;{}&quot;</span>, <span class="ident">_0</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SessionGetError</span>(<span class="ident">anyhow::Error</span>);
+<span class="doccomment">/// Error returned by [`Session::get`].
+</span><span class="attribute">#[derive(Debug, Display, From)]
+#[display(fmt = <span class="string">&quot;{}&quot;</span>, _0)]
+</span><span class="kw">pub struct </span>SessionGetError(anyhow::Error);
 
-<span class="kw">impl</span> <span class="ident">StdError</span> <span class="kw">for</span> <span class="ident">SessionGetError</span> {
-    <span class="kw">fn</span> <span class="ident">source</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span>(<span class="kw">dyn</span> <span class="ident">StdError</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>)<span class="op">&gt;</span> {
-        <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">as_ref</span>())
+<span class="kw">impl </span>StdError <span class="kw">for </span>SessionGetError {
+    <span class="kw">fn </span>source(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>(<span class="kw">dyn </span>StdError + <span class="lifetime">&#39;static</span>)&gt; {
+        <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="number">0</span>.as_ref())
     }
 }
 
-<span class="kw">impl</span> <span class="ident">ResponseError</span> <span class="kw">for</span> <span class="ident">SessionGetError</span> {
-    <span class="kw">fn</span> <span class="ident">error_response</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">HttpResponse</span><span class="op">&lt;</span><span class="ident">BoxBody</span><span class="op">&gt;</span> {
-        <span class="ident">HttpResponse::new</span>(<span class="self">self</span>.<span class="ident">status_code</span>())
+<span class="kw">impl </span>ResponseError <span class="kw">for </span>SessionGetError {
+    <span class="kw">fn </span>error_response(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; HttpResponse&lt;BoxBody&gt; {
+        HttpResponse::new(<span class="self">self</span>.status_code())
     }
 }
 
-<span class="doccomment">/// Error returned by [`Session::insert`].</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Display</span>, <span class="ident">From</span>)]</span>
-<span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;{}&quot;</span>, <span class="ident">_0</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SessionInsertError</span>(<span class="ident">anyhow::Error</span>);
+<span class="doccomment">/// Error returned by [`Session::insert`].
+</span><span class="attribute">#[derive(Debug, Display, From)]
+#[display(fmt = <span class="string">&quot;{}&quot;</span>, _0)]
+</span><span class="kw">pub struct </span>SessionInsertError(anyhow::Error);
 
-<span class="kw">impl</span> <span class="ident">StdError</span> <span class="kw">for</span> <span class="ident">SessionInsertError</span> {
-    <span class="kw">fn</span> <span class="ident">source</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span>(<span class="kw">dyn</span> <span class="ident">StdError</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>)<span class="op">&gt;</span> {
-        <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">as_ref</span>())
+<span class="kw">impl </span>StdError <span class="kw">for </span>SessionInsertError {
+    <span class="kw">fn </span>source(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>(<span class="kw">dyn </span>StdError + <span class="lifetime">&#39;static</span>)&gt; {
+        <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="number">0</span>.as_ref())
     }
 }
 
-<span class="kw">impl</span> <span class="ident">ResponseError</span> <span class="kw">for</span> <span class="ident">SessionInsertError</span> {
-    <span class="kw">fn</span> <span class="ident">error_response</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">HttpResponse</span><span class="op">&lt;</span><span class="ident">BoxBody</span><span class="op">&gt;</span> {
-        <span class="ident">HttpResponse::new</span>(<span class="self">self</span>.<span class="ident">status_code</span>())
+<span class="kw">impl </span>ResponseError <span class="kw">for </span>SessionInsertError {
+    <span class="kw">fn </span>error_response(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; HttpResponse&lt;BoxBody&gt; {
+        HttpResponse::new(<span class="self">self</span>.status_code())
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_session" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (34a6cae28 2022-08-09)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_session" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (060e47f74 2022-08-23)" ></div></body></html>

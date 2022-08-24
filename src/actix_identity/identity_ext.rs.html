@@ -25,32 +25,32 @@
 <span id="25">25</span>
 <span id="26">26</span>
 <span id="27">27</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">actix_web</span>::{<span class="ident">dev::ServiceRequest</span>, <span class="ident">guard::GuardContext</span>, <span class="ident">HttpMessage</span>, <span class="ident">HttpRequest</span>};
+</pre><pre class="rust"><code><span class="kw">use </span>actix_web::{dev::ServiceRequest, guard::GuardContext, HttpMessage, HttpRequest};
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::Identity</span>;
+<span class="kw">use </span><span class="kw">crate</span>::Identity;
 
-<span class="doccomment">/// Helper trait to retrieve an [`Identity`] instance from various `actix-web`&#39;s types.</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">IdentityExt</span> {
-    <span class="doccomment">/// Retrieve the identity attached to the current session, if available.</span>
-    <span class="kw">fn</span> <span class="ident">get_identity</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Identity</span>, <span class="ident">anyhow::Error</span><span class="op">&gt;</span>;
+<span class="doccomment">/// Helper trait to retrieve an [`Identity`] instance from various `actix-web`&#39;s types.
+</span><span class="kw">pub trait </span>IdentityExt {
+    <span class="doccomment">/// Retrieve the identity attached to the current session, if available.
+    </span><span class="kw">fn </span>get_identity(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Identity, anyhow::Error&gt;;
 }
 
-<span class="kw">impl</span> <span class="ident">IdentityExt</span> <span class="kw">for</span> <span class="ident">HttpRequest</span> {
-    <span class="kw">fn</span> <span class="ident">get_identity</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Identity</span>, <span class="ident">anyhow::Error</span><span class="op">&gt;</span> {
-        <span class="ident">Identity::extract</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">extensions</span>())
+<span class="kw">impl </span>IdentityExt <span class="kw">for </span>HttpRequest {
+    <span class="kw">fn </span>get_identity(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Identity, anyhow::Error&gt; {
+        Identity::extract(<span class="kw-2">&amp;</span><span class="self">self</span>.extensions())
     }
 }
 
-<span class="kw">impl</span> <span class="ident">IdentityExt</span> <span class="kw">for</span> <span class="ident">ServiceRequest</span> {
-    <span class="kw">fn</span> <span class="ident">get_identity</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Identity</span>, <span class="ident">anyhow::Error</span><span class="op">&gt;</span> {
-        <span class="ident">Identity::extract</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">extensions</span>())
+<span class="kw">impl </span>IdentityExt <span class="kw">for </span>ServiceRequest {
+    <span class="kw">fn </span>get_identity(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Identity, anyhow::Error&gt; {
+        Identity::extract(<span class="kw-2">&amp;</span><span class="self">self</span>.extensions())
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">IdentityExt</span> <span class="kw">for</span> <span class="ident">GuardContext</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">get_identity</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Identity</span>, <span class="ident">anyhow::Error</span><span class="op">&gt;</span> {
-        <span class="ident">Identity::extract</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">req_data</span>())
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; IdentityExt <span class="kw">for </span>GuardContext&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">fn </span>get_identity(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Identity, anyhow::Error&gt; {
+        Identity::extract(<span class="kw-2">&amp;</span><span class="self">self</span>.req_data())
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_identity" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (34a6cae28 2022-08-09)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_identity" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (060e47f74 2022-08-23)" ></div></body></html>

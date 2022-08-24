@@ -463,313 +463,313 @@
 <span id="461">461</span>
 <span id="462">462</span>
 <span id="463">463</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections::HashMap</span>, <span class="ident">convert::TryInto</span>, <span class="ident">fmt</span>, <span class="ident">future::Future</span>, <span class="ident">pin::Pin</span>, <span class="ident">rc::Rc</span>};
+</pre><pre class="rust"><code><span class="kw">use </span>std::{collections::HashMap, convert::TryInto, fmt, future::Future, pin::Pin, rc::Rc};
 
-<span class="kw">use</span> <span class="ident">actix_utils::future</span>::{<span class="ident">ready</span>, <span class="ident">Ready</span>};
-<span class="kw">use</span> <span class="ident">actix_web</span>::{
-    <span class="ident">body::MessageBody</span>,
-    <span class="ident">cookie</span>::{<span class="ident">Cookie</span>, <span class="ident">CookieJar</span>, <span class="ident">Key</span>},
-    <span class="ident">dev</span>::{<span class="ident">forward_ready</span>, <span class="ident">ResponseHead</span>, <span class="ident">Service</span>, <span class="ident">ServiceRequest</span>, <span class="ident">ServiceResponse</span>, <span class="ident">Transform</span>},
-    <span class="ident">http::header</span>::{<span class="ident">HeaderValue</span>, <span class="ident">SET_COOKIE</span>},
-    <span class="ident">HttpResponse</span>,
+<span class="kw">use </span>actix_utils::future::{ready, Ready};
+<span class="kw">use </span>actix_web::{
+    body::MessageBody,
+    cookie::{Cookie, CookieJar, Key},
+    dev::{forward_ready, ResponseHead, Service, ServiceRequest, ServiceResponse, Transform},
+    http::header::{HeaderValue, SET_COOKIE},
+    HttpResponse,
 };
-<span class="kw">use</span> <span class="ident">anyhow::Context</span>;
+<span class="kw">use </span>anyhow::Context;
 
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">config</span>::{
-        <span class="self">self</span>, <span class="ident">Configuration</span>, <span class="ident">CookieConfiguration</span>, <span class="ident">CookieContentSecurity</span>, <span class="ident">SessionMiddlewareBuilder</span>,
-        <span class="ident">TtlExtensionPolicy</span>,
+<span class="kw">use crate</span>::{
+    config::{
+        <span class="self">self</span>, Configuration, CookieConfiguration, CookieContentSecurity, SessionMiddlewareBuilder,
+        TtlExtensionPolicy,
     },
-    <span class="ident">storage</span>::{<span class="ident">LoadError</span>, <span class="ident">SessionKey</span>, <span class="ident">SessionStore</span>},
-    <span class="ident">Session</span>, <span class="ident">SessionStatus</span>,
+    storage::{LoadError, SessionKey, SessionStore},
+    Session, SessionStatus,
 };
 
-<span class="doccomment">/// A middleware for session management in Actix Web applications.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [`SessionMiddleware`] takes care of a few jobs:</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// - Instructs the session storage backend to create/update/delete/retrieve the state attached to</span>
-<span class="doccomment">///   a session according to its status and the operations that have been performed against it;</span>
-<span class="doccomment">/// - Set/remove a cookie, on the client side, to enable a user to be consistently associated with</span>
-<span class="doccomment">///   the same session across multiple HTTP requests.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Use [`SessionMiddleware::new`] to initialize the session framework using the default parameters.</span>
-<span class="doccomment">/// To create a new instance of [`SessionMiddleware`] you need to provide:</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// - an instance of the session storage backend you wish to use (i.e. an implementation of</span>
-<span class="doccomment">///   [`SessionStore`]);</span>
-<span class="doccomment">/// - a secret key, to sign or encrypt the content of client-side session cookie.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # How did we choose defaults?</span>
-<span class="doccomment">/// You should not regret adding `actix-session` to your dependencies and going to production using</span>
-<span class="doccomment">/// the default configuration. That is why, when in doubt, we opt to use the most secure option for</span>
-<span class="doccomment">/// each configuration parameter.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// We expose knobs to change the default to suit your needs—i.e., if you know what you are doing,</span>
-<span class="doccomment">/// we will not stop you. But being a subject-matter expert should not be a requirement to deploy</span>
-<span class="doccomment">/// reasonably secure implementation of sessions.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Examples</span>
-<span class="doccomment">/// ```no_run</span>
-<span class="doccomment">/// use actix_web::{web, App, HttpServer, HttpResponse, Error};</span>
-<span class="doccomment">/// use actix_session::{Session, SessionMiddleware, storage::RedisActorSessionStore};</span>
-<span class="doccomment">/// use actix_web::cookie::Key;</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// // The secret key would usually be read from a configuration file/environment variables.</span>
-<span class="doccomment">/// fn get_secret_key() -&gt; Key {</span>
-<span class="doccomment">///     # todo!()</span>
-<span class="doccomment">///     // [...]</span>
-<span class="doccomment">/// }</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// #[actix_web::main]</span>
-<span class="doccomment">/// async fn main() -&gt; std::io::Result&lt;()&gt; {</span>
-<span class="doccomment">///     let secret_key = get_secret_key();</span>
-<span class="doccomment">///     let redis_connection_string = &quot;127.0.0.1:6379&quot;;</span>
-<span class="doccomment">///     HttpServer::new(move ||</span>
-<span class="doccomment">///             App::new()</span>
-<span class="doccomment">///             // Add session management to your application using Redis for session state storage</span>
-<span class="doccomment">///             .wrap(</span>
-<span class="doccomment">///                 SessionMiddleware::new(</span>
-<span class="doccomment">///                     RedisActorSessionStore::new(redis_connection_string),</span>
-<span class="doccomment">///                     secret_key.clone()</span>
-<span class="doccomment">///                 )</span>
-<span class="doccomment">///             )</span>
-<span class="doccomment">///             .default_service(web::to(|| HttpResponse::Ok())))</span>
-<span class="doccomment">///         .bind((&quot;127.0.0.1&quot;, 8080))?</span>
-<span class="doccomment">///         .run()</span>
-<span class="doccomment">///         .await</span>
-<span class="doccomment">/// }</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// If you want to customise use [`builder`](Self::builder) instead of [`new`](Self::new):</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ```no_run</span>
-<span class="doccomment">/// use actix_web::{App, cookie::{Key, time}, Error, HttpResponse, HttpServer, web};</span>
-<span class="doccomment">/// use actix_session::{Session, SessionMiddleware, storage::RedisActorSessionStore};</span>
-<span class="doccomment">/// use actix_session::config::PersistentSession;</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// // The secret key would usually be read from a configuration file/environment variables.</span>
-<span class="doccomment">/// fn get_secret_key() -&gt; Key {</span>
-<span class="doccomment">///     # todo!()</span>
-<span class="doccomment">///     // [...]</span>
-<span class="doccomment">/// }</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// #[actix_web::main]</span>
-<span class="doccomment">/// async fn main() -&gt; std::io::Result&lt;()&gt; {</span>
-<span class="doccomment">///     let secret_key = get_secret_key();</span>
-<span class="doccomment">///     let redis_connection_string = &quot;127.0.0.1:6379&quot;;</span>
-<span class="doccomment">///     HttpServer::new(move ||</span>
-<span class="doccomment">///             App::new()</span>
-<span class="doccomment">///             // Customise session length!</span>
-<span class="doccomment">///             .wrap(</span>
-<span class="doccomment">///                 SessionMiddleware::builder(</span>
-<span class="doccomment">///                     RedisActorSessionStore::new(redis_connection_string),</span>
-<span class="doccomment">///                     secret_key.clone()</span>
-<span class="doccomment">///                 )</span>
-<span class="doccomment">///                 .session_lifecycle(</span>
-<span class="doccomment">///                     PersistentSession::default()</span>
-<span class="doccomment">///                         .session_ttl(time::Duration::days(5))</span>
-<span class="doccomment">///                 )</span>
-<span class="doccomment">///                 .build(),</span>
-<span class="doccomment">///             )</span>
-<span class="doccomment">///             .default_service(web::to(|| HttpResponse::Ok())))</span>
-<span class="doccomment">///         .bind((&quot;127.0.0.1&quot;, 8080))?</span>
-<span class="doccomment">///         .run()</span>
-<span class="doccomment">///         .await</span>
-<span class="doccomment">/// }</span>
-<span class="doccomment">/// ```</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SessionMiddleware</span><span class="op">&lt;</span><span class="ident">Store</span>: <span class="ident">SessionStore</span><span class="op">&gt;</span> {
-    <span class="ident">storage_backend</span>: <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Store</span><span class="op">&gt;</span>,
-    <span class="ident">configuration</span>: <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Configuration</span><span class="op">&gt;</span>,
+<span class="doccomment">/// A middleware for session management in Actix Web applications.
+///
+/// [`SessionMiddleware`] takes care of a few jobs:
+///
+/// - Instructs the session storage backend to create/update/delete/retrieve the state attached to
+///   a session according to its status and the operations that have been performed against it;
+/// - Set/remove a cookie, on the client side, to enable a user to be consistently associated with
+///   the same session across multiple HTTP requests.
+///
+/// Use [`SessionMiddleware::new`] to initialize the session framework using the default parameters.
+/// To create a new instance of [`SessionMiddleware`] you need to provide:
+///
+/// - an instance of the session storage backend you wish to use (i.e. an implementation of
+///   [`SessionStore`]);
+/// - a secret key, to sign or encrypt the content of client-side session cookie.
+///
+/// # How did we choose defaults?
+/// You should not regret adding `actix-session` to your dependencies and going to production using
+/// the default configuration. That is why, when in doubt, we opt to use the most secure option for
+/// each configuration parameter.
+///
+/// We expose knobs to change the default to suit your needs—i.e., if you know what you are doing,
+/// we will not stop you. But being a subject-matter expert should not be a requirement to deploy
+/// reasonably secure implementation of sessions.
+///
+/// # Examples
+/// ```no_run
+/// use actix_web::{web, App, HttpServer, HttpResponse, Error};
+/// use actix_session::{Session, SessionMiddleware, storage::RedisActorSessionStore};
+/// use actix_web::cookie::Key;
+///
+/// // The secret key would usually be read from a configuration file/environment variables.
+/// fn get_secret_key() -&gt; Key {
+///     # todo!()
+///     // [...]
+/// }
+///
+/// #[actix_web::main]
+/// async fn main() -&gt; std::io::Result&lt;()&gt; {
+///     let secret_key = get_secret_key();
+///     let redis_connection_string = &quot;127.0.0.1:6379&quot;;
+///     HttpServer::new(move ||
+///             App::new()
+///             // Add session management to your application using Redis for session state storage
+///             .wrap(
+///                 SessionMiddleware::new(
+///                     RedisActorSessionStore::new(redis_connection_string),
+///                     secret_key.clone()
+///                 )
+///             )
+///             .default_service(web::to(|| HttpResponse::Ok())))
+///         .bind((&quot;127.0.0.1&quot;, 8080))?
+///         .run()
+///         .await
+/// }
+/// ```
+///
+/// If you want to customise use [`builder`](Self::builder) instead of [`new`](Self::new):
+///
+/// ```no_run
+/// use actix_web::{App, cookie::{Key, time}, Error, HttpResponse, HttpServer, web};
+/// use actix_session::{Session, SessionMiddleware, storage::RedisActorSessionStore};
+/// use actix_session::config::PersistentSession;
+///
+/// // The secret key would usually be read from a configuration file/environment variables.
+/// fn get_secret_key() -&gt; Key {
+///     # todo!()
+///     // [...]
+/// }
+///
+/// #[actix_web::main]
+/// async fn main() -&gt; std::io::Result&lt;()&gt; {
+///     let secret_key = get_secret_key();
+///     let redis_connection_string = &quot;127.0.0.1:6379&quot;;
+///     HttpServer::new(move ||
+///             App::new()
+///             // Customise session length!
+///             .wrap(
+///                 SessionMiddleware::builder(
+///                     RedisActorSessionStore::new(redis_connection_string),
+///                     secret_key.clone()
+///                 )
+///                 .session_lifecycle(
+///                     PersistentSession::default()
+///                         .session_ttl(time::Duration::days(5))
+///                 )
+///                 .build(),
+///             )
+///             .default_service(web::to(|| HttpResponse::Ok())))
+///         .bind((&quot;127.0.0.1&quot;, 8080))?
+///         .run()
+///         .await
+/// }
+/// ```
+</span><span class="attribute">#[derive(Clone)]
+</span><span class="kw">pub struct </span>SessionMiddleware&lt;Store: SessionStore&gt; {
+    storage_backend: Rc&lt;Store&gt;,
+    configuration: Rc&lt;Configuration&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Store</span>: <span class="ident">SessionStore</span><span class="op">&gt;</span> <span class="ident">SessionMiddleware</span><span class="op">&lt;</span><span class="ident">Store</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Use [`SessionMiddleware::new`] to initialize the session framework using the default</span>
-    <span class="doccomment">/// parameters.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// To create a new instance of [`SessionMiddleware`] you need to provide:</span>
-    <span class="doccomment">/// - an instance of the session storage backend you wish to use (i.e. an implementation of</span>
-    <span class="doccomment">///   [`SessionStore`]);</span>
-    <span class="doccomment">/// - a secret key, to sign or encrypt the content of client-side session cookie.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">store</span>: <span class="ident">Store</span>, <span class="ident">key</span>: <span class="ident">Key</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident"><span class="self">Self</span>::builder</span>(<span class="ident">store</span>, <span class="ident">key</span>).<span class="ident">build</span>()
+<span class="kw">impl</span>&lt;Store: SessionStore&gt; SessionMiddleware&lt;Store&gt; {
+    <span class="doccomment">/// Use [`SessionMiddleware::new`] to initialize the session framework using the default
+    /// parameters.
+    ///
+    /// To create a new instance of [`SessionMiddleware`] you need to provide:
+    /// - an instance of the session storage backend you wish to use (i.e. an implementation of
+    ///   [`SessionStore`]);
+    /// - a secret key, to sign or encrypt the content of client-side session cookie.
+    </span><span class="kw">pub fn </span>new(store: Store, key: Key) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::builder(store, key).build()
     }
 
-    <span class="doccomment">/// A fluent API to configure [`SessionMiddleware`].</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// It takes as input the two required inputs to create a new instance of [`SessionMiddleware`]:</span>
-    <span class="doccomment">/// - an instance of the session storage backend you wish to use (i.e. an implementation of</span>
-    <span class="doccomment">///   [`SessionStore`]);</span>
-    <span class="doccomment">/// - a secret key, to sign or encrypt the content of client-side session cookie.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">builder</span>(<span class="ident">store</span>: <span class="ident">Store</span>, <span class="ident">key</span>: <span class="ident">Key</span>) -&gt; <span class="ident">SessionMiddlewareBuilder</span><span class="op">&lt;</span><span class="ident">Store</span><span class="op">&gt;</span> {
-        <span class="ident">SessionMiddlewareBuilder::new</span>(<span class="ident">store</span>, <span class="ident">config::default_configuration</span>(<span class="ident">key</span>))
+    <span class="doccomment">/// A fluent API to configure [`SessionMiddleware`].
+    ///
+    /// It takes as input the two required inputs to create a new instance of [`SessionMiddleware`]:
+    /// - an instance of the session storage backend you wish to use (i.e. an implementation of
+    ///   [`SessionStore`]);
+    /// - a secret key, to sign or encrypt the content of client-side session cookie.
+    </span><span class="kw">pub fn </span>builder(store: Store, key: Key) -&gt; SessionMiddlewareBuilder&lt;Store&gt; {
+        SessionMiddlewareBuilder::new(store, config::default_configuration(key))
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">from_parts</span>(<span class="ident">store</span>: <span class="ident">Store</span>, <span class="ident">configuration</span>: <span class="ident">Configuration</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">storage_backend</span>: <span class="ident">Rc::new</span>(<span class="ident">store</span>),
-            <span class="ident">configuration</span>: <span class="ident">Rc::new</span>(<span class="ident">configuration</span>),
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>from_parts(store: Store, configuration: Configuration) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            storage_backend: Rc::new(store),
+            configuration: Rc::new(configuration),
         }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">B</span>, <span class="ident">Store</span><span class="op">&gt;</span> <span class="ident">Transform</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">ServiceRequest</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">SessionMiddleware</span><span class="op">&lt;</span><span class="ident">Store</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">S</span>: <span class="ident">Service</span><span class="op">&lt;</span><span class="ident">ServiceRequest</span>, <span class="ident">Response</span> <span class="op">=</span> <span class="ident">ServiceResponse</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>, <span class="ident">Error</span> <span class="op">=</span> <span class="ident">actix_web::Error</span><span class="op">&gt;</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
-    <span class="ident">S::Future</span>: <span class="lifetime">&#39;static</span>,
-    <span class="ident">B</span>: <span class="ident">MessageBody</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
-    <span class="ident">Store</span>: <span class="ident">SessionStore</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+<span class="kw">impl</span>&lt;S, B, Store&gt; Transform&lt;S, ServiceRequest&gt; <span class="kw">for </span>SessionMiddleware&lt;Store&gt;
+<span class="kw">where
+    </span>S: Service&lt;ServiceRequest, Response = ServiceResponse&lt;B&gt;, Error = actix_web::Error&gt; + <span class="lifetime">&#39;static</span>,
+    S::Future: <span class="lifetime">&#39;static</span>,
+    B: MessageBody + <span class="lifetime">&#39;static</span>,
+    Store: SessionStore + <span class="lifetime">&#39;static</span>,
 {
-    <span class="kw">type</span> <span class="ident">Response</span> <span class="op">=</span> <span class="ident">ServiceResponse</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>;
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">actix_web::Error</span>;
-    <span class="kw">type</span> <span class="ident">Transform</span> <span class="op">=</span> <span class="ident">InnerSessionMiddleware</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">Store</span><span class="op">&gt;</span>;
-    <span class="kw">type</span> <span class="ident">InitError</span> <span class="op">=</span> ();
-    <span class="kw">type</span> <span class="ident">Future</span> <span class="op">=</span> <span class="ident">Ready</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Transform</span>, <span class="ident"><span class="self">Self</span>::InitError</span><span class="op">&gt;</span><span class="op">&gt;</span>;
+    <span class="kw">type </span>Response = ServiceResponse&lt;B&gt;;
+    <span class="kw">type </span>Error = actix_web::Error;
+    <span class="kw">type </span>Transform = InnerSessionMiddleware&lt;S, Store&gt;;
+    <span class="kw">type </span>InitError = ();
+    <span class="kw">type </span>Future = Ready&lt;<span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Transform, <span class="self">Self</span>::InitError&gt;&gt;;
 
-    <span class="kw">fn</span> <span class="ident">new_transform</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">service</span>: <span class="ident">S</span>) -&gt; <span class="ident"><span class="self">Self</span>::Future</span> {
-        <span class="ident">ready</span>(<span class="prelude-val">Ok</span>(<span class="ident">InnerSessionMiddleware</span> {
-            <span class="ident">service</span>: <span class="ident">Rc::new</span>(<span class="ident">service</span>),
-            <span class="ident">configuration</span>: <span class="ident">Rc::clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">configuration</span>),
-            <span class="ident">storage_backend</span>: <span class="ident">Rc::clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">storage_backend</span>),
+    <span class="kw">fn </span>new_transform(<span class="kw-2">&amp;</span><span class="self">self</span>, service: S) -&gt; <span class="self">Self</span>::Future {
+        ready(<span class="prelude-val">Ok</span>(InnerSessionMiddleware {
+            service: Rc::new(service),
+            configuration: Rc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.configuration),
+            storage_backend: Rc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.storage_backend),
         }))
     }
 }
 
-<span class="doccomment">/// Short-hand to create an `actix_web::Error` instance that will result in an `Internal Server</span>
-<span class="doccomment">/// Error` response while preserving the error root cause (e.g. in logs).</span>
-<span class="kw">fn</span> <span class="ident">e500</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">fmt::Debug</span> <span class="op">+</span> <span class="ident">fmt::Display</span> <span class="op">+</span> <span class="lifetime">&#39;static</span><span class="op">&gt;</span>(<span class="ident">err</span>: <span class="ident">E</span>) -&gt; <span class="ident">actix_web::Error</span> {
-    <span class="comment">// We do not use `actix_web::error::ErrorInternalServerError` because we do not want to</span>
-    <span class="comment">// leak internal implementation details to the caller.</span>
-    <span class="comment">//</span>
-    <span class="comment">// `actix_web::error::ErrorInternalServerError` includes the error Display representation</span>
-    <span class="comment">// as body of the error responses, leading to messages like &quot;There was an issue persisting</span>
-    <span class="comment">// the session state&quot; reaching API clients. We don&#39;t want that, we want opaque 500s.</span>
-    <span class="ident">actix_web::error::InternalError::from_response</span>(
-        <span class="ident">err</span>,
-        <span class="ident">HttpResponse::InternalServerError</span>().<span class="ident">finish</span>(),
+<span class="doccomment">/// Short-hand to create an `actix_web::Error` instance that will result in an `Internal Server
+/// Error` response while preserving the error root cause (e.g. in logs).
+</span><span class="kw">fn </span>e500&lt;E: fmt::Debug + fmt::Display + <span class="lifetime">&#39;static</span>&gt;(err: E) -&gt; actix_web::Error {
+    <span class="comment">// We do not use `actix_web::error::ErrorInternalServerError` because we do not want to
+    // leak internal implementation details to the caller.
+    //
+    // `actix_web::error::ErrorInternalServerError` includes the error Display representation
+    // as body of the error responses, leading to messages like &quot;There was an issue persisting
+    // the session state&quot; reaching API clients. We don&#39;t want that, we want opaque 500s.
+    </span>actix_web::error::InternalError::from_response(
+        err,
+        HttpResponse::InternalServerError().finish(),
     )
-    .<span class="ident">into</span>()
+    .into()
 }
 
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-<span class="attribute">#[<span class="ident">non_exhaustive</span>]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">InnerSessionMiddleware</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">Store</span>: <span class="ident">SessionStore</span> <span class="op">+</span> <span class="lifetime">&#39;static</span><span class="op">&gt;</span> {
-    <span class="ident">service</span>: <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
-    <span class="ident">configuration</span>: <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Configuration</span><span class="op">&gt;</span>,
-    <span class="ident">storage_backend</span>: <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Store</span><span class="op">&gt;</span>,
+<span class="attribute">#[doc(hidden)]
+#[non_exhaustive]
+</span><span class="kw">pub struct </span>InnerSessionMiddleware&lt;S, Store: SessionStore + <span class="lifetime">&#39;static</span>&gt; {
+    service: Rc&lt;S&gt;,
+    configuration: Rc&lt;Configuration&gt;,
+    storage_backend: Rc&lt;Store&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">B</span>, <span class="ident">Store</span><span class="op">&gt;</span> <span class="ident">Service</span><span class="op">&lt;</span><span class="ident">ServiceRequest</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">InnerSessionMiddleware</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">Store</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">S</span>: <span class="ident">Service</span><span class="op">&lt;</span><span class="ident">ServiceRequest</span>, <span class="ident">Response</span> <span class="op">=</span> <span class="ident">ServiceResponse</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>, <span class="ident">Error</span> <span class="op">=</span> <span class="ident">actix_web::Error</span><span class="op">&gt;</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
-    <span class="ident">S::Future</span>: <span class="lifetime">&#39;static</span>,
-    <span class="ident">Store</span>: <span class="ident">SessionStore</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+<span class="kw">impl</span>&lt;S, B, Store&gt; Service&lt;ServiceRequest&gt; <span class="kw">for </span>InnerSessionMiddleware&lt;S, Store&gt;
+<span class="kw">where
+    </span>S: Service&lt;ServiceRequest, Response = ServiceResponse&lt;B&gt;, Error = actix_web::Error&gt; + <span class="lifetime">&#39;static</span>,
+    S::Future: <span class="lifetime">&#39;static</span>,
+    Store: SessionStore + <span class="lifetime">&#39;static</span>,
 {
-    <span class="kw">type</span> <span class="ident">Response</span> <span class="op">=</span> <span class="ident">ServiceResponse</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>;
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">actix_web::Error</span>;
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::type_complexity</span>)]</span>
-    <span class="kw">type</span> <span class="ident">Future</span> <span class="op">=</span> <span class="ident">Pin</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Response</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>;
+    <span class="kw">type </span>Response = ServiceResponse&lt;B&gt;;
+    <span class="kw">type </span>Error = actix_web::Error;
+    <span class="attribute">#[allow(clippy::type_complexity)]
+    </span><span class="kw">type </span>Future = Pin&lt;Box&lt;<span class="kw">dyn </span>Future&lt;Output = <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Response, <span class="self">Self</span>::Error&gt;&gt;&gt;&gt;;
 
-    <span class="macro">forward_ready!</span>(<span class="ident">service</span>);
+    <span class="macro">forward_ready!</span>(service);
 
-    <span class="kw">fn</span> <span class="ident">call</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw-2">mut</span> <span class="ident">req</span>: <span class="ident">ServiceRequest</span>) -&gt; <span class="ident"><span class="self">Self</span>::Future</span> {
-        <span class="kw">let</span> <span class="ident">service</span> <span class="op">=</span> <span class="ident">Rc::clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">service</span>);
-        <span class="kw">let</span> <span class="ident">storage_backend</span> <span class="op">=</span> <span class="ident">Rc::clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">storage_backend</span>);
-        <span class="kw">let</span> <span class="ident">configuration</span> <span class="op">=</span> <span class="ident">Rc::clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">configuration</span>);
+    <span class="kw">fn </span>call(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw-2">mut </span>req: ServiceRequest) -&gt; <span class="self">Self</span>::Future {
+        <span class="kw">let </span>service = Rc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.service);
+        <span class="kw">let </span>storage_backend = Rc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.storage_backend);
+        <span class="kw">let </span>configuration = Rc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.configuration);
 
-        <span class="ident">Box::pin</span>(<span class="kw">async</span> <span class="kw">move</span> {
-            <span class="kw">let</span> <span class="ident">session_key</span> <span class="op">=</span> <span class="ident">extract_session_key</span>(<span class="kw-2">&amp;</span><span class="ident">req</span>, <span class="kw-2">&amp;</span><span class="ident">configuration</span>.<span class="ident">cookie</span>);
-            <span class="kw">let</span> (<span class="ident">session_key</span>, <span class="ident">session_state</span>) <span class="op">=</span>
-                <span class="ident">load_session_state</span>(<span class="ident">session_key</span>, <span class="ident">storage_backend</span>.<span class="ident">as_ref</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
+        Box::pin(<span class="kw">async move </span>{
+            <span class="kw">let </span>session_key = extract_session_key(<span class="kw-2">&amp;</span>req, <span class="kw-2">&amp;</span>configuration.cookie);
+            <span class="kw">let </span>(session_key, session_state) =
+                load_session_state(session_key, storage_backend.as_ref()).<span class="kw">await</span><span class="question-mark">?</span>;
 
-            <span class="ident">Session::set_session</span>(<span class="kw-2">&amp;mut</span> <span class="ident">req</span>, <span class="ident">session_state</span>);
+            Session::set_session(<span class="kw-2">&amp;mut </span>req, session_state);
 
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">service</span>.<span class="ident">call</span>(<span class="ident">req</span>).<span class="kw">await</span><span class="question-mark">?</span>;
-            <span class="kw">let</span> (<span class="ident">status</span>, <span class="ident">session_state</span>) <span class="op">=</span> <span class="ident">Session::get_changes</span>(<span class="kw-2">&amp;mut</span> <span class="ident">res</span>);
+            <span class="kw">let </span><span class="kw-2">mut </span>res = service.call(req).<span class="kw">await</span><span class="question-mark">?</span>;
+            <span class="kw">let </span>(status, session_state) = Session::get_changes(<span class="kw-2">&amp;mut </span>res);
 
-            <span class="kw">match</span> <span class="ident">session_key</span> {
-                <span class="prelude-val">None</span> =&gt; {
-                    <span class="comment">// we do not create an entry in the session store if there is no state attached</span>
-                    <span class="comment">// to a fresh session</span>
-                    <span class="kw">if</span> <span class="op">!</span><span class="ident">session_state</span>.<span class="ident">is_empty</span>() {
-                        <span class="kw">let</span> <span class="ident">session_key</span> <span class="op">=</span> <span class="ident">storage_backend</span>
-                            .<span class="ident">save</span>(<span class="ident">session_state</span>, <span class="kw-2">&amp;</span><span class="ident">configuration</span>.<span class="ident">session</span>.<span class="ident">state_ttl</span>)
-                            .<span class="kw">await</span>
-                            .<span class="ident">map_err</span>(<span class="ident">e500</span>)<span class="question-mark">?</span>;
+            <span class="kw">match </span>session_key {
+                <span class="prelude-val">None </span>=&gt; {
+                    <span class="comment">// we do not create an entry in the session store if there is no state attached
+                    // to a fresh session
+                    </span><span class="kw">if </span>!session_state.is_empty() {
+                        <span class="kw">let </span>session_key = storage_backend
+                            .save(session_state, <span class="kw-2">&amp;</span>configuration.session.state_ttl)
+                            .<span class="kw">await
+                            </span>.map_err(e500)<span class="question-mark">?</span>;
 
-                        <span class="ident">set_session_cookie</span>(
-                            <span class="ident">res</span>.<span class="ident">response_mut</span>().<span class="ident">head_mut</span>(),
-                            <span class="ident">session_key</span>,
-                            <span class="kw-2">&amp;</span><span class="ident">configuration</span>.<span class="ident">cookie</span>,
+                        set_session_cookie(
+                            res.response_mut().head_mut(),
+                            session_key,
+                            <span class="kw-2">&amp;</span>configuration.cookie,
                         )
-                        .<span class="ident">map_err</span>(<span class="ident">e500</span>)<span class="question-mark">?</span>;
+                        .map_err(e500)<span class="question-mark">?</span>;
                     }
                 }
 
-                <span class="prelude-val">Some</span>(<span class="ident">session_key</span>) =&gt; {
-                    <span class="kw">match</span> <span class="ident">status</span> {
-                        <span class="ident">SessionStatus::Changed</span> =&gt; {
-                            <span class="kw">let</span> <span class="ident">session_key</span> <span class="op">=</span> <span class="ident">storage_backend</span>
-                                .<span class="ident">update</span>(
-                                    <span class="ident">session_key</span>,
-                                    <span class="ident">session_state</span>,
-                                    <span class="kw-2">&amp;</span><span class="ident">configuration</span>.<span class="ident">session</span>.<span class="ident">state_ttl</span>,
+                <span class="prelude-val">Some</span>(session_key) =&gt; {
+                    <span class="kw">match </span>status {
+                        SessionStatus::Changed =&gt; {
+                            <span class="kw">let </span>session_key = storage_backend
+                                .update(
+                                    session_key,
+                                    session_state,
+                                    <span class="kw-2">&amp;</span>configuration.session.state_ttl,
                                 )
-                                .<span class="kw">await</span>
-                                .<span class="ident">map_err</span>(<span class="ident">e500</span>)<span class="question-mark">?</span>;
+                                .<span class="kw">await
+                                </span>.map_err(e500)<span class="question-mark">?</span>;
 
-                            <span class="ident">set_session_cookie</span>(
-                                <span class="ident">res</span>.<span class="ident">response_mut</span>().<span class="ident">head_mut</span>(),
-                                <span class="ident">session_key</span>,
-                                <span class="kw-2">&amp;</span><span class="ident">configuration</span>.<span class="ident">cookie</span>,
+                            set_session_cookie(
+                                res.response_mut().head_mut(),
+                                session_key,
+                                <span class="kw-2">&amp;</span>configuration.cookie,
                             )
-                            .<span class="ident">map_err</span>(<span class="ident">e500</span>)<span class="question-mark">?</span>;
+                            .map_err(e500)<span class="question-mark">?</span>;
                         }
 
-                        <span class="ident">SessionStatus::Purged</span> =&gt; {
-                            <span class="ident">storage_backend</span>.<span class="ident">delete</span>(<span class="kw-2">&amp;</span><span class="ident">session_key</span>).<span class="kw">await</span>.<span class="ident">map_err</span>(<span class="ident">e500</span>)<span class="question-mark">?</span>;
+                        SessionStatus::Purged =&gt; {
+                            storage_backend.delete(<span class="kw-2">&amp;</span>session_key).<span class="kw">await</span>.map_err(e500)<span class="question-mark">?</span>;
 
-                            <span class="ident">delete_session_cookie</span>(
-                                <span class="ident">res</span>.<span class="ident">response_mut</span>().<span class="ident">head_mut</span>(),
-                                <span class="kw-2">&amp;</span><span class="ident">configuration</span>.<span class="ident">cookie</span>,
+                            delete_session_cookie(
+                                res.response_mut().head_mut(),
+                                <span class="kw-2">&amp;</span>configuration.cookie,
                             )
-                            .<span class="ident">map_err</span>(<span class="ident">e500</span>)<span class="question-mark">?</span>;
+                            .map_err(e500)<span class="question-mark">?</span>;
                         }
 
-                        <span class="ident">SessionStatus::Renewed</span> =&gt; {
-                            <span class="ident">storage_backend</span>.<span class="ident">delete</span>(<span class="kw-2">&amp;</span><span class="ident">session_key</span>).<span class="kw">await</span>.<span class="ident">map_err</span>(<span class="ident">e500</span>)<span class="question-mark">?</span>;
+                        SessionStatus::Renewed =&gt; {
+                            storage_backend.delete(<span class="kw-2">&amp;</span>session_key).<span class="kw">await</span>.map_err(e500)<span class="question-mark">?</span>;
 
-                            <span class="kw">let</span> <span class="ident">session_key</span> <span class="op">=</span> <span class="ident">storage_backend</span>
-                                .<span class="ident">save</span>(<span class="ident">session_state</span>, <span class="kw-2">&amp;</span><span class="ident">configuration</span>.<span class="ident">session</span>.<span class="ident">state_ttl</span>)
-                                .<span class="kw">await</span>
-                                .<span class="ident">map_err</span>(<span class="ident">e500</span>)<span class="question-mark">?</span>;
+                            <span class="kw">let </span>session_key = storage_backend
+                                .save(session_state, <span class="kw-2">&amp;</span>configuration.session.state_ttl)
+                                .<span class="kw">await
+                                </span>.map_err(e500)<span class="question-mark">?</span>;
 
-                            <span class="ident">set_session_cookie</span>(
-                                <span class="ident">res</span>.<span class="ident">response_mut</span>().<span class="ident">head_mut</span>(),
-                                <span class="ident">session_key</span>,
-                                <span class="kw-2">&amp;</span><span class="ident">configuration</span>.<span class="ident">cookie</span>,
+                            set_session_cookie(
+                                res.response_mut().head_mut(),
+                                session_key,
+                                <span class="kw-2">&amp;</span>configuration.cookie,
                             )
-                            .<span class="ident">map_err</span>(<span class="ident">e500</span>)<span class="question-mark">?</span>;
+                            .map_err(e500)<span class="question-mark">?</span>;
                         }
 
-                        <span class="ident">SessionStatus::Unchanged</span> =&gt; {
-                            <span class="kw">if</span> <span class="macro">matches!</span>(
-                                <span class="ident">configuration</span>.<span class="ident">ttl_extension_policy</span>,
-                                <span class="ident">TtlExtensionPolicy::OnEveryRequest</span>
+                        SessionStatus::Unchanged =&gt; {
+                            <span class="kw">if </span><span class="macro">matches!</span>(
+                                configuration.ttl_extension_policy,
+                                TtlExtensionPolicy::OnEveryRequest
                             ) {
-                                <span class="ident">storage_backend</span>
-                                    .<span class="ident">update_ttl</span>(<span class="kw-2">&amp;</span><span class="ident">session_key</span>, <span class="kw-2">&amp;</span><span class="ident">configuration</span>.<span class="ident">session</span>.<span class="ident">state_ttl</span>)
-                                    .<span class="kw">await</span>
-                                    .<span class="ident">map_err</span>(<span class="ident">e500</span>)<span class="question-mark">?</span>;
+                                storage_backend
+                                    .update_ttl(<span class="kw-2">&amp;</span>session_key, <span class="kw-2">&amp;</span>configuration.session.state_ttl)
+                                    .<span class="kw">await
+                                    </span>.map_err(e500)<span class="question-mark">?</span>;
 
-                                <span class="kw">if</span> <span class="ident">configuration</span>.<span class="ident">cookie</span>.<span class="ident">max_age</span>.<span class="ident">is_some</span>() {
-                                    <span class="ident">set_session_cookie</span>(
-                                        <span class="ident">res</span>.<span class="ident">response_mut</span>().<span class="ident">head_mut</span>(),
-                                        <span class="ident">session_key</span>,
-                                        <span class="kw-2">&amp;</span><span class="ident">configuration</span>.<span class="ident">cookie</span>,
+                                <span class="kw">if </span>configuration.cookie.max_age.is_some() {
+                                    set_session_cookie(
+                                        res.response_mut().head_mut(),
+                                        session_key,
+                                        <span class="kw-2">&amp;</span>configuration.cookie,
                                     )
-                                    .<span class="ident">map_err</span>(<span class="ident">e500</span>)<span class="question-mark">?</span>;
+                                    .map_err(e500)<span class="question-mark">?</span>;
                                 }
                             }
                         }
@@ -777,154 +777,154 @@
                 }
             }
 
-            <span class="prelude-val">Ok</span>(<span class="ident">res</span>)
+            <span class="prelude-val">Ok</span>(res)
         })
     }
 }
 
-<span class="doccomment">/// Examines the session cookie attached to the incoming request, if there is one, and tries</span>
-<span class="doccomment">/// to extract the session key.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// It returns `None` if there is no session cookie or if the session cookie is considered invalid</span>
-<span class="doccomment">/// (e.g., when failing a signature check).</span>
-<span class="kw">fn</span> <span class="ident">extract_session_key</span>(<span class="ident">req</span>: <span class="kw-2">&amp;</span><span class="ident">ServiceRequest</span>, <span class="ident">config</span>: <span class="kw-2">&amp;</span><span class="ident">CookieConfiguration</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">SessionKey</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">cookies</span> <span class="op">=</span> <span class="ident">req</span>.<span class="ident">cookies</span>().<span class="ident">ok</span>()<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">session_cookie</span> <span class="op">=</span> <span class="ident">cookies</span>
-        .<span class="ident">iter</span>()
-        .<span class="ident">find</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">cookie</span><span class="op">|</span> <span class="ident">cookie</span>.<span class="ident">name</span>() <span class="op">==</span> <span class="ident">config</span>.<span class="ident">name</span>)<span class="question-mark">?</span>;
+<span class="doccomment">/// Examines the session cookie attached to the incoming request, if there is one, and tries
+/// to extract the session key.
+///
+/// It returns `None` if there is no session cookie or if the session cookie is considered invalid
+/// (e.g., when failing a signature check).
+</span><span class="kw">fn </span>extract_session_key(req: <span class="kw-2">&amp;</span>ServiceRequest, config: <span class="kw-2">&amp;</span>CookieConfiguration) -&gt; <span class="prelude-ty">Option</span>&lt;SessionKey&gt; {
+    <span class="kw">let </span>cookies = req.cookies().ok()<span class="question-mark">?</span>;
+    <span class="kw">let </span>session_cookie = cookies
+        .iter()
+        .find(|<span class="kw-2">&amp;</span>cookie| cookie.name() == config.name)<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">jar</span> <span class="op">=</span> <span class="ident">CookieJar::new</span>();
-    <span class="ident">jar</span>.<span class="ident">add_original</span>(<span class="ident">session_cookie</span>.<span class="ident">clone</span>());
+    <span class="kw">let </span><span class="kw-2">mut </span>jar = CookieJar::new();
+    jar.add_original(session_cookie.clone());
 
-    <span class="kw">let</span> <span class="ident">verification_result</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">config</span>.<span class="ident">content_security</span> {
-        <span class="ident">CookieContentSecurity::Signed</span> =&gt; <span class="ident">jar</span>.<span class="ident">signed</span>(<span class="kw-2">&amp;</span><span class="ident">config</span>.<span class="ident">key</span>).<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">config</span>.<span class="ident">name</span>),
-        <span class="ident">CookieContentSecurity::Private</span> =&gt; <span class="ident">jar</span>.<span class="ident">private</span>(<span class="kw-2">&amp;</span><span class="ident">config</span>.<span class="ident">key</span>).<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">config</span>.<span class="ident">name</span>),
+    <span class="kw">let </span>verification_result = <span class="kw">match </span>config.content_security {
+        CookieContentSecurity::Signed =&gt; jar.signed(<span class="kw-2">&amp;</span>config.key).get(<span class="kw-2">&amp;</span>config.name),
+        CookieContentSecurity::Private =&gt; jar.private(<span class="kw-2">&amp;</span>config.key).get(<span class="kw-2">&amp;</span>config.name),
     };
 
-    <span class="kw">if</span> <span class="ident">verification_result</span>.<span class="ident">is_none</span>() {
+    <span class="kw">if </span>verification_result.is_none() {
         <span class="macro">tracing::warn!</span>(
             <span class="string">&quot;The session cookie attached to the incoming request failed to pass cryptographic \
-            checks (signature verification/decryption).&quot;</span>
-        );
+            checks (signature verification/decryption).&quot;
+        </span>);
     }
 
-    <span class="kw">match</span> <span class="ident">verification_result</span><span class="question-mark">?</span>.<span class="ident">value</span>().<span class="ident">to_owned</span>().<span class="ident">try_into</span>() {
-        <span class="prelude-val">Ok</span>(<span class="ident">session_key</span>) =&gt; <span class="prelude-val">Some</span>(<span class="ident">session_key</span>),
-        <span class="prelude-val">Err</span>(<span class="ident">err</span>) =&gt; {
+    <span class="kw">match </span>verification_result<span class="question-mark">?</span>.value().to_owned().try_into() {
+        <span class="prelude-val">Ok</span>(session_key) =&gt; <span class="prelude-val">Some</span>(session_key),
+        <span class="prelude-val">Err</span>(err) =&gt; {
             <span class="macro">tracing::warn!</span>(
-                <span class="ident">error</span>.<span class="ident">message</span> <span class="op">=</span> <span class="op">%</span><span class="ident">err</span>,
-                <span class="ident">error</span>.<span class="ident">cause_chain</span> <span class="op">=</span> <span class="question-mark">?</span><span class="ident">err</span>,
-                <span class="string">&quot;Invalid session key, ignoring.&quot;</span>
-            );
+                error.message = %err,
+                error.cause_chain = <span class="question-mark">?</span>err,
+                <span class="string">&quot;Invalid session key, ignoring.&quot;
+            </span>);
 
-            <span class="prelude-val">None</span>
-        }
+            <span class="prelude-val">None
+        </span>}
     }
 }
 
-<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">load_session_state</span><span class="op">&lt;</span><span class="ident">Store</span>: <span class="ident">SessionStore</span><span class="op">&gt;</span>(
-    <span class="ident">session_key</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">SessionKey</span><span class="op">&gt;</span>,
-    <span class="ident">storage_backend</span>: <span class="kw-2">&amp;</span><span class="ident">Store</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">SessionKey</span><span class="op">&gt;</span>, <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">String</span><span class="op">&gt;</span>), <span class="ident">actix_web::Error</span><span class="op">&gt;</span> {
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">session_key</span>) <span class="op">=</span> <span class="ident">session_key</span> {
-        <span class="kw">match</span> <span class="ident">storage_backend</span>.<span class="ident">load</span>(<span class="kw-2">&amp;</span><span class="ident">session_key</span>).<span class="kw">await</span> {
-            <span class="prelude-val">Ok</span>(<span class="ident">state</span>) =&gt; {
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">state</span>) <span class="op">=</span> <span class="ident">state</span> {
-                    <span class="prelude-val">Ok</span>((<span class="prelude-val">Some</span>(<span class="ident">session_key</span>), <span class="ident">state</span>))
-                } <span class="kw">else</span> {
-                    <span class="comment">// We discard the existing session key given that the state attached to it can</span>
-                    <span class="comment">// no longer be found (e.g. it expired or we suffered some data loss in the</span>
-                    <span class="comment">// storage). Regenerating the session key will trigger the `save` workflow</span>
-                    <span class="comment">// instead of the `update` workflow if the session state is modified during the</span>
-                    <span class="comment">// lifecycle of the current request.</span>
+<span class="kw">async fn </span>load_session_state&lt;Store: SessionStore&gt;(
+    session_key: <span class="prelude-ty">Option</span>&lt;SessionKey&gt;,
+    storage_backend: <span class="kw-2">&amp;</span>Store,
+) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="prelude-ty">Option</span>&lt;SessionKey&gt;, HashMap&lt;String, String&gt;), actix_web::Error&gt; {
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(session_key) = session_key {
+        <span class="kw">match </span>storage_backend.load(<span class="kw-2">&amp;</span>session_key).<span class="kw">await </span>{
+            <span class="prelude-val">Ok</span>(state) =&gt; {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(state) = state {
+                    <span class="prelude-val">Ok</span>((<span class="prelude-val">Some</span>(session_key), state))
+                } <span class="kw">else </span>{
+                    <span class="comment">// We discard the existing session key given that the state attached to it can
+                    // no longer be found (e.g. it expired or we suffered some data loss in the
+                    // storage). Regenerating the session key will trigger the `save` workflow
+                    // instead of the `update` workflow if the session state is modified during the
+                    // lifecycle of the current request.
 
-                    <span class="macro">tracing::info!</span>(
+                    </span><span class="macro">tracing::info!</span>(
                         <span class="string">&quot;No session state has been found for a valid session key, creating a new \
-                        empty session.&quot;</span>
-                    );
+                        empty session.&quot;
+                    </span>);
 
-                    <span class="prelude-val">Ok</span>((<span class="prelude-val">None</span>, <span class="ident">HashMap::new</span>()))
+                    <span class="prelude-val">Ok</span>((<span class="prelude-val">None</span>, HashMap::new()))
                 }
             }
 
-            <span class="prelude-val">Err</span>(<span class="ident">err</span>) =&gt; <span class="kw">match</span> <span class="ident">err</span> {
-                <span class="ident">LoadError::Deserialization</span>(<span class="ident">err</span>) =&gt; {
+            <span class="prelude-val">Err</span>(err) =&gt; <span class="kw">match </span>err {
+                LoadError::Deserialization(err) =&gt; {
                     <span class="macro">tracing::warn!</span>(
-                        <span class="ident">error</span>.<span class="ident">message</span> <span class="op">=</span> <span class="op">%</span><span class="ident">err</span>,
-                        <span class="ident">error</span>.<span class="ident">cause_chain</span> <span class="op">=</span> <span class="question-mark">?</span><span class="ident">err</span>,
-                        <span class="string">&quot;Invalid session state, creating a new empty session.&quot;</span>
-                    );
+                        error.message = %err,
+                        error.cause_chain = <span class="question-mark">?</span>err,
+                        <span class="string">&quot;Invalid session state, creating a new empty session.&quot;
+                    </span>);
 
-                    <span class="prelude-val">Ok</span>((<span class="prelude-val">Some</span>(<span class="ident">session_key</span>), <span class="ident">HashMap::new</span>()))
+                    <span class="prelude-val">Ok</span>((<span class="prelude-val">Some</span>(session_key), HashMap::new()))
                 }
 
-                <span class="ident">LoadError::Other</span>(<span class="ident">err</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">e500</span>(<span class="ident">err</span>)),
+                LoadError::Other(err) =&gt; <span class="prelude-val">Err</span>(e500(err)),
             },
         }
-    } <span class="kw">else</span> {
-        <span class="prelude-val">Ok</span>((<span class="prelude-val">None</span>, <span class="ident">HashMap::new</span>()))
+    } <span class="kw">else </span>{
+        <span class="prelude-val">Ok</span>((<span class="prelude-val">None</span>, HashMap::new()))
     }
 }
 
-<span class="kw">fn</span> <span class="ident">set_session_cookie</span>(
-    <span class="ident">response</span>: <span class="kw-2">&amp;mut</span> <span class="ident">ResponseHead</span>,
-    <span class="ident">session_key</span>: <span class="ident">SessionKey</span>,
-    <span class="ident">config</span>: <span class="kw-2">&amp;</span><span class="ident">CookieConfiguration</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">anyhow::Error</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">value</span>: <span class="ident">String</span> <span class="op">=</span> <span class="ident">session_key</span>.<span class="ident">into</span>();
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cookie</span> <span class="op">=</span> <span class="ident">Cookie::new</span>(<span class="ident">config</span>.<span class="ident">name</span>.<span class="ident">clone</span>(), <span class="ident">value</span>);
+<span class="kw">fn </span>set_session_cookie(
+    response: <span class="kw-2">&amp;mut </span>ResponseHead,
+    session_key: SessionKey,
+    config: <span class="kw-2">&amp;</span>CookieConfiguration,
+) -&gt; <span class="prelude-ty">Result</span>&lt;(), anyhow::Error&gt; {
+    <span class="kw">let </span>value: String = session_key.into();
+    <span class="kw">let </span><span class="kw-2">mut </span>cookie = Cookie::new(config.name.clone(), value);
 
-    <span class="ident">cookie</span>.<span class="ident">set_secure</span>(<span class="ident">config</span>.<span class="ident">secure</span>);
-    <span class="ident">cookie</span>.<span class="ident">set_http_only</span>(<span class="ident">config</span>.<span class="ident">http_only</span>);
-    <span class="ident">cookie</span>.<span class="ident">set_same_site</span>(<span class="ident">config</span>.<span class="ident">same_site</span>);
-    <span class="ident">cookie</span>.<span class="ident">set_path</span>(<span class="ident">config</span>.<span class="ident">path</span>.<span class="ident">clone</span>());
+    cookie.set_secure(config.secure);
+    cookie.set_http_only(config.http_only);
+    cookie.set_same_site(config.same_site);
+    cookie.set_path(config.path.clone());
 
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">max_age</span>) <span class="op">=</span> <span class="ident">config</span>.<span class="ident">max_age</span> {
-        <span class="ident">cookie</span>.<span class="ident">set_max_age</span>(<span class="ident">max_age</span>);
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(max_age) = config.max_age {
+        cookie.set_max_age(max_age);
     }
 
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">domain</span>) <span class="op">=</span> <span class="ident">config</span>.<span class="ident">domain</span> {
-        <span class="ident">cookie</span>.<span class="ident">set_domain</span>(<span class="ident">domain</span>.<span class="ident">clone</span>());
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>domain) = config.domain {
+        cookie.set_domain(domain.clone());
     }
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">jar</span> <span class="op">=</span> <span class="ident">CookieJar::new</span>();
-    <span class="kw">match</span> <span class="ident">config</span>.<span class="ident">content_security</span> {
-        <span class="ident">CookieContentSecurity::Signed</span> =&gt; <span class="ident">jar</span>.<span class="ident">signed_mut</span>(<span class="kw-2">&amp;</span><span class="ident">config</span>.<span class="ident">key</span>).<span class="ident">add</span>(<span class="ident">cookie</span>),
-        <span class="ident">CookieContentSecurity::Private</span> =&gt; <span class="ident">jar</span>.<span class="ident">private_mut</span>(<span class="kw-2">&amp;</span><span class="ident">config</span>.<span class="ident">key</span>).<span class="ident">add</span>(<span class="ident">cookie</span>),
+    <span class="kw">let </span><span class="kw-2">mut </span>jar = CookieJar::new();
+    <span class="kw">match </span>config.content_security {
+        CookieContentSecurity::Signed =&gt; jar.signed_mut(<span class="kw-2">&amp;</span>config.key).add(cookie),
+        CookieContentSecurity::Private =&gt; jar.private_mut(<span class="kw-2">&amp;</span>config.key).add(cookie),
     }
 
-    <span class="comment">// set cookie</span>
-    <span class="kw">let</span> <span class="ident">cookie</span> <span class="op">=</span> <span class="ident">jar</span>.<span class="ident">delta</span>().<span class="ident">next</span>().<span class="ident">unwrap</span>();
-    <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="ident">HeaderValue::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">cookie</span>.<span class="ident">encoded</span>().<span class="ident">to_string</span>())
-        .<span class="ident">context</span>(<span class="string">&quot;Failed to attach a session cookie to the outgoing response&quot;</span>)<span class="question-mark">?</span>;
+    <span class="comment">// set cookie
+    </span><span class="kw">let </span>cookie = jar.delta().next().unwrap();
+    <span class="kw">let </span>val = HeaderValue::from_str(<span class="kw-2">&amp;</span>cookie.encoded().to_string())
+        .context(<span class="string">&quot;Failed to attach a session cookie to the outgoing response&quot;</span>)<span class="question-mark">?</span>;
 
-    <span class="ident">response</span>.<span class="ident">headers_mut</span>().<span class="ident">append</span>(<span class="ident">SET_COOKIE</span>, <span class="ident">val</span>);
+    response.headers_mut().append(SET_COOKIE, val);
 
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="kw">fn</span> <span class="ident">delete_session_cookie</span>(
-    <span class="ident">response</span>: <span class="kw-2">&amp;mut</span> <span class="ident">ResponseHead</span>,
-    <span class="ident">config</span>: <span class="kw-2">&amp;</span><span class="ident">CookieConfiguration</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">anyhow::Error</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">removal_cookie</span> <span class="op">=</span> <span class="ident">Cookie::build</span>(<span class="ident">config</span>.<span class="ident">name</span>.<span class="ident">clone</span>(), <span class="string">&quot;&quot;</span>)
-        .<span class="ident">path</span>(<span class="ident">config</span>.<span class="ident">path</span>.<span class="ident">clone</span>())
-        .<span class="ident">http_only</span>(<span class="ident">config</span>.<span class="ident">http_only</span>);
+<span class="kw">fn </span>delete_session_cookie(
+    response: <span class="kw-2">&amp;mut </span>ResponseHead,
+    config: <span class="kw-2">&amp;</span>CookieConfiguration,
+) -&gt; <span class="prelude-ty">Result</span>&lt;(), anyhow::Error&gt; {
+    <span class="kw">let </span>removal_cookie = Cookie::build(config.name.clone(), <span class="string">&quot;&quot;</span>)
+        .path(config.path.clone())
+        .http_only(config.http_only);
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">removal_cookie</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">domain</span>) <span class="op">=</span> <span class="ident">config</span>.<span class="ident">domain</span> {
-        <span class="ident">removal_cookie</span>.<span class="ident">domain</span>(<span class="ident">domain</span>)
-    } <span class="kw">else</span> {
-        <span class="ident">removal_cookie</span>
+    <span class="kw">let </span><span class="kw-2">mut </span>removal_cookie = <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>domain) = config.domain {
+        removal_cookie.domain(domain)
+    } <span class="kw">else </span>{
+        removal_cookie
     }
-    .<span class="ident">finish</span>();
+    .finish();
 
-    <span class="ident">removal_cookie</span>.<span class="ident">make_removal</span>();
+    removal_cookie.make_removal();
 
-    <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="ident">HeaderValue::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">removal_cookie</span>.<span class="ident">to_string</span>())
-        .<span class="ident">context</span>(<span class="string">&quot;Failed to attach a session removal cookie to the outgoing response&quot;</span>)<span class="question-mark">?</span>;
-    <span class="ident">response</span>.<span class="ident">headers_mut</span>().<span class="ident">append</span>(<span class="ident">SET_COOKIE</span>, <span class="ident">val</span>);
+    <span class="kw">let </span>val = HeaderValue::from_str(<span class="kw-2">&amp;</span>removal_cookie.to_string())
+        .context(<span class="string">&quot;Failed to attach a session removal cookie to the outgoing response&quot;</span>)<span class="question-mark">?</span>;
+    response.headers_mut().append(SET_COOKIE, val);
 
     <span class="prelude-val">Ok</span>(())
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_session" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (34a6cae28 2022-08-09)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_session" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (060e47f74 2022-08-23)" ></div></body></html>

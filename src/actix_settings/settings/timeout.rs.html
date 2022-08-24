@@ -98,65 +98,65 @@
 <span id="96">96</span>
 <span id="97">97</span>
 <span id="98">98</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::fmt</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>std::fmt;
 
-<span class="kw">use</span> <span class="ident">once_cell::sync::Lazy</span>;
-<span class="kw">use</span> <span class="ident">regex::Regex</span>;
-<span class="kw">use</span> <span class="ident">serde::de</span>;
+<span class="kw">use </span>once_cell::sync::Lazy;
+<span class="kw">use </span>regex::Regex;
+<span class="kw">use </span>serde::de;
 
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">AsResult</span>, <span class="ident">Error</span>, <span class="ident">Parse</span>};
+<span class="kw">use crate</span>::{AsResult, Error, Parse};
 
-<span class="doccomment">/// A timeout duration in milliseconds or seconds.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Timeout</span> {
-    <span class="doccomment">/// The default timeout. Depends on context.</span>
-    <span class="ident">Default</span>,
+<span class="doccomment">/// A timeout duration in milliseconds or seconds.
+</span><span class="attribute">#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+</span><span class="kw">pub enum </span>Timeout {
+    <span class="doccomment">/// The default timeout. Depends on context.
+    </span>Default,
 
-    <span class="doccomment">/// Timeout in milliseconds.</span>
-    <span class="ident">Milliseconds</span>(<span class="ident">usize</span>),
+    <span class="doccomment">/// Timeout in milliseconds.
+    </span>Milliseconds(usize),
 
-    <span class="doccomment">/// Timeout in seconds.</span>
-    <span class="ident">Seconds</span>(<span class="ident">usize</span>),
+    <span class="doccomment">/// Timeout in seconds.
+    </span>Seconds(usize),
 }
 
-<span class="kw">impl</span> <span class="ident">Parse</span> <span class="kw">for</span> <span class="ident">Timeout</span> {
-    <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">string</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">AsResult</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="kw">pub</span> <span class="kw">static</span> <span class="ident">FMT</span>: <span class="ident">Lazy</span><span class="op">&lt;</span><span class="ident">Regex</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Lazy::new</span>(<span class="op">|</span><span class="op">|</span> {
-            <span class="ident">Regex::new</span>(<span class="string">r&quot;^\d+ (milliseconds|seconds)$&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;Failed to compile regex: FMT&quot;</span>)
+<span class="kw">impl </span>Parse <span class="kw">for </span>Timeout {
+    <span class="kw">fn </span>parse(string: <span class="kw-2">&amp;</span>str) -&gt; AsResult&lt;<span class="self">Self</span>&gt; {
+        <span class="kw">pub static </span>FMT: Lazy&lt;Regex&gt; = Lazy::new(|| {
+            Regex::new(<span class="string">r&quot;^\d+ (milliseconds|seconds)$&quot;</span>).expect(<span class="string">&quot;Failed to compile regex: FMT&quot;</span>)
         });
 
-        <span class="kw">pub</span> <span class="kw">static</span> <span class="ident">DIGITS</span>: <span class="ident">Lazy</span><span class="op">&lt;</span><span class="ident">Regex</span><span class="op">&gt;</span> <span class="op">=</span>
-            <span class="ident">Lazy::new</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">Regex::new</span>(<span class="string">r&quot;^\d+&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;Failed to compile regex: DIGITS&quot;</span>));
+        <span class="kw">pub static </span>DIGITS: Lazy&lt;Regex&gt; =
+            Lazy::new(|| Regex::new(<span class="string">r&quot;^\d+&quot;</span>).expect(<span class="string">&quot;Failed to compile regex: DIGITS&quot;</span>));
 
-        <span class="kw">pub</span> <span class="kw">static</span> <span class="ident">UNIT</span>: <span class="ident">Lazy</span><span class="op">&lt;</span><span class="ident">Regex</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Lazy::new</span>(<span class="op">|</span><span class="op">|</span> {
-            <span class="ident">Regex::new</span>(<span class="string">r&quot;(milliseconds|seconds)$&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;Failed to compile regex: UNIT&quot;</span>)
+        <span class="kw">pub static </span>UNIT: Lazy&lt;Regex&gt; = Lazy::new(|| {
+            Regex::new(<span class="string">r&quot;(milliseconds|seconds)$&quot;</span>).expect(<span class="string">&quot;Failed to compile regex: UNIT&quot;</span>)
         });
 
-        <span class="macro">macro_rules!</span> <span class="ident">invalid_value</span> {
-            (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">got</span>:<span class="ident">expr</span>) =&gt; {
-                <span class="prelude-val">Err</span>(<span class="macro">InvalidValue!</span> {
-                    <span class="ident">expected</span>: <span class="string">&quot;a string of the format \&quot;N seconds\&quot; or \&quot;N milliseconds\&quot; where N is an integer &gt; 0&quot;</span>,
-                    <span class="ident">got</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">got</span>,
+        <span class="macro">macro_rules! </span>invalid_value {
+            (<span class="macro-nonterminal">$got</span>:expr) =&gt; {
+                <span class="prelude-val">Err</span>(<span class="macro">InvalidValue! </span>{
+                    expected: <span class="string">&quot;a string of the format \&quot;N seconds\&quot; or \&quot;N milliseconds\&quot; where N is an integer &gt; 0&quot;</span>,
+                    got: <span class="macro-nonterminal">$got</span>,
                 })
             }
         }
 
-        <span class="kw">match</span> <span class="ident">string</span> {
-            <span class="string">&quot;default&quot;</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident">Timeout::Default</span>),
+        <span class="kw">match </span>string {
+            <span class="string">&quot;default&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Timeout::Default),
 
-            <span class="ident">string</span> <span class="kw">if</span> <span class="op">!</span><span class="ident">FMT</span>.<span class="ident">is_match</span>(<span class="ident">string</span>) =&gt; <span class="macro">invalid_value!</span>(<span class="ident">string</span>),
+            string <span class="kw">if </span>!FMT.is_match(string) =&gt; <span class="macro">invalid_value!</span>(string),
 
-            <span class="ident">string</span> =&gt; <span class="kw">match</span> (<span class="ident">DIGITS</span>.<span class="ident">find</span>(<span class="ident">string</span>), <span class="ident">UNIT</span>.<span class="ident">find</span>(<span class="ident">string</span>)) {
-                (<span class="prelude-val">None</span>, <span class="kw">_</span>) <span class="op">|</span> (<span class="kw">_</span>, <span class="prelude-val">None</span>) =&gt; <span class="macro">invalid_value!</span>(<span class="ident">string</span>),
+            string =&gt; <span class="kw">match </span>(DIGITS.find(string), UNIT.find(string)) {
+                (<span class="prelude-val">None</span>, <span class="kw">_</span>) | (<span class="kw">_</span>, <span class="prelude-val">None</span>) =&gt; <span class="macro">invalid_value!</span>(string),
 
-                (<span class="prelude-val">Some</span>(<span class="ident">digits</span>), <span class="prelude-val">Some</span>(<span class="ident">unit</span>)) =&gt; {
-                    <span class="kw">let</span> <span class="ident">digits</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">string</span>[<span class="ident">digits</span>.<span class="ident">range</span>()];
-                    <span class="kw">let</span> <span class="ident">unit</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">string</span>[<span class="ident">unit</span>.<span class="ident">range</span>()];
+                (<span class="prelude-val">Some</span>(digits), <span class="prelude-val">Some</span>(unit)) =&gt; {
+                    <span class="kw">let </span>digits = <span class="kw-2">&amp;</span>string[digits.range()];
+                    <span class="kw">let </span>unit = <span class="kw-2">&amp;</span>string[unit.range()];
 
-                    <span class="kw">match</span> (<span class="ident">digits</span>.<span class="ident">parse</span>(), <span class="ident">unit</span>) {
-                        (<span class="prelude-val">Ok</span>(<span class="ident">n</span>), <span class="string">&quot;milliseconds&quot;</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">Timeout::Milliseconds</span>(<span class="ident">n</span>)),
-                        (<span class="prelude-val">Ok</span>(<span class="ident">n</span>), <span class="string">&quot;seconds&quot;</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">Timeout::Seconds</span>(<span class="ident">n</span>)),
-                        <span class="kw">_</span> =&gt; <span class="macro">invalid_value!</span>(<span class="ident">string</span>),
+                    <span class="kw">match </span>(digits.parse(), unit) {
+                        (<span class="prelude-val">Ok</span>(n), <span class="string">&quot;milliseconds&quot;</span>) =&gt; <span class="prelude-val">Ok</span>(Timeout::Milliseconds(n)),
+                        (<span class="prelude-val">Ok</span>(n), <span class="string">&quot;seconds&quot;</span>) =&gt; <span class="prelude-val">Ok</span>(Timeout::Seconds(n)),
+                        <span class="kw">_ </span>=&gt; <span class="macro">invalid_value!</span>(string),
                     }
                 }
             },
@@ -164,37 +164,37 @@
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="ident">de::Deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Timeout</span> {
-    <span class="kw">fn</span> <span class="ident">deserialize</span><span class="op">&lt;</span><span class="ident">D</span><span class="op">&gt;</span>(<span class="ident">deserializer</span>: <span class="ident">D</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">D::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">D</span>: <span class="ident">de::Deserializer</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; de::Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>Timeout {
+    <span class="kw">fn </span>deserialize&lt;D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, D::Error&gt;
+    <span class="kw">where
+        </span>D: de::Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
     {
-        <span class="kw">struct</span> <span class="ident">TimeoutVisitor</span>;
+        <span class="kw">struct </span>TimeoutVisitor;
 
-        <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="ident">de::Visitor</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">TimeoutVisitor</span> {
-            <span class="kw">type</span> <span class="ident">Value</span> <span class="op">=</span> <span class="ident">Timeout</span>;
+        <span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; de::Visitor&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>TimeoutVisitor {
+            <span class="kw">type </span>Value = Timeout;
 
-            <span class="kw">fn</span> <span class="ident">expecting</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
-                <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="string">&quot;Either \&quot;default\&quot;, \&quot;disabled\&quot;, \&quot;os\&quot;, or a string of the format \&quot;N seconds\&quot; where N is an integer &gt; 0&quot;</span>;
-                <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="ident">msg</span>)
+            <span class="kw">fn </span>expecting(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+                <span class="kw">let </span>msg = <span class="string">&quot;Either \&quot;default\&quot;, \&quot;disabled\&quot;, \&quot;os\&quot;, or a string of the format \&quot;N seconds\&quot; where N is an integer &gt; 0&quot;</span>;
+                f.write_str(msg)
             }
 
-            <span class="kw">fn</span> <span class="ident">visit_str</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">E</span><span class="op">&gt;</span>
-            <span class="kw">where</span>
-                <span class="ident">E</span>: <span class="ident">de::Error</span>,
+            <span class="kw">fn </span>visit_str&lt;E&gt;(<span class="self">self</span>, value: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt;
+            <span class="kw">where
+                </span>E: de::Error,
             {
-                <span class="kw">match</span> <span class="ident">Timeout::parse</span>(<span class="ident">value</span>) {
-                    <span class="prelude-val">Ok</span>(<span class="ident">num_workers</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">num_workers</span>),
-                    <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidValue</span> { <span class="ident">expected</span>, <span class="ident">got</span>, .. }) =&gt; <span class="prelude-val">Err</span>(
-                        <span class="ident">de::Error::invalid_value</span>(<span class="ident">de::Unexpected::Str</span>(<span class="kw-2">&amp;</span><span class="ident">got</span>), <span class="kw-2">&amp;</span><span class="ident">expected</span>),
+                <span class="kw">match </span>Timeout::parse(value) {
+                    <span class="prelude-val">Ok</span>(num_workers) =&gt; <span class="prelude-val">Ok</span>(num_workers),
+                    <span class="prelude-val">Err</span>(Error::InvalidValue { expected, got, .. }) =&gt; <span class="prelude-val">Err</span>(
+                        de::Error::invalid_value(de::Unexpected::Str(<span class="kw-2">&amp;</span>got), <span class="kw-2">&amp;</span>expected),
                     ),
                     <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="macro">unreachable!</span>(),
                 }
             }
         }
 
-        <span class="ident">deserializer</span>.<span class="ident">deserialize_string</span>(<span class="ident">TimeoutVisitor</span>)
+        deserializer.deserialize_string(TimeoutVisitor)
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="actix_settings" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (34a6cae28 2022-08-09)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="actix_settings" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (060e47f74 2022-08-23)" ></div></body></html>

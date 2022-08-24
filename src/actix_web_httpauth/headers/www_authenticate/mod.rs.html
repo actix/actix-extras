@@ -5,12 +5,12 @@
 <span id="5">5</span>
 <span id="6">6</span>
 <span id="7">7</span>
-</pre><pre class="rust"><code><span class="doccomment">//! `WWW-Authenticate` header and various auth challenges.</span>
+</pre><pre class="rust"><code><span class="doccomment">//! `WWW-Authenticate` header and various auth challenges.
 
-<span class="kw">mod</span> <span class="ident">challenge</span>;
-<span class="kw">mod</span> <span class="ident">header</span>;
+</span><span class="kw">mod </span>challenge;
+<span class="kw">mod </span>header;
 
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::challenge</span>::{<span class="ident">basic</span>, <span class="ident">bearer</span>, <span class="ident">Challenge</span>};
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::header::WwwAuthenticate</span>;
+<span class="kw">pub use </span><span class="self">self</span>::challenge::{basic, bearer, Challenge};
+<span class="kw">pub use </span><span class="self">self</span>::header::WwwAuthenticate;
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="actix_web_httpauth" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (34a6cae28 2022-08-09)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="actix_web_httpauth" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (060e47f74 2022-08-23)" ></div></body></html>

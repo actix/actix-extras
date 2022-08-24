@@ -98,105 +98,105 @@
 <span id="98">98</span>
 <span id="99">99</span>
 <span id="100">100</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Identity management for Actix Web.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! `actix-identity` can be used to track identity of a user across multiple requests. It is built</span>
-<span class="doccomment">//! on top of HTTP sessions, via [`actix-session`](https://docs.rs/actix-session).</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! # Getting started</span>
-<span class="doccomment">//! To start using identity management in your Actix Web application you must register</span>
-<span class="doccomment">//! [`IdentityMiddleware`] and `SessionMiddleware` as middleware on your `App`:</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! ```no_run</span>
-<span class="doccomment">//! # use actix_web::web;</span>
-<span class="doccomment">//! use actix_web::{cookie::Key, App, HttpServer, HttpResponse};</span>
-<span class="doccomment">//! use actix_identity::IdentityMiddleware;</span>
-<span class="doccomment">//! use actix_session::{storage::RedisSessionStore, SessionMiddleware};</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! #[actix_web::main]</span>
-<span class="doccomment">//! async fn main() {</span>
-<span class="doccomment">//!     let secret_key = Key::generate();</span>
-<span class="doccomment">//!     let redis_store = RedisSessionStore::new(&quot;redis://127.0.0.1:6379&quot;)</span>
-<span class="doccomment">//!         .await</span>
-<span class="doccomment">//!         .unwrap();</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//!     HttpServer::new(move || {</span>
-<span class="doccomment">//!         App::new()</span>
-<span class="doccomment">//!             // Install the identity framework first.</span>
-<span class="doccomment">//!             .wrap(IdentityMiddleware::default())</span>
-<span class="doccomment">//!             // The identity system is built on top of sessions. You must install the session</span>
-<span class="doccomment">//!             // middleware to leverage `actix-identity`. The session middleware must be mounted</span>
-<span class="doccomment">//!             // AFTER the identity middleware: `actix-web` invokes middleware in the OPPOSITE</span>
-<span class="doccomment">//!             // order of registration when it receives an incoming request.</span>
-<span class="doccomment">//!             .wrap(SessionMiddleware::new(</span>
-<span class="doccomment">//!                  redis_store.clone(),</span>
-<span class="doccomment">//!                  secret_key.clone()</span>
-<span class="doccomment">//!             ))</span>
-<span class="doccomment">//!             // Your request handlers [...]</span>
-<span class="doccomment">//!             # .default_service(web::to(|| HttpResponse::Ok()))</span>
-<span class="doccomment">//!     })</span>
-<span class="doccomment">//! # ;</span>
-<span class="doccomment">//! }</span>
-<span class="doccomment">//! ```</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! User identities can be created, accessed and destroyed using the [`Identity`] extractor in your</span>
-<span class="doccomment">//! request handlers:</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! ```no_run</span>
-<span class="doccomment">//! use actix_web::{get, post, HttpResponse, Responder, HttpRequest, HttpMessage};</span>
-<span class="doccomment">//! use actix_identity::Identity;</span>
-<span class="doccomment">//! use actix_session::storage::RedisSessionStore;</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! #[get(&quot;/&quot;)]</span>
-<span class="doccomment">//! async fn index(user: Option&lt;Identity&gt;) -&gt; impl Responder {</span>
-<span class="doccomment">//!     if let Some(user) = user {</span>
-<span class="doccomment">//!         format!(&quot;Welcome! {}&quot;, user.id().unwrap())</span>
-<span class="doccomment">//!     } else {</span>
-<span class="doccomment">//!         &quot;Welcome Anonymous!&quot;.to_owned()</span>
-<span class="doccomment">//!     }</span>
-<span class="doccomment">//! }</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! #[post(&quot;/login&quot;)]</span>
-<span class="doccomment">//! async fn login(request: HttpRequest) -&gt; impl Responder {</span>
-<span class="doccomment">//!     // Some kind of authentication should happen here</span>
-<span class="doccomment">//!     // e.g. password-based, biometric, etc.</span>
-<span class="doccomment">//!     // [...]</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//!     // attach a verified user identity to the active session</span>
-<span class="doccomment">//!     Identity::login(&amp;request.extensions(), &quot;User1&quot;.into()).unwrap();</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//!     HttpResponse::Ok()</span>
-<span class="doccomment">//! }</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! #[post(&quot;/logout&quot;)]</span>
-<span class="doccomment">//! async fn logout(user: Identity) -&gt; impl Responder {</span>
-<span class="doccomment">//!     user.logout();</span>
-<span class="doccomment">//!     HttpResponse::Ok()</span>
-<span class="doccomment">//! }</span>
-<span class="doccomment">//! ```</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! # Advanced configuration</span>
-<span class="doccomment">//! By default, `actix-identity` does not automatically log out users. You can change this behaviour</span>
-<span class="doccomment">//! by customising the configuration for [`IdentityMiddleware`] via [`IdentityMiddleware::builder`].</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! In particular, you can automatically log out users who:</span>
-<span class="doccomment">//! - have been inactive for a while (see [`IdentityMiddlewareBuilder::visit_deadline`];</span>
-<span class="doccomment">//! - logged in too long ago (see [`IdentityMiddlewareBuilder::login_deadline`]).</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! [`IdentityMiddlewareBuilder::visit_deadline`]: config::IdentityMiddlewareBuilder::visit_deadline</span>
-<span class="doccomment">//! [`IdentityMiddlewareBuilder::login_deadline`]: config::IdentityMiddlewareBuilder::login_deadline</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Identity management for Actix Web.
+//!
+//! `actix-identity` can be used to track identity of a user across multiple requests. It is built
+//! on top of HTTP sessions, via [`actix-session`](https://docs.rs/actix-session).
+//!
+//! # Getting started
+//! To start using identity management in your Actix Web application you must register
+//! [`IdentityMiddleware`] and `SessionMiddleware` as middleware on your `App`:
+//!
+//! ```no_run
+//! # use actix_web::web;
+//! use actix_web::{cookie::Key, App, HttpServer, HttpResponse};
+//! use actix_identity::IdentityMiddleware;
+//! use actix_session::{storage::RedisSessionStore, SessionMiddleware};
+//!
+//! #[actix_web::main]
+//! async fn main() {
+//!     let secret_key = Key::generate();
+//!     let redis_store = RedisSessionStore::new(&quot;redis://127.0.0.1:6379&quot;)
+//!         .await
+//!         .unwrap();
+//!
+//!     HttpServer::new(move || {
+//!         App::new()
+//!             // Install the identity framework first.
+//!             .wrap(IdentityMiddleware::default())
+//!             // The identity system is built on top of sessions. You must install the session
+//!             // middleware to leverage `actix-identity`. The session middleware must be mounted
+//!             // AFTER the identity middleware: `actix-web` invokes middleware in the OPPOSITE
+//!             // order of registration when it receives an incoming request.
+//!             .wrap(SessionMiddleware::new(
+//!                  redis_store.clone(),
+//!                  secret_key.clone()
+//!             ))
+//!             // Your request handlers [...]
+//!             # .default_service(web::to(|| HttpResponse::Ok()))
+//!     })
+//! # ;
+//! }
+//! ```
+//!
+//! User identities can be created, accessed and destroyed using the [`Identity`] extractor in your
+//! request handlers:
+//!
+//! ```no_run
+//! use actix_web::{get, post, HttpResponse, Responder, HttpRequest, HttpMessage};
+//! use actix_identity::Identity;
+//! use actix_session::storage::RedisSessionStore;
+//!
+//! #[get(&quot;/&quot;)]
+//! async fn index(user: Option&lt;Identity&gt;) -&gt; impl Responder {
+//!     if let Some(user) = user {
+//!         format!(&quot;Welcome! {}&quot;, user.id().unwrap())
+//!     } else {
+//!         &quot;Welcome Anonymous!&quot;.to_owned()
+//!     }
+//! }
+//!
+//! #[post(&quot;/login&quot;)]
+//! async fn login(request: HttpRequest) -&gt; impl Responder {
+//!     // Some kind of authentication should happen here
+//!     // e.g. password-based, biometric, etc.
+//!     // [...]
+//!
+//!     // attach a verified user identity to the active session
+//!     Identity::login(&amp;request.extensions(), &quot;User1&quot;.into()).unwrap();
+//!
+//!     HttpResponse::Ok()
+//! }
+//!
+//! #[post(&quot;/logout&quot;)]
+//! async fn logout(user: Identity) -&gt; impl Responder {
+//!     user.logout();
+//!     HttpResponse::Ok()
+//! }
+//! ```
+//!
+//! # Advanced configuration
+//! By default, `actix-identity` does not automatically log out users. You can change this behaviour
+//! by customising the configuration for [`IdentityMiddleware`] via [`IdentityMiddleware::builder`].
+//!
+//! In particular, you can automatically log out users who:
+//! - have been inactive for a while (see [`IdentityMiddlewareBuilder::visit_deadline`];
+//! - logged in too long ago (see [`IdentityMiddlewareBuilder::login_deadline`]).
+//!
+//! [`IdentityMiddlewareBuilder::visit_deadline`]: config::IdentityMiddlewareBuilder::visit_deadline
+//! [`IdentityMiddlewareBuilder::login_deadline`]: config::IdentityMiddlewareBuilder::login_deadline
 
-<span class="attribute">#![<span class="ident">forbid</span>(<span class="ident">unsafe_code</span>)]</span>
-<span class="attribute">#![<span class="ident">deny</span>(<span class="ident">rust_2018_idioms</span>, <span class="ident">nonstandard_style</span>, <span class="ident">missing_docs</span>)]</span>
-<span class="attribute">#![<span class="ident">warn</span>(<span class="ident">future_incompatible</span>)]</span>
+</span><span class="attribute">#![forbid(unsafe_code)]
+#![deny(rust_2018_idioms, nonstandard_style, missing_docs)]
+#![warn(future_incompatible)]
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">config</span>;
-<span class="kw">mod</span> <span class="ident">identity</span>;
-<span class="kw">mod</span> <span class="ident">identity_ext</span>;
-<span class="kw">mod</span> <span class="ident">middleware</span>;
+</span><span class="kw">pub mod </span>config;
+<span class="kw">mod </span>identity;
+<span class="kw">mod </span>identity_ext;
+<span class="kw">mod </span>middleware;
 
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::identity::Identity</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::identity_ext::IdentityExt</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::middleware::IdentityMiddleware</span>;
+<span class="kw">pub use </span><span class="self">self</span>::identity::Identity;
+<span class="kw">pub use </span><span class="self">self</span>::identity_ext::IdentityExt;
+<span class="kw">pub use </span><span class="self">self</span>::middleware::IdentityMiddleware;
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_identity" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (34a6cae28 2022-08-09)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_identity" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (060e47f74 2022-08-23)" ></div></body></html>

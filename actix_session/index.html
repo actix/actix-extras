@@ -34,43 +34,43 @@ by implementing the <a href="storage/trait.SessionStore.html"><code>SessionStore
 <p>To start using sessions in your Actix Web application you must register <a href="struct.SessionMiddleware.html" title="SessionMiddleware"><code>SessionMiddleware</code></a>
 as a middleware on your <code>App</code>:</p>
 
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">actix_web</span>::{<span class="ident">web</span>, <span class="ident">App</span>, <span class="ident">HttpServer</span>, <span class="ident">HttpResponse</span>, <span class="ident">Error</span>};
-<span class="kw">use</span> <span class="ident">actix_session</span>::{<span class="ident">Session</span>, <span class="ident">SessionMiddleware</span>, <span class="ident">storage::RedisActorSessionStore</span>};
-<span class="kw">use</span> <span class="ident">actix_web::cookie::Key</span>;
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>actix_web::{web, App, HttpServer, HttpResponse, Error};
+<span class="kw">use </span>actix_session::{Session, SessionMiddleware, storage::RedisActorSessionStore};
+<span class="kw">use </span>actix_web::cookie::Key;
 
-<span class="attribute">#[<span class="ident">actix_web::main</span>]</span>
-<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">main</span>() -&gt; <span class="ident">std::io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="comment">// The secret key would usually be read from a configuration file/environment variables.</span>
-    <span class="kw">let</span> <span class="ident">secret_key</span> <span class="op">=</span> <span class="ident">Key::generate</span>();
-    <span class="kw">let</span> <span class="ident">redis_connection_string</span> <span class="op">=</span> <span class="string">&quot;127.0.0.1:6379&quot;</span>;
-    <span class="ident">HttpServer::new</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span>
-            <span class="ident">App::new</span>()
-            <span class="comment">// Add session management to your application using Redis for session state storage</span>
-            .<span class="ident">wrap</span>(
-                <span class="ident">SessionMiddleware::new</span>(
-                    <span class="ident">RedisActorSessionStore::new</span>(<span class="ident">redis_connection_string</span>),
-                    <span class="ident">secret_key</span>.<span class="ident">clone</span>()
+<span class="attribute">#[actix_web::main]
+</span><span class="kw">async fn </span>main() -&gt; std::io::Result&lt;()&gt; {
+    <span class="comment">// The secret key would usually be read from a configuration file/environment variables.
+    </span><span class="kw">let </span>secret_key = Key::generate();
+    <span class="kw">let </span>redis_connection_string = <span class="string">&quot;127.0.0.1:6379&quot;</span>;
+    HttpServer::new(<span class="kw">move </span>||
+            App::new()
+            <span class="comment">// Add session management to your application using Redis for session state storage
+            </span>.wrap(
+                SessionMiddleware::new(
+                    RedisActorSessionStore::new(redis_connection_string),
+                    secret_key.clone()
                 )
             )
-            .<span class="ident">default_service</span>(<span class="ident">web::to</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">HttpResponse::Ok</span>())))
-        .<span class="ident">bind</span>((<span class="string">&quot;127.0.0.1&quot;</span>, <span class="number">8080</span>))<span class="question-mark">?</span>
-        .<span class="ident">run</span>()
-        .<span class="kw">await</span>
-}</code></pre></div>
+            .default_service(web::to(|| HttpResponse::Ok())))
+        .bind((<span class="string">&quot;127.0.0.1&quot;</span>, <span class="number">8080</span>))<span class="question-mark">?
+        </span>.run()
+        .<span class="kw">await
+</span>}</code></pre></div>
 <p>The session state can be accessed and modified by your request handlers using the <a href="struct.Session.html" title="Session"><code>Session</code></a>
 extractor.</p>
 
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">actix_web::Error</span>;
-<span class="kw">use</span> <span class="ident">actix_session::Session</span>;
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>actix_web::Error;
+<span class="kw">use </span>actix_session::Session;
 
-<span class="kw">fn</span> <span class="ident">index</span>(<span class="ident">session</span>: <span class="ident">Session</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
-    <span class="comment">// access the session state</span>
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">count</span>) <span class="op">=</span> <span class="ident">session</span>.<span class="ident">get</span>::<span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span>(<span class="string">&quot;counter&quot;</span>)<span class="question-mark">?</span> {
-        <span class="macro">println!</span>(<span class="string">&quot;SESSION value: {}&quot;</span>, <span class="ident">count</span>);
-        <span class="comment">// modify the session state</span>
-        <span class="ident">session</span>.<span class="ident">insert</span>(<span class="string">&quot;counter&quot;</span>, <span class="ident">count</span> <span class="op">+</span> <span class="number">1</span>)<span class="question-mark">?</span>;
-    } <span class="kw">else</span> {
-        <span class="ident">session</span>.<span class="ident">insert</span>(<span class="string">&quot;counter&quot;</span>, <span class="number">1</span>)<span class="question-mark">?</span>;
+<span class="kw">fn </span>index(session: Session) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str, Error&gt; {
+    <span class="comment">// access the session state
+    </span><span class="kw">if let </span><span class="prelude-val">Some</span>(count) = session.get::&lt;i32&gt;(<span class="string">&quot;counter&quot;</span>)<span class="question-mark">? </span>{
+        <span class="macro">println!</span>(<span class="string">&quot;SESSION value: {}&quot;</span>, count);
+        <span class="comment">// modify the session state
+        </span>session.insert(<span class="string">&quot;counter&quot;</span>, count + <span class="number">1</span>)<span class="question-mark">?</span>;
+    } <span class="kw">else </span>{
+        session.insert(<span class="string">&quot;counter&quot;</span>, <span class="number">1</span>)<span class="question-mark">?</span>;
     }
 
     <span class="prelude-val">Ok</span>(<span class="string">&quot;Welcome!&quot;</span>)
@@ -109,4 +109,4 @@ actix-session = { version = &quot;...&quot;, features = [&quot;redis-rs-session&
 </div></div></div><h2 id="enums" class="small-section-header"><a href="#enums">Enums</a></h2><div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.SessionStatus.html" title="actix_session::SessionStatus enum">SessionStatus</a></div><div class="item-right docblock-short"><p>Status of a <a href="struct.Session.html" title="Session"><code>Session</code></a>.</p>
 </div></div></div><h2 id="traits" class="small-section-header"><a href="#traits">Traits</a></h2><div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.SessionExt.html" title="actix_session::SessionExt trait">SessionExt</a></div><div class="item-right docblock-short"><p>Extract a <a href="struct.Session.html" title="Session"><code>Session</code></a> object from various <code>actix-web</code> types (e.g. <code>HttpRequest</code>,
 <code>ServiceRequest</code>, <code>ServiceResponse</code>).</p>
-</div></div></div></section></div></main><div id="rustdoc-vars" data-root-path="../" data-current-crate="actix_session" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (34a6cae28 2022-08-09)" ></div></body></html>
+</div></div></div></section></div></main><div id="rustdoc-vars" data-root-path="../" data-current-crate="actix_session" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (060e47f74 2022-08-23)" ></div></body></html>

@@ -65,70 +65,70 @@
 <span id="63">63</span>
 <span id="64">64</span>
 <span id="65">65</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">serde::Deserialize</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>serde::Deserialize;
 
-<span class="kw">mod</span> <span class="ident">address</span>;
-<span class="kw">mod</span> <span class="ident">backlog</span>;
-<span class="kw">mod</span> <span class="ident">keep_alive</span>;
-<span class="kw">mod</span> <span class="ident">max_connection_rate</span>;
-<span class="kw">mod</span> <span class="ident">max_connections</span>;
-<span class="kw">mod</span> <span class="ident">mode</span>;
-<span class="kw">mod</span> <span class="ident">num_workers</span>;
-<span class="kw">mod</span> <span class="ident">timeout</span>;
-<span class="kw">mod</span> <span class="ident">tls</span>;
+<span class="kw">mod </span>address;
+<span class="kw">mod </span>backlog;
+<span class="kw">mod </span>keep_alive;
+<span class="kw">mod </span>max_connection_rate;
+<span class="kw">mod </span>max_connections;
+<span class="kw">mod </span>mode;
+<span class="kw">mod </span>num_workers;
+<span class="kw">mod </span>timeout;
+<span class="kw">mod </span>tls;
 
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::address::Address</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::backlog::Backlog</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::keep_alive::KeepAlive</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::max_connection_rate::MaxConnectionRate</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::max_connections::MaxConnections</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::mode::Mode</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::num_workers::NumWorkers</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::timeout::Timeout</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::tls::Tls</span>;
+<span class="kw">pub use </span><span class="self">self</span>::address::Address;
+<span class="kw">pub use </span><span class="self">self</span>::backlog::Backlog;
+<span class="kw">pub use </span><span class="self">self</span>::keep_alive::KeepAlive;
+<span class="kw">pub use </span><span class="self">self</span>::max_connection_rate::MaxConnectionRate;
+<span class="kw">pub use </span><span class="self">self</span>::max_connections::MaxConnections;
+<span class="kw">pub use </span><span class="self">self</span>::mode::Mode;
+<span class="kw">pub use </span><span class="self">self</span>::num_workers::NumWorkers;
+<span class="kw">pub use </span><span class="self">self</span>::timeout::Timeout;
+<span class="kw">pub use </span><span class="self">self</span>::tls::Tls;
 
-<span class="doccomment">/// Settings types for Actix Web.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename_all</span> <span class="op">=</span> <span class="string">&quot;kebab-case&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ActixSettings</span> {
-    <span class="doccomment">/// List of addresses for the server to bind to.</span>
-    <span class="kw">pub</span> <span class="ident">hosts</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
+<span class="doccomment">/// Settings types for Actix Web.
+</span><span class="attribute">#[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize)]
+#[serde(rename_all = <span class="string">&quot;kebab-case&quot;</span>)]
+</span><span class="kw">pub struct </span>ActixSettings {
+    <span class="doccomment">/// List of addresses for the server to bind to.
+    </span><span class="kw">pub </span>hosts: Vec&lt;Address&gt;,
 
-    <span class="doccomment">/// Marker of intended deployment environment.</span>
-    <span class="kw">pub</span> <span class="ident">mode</span>: <span class="ident">Mode</span>,
+    <span class="doccomment">/// Marker of intended deployment environment.
+    </span><span class="kw">pub </span>mode: Mode,
 
-    <span class="doccomment">/// True if the [`Compress`](actix_web::middleware::Compress) middleware should be enabled.</span>
-    <span class="kw">pub</span> <span class="ident">enable_compression</span>: <span class="ident">bool</span>,
+    <span class="doccomment">/// True if the [`Compress`](actix_web::middleware::Compress) middleware should be enabled.
+    </span><span class="kw">pub </span>enable_compression: bool,
 
-    <span class="doccomment">/// True if the [`Logger`](actix_web::middleware::Logger) middleware should be enabled.</span>
-    <span class="kw">pub</span> <span class="ident">enable_log</span>: <span class="ident">bool</span>,
+    <span class="doccomment">/// True if the [`Logger`](actix_web::middleware::Logger) middleware should be enabled.
+    </span><span class="kw">pub </span>enable_log: bool,
 
-    <span class="doccomment">/// The number of workers that the server should start.</span>
-    <span class="kw">pub</span> <span class="ident">num_workers</span>: <span class="ident">NumWorkers</span>,
+    <span class="doccomment">/// The number of workers that the server should start.
+    </span><span class="kw">pub </span>num_workers: NumWorkers,
 
-    <span class="doccomment">/// The maximum number of pending connections.</span>
-    <span class="kw">pub</span> <span class="ident">backlog</span>: <span class="ident">Backlog</span>,
+    <span class="doccomment">/// The maximum number of pending connections.
+    </span><span class="kw">pub </span>backlog: Backlog,
 
-    <span class="doccomment">/// The per-worker maximum number of concurrent connections.</span>
-    <span class="kw">pub</span> <span class="ident">max_connections</span>: <span class="ident">MaxConnections</span>,
+    <span class="doccomment">/// The per-worker maximum number of concurrent connections.
+    </span><span class="kw">pub </span>max_connections: MaxConnections,
 
-    <span class="doccomment">/// The per-worker maximum concurrent TLS connection limit.</span>
-    <span class="kw">pub</span> <span class="ident">max_connection_rate</span>: <span class="ident">MaxConnectionRate</span>,
+    <span class="doccomment">/// The per-worker maximum concurrent TLS connection limit.
+    </span><span class="kw">pub </span>max_connection_rate: MaxConnectionRate,
 
-    <span class="doccomment">/// Server keep-alive preference.</span>
-    <span class="kw">pub</span> <span class="ident">keep_alive</span>: <span class="ident">KeepAlive</span>,
+    <span class="doccomment">/// Server keep-alive preference.
+    </span><span class="kw">pub </span>keep_alive: KeepAlive,
 
-    <span class="doccomment">/// Timeout duration for reading client request header.</span>
-    <span class="kw">pub</span> <span class="ident">client_timeout</span>: <span class="ident">Timeout</span>,
+    <span class="doccomment">/// Timeout duration for reading client request header.
+    </span><span class="kw">pub </span>client_timeout: Timeout,
 
-    <span class="doccomment">/// Timeout duration for connection shutdown.</span>
-    <span class="kw">pub</span> <span class="ident">client_shutdown</span>: <span class="ident">Timeout</span>,
+    <span class="doccomment">/// Timeout duration for connection shutdown.
+    </span><span class="kw">pub </span>client_shutdown: Timeout,
 
-    <span class="doccomment">/// Timeout duration for graceful worker shutdown.</span>
-    <span class="kw">pub</span> <span class="ident">shutdown_timeout</span>: <span class="ident">Timeout</span>,
+    <span class="doccomment">/// Timeout duration for graceful worker shutdown.
+    </span><span class="kw">pub </span>shutdown_timeout: Timeout,
 
-    <span class="doccomment">/// TLS (HTTPS) configuration.</span>
-    <span class="kw">pub</span> <span class="ident">tls</span>: <span class="ident">Tls</span>,
+    <span class="doccomment">/// TLS (HTTPS) configuration.
+    </span><span class="kw">pub </span>tls: Tls,
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="actix_settings" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (34a6cae28 2022-08-09)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="actix_settings" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (060e47f74 2022-08-23)" ></div></body></html>

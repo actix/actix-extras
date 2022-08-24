@@ -25,32 +25,32 @@
 <span id="25">25</span>
 <span id="26">26</span>
 <span id="27">27</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Challenge for the &quot;Bearer&quot; HTTP Authentication Scheme.</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Challenge for the &quot;Bearer&quot; HTTP Authentication Scheme.
 
-<span class="kw">mod</span> <span class="ident">builder</span>;
-<span class="kw">mod</span> <span class="ident">challenge</span>;
-<span class="kw">mod</span> <span class="ident">errors</span>;
+</span><span class="kw">mod </span>builder;
+<span class="kw">mod </span>challenge;
+<span class="kw">mod </span>errors;
 
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::builder::BearerBuilder</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::challenge::Bearer</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::errors::Error</span>;
+<span class="kw">pub use </span><span class="self">self</span>::builder::BearerBuilder;
+<span class="kw">pub use </span><span class="self">self</span>::challenge::Bearer;
+<span class="kw">pub use </span><span class="self">self</span>::errors::Error;
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">to_bytes</span>() {
-        <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">Bearer::build</span>()
-            .<span class="ident">error</span>(<span class="ident">Error::InvalidToken</span>)
-            .<span class="ident">error_description</span>(<span class="string">&quot;Subject 8740827c-2e0a-447b-9716-d73042e4039d not found&quot;</span>)
-            .<span class="ident">finish</span>();
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>to_bytes() {
+        <span class="kw">let </span>b = Bearer::build()
+            .error(Error::InvalidToken)
+            .error_description(<span class="string">&quot;Subject 8740827c-2e0a-447b-9716-d73042e4039d not found&quot;</span>)
+            .finish();
 
         <span class="macro">assert_eq!</span>(
         <span class="string">&quot;Bearer error=\&quot;invalid_token\&quot; error_description=\&quot;Subject 8740827c-2e0a-447b-9716-d73042e4039d not found\&quot;&quot;</span>,
-        <span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">b</span>)
+        <span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, b)
     );
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../../../" data-current-crate="actix_web_httpauth" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (34a6cae28 2022-08-09)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../../../" data-current-crate="actix_web_httpauth" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (060e47f74 2022-08-23)" ></div></body></html>

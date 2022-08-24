@@ -415,422 +415,422 @@
 <span id="415">415</span>
 <span id="416">416</span>
 <span id="417">417</span>
-</pre><pre class="rust"><code><span class="doccomment">//! HTTP Authentication middleware.</span>
+</pre><pre class="rust"><code><span class="doccomment">//! HTTP Authentication middleware.
 
-<span class="kw">use</span> <span class="ident">std</span>::{
-    <span class="ident">future::Future</span>,
-    <span class="ident">marker::PhantomData</span>,
-    <span class="ident">pin::Pin</span>,
-    <span class="ident">rc::Rc</span>,
-    <span class="ident">sync::Arc</span>,
-    <span class="ident">task</span>::{<span class="ident">Context</span>, <span class="ident">Poll</span>},
+</span><span class="kw">use </span>std::{
+    future::Future,
+    marker::PhantomData,
+    pin::Pin,
+    rc::Rc,
+    sync::Arc,
+    task::{Context, Poll},
 };
 
-<span class="kw">use</span> <span class="ident">actix_web</span>::{
-    <span class="ident">body</span>::{<span class="ident">EitherBody</span>, <span class="ident">MessageBody</span>},
-    <span class="ident">dev</span>::{<span class="ident">Service</span>, <span class="ident">ServiceRequest</span>, <span class="ident">ServiceResponse</span>, <span class="ident">Transform</span>},
-    <span class="ident">Error</span>, <span class="ident">FromRequest</span>,
+<span class="kw">use </span>actix_web::{
+    body::{EitherBody, MessageBody},
+    dev::{Service, ServiceRequest, ServiceResponse, Transform},
+    Error, FromRequest,
 };
-<span class="kw">use</span> <span class="ident">futures_core::ready</span>;
-<span class="kw">use</span> <span class="ident">futures_util::future</span>::{<span class="self">self</span>, <span class="ident">LocalBoxFuture</span>, <span class="ident">TryFutureExt</span> <span class="kw">as</span> <span class="kw">_</span>};
+<span class="kw">use </span>futures_core::ready;
+<span class="kw">use </span>futures_util::future::{<span class="self">self</span>, LocalBoxFuture, TryFutureExt <span class="kw">as _</span>};
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::extractors</span>::{<span class="ident">basic</span>, <span class="ident">bearer</span>};
+<span class="kw">use </span><span class="kw">crate</span>::extractors::{basic, bearer};
 
-<span class="doccomment">/// Middleware for checking HTTP authentication.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// If there is no `Authorization` header in the request, this middleware returns an error</span>
-<span class="doccomment">/// immediately, without calling the `F` callback.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Otherwise, it will pass both the request and the parsed credentials into it. In case of</span>
-<span class="doccomment">/// successful validation `F` callback is required to return the `ServiceRequest` back.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">HttpAuthentication</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">F</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">FromRequest</span>,
+<span class="doccomment">/// Middleware for checking HTTP authentication.
+///
+/// If there is no `Authorization` header in the request, this middleware returns an error
+/// immediately, without calling the `F` callback.
+///
+/// Otherwise, it will pass both the request and the parsed credentials into it. In case of
+/// successful validation `F` callback is required to return the `ServiceRequest` back.
+</span><span class="attribute">#[derive(Debug, Clone)]
+</span><span class="kw">pub struct </span>HttpAuthentication&lt;T, F&gt;
+<span class="kw">where
+    </span>T: FromRequest,
 {
-    <span class="ident">process_fn</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    <span class="ident">_extractor</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
+    process_fn: Arc&lt;F&gt;,
+    _extractor: PhantomData&lt;T&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">F</span>, <span class="ident">O</span><span class="op">&gt;</span> <span class="ident">HttpAuthentication</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">F</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">FromRequest</span>,
-    <span class="ident">F</span>: <span class="ident">Fn</span>(<span class="ident">ServiceRequest</span>, <span class="ident">T</span>) -&gt; <span class="ident">O</span>,
-    <span class="ident">O</span>: <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ServiceRequest</span>, (<span class="ident">Error</span>, <span class="ident">ServiceRequest</span>)<span class="op">&gt;</span><span class="op">&gt;</span>,
+<span class="kw">impl</span>&lt;T, F, O&gt; HttpAuthentication&lt;T, F&gt;
+<span class="kw">where
+    </span>T: FromRequest,
+    F: Fn(ServiceRequest, T) -&gt; O,
+    O: Future&lt;Output = <span class="prelude-ty">Result</span>&lt;ServiceRequest, (Error, ServiceRequest)&gt;&gt;,
 {
-    <span class="doccomment">/// Construct `HttpAuthentication` middleware with the provided auth extractor `T` and</span>
-    <span class="doccomment">/// validation callback `F`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_fn</span>(<span class="ident">process_fn</span>: <span class="ident">F</span>) -&gt; <span class="ident">HttpAuthentication</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">F</span><span class="op">&gt;</span> {
-        <span class="ident">HttpAuthentication</span> {
-            <span class="ident">process_fn</span>: <span class="ident">Arc::new</span>(<span class="ident">process_fn</span>),
-            <span class="ident">_extractor</span>: <span class="ident">PhantomData</span>,
+    <span class="doccomment">/// Construct `HttpAuthentication` middleware with the provided auth extractor `T` and
+    /// validation callback `F`.
+    </span><span class="kw">pub fn </span>with_fn(process_fn: F) -&gt; HttpAuthentication&lt;T, F&gt; {
+        HttpAuthentication {
+            process_fn: Arc::new(process_fn),
+            _extractor: PhantomData,
         }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">O</span><span class="op">&gt;</span> <span class="ident">HttpAuthentication</span><span class="op">&lt;</span><span class="ident">basic::BasicAuth</span>, <span class="ident">F</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">F</span>: <span class="ident">Fn</span>(<span class="ident">ServiceRequest</span>, <span class="ident">basic::BasicAuth</span>) -&gt; <span class="ident">O</span>,
-    <span class="ident">O</span>: <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ServiceRequest</span>, (<span class="ident">Error</span>, <span class="ident">ServiceRequest</span>)<span class="op">&gt;</span><span class="op">&gt;</span>,
+<span class="kw">impl</span>&lt;F, O&gt; HttpAuthentication&lt;basic::BasicAuth, F&gt;
+<span class="kw">where
+    </span>F: Fn(ServiceRequest, basic::BasicAuth) -&gt; O,
+    O: Future&lt;Output = <span class="prelude-ty">Result</span>&lt;ServiceRequest, (Error, ServiceRequest)&gt;&gt;,
 {
-    <span class="doccomment">/// Construct `HttpAuthentication` middleware for the HTTP &quot;Basic&quot; authentication scheme.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// # use actix_web::{Error, dev::ServiceRequest};</span>
-    <span class="doccomment">/// # use actix_web_httpauth::{extractors::basic::BasicAuth, middleware::HttpAuthentication};</span>
-    <span class="doccomment">/// // In this example validator returns immediately, but since it is required to return</span>
-    <span class="doccomment">/// // anything that implements `IntoFuture` trait, it can be extended to query database or to</span>
-    <span class="doccomment">/// // do something else in a async manner.</span>
-    <span class="doccomment">/// async fn validator(</span>
-    <span class="doccomment">///     req: ServiceRequest,</span>
-    <span class="doccomment">///     credentials: BasicAuth,</span>
-    <span class="doccomment">/// ) -&gt; Result&lt;ServiceRequest, (Error, ServiceRequest)&gt; {</span>
-    <span class="doccomment">///     // All users are great and more than welcome!</span>
-    <span class="doccomment">///     Ok(req)</span>
-    <span class="doccomment">/// }</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let middleware = HttpAuthentication::basic(validator);</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">basic</span>(<span class="ident">process_fn</span>: <span class="ident">F</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident"><span class="self">Self</span>::with_fn</span>(<span class="ident">process_fn</span>)
+    <span class="doccomment">/// Construct `HttpAuthentication` middleware for the HTTP &quot;Basic&quot; authentication scheme.
+    ///
+    /// # Examples
+    /// ```
+    /// # use actix_web::{Error, dev::ServiceRequest};
+    /// # use actix_web_httpauth::{extractors::basic::BasicAuth, middleware::HttpAuthentication};
+    /// // In this example validator returns immediately, but since it is required to return
+    /// // anything that implements `IntoFuture` trait, it can be extended to query database or to
+    /// // do something else in a async manner.
+    /// async fn validator(
+    ///     req: ServiceRequest,
+    ///     credentials: BasicAuth,
+    /// ) -&gt; Result&lt;ServiceRequest, (Error, ServiceRequest)&gt; {
+    ///     // All users are great and more than welcome!
+    ///     Ok(req)
+    /// }
+    ///
+    /// let middleware = HttpAuthentication::basic(validator);
+    /// ```
+    </span><span class="kw">pub fn </span>basic(process_fn: F) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::with_fn(process_fn)
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">O</span><span class="op">&gt;</span> <span class="ident">HttpAuthentication</span><span class="op">&lt;</span><span class="ident">bearer::BearerAuth</span>, <span class="ident">F</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">F</span>: <span class="ident">Fn</span>(<span class="ident">ServiceRequest</span>, <span class="ident">bearer::BearerAuth</span>) -&gt; <span class="ident">O</span>,
-    <span class="ident">O</span>: <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ServiceRequest</span>, (<span class="ident">Error</span>, <span class="ident">ServiceRequest</span>)<span class="op">&gt;</span><span class="op">&gt;</span>,
+<span class="kw">impl</span>&lt;F, O&gt; HttpAuthentication&lt;bearer::BearerAuth, F&gt;
+<span class="kw">where
+    </span>F: Fn(ServiceRequest, bearer::BearerAuth) -&gt; O,
+    O: Future&lt;Output = <span class="prelude-ty">Result</span>&lt;ServiceRequest, (Error, ServiceRequest)&gt;&gt;,
 {
-    <span class="doccomment">/// Construct `HttpAuthentication` middleware for the HTTP &quot;Bearer&quot; authentication scheme.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// # use actix_web::{Error, dev::ServiceRequest};</span>
-    <span class="doccomment">/// # use actix_web_httpauth::{</span>
-    <span class="doccomment">/// #     extractors::{AuthenticationError, AuthExtractorConfig, bearer::{self, BearerAuth}},</span>
-    <span class="doccomment">/// #     middleware::HttpAuthentication,</span>
-    <span class="doccomment">/// # };</span>
-    <span class="doccomment">/// async fn validator(</span>
-    <span class="doccomment">///     req: ServiceRequest,</span>
-    <span class="doccomment">///     credentials: BearerAuth</span>
-    <span class="doccomment">/// ) -&gt; Result&lt;ServiceRequest, (Error, ServiceRequest)&gt; {</span>
-    <span class="doccomment">///     if credentials.token() == &quot;mF_9.B5f-4.1JqM&quot; {</span>
-    <span class="doccomment">///         Ok(req)</span>
-    <span class="doccomment">///     } else {</span>
-    <span class="doccomment">///         let config = req.app_data::&lt;bearer::Config&gt;()</span>
-    <span class="doccomment">///             .cloned()</span>
-    <span class="doccomment">///             .unwrap_or_default()</span>
-    <span class="doccomment">///             .scope(&quot;urn:example:channel=HBO&amp;urn:example:rating=G,PG-13&quot;);</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">///         Err((AuthenticationError::from(config).into(), req))</span>
-    <span class="doccomment">///     }</span>
-    <span class="doccomment">/// }</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let middleware = HttpAuthentication::bearer(validator);</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">bearer</span>(<span class="ident">process_fn</span>: <span class="ident">F</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident"><span class="self">Self</span>::with_fn</span>(<span class="ident">process_fn</span>)
+    <span class="doccomment">/// Construct `HttpAuthentication` middleware for the HTTP &quot;Bearer&quot; authentication scheme.
+    ///
+    /// # Examples
+    /// ```
+    /// # use actix_web::{Error, dev::ServiceRequest};
+    /// # use actix_web_httpauth::{
+    /// #     extractors::{AuthenticationError, AuthExtractorConfig, bearer::{self, BearerAuth}},
+    /// #     middleware::HttpAuthentication,
+    /// # };
+    /// async fn validator(
+    ///     req: ServiceRequest,
+    ///     credentials: BearerAuth
+    /// ) -&gt; Result&lt;ServiceRequest, (Error, ServiceRequest)&gt; {
+    ///     if credentials.token() == &quot;mF_9.B5f-4.1JqM&quot; {
+    ///         Ok(req)
+    ///     } else {
+    ///         let config = req.app_data::&lt;bearer::Config&gt;()
+    ///             .cloned()
+    ///             .unwrap_or_default()
+    ///             .scope(&quot;urn:example:channel=HBO&amp;urn:example:rating=G,PG-13&quot;);
+    ///
+    ///         Err((AuthenticationError::from(config).into(), req))
+    ///     }
+    /// }
+    ///
+    /// let middleware = HttpAuthentication::bearer(validator);
+    /// ```
+    </span><span class="kw">pub fn </span>bearer(process_fn: F) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::with_fn(process_fn)
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">B</span>, <span class="ident">T</span>, <span class="ident">F</span>, <span class="ident">O</span><span class="op">&gt;</span> <span class="ident">Transform</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">ServiceRequest</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">HttpAuthentication</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">F</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">S</span>: <span class="ident">Service</span><span class="op">&lt;</span><span class="ident">ServiceRequest</span>, <span class="ident">Response</span> <span class="op">=</span> <span class="ident">ServiceResponse</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>, <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Error</span><span class="op">&gt;</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
-    <span class="ident">S::Future</span>: <span class="lifetime">&#39;static</span>,
-    <span class="ident">F</span>: <span class="ident">Fn</span>(<span class="ident">ServiceRequest</span>, <span class="ident">T</span>) -&gt; <span class="ident">O</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
-    <span class="ident">O</span>: <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ServiceRequest</span>, (<span class="ident">Error</span>, <span class="ident">ServiceRequest</span>)<span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
-    <span class="ident">T</span>: <span class="ident">FromRequest</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
-    <span class="ident">B</span>: <span class="ident">MessageBody</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+<span class="kw">impl</span>&lt;S, B, T, F, O&gt; Transform&lt;S, ServiceRequest&gt; <span class="kw">for </span>HttpAuthentication&lt;T, F&gt;
+<span class="kw">where
+    </span>S: Service&lt;ServiceRequest, Response = ServiceResponse&lt;B&gt;, Error = Error&gt; + <span class="lifetime">&#39;static</span>,
+    S::Future: <span class="lifetime">&#39;static</span>,
+    F: Fn(ServiceRequest, T) -&gt; O + <span class="lifetime">&#39;static</span>,
+    O: Future&lt;Output = <span class="prelude-ty">Result</span>&lt;ServiceRequest, (Error, ServiceRequest)&gt;&gt; + <span class="lifetime">&#39;static</span>,
+    T: FromRequest + <span class="lifetime">&#39;static</span>,
+    B: MessageBody + <span class="lifetime">&#39;static</span>,
 {
-    <span class="kw">type</span> <span class="ident">Response</span> <span class="op">=</span> <span class="ident">ServiceResponse</span><span class="op">&lt;</span><span class="ident">EitherBody</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span><span class="op">&gt;</span>;
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Error</span>;
-    <span class="kw">type</span> <span class="ident">Transform</span> <span class="op">=</span> <span class="ident">AuthenticationMiddleware</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">F</span>, <span class="ident">T</span><span class="op">&gt;</span>;
-    <span class="kw">type</span> <span class="ident">InitError</span> <span class="op">=</span> ();
-    <span class="kw">type</span> <span class="ident">Future</span> <span class="op">=</span> <span class="ident">future::Ready</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Transform</span>, <span class="ident"><span class="self">Self</span>::InitError</span><span class="op">&gt;</span><span class="op">&gt;</span>;
+    <span class="kw">type </span>Response = ServiceResponse&lt;EitherBody&lt;B&gt;&gt;;
+    <span class="kw">type </span>Error = Error;
+    <span class="kw">type </span>Transform = AuthenticationMiddleware&lt;S, F, T&gt;;
+    <span class="kw">type </span>InitError = ();
+    <span class="kw">type </span>Future = future::Ready&lt;<span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Transform, <span class="self">Self</span>::InitError&gt;&gt;;
 
-    <span class="kw">fn</span> <span class="ident">new_transform</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">service</span>: <span class="ident">S</span>) -&gt; <span class="ident"><span class="self">Self</span>::Future</span> {
-        <span class="ident">future::ok</span>(<span class="ident">AuthenticationMiddleware</span> {
-            <span class="ident">service</span>: <span class="ident">Rc::new</span>(<span class="ident">service</span>),
-            <span class="ident">process_fn</span>: <span class="self">self</span>.<span class="ident">process_fn</span>.<span class="ident">clone</span>(),
-            <span class="ident">_extractor</span>: <span class="ident">PhantomData</span>,
+    <span class="kw">fn </span>new_transform(<span class="kw-2">&amp;</span><span class="self">self</span>, service: S) -&gt; <span class="self">Self</span>::Future {
+        future::ok(AuthenticationMiddleware {
+            service: Rc::new(service),
+            process_fn: <span class="self">self</span>.process_fn.clone(),
+            _extractor: PhantomData,
         })
     }
 }
 
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AuthenticationMiddleware</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">F</span>, <span class="ident">T</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">FromRequest</span>,
+<span class="attribute">#[doc(hidden)]
+</span><span class="kw">pub struct </span>AuthenticationMiddleware&lt;S, F, T&gt;
+<span class="kw">where
+    </span>T: FromRequest,
 {
-    <span class="ident">service</span>: <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
-    <span class="ident">process_fn</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>,
-    <span class="ident">_extractor</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
+    service: Rc&lt;S&gt;,
+    process_fn: Arc&lt;F&gt;,
+    _extractor: PhantomData&lt;T&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">B</span>, <span class="ident">F</span>, <span class="ident">T</span>, <span class="ident">O</span><span class="op">&gt;</span> <span class="ident">Service</span><span class="op">&lt;</span><span class="ident">ServiceRequest</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">AuthenticationMiddleware</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">F</span>, <span class="ident">T</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">S</span>: <span class="ident">Service</span><span class="op">&lt;</span><span class="ident">ServiceRequest</span>, <span class="ident">Response</span> <span class="op">=</span> <span class="ident">ServiceResponse</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>, <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Error</span><span class="op">&gt;</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
-    <span class="ident">S::Future</span>: <span class="lifetime">&#39;static</span>,
-    <span class="ident">F</span>: <span class="ident">Fn</span>(<span class="ident">ServiceRequest</span>, <span class="ident">T</span>) -&gt; <span class="ident">O</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
-    <span class="ident">O</span>: <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ServiceRequest</span>, (<span class="ident">Error</span>, <span class="ident">ServiceRequest</span>)<span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
-    <span class="ident">T</span>: <span class="ident">FromRequest</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
-    <span class="ident">B</span>: <span class="ident">MessageBody</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+<span class="kw">impl</span>&lt;S, B, F, T, O&gt; Service&lt;ServiceRequest&gt; <span class="kw">for </span>AuthenticationMiddleware&lt;S, F, T&gt;
+<span class="kw">where
+    </span>S: Service&lt;ServiceRequest, Response = ServiceResponse&lt;B&gt;, Error = Error&gt; + <span class="lifetime">&#39;static</span>,
+    S::Future: <span class="lifetime">&#39;static</span>,
+    F: Fn(ServiceRequest, T) -&gt; O + <span class="lifetime">&#39;static</span>,
+    O: Future&lt;Output = <span class="prelude-ty">Result</span>&lt;ServiceRequest, (Error, ServiceRequest)&gt;&gt; + <span class="lifetime">&#39;static</span>,
+    T: FromRequest + <span class="lifetime">&#39;static</span>,
+    B: MessageBody + <span class="lifetime">&#39;static</span>,
 {
-    <span class="kw">type</span> <span class="ident">Response</span> <span class="op">=</span> <span class="ident">ServiceResponse</span><span class="op">&lt;</span><span class="ident">EitherBody</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span><span class="op">&gt;</span>;
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">S::Error</span>;
-    <span class="kw">type</span> <span class="ident">Future</span> <span class="op">=</span> <span class="ident">LocalBoxFuture</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Response</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span><span class="op">&gt;</span>;
+    <span class="kw">type </span>Response = ServiceResponse&lt;EitherBody&lt;B&gt;&gt;;
+    <span class="kw">type </span>Error = S::Error;
+    <span class="kw">type </span>Future = LocalBoxFuture&lt;<span class="lifetime">&#39;static</span>, <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Response, <span class="self">Self</span>::Error&gt;&gt;;
 
-    <span class="macro">actix_web::dev::forward_ready!</span>(<span class="ident">service</span>);
+    <span class="macro">actix_web::dev::forward_ready!</span>(service);
 
-    <span class="kw">fn</span> <span class="ident">call</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">req</span>: <span class="ident">ServiceRequest</span>) -&gt; <span class="ident"><span class="self">Self</span>::Future</span> {
-        <span class="kw">let</span> <span class="ident">process_fn</span> <span class="op">=</span> <span class="ident">Arc::clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">process_fn</span>);
-        <span class="kw">let</span> <span class="ident">service</span> <span class="op">=</span> <span class="ident">Rc::clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">service</span>);
+    <span class="kw">fn </span>call(<span class="kw-2">&amp;</span><span class="self">self</span>, req: ServiceRequest) -&gt; <span class="self">Self</span>::Future {
+        <span class="kw">let </span>process_fn = Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.process_fn);
+        <span class="kw">let </span>service = Rc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.service);
 
-        <span class="ident">Box::pin</span>(<span class="kw">async</span> <span class="kw">move</span> {
-            <span class="kw">let</span> (<span class="ident">req</span>, <span class="ident">credentials</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">Extract</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="ident">::new</span>(<span class="ident">req</span>).<span class="kw">await</span> {
-                <span class="prelude-val">Ok</span>(<span class="ident">req</span>) =&gt; <span class="ident">req</span>,
-                <span class="prelude-val">Err</span>((<span class="ident">err</span>, <span class="ident">req</span>)) =&gt; {
-                    <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">req</span>.<span class="ident">error_response</span>(<span class="ident">err</span>).<span class="ident">map_into_right_body</span>());
+        Box::pin(<span class="kw">async move </span>{
+            <span class="kw">let </span>(req, credentials) = <span class="kw">match </span>Extract::&lt;T&gt;::new(req).<span class="kw">await </span>{
+                <span class="prelude-val">Ok</span>(req) =&gt; req,
+                <span class="prelude-val">Err</span>((err, req)) =&gt; {
+                    <span class="kw">return </span><span class="prelude-val">Ok</span>(req.error_response(err).map_into_right_body());
                 }
             };
 
-            <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">process_fn</span>(<span class="ident">req</span>, <span class="ident">credentials</span>).<span class="kw">await</span> {
-                <span class="prelude-val">Ok</span>(<span class="ident">req</span>) =&gt; <span class="ident">req</span>,
-                <span class="prelude-val">Err</span>((<span class="ident">err</span>, <span class="ident">req</span>)) =&gt; {
-                    <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">req</span>.<span class="ident">error_response</span>(<span class="ident">err</span>).<span class="ident">map_into_right_body</span>());
+            <span class="kw">let </span>req = <span class="kw">match </span>process_fn(req, credentials).<span class="kw">await </span>{
+                <span class="prelude-val">Ok</span>(req) =&gt; req,
+                <span class="prelude-val">Err</span>((err, req)) =&gt; {
+                    <span class="kw">return </span><span class="prelude-val">Ok</span>(req.error_response(err).map_into_right_body());
                 }
             };
 
-            <span class="ident">service</span>.<span class="ident">call</span>(<span class="ident">req</span>).<span class="kw">await</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">res</span><span class="op">|</span> <span class="ident">res</span>.<span class="ident">map_into_left_body</span>())
+            service.call(req).<span class="kw">await</span>.map(|res| res.map_into_left_body())
         })
     }
 }
 
-<span class="kw">struct</span> <span class="ident">Extract</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="ident">req</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ServiceRequest</span><span class="op">&gt;</span>,
-    <span class="ident">fut</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">LocalBoxFuture</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">_extractor</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="kw">fn</span>() -&gt; <span class="ident">T</span><span class="op">&gt;</span>,
+<span class="kw">struct </span>Extract&lt;T&gt; {
+    req: <span class="prelude-ty">Option</span>&lt;ServiceRequest&gt;,
+    fut: <span class="prelude-ty">Option</span>&lt;LocalBoxFuture&lt;<span class="lifetime">&#39;static</span>, <span class="prelude-ty">Result</span>&lt;T, Error&gt;&gt;&gt;,
+    _extractor: PhantomData&lt;<span class="kw">fn</span>() -&gt; T&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Extract</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">req</span>: <span class="ident">ServiceRequest</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident">Extract</span> {
-            <span class="ident">req</span>: <span class="prelude-val">Some</span>(<span class="ident">req</span>),
-            <span class="ident">fut</span>: <span class="prelude-val">None</span>,
-            <span class="ident">_extractor</span>: <span class="ident">PhantomData</span>,
+<span class="kw">impl</span>&lt;T&gt; Extract&lt;T&gt; {
+    <span class="kw">pub fn </span>new(req: ServiceRequest) -&gt; <span class="self">Self </span>{
+        Extract {
+            req: <span class="prelude-val">Some</span>(req),
+            fut: <span class="prelude-val">None</span>,
+            _extractor: PhantomData,
         }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Future</span> <span class="kw">for</span> <span class="ident">Extract</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">FromRequest</span>,
-    <span class="ident">T::Future</span>: <span class="lifetime">&#39;static</span>,
-    <span class="ident">T::Error</span>: <span class="lifetime">&#39;static</span>,
+<span class="kw">impl</span>&lt;T&gt; Future <span class="kw">for </span>Extract&lt;T&gt;
+<span class="kw">where
+    </span>T: FromRequest,
+    T::Future: <span class="lifetime">&#39;static</span>,
+    T::Error: <span class="lifetime">&#39;static</span>,
 {
-    <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">ServiceRequest</span>, <span class="ident">T</span>), (<span class="ident">Error</span>, <span class="ident">ServiceRequest</span>)<span class="op">&gt;</span>;
+    <span class="kw">type </span>Output = <span class="prelude-ty">Result</span>&lt;(ServiceRequest, T), (Error, ServiceRequest)&gt;;
 
-    <span class="kw">fn</span> <span class="ident">poll</span>(<span class="kw-2">mut</span> <span class="self">self</span>: <span class="ident">Pin</span><span class="op">&lt;</span><span class="kw-2">&amp;mut</span> <span class="self">Self</span><span class="op">&gt;</span>, <span class="ident">ctx</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Context</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">Poll</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Output</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">fut</span>.<span class="ident">is_none</span>() {
-            <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">req</span>.<span class="ident">as_mut</span>().<span class="ident">expect</span>(<span class="string">&quot;Extract future was polled twice!&quot;</span>);
-            <span class="kw">let</span> <span class="ident">fut</span> <span class="op">=</span> <span class="ident">req</span>.<span class="ident">extract</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>().<span class="ident">map_err</span>(<span class="ident">Into::into</span>);
-            <span class="self">self</span>.<span class="ident">fut</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">Box::pin</span>(<span class="ident">fut</span>));
+    <span class="kw">fn </span>poll(<span class="kw-2">mut </span><span class="self">self</span>: Pin&lt;<span class="kw-2">&amp;mut </span><span class="self">Self</span>&gt;, ctx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; Poll&lt;<span class="self">Self</span>::Output&gt; {
+        <span class="kw">if </span><span class="self">self</span>.fut.is_none() {
+            <span class="kw">let </span>req = <span class="self">self</span>.req.as_mut().expect(<span class="string">&quot;Extract future was polled twice!&quot;</span>);
+            <span class="kw">let </span>fut = req.extract::&lt;T&gt;().map_err(Into::into);
+            <span class="self">self</span>.fut = <span class="prelude-val">Some</span>(Box::pin(fut));
         }
 
-        <span class="kw">let</span> <span class="ident">fut</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">fut</span>
-            .<span class="ident">as_mut</span>()
-            .<span class="ident">expect</span>(<span class="string">&quot;Extraction future should be initialized at this point&quot;</span>);
+        <span class="kw">let </span>fut = <span class="self">self
+            </span>.fut
+            .as_mut()
+            .expect(<span class="string">&quot;Extraction future should be initialized at this point&quot;</span>);
 
-        <span class="kw">let</span> <span class="ident">credentials</span> <span class="op">=</span> <span class="macro">ready!</span>(<span class="ident">fut</span>.<span class="ident">as_mut</span>().<span class="ident">poll</span>(<span class="ident">ctx</span>)).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> {
+        <span class="kw">let </span>credentials = <span class="macro">ready!</span>(fut.as_mut().poll(ctx)).map_err(|err| {
             (
-                <span class="ident">err</span>,
-                <span class="comment">// returning request allows a proper error response to be created</span>
-                <span class="self">self</span>.<span class="ident">req</span>.<span class="ident">take</span>().<span class="ident">expect</span>(<span class="string">&quot;Extract future was polled twice!&quot;</span>),
+                err,
+                <span class="comment">// returning request allows a proper error response to be created
+                </span><span class="self">self</span>.req.take().expect(<span class="string">&quot;Extract future was polled twice!&quot;</span>),
             )
         })<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">req</span>.<span class="ident">take</span>().<span class="ident">expect</span>(<span class="string">&quot;Extract future was polled twice!&quot;</span>);
-        <span class="ident">Poll::Ready</span>(<span class="prelude-val">Ok</span>((<span class="ident">req</span>, <span class="ident">credentials</span>)))
+        <span class="kw">let </span>req = <span class="self">self</span>.req.take().expect(<span class="string">&quot;Extract future was polled twice!&quot;</span>);
+        Poll::Ready(<span class="prelude-val">Ok</span>((req, credentials)))
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="ident">actix_service::into_service</span>;
-    <span class="kw">use</span> <span class="ident">actix_web</span>::{
-        <span class="ident">dev::Service</span>,
-        <span class="ident">error</span>::{<span class="self">self</span>, <span class="ident">ErrorForbidden</span>},
-        <span class="ident">http::StatusCode</span>,
-        <span class="ident">test::TestRequest</span>,
-        <span class="ident">web</span>, <span class="ident">App</span>, <span class="ident">HttpResponse</span>,
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use </span>actix_service::into_service;
+    <span class="kw">use </span>actix_web::{
+        dev::Service,
+        error::{<span class="self">self</span>, ErrorForbidden},
+        http::StatusCode,
+        test::TestRequest,
+        web, App, HttpResponse,
     };
 
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::extractors</span>::{<span class="ident">basic::BasicAuth</span>, <span class="ident">bearer::BearerAuth</span>};
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use </span><span class="kw">crate</span>::extractors::{basic::BasicAuth, bearer::BearerAuth};
 
-    <span class="doccomment">/// This is a test for https://github.com/actix/actix-extras/issues/10</span>
-    <span class="attribute">#[<span class="ident">actix_web::test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">test_middleware_panic</span>() {
-        <span class="kw">let</span> <span class="ident">middleware</span> <span class="op">=</span> <span class="ident">AuthenticationMiddleware</span> {
-            <span class="ident">service</span>: <span class="ident">Rc::new</span>(<span class="ident">into_service</span>(<span class="op">|</span><span class="kw">_</span>: <span class="ident">ServiceRequest</span><span class="op">|</span> <span class="kw">async</span> <span class="kw">move</span> {
-                <span class="ident">actix_web::rt::time::sleep</span>(<span class="ident">std::time::Duration::from_secs</span>(<span class="number">1</span>)).<span class="kw">await</span>;
-                <span class="prelude-val">Err</span>::<span class="op">&lt;</span><span class="ident">ServiceResponse</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">error::ErrorBadRequest</span>(<span class="string">&quot;error&quot;</span>))
+    <span class="doccomment">/// This is a test for https://github.com/actix/actix-extras/issues/10
+    </span><span class="attribute">#[actix_web::test]
+    </span><span class="kw">async fn </span>test_middleware_panic() {
+        <span class="kw">let </span>middleware = AuthenticationMiddleware {
+            service: Rc::new(into_service(|<span class="kw">_</span>: ServiceRequest| <span class="kw">async move </span>{
+                actix_web::rt::time::sleep(std::time::Duration::from_secs(<span class="number">1</span>)).<span class="kw">await</span>;
+                <span class="prelude-val">Err</span>::&lt;ServiceResponse, <span class="kw">_</span>&gt;(error::ErrorBadRequest(<span class="string">&quot;error&quot;</span>))
             })),
-            <span class="ident">process_fn</span>: <span class="ident">Arc::new</span>(<span class="op">|</span><span class="ident">req</span>, <span class="kw">_</span>: <span class="ident">BearerAuth</span><span class="op">|</span> <span class="kw">async</span> { <span class="prelude-val">Ok</span>(<span class="ident">req</span>) }),
-            <span class="ident">_extractor</span>: <span class="ident">PhantomData</span>,
+            process_fn: Arc::new(|req, <span class="kw">_</span>: BearerAuth| <span class="kw">async </span>{ <span class="prelude-val">Ok</span>(req) }),
+            _extractor: PhantomData,
         };
 
-        <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="ident">TestRequest::get</span>()
-            .<span class="ident">append_header</span>((<span class="string">&quot;Authorization&quot;</span>, <span class="string">&quot;Bearer 1&quot;</span>))
-            .<span class="ident">to_srv_request</span>();
+        <span class="kw">let </span>req = TestRequest::get()
+            .append_header((<span class="string">&quot;Authorization&quot;</span>, <span class="string">&quot;Bearer 1&quot;</span>))
+            .to_srv_request();
 
-        <span class="kw">let</span> <span class="ident">f</span> <span class="op">=</span> <span class="ident">middleware</span>.<span class="ident">call</span>(<span class="ident">req</span>).<span class="kw">await</span>;
+        <span class="kw">let </span>f = middleware.call(req).<span class="kw">await</span>;
 
-        <span class="kw">let</span> <span class="ident">_res</span> <span class="op">=</span> <span class="ident">futures_util::future::lazy</span>(<span class="op">|</span><span class="ident">cx</span><span class="op">|</span> <span class="ident">middleware</span>.<span class="ident">poll_ready</span>(<span class="ident">cx</span>)).<span class="kw">await</span>;
+        <span class="kw">let </span>_res = futures_util::future::lazy(|cx| middleware.poll_ready(cx)).<span class="kw">await</span>;
 
-        <span class="macro">assert!</span>(<span class="ident">f</span>.<span class="ident">is_err</span>());
+        <span class="macro">assert!</span>(f.is_err());
     }
 
-    <span class="doccomment">/// This is a test for https://github.com/actix/actix-extras/issues/10</span>
-    <span class="attribute">#[<span class="ident">actix_web::test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">test_middleware_panic_several_orders</span>() {
-        <span class="kw">let</span> <span class="ident">middleware</span> <span class="op">=</span> <span class="ident">AuthenticationMiddleware</span> {
-            <span class="ident">service</span>: <span class="ident">Rc::new</span>(<span class="ident">into_service</span>(<span class="op">|</span><span class="kw">_</span>: <span class="ident">ServiceRequest</span><span class="op">|</span> <span class="kw">async</span> <span class="kw">move</span> {
-                <span class="ident">actix_web::rt::time::sleep</span>(<span class="ident">std::time::Duration::from_secs</span>(<span class="number">1</span>)).<span class="kw">await</span>;
-                <span class="prelude-val">Err</span>::<span class="op">&lt;</span><span class="ident">ServiceResponse</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">error::ErrorBadRequest</span>(<span class="string">&quot;error&quot;</span>))
+    <span class="doccomment">/// This is a test for https://github.com/actix/actix-extras/issues/10
+    </span><span class="attribute">#[actix_web::test]
+    </span><span class="kw">async fn </span>test_middleware_panic_several_orders() {
+        <span class="kw">let </span>middleware = AuthenticationMiddleware {
+            service: Rc::new(into_service(|<span class="kw">_</span>: ServiceRequest| <span class="kw">async move </span>{
+                actix_web::rt::time::sleep(std::time::Duration::from_secs(<span class="number">1</span>)).<span class="kw">await</span>;
+                <span class="prelude-val">Err</span>::&lt;ServiceResponse, <span class="kw">_</span>&gt;(error::ErrorBadRequest(<span class="string">&quot;error&quot;</span>))
             })),
-            <span class="ident">process_fn</span>: <span class="ident">Arc::new</span>(<span class="op">|</span><span class="ident">req</span>, <span class="kw">_</span>: <span class="ident">BearerAuth</span><span class="op">|</span> <span class="kw">async</span> { <span class="prelude-val">Ok</span>(<span class="ident">req</span>) }),
-            <span class="ident">_extractor</span>: <span class="ident">PhantomData</span>,
+            process_fn: Arc::new(|req, <span class="kw">_</span>: BearerAuth| <span class="kw">async </span>{ <span class="prelude-val">Ok</span>(req) }),
+            _extractor: PhantomData,
         };
 
-        <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="ident">TestRequest::get</span>()
-            .<span class="ident">append_header</span>((<span class="string">&quot;Authorization&quot;</span>, <span class="string">&quot;Bearer 1&quot;</span>))
-            .<span class="ident">to_srv_request</span>();
+        <span class="kw">let </span>req = TestRequest::get()
+            .append_header((<span class="string">&quot;Authorization&quot;</span>, <span class="string">&quot;Bearer 1&quot;</span>))
+            .to_srv_request();
 
-        <span class="kw">let</span> <span class="ident">f1</span> <span class="op">=</span> <span class="ident">middleware</span>.<span class="ident">call</span>(<span class="ident">req</span>).<span class="kw">await</span>;
+        <span class="kw">let </span>f1 = middleware.call(req).<span class="kw">await</span>;
 
-        <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="ident">TestRequest::get</span>()
-            .<span class="ident">append_header</span>((<span class="string">&quot;Authorization&quot;</span>, <span class="string">&quot;Bearer 1&quot;</span>))
-            .<span class="ident">to_srv_request</span>();
+        <span class="kw">let </span>req = TestRequest::get()
+            .append_header((<span class="string">&quot;Authorization&quot;</span>, <span class="string">&quot;Bearer 1&quot;</span>))
+            .to_srv_request();
 
-        <span class="kw">let</span> <span class="ident">f2</span> <span class="op">=</span> <span class="ident">middleware</span>.<span class="ident">call</span>(<span class="ident">req</span>).<span class="kw">await</span>;
+        <span class="kw">let </span>f2 = middleware.call(req).<span class="kw">await</span>;
 
-        <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="ident">TestRequest::get</span>()
-            .<span class="ident">append_header</span>((<span class="string">&quot;Authorization&quot;</span>, <span class="string">&quot;Bearer 1&quot;</span>))
-            .<span class="ident">to_srv_request</span>();
+        <span class="kw">let </span>req = TestRequest::get()
+            .append_header((<span class="string">&quot;Authorization&quot;</span>, <span class="string">&quot;Bearer 1&quot;</span>))
+            .to_srv_request();
 
-        <span class="kw">let</span> <span class="ident">f3</span> <span class="op">=</span> <span class="ident">middleware</span>.<span class="ident">call</span>(<span class="ident">req</span>).<span class="kw">await</span>;
+        <span class="kw">let </span>f3 = middleware.call(req).<span class="kw">await</span>;
 
-        <span class="kw">let</span> <span class="ident">_res</span> <span class="op">=</span> <span class="ident">futures_util::future::lazy</span>(<span class="op">|</span><span class="ident">cx</span><span class="op">|</span> <span class="ident">middleware</span>.<span class="ident">poll_ready</span>(<span class="ident">cx</span>)).<span class="kw">await</span>;
+        <span class="kw">let </span>_res = futures_util::future::lazy(|cx| middleware.poll_ready(cx)).<span class="kw">await</span>;
 
-        <span class="macro">assert!</span>(<span class="ident">f1</span>.<span class="ident">is_err</span>());
-        <span class="macro">assert!</span>(<span class="ident">f2</span>.<span class="ident">is_err</span>());
-        <span class="macro">assert!</span>(<span class="ident">f3</span>.<span class="ident">is_err</span>());
+        <span class="macro">assert!</span>(f1.is_err());
+        <span class="macro">assert!</span>(f2.is_err());
+        <span class="macro">assert!</span>(f3.is_err());
     }
 
-    <span class="attribute">#[<span class="ident">actix_web::test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">test_middleware_opt_extractor</span>() {
-        <span class="kw">let</span> <span class="ident">middleware</span> <span class="op">=</span> <span class="ident">AuthenticationMiddleware</span> {
-            <span class="ident">service</span>: <span class="ident">Rc::new</span>(<span class="ident">into_service</span>(<span class="op">|</span><span class="ident">req</span>: <span class="ident">ServiceRequest</span><span class="op">|</span> <span class="kw">async</span> <span class="kw">move</span> {
-                <span class="prelude-val">Ok</span>::<span class="op">&lt;</span><span class="ident">ServiceResponse</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">req</span>.<span class="ident">into_response</span>(<span class="ident">HttpResponse::Ok</span>().<span class="ident">finish</span>()))
+    <span class="attribute">#[actix_web::test]
+    </span><span class="kw">async fn </span>test_middleware_opt_extractor() {
+        <span class="kw">let </span>middleware = AuthenticationMiddleware {
+            service: Rc::new(into_service(|req: ServiceRequest| <span class="kw">async move </span>{
+                <span class="prelude-val">Ok</span>::&lt;ServiceResponse, <span class="kw">_</span>&gt;(req.into_response(HttpResponse::Ok().finish()))
             })),
-            <span class="ident">process_fn</span>: <span class="ident">Arc::new</span>(<span class="op">|</span><span class="ident">req</span>, <span class="ident">auth</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BearerAuth</span><span class="op">&gt;</span><span class="op">|</span> {
-                <span class="macro">assert!</span>(<span class="ident">auth</span>.<span class="ident">is_none</span>());
-                <span class="kw">async</span> { <span class="prelude-val">Ok</span>(<span class="ident">req</span>) }
+            process_fn: Arc::new(|req, auth: <span class="prelude-ty">Option</span>&lt;BearerAuth&gt;| {
+                <span class="macro">assert!</span>(auth.is_none());
+                <span class="kw">async </span>{ <span class="prelude-val">Ok</span>(req) }
             }),
-            <span class="ident">_extractor</span>: <span class="ident">PhantomData</span>,
+            _extractor: PhantomData,
         };
 
-        <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="ident">TestRequest::get</span>()
-            .<span class="ident">append_header</span>((<span class="string">&quot;Authorization996&quot;</span>, <span class="string">&quot;Bearer 1&quot;</span>))
-            .<span class="ident">to_srv_request</span>();
+        <span class="kw">let </span>req = TestRequest::get()
+            .append_header((<span class="string">&quot;Authorization996&quot;</span>, <span class="string">&quot;Bearer 1&quot;</span>))
+            .to_srv_request();
 
-        <span class="kw">let</span> <span class="ident">f</span> <span class="op">=</span> <span class="ident">middleware</span>.<span class="ident">call</span>(<span class="ident">req</span>).<span class="kw">await</span>;
+        <span class="kw">let </span>f = middleware.call(req).<span class="kw">await</span>;
 
-        <span class="kw">let</span> <span class="ident">_res</span> <span class="op">=</span> <span class="ident">futures_util::future::lazy</span>(<span class="op">|</span><span class="ident">cx</span><span class="op">|</span> <span class="ident">middleware</span>.<span class="ident">poll_ready</span>(<span class="ident">cx</span>)).<span class="kw">await</span>;
+        <span class="kw">let </span>_res = futures_util::future::lazy(|cx| middleware.poll_ready(cx)).<span class="kw">await</span>;
 
-        <span class="macro">assert!</span>(<span class="ident">f</span>.<span class="ident">is_ok</span>());
+        <span class="macro">assert!</span>(f.is_ok());
     }
 
-    <span class="attribute">#[<span class="ident">actix_web::test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">test_middleware_res_extractor</span>() {
-        <span class="kw">let</span> <span class="ident">middleware</span> <span class="op">=</span> <span class="ident">AuthenticationMiddleware</span> {
-            <span class="ident">service</span>: <span class="ident">Rc::new</span>(<span class="ident">into_service</span>(<span class="op">|</span><span class="ident">req</span>: <span class="ident">ServiceRequest</span><span class="op">|</span> <span class="kw">async</span> <span class="kw">move</span> {
-                <span class="prelude-val">Ok</span>::<span class="op">&lt;</span><span class="ident">ServiceResponse</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">req</span>.<span class="ident">into_response</span>(<span class="ident">HttpResponse::Ok</span>().<span class="ident">finish</span>()))
+    <span class="attribute">#[actix_web::test]
+    </span><span class="kw">async fn </span>test_middleware_res_extractor() {
+        <span class="kw">let </span>middleware = AuthenticationMiddleware {
+            service: Rc::new(into_service(|req: ServiceRequest| <span class="kw">async move </span>{
+                <span class="prelude-val">Ok</span>::&lt;ServiceResponse, <span class="kw">_</span>&gt;(req.into_response(HttpResponse::Ok().finish()))
             })),
-            <span class="ident">process_fn</span>: <span class="ident">Arc::new</span>(
-                <span class="op">|</span><span class="ident">req</span>, <span class="ident">auth</span>: <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BearerAuth</span>, <span class="op">&lt;</span><span class="ident">BearerAuth</span> <span class="kw">as</span> <span class="ident">FromRequest</span><span class="op">&gt;</span><span class="ident">::Error</span><span class="op">&gt;</span><span class="op">|</span> {
-                    <span class="macro">assert!</span>(<span class="ident">auth</span>.<span class="ident">is_err</span>());
-                    <span class="kw">async</span> { <span class="prelude-val">Ok</span>(<span class="ident">req</span>) }
+            process_fn: Arc::new(
+                |req, auth: <span class="prelude-ty">Result</span>&lt;BearerAuth, &lt;BearerAuth <span class="kw">as </span>FromRequest&gt;::Error&gt;| {
+                    <span class="macro">assert!</span>(auth.is_err());
+                    <span class="kw">async </span>{ <span class="prelude-val">Ok</span>(req) }
                 },
             ),
-            <span class="ident">_extractor</span>: <span class="ident">PhantomData</span>,
+            _extractor: PhantomData,
         };
 
-        <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="ident">TestRequest::get</span>()
-            .<span class="ident">append_header</span>((<span class="string">&quot;Authorization&quot;</span>, <span class="string">&quot;BearerLOL&quot;</span>))
-            .<span class="ident">to_srv_request</span>();
+        <span class="kw">let </span>req = TestRequest::get()
+            .append_header((<span class="string">&quot;Authorization&quot;</span>, <span class="string">&quot;BearerLOL&quot;</span>))
+            .to_srv_request();
 
-        <span class="kw">let</span> <span class="ident">f</span> <span class="op">=</span> <span class="ident">middleware</span>.<span class="ident">call</span>(<span class="ident">req</span>).<span class="kw">await</span>;
+        <span class="kw">let </span>f = middleware.call(req).<span class="kw">await</span>;
 
-        <span class="kw">let</span> <span class="ident">_res</span> <span class="op">=</span> <span class="ident">futures_util::future::lazy</span>(<span class="op">|</span><span class="ident">cx</span><span class="op">|</span> <span class="ident">middleware</span>.<span class="ident">poll_ready</span>(<span class="ident">cx</span>)).<span class="kw">await</span>;
+        <span class="kw">let </span>_res = futures_util::future::lazy(|cx| middleware.poll_ready(cx)).<span class="kw">await</span>;
 
-        <span class="macro">assert!</span>(<span class="ident">f</span>.<span class="ident">is_ok</span>());
+        <span class="macro">assert!</span>(f.is_ok());
     }
 
-    <span class="attribute">#[<span class="ident">actix_web::test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">test_middleware_works_with_app</span>() {
-        <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">validator</span>(
-            <span class="ident">req</span>: <span class="ident">ServiceRequest</span>,
-            <span class="ident">_credentials</span>: <span class="ident">BasicAuth</span>,
-        ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ServiceRequest</span>, (<span class="ident">actix_web::Error</span>, <span class="ident">ServiceRequest</span>)<span class="op">&gt;</span> {
-            <span class="prelude-val">Err</span>((<span class="ident">ErrorForbidden</span>(<span class="string">&quot;You are not welcome!&quot;</span>), <span class="ident">req</span>))
+    <span class="attribute">#[actix_web::test]
+    </span><span class="kw">async fn </span>test_middleware_works_with_app() {
+        <span class="kw">async fn </span>validator(
+            req: ServiceRequest,
+            _credentials: BasicAuth,
+        ) -&gt; <span class="prelude-ty">Result</span>&lt;ServiceRequest, (actix_web::Error, ServiceRequest)&gt; {
+            <span class="prelude-val">Err</span>((ErrorForbidden(<span class="string">&quot;You are not welcome!&quot;</span>), req))
         }
-        <span class="kw">let</span> <span class="ident">middleware</span> <span class="op">=</span> <span class="ident">HttpAuthentication::basic</span>(<span class="ident">validator</span>);
+        <span class="kw">let </span>middleware = HttpAuthentication::basic(validator);
 
-        <span class="kw">let</span> <span class="ident">srv</span> <span class="op">=</span> <span class="ident">actix_web::test::init_service</span>(
-            <span class="ident">App::new</span>()
-                .<span class="ident">wrap</span>(<span class="ident">middleware</span>)
-                .<span class="ident">route</span>(<span class="string">&quot;/&quot;</span>, <span class="ident">web::get</span>().<span class="ident">to</span>(<span class="ident">HttpResponse::Ok</span>)),
+        <span class="kw">let </span>srv = actix_web::test::init_service(
+            App::new()
+                .wrap(middleware)
+                .route(<span class="string">&quot;/&quot;</span>, web::get().to(HttpResponse::Ok)),
         )
         .<span class="kw">await</span>;
 
-        <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="ident">actix_web::test::TestRequest::with_uri</span>(<span class="string">&quot;/&quot;</span>)
-            .<span class="ident">append_header</span>((<span class="string">&quot;Authorization&quot;</span>, <span class="string">&quot;Basic DontCare&quot;</span>))
-            .<span class="ident">to_request</span>();
+        <span class="kw">let </span>req = actix_web::test::TestRequest::with_uri(<span class="string">&quot;/&quot;</span>)
+            .append_header((<span class="string">&quot;Authorization&quot;</span>, <span class="string">&quot;Basic DontCare&quot;</span>))
+            .to_request();
 
-        <span class="kw">let</span> <span class="ident">resp</span> <span class="op">=</span> <span class="ident">srv</span>.<span class="ident">call</span>(<span class="ident">req</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">resp</span>.<span class="ident">status</span>(), <span class="ident">StatusCode::UNAUTHORIZED</span>);
+        <span class="kw">let </span>resp = srv.call(req).<span class="kw">await</span>.unwrap();
+        <span class="macro">assert_eq!</span>(resp.status(), StatusCode::UNAUTHORIZED);
     }
 
-    <span class="attribute">#[<span class="ident">actix_web::test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">test_middleware_works_with_scope</span>() {
-        <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">validator</span>(
-            <span class="ident">req</span>: <span class="ident">ServiceRequest</span>,
-            <span class="ident">_credentials</span>: <span class="ident">BasicAuth</span>,
-        ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ServiceRequest</span>, (<span class="ident">actix_web::Error</span>, <span class="ident">ServiceRequest</span>)<span class="op">&gt;</span> {
-            <span class="prelude-val">Err</span>((<span class="ident">ErrorForbidden</span>(<span class="string">&quot;You are not welcome!&quot;</span>), <span class="ident">req</span>))
+    <span class="attribute">#[actix_web::test]
+    </span><span class="kw">async fn </span>test_middleware_works_with_scope() {
+        <span class="kw">async fn </span>validator(
+            req: ServiceRequest,
+            _credentials: BasicAuth,
+        ) -&gt; <span class="prelude-ty">Result</span>&lt;ServiceRequest, (actix_web::Error, ServiceRequest)&gt; {
+            <span class="prelude-val">Err</span>((ErrorForbidden(<span class="string">&quot;You are not welcome!&quot;</span>), req))
         }
-        <span class="kw">let</span> <span class="ident">middleware</span> <span class="op">=</span> <span class="ident">actix_web::middleware::Compat::new</span>(<span class="ident">HttpAuthentication::basic</span>(<span class="ident">validator</span>));
+        <span class="kw">let </span>middleware = actix_web::middleware::Compat::new(HttpAuthentication::basic(validator));
 
-        <span class="kw">let</span> <span class="ident">srv</span> <span class="op">=</span> <span class="ident">actix_web::test::init_service</span>(
-            <span class="ident">App::new</span>().<span class="ident">service</span>(
-                <span class="ident">web::scope</span>(<span class="string">&quot;/&quot;</span>)
-                    .<span class="ident">wrap</span>(<span class="ident">middleware</span>)
-                    .<span class="ident">route</span>(<span class="string">&quot;/&quot;</span>, <span class="ident">web::get</span>().<span class="ident">to</span>(<span class="ident">HttpResponse::Ok</span>)),
+        <span class="kw">let </span>srv = actix_web::test::init_service(
+            App::new().service(
+                web::scope(<span class="string">&quot;/&quot;</span>)
+                    .wrap(middleware)
+                    .route(<span class="string">&quot;/&quot;</span>, web::get().to(HttpResponse::Ok)),
             ),
         )
         .<span class="kw">await</span>;
 
-        <span class="kw">let</span> <span class="ident">req</span> <span class="op">=</span> <span class="ident">actix_web::test::TestRequest::with_uri</span>(<span class="string">&quot;/&quot;</span>)
-            .<span class="ident">append_header</span>((<span class="string">&quot;Authorization&quot;</span>, <span class="string">&quot;Basic DontCare&quot;</span>))
-            .<span class="ident">to_request</span>();
+        <span class="kw">let </span>req = actix_web::test::TestRequest::with_uri(<span class="string">&quot;/&quot;</span>)
+            .append_header((<span class="string">&quot;Authorization&quot;</span>, <span class="string">&quot;Basic DontCare&quot;</span>))
+            .to_request();
 
-        <span class="kw">let</span> <span class="ident">resp</span> <span class="op">=</span> <span class="ident">srv</span>.<span class="ident">call</span>(<span class="ident">req</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">resp</span>.<span class="ident">status</span>(), <span class="ident">StatusCode::UNAUTHORIZED</span>);
+        <span class="kw">let </span>resp = srv.call(req).<span class="kw">await</span>.unwrap();
+        <span class="macro">assert_eq!</span>(resp.status(), StatusCode::UNAUTHORIZED);
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_web_httpauth" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (34a6cae28 2022-08-09)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_web_httpauth" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (060e47f74 2022-08-23)" ></div></body></html>

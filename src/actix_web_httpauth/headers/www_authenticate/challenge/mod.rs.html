@@ -10,17 +10,17 @@
 <span id="10">10</span>
 <span id="11">11</span>
 <span id="12">12</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::fmt</span>::{<span class="ident">Debug</span>, <span class="ident">Display</span>};
+</pre><pre class="rust"><code><span class="kw">use </span>std::fmt::{Debug, Display};
 
-<span class="kw">use</span> <span class="ident">actix_web</span>::{<span class="ident">http::header::TryIntoHeaderValue</span>, <span class="ident">web::Bytes</span>};
+<span class="kw">use </span>actix_web::{http::header::TryIntoHeaderValue, web::Bytes};
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">basic</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">bearer</span>;
+<span class="kw">pub mod </span>basic;
+<span class="kw">pub mod </span>bearer;
 
-<span class="doccomment">/// Authentication challenge for `WWW-Authenticate` header.</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Challenge</span>: <span class="ident">TryIntoHeaderValue</span> <span class="op">+</span> <span class="ident">Debug</span> <span class="op">+</span> <span class="ident">Display</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> {
-    <span class="doccomment">/// Converts the challenge into a bytes suitable for HTTP transmission.</span>
-    <span class="kw">fn</span> <span class="ident">to_bytes</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Bytes</span>;
+<span class="doccomment">/// Authentication challenge for `WWW-Authenticate` header.
+</span><span class="kw">pub trait </span>Challenge: TryIntoHeaderValue + Debug + Display + Clone + Send + Sync {
+    <span class="doccomment">/// Converts the challenge into a bytes suitable for HTTP transmission.
+    </span><span class="kw">fn </span>to_bytes(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Bytes;
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="actix_web_httpauth" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (34a6cae28 2022-08-09)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="actix_web_httpauth" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (060e47f74 2022-08-23)" ></div></body></html>

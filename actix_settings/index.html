@@ -10,46 +10,46 @@ the environment using <a href="struct.BasicSettings.html#method.override_field_w
 <h2 id="examples"><a href="#examples">Examples</a></h2>
 <p>See examples folder on GitHub for complete example.</p>
 
-<div class='information'><div class='tooltip ignore'>ⓘ</div></div><div class="example-wrap"><pre class="rust rust-example-rendered ignore"><code><span class="kw">use</span> <span class="ident">actix_settings</span>::{<span class="ident">ApplySettings</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">Mode</span>, <span class="ident">Settings</span>};
+<div class='information'><div class='tooltip ignore'>ⓘ</div></div><div class="example-wrap"><pre class="rust rust-example-rendered ignore"><code><span class="kw">use </span>actix_settings::{ApplySettings <span class="kw">as _</span>, Mode, Settings};
 
-<span class="attribute">#[<span class="ident">actix_web::main</span>]</span>
-<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">main</span>() -&gt; <span class="ident">std::io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">settings</span> <span class="op">=</span> <span class="ident">Settings::parse_toml</span>(<span class="string">&quot;./Server.toml&quot;</span>)
-        .<span class="ident">expect</span>(<span class="string">&quot;Failed to parse `Settings` from Server.toml&quot;</span>);
+<span class="attribute">#[actix_web::main]
+</span><span class="kw">async fn </span>main() -&gt; std::io::Result&lt;()&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::parse_toml(<span class="string">&quot;./Server.toml&quot;</span>)
+        .expect(<span class="string">&quot;Failed to parse `Settings` from Server.toml&quot;</span>);
 
-    <span class="comment">// If the environment variable `$APPLICATION__HOSTS` is set,</span>
-    <span class="comment">// have its value override the `settings.actix.hosts` setting:</span>
-    <span class="ident">Settings::override_field_with_env_var</span>(<span class="kw-2">&amp;mut</span> <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">hosts</span>, <span class="string">&quot;APPLICATION__HOSTS&quot;</span>)<span class="question-mark">?</span>;
+    <span class="comment">// If the environment variable `$APPLICATION__HOSTS` is set,
+    // have its value override the `settings.actix.hosts` setting:
+    </span>Settings::override_field_with_env_var(<span class="kw-2">&amp;mut </span>settings.actix.hosts, <span class="string">&quot;APPLICATION__HOSTS&quot;</span>)<span class="question-mark">?</span>;
 
-    <span class="ident">init_logger</span>(<span class="kw-2">&amp;</span><span class="ident">settings</span>);
+    init_logger(<span class="kw-2">&amp;</span>settings);
 
-    <span class="ident">HttpServer::new</span>({
-        <span class="comment">// clone settings into each worker thread</span>
-        <span class="kw">let</span> <span class="ident">settings</span> <span class="op">=</span> <span class="ident">settings</span>.<span class="ident">clone</span>();
+    HttpServer::new({
+        <span class="comment">// clone settings into each worker thread
+        </span><span class="kw">let </span>settings = settings.clone();
 
-        <span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
-            <span class="ident">App::new</span>()
-                <span class="comment">// Include this `.wrap()` call for compression settings to take effect</span>
-                .<span class="ident">wrap</span>(<span class="ident">Condition::new</span>(
-                    <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">enable_compression</span>,
-                    <span class="ident">Compress::default</span>(),
+        <span class="kw">move </span>|| {
+            App::new()
+                <span class="comment">// Include this `.wrap()` call for compression settings to take effect
+                </span>.wrap(Condition::new(
+                    settings.actix.enable_compression,
+                    Compress::default(),
                 ))
 
-                <span class="comment">// add request logger</span>
-                .<span class="ident">wrap</span>(<span class="ident">Logger::default</span>())
+                <span class="comment">// add request logger
+                </span>.wrap(Logger::default())
 
-                <span class="comment">// make `Settings` available to handlers</span>
-                .<span class="ident">app_data</span>(<span class="ident">web::Data::new</span>(<span class="ident">settings</span>.<span class="ident">clone</span>()))
+                <span class="comment">// make `Settings` available to handlers
+                </span>.app_data(web::Data::new(settings.clone()))
 
-                <span class="comment">// add request handlers as normal</span>
-                .<span class="ident">service</span>(<span class="ident">index</span>)
+                <span class="comment">// add request handlers as normal
+                </span>.service(index)
         }
     })
-    <span class="comment">// apply the `Settings` to Actix Web&#39;s `HttpServer`</span>
-    .<span class="ident">apply_settings</span>(<span class="kw-2">&amp;</span><span class="ident">settings</span>)
-    .<span class="ident">run</span>()
-    .<span class="kw">await</span>
-}</code></pre></div>
+    <span class="comment">// apply the `Settings` to Actix Web&#39;s `HttpServer`
+    </span>.apply_settings(<span class="kw-2">&amp;</span>settings)
+    .run()
+    .<span class="kw">await
+</span>}</code></pre></div>
 </div></details><h2 id="structs" class="small-section-header"><a href="#structs">Structs</a></h2><div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.ActixSettings.html" title="actix_settings::ActixSettings struct">ActixSettings</a></div><div class="item-right docblock-short"><p>Settings types for Actix Web.</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Address.html" title="actix_settings::Address struct">Address</a></div><div class="item-right docblock-short"><p>A host/port pair for the server to bind to.</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.BasicSettings.html" title="actix_settings::BasicSettings struct">BasicSettings</a></div><div class="item-right docblock-short"><p>Wrapper for server and application-specific settings.</p>
@@ -66,4 +66,4 @@ the environment using <a href="struct.BasicSettings.html#method.override_field_w
 </div></div></div><h2 id="traits" class="small-section-header"><a href="#traits">Traits</a></h2><div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.ApplySettings.html" title="actix_settings::ApplySettings trait">ApplySettings</a></div><div class="item-right docblock-short"><p>Extension trait for applying parsed settings to the server object.</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.Parse.html" title="actix_settings::Parse trait">Parse</a></div><div class="item-right docblock-short"><p>A specialized <code>FromStr</code> trait that returns [<code>AtError</code>] errors</p>
 </div></div></div><h2 id="types" class="small-section-header"><a href="#types">Type Definitions</a></h2><div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="type" href="type.Settings.html" title="actix_settings::Settings type">Settings</a></div><div class="item-right docblock-short"><p>Convenience type alias for <a href="struct.BasicSettings.html" title="BasicSettings"><code>BasicSettings</code></a> with no defined application-specific settings.</p>
-</div></div></div></section></div></main><div id="rustdoc-vars" data-root-path="../" data-current-crate="actix_settings" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (34a6cae28 2022-08-09)" ></div></body></html>
+</div></div></div></section></div></main><div id="rustdoc-vars" data-root-path="../" data-current-crate="actix_settings" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (060e47f74 2022-08-23)" ></div></body></html>

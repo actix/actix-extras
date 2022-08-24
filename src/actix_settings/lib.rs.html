@@ -809,399 +809,399 @@
 <span id="807">807</span>
 <span id="808">808</span>
 <span id="809">809</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Easily manage Actix Web&#39;s settings from a TOML file and environment variables.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! To get started add a [`Settings::parse_toml(&quot;./Server.toml&quot;)`](Settings::parse_toml) call to the</span>
-<span class="doccomment">//! top of your main function. This will create a template file with descriptions of all the</span>
-<span class="doccomment">//! configurable settings. You can change or remove anything in that file and it will be picked up</span>
-<span class="doccomment">//! the next time you run your application.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! Overriding parts of the file can be done from values using [`Settings::override_field`] or from</span>
-<span class="doccomment">//! the environment using [`Settings::override_field_with_env_var`].</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! # Examples</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! See examples folder on GitHub for complete example.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! ```ignore</span>
-<span class="doccomment">//! # use actix_web::{</span>
-<span class="doccomment">//! #     get,</span>
-<span class="doccomment">//! #     middleware::{Compress, Condition, Logger},</span>
-<span class="doccomment">//! #     web, App, HttpServer,</span>
-<span class="doccomment">//! # };</span>
-<span class="doccomment">//! use actix_settings::{ApplySettings as _, Mode, Settings};</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! #[actix_web::main]</span>
-<span class="doccomment">//! async fn main() -&gt; std::io::Result&lt;()&gt; {</span>
-<span class="doccomment">//!     let mut settings = Settings::parse_toml(&quot;./Server.toml&quot;)</span>
-<span class="doccomment">//!         .expect(&quot;Failed to parse `Settings` from Server.toml&quot;);</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//!     // If the environment variable `$APPLICATION__HOSTS` is set,</span>
-<span class="doccomment">//!     // have its value override the `settings.actix.hosts` setting:</span>
-<span class="doccomment">//!     Settings::override_field_with_env_var(&amp;mut settings.actix.hosts, &quot;APPLICATION__HOSTS&quot;)?;</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//!     init_logger(&amp;settings);</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//!     HttpServer::new({</span>
-<span class="doccomment">//!         // clone settings into each worker thread</span>
-<span class="doccomment">//!         let settings = settings.clone();</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//!         move || {</span>
-<span class="doccomment">//!             App::new()</span>
-<span class="doccomment">//!                 // Include this `.wrap()` call for compression settings to take effect</span>
-<span class="doccomment">//!                 .wrap(Condition::new(</span>
-<span class="doccomment">//!                     settings.actix.enable_compression,</span>
-<span class="doccomment">//!                     Compress::default(),</span>
-<span class="doccomment">//!                 ))</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//!                 // add request logger</span>
-<span class="doccomment">//!                 .wrap(Logger::default())</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//!                 // make `Settings` available to handlers</span>
-<span class="doccomment">//!                 .app_data(web::Data::new(settings.clone()))</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//!                 // add request handlers as normal</span>
-<span class="doccomment">//!                 .service(index)</span>
-<span class="doccomment">//!         }</span>
-<span class="doccomment">//!     })</span>
-<span class="doccomment">//!     // apply the `Settings` to Actix Web&#39;s `HttpServer`</span>
-<span class="doccomment">//!     .apply_settings(&amp;settings)</span>
-<span class="doccomment">//!     .run()</span>
-<span class="doccomment">//!     .await</span>
-<span class="doccomment">//! }</span>
-<span class="doccomment">//! ```</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Easily manage Actix Web&#39;s settings from a TOML file and environment variables.
+//!
+//! To get started add a [`Settings::parse_toml(&quot;./Server.toml&quot;)`](Settings::parse_toml) call to the
+//! top of your main function. This will create a template file with descriptions of all the
+//! configurable settings. You can change or remove anything in that file and it will be picked up
+//! the next time you run your application.
+//!
+//! Overriding parts of the file can be done from values using [`Settings::override_field`] or from
+//! the environment using [`Settings::override_field_with_env_var`].
+//!
+//! # Examples
+//!
+//! See examples folder on GitHub for complete example.
+//!
+//! ```ignore
+//! # use actix_web::{
+//! #     get,
+//! #     middleware::{Compress, Condition, Logger},
+//! #     web, App, HttpServer,
+//! # };
+//! use actix_settings::{ApplySettings as _, Mode, Settings};
+//!
+//! #[actix_web::main]
+//! async fn main() -&gt; std::io::Result&lt;()&gt; {
+//!     let mut settings = Settings::parse_toml(&quot;./Server.toml&quot;)
+//!         .expect(&quot;Failed to parse `Settings` from Server.toml&quot;);
+//!
+//!     // If the environment variable `$APPLICATION__HOSTS` is set,
+//!     // have its value override the `settings.actix.hosts` setting:
+//!     Settings::override_field_with_env_var(&amp;mut settings.actix.hosts, &quot;APPLICATION__HOSTS&quot;)?;
+//!
+//!     init_logger(&amp;settings);
+//!
+//!     HttpServer::new({
+//!         // clone settings into each worker thread
+//!         let settings = settings.clone();
+//!
+//!         move || {
+//!             App::new()
+//!                 // Include this `.wrap()` call for compression settings to take effect
+//!                 .wrap(Condition::new(
+//!                     settings.actix.enable_compression,
+//!                     Compress::default(),
+//!                 ))
+//!
+//!                 // add request logger
+//!                 .wrap(Logger::default())
+//!
+//!                 // make `Settings` available to handlers
+//!                 .app_data(web::Data::new(settings.clone()))
+//!
+//!                 // add request handlers as normal
+//!                 .service(index)
+//!         }
+//!     })
+//!     // apply the `Settings` to Actix Web&#39;s `HttpServer`
+//!     .apply_settings(&amp;settings)
+//!     .run()
+//!     .await
+//! }
+//! ```
 
-<span class="attribute">#![<span class="ident">forbid</span>(<span class="ident">unsafe_code</span>)]</span>
-<span class="attribute">#![<span class="ident">deny</span>(<span class="ident">rust_2018_idioms</span>, <span class="ident">nonstandard_style</span>)]</span>
-<span class="attribute">#![<span class="ident">warn</span>(<span class="ident">future_incompatible</span>, <span class="ident">missing_docs</span>, <span class="ident">missing_debug_implementations</span>)]</span>
-<span class="attribute">#![<span class="ident">doc</span>(<span class="ident">html_logo_url</span> <span class="op">=</span> <span class="string">&quot;https://actix.rs/img/logo.png&quot;</span>)]</span>
-<span class="attribute">#![<span class="ident">doc</span>(<span class="ident">html_favicon_url</span> <span class="op">=</span> <span class="string">&quot;https://actix.rs/favicon.ico&quot;</span>)]</span>
+</span><span class="attribute">#![forbid(unsafe_code)]
+#![deny(rust_2018_idioms, nonstandard_style)]
+#![warn(future_incompatible, missing_docs, missing_debug_implementations)]
+#![doc(html_logo_url = <span class="string">&quot;https://actix.rs/img/logo.png&quot;</span>)]
+#![doc(html_favicon_url = <span class="string">&quot;https://actix.rs/favicon.ico&quot;</span>)]
 
-<span class="kw">use</span> <span class="ident">std</span>::{
-    <span class="ident">env</span>, <span class="ident">fmt</span>,
-    <span class="ident">fs::File</span>,
-    <span class="ident">io</span>::{<span class="ident">Read</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">Write</span> <span class="kw">as</span> <span class="kw">_</span>},
-    <span class="ident">path::Path</span>,
-    <span class="ident">time::Duration</span>,
+</span><span class="kw">use </span>std::{
+    env, fmt,
+    fs::File,
+    io::{Read <span class="kw">as _</span>, Write <span class="kw">as _</span>},
+    path::Path,
+    time::Duration,
 };
 
-<span class="kw">use</span> <span class="ident">actix_http</span>::{<span class="ident">Request</span>, <span class="ident">Response</span>};
-<span class="kw">use</span> <span class="ident">actix_service::IntoServiceFactory</span>;
-<span class="kw">use</span> <span class="ident">actix_web</span>::{
-    <span class="ident">body::MessageBody</span>,
-    <span class="ident">dev</span>::{<span class="ident">AppConfig</span>, <span class="ident">ServiceFactory</span>},
-    <span class="ident">http::KeepAlive</span> <span class="kw">as</span> <span class="ident">ActixKeepAlive</span>,
-    <span class="ident">Error</span> <span class="kw">as</span> <span class="ident">WebError</span>, <span class="ident">HttpServer</span>,
+<span class="kw">use </span>actix_http::{Request, Response};
+<span class="kw">use </span>actix_service::IntoServiceFactory;
+<span class="kw">use </span>actix_web::{
+    body::MessageBody,
+    dev::{AppConfig, ServiceFactory},
+    http::KeepAlive <span class="kw">as </span>ActixKeepAlive,
+    Error <span class="kw">as </span>WebError, HttpServer,
 };
-<span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">de</span>, <span class="ident">Deserialize</span>};
+<span class="kw">use </span>serde::{de, Deserialize};
 
-<span class="attribute">#[<span class="ident">macro_use</span>]</span>
-<span class="kw">mod</span> <span class="ident">error</span>;
-<span class="kw">mod</span> <span class="ident">parse</span>;
-<span class="kw">mod</span> <span class="ident">settings</span>;
+<span class="attribute">#[macro_use]
+</span><span class="kw">mod </span>error;
+<span class="kw">mod </span>parse;
+<span class="kw">mod </span>settings;
 
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::error::Error</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::parse::Parse</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::settings</span>::{
-    <span class="ident">ActixSettings</span>, <span class="ident">Address</span>, <span class="ident">Backlog</span>, <span class="ident">KeepAlive</span>, <span class="ident">MaxConnectionRate</span>, <span class="ident">MaxConnections</span>, <span class="ident">Mode</span>,
-    <span class="ident">NumWorkers</span>, <span class="ident">Timeout</span>, <span class="ident">Tls</span>,
+<span class="kw">pub use </span><span class="self">self</span>::error::Error;
+<span class="kw">pub use </span><span class="self">self</span>::parse::Parse;
+<span class="kw">pub use </span><span class="self">self</span>::settings::{
+    ActixSettings, Address, Backlog, KeepAlive, MaxConnectionRate, MaxConnections, Mode,
+    NumWorkers, Timeout, Tls,
 };
 
-<span class="doccomment">/// Convenience type alias for `Result&lt;T, AtError&gt;`.</span>
-<span class="kw">type</span> <span class="ident">AsResult</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Error</span><span class="op">&gt;</span>;
+<span class="doccomment">/// Convenience type alias for `Result&lt;T, AtError&gt;`.
+</span><span class="kw">type </span>AsResult&lt;T&gt; = std::result::Result&lt;T, Error&gt;;
 
-<span class="doccomment">/// Wrapper for server and application-specific settings.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;A: Deserialize&lt;&#39;de&gt;&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BasicSettings</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Actix Web server settings.</span>
-    <span class="kw">pub</span> <span class="ident">actix</span>: <span class="ident">ActixSettings</span>,
+<span class="doccomment">/// Wrapper for server and application-specific settings.
+</span><span class="attribute">#[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize)]
+#[serde(bound = <span class="string">&quot;A: Deserialize&lt;&#39;de&gt;&quot;</span>)]
+</span><span class="kw">pub struct </span>BasicSettings&lt;A&gt; {
+    <span class="doccomment">/// Actix Web server settings.
+    </span><span class="kw">pub </span>actix: ActixSettings,
 
-    <span class="doccomment">/// Application-specific settings.</span>
-    <span class="kw">pub</span> <span class="ident">application</span>: <span class="ident">A</span>,
+    <span class="doccomment">/// Application-specific settings.
+    </span><span class="kw">pub </span>application: A,
 }
 
-<span class="doccomment">/// Convenience type alias for [`BasicSettings`] with no defined application-specific settings.</span>
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">Settings</span> <span class="op">=</span> <span class="ident">BasicSettings</span><span class="op">&lt;</span><span class="ident">NoSettings</span><span class="op">&gt;</span>;
+<span class="doccomment">/// Convenience type alias for [`BasicSettings`] with no defined application-specific settings.
+</span><span class="kw">pub type </span>Settings = BasicSettings&lt;NoSettings&gt;;
 
-<span class="doccomment">/// Marker type representing no defined application-specific settings.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="attribute">#[<span class="ident">non_exhaustive</span>]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">NoSettings</span> {<span class="comment">/* NOTE: turning this into a unit struct will cause deserialization failures. */</span>}
+<span class="doccomment">/// Marker type representing no defined application-specific settings.
+</span><span class="attribute">#[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize)]
+#[non_exhaustive]
+</span><span class="kw">pub struct </span>NoSettings {<span class="comment">/* NOTE: turning this into a unit struct will cause deserialization failures. */</span>}
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span> <span class="ident">BasicSettings</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">A</span>: <span class="ident">de::DeserializeOwned</span>,
+<span class="kw">impl</span>&lt;A&gt; BasicSettings&lt;A&gt;
+<span class="kw">where
+    </span>A: de::DeserializeOwned,
 {
-    <span class="comment">// NOTE **DO NOT** mess with the ordering of the tables in the default template.</span>
-    <span class="comment">//      Especially the `[application]` table needs to be last in order</span>
-    <span class="comment">//      for some tests to keep working.</span>
-    <span class="doccomment">/// Default settings file contents.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const</span> <span class="ident">DEFAULT_TOML_TEMPLATE</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> <span class="op">=</span> <span class="macro">include_str!</span>(<span class="string">&quot;./defaults.toml&quot;</span>);
+    <span class="comment">// NOTE **DO NOT** mess with the ordering of the tables in the default template.
+    //      Especially the `[application]` table needs to be last in order
+    //      for some tests to keep working.
+    </span><span class="doccomment">/// Default settings file contents.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>DEFAULT_TOML_TEMPLATE: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str = <span class="macro">include_str!</span>(<span class="string">&quot;./defaults.toml&quot;</span>);
 
-    <span class="doccomment">/// Parse an instance of `Self` from a TOML file located at `filepath`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// If the file doesn&#39;t exist, it is generated from the default TOML template, after which the</span>
-    <span class="doccomment">/// newly generated file is read in and parsed.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse_toml</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>(<span class="ident">filepath</span>: <span class="ident">P</span>) -&gt; <span class="ident">AsResult</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">P</span>: <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Parse an instance of `Self` from a TOML file located at `filepath`.
+    ///
+    /// If the file doesn&#39;t exist, it is generated from the default TOML template, after which the
+    /// newly generated file is read in and parsed.
+    </span><span class="kw">pub fn </span>parse_toml&lt;P&gt;(filepath: P) -&gt; AsResult&lt;<span class="self">Self</span>&gt;
+    <span class="kw">where
+        </span>P: AsRef&lt;Path&gt;,
     {
-        <span class="kw">let</span> <span class="ident">filepath</span> <span class="op">=</span> <span class="ident">filepath</span>.<span class="ident">as_ref</span>();
+        <span class="kw">let </span>filepath = filepath.as_ref();
 
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">filepath</span>.<span class="ident">exists</span>() {
-            <span class="ident"><span class="self">Self</span>::write_toml_file</span>(<span class="ident">filepath</span>)<span class="question-mark">?</span>;
+        <span class="kw">if </span>!filepath.exists() {
+            <span class="self">Self</span>::write_toml_file(filepath)<span class="question-mark">?</span>;
         }
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">f</span> <span class="op">=</span> <span class="ident">File::open</span>(<span class="ident">filepath</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">len_guess</span> <span class="op">=</span> <span class="ident">f</span>.<span class="ident">metadata</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">md</span><span class="op">|</span> <span class="ident">md</span>.<span class="ident">len</span>()).<span class="ident">unwrap_or</span>(<span class="number">128</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>f = File::open(filepath)<span class="question-mark">?</span>;
+        <span class="kw">let </span>len_guess = f.metadata().map(|md| md.len()).unwrap_or(<span class="number">128</span>);
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">contents</span> <span class="op">=</span> <span class="ident">String::with_capacity</span>(<span class="ident">len_guess</span> <span class="kw">as</span> <span class="ident">usize</span>);
-        <span class="ident">f</span>.<span class="ident">read_to_string</span>(<span class="kw-2">&amp;mut</span> <span class="ident">contents</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>contents = String::with_capacity(len_guess <span class="kw">as </span>usize);
+        f.read_to_string(<span class="kw-2">&amp;mut </span>contents)<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="ident">toml::from_str</span>::<span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">contents</span>)<span class="question-mark">?</span>)
+        <span class="prelude-val">Ok</span>(toml::from_str::&lt;<span class="self">Self</span>&gt;(<span class="kw-2">&amp;</span>contents)<span class="question-mark">?</span>)
     }
 
-    <span class="doccomment">/// Parse an instance of `Self` straight from the default TOML template.</span>
-    <span class="comment">// TODO: make infallible</span>
-    <span class="comment">// TODO: consider &quot;template&quot; rename</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_default_template</span>() -&gt; <span class="ident">AsResult</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="ident"><span class="self">Self</span>::from_template</span>(<span class="ident"><span class="self">Self</span>::DEFAULT_TOML_TEMPLATE</span>)
+    <span class="doccomment">/// Parse an instance of `Self` straight from the default TOML template.
+    </span><span class="comment">// TODO: make infallible
+    // TODO: consider &quot;template&quot; rename
+    </span><span class="kw">pub fn </span>from_default_template() -&gt; AsResult&lt;<span class="self">Self</span>&gt; {
+        <span class="self">Self</span>::from_template(<span class="self">Self</span>::DEFAULT_TOML_TEMPLATE)
     }
 
-    <span class="doccomment">/// Parse an instance of `Self` straight from the default TOML template.</span>
-    <span class="comment">// TODO: consider &quot;template&quot; rename</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_template</span>(<span class="ident">template</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">AsResult</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Ok</span>(<span class="ident">toml::from_str</span>(<span class="ident">template</span>)<span class="question-mark">?</span>)
+    <span class="doccomment">/// Parse an instance of `Self` straight from the default TOML template.
+    </span><span class="comment">// TODO: consider &quot;template&quot; rename
+    </span><span class="kw">pub fn </span>from_template(template: <span class="kw-2">&amp;</span>str) -&gt; AsResult&lt;<span class="self">Self</span>&gt; {
+        <span class="prelude-val">Ok</span>(toml::from_str(template)<span class="question-mark">?</span>)
     }
 
-    <span class="doccomment">/// Writes the default TOML template to a new file, located at `filepath`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Errors</span>
-    <span class="doccomment">/// Returns a [`FileExists`](crate::AtError::FileExists) error if a file already exists at that</span>
-    <span class="doccomment">/// location.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">write_toml_file</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>(<span class="ident">filepath</span>: <span class="ident">P</span>) -&gt; <span class="ident">AsResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">P</span>: <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Writes the default TOML template to a new file, located at `filepath`.
+    ///
+    /// # Errors
+    /// Returns a [`FileExists`](crate::AtError::FileExists) error if a file already exists at that
+    /// location.
+    </span><span class="kw">pub fn </span>write_toml_file&lt;P&gt;(filepath: P) -&gt; AsResult&lt;()&gt;
+    <span class="kw">where
+        </span>P: AsRef&lt;Path&gt;,
     {
-        <span class="kw">let</span> <span class="ident">filepath</span> <span class="op">=</span> <span class="ident">filepath</span>.<span class="ident">as_ref</span>();
+        <span class="kw">let </span>filepath = filepath.as_ref();
 
-        <span class="kw">if</span> <span class="ident">filepath</span>.<span class="ident">exists</span>() {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::FileExists</span>(<span class="ident">filepath</span>.<span class="ident">to_path_buf</span>()));
+        <span class="kw">if </span>filepath.exists() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::FileExists(filepath.to_path_buf()));
         }
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">File::create</span>(<span class="ident">filepath</span>)<span class="question-mark">?</span>;
-        <span class="ident">file</span>.<span class="ident">write_all</span>(<span class="ident"><span class="self">Self</span>::DEFAULT_TOML_TEMPLATE</span>.<span class="ident">trim</span>().<span class="ident">as_bytes</span>())<span class="question-mark">?</span>;
-        <span class="ident">file</span>.<span class="ident">flush</span>()<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>file = File::create(filepath)<span class="question-mark">?</span>;
+        file.write_all(<span class="self">Self</span>::DEFAULT_TOML_TEMPLATE.trim().as_bytes())<span class="question-mark">?</span>;
+        file.flush()<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="doccomment">/// Attempts to parse `value` and override the referenced `field`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// use actix_settings::{Settings, Mode};</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # fn inner() -&gt; Result&lt;(), actix_settings::Error&gt; {</span>
-    <span class="doccomment">/// let mut settings = Settings::from_default_template()?;</span>
-    <span class="doccomment">/// assert_eq!(settings.actix.mode, Mode::Development);</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Settings::override_field(&amp;mut settings.actix.mode, &quot;production&quot;)?;</span>
-    <span class="doccomment">/// assert_eq!(settings.actix.mode, Mode::Production);</span>
-    <span class="doccomment">/// # Ok(()) }</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">override_field</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">V</span><span class="op">&gt;</span>(<span class="ident">field</span>: <span class="kw-2">&amp;mut</span> <span class="ident">F</span>, <span class="ident">value</span>: <span class="ident">V</span>) -&gt; <span class="ident">AsResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">Parse</span>,
-        <span class="ident">V</span>: <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Attempts to parse `value` and override the referenced `field`.
+    ///
+    /// # Examples
+    /// ```
+    /// use actix_settings::{Settings, Mode};
+    ///
+    /// # fn inner() -&gt; Result&lt;(), actix_settings::Error&gt; {
+    /// let mut settings = Settings::from_default_template()?;
+    /// assert_eq!(settings.actix.mode, Mode::Development);
+    ///
+    /// Settings::override_field(&amp;mut settings.actix.mode, &quot;production&quot;)?;
+    /// assert_eq!(settings.actix.mode, Mode::Production);
+    /// # Ok(()) }
+    /// ```
+    </span><span class="kw">pub fn </span>override_field&lt;F, V&gt;(field: <span class="kw-2">&amp;mut </span>F, value: V) -&gt; AsResult&lt;()&gt;
+    <span class="kw">where
+        </span>F: Parse,
+        V: AsRef&lt;str&gt;,
     {
-        <span class="kw-2">*</span><span class="ident">field</span> <span class="op">=</span> <span class="ident">F::parse</span>(<span class="ident">value</span>.<span class="ident">as_ref</span>())<span class="question-mark">?</span>;
+        <span class="kw-2">*</span>field = F::parse(value.as_ref())<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="doccomment">/// Attempts to read an environment variable, parse it, and override the referenced `field`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// use actix_settings::{Settings, Mode};</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// std::env::set_var(&quot;OVERRIDE__MODE&quot;, &quot;production&quot;);</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # fn inner() -&gt; Result&lt;(), actix_settings::Error&gt; {</span>
-    <span class="doccomment">/// let mut settings = Settings::from_default_template()?;</span>
-    <span class="doccomment">/// assert_eq!(settings.actix.mode, Mode::Development);</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Settings::override_field_with_env_var(&amp;mut settings.actix.mode, &quot;OVERRIDE__MODE&quot;)?;</span>
-    <span class="doccomment">/// assert_eq!(settings.actix.mode, Mode::Production);</span>
-    <span class="doccomment">/// # Ok(()) }</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">override_field_with_env_var</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">N</span><span class="op">&gt;</span>(<span class="ident">field</span>: <span class="kw-2">&amp;mut</span> <span class="ident">F</span>, <span class="ident">var_name</span>: <span class="ident">N</span>) -&gt; <span class="ident">AsResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">Parse</span>,
-        <span class="ident">N</span>: <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Attempts to read an environment variable, parse it, and override the referenced `field`.
+    ///
+    /// # Examples
+    /// ```
+    /// use actix_settings::{Settings, Mode};
+    ///
+    /// std::env::set_var(&quot;OVERRIDE__MODE&quot;, &quot;production&quot;);
+    ///
+    /// # fn inner() -&gt; Result&lt;(), actix_settings::Error&gt; {
+    /// let mut settings = Settings::from_default_template()?;
+    /// assert_eq!(settings.actix.mode, Mode::Development);
+    ///
+    /// Settings::override_field_with_env_var(&amp;mut settings.actix.mode, &quot;OVERRIDE__MODE&quot;)?;
+    /// assert_eq!(settings.actix.mode, Mode::Production);
+    /// # Ok(()) }
+    /// ```
+    </span><span class="kw">pub fn </span>override_field_with_env_var&lt;F, N&gt;(field: <span class="kw-2">&amp;mut </span>F, var_name: N) -&gt; AsResult&lt;()&gt;
+    <span class="kw">where
+        </span>F: Parse,
+        N: AsRef&lt;str&gt;,
     {
-        <span class="kw">match</span> <span class="ident">env::var</span>(<span class="ident">var_name</span>.<span class="ident">as_ref</span>()) {
-            <span class="prelude-val">Err</span>(<span class="ident">env::VarError::NotPresent</span>) =&gt; <span class="prelude-val">Ok</span>((<span class="comment">/*NOP*/</span>)),
-            <span class="prelude-val">Err</span>(<span class="ident">var_error</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">Error::from</span>(<span class="ident">var_error</span>)),
-            <span class="prelude-val">Ok</span>(<span class="ident">value</span>) =&gt; <span class="ident"><span class="self">Self</span>::override_field</span>(<span class="ident">field</span>, <span class="ident">value</span>),
+        <span class="kw">match </span>env::var(var_name.as_ref()) {
+            <span class="prelude-val">Err</span>(env::VarError::NotPresent) =&gt; <span class="prelude-val">Ok</span>((<span class="comment">/*NOP*/</span>)),
+            <span class="prelude-val">Err</span>(var_error) =&gt; <span class="prelude-val">Err</span>(Error::from(var_error)),
+            <span class="prelude-val">Ok</span>(value) =&gt; <span class="self">Self</span>::override_field(field, value),
         }
     }
 }
 
-<span class="doccomment">/// Extension trait for applying parsed settings to the server object.</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">ApplySettings</span> {
-    <span class="doccomment">/// Apply a [`BasicSettings`] value to `self`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`BasicSettings`]: ./struct.BasicSettings.html</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">fn</span> <span class="ident">apply_settings</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">settings</span>: <span class="kw-2">&amp;</span><span class="ident">BasicSettings</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span>
-    <span class="kw">where</span>
-        <span class="ident">A</span>: <span class="ident">de::DeserializeOwned</span>;
+<span class="doccomment">/// Extension trait for applying parsed settings to the server object.
+</span><span class="kw">pub trait </span>ApplySettings {
+    <span class="doccomment">/// Apply a [`BasicSettings`] value to `self`.
+    ///
+    /// [`BasicSettings`]: ./struct.BasicSettings.html
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">fn </span>apply_settings&lt;A&gt;(<span class="self">self</span>, settings: <span class="kw-2">&amp;</span>BasicSettings&lt;A&gt;) -&gt; <span class="self">Self
+    </span><span class="kw">where
+        </span>A: de::DeserializeOwned;
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">I</span>, <span class="ident">S</span>, <span class="ident">B</span><span class="op">&gt;</span> <span class="ident">ApplySettings</span> <span class="kw">for</span> <span class="ident">HttpServer</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">I</span>, <span class="ident">S</span>, <span class="ident">B</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">F</span>: <span class="ident">Fn</span>() -&gt; <span class="ident">I</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
-    <span class="ident">I</span>: <span class="ident">IntoServiceFactory</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">Request</span><span class="op">&gt;</span>,
-    <span class="ident">S</span>: <span class="ident">ServiceFactory</span><span class="op">&lt;</span><span class="ident">Request</span>, <span class="ident">Config</span> <span class="op">=</span> <span class="ident">AppConfig</span><span class="op">&gt;</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
-    <span class="ident">S::Error</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">WebError</span><span class="op">&gt;</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
-    <span class="ident">S::InitError</span>: <span class="ident">fmt::Debug</span>,
-    <span class="ident">S::Response</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Response</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
-    <span class="ident">S::Future</span>: <span class="lifetime">&#39;static</span>,
-    <span class="ident">B</span>: <span class="ident">MessageBody</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+<span class="kw">impl</span>&lt;F, I, S, B&gt; ApplySettings <span class="kw">for </span>HttpServer&lt;F, I, S, B&gt;
+<span class="kw">where
+    </span>F: Fn() -&gt; I + Send + Clone + <span class="lifetime">&#39;static</span>,
+    I: IntoServiceFactory&lt;S, Request&gt;,
+    S: ServiceFactory&lt;Request, Config = AppConfig&gt; + <span class="lifetime">&#39;static</span>,
+    S::Error: Into&lt;WebError&gt; + <span class="lifetime">&#39;static</span>,
+    S::InitError: fmt::Debug,
+    S::Response: Into&lt;Response&lt;B&gt;&gt; + <span class="lifetime">&#39;static</span>,
+    S::Future: <span class="lifetime">&#39;static</span>,
+    B: MessageBody + <span class="lifetime">&#39;static</span>,
 {
-    <span class="kw">fn</span> <span class="ident">apply_settings</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">settings</span>: <span class="kw-2">&amp;</span><span class="ident">BasicSettings</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span>
-    <span class="kw">where</span>
-        <span class="ident">A</span>: <span class="ident">de::DeserializeOwned</span>,
+    <span class="kw">fn </span>apply_settings&lt;A&gt;(<span class="kw-2">mut </span><span class="self">self</span>, settings: <span class="kw-2">&amp;</span>BasicSettings&lt;A&gt;) -&gt; <span class="self">Self
+    </span><span class="kw">where
+        </span>A: de::DeserializeOwned,
     {
-        <span class="kw">if</span> <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">tls</span>.<span class="ident">enabled</span> {
-            <span class="comment">// for Address { host, port } in &amp;settings.actix.hosts {</span>
-            <span class="comment">//     self = self.bind(format!(&quot;{}:{}&quot;, host, port))</span>
-            <span class="comment">//         .unwrap(/*TODO*/);</span>
-            <span class="comment">// }</span>
-            <span class="macro">todo!</span>(<span class="string">&quot;[ApplySettings] TLS support has not been implemented yet.&quot;</span>);
-        } <span class="kw">else</span> {
-            <span class="kw">for</span> <span class="ident">Address</span> { <span class="ident">host</span>, <span class="ident">port</span> } <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">hosts</span> {
-                <span class="self">self</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">bind</span>(<span class="macro">format!</span>(<span class="string">&quot;{}:{}&quot;</span>, <span class="ident">host</span>, <span class="ident">port</span>))
-                    .<span class="ident">unwrap</span>(<span class="comment">/*TODO*/</span>);
+        <span class="kw">if </span>settings.actix.tls.enabled {
+            <span class="comment">// for Address { host, port } in &amp;settings.actix.hosts {
+            //     self = self.bind(format!(&quot;{}:{}&quot;, host, port))
+            //         .unwrap(/*TODO*/);
+            // }
+            </span><span class="macro">todo!</span>(<span class="string">&quot;[ApplySettings] TLS support has not been implemented yet.&quot;</span>);
+        } <span class="kw">else </span>{
+            <span class="kw">for </span>Address { host, port } <span class="kw">in </span><span class="kw-2">&amp;</span>settings.actix.hosts {
+                <span class="self">self </span>= <span class="self">self</span>.bind(<span class="macro">format!</span>(<span class="string">&quot;{}:{}&quot;</span>, host, port))
+                    .unwrap(<span class="comment">/*TODO*/</span>);
             }
         }
 
-        <span class="self">self</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">num_workers</span> {
-            <span class="ident">NumWorkers::Default</span> =&gt; <span class="self">self</span>,
-            <span class="ident">NumWorkers::Manual</span>(<span class="ident">n</span>) =&gt; <span class="self">self</span>.<span class="ident">workers</span>(<span class="ident">n</span>),
+        <span class="self">self </span>= <span class="kw">match </span>settings.actix.num_workers {
+            NumWorkers::Default =&gt; <span class="self">self</span>,
+            NumWorkers::Manual(n) =&gt; <span class="self">self</span>.workers(n),
         };
 
-        <span class="self">self</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">backlog</span> {
-            <span class="ident">Backlog::Default</span> =&gt; <span class="self">self</span>,
-            <span class="ident">Backlog::Manual</span>(<span class="ident">n</span>) =&gt; <span class="self">self</span>.<span class="ident">backlog</span>(<span class="ident">n</span> <span class="kw">as</span> <span class="ident">u32</span>),
+        <span class="self">self </span>= <span class="kw">match </span>settings.actix.backlog {
+            Backlog::Default =&gt; <span class="self">self</span>,
+            Backlog::Manual(n) =&gt; <span class="self">self</span>.backlog(n <span class="kw">as </span>u32),
         };
 
-        <span class="self">self</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">max_connections</span> {
-            <span class="ident">MaxConnections::Default</span> =&gt; <span class="self">self</span>,
-            <span class="ident">MaxConnections::Manual</span>(<span class="ident">n</span>) =&gt; <span class="self">self</span>.<span class="ident">max_connections</span>(<span class="ident">n</span>),
+        <span class="self">self </span>= <span class="kw">match </span>settings.actix.max_connections {
+            MaxConnections::Default =&gt; <span class="self">self</span>,
+            MaxConnections::Manual(n) =&gt; <span class="self">self</span>.max_connections(n),
         };
 
-        <span class="self">self</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">max_connection_rate</span> {
-            <span class="ident">MaxConnectionRate::Default</span> =&gt; <span class="self">self</span>,
-            <span class="ident">MaxConnectionRate::Manual</span>(<span class="ident">n</span>) =&gt; <span class="self">self</span>.<span class="ident">max_connection_rate</span>(<span class="ident">n</span>),
+        <span class="self">self </span>= <span class="kw">match </span>settings.actix.max_connection_rate {
+            MaxConnectionRate::Default =&gt; <span class="self">self</span>,
+            MaxConnectionRate::Manual(n) =&gt; <span class="self">self</span>.max_connection_rate(n),
         };
 
-        <span class="self">self</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">keep_alive</span> {
-            <span class="ident">KeepAlive::Default</span> =&gt; <span class="self">self</span>,
-            <span class="ident">KeepAlive::Disabled</span> =&gt; <span class="self">self</span>.<span class="ident">keep_alive</span>(<span class="ident">ActixKeepAlive::Disabled</span>),
-            <span class="ident">KeepAlive::Os</span> =&gt; <span class="self">self</span>.<span class="ident">keep_alive</span>(<span class="ident">ActixKeepAlive::Os</span>),
-            <span class="ident">KeepAlive::Seconds</span>(<span class="ident">n</span>) =&gt; <span class="self">self</span>.<span class="ident">keep_alive</span>(<span class="ident">Duration::from_secs</span>(<span class="ident">n</span> <span class="kw">as</span> <span class="ident">u64</span>)),
+        <span class="self">self </span>= <span class="kw">match </span>settings.actix.keep_alive {
+            KeepAlive::Default =&gt; <span class="self">self</span>,
+            KeepAlive::Disabled =&gt; <span class="self">self</span>.keep_alive(ActixKeepAlive::Disabled),
+            KeepAlive::Os =&gt; <span class="self">self</span>.keep_alive(ActixKeepAlive::Os),
+            KeepAlive::Seconds(n) =&gt; <span class="self">self</span>.keep_alive(Duration::from_secs(n <span class="kw">as </span>u64)),
         };
 
-        <span class="self">self</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">client_timeout</span> {
-            <span class="ident">Timeout::Default</span> =&gt; <span class="self">self</span>,
-            <span class="ident">Timeout::Milliseconds</span>(<span class="ident">n</span>) =&gt; {
-                <span class="self">self</span>.<span class="ident">client_request_timeout</span>(<span class="ident">Duration::from_millis</span>(<span class="ident">n</span> <span class="kw">as</span> <span class="ident">u64</span>))
+        <span class="self">self </span>= <span class="kw">match </span>settings.actix.client_timeout {
+            Timeout::Default =&gt; <span class="self">self</span>,
+            Timeout::Milliseconds(n) =&gt; {
+                <span class="self">self</span>.client_request_timeout(Duration::from_millis(n <span class="kw">as </span>u64))
             }
-            <span class="ident">Timeout::Seconds</span>(<span class="ident">n</span>) =&gt; <span class="self">self</span>.<span class="ident">client_request_timeout</span>(<span class="ident">Duration::from_secs</span>(<span class="ident">n</span> <span class="kw">as</span> <span class="ident">u64</span>)),
+            Timeout::Seconds(n) =&gt; <span class="self">self</span>.client_request_timeout(Duration::from_secs(n <span class="kw">as </span>u64)),
         };
 
-        <span class="self">self</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">client_shutdown</span> {
-            <span class="ident">Timeout::Default</span> =&gt; <span class="self">self</span>,
-            <span class="ident">Timeout::Milliseconds</span>(<span class="ident">n</span>) =&gt; {
-                <span class="self">self</span>.<span class="ident">client_disconnect_timeout</span>(<span class="ident">Duration::from_millis</span>(<span class="ident">n</span> <span class="kw">as</span> <span class="ident">u64</span>))
+        <span class="self">self </span>= <span class="kw">match </span>settings.actix.client_shutdown {
+            Timeout::Default =&gt; <span class="self">self</span>,
+            Timeout::Milliseconds(n) =&gt; {
+                <span class="self">self</span>.client_disconnect_timeout(Duration::from_millis(n <span class="kw">as </span>u64))
             }
-            <span class="ident">Timeout::Seconds</span>(<span class="ident">n</span>) =&gt; <span class="self">self</span>.<span class="ident">client_disconnect_timeout</span>(<span class="ident">Duration::from_secs</span>(<span class="ident">n</span> <span class="kw">as</span> <span class="ident">u64</span>)),
+            Timeout::Seconds(n) =&gt; <span class="self">self</span>.client_disconnect_timeout(Duration::from_secs(n <span class="kw">as </span>u64)),
         };
 
-        <span class="self">self</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">shutdown_timeout</span> {
-            <span class="ident">Timeout::Default</span> =&gt; <span class="self">self</span>,
-            <span class="ident">Timeout::Milliseconds</span>(<span class="kw">_</span>) =&gt; <span class="self">self</span>.<span class="ident">shutdown_timeout</span>(<span class="number">1</span>),
-            <span class="ident">Timeout::Seconds</span>(<span class="ident">n</span>) =&gt; <span class="self">self</span>.<span class="ident">shutdown_timeout</span>(<span class="ident">n</span> <span class="kw">as</span> <span class="ident">u64</span>),
+        <span class="self">self </span>= <span class="kw">match </span>settings.actix.shutdown_timeout {
+            Timeout::Default =&gt; <span class="self">self</span>,
+            Timeout::Milliseconds(<span class="kw">_</span>) =&gt; <span class="self">self</span>.shutdown_timeout(<span class="number">1</span>),
+            Timeout::Seconds(n) =&gt; <span class="self">self</span>.shutdown_timeout(n <span class="kw">as </span>u64),
         };
 
-        <span class="self">self</span>
-    }
+        <span class="self">self
+    </span>}
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="ident">actix_web::App</span>;
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use </span>actix_web::App;
 
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">apply_settings</span>() {
-        <span class="kw">let</span> <span class="ident">settings</span> <span class="op">=</span> <span class="ident">Settings::parse_toml</span>(<span class="string">&quot;Server.toml&quot;</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">HttpServer::new</span>(<span class="ident">App::new</span>).<span class="ident">apply_settings</span>(<span class="kw-2">&amp;</span><span class="ident">settings</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>apply_settings() {
+        <span class="kw">let </span>settings = Settings::parse_toml(<span class="string">&quot;Server.toml&quot;</span>).unwrap();
+        <span class="kw">let _ </span>= HttpServer::new(App::new).apply_settings(<span class="kw-2">&amp;</span>settings);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">override_field_hosts</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">settings</span> <span class="op">=</span> <span class="ident">Settings::from_default_template</span>().<span class="ident">unwrap</span>();
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>override_field_hosts() {
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
 
         <span class="macro">assert_eq!</span>(
-            <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">hosts</span>,
-            <span class="macro">vec!</span>[<span class="ident">Address</span> {
-                <span class="ident">host</span>: <span class="string">&quot;0.0.0.0&quot;</span>.<span class="ident">into</span>(),
-                <span class="ident">port</span>: <span class="number">9000</span>
-            },]
+            settings.actix.hosts,
+            <span class="macro">vec!</span>[Address {
+                host: <span class="string">&quot;0.0.0.0&quot;</span>.into(),
+                port: <span class="number">9000
+            </span>},]
         );
 
-        <span class="ident">Settings::override_field</span>(
-            <span class="kw-2">&amp;mut</span> <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">hosts</span>,
+        Settings::override_field(
+            <span class="kw-2">&amp;mut </span>settings.actix.hosts,
             <span class="string">r#&quot;[
             [&quot;0.0.0.0&quot;,   1234],
             [&quot;localhost&quot;, 2345]
         ]&quot;#</span>,
         )
-        .<span class="ident">unwrap</span>();
+        .unwrap();
 
         <span class="macro">assert_eq!</span>(
-            <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">hosts</span>,
+            settings.actix.hosts,
             <span class="macro">vec!</span>[
-                <span class="ident">Address</span> {
-                    <span class="ident">host</span>: <span class="string">&quot;0.0.0.0&quot;</span>.<span class="ident">into</span>(),
-                    <span class="ident">port</span>: <span class="number">1234</span>
-                },
-                <span class="ident">Address</span> {
-                    <span class="ident">host</span>: <span class="string">&quot;localhost&quot;</span>.<span class="ident">into</span>(),
-                    <span class="ident">port</span>: <span class="number">2345</span>
-                },
+                Address {
+                    host: <span class="string">&quot;0.0.0.0&quot;</span>.into(),
+                    port: <span class="number">1234
+                </span>},
+                Address {
+                    host: <span class="string">&quot;localhost&quot;</span>.into(),
+                    port: <span class="number">2345
+                </span>},
             ]
         );
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">override_field_with_env_var_hosts</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">settings</span> <span class="op">=</span> <span class="ident">Settings::from_default_template</span>().<span class="ident">unwrap</span>();
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>override_field_with_env_var_hosts() {
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
 
         <span class="macro">assert_eq!</span>(
-            <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">hosts</span>,
-            <span class="macro">vec!</span>[<span class="ident">Address</span> {
-                <span class="ident">host</span>: <span class="string">&quot;0.0.0.0&quot;</span>.<span class="ident">into</span>(),
-                <span class="ident">port</span>: <span class="number">9000</span>
-            },]
+            settings.actix.hosts,
+            <span class="macro">vec!</span>[Address {
+                host: <span class="string">&quot;0.0.0.0&quot;</span>.into(),
+                port: <span class="number">9000
+            </span>},]
         );
 
-        <span class="ident">std::env::set_var</span>(
+        std::env::set_var(
             <span class="string">&quot;OVERRIDE__HOSTS&quot;</span>,
             <span class="string">r#&quot;[
             [&quot;0.0.0.0&quot;,   1234],
@@ -1209,414 +1209,414 @@
         ]&quot;#</span>,
         );
 
-        <span class="ident">Settings::override_field_with_env_var</span>(<span class="kw-2">&amp;mut</span> <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">hosts</span>, <span class="string">&quot;OVERRIDE__HOSTS&quot;</span>)
-            .<span class="ident">unwrap</span>();
+        Settings::override_field_with_env_var(<span class="kw-2">&amp;mut </span>settings.actix.hosts, <span class="string">&quot;OVERRIDE__HOSTS&quot;</span>)
+            .unwrap();
 
         <span class="macro">assert_eq!</span>(
-            <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">hosts</span>,
+            settings.actix.hosts,
             <span class="macro">vec!</span>[
-                <span class="ident">Address</span> {
-                    <span class="ident">host</span>: <span class="string">&quot;0.0.0.0&quot;</span>.<span class="ident">into</span>(),
-                    <span class="ident">port</span>: <span class="number">1234</span>
-                },
-                <span class="ident">Address</span> {
-                    <span class="ident">host</span>: <span class="string">&quot;localhost&quot;</span>.<span class="ident">into</span>(),
-                    <span class="ident">port</span>: <span class="number">2345</span>
-                },
+                Address {
+                    host: <span class="string">&quot;0.0.0.0&quot;</span>.into(),
+                    port: <span class="number">1234
+                </span>},
+                Address {
+                    host: <span class="string">&quot;localhost&quot;</span>.into(),
+                    port: <span class="number">2345
+                </span>},
             ]
         );
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">override_field_mode</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">settings</span> <span class="op">=</span> <span class="ident">Settings::from_default_template</span>().<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">mode</span>, <span class="ident">Mode::Development</span>);
-        <span class="ident">Settings::override_field</span>(<span class="kw-2">&amp;mut</span> <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">mode</span>, <span class="string">&quot;production&quot;</span>).<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">mode</span>, <span class="ident">Mode::Production</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>override_field_mode() {
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
+        <span class="macro">assert_eq!</span>(settings.actix.mode, Mode::Development);
+        Settings::override_field(<span class="kw-2">&amp;mut </span>settings.actix.mode, <span class="string">&quot;production&quot;</span>).unwrap();
+        <span class="macro">assert_eq!</span>(settings.actix.mode, Mode::Production);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">override_field_with_env_var_mode</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">settings</span> <span class="op">=</span> <span class="ident">Settings::from_default_template</span>().<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">mode</span>, <span class="ident">Mode::Development</span>);
-        <span class="ident">std::env::set_var</span>(<span class="string">&quot;OVERRIDE__MODE&quot;</span>, <span class="string">&quot;production&quot;</span>);
-        <span class="ident">Settings::override_field_with_env_var</span>(<span class="kw-2">&amp;mut</span> <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">mode</span>, <span class="string">&quot;OVERRIDE__MODE&quot;</span>).<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">mode</span>, <span class="ident">Mode::Production</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>override_field_with_env_var_mode() {
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
+        <span class="macro">assert_eq!</span>(settings.actix.mode, Mode::Development);
+        std::env::set_var(<span class="string">&quot;OVERRIDE__MODE&quot;</span>, <span class="string">&quot;production&quot;</span>);
+        Settings::override_field_with_env_var(<span class="kw-2">&amp;mut </span>settings.actix.mode, <span class="string">&quot;OVERRIDE__MODE&quot;</span>).unwrap();
+        <span class="macro">assert_eq!</span>(settings.actix.mode, Mode::Production);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">override_field_enable_compression</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">settings</span> <span class="op">=</span> <span class="ident">Settings::from_default_template</span>().<span class="ident">unwrap</span>();
-        <span class="macro">assert!</span>(<span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">enable_compression</span>);
-        <span class="ident">Settings::override_field</span>(<span class="kw-2">&amp;mut</span> <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">enable_compression</span>, <span class="string">&quot;false&quot;</span>).<span class="ident">unwrap</span>();
-        <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">enable_compression</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>override_field_enable_compression() {
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
+        <span class="macro">assert!</span>(settings.actix.enable_compression);
+        Settings::override_field(<span class="kw-2">&amp;mut </span>settings.actix.enable_compression, <span class="string">&quot;false&quot;</span>).unwrap();
+        <span class="macro">assert!</span>(!settings.actix.enable_compression);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">override_field_with_env_var_enable_compression</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">settings</span> <span class="op">=</span> <span class="ident">Settings::from_default_template</span>().<span class="ident">unwrap</span>();
-        <span class="macro">assert!</span>(<span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">enable_compression</span>);
-        <span class="ident">std::env::set_var</span>(<span class="string">&quot;OVERRIDE__ENABLE_COMPRESSION&quot;</span>, <span class="string">&quot;false&quot;</span>);
-        <span class="ident">Settings::override_field_with_env_var</span>(
-            <span class="kw-2">&amp;mut</span> <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">enable_compression</span>,
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>override_field_with_env_var_enable_compression() {
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
+        <span class="macro">assert!</span>(settings.actix.enable_compression);
+        std::env::set_var(<span class="string">&quot;OVERRIDE__ENABLE_COMPRESSION&quot;</span>, <span class="string">&quot;false&quot;</span>);
+        Settings::override_field_with_env_var(
+            <span class="kw-2">&amp;mut </span>settings.actix.enable_compression,
             <span class="string">&quot;OVERRIDE__ENABLE_COMPRESSION&quot;</span>,
         )
-        .<span class="ident">unwrap</span>();
-        <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">enable_compression</span>);
+        .unwrap();
+        <span class="macro">assert!</span>(!settings.actix.enable_compression);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">override_field_enable_log</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">settings</span> <span class="op">=</span> <span class="ident">Settings::from_default_template</span>().<span class="ident">unwrap</span>();
-        <span class="macro">assert!</span>(<span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">enable_log</span>);
-        <span class="ident">Settings::override_field</span>(<span class="kw-2">&amp;mut</span> <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">enable_log</span>, <span class="string">&quot;false&quot;</span>).<span class="ident">unwrap</span>();
-        <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">enable_log</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>override_field_enable_log() {
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
+        <span class="macro">assert!</span>(settings.actix.enable_log);
+        Settings::override_field(<span class="kw-2">&amp;mut </span>settings.actix.enable_log, <span class="string">&quot;false&quot;</span>).unwrap();
+        <span class="macro">assert!</span>(!settings.actix.enable_log);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">override_field_with_env_var_enable_log</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">settings</span> <span class="op">=</span> <span class="ident">Settings::from_default_template</span>().<span class="ident">unwrap</span>();
-        <span class="macro">assert!</span>(<span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">enable_log</span>);
-        <span class="ident">std::env::set_var</span>(<span class="string">&quot;OVERRIDE__ENABLE_LOG&quot;</span>, <span class="string">&quot;false&quot;</span>);
-        <span class="ident">Settings::override_field_with_env_var</span>(
-            <span class="kw-2">&amp;mut</span> <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">enable_log</span>,
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>override_field_with_env_var_enable_log() {
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
+        <span class="macro">assert!</span>(settings.actix.enable_log);
+        std::env::set_var(<span class="string">&quot;OVERRIDE__ENABLE_LOG&quot;</span>, <span class="string">&quot;false&quot;</span>);
+        Settings::override_field_with_env_var(
+            <span class="kw-2">&amp;mut </span>settings.actix.enable_log,
             <span class="string">&quot;OVERRIDE__ENABLE_LOG&quot;</span>,
         )
-        .<span class="ident">unwrap</span>();
-        <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">enable_log</span>);
+        .unwrap();
+        <span class="macro">assert!</span>(!settings.actix.enable_log);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">override_field_num_workers</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">settings</span> <span class="op">=</span> <span class="ident">Settings::from_default_template</span>().<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">num_workers</span>, <span class="ident">NumWorkers::Default</span>);
-        <span class="ident">Settings::override_field</span>(<span class="kw-2">&amp;mut</span> <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">num_workers</span>, <span class="string">&quot;42&quot;</span>).<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">num_workers</span>, <span class="ident">NumWorkers::Manual</span>(<span class="number">42</span>));
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>override_field_num_workers() {
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
+        <span class="macro">assert_eq!</span>(settings.actix.num_workers, NumWorkers::Default);
+        Settings::override_field(<span class="kw-2">&amp;mut </span>settings.actix.num_workers, <span class="string">&quot;42&quot;</span>).unwrap();
+        <span class="macro">assert_eq!</span>(settings.actix.num_workers, NumWorkers::Manual(<span class="number">42</span>));
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">override_field_with_env_var_num_workers</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">settings</span> <span class="op">=</span> <span class="ident">Settings::from_default_template</span>().<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">num_workers</span>, <span class="ident">NumWorkers::Default</span>);
-        <span class="ident">std::env::set_var</span>(<span class="string">&quot;OVERRIDE__NUM_WORKERS&quot;</span>, <span class="string">&quot;42&quot;</span>);
-        <span class="ident">Settings::override_field_with_env_var</span>(
-            <span class="kw-2">&amp;mut</span> <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">num_workers</span>,
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>override_field_with_env_var_num_workers() {
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
+        <span class="macro">assert_eq!</span>(settings.actix.num_workers, NumWorkers::Default);
+        std::env::set_var(<span class="string">&quot;OVERRIDE__NUM_WORKERS&quot;</span>, <span class="string">&quot;42&quot;</span>);
+        Settings::override_field_with_env_var(
+            <span class="kw-2">&amp;mut </span>settings.actix.num_workers,
             <span class="string">&quot;OVERRIDE__NUM_WORKERS&quot;</span>,
         )
-        .<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">num_workers</span>, <span class="ident">NumWorkers::Manual</span>(<span class="number">42</span>));
+        .unwrap();
+        <span class="macro">assert_eq!</span>(settings.actix.num_workers, NumWorkers::Manual(<span class="number">42</span>));
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">override_field_backlog</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">settings</span> <span class="op">=</span> <span class="ident">Settings::from_default_template</span>().<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">backlog</span>, <span class="ident">Backlog::Default</span>);
-        <span class="ident">Settings::override_field</span>(<span class="kw-2">&amp;mut</span> <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">backlog</span>, <span class="string">&quot;42&quot;</span>).<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">backlog</span>, <span class="ident">Backlog::Manual</span>(<span class="number">42</span>));
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>override_field_backlog() {
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
+        <span class="macro">assert_eq!</span>(settings.actix.backlog, Backlog::Default);
+        Settings::override_field(<span class="kw-2">&amp;mut </span>settings.actix.backlog, <span class="string">&quot;42&quot;</span>).unwrap();
+        <span class="macro">assert_eq!</span>(settings.actix.backlog, Backlog::Manual(<span class="number">42</span>));
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">override_field_with_env_var_backlog</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">settings</span> <span class="op">=</span> <span class="ident">Settings::from_default_template</span>().<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">backlog</span>, <span class="ident">Backlog::Default</span>);
-        <span class="ident">std::env::set_var</span>(<span class="string">&quot;OVERRIDE__BACKLOG&quot;</span>, <span class="string">&quot;42&quot;</span>);
-        <span class="ident">Settings::override_field_with_env_var</span>(<span class="kw-2">&amp;mut</span> <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">backlog</span>, <span class="string">&quot;OVERRIDE__BACKLOG&quot;</span>)
-            .<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">backlog</span>, <span class="ident">Backlog::Manual</span>(<span class="number">42</span>));
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>override_field_with_env_var_backlog() {
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
+        <span class="macro">assert_eq!</span>(settings.actix.backlog, Backlog::Default);
+        std::env::set_var(<span class="string">&quot;OVERRIDE__BACKLOG&quot;</span>, <span class="string">&quot;42&quot;</span>);
+        Settings::override_field_with_env_var(<span class="kw-2">&amp;mut </span>settings.actix.backlog, <span class="string">&quot;OVERRIDE__BACKLOG&quot;</span>)
+            .unwrap();
+        <span class="macro">assert_eq!</span>(settings.actix.backlog, Backlog::Manual(<span class="number">42</span>));
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">override_field_max_connections</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">settings</span> <span class="op">=</span> <span class="ident">Settings::from_default_template</span>().<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">max_connections</span>, <span class="ident">MaxConnections::Default</span>);
-        <span class="ident">Settings::override_field</span>(<span class="kw-2">&amp;mut</span> <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">max_connections</span>, <span class="string">&quot;42&quot;</span>).<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">max_connections</span>, <span class="ident">MaxConnections::Manual</span>(<span class="number">42</span>));
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>override_field_max_connections() {
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
+        <span class="macro">assert_eq!</span>(settings.actix.max_connections, MaxConnections::Default);
+        Settings::override_field(<span class="kw-2">&amp;mut </span>settings.actix.max_connections, <span class="string">&quot;42&quot;</span>).unwrap();
+        <span class="macro">assert_eq!</span>(settings.actix.max_connections, MaxConnections::Manual(<span class="number">42</span>));
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">override_field_with_env_var_max_connections</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">settings</span> <span class="op">=</span> <span class="ident">Settings::from_default_template</span>().<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">max_connections</span>, <span class="ident">MaxConnections::Default</span>);
-        <span class="ident">std::env::set_var</span>(<span class="string">&quot;OVERRIDE__MAX_CONNECTIONS&quot;</span>, <span class="string">&quot;42&quot;</span>);
-        <span class="ident">Settings::override_field_with_env_var</span>(
-            <span class="kw-2">&amp;mut</span> <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">max_connections</span>,
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>override_field_with_env_var_max_connections() {
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
+        <span class="macro">assert_eq!</span>(settings.actix.max_connections, MaxConnections::Default);
+        std::env::set_var(<span class="string">&quot;OVERRIDE__MAX_CONNECTIONS&quot;</span>, <span class="string">&quot;42&quot;</span>);
+        Settings::override_field_with_env_var(
+            <span class="kw-2">&amp;mut </span>settings.actix.max_connections,
             <span class="string">&quot;OVERRIDE__MAX_CONNECTIONS&quot;</span>,
         )
-        .<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">max_connections</span>, <span class="ident">MaxConnections::Manual</span>(<span class="number">42</span>));
+        .unwrap();
+        <span class="macro">assert_eq!</span>(settings.actix.max_connections, MaxConnections::Manual(<span class="number">42</span>));
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">override_field_max_connection_rate</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">settings</span> <span class="op">=</span> <span class="ident">Settings::from_default_template</span>().<span class="ident">unwrap</span>();
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>override_field_max_connection_rate() {
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
         <span class="macro">assert_eq!</span>(
-            <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">max_connection_rate</span>,
-            <span class="ident">MaxConnectionRate::Default</span>
+            settings.actix.max_connection_rate,
+            MaxConnectionRate::Default
         );
-        <span class="ident">Settings::override_field</span>(<span class="kw-2">&amp;mut</span> <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">max_connection_rate</span>, <span class="string">&quot;42&quot;</span>).<span class="ident">unwrap</span>();
+        Settings::override_field(<span class="kw-2">&amp;mut </span>settings.actix.max_connection_rate, <span class="string">&quot;42&quot;</span>).unwrap();
         <span class="macro">assert_eq!</span>(
-            <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">max_connection_rate</span>,
-            <span class="ident">MaxConnectionRate::Manual</span>(<span class="number">42</span>)
+            settings.actix.max_connection_rate,
+            MaxConnectionRate::Manual(<span class="number">42</span>)
         );
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">override_field_with_env_var_max_connection_rate</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">settings</span> <span class="op">=</span> <span class="ident">Settings::from_default_template</span>().<span class="ident">unwrap</span>();
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>override_field_with_env_var_max_connection_rate() {
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
         <span class="macro">assert_eq!</span>(
-            <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">max_connection_rate</span>,
-            <span class="ident">MaxConnectionRate::Default</span>
+            settings.actix.max_connection_rate,
+            MaxConnectionRate::Default
         );
-        <span class="ident">std::env::set_var</span>(<span class="string">&quot;OVERRIDE__MAX_CONNECTION_RATE&quot;</span>, <span class="string">&quot;42&quot;</span>);
-        <span class="ident">Settings::override_field_with_env_var</span>(
-            <span class="kw-2">&amp;mut</span> <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">max_connection_rate</span>,
+        std::env::set_var(<span class="string">&quot;OVERRIDE__MAX_CONNECTION_RATE&quot;</span>, <span class="string">&quot;42&quot;</span>);
+        Settings::override_field_with_env_var(
+            <span class="kw-2">&amp;mut </span>settings.actix.max_connection_rate,
             <span class="string">&quot;OVERRIDE__MAX_CONNECTION_RATE&quot;</span>,
         )
-        .<span class="ident">unwrap</span>();
+        .unwrap();
         <span class="macro">assert_eq!</span>(
-            <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">max_connection_rate</span>,
-            <span class="ident">MaxConnectionRate::Manual</span>(<span class="number">42</span>)
+            settings.actix.max_connection_rate,
+            MaxConnectionRate::Manual(<span class="number">42</span>)
         );
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">override_field_keep_alive</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">settings</span> <span class="op">=</span> <span class="ident">Settings::from_default_template</span>().<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">keep_alive</span>, <span class="ident">KeepAlive::Default</span>);
-        <span class="ident">Settings::override_field</span>(<span class="kw-2">&amp;mut</span> <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">keep_alive</span>, <span class="string">&quot;42 seconds&quot;</span>).<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">keep_alive</span>, <span class="ident">KeepAlive::Seconds</span>(<span class="number">42</span>));
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>override_field_keep_alive() {
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
+        <span class="macro">assert_eq!</span>(settings.actix.keep_alive, KeepAlive::Default);
+        Settings::override_field(<span class="kw-2">&amp;mut </span>settings.actix.keep_alive, <span class="string">&quot;42 seconds&quot;</span>).unwrap();
+        <span class="macro">assert_eq!</span>(settings.actix.keep_alive, KeepAlive::Seconds(<span class="number">42</span>));
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">override_field_with_env_var_keep_alive</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">settings</span> <span class="op">=</span> <span class="ident">Settings::from_default_template</span>().<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">keep_alive</span>, <span class="ident">KeepAlive::Default</span>);
-        <span class="ident">std::env::set_var</span>(<span class="string">&quot;OVERRIDE__KEEP_ALIVE&quot;</span>, <span class="string">&quot;42 seconds&quot;</span>);
-        <span class="ident">Settings::override_field_with_env_var</span>(
-            <span class="kw-2">&amp;mut</span> <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">keep_alive</span>,
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>override_field_with_env_var_keep_alive() {
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
+        <span class="macro">assert_eq!</span>(settings.actix.keep_alive, KeepAlive::Default);
+        std::env::set_var(<span class="string">&quot;OVERRIDE__KEEP_ALIVE&quot;</span>, <span class="string">&quot;42 seconds&quot;</span>);
+        Settings::override_field_with_env_var(
+            <span class="kw-2">&amp;mut </span>settings.actix.keep_alive,
             <span class="string">&quot;OVERRIDE__KEEP_ALIVE&quot;</span>,
         )
-        .<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">keep_alive</span>, <span class="ident">KeepAlive::Seconds</span>(<span class="number">42</span>));
+        .unwrap();
+        <span class="macro">assert_eq!</span>(settings.actix.keep_alive, KeepAlive::Seconds(<span class="number">42</span>));
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">override_field_client_timeout</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">settings</span> <span class="op">=</span> <span class="ident">Settings::from_default_template</span>().<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">client_timeout</span>, <span class="ident">Timeout::Default</span>);
-        <span class="ident">Settings::override_field</span>(<span class="kw-2">&amp;mut</span> <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">client_timeout</span>, <span class="string">&quot;42 seconds&quot;</span>).<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">client_timeout</span>, <span class="ident">Timeout::Seconds</span>(<span class="number">42</span>));
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>override_field_client_timeout() {
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
+        <span class="macro">assert_eq!</span>(settings.actix.client_timeout, Timeout::Default);
+        Settings::override_field(<span class="kw-2">&amp;mut </span>settings.actix.client_timeout, <span class="string">&quot;42 seconds&quot;</span>).unwrap();
+        <span class="macro">assert_eq!</span>(settings.actix.client_timeout, Timeout::Seconds(<span class="number">42</span>));
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">override_field_with_env_var_client_timeout</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">settings</span> <span class="op">=</span> <span class="ident">Settings::from_default_template</span>().<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">client_timeout</span>, <span class="ident">Timeout::Default</span>);
-        <span class="ident">std::env::set_var</span>(<span class="string">&quot;OVERRIDE__CLIENT_TIMEOUT&quot;</span>, <span class="string">&quot;42 seconds&quot;</span>);
-        <span class="ident">Settings::override_field_with_env_var</span>(
-            <span class="kw-2">&amp;mut</span> <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">client_timeout</span>,
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>override_field_with_env_var_client_timeout() {
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
+        <span class="macro">assert_eq!</span>(settings.actix.client_timeout, Timeout::Default);
+        std::env::set_var(<span class="string">&quot;OVERRIDE__CLIENT_TIMEOUT&quot;</span>, <span class="string">&quot;42 seconds&quot;</span>);
+        Settings::override_field_with_env_var(
+            <span class="kw-2">&amp;mut </span>settings.actix.client_timeout,
             <span class="string">&quot;OVERRIDE__CLIENT_TIMEOUT&quot;</span>,
         )
-        .<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">client_timeout</span>, <span class="ident">Timeout::Seconds</span>(<span class="number">42</span>));
+        .unwrap();
+        <span class="macro">assert_eq!</span>(settings.actix.client_timeout, Timeout::Seconds(<span class="number">42</span>));
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">override_field_client_shutdown</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">settings</span> <span class="op">=</span> <span class="ident">Settings::from_default_template</span>().<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">client_shutdown</span>, <span class="ident">Timeout::Default</span>);
-        <span class="ident">Settings::override_field</span>(<span class="kw-2">&amp;mut</span> <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">client_shutdown</span>, <span class="string">&quot;42 seconds&quot;</span>).<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">client_shutdown</span>, <span class="ident">Timeout::Seconds</span>(<span class="number">42</span>));
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>override_field_client_shutdown() {
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
+        <span class="macro">assert_eq!</span>(settings.actix.client_shutdown, Timeout::Default);
+        Settings::override_field(<span class="kw-2">&amp;mut </span>settings.actix.client_shutdown, <span class="string">&quot;42 seconds&quot;</span>).unwrap();
+        <span class="macro">assert_eq!</span>(settings.actix.client_shutdown, Timeout::Seconds(<span class="number">42</span>));
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">override_field_with_env_var_client_shutdown</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">settings</span> <span class="op">=</span> <span class="ident">Settings::from_default_template</span>().<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">client_shutdown</span>, <span class="ident">Timeout::Default</span>);
-        <span class="ident">std::env::set_var</span>(<span class="string">&quot;OVERRIDE__CLIENT_SHUTDOWN&quot;</span>, <span class="string">&quot;42 seconds&quot;</span>);
-        <span class="ident">Settings::override_field_with_env_var</span>(
-            <span class="kw-2">&amp;mut</span> <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">client_shutdown</span>,
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>override_field_with_env_var_client_shutdown() {
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
+        <span class="macro">assert_eq!</span>(settings.actix.client_shutdown, Timeout::Default);
+        std::env::set_var(<span class="string">&quot;OVERRIDE__CLIENT_SHUTDOWN&quot;</span>, <span class="string">&quot;42 seconds&quot;</span>);
+        Settings::override_field_with_env_var(
+            <span class="kw-2">&amp;mut </span>settings.actix.client_shutdown,
             <span class="string">&quot;OVERRIDE__CLIENT_SHUTDOWN&quot;</span>,
         )
-        .<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">client_shutdown</span>, <span class="ident">Timeout::Seconds</span>(<span class="number">42</span>));
+        .unwrap();
+        <span class="macro">assert_eq!</span>(settings.actix.client_shutdown, Timeout::Seconds(<span class="number">42</span>));
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">override_field_shutdown_timeout</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">settings</span> <span class="op">=</span> <span class="ident">Settings::from_default_template</span>().<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">shutdown_timeout</span>, <span class="ident">Timeout::Default</span>);
-        <span class="ident">Settings::override_field</span>(<span class="kw-2">&amp;mut</span> <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">shutdown_timeout</span>, <span class="string">&quot;42 seconds&quot;</span>).<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">shutdown_timeout</span>, <span class="ident">Timeout::Seconds</span>(<span class="number">42</span>));
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>override_field_shutdown_timeout() {
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
+        <span class="macro">assert_eq!</span>(settings.actix.shutdown_timeout, Timeout::Default);
+        Settings::override_field(<span class="kw-2">&amp;mut </span>settings.actix.shutdown_timeout, <span class="string">&quot;42 seconds&quot;</span>).unwrap();
+        <span class="macro">assert_eq!</span>(settings.actix.shutdown_timeout, Timeout::Seconds(<span class="number">42</span>));
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">override_field_with_env_var_shutdown_timeout</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">settings</span> <span class="op">=</span> <span class="ident">Settings::from_default_template</span>().<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">shutdown_timeout</span>, <span class="ident">Timeout::Default</span>);
-        <span class="ident">std::env::set_var</span>(<span class="string">&quot;OVERRIDE__SHUTDOWN_TIMEOUT&quot;</span>, <span class="string">&quot;42 seconds&quot;</span>);
-        <span class="ident">Settings::override_field_with_env_var</span>(
-            <span class="kw-2">&amp;mut</span> <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">shutdown_timeout</span>,
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>override_field_with_env_var_shutdown_timeout() {
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
+        <span class="macro">assert_eq!</span>(settings.actix.shutdown_timeout, Timeout::Default);
+        std::env::set_var(<span class="string">&quot;OVERRIDE__SHUTDOWN_TIMEOUT&quot;</span>, <span class="string">&quot;42 seconds&quot;</span>);
+        Settings::override_field_with_env_var(
+            <span class="kw-2">&amp;mut </span>settings.actix.shutdown_timeout,
             <span class="string">&quot;OVERRIDE__SHUTDOWN_TIMEOUT&quot;</span>,
         )
-        .<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">shutdown_timeout</span>, <span class="ident">Timeout::Seconds</span>(<span class="number">42</span>));
+        .unwrap();
+        <span class="macro">assert_eq!</span>(settings.actix.shutdown_timeout, Timeout::Seconds(<span class="number">42</span>));
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">override_field_tls_enabled</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">settings</span> <span class="op">=</span> <span class="ident">Settings::from_default_template</span>().<span class="ident">unwrap</span>();
-        <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">tls</span>.<span class="ident">enabled</span>);
-        <span class="ident">Settings::override_field</span>(<span class="kw-2">&amp;mut</span> <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">tls</span>.<span class="ident">enabled</span>, <span class="string">&quot;true&quot;</span>).<span class="ident">unwrap</span>();
-        <span class="macro">assert!</span>(<span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">tls</span>.<span class="ident">enabled</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>override_field_tls_enabled() {
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
+        <span class="macro">assert!</span>(!settings.actix.tls.enabled);
+        Settings::override_field(<span class="kw-2">&amp;mut </span>settings.actix.tls.enabled, <span class="string">&quot;true&quot;</span>).unwrap();
+        <span class="macro">assert!</span>(settings.actix.tls.enabled);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">override_field_with_env_var_tls_enabled</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">settings</span> <span class="op">=</span> <span class="ident">Settings::from_default_template</span>().<span class="ident">unwrap</span>();
-        <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">tls</span>.<span class="ident">enabled</span>);
-        <span class="ident">std::env::set_var</span>(<span class="string">&quot;OVERRIDE__TLS_ENABLED&quot;</span>, <span class="string">&quot;true&quot;</span>);
-        <span class="ident">Settings::override_field_with_env_var</span>(
-            <span class="kw-2">&amp;mut</span> <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">tls</span>.<span class="ident">enabled</span>,
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>override_field_with_env_var_tls_enabled() {
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
+        <span class="macro">assert!</span>(!settings.actix.tls.enabled);
+        std::env::set_var(<span class="string">&quot;OVERRIDE__TLS_ENABLED&quot;</span>, <span class="string">&quot;true&quot;</span>);
+        Settings::override_field_with_env_var(
+            <span class="kw-2">&amp;mut </span>settings.actix.tls.enabled,
             <span class="string">&quot;OVERRIDE__TLS_ENABLED&quot;</span>,
         )
-        .<span class="ident">unwrap</span>();
-        <span class="macro">assert!</span>(<span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">tls</span>.<span class="ident">enabled</span>);
+        .unwrap();
+        <span class="macro">assert!</span>(settings.actix.tls.enabled);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">override_field_tls_certificate</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">settings</span> <span class="op">=</span> <span class="ident">Settings::from_default_template</span>().<span class="ident">unwrap</span>();
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>override_field_tls_certificate() {
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
         <span class="macro">assert_eq!</span>(
-            <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">tls</span>.<span class="ident">certificate</span>,
-            <span class="ident">Path::new</span>(<span class="string">&quot;path/to/cert/cert.pem&quot;</span>)
+            settings.actix.tls.certificate,
+            Path::new(<span class="string">&quot;path/to/cert/cert.pem&quot;</span>)
         );
-        <span class="ident">Settings::override_field</span>(
-            <span class="kw-2">&amp;mut</span> <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">tls</span>.<span class="ident">certificate</span>,
+        Settings::override_field(
+            <span class="kw-2">&amp;mut </span>settings.actix.tls.certificate,
             <span class="string">&quot;/overridden/path/to/cert/cert.pem&quot;</span>,
         )
-        .<span class="ident">unwrap</span>();
+        .unwrap();
         <span class="macro">assert_eq!</span>(
-            <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">tls</span>.<span class="ident">certificate</span>,
-            <span class="ident">Path::new</span>(<span class="string">&quot;/overridden/path/to/cert/cert.pem&quot;</span>)
+            settings.actix.tls.certificate,
+            Path::new(<span class="string">&quot;/overridden/path/to/cert/cert.pem&quot;</span>)
         );
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">override_field_with_env_var_tls_certificate</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">settings</span> <span class="op">=</span> <span class="ident">Settings::from_default_template</span>().<span class="ident">unwrap</span>();
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>override_field_with_env_var_tls_certificate() {
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
         <span class="macro">assert_eq!</span>(
-            <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">tls</span>.<span class="ident">certificate</span>,
-            <span class="ident">Path::new</span>(<span class="string">&quot;path/to/cert/cert.pem&quot;</span>)
+            settings.actix.tls.certificate,
+            Path::new(<span class="string">&quot;path/to/cert/cert.pem&quot;</span>)
         );
-        <span class="ident">std::env::set_var</span>(
+        std::env::set_var(
             <span class="string">&quot;OVERRIDE__TLS_CERTIFICATE&quot;</span>,
             <span class="string">&quot;/overridden/path/to/cert/cert.pem&quot;</span>,
         );
-        <span class="ident">Settings::override_field_with_env_var</span>(
-            <span class="kw-2">&amp;mut</span> <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">tls</span>.<span class="ident">certificate</span>,
+        Settings::override_field_with_env_var(
+            <span class="kw-2">&amp;mut </span>settings.actix.tls.certificate,
             <span class="string">&quot;OVERRIDE__TLS_CERTIFICATE&quot;</span>,
         )
-        .<span class="ident">unwrap</span>();
+        .unwrap();
         <span class="macro">assert_eq!</span>(
-            <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">tls</span>.<span class="ident">certificate</span>,
-            <span class="ident">Path::new</span>(<span class="string">&quot;/overridden/path/to/cert/cert.pem&quot;</span>)
+            settings.actix.tls.certificate,
+            Path::new(<span class="string">&quot;/overridden/path/to/cert/cert.pem&quot;</span>)
         );
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">override_field_tls_private_key</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">settings</span> <span class="op">=</span> <span class="ident">Settings::from_default_template</span>().<span class="ident">unwrap</span>();
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>override_field_tls_private_key() {
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
         <span class="macro">assert_eq!</span>(
-            <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">tls</span>.<span class="ident">private_key</span>,
-            <span class="ident">Path::new</span>(<span class="string">&quot;path/to/cert/key.pem&quot;</span>)
+            settings.actix.tls.private_key,
+            Path::new(<span class="string">&quot;path/to/cert/key.pem&quot;</span>)
         );
-        <span class="ident">Settings::override_field</span>(
-            <span class="kw-2">&amp;mut</span> <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">tls</span>.<span class="ident">private_key</span>,
+        Settings::override_field(
+            <span class="kw-2">&amp;mut </span>settings.actix.tls.private_key,
             <span class="string">&quot;/overridden/path/to/cert/key.pem&quot;</span>,
         )
-        .<span class="ident">unwrap</span>();
+        .unwrap();
         <span class="macro">assert_eq!</span>(
-            <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">tls</span>.<span class="ident">private_key</span>,
-            <span class="ident">Path::new</span>(<span class="string">&quot;/overridden/path/to/cert/key.pem&quot;</span>)
+            settings.actix.tls.private_key,
+            Path::new(<span class="string">&quot;/overridden/path/to/cert/key.pem&quot;</span>)
         );
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">override_field_with_env_var_tls_private_key</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">settings</span> <span class="op">=</span> <span class="ident">Settings::from_default_template</span>().<span class="ident">unwrap</span>();
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>override_field_with_env_var_tls_private_key() {
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
         <span class="macro">assert_eq!</span>(
-            <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">tls</span>.<span class="ident">private_key</span>,
-            <span class="ident">Path::new</span>(<span class="string">&quot;path/to/cert/key.pem&quot;</span>)
+            settings.actix.tls.private_key,
+            Path::new(<span class="string">&quot;path/to/cert/key.pem&quot;</span>)
         );
-        <span class="ident">std::env::set_var</span>(
+        std::env::set_var(
             <span class="string">&quot;OVERRIDE__TLS_PRIVATE_KEY&quot;</span>,
             <span class="string">&quot;/overridden/path/to/cert/key.pem&quot;</span>,
         );
-        <span class="ident">Settings::override_field_with_env_var</span>(
-            <span class="kw-2">&amp;mut</span> <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">tls</span>.<span class="ident">private_key</span>,
+        Settings::override_field_with_env_var(
+            <span class="kw-2">&amp;mut </span>settings.actix.tls.private_key,
             <span class="string">&quot;OVERRIDE__TLS_PRIVATE_KEY&quot;</span>,
         )
-        .<span class="ident">unwrap</span>();
+        .unwrap();
         <span class="macro">assert_eq!</span>(
-            <span class="ident">settings</span>.<span class="ident">actix</span>.<span class="ident">tls</span>.<span class="ident">private_key</span>,
-            <span class="ident">Path::new</span>(<span class="string">&quot;/overridden/path/to/cert/key.pem&quot;</span>)
+            settings.actix.tls.private_key,
+            Path::new(<span class="string">&quot;/overridden/path/to/cert/key.pem&quot;</span>)
         );
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">override_extended_field_with_custom_type</span>() {
-        <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Deserialize</span>)]</span>
-        <span class="kw">struct</span> <span class="ident">NestedSetting</span> {
-            <span class="ident">foo</span>: <span class="ident">String</span>,
-            <span class="ident">bar</span>: <span class="ident">bool</span>,
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>override_extended_field_with_custom_type() {
+        <span class="attribute">#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+        </span><span class="kw">struct </span>NestedSetting {
+            foo: String,
+            bar: bool,
         }
 
-        <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Deserialize</span>)]</span>
-        <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename_all</span> <span class="op">=</span> <span class="string">&quot;kebab-case&quot;</span>)]</span>
-        <span class="kw">struct</span> <span class="ident">AppSettings</span> {
-            <span class="ident">example_name</span>: <span class="ident">String</span>,
-            <span class="ident">nested_field</span>: <span class="ident">NestedSetting</span>,
+        <span class="attribute">#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+        #[serde(rename_all = <span class="string">&quot;kebab-case&quot;</span>)]
+        </span><span class="kw">struct </span>AppSettings {
+            example_name: String,
+            nested_field: NestedSetting,
         }
 
-        <span class="kw">type</span> <span class="ident">CustomSettings</span> <span class="op">=</span> <span class="ident">BasicSettings</span><span class="op">&lt;</span><span class="ident">AppSettings</span><span class="op">&gt;</span>;
+        <span class="kw">type </span>CustomSettings = BasicSettings&lt;AppSettings&gt;;
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">settings</span> <span class="op">=</span> <span class="ident">CustomSettings::from_template</span>(
-            <span class="kw-2">&amp;</span>(<span class="ident">CustomSettings::DEFAULT_TOML_TEMPLATE</span>.<span class="ident">to_string</span>()
-                <span class="comment">// NOTE: Add these entries to the `[application]` table:</span>
-                <span class="op">+</span> <span class="string">&quot;\nexample-name = \&quot;example value\&quot;&quot;</span>
-                <span class="op">+</span> <span class="string">&quot;\nnested-field = { foo = \&quot;foo\&quot;, bar = false }&quot;</span>),
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = CustomSettings::from_template(
+            <span class="kw-2">&amp;</span>(CustomSettings::DEFAULT_TOML_TEMPLATE.to_string()
+                <span class="comment">// NOTE: Add these entries to the `[application]` table:
+                </span>+ <span class="string">&quot;\nexample-name = \&quot;example value\&quot;&quot;
+                </span>+ <span class="string">&quot;\nnested-field = { foo = \&quot;foo\&quot;, bar = false }&quot;</span>),
         )
-        .<span class="ident">unwrap</span>();
+        .unwrap();
 
         <span class="macro">assert_eq!</span>(
-            <span class="ident">settings</span>.<span class="ident">application</span>,
-            <span class="ident">AppSettings</span> {
-                <span class="ident">example_name</span>: <span class="string">&quot;example value&quot;</span>.<span class="ident">into</span>(),
-                <span class="ident">nested_field</span>: <span class="ident">NestedSetting</span> {
-                    <span class="ident">foo</span>: <span class="string">&quot;foo&quot;</span>.<span class="ident">into</span>(),
-                    <span class="ident">bar</span>: <span class="bool-val">false</span>,
+            settings.application,
+            AppSettings {
+                example_name: <span class="string">&quot;example value&quot;</span>.into(),
+                nested_field: NestedSetting {
+                    foo: <span class="string">&quot;foo&quot;</span>.into(),
+                    bar: <span class="bool-val">false</span>,
                 },
             }
         );
 
-        <span class="ident">CustomSettings::override_field</span>(
-            <span class="kw-2">&amp;mut</span> <span class="ident">settings</span>.<span class="ident">application</span>.<span class="ident">example_name</span>,
+        CustomSettings::override_field(
+            <span class="kw-2">&amp;mut </span>settings.application.example_name,
             <span class="string">&quot;/overridden/path/to/cert/key.pem&quot;</span>,
         )
-        .<span class="ident">unwrap</span>();
+        .unwrap();
 
         <span class="macro">assert_eq!</span>(
-            <span class="ident">settings</span>.<span class="ident">application</span>,
-            <span class="ident">AppSettings</span> {
-                <span class="ident">example_name</span>: <span class="string">&quot;/overridden/path/to/cert/key.pem&quot;</span>.<span class="ident">into</span>(),
-                <span class="ident">nested_field</span>: <span class="ident">NestedSetting</span> {
-                    <span class="ident">foo</span>: <span class="string">&quot;foo&quot;</span>.<span class="ident">into</span>(),
-                    <span class="ident">bar</span>: <span class="bool-val">false</span>,
+            settings.application,
+            AppSettings {
+                example_name: <span class="string">&quot;/overridden/path/to/cert/key.pem&quot;</span>.into(),
+                nested_field: NestedSetting {
+                    foo: <span class="string">&quot;foo&quot;</span>.into(),
+                    bar: <span class="bool-val">false</span>,
                 },
             }
         );
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_settings" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (34a6cae28 2022-08-09)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_settings" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (060e47f74 2022-08-23)" ></div></body></html>

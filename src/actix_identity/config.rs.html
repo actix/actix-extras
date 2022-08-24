@@ -99,106 +99,106 @@
 <span id="99">99</span>
 <span id="100">100</span>
 <span id="101">101</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Configuration options to tune the behaviour of [`IdentityMiddleware`].</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Configuration options to tune the behaviour of [`IdentityMiddleware`].
 
-<span class="kw">use</span> <span class="ident">std::time::Duration</span>;
+</span><span class="kw">use </span>std::time::Duration;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::IdentityMiddleware</span>;
+<span class="kw">use </span><span class="kw">crate</span>::IdentityMiddleware;
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">Configuration</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">on_logout</span>: <span class="ident">LogoutBehaviour</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">login_deadline</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Duration</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">visit_deadline</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Duration</span><span class="op">&gt;</span>,
+<span class="attribute">#[derive(Debug, Clone)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Configuration {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) on_logout: LogoutBehaviour,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) login_deadline: <span class="prelude-ty">Option</span>&lt;Duration&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) visit_deadline: <span class="prelude-ty">Option</span>&lt;Duration&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">Configuration</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">on_logout</span>: <span class="ident">LogoutBehaviour::PurgeSession</span>,
-            <span class="ident">login_deadline</span>: <span class="prelude-val">None</span>,
-            <span class="ident">visit_deadline</span>: <span class="prelude-val">None</span>,
+<span class="kw">impl </span>Default <span class="kw">for </span>Configuration {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            on_logout: LogoutBehaviour::PurgeSession,
+            login_deadline: <span class="prelude-val">None</span>,
+            visit_deadline: <span class="prelude-val">None</span>,
         }
     }
 }
 
-<span class="doccomment">/// `LogoutBehaviour` controls what actions are going to be performed when [`Identity::logout`] is</span>
-<span class="doccomment">/// invoked.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [`Identity::logout`]: crate::Identity::logout</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-<span class="attribute">#[<span class="ident">non_exhaustive</span>]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">LogoutBehaviour</span> {
-    <span class="doccomment">/// When [`Identity::logout`](crate::Identity::logout) is called, purge the current session.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This behaviour might be desirable when you have stored additional information in the</span>
-    <span class="doccomment">/// session state that are tied to the user&#39;s identity and should not be retained after logout.</span>
-    <span class="ident">PurgeSession</span>,
+<span class="doccomment">/// `LogoutBehaviour` controls what actions are going to be performed when [`Identity::logout`] is
+/// invoked.
+///
+/// [`Identity::logout`]: crate::Identity::logout
+</span><span class="attribute">#[derive(Debug, Clone)]
+#[non_exhaustive]
+</span><span class="kw">pub enum </span>LogoutBehaviour {
+    <span class="doccomment">/// When [`Identity::logout`](crate::Identity::logout) is called, purge the current session.
+    ///
+    /// This behaviour might be desirable when you have stored additional information in the
+    /// session state that are tied to the user&#39;s identity and should not be retained after logout.
+    </span>PurgeSession,
 
-    <span class="doccomment">/// When [`Identity::logout`](crate::Identity::logout) is called, remove the identity</span>
-    <span class="doccomment">/// information from the current session state. The session itself is not destroyed.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This behaviour might be desirable when you have stored information in the session state that</span>
-    <span class="doccomment">/// is not tied to the user&#39;s identity and should be retained after logout.</span>
-    <span class="ident">DeleteIdentityKeys</span>,
+    <span class="doccomment">/// When [`Identity::logout`](crate::Identity::logout) is called, remove the identity
+    /// information from the current session state. The session itself is not destroyed.
+    ///
+    /// This behaviour might be desirable when you have stored information in the session state that
+    /// is not tied to the user&#39;s identity and should be retained after logout.
+    </span>DeleteIdentityKeys,
 }
 
-<span class="doccomment">/// A fluent builder to construct an [`IdentityMiddleware`] instance with custom configuration</span>
-<span class="doccomment">/// parameters.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Use [`IdentityMiddleware::builder`] to get started!</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">IdentityMiddlewareBuilder</span> {
-    <span class="ident">configuration</span>: <span class="ident">Configuration</span>,
+<span class="doccomment">/// A fluent builder to construct an [`IdentityMiddleware`] instance with custom configuration
+/// parameters.
+///
+/// Use [`IdentityMiddleware::builder`] to get started!
+</span><span class="attribute">#[derive(Debug, Clone)]
+</span><span class="kw">pub struct </span>IdentityMiddlewareBuilder {
+    configuration: Configuration,
 }
 
-<span class="kw">impl</span> <span class="ident">IdentityMiddlewareBuilder</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">configuration</span>: <span class="ident">Configuration::default</span>(),
+<span class="kw">impl </span>IdentityMiddlewareBuilder {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            configuration: Configuration::default(),
         }
     }
 
-    <span class="doccomment">/// Determines how [`Identity::logout`](crate::Identity::logout) affects the current session.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// By default, the current session is purged ([`LogoutBehaviour::PurgeSession`]).</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">logout_behaviour</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">logout_behaviour</span>: <span class="ident">LogoutBehaviour</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">configuration</span>.<span class="ident">on_logout</span> <span class="op">=</span> <span class="ident">logout_behaviour</span>;
-        <span class="self">self</span>
-    }
+    <span class="doccomment">/// Determines how [`Identity::logout`](crate::Identity::logout) affects the current session.
+    ///
+    /// By default, the current session is purged ([`LogoutBehaviour::PurgeSession`]).
+    </span><span class="kw">pub fn </span>logout_behaviour(<span class="kw-2">mut </span><span class="self">self</span>, logout_behaviour: LogoutBehaviour) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.configuration.on_logout = logout_behaviour;
+        <span class="self">self
+    </span>}
 
-    <span class="doccomment">/// Automatically logs out users after a certain amount of time has passed since they logged in,</span>
-    <span class="doccomment">/// regardless of their activity pattern.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// If set to:</span>
-    <span class="doccomment">/// - `None`: login deadline is disabled.</span>
-    <span class="doccomment">/// - `Some(duration)`: login deadline is enabled and users will be logged out after `duration`</span>
-    <span class="doccomment">///   has passed since their login.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// By default, login deadline is disabled.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">login_deadline</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">deadline</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Duration</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">configuration</span>.<span class="ident">login_deadline</span> <span class="op">=</span> <span class="ident">deadline</span>;
-        <span class="self">self</span>
-    }
+    <span class="doccomment">/// Automatically logs out users after a certain amount of time has passed since they logged in,
+    /// regardless of their activity pattern.
+    ///
+    /// If set to:
+    /// - `None`: login deadline is disabled.
+    /// - `Some(duration)`: login deadline is enabled and users will be logged out after `duration`
+    ///   has passed since their login.
+    ///
+    /// By default, login deadline is disabled.
+    </span><span class="kw">pub fn </span>login_deadline(<span class="kw-2">mut </span><span class="self">self</span>, deadline: <span class="prelude-ty">Option</span>&lt;Duration&gt;) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.configuration.login_deadline = deadline;
+        <span class="self">self
+    </span>}
 
-    <span class="doccomment">/// Automatically logs out users after a certain amount of time has passed since their last</span>
-    <span class="doccomment">/// visit.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// If set to:</span>
-    <span class="doccomment">/// - `None`: visit deadline is disabled.</span>
-    <span class="doccomment">/// - `Some(duration)`: visit deadline is enabled and users will be logged out after `duration`</span>
-    <span class="doccomment">///   has passed since their last visit.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// By default, visit deadline is disabled.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">visit_deadline</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">deadline</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Duration</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">configuration</span>.<span class="ident">visit_deadline</span> <span class="op">=</span> <span class="ident">deadline</span>;
-        <span class="self">self</span>
-    }
+    <span class="doccomment">/// Automatically logs out users after a certain amount of time has passed since their last
+    /// visit.
+    ///
+    /// If set to:
+    /// - `None`: visit deadline is disabled.
+    /// - `Some(duration)`: visit deadline is enabled and users will be logged out after `duration`
+    ///   has passed since their last visit.
+    ///
+    /// By default, visit deadline is disabled.
+    </span><span class="kw">pub fn </span>visit_deadline(<span class="kw-2">mut </span><span class="self">self</span>, deadline: <span class="prelude-ty">Option</span>&lt;Duration&gt;) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.configuration.visit_deadline = deadline;
+        <span class="self">self
+    </span>}
 
-    <span class="doccomment">/// Finalises the builder and returns an [`IdentityMiddleware`] instance.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">build</span>(<span class="self">self</span>) -&gt; <span class="ident">IdentityMiddleware</span> {
-        <span class="ident">IdentityMiddleware::new</span>(<span class="self">self</span>.<span class="ident">configuration</span>)
+    <span class="doccomment">/// Finalises the builder and returns an [`IdentityMiddleware`] instance.
+    </span><span class="kw">pub fn </span>build(<span class="self">self</span>) -&gt; IdentityMiddleware {
+        IdentityMiddleware::new(<span class="self">self</span>.configuration)
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_identity" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (34a6cae28 2022-08-09)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_identity" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (060e47f74 2022-08-23)" ></div></body></html>

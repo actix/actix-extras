@@ -60,65 +60,65 @@
 <span id="58">58</span>
 <span id="59">59</span>
 <span id="60">60</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Cross-Origin Resource Sharing (CORS) controls for Actix Web.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! This middleware can be applied to both applications and resources. Once built, a</span>
-<span class="doccomment">//! [`Cors`] builder can be used as an argument for Actix Web&#39;s `App::wrap()`,</span>
-<span class="doccomment">//! `Scope::wrap()`, or `Resource::wrap()` methods.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! This CORS middleware automatically handles `OPTIONS` preflight requests.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! # Example</span>
-<span class="doccomment">//! ```no_run</span>
-<span class="doccomment">//! use actix_cors::Cors;</span>
-<span class="doccomment">//! use actix_web::{get, http, web, App, HttpRequest, HttpResponse, HttpServer};</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! #[get(&quot;/index.html&quot;)]</span>
-<span class="doccomment">//! async fn index(req: HttpRequest) -&gt; &amp;&#39;static str {</span>
-<span class="doccomment">//!     &quot;&lt;p&gt;Hello World!&lt;/p&gt;&quot;</span>
-<span class="doccomment">//! }</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! #[actix_web::main]</span>
-<span class="doccomment">//! async fn main() -&gt; std::io::Result&lt;()&gt; {</span>
-<span class="doccomment">//!     HttpServer::new(|| {</span>
-<span class="doccomment">//!         let cors = Cors::default()</span>
-<span class="doccomment">//!               .allowed_origin(&quot;https://www.rust-lang.org/&quot;)</span>
-<span class="doccomment">//!               .allowed_origin_fn(|origin, _req_head| {</span>
-<span class="doccomment">//!                   origin.as_bytes().ends_with(b&quot;.rust-lang.org&quot;)</span>
-<span class="doccomment">//!               })</span>
-<span class="doccomment">//!               .allowed_methods(vec![&quot;GET&quot;, &quot;POST&quot;])</span>
-<span class="doccomment">//!               .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])</span>
-<span class="doccomment">//!               .allowed_header(http::header::CONTENT_TYPE)</span>
-<span class="doccomment">//!               .max_age(3600);</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//!         App::new()</span>
-<span class="doccomment">//!             .wrap(cors)</span>
-<span class="doccomment">//!             .service(index)</span>
-<span class="doccomment">//!     })</span>
-<span class="doccomment">//!     .bind((&quot;127.0.0.1&quot;, 8080))?</span>
-<span class="doccomment">//!     .run()</span>
-<span class="doccomment">//!     .await;</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//!     Ok(())</span>
-<span class="doccomment">//! }</span>
-<span class="doccomment">//! ```</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Cross-Origin Resource Sharing (CORS) controls for Actix Web.
+//!
+//! This middleware can be applied to both applications and resources. Once built, a
+//! [`Cors`] builder can be used as an argument for Actix Web&#39;s `App::wrap()`,
+//! `Scope::wrap()`, or `Resource::wrap()` methods.
+//!
+//! This CORS middleware automatically handles `OPTIONS` preflight requests.
+//!
+//! # Example
+//! ```no_run
+//! use actix_cors::Cors;
+//! use actix_web::{get, http, web, App, HttpRequest, HttpResponse, HttpServer};
+//!
+//! #[get(&quot;/index.html&quot;)]
+//! async fn index(req: HttpRequest) -&gt; &amp;&#39;static str {
+//!     &quot;&lt;p&gt;Hello World!&lt;/p&gt;&quot;
+//! }
+//!
+//! #[actix_web::main]
+//! async fn main() -&gt; std::io::Result&lt;()&gt; {
+//!     HttpServer::new(|| {
+//!         let cors = Cors::default()
+//!               .allowed_origin(&quot;https://www.rust-lang.org/&quot;)
+//!               .allowed_origin_fn(|origin, _req_head| {
+//!                   origin.as_bytes().ends_with(b&quot;.rust-lang.org&quot;)
+//!               })
+//!               .allowed_methods(vec![&quot;GET&quot;, &quot;POST&quot;])
+//!               .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
+//!               .allowed_header(http::header::CONTENT_TYPE)
+//!               .max_age(3600);
+//!
+//!         App::new()
+//!             .wrap(cors)
+//!             .service(index)
+//!     })
+//!     .bind((&quot;127.0.0.1&quot;, 8080))?
+//!     .run()
+//!     .await;
+//!
+//!     Ok(())
+//! }
+//! ```
 
-<span class="attribute">#![<span class="ident">forbid</span>(<span class="ident">unsafe_code</span>)]</span>
-<span class="attribute">#![<span class="ident">deny</span>(<span class="ident">rust_2018_idioms</span>, <span class="ident">nonstandard_style</span>)]</span>
-<span class="attribute">#![<span class="ident">warn</span>(<span class="ident">future_incompatible</span>, <span class="ident">missing_docs</span>, <span class="ident">missing_debug_implementations</span>)]</span>
-<span class="attribute">#![<span class="ident">doc</span>(<span class="ident">html_logo_url</span> <span class="op">=</span> <span class="string">&quot;https://actix.rs/img/logo.png&quot;</span>)]</span>
-<span class="attribute">#![<span class="ident">doc</span>(<span class="ident">html_favicon_url</span> <span class="op">=</span> <span class="string">&quot;https://actix.rs/favicon.ico&quot;</span>)]</span>
+</span><span class="attribute">#![forbid(unsafe_code)]
+#![deny(rust_2018_idioms, nonstandard_style)]
+#![warn(future_incompatible, missing_docs, missing_debug_implementations)]
+#![doc(html_logo_url = <span class="string">&quot;https://actix.rs/img/logo.png&quot;</span>)]
+#![doc(html_favicon_url = <span class="string">&quot;https://actix.rs/favicon.ico&quot;</span>)]
 
-<span class="kw">mod</span> <span class="ident">all_or_some</span>;
-<span class="kw">mod</span> <span class="ident">builder</span>;
-<span class="kw">mod</span> <span class="ident">error</span>;
-<span class="kw">mod</span> <span class="ident">inner</span>;
-<span class="kw">mod</span> <span class="ident">middleware</span>;
+</span><span class="kw">mod </span>all_or_some;
+<span class="kw">mod </span>builder;
+<span class="kw">mod </span>error;
+<span class="kw">mod </span>inner;
+<span class="kw">mod </span>middleware;
 
-<span class="kw">use</span> <span class="ident">all_or_some::AllOrSome</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">builder::Cors</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">error::CorsError</span>;
-<span class="kw">use</span> <span class="ident">inner</span>::{<span class="ident">Inner</span>, <span class="ident">OriginFn</span>};
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">middleware::CorsMiddleware</span>;
+<span class="kw">use </span>all_or_some::AllOrSome;
+<span class="kw">pub use </span>builder::Cors;
+<span class="kw">pub use </span>error::CorsError;
+<span class="kw">use </span>inner::{Inner, OriginFn};
+<span class="kw">pub use </span>middleware::CorsMiddleware;
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_cors" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (34a6cae28 2022-08-09)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_cors" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (060e47f74 2022-08-23)" ></div></body></html>

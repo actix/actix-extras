@@ -134,141 +134,141 @@
 <span id="134">134</span>
 <span id="135">135</span>
 <span id="136">136</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Challenge for the &quot;Basic&quot; HTTP Authentication Scheme.</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Challenge for the &quot;Basic&quot; HTTP Authentication Scheme.
 
-<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">borrow::Cow</span>, <span class="ident">fmt</span>, <span class="ident">str</span>};
+</span><span class="kw">use </span>std::{borrow::Cow, fmt, str};
 
-<span class="kw">use</span> <span class="ident">actix_web</span>::{
-    <span class="ident">http::header</span>::{<span class="ident">HeaderValue</span>, <span class="ident">InvalidHeaderValue</span>, <span class="ident">TryIntoHeaderValue</span>},
-    <span class="ident">web</span>::{<span class="ident">BufMut</span>, <span class="ident">Bytes</span>, <span class="ident">BytesMut</span>},
+<span class="kw">use </span>actix_web::{
+    http::header::{HeaderValue, InvalidHeaderValue, TryIntoHeaderValue},
+    web::{BufMut, Bytes, BytesMut},
 };
 
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::Challenge</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils</span>;
+<span class="kw">use </span><span class="kw">super</span>::Challenge;
+<span class="kw">use </span><span class="kw">crate</span>::utils;
 
-<span class="doccomment">/// Challenge for [`WWW-Authenticate`] header with HTTP Basic auth scheme,</span>
-<span class="doccomment">/// described in [RFC 7617](https://tools.ietf.org/html/rfc7617)</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Examples</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// # use actix_web::{web, App, HttpRequest, HttpResponse, HttpServer};</span>
-<span class="doccomment">/// use actix_web_httpauth::headers::www_authenticate::basic::Basic;</span>
-<span class="doccomment">/// use actix_web_httpauth::headers::www_authenticate::WwwAuthenticate;</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// fn index(_req: HttpRequest) -&gt; HttpResponse {</span>
-<span class="doccomment">///     let challenge = Basic::with_realm(&quot;Restricted area&quot;);</span>
-<span class="doccomment">///</span>
-<span class="doccomment">///     HttpResponse::Unauthorized()</span>
-<span class="doccomment">///         .insert_header(WwwAuthenticate(challenge))</span>
-<span class="doccomment">///         .finish()</span>
-<span class="doccomment">/// }</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [`WWW-Authenticate`]: ../struct.WwwAuthenticate.html</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">Ord</span>, <span class="ident">PartialOrd</span>, <span class="ident">Hash</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Basic</span> {
-    <span class="comment">// &quot;realm&quot; parameter is optional now: https://tools.ietf.org/html/rfc7235#appendix-A</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">realm</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+<span class="doccomment">/// Challenge for [`WWW-Authenticate`] header with HTTP Basic auth scheme,
+/// described in [RFC 7617](https://tools.ietf.org/html/rfc7617)
+///
+/// # Examples
+/// ```
+/// # use actix_web::{web, App, HttpRequest, HttpResponse, HttpServer};
+/// use actix_web_httpauth::headers::www_authenticate::basic::Basic;
+/// use actix_web_httpauth::headers::www_authenticate::WwwAuthenticate;
+///
+/// fn index(_req: HttpRequest) -&gt; HttpResponse {
+///     let challenge = Basic::with_realm(&quot;Restricted area&quot;);
+///
+///     HttpResponse::Unauthorized()
+///         .insert_header(WwwAuthenticate(challenge))
+///         .finish()
+/// }
+/// ```
+///
+/// [`WWW-Authenticate`]: ../struct.WwwAuthenticate.html
+</span><span class="attribute">#[derive(Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default, Clone)]
+</span><span class="kw">pub struct </span>Basic {
+    <span class="comment">// &quot;realm&quot; parameter is optional now: https://tools.ietf.org/html/rfc7235#appendix-A
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) realm: <span class="prelude-ty">Option</span>&lt;Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">Basic</span> {
-    <span class="doccomment">/// Creates new `Basic` challenge with an empty `realm` field.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// # use actix_web_httpauth::headers::www_authenticate::basic::Basic;</span>
-    <span class="doccomment">/// let challenge = Basic::new();</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="ident">Basic</span> {
-        <span class="ident">Default::default</span>()
+<span class="kw">impl </span>Basic {
+    <span class="doccomment">/// Creates new `Basic` challenge with an empty `realm` field.
+    ///
+    /// # Examples
+    /// ```
+    /// # use actix_web_httpauth::headers::www_authenticate::basic::Basic;
+    /// let challenge = Basic::new();
+    /// ```
+    </span><span class="kw">pub fn </span>new() -&gt; Basic {
+        Default::default()
     }
 
-    <span class="doccomment">/// Creates new `Basic` challenge from the provided `realm` field value.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// # use actix_web_httpauth::headers::www_authenticate::basic::Basic;</span>
-    <span class="doccomment">/// let challenge = Basic::with_realm(&quot;Restricted area&quot;);</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// # use actix_web_httpauth::headers::www_authenticate::basic::Basic;</span>
-    <span class="doccomment">/// let my_realm = &quot;Earth realm&quot;.to_string();</span>
-    <span class="doccomment">/// let challenge = Basic::with_realm(my_realm);</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_realm</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">value</span>: <span class="ident">T</span>) -&gt; <span class="ident">Basic</span>
-    <span class="kw">where</span>
-        <span class="ident">T</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Creates new `Basic` challenge from the provided `realm` field value.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use actix_web_httpauth::headers::www_authenticate::basic::Basic;
+    /// let challenge = Basic::with_realm(&quot;Restricted area&quot;);
+    /// ```
+    ///
+    /// ```
+    /// # use actix_web_httpauth::headers::www_authenticate::basic::Basic;
+    /// let my_realm = &quot;Earth realm&quot;.to_string();
+    /// let challenge = Basic::with_realm(my_realm);
+    /// ```
+    </span><span class="kw">pub fn </span>with_realm&lt;T&gt;(value: T) -&gt; Basic
+    <span class="kw">where
+        </span>T: Into&lt;Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;&gt;,
     {
-        <span class="ident">Basic</span> {
-            <span class="ident">realm</span>: <span class="prelude-val">Some</span>(<span class="ident">value</span>.<span class="ident">into</span>()),
+        Basic {
+            realm: <span class="prelude-val">Some</span>(value.into()),
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-<span class="kw">impl</span> <span class="ident">Challenge</span> <span class="kw">for</span> <span class="ident">Basic</span> {
-    <span class="kw">fn</span> <span class="ident">to_bytes</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Bytes</span> {
-        <span class="comment">// 5 is for `&quot;Basic&quot;`, 9 is for `&quot;realm=\&quot;\&quot;&quot;`</span>
-        <span class="kw">let</span> <span class="ident">length</span> <span class="op">=</span> <span class="number">5</span> <span class="op">+</span> <span class="self">self</span>.<span class="ident">realm</span>.<span class="ident">as_ref</span>().<span class="ident">map_or</span>(<span class="number">0</span>, <span class="op">|</span><span class="ident">realm</span><span class="op">|</span> <span class="ident">realm</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="number">9</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buffer</span> <span class="op">=</span> <span class="ident">BytesMut::with_capacity</span>(<span class="ident">length</span>);
-        <span class="ident">buffer</span>.<span class="ident">put</span>(<span class="kw-2">&amp;</span><span class="string">b&quot;Basic&quot;</span>[..]);
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">realm</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">realm</span> {
-            <span class="ident">buffer</span>.<span class="ident">put</span>(<span class="kw-2">&amp;</span><span class="string">b&quot; realm=\&quot;&quot;</span>[..]);
-            <span class="ident">utils::put_quoted</span>(<span class="kw-2">&amp;mut</span> <span class="ident">buffer</span>, <span class="ident">realm</span>);
-            <span class="ident">buffer</span>.<span class="ident">put_u8</span>(<span class="string">b&#39;&quot;&#39;</span>);
+<span class="attribute">#[doc(hidden)]
+</span><span class="kw">impl </span>Challenge <span class="kw">for </span>Basic {
+    <span class="kw">fn </span>to_bytes(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Bytes {
+        <span class="comment">// 5 is for `&quot;Basic&quot;`, 9 is for `&quot;realm=\&quot;\&quot;&quot;`
+        </span><span class="kw">let </span>length = <span class="number">5 </span>+ <span class="self">self</span>.realm.as_ref().map_or(<span class="number">0</span>, |realm| realm.len() + <span class="number">9</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>buffer = BytesMut::with_capacity(length);
+        buffer.put(<span class="kw-2">&amp;</span><span class="string">b&quot;Basic&quot;</span>[..]);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>realm) = <span class="self">self</span>.realm {
+            buffer.put(<span class="kw-2">&amp;</span><span class="string">b&quot; realm=\&quot;&quot;</span>[..]);
+            utils::put_quoted(<span class="kw-2">&amp;mut </span>buffer, realm);
+            buffer.put_u8(<span class="string">b&#39;&quot;&#39;</span>);
         }
 
-        <span class="ident">buffer</span>.<span class="ident">freeze</span>()
+        buffer.freeze()
     }
 }
 
-<span class="kw">impl</span> <span class="ident">fmt::Display</span> <span class="kw">for</span> <span class="ident">Basic</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">fmt::Error</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">to_bytes</span>();
-        <span class="kw">let</span> <span class="ident">repr</span> <span class="op">=</span> <span class="ident">str::from_utf8</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>)
-            <span class="comment">// Should not happen since challenges are crafted manually</span>
-            <span class="comment">// from a `&amp;&#39;static str` or `String`</span>
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">fmt::Error</span>)<span class="question-mark">?</span>;
+<span class="kw">impl </span>fmt::Display <span class="kw">for </span>Basic {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), fmt::Error&gt; {
+        <span class="kw">let </span>bytes = <span class="self">self</span>.to_bytes();
+        <span class="kw">let </span>repr = str::from_utf8(<span class="kw-2">&amp;</span>bytes)
+            <span class="comment">// Should not happen since challenges are crafted manually
+            // from a `&amp;&#39;static str` or `String`
+            </span>.map_err(|<span class="kw">_</span>| fmt::Error)<span class="question-mark">?</span>;
 
-        <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="ident">repr</span>)
+        f.write_str(repr)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">TryIntoHeaderValue</span> <span class="kw">for</span> <span class="ident">Basic</span> {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">InvalidHeaderValue</span>;
+<span class="kw">impl </span>TryIntoHeaderValue <span class="kw">for </span>Basic {
+    <span class="kw">type </span>Error = InvalidHeaderValue;
 
-    <span class="kw">fn</span> <span class="ident">try_into_value</span>(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">HeaderValue</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
-        <span class="ident">HeaderValue::from_maybe_shared</span>(<span class="self">self</span>.<span class="ident">to_bytes</span>())
+    <span class="kw">fn </span>try_into_value(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;HeaderValue, <span class="self">Self</span>::Error&gt; {
+        HeaderValue::from_maybe_shared(<span class="self">self</span>.to_bytes())
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_plain_into_header_value</span>() {
-        <span class="kw">let</span> <span class="ident">challenge</span> <span class="op">=</span> <span class="ident">Basic</span> { <span class="ident">realm</span>: <span class="prelude-val">None</span> };
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_plain_into_header_value() {
+        <span class="kw">let </span>challenge = Basic { realm: <span class="prelude-val">None </span>};
 
-        <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">challenge</span>.<span class="ident">try_into_value</span>();
-        <span class="macro">assert!</span>(<span class="ident">value</span>.<span class="ident">is_ok</span>());
-        <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">value</span>.<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">value</span>, <span class="string">&quot;Basic&quot;</span>);
+        <span class="kw">let </span>value = challenge.try_into_value();
+        <span class="macro">assert!</span>(value.is_ok());
+        <span class="kw">let </span>value = value.unwrap();
+        <span class="macro">assert_eq!</span>(value, <span class="string">&quot;Basic&quot;</span>);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_with_realm_into_header_value</span>() {
-        <span class="kw">let</span> <span class="ident">challenge</span> <span class="op">=</span> <span class="ident">Basic</span> {
-            <span class="ident">realm</span>: <span class="prelude-val">Some</span>(<span class="string">&quot;Restricted area&quot;</span>.<span class="ident">into</span>()),
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_with_realm_into_header_value() {
+        <span class="kw">let </span>challenge = Basic {
+            realm: <span class="prelude-val">Some</span>(<span class="string">&quot;Restricted area&quot;</span>.into()),
         };
 
-        <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">challenge</span>.<span class="ident">try_into_value</span>();
-        <span class="macro">assert!</span>(<span class="ident">value</span>.<span class="ident">is_ok</span>());
-        <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">value</span>.<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">value</span>, <span class="string">&quot;Basic realm=\&quot;Restricted area\&quot;&quot;</span>);
+        <span class="kw">let </span>value = challenge.try_into_value();
+        <span class="macro">assert!</span>(value.is_ok());
+        <span class="kw">let </span>value = value.unwrap();
+        <span class="macro">assert_eq!</span>(value, <span class="string">&quot;Basic realm=\&quot;Restricted area\&quot;&quot;</span>);
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="actix_web_httpauth" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (34a6cae28 2022-08-09)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="actix_web_httpauth" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (060e47f74 2022-08-23)" ></div></body></html>

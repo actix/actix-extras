@@ -19,24 +19,24 @@
 <span id="17">17</span>
 <span id="18">18</span>
 <span id="19">19</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::convert::TryInto</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>std::convert::TryInto;
 
-<span class="kw">use</span> <span class="ident">rand</span>::{<span class="ident">distributions::Alphanumeric</span>, <span class="ident">rngs::OsRng</span>, <span class="ident">Rng</span> <span class="kw">as</span> <span class="kw">_</span>};
+<span class="kw">use </span>rand::{distributions::Alphanumeric, rngs::OsRng, Rng <span class="kw">as _</span>};
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::storage::SessionKey</span>;
+<span class="kw">use </span><span class="kw">crate</span>::storage::SessionKey;
 
-<span class="doccomment">/// Session key generation routine that follows [OWASP recommendations].</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [OWASP recommendations]: https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html#session-id-entropy</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">generate_session_key</span>() -&gt; <span class="ident">SessionKey</span> {
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">std::iter::repeat</span>(())
-        .<span class="ident">map</span>(<span class="op">|</span>()<span class="op">|</span> <span class="ident">OsRng</span>.<span class="ident">sample</span>(<span class="ident">Alphanumeric</span>))
-        .<span class="ident">take</span>(<span class="number">64</span>)
-        .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
+<span class="doccomment">/// Session key generation routine that follows [OWASP recommendations].
+///
+/// [OWASP recommendations]: https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html#session-id-entropy
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>generate_session_key() -&gt; SessionKey {
+    <span class="kw">let </span>value = std::iter::repeat(())
+        .map(|()| OsRng.sample(Alphanumeric))
+        .take(<span class="number">64</span>)
+        .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
 
-    <span class="comment">// These unwraps will never panic because pre-conditions are always verified</span>
-    <span class="comment">// (i.e. length and character set)</span>
-    <span class="ident">String::from_utf8</span>(<span class="ident">value</span>).<span class="ident">unwrap</span>().<span class="ident">try_into</span>().<span class="ident">unwrap</span>()
+    <span class="comment">// These unwraps will never panic because pre-conditions are always verified
+    // (i.e. length and character set)
+    </span>String::from_utf8(value).unwrap().try_into().unwrap()
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="actix_session" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (34a6cae28 2022-08-09)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="actix_session" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (060e47f74 2022-08-23)" ></div></body></html>

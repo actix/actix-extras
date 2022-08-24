@@ -48,55 +48,55 @@
 <span id="48">48</span>
 <span id="49">49</span>
 <span id="50">50</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::fmt</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>std::fmt;
 
-<span class="kw">use</span> <span class="ident">actix_web::http::StatusCode</span>;
+<span class="kw">use </span>actix_web::http::StatusCode;
 
-<span class="doccomment">/// Bearer authorization error types, described in [RFC 6750].</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [RFC 6750]: https://tools.ietf.org/html/rfc6750#section-3.1</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">PartialOrd</span>, <span class="ident">Ord</span>, <span class="ident">Hash</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span> {
-    <span class="doccomment">/// The request is missing a required parameter, includes an unsupported parameter or parameter</span>
-    <span class="doccomment">/// value, repeats the same parameter, uses more than one method for including an access token,</span>
-    <span class="doccomment">/// or is otherwise malformed.</span>
-    <span class="ident">InvalidRequest</span>,
+<span class="doccomment">/// Bearer authorization error types, described in [RFC 6750].
+///
+/// [RFC 6750]: https://tools.ietf.org/html/rfc6750#section-3.1
+</span><span class="attribute">#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+</span><span class="kw">pub enum </span>Error {
+    <span class="doccomment">/// The request is missing a required parameter, includes an unsupported parameter or parameter
+    /// value, repeats the same parameter, uses more than one method for including an access token,
+    /// or is otherwise malformed.
+    </span>InvalidRequest,
 
-    <span class="doccomment">/// The access token provided is expired, revoked, malformed, or invalid for other reasons.</span>
-    <span class="ident">InvalidToken</span>,
+    <span class="doccomment">/// The access token provided is expired, revoked, malformed, or invalid for other reasons.
+    </span>InvalidToken,
 
-    <span class="doccomment">/// The request requires higher privileges than provided by the access token.</span>
-    <span class="ident">InsufficientScope</span>,
+    <span class="doccomment">/// The request requires higher privileges than provided by the access token.
+    </span>InsufficientScope,
 }
 
-<span class="kw">impl</span> <span class="ident">Error</span> {
-    <span class="doccomment">/// Returns [HTTP status code] suitable for current error type.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [HTTP status code]: `actix_web::http::StatusCode`</span>
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::trivially_copy_pass_by_ref</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">status_code</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">StatusCode</span> {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">Error::InvalidRequest</span> =&gt; <span class="ident">StatusCode::BAD_REQUEST</span>,
-            <span class="ident">Error::InvalidToken</span> =&gt; <span class="ident">StatusCode::UNAUTHORIZED</span>,
-            <span class="ident">Error::InsufficientScope</span> =&gt; <span class="ident">StatusCode::FORBIDDEN</span>,
+<span class="kw">impl </span>Error {
+    <span class="doccomment">/// Returns [HTTP status code] suitable for current error type.
+    ///
+    /// [HTTP status code]: `actix_web::http::StatusCode`
+    </span><span class="attribute">#[allow(clippy::trivially_copy_pass_by_ref)]
+    </span><span class="kw">pub fn </span>status_code(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; StatusCode {
+        <span class="kw">match </span><span class="self">self </span>{
+            Error::InvalidRequest =&gt; StatusCode::BAD_REQUEST,
+            Error::InvalidToken =&gt; StatusCode::UNAUTHORIZED,
+            Error::InsufficientScope =&gt; StatusCode::FORBIDDEN,
         }
     }
 
-    <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::trivially_copy_pass_by_ref</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_str</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">str</span> {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">Error::InvalidRequest</span> =&gt; <span class="string">&quot;invalid_request&quot;</span>,
-            <span class="ident">Error::InvalidToken</span> =&gt; <span class="string">&quot;invalid_token&quot;</span>,
-            <span class="ident">Error::InsufficientScope</span> =&gt; <span class="string">&quot;insufficient_scope&quot;</span>,
+    <span class="attribute">#[doc(hidden)]
+    #[allow(clippy::trivially_copy_pass_by_ref)]
+    </span><span class="kw">pub fn </span>as_str(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str {
+        <span class="kw">match </span><span class="self">self </span>{
+            Error::InvalidRequest =&gt; <span class="string">&quot;invalid_request&quot;</span>,
+            Error::InvalidToken =&gt; <span class="string">&quot;invalid_token&quot;</span>,
+            Error::InsufficientScope =&gt; <span class="string">&quot;insufficient_scope&quot;</span>,
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">fmt::Display</span> <span class="kw">for</span> <span class="ident">Error</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="self">self</span>.<span class="ident">as_str</span>())
+<span class="kw">impl </span>fmt::Display <span class="kw">for </span>Error {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+        f.write_str(<span class="self">self</span>.as_str())
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../../../" data-current-crate="actix_web_httpauth" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (34a6cae28 2022-08-09)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../../../" data-current-crate="actix_web_httpauth" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (060e47f74 2022-08-23)" ></div></body></html>

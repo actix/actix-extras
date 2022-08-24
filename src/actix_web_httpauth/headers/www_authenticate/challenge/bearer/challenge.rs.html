@@ -140,147 +140,147 @@
 <span id="140">140</span>
 <span id="141">141</span>
 <span id="142">142</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">borrow::Cow</span>, <span class="ident">fmt</span>, <span class="ident">str</span>};
+</pre><pre class="rust"><code><span class="kw">use </span>std::{borrow::Cow, fmt, str};
 
-<span class="kw">use</span> <span class="ident">actix_web</span>::{
-    <span class="ident">http::header</span>::{<span class="ident">HeaderValue</span>, <span class="ident">InvalidHeaderValue</span>, <span class="ident">TryIntoHeaderValue</span>},
-    <span class="ident">web</span>::{<span class="ident">BufMut</span>, <span class="ident">Bytes</span>, <span class="ident">BytesMut</span>},
+<span class="kw">use </span>actix_web::{
+    http::header::{HeaderValue, InvalidHeaderValue, TryIntoHeaderValue},
+    web::{BufMut, Bytes, BytesMut},
 };
 
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::<span class="kw">super</span>::Challenge</span>;
-<span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">BearerBuilder</span>, <span class="ident">Error</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils</span>;
+<span class="kw">use </span><span class="kw">super</span>::<span class="kw">super</span>::Challenge;
+<span class="kw">use super</span>::{BearerBuilder, Error};
+<span class="kw">use </span><span class="kw">crate</span>::utils;
 
-<span class="doccomment">/// Challenge for [`WWW-Authenticate`] header with HTTP Bearer auth scheme, described in [RFC 6750].</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Examples</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// # use actix_web::{web, App, HttpRequest, HttpResponse, HttpServer};</span>
-<span class="doccomment">/// use actix_web_httpauth::headers::www_authenticate::bearer::{</span>
-<span class="doccomment">///     Bearer, Error,</span>
-<span class="doccomment">/// };</span>
-<span class="doccomment">/// use actix_web_httpauth::headers::www_authenticate::WwwAuthenticate;</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// fn index(_req: HttpRequest) -&gt; HttpResponse {</span>
-<span class="doccomment">///     let challenge = Bearer::build()</span>
-<span class="doccomment">///         .realm(&quot;example&quot;)</span>
-<span class="doccomment">///         .scope(&quot;openid profile email&quot;)</span>
-<span class="doccomment">///         .error(Error::InvalidToken)</span>
-<span class="doccomment">///         .error_description(&quot;The access token expired&quot;)</span>
-<span class="doccomment">///         .error_uri(&quot;http://example.org&quot;)</span>
-<span class="doccomment">///         .finish();</span>
-<span class="doccomment">///</span>
-<span class="doccomment">///     HttpResponse::Unauthorized()</span>
-<span class="doccomment">///         .insert_header(WwwAuthenticate(challenge))</span>
-<span class="doccomment">///         .finish()</span>
-<span class="doccomment">/// }</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [`WWW-Authenticate`]: crate::headers::www_authenticate::WwwAuthenticate</span>
-<span class="doccomment">/// [RFC 6750]: https://tools.ietf.org/html/rfc6750#section-3</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Default</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">PartialOrd</span>, <span class="ident">Ord</span>, <span class="ident">Hash</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Bearer</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">scope</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">realm</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">error</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Error</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">error_description</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">error_uri</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+<span class="doccomment">/// Challenge for [`WWW-Authenticate`] header with HTTP Bearer auth scheme, described in [RFC 6750].
+///
+/// # Examples
+/// ```
+/// # use actix_web::{web, App, HttpRequest, HttpResponse, HttpServer};
+/// use actix_web_httpauth::headers::www_authenticate::bearer::{
+///     Bearer, Error,
+/// };
+/// use actix_web_httpauth::headers::www_authenticate::WwwAuthenticate;
+///
+/// fn index(_req: HttpRequest) -&gt; HttpResponse {
+///     let challenge = Bearer::build()
+///         .realm(&quot;example&quot;)
+///         .scope(&quot;openid profile email&quot;)
+///         .error(Error::InvalidToken)
+///         .error_description(&quot;The access token expired&quot;)
+///         .error_uri(&quot;http://example.org&quot;)
+///         .finish();
+///
+///     HttpResponse::Unauthorized()
+///         .insert_header(WwwAuthenticate(challenge))
+///         .finish()
+/// }
+/// ```
+///
+/// [`WWW-Authenticate`]: crate::headers::www_authenticate::WwwAuthenticate
+/// [RFC 6750]: https://tools.ietf.org/html/rfc6750#section-3
+</span><span class="attribute">#[derive(Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+</span><span class="kw">pub struct </span>Bearer {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) scope: <span class="prelude-ty">Option</span>&lt;Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) realm: <span class="prelude-ty">Option</span>&lt;Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) error: <span class="prelude-ty">Option</span>&lt;Error&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) error_description: <span class="prelude-ty">Option</span>&lt;Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) error_uri: <span class="prelude-ty">Option</span>&lt;Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">Bearer</span> {
-    <span class="doccomment">/// Creates the builder for `Bearer` challenge.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// # use actix_web_httpauth::headers::www_authenticate::bearer::{Bearer};</span>
-    <span class="doccomment">/// let challenge = Bearer::build()</span>
-    <span class="doccomment">///     .realm(&quot;Restricted area&quot;)</span>
-    <span class="doccomment">///     .scope(&quot;openid profile email&quot;)</span>
-    <span class="doccomment">///     .finish();</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">build</span>() -&gt; <span class="ident">BearerBuilder</span> {
-        <span class="ident">BearerBuilder::default</span>()
+<span class="kw">impl </span>Bearer {
+    <span class="doccomment">/// Creates the builder for `Bearer` challenge.
+    ///
+    /// # Examples
+    /// ```
+    /// # use actix_web_httpauth::headers::www_authenticate::bearer::{Bearer};
+    /// let challenge = Bearer::build()
+    ///     .realm(&quot;Restricted area&quot;)
+    ///     .scope(&quot;openid profile email&quot;)
+    ///     .finish();
+    /// ```
+    </span><span class="kw">pub fn </span>build() -&gt; BearerBuilder {
+        BearerBuilder::default()
     }
 }
 
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-<span class="kw">impl</span> <span class="ident">Challenge</span> <span class="kw">for</span> <span class="ident">Bearer</span> {
-    <span class="kw">fn</span> <span class="ident">to_bytes</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Bytes</span> {
-        <span class="kw">let</span> <span class="ident">desc_uri_required</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">error_description</span>
-            .<span class="ident">as_ref</span>()
-            .<span class="ident">map_or</span>(<span class="number">0</span>, <span class="op">|</span><span class="ident">desc</span><span class="op">|</span> <span class="ident">desc</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="number">20</span>)
-            <span class="op">+</span> <span class="self">self</span>.<span class="ident">error_uri</span>.<span class="ident">as_ref</span>().<span class="ident">map_or</span>(<span class="number">0</span>, <span class="op">|</span><span class="ident">url</span><span class="op">|</span> <span class="ident">url</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="number">12</span>);
+<span class="attribute">#[doc(hidden)]
+</span><span class="kw">impl </span>Challenge <span class="kw">for </span>Bearer {
+    <span class="kw">fn </span>to_bytes(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Bytes {
+        <span class="kw">let </span>desc_uri_required = <span class="self">self
+            </span>.error_description
+            .as_ref()
+            .map_or(<span class="number">0</span>, |desc| desc.len() + <span class="number">20</span>)
+            + <span class="self">self</span>.error_uri.as_ref().map_or(<span class="number">0</span>, |url| url.len() + <span class="number">12</span>);
 
-        <span class="kw">let</span> <span class="ident">capacity</span> <span class="op">=</span> <span class="number">6</span>
-            <span class="op">+</span> <span class="self">self</span>.<span class="ident">realm</span>.<span class="ident">as_ref</span>().<span class="ident">map_or</span>(<span class="number">0</span>, <span class="op">|</span><span class="ident">realm</span><span class="op">|</span> <span class="ident">realm</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="number">9</span>)
-            <span class="op">+</span> <span class="self">self</span>.<span class="ident">scope</span>.<span class="ident">as_ref</span>().<span class="ident">map_or</span>(<span class="number">0</span>, <span class="op">|</span><span class="ident">scope</span><span class="op">|</span> <span class="ident">scope</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="number">9</span>)
-            <span class="op">+</span> <span class="ident">desc_uri_required</span>;
+        <span class="kw">let </span>capacity = <span class="number">6
+            </span>+ <span class="self">self</span>.realm.as_ref().map_or(<span class="number">0</span>, |realm| realm.len() + <span class="number">9</span>)
+            + <span class="self">self</span>.scope.as_ref().map_or(<span class="number">0</span>, |scope| scope.len() + <span class="number">9</span>)
+            + desc_uri_required;
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buffer</span> <span class="op">=</span> <span class="ident">BytesMut::with_capacity</span>(<span class="ident">capacity</span>);
-        <span class="ident">buffer</span>.<span class="ident">put</span>(<span class="kw-2">&amp;</span><span class="string">b&quot;Bearer&quot;</span>[..]);
+        <span class="kw">let </span><span class="kw-2">mut </span>buffer = BytesMut::with_capacity(capacity);
+        buffer.put(<span class="kw-2">&amp;</span><span class="string">b&quot;Bearer&quot;</span>[..]);
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">realm</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">realm</span> {
-            <span class="ident">buffer</span>.<span class="ident">put</span>(<span class="kw-2">&amp;</span><span class="string">b&quot; realm=\&quot;&quot;</span>[..]);
-            <span class="ident">utils::put_quoted</span>(<span class="kw-2">&amp;mut</span> <span class="ident">buffer</span>, <span class="ident">realm</span>);
-            <span class="ident">buffer</span>.<span class="ident">put_u8</span>(<span class="string">b&#39;&quot;&#39;</span>);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>realm) = <span class="self">self</span>.realm {
+            buffer.put(<span class="kw-2">&amp;</span><span class="string">b&quot; realm=\&quot;&quot;</span>[..]);
+            utils::put_quoted(<span class="kw-2">&amp;mut </span>buffer, realm);
+            buffer.put_u8(<span class="string">b&#39;&quot;&#39;</span>);
         }
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">scope</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">scope</span> {
-            <span class="ident">buffer</span>.<span class="ident">put</span>(<span class="kw-2">&amp;</span><span class="string">b&quot; scope=\&quot;&quot;</span>[..]);
-            <span class="ident">utils::put_quoted</span>(<span class="kw-2">&amp;mut</span> <span class="ident">buffer</span>, <span class="ident">scope</span>);
-            <span class="ident">buffer</span>.<span class="ident">put_u8</span>(<span class="string">b&#39;&quot;&#39;</span>);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>scope) = <span class="self">self</span>.scope {
+            buffer.put(<span class="kw-2">&amp;</span><span class="string">b&quot; scope=\&quot;&quot;</span>[..]);
+            utils::put_quoted(<span class="kw-2">&amp;mut </span>buffer, scope);
+            buffer.put_u8(<span class="string">b&#39;&quot;&#39;</span>);
         }
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">error</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">error</span> {
-            <span class="kw">let</span> <span class="ident">error_repr</span> <span class="op">=</span> <span class="ident">error</span>.<span class="ident">as_str</span>();
-            <span class="kw">let</span> <span class="ident">remaining</span> <span class="op">=</span> <span class="ident">buffer</span>.<span class="ident">remaining_mut</span>();
-            <span class="kw">let</span> <span class="ident">required</span> <span class="op">=</span> <span class="ident">desc_uri_required</span> <span class="op">+</span> <span class="ident">error_repr</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="number">9</span>; <span class="comment">// 9 is for `&quot; error=\&quot;\&quot;&quot;`</span>
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>error) = <span class="self">self</span>.error {
+            <span class="kw">let </span>error_repr = error.as_str();
+            <span class="kw">let </span>remaining = buffer.remaining_mut();
+            <span class="kw">let </span>required = desc_uri_required + error_repr.len() + <span class="number">9</span>; <span class="comment">// 9 is for `&quot; error=\&quot;\&quot;&quot;`
 
-            <span class="kw">if</span> <span class="ident">remaining</span> <span class="op">&lt;</span> <span class="ident">required</span> {
-                <span class="ident">buffer</span>.<span class="ident">reserve</span>(<span class="ident">required</span>);
+            </span><span class="kw">if </span>remaining &lt; required {
+                buffer.reserve(required);
             }
 
-            <span class="ident">buffer</span>.<span class="ident">put</span>(<span class="kw-2">&amp;</span><span class="string">b&quot; error=\&quot;&quot;</span>[..]);
-            <span class="ident">utils::put_quoted</span>(<span class="kw-2">&amp;mut</span> <span class="ident">buffer</span>, <span class="ident">error_repr</span>);
-            <span class="ident">buffer</span>.<span class="ident">put_u8</span>(<span class="string">b&#39;&quot;&#39;</span>)
+            buffer.put(<span class="kw-2">&amp;</span><span class="string">b&quot; error=\&quot;&quot;</span>[..]);
+            utils::put_quoted(<span class="kw-2">&amp;mut </span>buffer, error_repr);
+            buffer.put_u8(<span class="string">b&#39;&quot;&#39;</span>)
         }
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">error_description</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">error_description</span> {
-            <span class="ident">buffer</span>.<span class="ident">put</span>(<span class="kw-2">&amp;</span><span class="string">b&quot; error_description=\&quot;&quot;</span>[..]);
-            <span class="ident">utils::put_quoted</span>(<span class="kw-2">&amp;mut</span> <span class="ident">buffer</span>, <span class="ident">error_description</span>);
-            <span class="ident">buffer</span>.<span class="ident">put_u8</span>(<span class="string">b&#39;&quot;&#39;</span>);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>error_description) = <span class="self">self</span>.error_description {
+            buffer.put(<span class="kw-2">&amp;</span><span class="string">b&quot; error_description=\&quot;&quot;</span>[..]);
+            utils::put_quoted(<span class="kw-2">&amp;mut </span>buffer, error_description);
+            buffer.put_u8(<span class="string">b&#39;&quot;&#39;</span>);
         }
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">error_uri</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">error_uri</span> {
-            <span class="ident">buffer</span>.<span class="ident">put</span>(<span class="kw-2">&amp;</span><span class="string">b&quot; error_uri=\&quot;&quot;</span>[..]);
-            <span class="ident">utils::put_quoted</span>(<span class="kw-2">&amp;mut</span> <span class="ident">buffer</span>, <span class="ident">error_uri</span>);
-            <span class="ident">buffer</span>.<span class="ident">put_u8</span>(<span class="string">b&#39;&quot;&#39;</span>);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>error_uri) = <span class="self">self</span>.error_uri {
+            buffer.put(<span class="kw-2">&amp;</span><span class="string">b&quot; error_uri=\&quot;&quot;</span>[..]);
+            utils::put_quoted(<span class="kw-2">&amp;mut </span>buffer, error_uri);
+            buffer.put_u8(<span class="string">b&#39;&quot;&#39;</span>);
         }
 
-        <span class="ident">buffer</span>.<span class="ident">freeze</span>()
+        buffer.freeze()
     }
 }
 
-<span class="kw">impl</span> <span class="ident">fmt::Display</span> <span class="kw">for</span> <span class="ident">Bearer</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">fmt::Error</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">to_bytes</span>();
+<span class="kw">impl </span>fmt::Display <span class="kw">for </span>Bearer {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), fmt::Error&gt; {
+        <span class="kw">let </span>bytes = <span class="self">self</span>.to_bytes();
 
-        <span class="kw">let</span> <span class="ident">repr</span> <span class="op">=</span> <span class="ident">str::from_utf8</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>)
-            <span class="comment">// Should not happen since challenges are crafted manually</span>
-            <span class="comment">// from `&amp;&#39;static str`&#39;s and Strings</span>
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">fmt::Error</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>repr = str::from_utf8(<span class="kw-2">&amp;</span>bytes)
+            <span class="comment">// Should not happen since challenges are crafted manually
+            // from `&amp;&#39;static str`&#39;s and Strings
+            </span>.map_err(|<span class="kw">_</span>| fmt::Error)<span class="question-mark">?</span>;
 
-        <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="ident">repr</span>)
+        f.write_str(repr)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">TryIntoHeaderValue</span> <span class="kw">for</span> <span class="ident">Bearer</span> {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">InvalidHeaderValue</span>;
+<span class="kw">impl </span>TryIntoHeaderValue <span class="kw">for </span>Bearer {
+    <span class="kw">type </span>Error = InvalidHeaderValue;
 
-    <span class="kw">fn</span> <span class="ident">try_into_value</span>(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">HeaderValue</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
-        <span class="ident">HeaderValue::from_maybe_shared</span>(<span class="self">self</span>.<span class="ident">to_bytes</span>())
+    <span class="kw">fn </span>try_into_value(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;HeaderValue, <span class="self">Self</span>::Error&gt; {
+        HeaderValue::from_maybe_shared(<span class="self">self</span>.to_bytes())
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../../../" data-current-crate="actix_web_httpauth" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (34a6cae28 2022-08-09)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../../../" data-current-crate="actix_web_httpauth" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (060e47f74 2022-08-23)" ></div></body></html>

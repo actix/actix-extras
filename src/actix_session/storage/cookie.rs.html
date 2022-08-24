@@ -121,126 +121,126 @@
 <span id="119">119</span>
 <span id="120">120</span>
 <span id="121">121</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::convert::TryInto</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>std::convert::TryInto;
 
-<span class="kw">use</span> <span class="ident">actix_web::cookie::time::Duration</span>;
-<span class="kw">use</span> <span class="ident">anyhow::Error</span>;
+<span class="kw">use </span>actix_web::cookie::time::Duration;
+<span class="kw">use </span>anyhow::Error;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::SessionKey</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::storage</span>::{
-    <span class="ident">interface</span>::{<span class="ident">LoadError</span>, <span class="ident">SaveError</span>, <span class="ident">SessionState</span>, <span class="ident">UpdateError</span>},
-    <span class="ident">SessionStore</span>,
+<span class="kw">use </span><span class="kw">super</span>::SessionKey;
+<span class="kw">use </span><span class="kw">crate</span>::storage::{
+    interface::{LoadError, SaveError, SessionState, UpdateError},
+    SessionStore,
 };
 
-<span class="doccomment">/// Use the session key, stored in the session cookie, as storage backend for the session state.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ```no_run</span>
-<span class="doccomment">/// use actix_web::{cookie::Key, web, App, HttpServer, HttpResponse, Error};</span>
-<span class="doccomment">/// use actix_session::{SessionMiddleware, storage::CookieSessionStore};</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// // The secret key would usually be read from a configuration file/environment variables.</span>
-<span class="doccomment">/// fn get_secret_key() -&gt; Key {</span>
-<span class="doccomment">///     # todo!()</span>
-<span class="doccomment">///     // [...]</span>
-<span class="doccomment">/// }</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// #[actix_web::main]</span>
-<span class="doccomment">/// async fn main() -&gt; std::io::Result&lt;()&gt; {</span>
-<span class="doccomment">///     let secret_key = get_secret_key();</span>
-<span class="doccomment">///     HttpServer::new(move ||</span>
-<span class="doccomment">///             App::new()</span>
-<span class="doccomment">///             .wrap(SessionMiddleware::new(CookieSessionStore::default(), secret_key.clone()))</span>
-<span class="doccomment">///             .default_service(web::to(|| HttpResponse::Ok())))</span>
-<span class="doccomment">///         .bind((&quot;127.0.0.1&quot;, 8080))?</span>
-<span class="doccomment">///         .run()</span>
-<span class="doccomment">///         .await</span>
-<span class="doccomment">/// }</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Limitations</span>
-<span class="doccomment">/// Cookies are subject to size limits so we require session keys to be shorter than 4096 bytes.</span>
-<span class="doccomment">/// This translates into a limit on the maximum size of the session state when using cookies as</span>
-<span class="doccomment">/// storage backend.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The session cookie can always be inspected by end users via the developer tools exposed by their</span>
-<span class="doccomment">/// browsers. We strongly recommend setting the policy to [`CookieContentSecurity::Private`] when</span>
-<span class="doccomment">/// using cookies as storage backend.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// There is no way to invalidate a session before its natural expiry when using cookies as the</span>
-<span class="doccomment">/// storage backend.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [`CookieContentSecurity::Private`]: crate::config::CookieContentSecurity::Private</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">docsrs</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;cookie-session&quot;</span>)))]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
-<span class="attribute">#[<span class="ident">non_exhaustive</span>]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CookieSessionStore</span>;
+<span class="doccomment">/// Use the session key, stored in the session cookie, as storage backend for the session state.
+///
+/// ```no_run
+/// use actix_web::{cookie::Key, web, App, HttpServer, HttpResponse, Error};
+/// use actix_session::{SessionMiddleware, storage::CookieSessionStore};
+///
+/// // The secret key would usually be read from a configuration file/environment variables.
+/// fn get_secret_key() -&gt; Key {
+///     # todo!()
+///     // [...]
+/// }
+///
+/// #[actix_web::main]
+/// async fn main() -&gt; std::io::Result&lt;()&gt; {
+///     let secret_key = get_secret_key();
+///     HttpServer::new(move ||
+///             App::new()
+///             .wrap(SessionMiddleware::new(CookieSessionStore::default(), secret_key.clone()))
+///             .default_service(web::to(|| HttpResponse::Ok())))
+///         .bind((&quot;127.0.0.1&quot;, 8080))?
+///         .run()
+///         .await
+/// }
+/// ```
+///
+/// # Limitations
+/// Cookies are subject to size limits so we require session keys to be shorter than 4096 bytes.
+/// This translates into a limit on the maximum size of the session state when using cookies as
+/// storage backend.
+///
+/// The session cookie can always be inspected by end users via the developer tools exposed by their
+/// browsers. We strongly recommend setting the policy to [`CookieContentSecurity::Private`] when
+/// using cookies as storage backend.
+///
+/// There is no way to invalidate a session before its natural expiry when using cookies as the
+/// storage backend.
+///
+/// [`CookieContentSecurity::Private`]: crate::config::CookieContentSecurity::Private
+</span><span class="attribute">#[cfg_attr(docsrs, doc(cfg(feature = <span class="string">&quot;cookie-session&quot;</span>)))]
+#[derive(Default)]
+#[non_exhaustive]
+</span><span class="kw">pub struct </span>CookieSessionStore;
 
-<span class="attribute">#[<span class="ident">async_trait::async_trait</span>(<span class="question-mark">?</span><span class="ident">Send</span>)]</span>
-<span class="kw">impl</span> <span class="ident">SessionStore</span> <span class="kw">for</span> <span class="ident">CookieSessionStore</span> {
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">load</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">session_key</span>: <span class="kw-2">&amp;</span><span class="ident">SessionKey</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">SessionState</span><span class="op">&gt;</span>, <span class="ident">LoadError</span><span class="op">&gt;</span> {
-        <span class="ident">serde_json::from_str</span>(<span class="ident">session_key</span>.<span class="ident">as_ref</span>())
-            .<span class="ident">map</span>(<span class="prelude-val">Some</span>)
-            .<span class="ident">map_err</span>(<span class="ident">anyhow::Error::new</span>)
-            .<span class="ident">map_err</span>(<span class="ident">LoadError::Deserialization</span>)
+<span class="attribute">#[async_trait::async_trait(<span class="question-mark">?</span>Send)]
+</span><span class="kw">impl </span>SessionStore <span class="kw">for </span>CookieSessionStore {
+    <span class="kw">async fn </span>load(<span class="kw-2">&amp;</span><span class="self">self</span>, session_key: <span class="kw-2">&amp;</span>SessionKey) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;SessionState&gt;, LoadError&gt; {
+        serde_json::from_str(session_key.as_ref())
+            .map(<span class="prelude-val">Some</span>)
+            .map_err(anyhow::Error::new)
+            .map_err(LoadError::Deserialization)
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">save</span>(
+    <span class="kw">async fn </span>save(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">session_state</span>: <span class="ident">SessionState</span>,
-        <span class="ident">_ttl</span>: <span class="kw-2">&amp;</span><span class="ident">Duration</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">SessionKey</span>, <span class="ident">SaveError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">session_key</span> <span class="op">=</span> <span class="ident">serde_json::to_string</span>(<span class="kw-2">&amp;</span><span class="ident">session_state</span>)
-            .<span class="ident">map_err</span>(<span class="ident">anyhow::Error::new</span>)
-            .<span class="ident">map_err</span>(<span class="ident">SaveError::Serialization</span>)<span class="question-mark">?</span>;
+        session_state: SessionState,
+        _ttl: <span class="kw-2">&amp;</span>Duration,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;SessionKey, SaveError&gt; {
+        <span class="kw">let </span>session_key = serde_json::to_string(<span class="kw-2">&amp;</span>session_state)
+            .map_err(anyhow::Error::new)
+            .map_err(SaveError::Serialization)<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="ident">session_key</span>
-            .<span class="ident">try_into</span>()
-            .<span class="ident">map_err</span>(<span class="ident">Into::into</span>)
-            .<span class="ident">map_err</span>(<span class="ident">SaveError::Other</span>)<span class="question-mark">?</span>)
+        <span class="prelude-val">Ok</span>(session_key
+            .try_into()
+            .map_err(Into::into)
+            .map_err(SaveError::Other)<span class="question-mark">?</span>)
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">update</span>(
+    <span class="kw">async fn </span>update(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">_session_key</span>: <span class="ident">SessionKey</span>,
-        <span class="ident">session_state</span>: <span class="ident">SessionState</span>,
-        <span class="ident">ttl</span>: <span class="kw-2">&amp;</span><span class="ident">Duration</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">SessionKey</span>, <span class="ident">UpdateError</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">save</span>(<span class="ident">session_state</span>, <span class="ident">ttl</span>)
-            .<span class="kw">await</span>
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">err</span> {
-                <span class="ident">SaveError::Serialization</span>(<span class="ident">err</span>) =&gt; <span class="ident">UpdateError::Serialization</span>(<span class="ident">err</span>),
-                <span class="ident">SaveError::Other</span>(<span class="ident">err</span>) =&gt; <span class="ident">UpdateError::Other</span>(<span class="ident">err</span>),
+        _session_key: SessionKey,
+        session_state: SessionState,
+        ttl: <span class="kw-2">&amp;</span>Duration,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;SessionKey, UpdateError&gt; {
+        <span class="self">self</span>.save(session_state, ttl)
+            .<span class="kw">await
+            </span>.map_err(|err| <span class="kw">match </span>err {
+                SaveError::Serialization(err) =&gt; UpdateError::Serialization(err),
+                SaveError::Other(err) =&gt; UpdateError::Other(err),
             })
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">update_ttl</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_session_key</span>: <span class="kw-2">&amp;</span><span class="ident">SessionKey</span>, <span class="ident">_ttl</span>: <span class="kw-2">&amp;</span><span class="ident">Duration</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
+    <span class="kw">async fn </span>update_ttl(<span class="kw-2">&amp;</span><span class="self">self</span>, _session_key: <span class="kw-2">&amp;</span>SessionKey, _ttl: <span class="kw-2">&amp;</span>Duration) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">delete</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_session_key</span>: <span class="kw-2">&amp;</span><span class="ident">SessionKey</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">anyhow::Error</span><span class="op">&gt;</span> {
+    <span class="kw">async fn </span>delete(<span class="kw-2">&amp;</span><span class="self">self</span>, _session_key: <span class="kw-2">&amp;</span>SessionKey) -&gt; <span class="prelude-ty">Result</span>&lt;(), anyhow::Error&gt; {
         <span class="prelude-val">Ok</span>(())
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">storage::utils::generate_session_key</span>, <span class="ident">test_helpers::acceptance_test_suite</span>};
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use crate</span>::{storage::utils::generate_session_key, test_helpers::acceptance_test_suite};
 
-    <span class="attribute">#[<span class="ident">actix_web::test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">test_session_workflow</span>() {
-        <span class="ident">acceptance_test_suite</span>(<span class="ident">CookieSessionStore::default</span>, <span class="bool-val">false</span>).<span class="kw">await</span>;
+    <span class="attribute">#[actix_web::test]
+    </span><span class="kw">async fn </span>test_session_workflow() {
+        acceptance_test_suite(CookieSessionStore::default, <span class="bool-val">false</span>).<span class="kw">await</span>;
     }
 
-    <span class="attribute">#[<span class="ident">actix_web::test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">loading_a_random_session_key_returns_deserialization_error</span>() {
-        <span class="kw">let</span> <span class="ident">store</span> <span class="op">=</span> <span class="ident">CookieSessionStore::default</span>();
-        <span class="kw">let</span> <span class="ident">session_key</span> <span class="op">=</span> <span class="ident">generate_session_key</span>();
+    <span class="attribute">#[actix_web::test]
+    </span><span class="kw">async fn </span>loading_a_random_session_key_returns_deserialization_error() {
+        <span class="kw">let </span>store = CookieSessionStore::default();
+        <span class="kw">let </span>session_key = generate_session_key();
         <span class="macro">assert!</span>(<span class="macro">matches!</span>(
-            <span class="ident">store</span>.<span class="ident">load</span>(<span class="kw-2">&amp;</span><span class="ident">session_key</span>).<span class="kw">await</span>.<span class="ident">unwrap_err</span>(),
-            <span class="ident">LoadError::Deserialization</span>(<span class="kw">_</span>),
+            store.load(<span class="kw-2">&amp;</span>session_key).<span class="kw">await</span>.unwrap_err(),
+            LoadError::Deserialization(<span class="kw">_</span>),
         ));
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="actix_session" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (34a6cae28 2022-08-09)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="actix_session" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (060e47f74 2022-08-23)" ></div></body></html>

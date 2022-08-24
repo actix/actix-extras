@@ -42,47 +42,47 @@
 <span id="40">40</span>
 <span id="41">41</span>
 <span id="42">42</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">derive_more</span>::{<span class="ident">Display</span>, <span class="ident">Error</span>, <span class="ident">From</span>};
+</pre><pre class="rust"><code><span class="kw">use </span>derive_more::{Display, Error, From};
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::status::Status</span>;
+<span class="kw">use </span><span class="kw">crate</span>::status::Status;
 
-<span class="doccomment">/// Failure modes of the rate limiter.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Display</span>, <span class="ident">Error</span>, <span class="ident">From</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span> {
-    <span class="doccomment">/// Redis client failed to connect or run a query.</span>
-    <span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;Redis client failed to connect or run a query&quot;</span>)]</span>
-    <span class="ident">Client</span>(<span class="ident">redis::RedisError</span>),
+<span class="doccomment">/// Failure modes of the rate limiter.
+</span><span class="attribute">#[derive(Debug, Display, Error, From)]
+</span><span class="kw">pub enum </span>Error {
+    <span class="doccomment">/// Redis client failed to connect or run a query.
+    </span><span class="attribute">#[display(fmt = <span class="string">&quot;Redis client failed to connect or run a query&quot;</span>)]
+    </span>Client(redis::RedisError),
 
-    <span class="doccomment">/// Limit is exceeded for a key.</span>
-    <span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;Limit is exceeded for a key&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">from</span>(<span class="ident">ignore</span>)]</span>
-    <span class="ident">LimitExceeded</span>(<span class="attribute">#[<span class="ident">error</span>(<span class="ident">not</span>(<span class="ident">source</span>))]</span> <span class="ident">Status</span>),
+    <span class="doccomment">/// Limit is exceeded for a key.
+    </span><span class="attribute">#[display(fmt = <span class="string">&quot;Limit is exceeded for a key&quot;</span>)]
+    #[from(ignore)]
+    </span>LimitExceeded(<span class="attribute">#[error(not(source))] </span>Status),
 
-    <span class="doccomment">/// Time conversion failed.</span>
-    <span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;Time conversion failed&quot;</span>)]</span>
-    <span class="ident">Time</span>(<span class="ident">time::error::ComponentRange</span>),
+    <span class="doccomment">/// Time conversion failed.
+    </span><span class="attribute">#[display(fmt = <span class="string">&quot;Time conversion failed&quot;</span>)]
+    </span>Time(time::error::ComponentRange),
 
-    <span class="doccomment">/// Generic error.</span>
-    <span class="attribute">#[<span class="ident">display</span>(<span class="ident">fmt</span> <span class="op">=</span> <span class="string">&quot;Generic error&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">from</span>(<span class="ident">ignore</span>)]</span>
-    <span class="ident">Other</span>(<span class="attribute">#[<span class="ident">error</span>(<span class="ident">not</span>(<span class="ident">source</span>))]</span> <span class="ident">String</span>),
+    <span class="doccomment">/// Generic error.
+    </span><span class="attribute">#[display(fmt = <span class="string">&quot;Generic error&quot;</span>)]
+    #[from(ignore)]
+    </span>Other(<span class="attribute">#[error(not(source))] </span>String),
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="macro">static_assertions::assert_impl_all!</span> {
-        <span class="ident">Error</span>:
-        <span class="ident">From</span><span class="op">&lt;</span><span class="ident">redis::RedisError</span><span class="op">&gt;</span>,
-        <span class="ident">From</span><span class="op">&lt;</span><span class="ident">time::error::ComponentRange</span><span class="op">&gt;</span>,
+    <span class="macro">static_assertions::assert_impl_all! </span>{
+        Error:
+        From&lt;redis::RedisError&gt;,
+        From&lt;time::error::ComponentRange&gt;,
     }
 
-    <span class="macro">static_assertions::assert_not_impl_any!</span> {
-        <span class="ident">Error</span>:
-        <span class="ident">From</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-        <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Status</span><span class="op">&gt;</span>,
+    <span class="macro">static_assertions::assert_not_impl_any! </span>{
+        Error:
+        From&lt;String&gt;,
+        From&lt;Status&gt;,
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_limitation" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (34a6cae28 2022-08-09)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_limitation" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (060e47f74 2022-08-23)" ></div></body></html>

@@ -118,123 +118,123 @@
 <span id="116">116</span>
 <span id="117">117</span>
 <span id="118">118</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">convert::TryInto</span>, <span class="ident">ops::Add</span>, <span class="ident">time::Duration</span>};
+</pre><pre class="rust"><code><span class="kw">use </span>std::{convert::TryInto, ops::Add, time::Duration};
 
-<span class="kw">use</span> <span class="ident">chrono::SubsecRound</span> <span class="kw">as</span> <span class="kw">_</span>;
+<span class="kw">use </span>chrono::SubsecRound <span class="kw">as _</span>;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::Error</span> <span class="kw">as</span> <span class="ident">LimitationError</span>;
+<span class="kw">use </span><span class="kw">crate</span>::Error <span class="kw">as </span>LimitationError;
 
-<span class="doccomment">/// A report for a given key containing the limit status.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Status</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">limit</span>: <span class="ident">usize</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">remaining</span>: <span class="ident">usize</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">reset_epoch_utc</span>: <span class="ident">usize</span>,
+<span class="doccomment">/// A report for a given key containing the limit status.
+</span><span class="attribute">#[derive(Debug, Clone)]
+</span><span class="kw">pub struct </span>Status {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) limit: usize,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) remaining: usize,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) reset_epoch_utc: usize,
 }
 
-<span class="kw">impl</span> <span class="ident">Status</span> {
-    <span class="doccomment">/// Constructs status limit status from parts.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">count</span>: <span class="ident">usize</span>, <span class="ident">limit</span>: <span class="ident">usize</span>, <span class="ident">reset_epoch_utc</span>: <span class="ident">usize</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">remaining</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">count</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">limit</span> { <span class="number">0</span> } <span class="kw">else</span> { <span class="ident">limit</span> <span class="op">-</span> <span class="ident">count</span> };
+<span class="kw">impl </span>Status {
+    <span class="doccomment">/// Constructs status limit status from parts.
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new(count: usize, limit: usize, reset_epoch_utc: usize) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>remaining = <span class="kw">if </span>count &gt;= limit { <span class="number">0 </span>} <span class="kw">else </span>{ limit - count };
 
-        <span class="ident">Status</span> {
-            <span class="ident">limit</span>,
-            <span class="ident">remaining</span>,
-            <span class="ident">reset_epoch_utc</span>,
+        Status {
+            limit,
+            remaining,
+            reset_epoch_utc,
         }
     }
 
-    <span class="doccomment">/// Returns the maximum number of requests allowed in the current period.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">limit</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        <span class="self">self</span>.<span class="ident">limit</span>
+    <span class="doccomment">/// Returns the maximum number of requests allowed in the current period.
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>limit(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="self">self</span>.limit
     }
 
-    <span class="doccomment">/// Returns how many requests are left in the current period.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">remaining</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        <span class="self">self</span>.<span class="ident">remaining</span>
+    <span class="doccomment">/// Returns how many requests are left in the current period.
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>remaining(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="self">self</span>.remaining
     }
 
-    <span class="doccomment">/// Returns a UNIX timestamp in UTC approximately when the next period will begin.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">reset_epoch_utc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        <span class="self">self</span>.<span class="ident">reset_epoch_utc</span>
+    <span class="doccomment">/// Returns a UNIX timestamp in UTC approximately when the next period will begin.
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>reset_epoch_utc(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="self">self</span>.reset_epoch_utc
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">epoch_utc_plus</span>(<span class="ident">duration</span>: <span class="ident">Duration</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">LimitationError</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="ident">chrono::Duration::from_std</span>(<span class="ident">duration</span>) {
-            <span class="prelude-val">Ok</span>(<span class="ident">value</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">chrono::Utc::now</span>()
-                .<span class="ident">add</span>(<span class="ident">value</span>)
-                .<span class="ident">round_subsecs</span>(<span class="number">0</span>)
-                .<span class="ident">timestamp</span>()
-                .<span class="ident">try_into</span>()
-                .<span class="ident">unwrap_or</span>(<span class="number">0</span>)),
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>epoch_utc_plus(duration: Duration) -&gt; <span class="prelude-ty">Result</span>&lt;usize, LimitationError&gt; {
+        <span class="kw">match </span>chrono::Duration::from_std(duration) {
+            <span class="prelude-val">Ok</span>(value) =&gt; <span class="prelude-val">Ok</span>(chrono::Utc::now()
+                .add(value)
+                .round_subsecs(<span class="number">0</span>)
+                .timestamp()
+                .try_into()
+                .unwrap_or(<span class="number">0</span>)),
 
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">LimitationError::Other</span>(
-                <span class="string">&quot;Source duration value is out of range for the target type&quot;</span>.<span class="ident">to_string</span>(),
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(LimitationError::Other(
+                <span class="string">&quot;Source duration value is out of range for the target type&quot;</span>.to_string(),
             )),
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_create_status</span>() {
-        <span class="kw">let</span> <span class="ident">status</span> <span class="op">=</span> <span class="ident">Status</span> {
-            <span class="ident">limit</span>: <span class="number">100</span>,
-            <span class="ident">remaining</span>: <span class="number">0</span>,
-            <span class="ident">reset_epoch_utc</span>: <span class="number">1000</span>,
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_create_status() {
+        <span class="kw">let </span>status = Status {
+            limit: <span class="number">100</span>,
+            remaining: <span class="number">0</span>,
+            reset_epoch_utc: <span class="number">1000</span>,
         };
 
-        <span class="macro">assert_eq!</span>(<span class="ident">status</span>.<span class="ident">limit</span>(), <span class="number">100</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">status</span>.<span class="ident">remaining</span>(), <span class="number">0</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">status</span>.<span class="ident">reset_epoch_utc</span>(), <span class="number">1000</span>);
+        <span class="macro">assert_eq!</span>(status.limit(), <span class="number">100</span>);
+        <span class="macro">assert_eq!</span>(status.remaining(), <span class="number">0</span>);
+        <span class="macro">assert_eq!</span>(status.reset_epoch_utc(), <span class="number">1000</span>);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_build_status</span>() {
-        <span class="kw">let</span> <span class="ident">count</span> <span class="op">=</span> <span class="number">200</span>;
-        <span class="kw">let</span> <span class="ident">limit</span> <span class="op">=</span> <span class="number">100</span>;
-        <span class="kw">let</span> <span class="ident">status</span> <span class="op">=</span> <span class="ident">Status::new</span>(<span class="ident">count</span>, <span class="ident">limit</span>, <span class="number">2000</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">status</span>.<span class="ident">limit</span>(), <span class="ident">limit</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">status</span>.<span class="ident">remaining</span>(), <span class="number">0</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">status</span>.<span class="ident">reset_epoch_utc</span>(), <span class="number">2000</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_build_status() {
+        <span class="kw">let </span>count = <span class="number">200</span>;
+        <span class="kw">let </span>limit = <span class="number">100</span>;
+        <span class="kw">let </span>status = Status::new(count, limit, <span class="number">2000</span>);
+        <span class="macro">assert_eq!</span>(status.limit(), limit);
+        <span class="macro">assert_eq!</span>(status.remaining(), <span class="number">0</span>);
+        <span class="macro">assert_eq!</span>(status.reset_epoch_utc(), <span class="number">2000</span>);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_build_status_limit</span>() {
-        <span class="kw">let</span> <span class="ident">limit</span> <span class="op">=</span> <span class="number">100</span>;
-        <span class="kw">let</span> <span class="ident">status</span> <span class="op">=</span> <span class="ident">Status::new</span>(<span class="number">0</span>, <span class="ident">limit</span>, <span class="number">2000</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">status</span>.<span class="ident">limit</span>(), <span class="ident">limit</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">status</span>.<span class="ident">remaining</span>(), <span class="ident">limit</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">status</span>.<span class="ident">reset_epoch_utc</span>(), <span class="number">2000</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_build_status_limit() {
+        <span class="kw">let </span>limit = <span class="number">100</span>;
+        <span class="kw">let </span>status = Status::new(<span class="number">0</span>, limit, <span class="number">2000</span>);
+        <span class="macro">assert_eq!</span>(status.limit(), limit);
+        <span class="macro">assert_eq!</span>(status.remaining(), limit);
+        <span class="macro">assert_eq!</span>(status.reset_epoch_utc(), <span class="number">2000</span>);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_epoch_utc_plus_zero</span>() {
-        <span class="kw">let</span> <span class="ident">duration</span> <span class="op">=</span> <span class="ident">Duration::from_secs</span>(<span class="number">0</span>);
-        <span class="kw">let</span> <span class="ident">seconds</span> <span class="op">=</span> <span class="ident">Status::epoch_utc_plus</span>(<span class="ident">duration</span>).<span class="ident">unwrap</span>();
-        <span class="macro">assert!</span>(<span class="ident">seconds</span> <span class="kw">as</span> <span class="ident">u64</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">duration</span>.<span class="ident">as_secs</span>());
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_epoch_utc_plus_zero() {
+        <span class="kw">let </span>duration = Duration::from_secs(<span class="number">0</span>);
+        <span class="kw">let </span>seconds = Status::epoch_utc_plus(duration).unwrap();
+        <span class="macro">assert!</span>(seconds <span class="kw">as </span>u64 &gt;= duration.as_secs());
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_epoch_utc_plus</span>() {
-        <span class="kw">let</span> <span class="ident">duration</span> <span class="op">=</span> <span class="ident">Duration::from_secs</span>(<span class="number">10</span>);
-        <span class="kw">let</span> <span class="ident">seconds</span> <span class="op">=</span> <span class="ident">Status::epoch_utc_plus</span>(<span class="ident">duration</span>).<span class="ident">unwrap</span>();
-        <span class="macro">assert!</span>(<span class="ident">seconds</span> <span class="kw">as</span> <span class="ident">u64</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">duration</span>.<span class="ident">as_secs</span>() <span class="op">+</span> <span class="number">10</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_epoch_utc_plus() {
+        <span class="kw">let </span>duration = Duration::from_secs(<span class="number">10</span>);
+        <span class="kw">let </span>seconds = Status::epoch_utc_plus(duration).unwrap();
+        <span class="macro">assert!</span>(seconds <span class="kw">as </span>u64 &gt;= duration.as_secs() + <span class="number">10</span>);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="attribute">#[<span class="ident">should_panic</span> <span class="op">=</span> <span class="string">&quot;Source duration value is out of range for the target type&quot;</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_epoch_utc_plus_overflow</span>() {
-        <span class="kw">let</span> <span class="ident">duration</span> <span class="op">=</span> <span class="ident">Duration::from_secs</span>(<span class="number">10000000000000000000</span>);
-        <span class="ident">Status::epoch_utc_plus</span>(<span class="ident">duration</span>).<span class="ident">unwrap</span>();
+    <span class="attribute">#[test]
+    #[should_panic = <span class="string">&quot;Source duration value is out of range for the target type&quot;</span>]
+    </span><span class="kw">fn </span>test_epoch_utc_plus_overflow() {
+        <span class="kw">let </span>duration = Duration::from_secs(<span class="number">10000000000000000000</span>);
+        Status::epoch_utc_plus(duration).unwrap();
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_limitation" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (34a6cae28 2022-08-09)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_limitation" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (060e47f74 2022-08-23)" ></div></body></html>

@@ -4,37 +4,37 @@
 <div class="example-wrap"><pre class="language-toml"><code>[dependencies]
 actix-web = &quot;4&quot;
 actix-limitation = &quot;0.3&quot;</code></pre></div>
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">std::time::Duration</span>;
-<span class="kw">use</span> <span class="ident">actix_web</span>::{<span class="ident">get</span>, <span class="ident">web</span>, <span class="ident">App</span>, <span class="ident">HttpServer</span>, <span class="ident">Responder</span>};
-<span class="kw">use</span> <span class="ident">actix_limitation</span>::{<span class="ident">Limiter</span>, <span class="ident">RateLimiter</span>};
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>std::time::Duration;
+<span class="kw">use </span>actix_web::{get, web, App, HttpServer, Responder};
+<span class="kw">use </span>actix_limitation::{Limiter, RateLimiter};
 
-<span class="attribute">#[<span class="ident">get</span>(<span class="string">&quot;/{id}/{name}&quot;</span>)]</span>
-<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">index</span>(<span class="ident">info</span>: <span class="ident">web::Path</span><span class="op">&lt;</span>(<span class="ident">u32</span>, <span class="ident">String</span>)<span class="op">&gt;</span>) -&gt; <span class="kw">impl</span> <span class="ident">Responder</span> {
-    <span class="macro">format!</span>(<span class="string">&quot;Hello {}! id:{}&quot;</span>, <span class="ident">info</span>.<span class="number">1</span>, <span class="ident">info</span>.<span class="number">0</span>)
+<span class="attribute">#[get(<span class="string">&quot;/{id}/{name}&quot;</span>)]
+</span><span class="kw">async fn </span>index(info: web::Path&lt;(u32, String)&gt;) -&gt; <span class="kw">impl </span>Responder {
+    <span class="macro">format!</span>(<span class="string">&quot;Hello {}! id:{}&quot;</span>, info.<span class="number">1</span>, info.<span class="number">0</span>)
 }
 
-<span class="attribute">#[<span class="ident">actix_web::main</span>]</span>
-<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">main</span>() -&gt; <span class="ident">std::io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">limiter</span> <span class="op">=</span> <span class="ident">web::Data::new</span>(
-        <span class="ident">Limiter::builder</span>(<span class="string">&quot;redis://127.0.0.1&quot;</span>)
-            .<span class="ident">cookie_name</span>(<span class="string">&quot;session-id&quot;</span>.<span class="ident">to_owned</span>())
-            .<span class="ident">session_key</span>(<span class="string">&quot;rate-api-id&quot;</span>.<span class="ident">to_owned</span>())
-            .<span class="ident">limit</span>(<span class="number">5000</span>)
-            .<span class="ident">period</span>(<span class="ident">Duration::from_secs</span>(<span class="number">3600</span>)) <span class="comment">// 60 minutes</span>
-            .<span class="ident">build</span>()
-            .<span class="ident">unwrap</span>(),
+<span class="attribute">#[actix_web::main]
+</span><span class="kw">async fn </span>main() -&gt; std::io::Result&lt;()&gt; {
+    <span class="kw">let </span>limiter = web::Data::new(
+        Limiter::builder(<span class="string">&quot;redis://127.0.0.1&quot;</span>)
+            .cookie_name(<span class="string">&quot;session-id&quot;</span>.to_owned())
+            .session_key(<span class="string">&quot;rate-api-id&quot;</span>.to_owned())
+            .limit(<span class="number">5000</span>)
+            .period(Duration::from_secs(<span class="number">3600</span>)) <span class="comment">// 60 minutes
+            </span>.build()
+            .unwrap(),
     );
 
-    <span class="ident">HttpServer::new</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
-        <span class="ident">App::new</span>()
-            .<span class="ident">wrap</span>(<span class="ident">RateLimiter::default</span>())
-            .<span class="ident">app_data</span>(<span class="ident">limiter</span>.<span class="ident">clone</span>())
-            .<span class="ident">service</span>(<span class="ident">index</span>)
+    HttpServer::new(<span class="kw">move </span>|| {
+        App::new()
+            .wrap(RateLimiter::default())
+            .app_data(limiter.clone())
+            .service(index)
     })
-    .<span class="ident">bind</span>((<span class="string">&quot;127.0.0.1&quot;</span>, <span class="number">8080</span>))<span class="question-mark">?</span>
-    .<span class="ident">run</span>()
-    .<span class="kw">await</span>
-}</code></pre></div>
+    .bind((<span class="string">&quot;127.0.0.1&quot;</span>, <span class="number">8080</span>))<span class="question-mark">?
+    </span>.run()
+    .<span class="kw">await
+</span>}</code></pre></div>
 </div></details><h2 id="structs" class="small-section-header"><a href="#structs">Structs</a></h2><div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Builder.html" title="actix_limitation::Builder struct">Builder</a></div><div class="item-right docblock-short"><p>Rate limiter builder.</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Limiter.html" title="actix_limitation::Limiter struct">Limiter</a></div><div class="item-right docblock-short"><p>Rate limiter.</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.RateLimiter.html" title="actix_limitation::RateLimiter struct">RateLimiter</a></div><div class="item-right docblock-short"><p>Rate limit middleware.</p>
@@ -44,4 +44,4 @@ actix-limitation = &quot;0.3&quot;</code></pre></div>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="constant" href="constant.DEFAULT_PERIOD_SECS.html" title="actix_limitation::DEFAULT_PERIOD_SECS constant">DEFAULT_PERIOD_SECS</a></div><div class="item-right docblock-short"><p>Default period (in seconds).</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="constant" href="constant.DEFAULT_REQUEST_LIMIT.html" title="actix_limitation::DEFAULT_REQUEST_LIMIT constant">DEFAULT_REQUEST_LIMIT</a></div><div class="item-right docblock-short"><p>Default request limit.</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="constant" href="constant.DEFAULT_SESSION_KEY.html" title="actix_limitation::DEFAULT_SESSION_KEY constant">DEFAULT_SESSION_KEY</a></div><div class="item-right docblock-short"><p>Default session key.</p>
-</div></div></div></section></div></main><div id="rustdoc-vars" data-root-path="../" data-current-crate="actix_limitation" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (34a6cae28 2022-08-09)" ></div></body></html>
+</div></div></div></section></div></main><div id="rustdoc-vars" data-root-path="../" data-current-crate="actix_limitation" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (060e47f74 2022-08-23)" ></div></body></html>

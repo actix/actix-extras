@@ -138,143 +138,143 @@
 <span id="136">136</span>
 <span id="137">137</span>
 <span id="138">138</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">env::VarError</span>, <span class="ident">io</span>, <span class="ident">num::ParseIntError</span>, <span class="ident">path::PathBuf</span>, <span class="ident">str::ParseBoolError</span>};
+</pre><pre class="rust"><code><span class="kw">use </span>std::{env::VarError, io, num::ParseIntError, path::PathBuf, str::ParseBoolError};
 
-<span class="kw">use</span> <span class="ident">toml::de::Error</span> <span class="kw">as</span> <span class="ident">TomlError</span>;
+<span class="kw">use </span>toml::de::Error <span class="kw">as </span>TomlError;
 
-<span class="doccomment">/// Errors that can be returned from methods in this crate.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span> {
-    <span class="doccomment">/// Environment variable does not exists or is invalid.</span>
-    <span class="ident">EnvVarError</span>(<span class="ident">VarError</span>),
+<span class="doccomment">/// Errors that can be returned from methods in this crate.
+</span><span class="attribute">#[derive(Debug, Clone)]
+</span><span class="kw">pub enum </span>Error {
+    <span class="doccomment">/// Environment variable does not exists or is invalid.
+    </span>EnvVarError(VarError),
 
-    <span class="doccomment">/// File already exists on disk.</span>
-    <span class="ident">FileExists</span>(<span class="ident">PathBuf</span>),
+    <span class="doccomment">/// File already exists on disk.
+    </span>FileExists(PathBuf),
 
-    <span class="doccomment">/// Invalid value.</span>
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">missing_docs</span>)]</span>
-    <span class="ident">InvalidValue</span> {
-        <span class="ident">expected</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>,
-        <span class="ident">got</span>: <span class="ident">String</span>,
-        <span class="ident">file</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>,
-        <span class="ident">line</span>: <span class="ident">u32</span>,
-        <span class="ident">column</span>: <span class="ident">u32</span>,
+    <span class="doccomment">/// Invalid value.
+    </span><span class="attribute">#[allow(missing_docs)]
+    </span>InvalidValue {
+        expected: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
+        got: String,
+        file: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
+        line: u32,
+        column: u32,
     },
 
-    <span class="doccomment">/// I/O error.</span>
-    <span class="ident">IoError</span>(<span class="ident">ioe::IoError</span>),
+    <span class="doccomment">/// I/O error.
+    </span>IoError(ioe::IoError),
 
-    <span class="doccomment">/// Value is not a boolean.</span>
-    <span class="ident">ParseBoolError</span>(<span class="ident">ParseBoolError</span>),
+    <span class="doccomment">/// Value is not a boolean.
+    </span>ParseBoolError(ParseBoolError),
 
-    <span class="doccomment">/// Value is not an integer.</span>
-    <span class="ident">ParseIntError</span>(<span class="ident">ParseIntError</span>),
+    <span class="doccomment">/// Value is not an integer.
+    </span>ParseIntError(ParseIntError),
 
-    <span class="doccomment">/// Value is not an address.</span>
-    <span class="ident">ParseAddressError</span>(<span class="ident">String</span>),
+    <span class="doccomment">/// Value is not an address.
+    </span>ParseAddressError(String),
 
-    <span class="doccomment">/// Error deserializing as TOML.</span>
-    <span class="ident">TomlError</span>(<span class="ident">TomlError</span>),
+    <span class="doccomment">/// Error deserializing as TOML.
+    </span>TomlError(TomlError),
 }
 
-<span class="macro">macro_rules!</span> <span class="ident">InvalidValue</span> {
-    (<span class="ident">expected</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">expected</span>:<span class="ident">expr</span>, <span class="ident">got</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">got</span>:<span class="ident">expr</span>,) =&gt; {
-        <span class="ident"><span class="kw">crate</span>::Error::InvalidValue</span> {
-            <span class="ident">expected</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">expected</span>,
-            <span class="ident">got</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">got</span>.<span class="ident">to_string</span>(),
-            <span class="ident">file</span>: <span class="macro">file!</span>(),
-            <span class="ident">line</span>: <span class="macro">line!</span>(),
-            <span class="ident">column</span>: <span class="macro">column!</span>(),
+<span class="macro">macro_rules! </span>InvalidValue {
+    (expected: <span class="macro-nonterminal">$expected</span>:expr, got: <span class="macro-nonterminal">$got</span>:expr,) =&gt; {
+        <span class="kw">crate</span>::Error::InvalidValue {
+            expected: <span class="macro-nonterminal">$expected</span>,
+            got: <span class="macro-nonterminal">$got</span>.to_string(),
+            file: <span class="macro">file!</span>(),
+            line: <span class="macro">line!</span>(),
+            column: <span class="macro">column!</span>(),
         }
     };
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">io::Error</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Error</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">io::Error</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident"><span class="self">Self</span>::IoError</span>(<span class="ident">ioe::IoError::from</span>(<span class="ident">err</span>))
+<span class="kw">impl </span>From&lt;io::Error&gt; <span class="kw">for </span>Error {
+    <span class="kw">fn </span>from(err: io::Error) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::IoError(ioe::IoError::from(err))
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">ioe::IoError</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Error</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">ioe::IoError</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident"><span class="self">Self</span>::IoError</span>(<span class="ident">err</span>)
+<span class="kw">impl </span>From&lt;ioe::IoError&gt; <span class="kw">for </span>Error {
+    <span class="kw">fn </span>from(err: ioe::IoError) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::IoError(err)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">ParseBoolError</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Error</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">ParseBoolError</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident"><span class="self">Self</span>::ParseBoolError</span>(<span class="ident">err</span>)
+<span class="kw">impl </span>From&lt;ParseBoolError&gt; <span class="kw">for </span>Error {
+    <span class="kw">fn </span>from(err: ParseBoolError) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::ParseBoolError(err)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">ParseIntError</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Error</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">ParseIntError</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident"><span class="self">Self</span>::ParseIntError</span>(<span class="ident">err</span>)
+<span class="kw">impl </span>From&lt;ParseIntError&gt; <span class="kw">for </span>Error {
+    <span class="kw">fn </span>from(err: ParseIntError) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::ParseIntError(err)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">TomlError</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Error</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">TomlError</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident"><span class="self">Self</span>::TomlError</span>(<span class="ident">err</span>)
+<span class="kw">impl </span>From&lt;TomlError&gt; <span class="kw">for </span>Error {
+    <span class="kw">fn </span>from(err: TomlError) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::TomlError(err)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">VarError</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Error</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">VarError</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident"><span class="self">Self</span>::EnvVarError</span>(<span class="ident">err</span>)
+<span class="kw">impl </span>From&lt;VarError&gt; <span class="kw">for </span>Error {
+    <span class="kw">fn </span>from(err: VarError) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::EnvVarError(err)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Error</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">io::Error</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">Error</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">match</span> <span class="ident">err</span> {
-            <span class="ident">Error::EnvVarError</span>(<span class="ident">var_error</span>) =&gt; {
-                <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;Env var error: {}&quot;</span>, <span class="ident">var_error</span>);
-                <span class="ident">io::Error::new</span>(<span class="ident">io::ErrorKind::InvalidInput</span>, <span class="ident">msg</span>)
+<span class="kw">impl </span>From&lt;Error&gt; <span class="kw">for </span>io::Error {
+    <span class="kw">fn </span>from(err: Error) -&gt; <span class="self">Self </span>{
+        <span class="kw">match </span>err {
+            Error::EnvVarError(var_error) =&gt; {
+                <span class="kw">let </span>msg = <span class="macro">format!</span>(<span class="string">&quot;Env var error: {}&quot;</span>, var_error);
+                io::Error::new(io::ErrorKind::InvalidInput, msg)
             }
 
-            <span class="ident">Error::FileExists</span>(<span class="ident">path_buf</span>) =&gt; {
-                <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;File exists: {}&quot;</span>, <span class="ident">path_buf</span>.<span class="ident">display</span>());
-                <span class="ident">io::Error::new</span>(<span class="ident">io::ErrorKind::AlreadyExists</span>, <span class="ident">msg</span>)
+            Error::FileExists(path_buf) =&gt; {
+                <span class="kw">let </span>msg = <span class="macro">format!</span>(<span class="string">&quot;File exists: {}&quot;</span>, path_buf.display());
+                io::Error::new(io::ErrorKind::AlreadyExists, msg)
             }
 
-            <span class="ident">Error::InvalidValue</span> {
-                <span class="ident">expected</span>,
-                <span class="kw-2">ref</span> <span class="ident">got</span>,
-                <span class="ident">file</span>,
-                <span class="ident">line</span>,
-                <span class="ident">column</span>,
+            Error::InvalidValue {
+                expected,
+                <span class="kw-2">ref </span>got,
+                file,
+                line,
+                column,
             } =&gt; {
-                <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="macro">format!</span>(
+                <span class="kw">let </span>msg = <span class="macro">format!</span>(
                     <span class="string">&quot;Expected {}, got {}  (@ {}:{}:{})&quot;</span>,
-                    <span class="ident">expected</span>, <span class="ident">got</span>, <span class="ident">file</span>, <span class="ident">line</span>, <span class="ident">column</span>
+                    expected, got, file, line, column
                 );
-                <span class="ident">io::Error::new</span>(<span class="ident">io::ErrorKind::InvalidInput</span>, <span class="ident">msg</span>)
+                io::Error::new(io::ErrorKind::InvalidInput, msg)
             }
 
-            <span class="ident">Error::IoError</span>(<span class="ident">io_error</span>) =&gt; <span class="ident">io_error</span>.<span class="ident">into</span>(),
+            Error::IoError(io_error) =&gt; io_error.into(),
 
-            <span class="ident">Error::ParseBoolError</span>(<span class="ident">parse_bool_error</span>) =&gt; {
-                <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;Failed to parse boolean: {}&quot;</span>, <span class="ident">parse_bool_error</span>);
-                <span class="ident">io::Error::new</span>(<span class="ident">io::ErrorKind::InvalidInput</span>, <span class="ident">msg</span>)
+            Error::ParseBoolError(parse_bool_error) =&gt; {
+                <span class="kw">let </span>msg = <span class="macro">format!</span>(<span class="string">&quot;Failed to parse boolean: {}&quot;</span>, parse_bool_error);
+                io::Error::new(io::ErrorKind::InvalidInput, msg)
             }
 
-            <span class="ident">Error::ParseIntError</span>(<span class="ident">parse_int_error</span>) =&gt; {
-                <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;Failed to parse integer: {}&quot;</span>, <span class="ident">parse_int_error</span>);
-                <span class="ident">io::Error::new</span>(<span class="ident">io::ErrorKind::InvalidInput</span>, <span class="ident">msg</span>)
+            Error::ParseIntError(parse_int_error) =&gt; {
+                <span class="kw">let </span>msg = <span class="macro">format!</span>(<span class="string">&quot;Failed to parse integer: {}&quot;</span>, parse_int_error);
+                io::Error::new(io::ErrorKind::InvalidInput, msg)
             }
 
-            <span class="ident">Error::ParseAddressError</span>(<span class="ident">string</span>) =&gt; {
-                <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;Failed to parse address: {}&quot;</span>, <span class="ident">string</span>);
-                <span class="ident">io::Error::new</span>(<span class="ident">io::ErrorKind::InvalidInput</span>, <span class="ident">msg</span>)
+            Error::ParseAddressError(string) =&gt; {
+                <span class="kw">let </span>msg = <span class="macro">format!</span>(<span class="string">&quot;Failed to parse address: {}&quot;</span>, string);
+                io::Error::new(io::ErrorKind::InvalidInput, msg)
             }
 
-            <span class="ident">Error::TomlError</span>(<span class="ident">toml_error</span>) =&gt; {
-                <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;TOML error: {}&quot;</span>, <span class="ident">toml_error</span>);
-                <span class="ident">io::Error::new</span>(<span class="ident">io::ErrorKind::InvalidInput</span>, <span class="ident">msg</span>)
+            Error::TomlError(toml_error) =&gt; {
+                <span class="kw">let </span>msg = <span class="macro">format!</span>(<span class="string">&quot;TOML error: {}&quot;</span>, toml_error);
+                io::Error::new(io::ErrorKind::InvalidInput, msg)
             }
         }
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_settings" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (34a6cae28 2022-08-09)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_settings" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (060e47f74 2022-08-23)" ></div></body></html>

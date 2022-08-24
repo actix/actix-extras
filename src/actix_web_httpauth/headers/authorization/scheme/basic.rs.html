@@ -193,200 +193,200 @@
 <span id="193">193</span>
 <span id="194">194</span>
 <span id="195">195</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">borrow::Cow</span>, <span class="ident">fmt</span>, <span class="ident">str</span>};
+</pre><pre class="rust"><code><span class="kw">use </span>std::{borrow::Cow, fmt, str};
 
-<span class="kw">use</span> <span class="ident">actix_web</span>::{
-    <span class="ident">http::header</span>::{<span class="ident">HeaderValue</span>, <span class="ident">InvalidHeaderValue</span>, <span class="ident">TryIntoHeaderValue</span>},
-    <span class="ident">web</span>::{<span class="ident">BufMut</span>, <span class="ident">BytesMut</span>},
+<span class="kw">use </span>actix_web::{
+    http::header::{HeaderValue, InvalidHeaderValue, TryIntoHeaderValue},
+    web::{BufMut, BytesMut},
 };
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::headers::authorization</span>::{<span class="ident">errors::ParseError</span>, <span class="ident">Scheme</span>};
+<span class="kw">use </span><span class="kw">crate</span>::headers::authorization::{errors::ParseError, Scheme};
 
-<span class="doccomment">/// Credentials for `Basic` authentication scheme, defined in [RFC 7617](https://tools.ietf.org/html/rfc7617)</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">PartialOrd</span>, <span class="ident">Ord</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Basic</span> {
-    <span class="ident">user_id</span>: <span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">str</span><span class="op">&gt;</span>,
-    <span class="ident">password</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+<span class="doccomment">/// Credentials for `Basic` authentication scheme, defined in [RFC 7617](https://tools.ietf.org/html/rfc7617)
+</span><span class="attribute">#[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
+</span><span class="kw">pub struct </span>Basic {
+    user_id: Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;,
+    password: <span class="prelude-ty">Option</span>&lt;Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">Basic</span> {
-    <span class="doccomment">/// Creates `Basic` credentials with provided `user_id` and optional</span>
-    <span class="doccomment">/// `password`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// # use actix_web_httpauth::headers::authorization::Basic;</span>
-    <span class="doccomment">/// let credentials = Basic::new(&quot;Alladin&quot;, Some(&quot;open sesame&quot;));</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span><span class="op">&lt;</span><span class="ident">U</span>, <span class="ident">P</span><span class="op">&gt;</span>(<span class="ident">user_id</span>: <span class="ident">U</span>, <span class="ident">password</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">P</span><span class="op">&gt;</span>) -&gt; <span class="ident">Basic</span>
-    <span class="kw">where</span>
-        <span class="ident">U</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="ident">P</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+<span class="kw">impl </span>Basic {
+    <span class="doccomment">/// Creates `Basic` credentials with provided `user_id` and optional
+    /// `password`.
+    ///
+    /// # Examples
+    /// ```
+    /// # use actix_web_httpauth::headers::authorization::Basic;
+    /// let credentials = Basic::new(&quot;Alladin&quot;, Some(&quot;open sesame&quot;));
+    /// ```
+    </span><span class="kw">pub fn </span>new&lt;U, P&gt;(user_id: U, password: <span class="prelude-ty">Option</span>&lt;P&gt;) -&gt; Basic
+    <span class="kw">where
+        </span>U: Into&lt;Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;&gt;,
+        P: Into&lt;Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;&gt;,
     {
-        <span class="ident">Basic</span> {
-            <span class="ident">user_id</span>: <span class="ident">user_id</span>.<span class="ident">into</span>(),
-            <span class="ident">password</span>: <span class="ident">password</span>.<span class="ident">map</span>(<span class="ident">Into::into</span>),
+        Basic {
+            user_id: user_id.into(),
+            password: password.map(Into::into),
         }
     }
 
-    <span class="doccomment">/// Returns client&#39;s user-ID.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">user_id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">str</span> {
-        <span class="self">self</span>.<span class="ident">user_id</span>.<span class="ident">as_ref</span>()
+    <span class="doccomment">/// Returns client&#39;s user-ID.
+    </span><span class="kw">pub fn </span>user_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str {
+        <span class="self">self</span>.user_id.as_ref()
     }
 
-    <span class="doccomment">/// Returns client&#39;s password if provided.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">password</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">password</span>.<span class="ident">as_deref</span>()
+    <span class="doccomment">/// Returns client&#39;s password if provided.
+    </span><span class="kw">pub fn </span>password(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt; {
+        <span class="self">self</span>.password.as_deref()
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Scheme</span> <span class="kw">for</span> <span class="ident">Basic</span> {
-    <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">header</span>: <span class="kw-2">&amp;</span><span class="ident">HeaderValue</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">ParseError</span><span class="op">&gt;</span> {
-        <span class="comment">// &quot;Basic *&quot; length</span>
-        <span class="kw">if</span> <span class="ident">header</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="number">7</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ParseError::Invalid</span>);
+<span class="kw">impl </span>Scheme <span class="kw">for </span>Basic {
+    <span class="kw">fn </span>parse(header: <span class="kw-2">&amp;</span>HeaderValue) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, ParseError&gt; {
+        <span class="comment">// &quot;Basic *&quot; length
+        </span><span class="kw">if </span>header.len() &lt; <span class="number">7 </span>{
+            <span class="kw">return </span><span class="prelude-val">Err</span>(ParseError::Invalid);
         }
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">parts</span> <span class="op">=</span> <span class="ident">header</span>.<span class="ident">to_str</span>()<span class="question-mark">?</span>.<span class="ident">splitn</span>(<span class="number">2</span>, <span class="string">&#39; &#39;</span>);
-        <span class="kw">match</span> <span class="ident">parts</span>.<span class="ident">next</span>() {
-            <span class="prelude-val">Some</span>(<span class="ident">scheme</span>) <span class="kw">if</span> <span class="ident">scheme</span> <span class="op">==</span> <span class="string">&quot;Basic&quot;</span> =&gt; (),
-            <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ParseError::MissingScheme</span>),
+        <span class="kw">let </span><span class="kw-2">mut </span>parts = header.to_str()<span class="question-mark">?</span>.splitn(<span class="number">2</span>, <span class="string">&#39; &#39;</span>);
+        <span class="kw">match </span>parts.next() {
+            <span class="prelude-val">Some</span>(scheme) <span class="kw">if </span>scheme == <span class="string">&quot;Basic&quot; </span>=&gt; (),
+            <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ParseError::MissingScheme),
         }
 
-        <span class="kw">let</span> <span class="ident">decoded</span> <span class="op">=</span> <span class="ident">base64::decode</span>(<span class="ident">parts</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="ident">ParseError::Invalid</span>)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">credentials</span> <span class="op">=</span> <span class="ident">str::from_utf8</span>(<span class="kw-2">&amp;</span><span class="ident">decoded</span>)<span class="question-mark">?</span>.<span class="ident">splitn</span>(<span class="number">2</span>, <span class="string">&#39;:&#39;</span>);
+        <span class="kw">let </span>decoded = base64::decode(parts.next().ok_or(ParseError::Invalid)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>credentials = str::from_utf8(<span class="kw-2">&amp;</span>decoded)<span class="question-mark">?</span>.splitn(<span class="number">2</span>, <span class="string">&#39;:&#39;</span>);
 
-        <span class="kw">let</span> <span class="ident">user_id</span> <span class="op">=</span> <span class="ident">credentials</span>
-            .<span class="ident">next</span>()
-            .<span class="ident">ok_or</span>(<span class="ident">ParseError::MissingField</span>(<span class="string">&quot;user_id&quot;</span>))
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">user_id</span><span class="op">|</span> <span class="ident">user_id</span>.<span class="ident">to_string</span>().<span class="ident">into</span>())<span class="question-mark">?</span>;
+        <span class="kw">let </span>user_id = credentials
+            .next()
+            .ok_or(ParseError::MissingField(<span class="string">&quot;user_id&quot;</span>))
+            .map(|user_id| user_id.to_string().into())<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">password</span> <span class="op">=</span> <span class="ident">credentials</span>
-            .<span class="ident">next</span>()
-            .<span class="ident">ok_or</span>(<span class="ident">ParseError::MissingField</span>(<span class="string">&quot;password&quot;</span>))
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">password</span><span class="op">|</span> {
-                <span class="kw">if</span> <span class="ident">password</span>.<span class="ident">is_empty</span>() {
-                    <span class="prelude-val">None</span>
-                } <span class="kw">else</span> {
-                    <span class="prelude-val">Some</span>(<span class="ident">password</span>.<span class="ident">to_string</span>().<span class="ident">into</span>())
+        <span class="kw">let </span>password = credentials
+            .next()
+            .ok_or(ParseError::MissingField(<span class="string">&quot;password&quot;</span>))
+            .map(|password| {
+                <span class="kw">if </span>password.is_empty() {
+                    <span class="prelude-val">None
+                </span>} <span class="kw">else </span>{
+                    <span class="prelude-val">Some</span>(password.to_string().into())
                 }
             })<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="ident">Basic</span> { <span class="ident">user_id</span>, <span class="ident">password</span> })
+        <span class="prelude-val">Ok</span>(Basic { user_id, password })
     }
 }
 
-<span class="kw">impl</span> <span class="ident">fmt::Debug</span> <span class="kw">for</span> <span class="ident">Basic</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="ident">f</span>.<span class="ident">write_fmt</span>(<span class="macro">format_args!</span>(<span class="string">&quot;Basic {}:******&quot;</span>, <span class="self">self</span>.<span class="ident">user_id</span>))
+<span class="kw">impl </span>fmt::Debug <span class="kw">for </span>Basic {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+        f.write_fmt(<span class="macro">format_args!</span>(<span class="string">&quot;Basic {}:******&quot;</span>, <span class="self">self</span>.user_id))
     }
 }
 
-<span class="kw">impl</span> <span class="ident">fmt::Display</span> <span class="kw">for</span> <span class="ident">Basic</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="ident">f</span>.<span class="ident">write_fmt</span>(<span class="macro">format_args!</span>(<span class="string">&quot;Basic {}:******&quot;</span>, <span class="self">self</span>.<span class="ident">user_id</span>))
+<span class="kw">impl </span>fmt::Display <span class="kw">for </span>Basic {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+        f.write_fmt(<span class="macro">format_args!</span>(<span class="string">&quot;Basic {}:******&quot;</span>, <span class="self">self</span>.user_id))
     }
 }
 
-<span class="kw">impl</span> <span class="ident">TryIntoHeaderValue</span> <span class="kw">for</span> <span class="ident">Basic</span> {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">InvalidHeaderValue</span>;
+<span class="kw">impl </span>TryIntoHeaderValue <span class="kw">for </span>Basic {
+    <span class="kw">type </span>Error = InvalidHeaderValue;
 
-    <span class="kw">fn</span> <span class="ident">try_into_value</span>(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">HeaderValue</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">credentials</span> <span class="op">=</span> <span class="ident">BytesMut::with_capacity</span>(
-            <span class="self">self</span>.<span class="ident">user_id</span>.<span class="ident">len</span>()
-                <span class="op">+</span> <span class="number">1</span> <span class="comment">// &#39;:&#39;</span>
-                <span class="op">+</span> <span class="self">self</span>.<span class="ident">password</span>.<span class="ident">as_ref</span>().<span class="ident">map_or</span>(<span class="number">0</span>, <span class="op">|</span><span class="ident">pwd</span><span class="op">|</span> <span class="ident">pwd</span>.<span class="ident">len</span>()),
+    <span class="kw">fn </span>try_into_value(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;HeaderValue, <span class="self">Self</span>::Error&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>credentials = BytesMut::with_capacity(
+            <span class="self">self</span>.user_id.len()
+                + <span class="number">1 </span><span class="comment">// &#39;:&#39;
+                </span>+ <span class="self">self</span>.password.as_ref().map_or(<span class="number">0</span>, |pwd| pwd.len()),
         );
 
-        <span class="ident">credentials</span>.<span class="ident">extend_from_slice</span>(<span class="self">self</span>.<span class="ident">user_id</span>.<span class="ident">as_bytes</span>());
-        <span class="ident">credentials</span>.<span class="ident">put_u8</span>(<span class="string">b&#39;:&#39;</span>);
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">password</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">password</span> {
-            <span class="ident">credentials</span>.<span class="ident">extend_from_slice</span>(<span class="ident">password</span>.<span class="ident">as_bytes</span>());
+        credentials.extend_from_slice(<span class="self">self</span>.user_id.as_bytes());
+        credentials.put_u8(<span class="string">b&#39;:&#39;</span>);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>password) = <span class="self">self</span>.password {
+            credentials.extend_from_slice(password.as_bytes());
         }
 
-        <span class="comment">// TODO: It would be nice not to allocate new `String`  here but write</span>
-        <span class="comment">// directly to `value`</span>
-        <span class="kw">let</span> <span class="ident">encoded</span> <span class="op">=</span> <span class="ident">base64::encode</span>(<span class="kw-2">&amp;</span><span class="ident">credentials</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">BytesMut::with_capacity</span>(<span class="number">6</span> <span class="op">+</span> <span class="ident">encoded</span>.<span class="ident">len</span>());
-        <span class="ident">value</span>.<span class="ident">put</span>(<span class="kw-2">&amp;</span><span class="string">b&quot;Basic &quot;</span>[..]);
-        <span class="ident">value</span>.<span class="ident">put</span>(<span class="ident">encoded</span>.<span class="ident">as_bytes</span>());
+        <span class="comment">// TODO: It would be nice not to allocate new `String`  here but write
+        // directly to `value`
+        </span><span class="kw">let </span>encoded = base64::encode(<span class="kw-2">&amp;</span>credentials);
+        <span class="kw">let </span><span class="kw-2">mut </span>value = BytesMut::with_capacity(<span class="number">6 </span>+ encoded.len());
+        value.put(<span class="kw-2">&amp;</span><span class="string">b&quot;Basic &quot;</span>[..]);
+        value.put(encoded.as_bytes());
 
-        <span class="ident">HeaderValue::from_maybe_shared</span>(<span class="ident">value</span>.<span class="ident">freeze</span>())
+        HeaderValue::from_maybe_shared(value.freeze())
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_parse_header</span>() {
-        <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">HeaderValue::from_static</span>(<span class="string">&quot;Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==&quot;</span>);
-        <span class="kw">let</span> <span class="ident">scheme</span> <span class="op">=</span> <span class="ident">Basic::parse</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_parse_header() {
+        <span class="kw">let </span>value = HeaderValue::from_static(<span class="string">&quot;Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==&quot;</span>);
+        <span class="kw">let </span>scheme = Basic::parse(<span class="kw-2">&amp;</span>value);
 
-        <span class="macro">assert!</span>(<span class="ident">scheme</span>.<span class="ident">is_ok</span>());
-        <span class="kw">let</span> <span class="ident">scheme</span> <span class="op">=</span> <span class="ident">scheme</span>.<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">scheme</span>.<span class="ident">user_id</span>, <span class="string">&quot;Aladdin&quot;</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">scheme</span>.<span class="ident">password</span>, <span class="prelude-val">Some</span>(<span class="string">&quot;open sesame&quot;</span>.<span class="ident">into</span>()));
+        <span class="macro">assert!</span>(scheme.is_ok());
+        <span class="kw">let </span>scheme = scheme.unwrap();
+        <span class="macro">assert_eq!</span>(scheme.user_id, <span class="string">&quot;Aladdin&quot;</span>);
+        <span class="macro">assert_eq!</span>(scheme.password, <span class="prelude-val">Some</span>(<span class="string">&quot;open sesame&quot;</span>.into()));
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_empty_password</span>() {
-        <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">HeaderValue::from_static</span>(<span class="string">&quot;Basic QWxhZGRpbjo=&quot;</span>);
-        <span class="kw">let</span> <span class="ident">scheme</span> <span class="op">=</span> <span class="ident">Basic::parse</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_empty_password() {
+        <span class="kw">let </span>value = HeaderValue::from_static(<span class="string">&quot;Basic QWxhZGRpbjo=&quot;</span>);
+        <span class="kw">let </span>scheme = Basic::parse(<span class="kw-2">&amp;</span>value);
 
-        <span class="macro">assert!</span>(<span class="ident">scheme</span>.<span class="ident">is_ok</span>());
-        <span class="kw">let</span> <span class="ident">scheme</span> <span class="op">=</span> <span class="ident">scheme</span>.<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">scheme</span>.<span class="ident">user_id</span>, <span class="string">&quot;Aladdin&quot;</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">scheme</span>.<span class="ident">password</span>, <span class="prelude-val">None</span>);
+        <span class="macro">assert!</span>(scheme.is_ok());
+        <span class="kw">let </span>scheme = scheme.unwrap();
+        <span class="macro">assert_eq!</span>(scheme.user_id, <span class="string">&quot;Aladdin&quot;</span>);
+        <span class="macro">assert_eq!</span>(scheme.password, <span class="prelude-val">None</span>);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_empty_header</span>() {
-        <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">HeaderValue::from_static</span>(<span class="string">&quot;&quot;</span>);
-        <span class="kw">let</span> <span class="ident">scheme</span> <span class="op">=</span> <span class="ident">Basic::parse</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_empty_header() {
+        <span class="kw">let </span>value = HeaderValue::from_static(<span class="string">&quot;&quot;</span>);
+        <span class="kw">let </span>scheme = Basic::parse(<span class="kw-2">&amp;</span>value);
 
-        <span class="macro">assert!</span>(<span class="ident">scheme</span>.<span class="ident">is_err</span>());
+        <span class="macro">assert!</span>(scheme.is_err());
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_wrong_scheme</span>() {
-        <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">HeaderValue::from_static</span>(<span class="string">&quot;THOUSHALLNOTPASS please?&quot;</span>);
-        <span class="kw">let</span> <span class="ident">scheme</span> <span class="op">=</span> <span class="ident">Basic::parse</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_wrong_scheme() {
+        <span class="kw">let </span>value = HeaderValue::from_static(<span class="string">&quot;THOUSHALLNOTPASS please?&quot;</span>);
+        <span class="kw">let </span>scheme = Basic::parse(<span class="kw-2">&amp;</span>value);
 
-        <span class="macro">assert!</span>(<span class="ident">scheme</span>.<span class="ident">is_err</span>());
+        <span class="macro">assert!</span>(scheme.is_err());
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_missing_credentials</span>() {
-        <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">HeaderValue::from_static</span>(<span class="string">&quot;Basic &quot;</span>);
-        <span class="kw">let</span> <span class="ident">scheme</span> <span class="op">=</span> <span class="ident">Basic::parse</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_missing_credentials() {
+        <span class="kw">let </span>value = HeaderValue::from_static(<span class="string">&quot;Basic &quot;</span>);
+        <span class="kw">let </span>scheme = Basic::parse(<span class="kw-2">&amp;</span>value);
 
-        <span class="macro">assert!</span>(<span class="ident">scheme</span>.<span class="ident">is_err</span>());
+        <span class="macro">assert!</span>(scheme.is_err());
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_missing_credentials_colon</span>() {
-        <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">HeaderValue::from_static</span>(<span class="string">&quot;Basic QWxsYWRpbg==&quot;</span>);
-        <span class="kw">let</span> <span class="ident">scheme</span> <span class="op">=</span> <span class="ident">Basic::parse</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_missing_credentials_colon() {
+        <span class="kw">let </span>value = HeaderValue::from_static(<span class="string">&quot;Basic QWxsYWRpbg==&quot;</span>);
+        <span class="kw">let </span>scheme = Basic::parse(<span class="kw-2">&amp;</span>value);
 
-        <span class="macro">assert!</span>(<span class="ident">scheme</span>.<span class="ident">is_err</span>());
+        <span class="macro">assert!</span>(scheme.is_err());
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_into_header_value</span>() {
-        <span class="kw">let</span> <span class="ident">basic</span> <span class="op">=</span> <span class="ident">Basic</span> {
-            <span class="ident">user_id</span>: <span class="string">&quot;Aladdin&quot;</span>.<span class="ident">into</span>(),
-            <span class="ident">password</span>: <span class="prelude-val">Some</span>(<span class="string">&quot;open sesame&quot;</span>.<span class="ident">into</span>()),
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_into_header_value() {
+        <span class="kw">let </span>basic = Basic {
+            user_id: <span class="string">&quot;Aladdin&quot;</span>.into(),
+            password: <span class="prelude-val">Some</span>(<span class="string">&quot;open sesame&quot;</span>.into()),
         };
 
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">basic</span>.<span class="ident">try_into_value</span>();
-        <span class="macro">assert!</span>(<span class="ident">result</span>.<span class="ident">is_ok</span>());
+        <span class="kw">let </span>result = basic.try_into_value();
+        <span class="macro">assert!</span>(result.is_ok());
         <span class="macro">assert_eq!</span>(
-            <span class="ident">result</span>.<span class="ident">unwrap</span>(),
-            <span class="ident">HeaderValue::from_static</span>(<span class="string">&quot;Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==&quot;</span>)
+            result.unwrap(),
+            HeaderValue::from_static(<span class="string">&quot;Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==&quot;</span>)
         );
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="actix_web_httpauth" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (34a6cae28 2022-08-09)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="actix_web_httpauth" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (060e47f74 2022-08-23)" ></div></body></html>

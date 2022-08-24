@@ -55,60 +55,60 @@
 <span id="53">53</span>
 <span id="54">54</span>
 <span id="55">55</span>
-</pre><pre class="rust"><code><span class="doccomment">/// An enum signifying that some of type `T` is allowed, or `All` (anything is allowed).</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">AllOrSome</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Everything is allowed. Usually equivalent to the `*` value.</span>
-    <span class="ident">All</span>,
+</pre><pre class="rust"><code><span class="doccomment">/// An enum signifying that some of type `T` is allowed, or `All` (anything is allowed).
+</span><span class="attribute">#[derive(Debug, Clone, PartialEq, Eq)]
+</span><span class="kw">pub enum </span>AllOrSome&lt;T&gt; {
+    <span class="doccomment">/// Everything is allowed. Usually equivalent to the `*` value.
+    </span>All,
 
-    <span class="doccomment">/// Only some of `T` is allowed</span>
-    <span class="prelude-val">Some</span>(<span class="ident">T</span>),
+    <span class="doccomment">/// Only some of `T` is allowed
+    </span><span class="prelude-val">Some</span>(T),
 }
 
-<span class="doccomment">/// Default as `AllOrSome::All`.</span>
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">AllOrSome</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="ident">AllOrSome::All</span>
+<span class="doccomment">/// Default as `AllOrSome::All`.
+</span><span class="kw">impl</span>&lt;T&gt; Default <span class="kw">for </span>AllOrSome&lt;T&gt; {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        AllOrSome::All
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">AllOrSome</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Returns whether this is an `All` variant.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_all</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="macro">matches!</span>(<span class="self">self</span>, <span class="ident">AllOrSome::All</span>)
+<span class="kw">impl</span>&lt;T&gt; AllOrSome&lt;T&gt; {
+    <span class="doccomment">/// Returns whether this is an `All` variant.
+    </span><span class="kw">pub fn </span>is_all(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="macro">matches!</span>(<span class="self">self</span>, AllOrSome::All)
     }
 
-    <span class="doccomment">/// Returns whether this is a `Some` variant.</span>
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_some</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="op">!</span><span class="self">self</span>.<span class="ident">is_all</span>()
+    <span class="doccomment">/// Returns whether this is a `Some` variant.
+    </span><span class="attribute">#[allow(dead_code)]
+    </span><span class="kw">pub fn </span>is_some(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        !<span class="self">self</span>.is_all()
     }
 
-    <span class="doccomment">/// Provides a shared reference to `T` if variant is `Some`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_ref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">T</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
-            <span class="ident">AllOrSome::All</span> =&gt; <span class="prelude-val">None</span>,
-            <span class="ident">AllOrSome::Some</span>(<span class="kw-2">ref</span> <span class="ident">t</span>) =&gt; <span class="prelude-val">Some</span>(<span class="ident">t</span>),
+    <span class="doccomment">/// Provides a shared reference to `T` if variant is `Some`.
+    </span><span class="kw">pub fn </span>as_ref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>T&gt; {
+        <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
+            AllOrSome::All =&gt; <span class="prelude-val">None</span>,
+            AllOrSome::Some(<span class="kw-2">ref </span>t) =&gt; <span class="prelude-val">Some</span>(t),
         }
     }
 
-    <span class="doccomment">/// Provides a mutable reference to `T` if variant is `Some`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;mut</span> <span class="ident">T</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
-            <span class="ident">AllOrSome::All</span> =&gt; <span class="prelude-val">None</span>,
-            <span class="ident">AllOrSome::Some</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">t</span>) =&gt; <span class="prelude-val">Some</span>(<span class="ident">t</span>),
+    <span class="doccomment">/// Provides a mutable reference to `T` if variant is `Some`.
+    </span><span class="kw">pub fn </span>as_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>T&gt; {
+        <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
+            AllOrSome::All =&gt; <span class="prelude-val">None</span>,
+            AllOrSome::Some(<span class="kw-2">ref mut </span>t) =&gt; <span class="prelude-val">Some</span>(t),
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="attribute">#[<span class="ident">test</span>]</span>
-<span class="kw">fn</span> <span class="ident">tests</span>() {
-    <span class="macro">assert!</span>(<span class="ident">AllOrSome</span>::<span class="op">&lt;</span>()<span class="op">&gt;</span><span class="ident">::All</span>.<span class="ident">is_all</span>());
-    <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">AllOrSome</span>::<span class="op">&lt;</span>()<span class="op">&gt;</span><span class="ident">::All</span>.<span class="ident">is_some</span>());
+<span class="attribute">#[cfg(test)]
+#[test]
+</span><span class="kw">fn </span>tests() {
+    <span class="macro">assert!</span>(AllOrSome::&lt;()&gt;::All.is_all());
+    <span class="macro">assert!</span>(!AllOrSome::&lt;()&gt;::All.is_some());
 
-    <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">AllOrSome::Some</span>(()).<span class="ident">is_all</span>());
-    <span class="macro">assert!</span>(<span class="ident">AllOrSome::Some</span>(()).<span class="ident">is_some</span>());
+    <span class="macro">assert!</span>(!AllOrSome::Some(()).is_all());
+    <span class="macro">assert!</span>(AllOrSome::Some(()).is_some());
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_cors" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (34a6cae28 2022-08-09)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_cors" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (060e47f74 2022-08-23)" ></div></body></html>

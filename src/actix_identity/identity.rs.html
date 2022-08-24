@@ -263,92 +263,92 @@
 <span id="263">263</span>
 <span id="264">264</span>
 <span id="265">265</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">actix_session::Session</span>;
-<span class="kw">use</span> <span class="ident">actix_utils::future</span>::{<span class="ident">ready</span>, <span class="ident">Ready</span>};
-<span class="kw">use</span> <span class="ident">actix_web</span>::{
-    <span class="ident">cookie::time::OffsetDateTime</span>,
-    <span class="ident">dev</span>::{<span class="ident">Extensions</span>, <span class="ident">Payload</span>},
-    <span class="ident">http::StatusCode</span>,
-    <span class="ident">Error</span>, <span class="ident">FromRequest</span>, <span class="ident">HttpMessage</span>, <span class="ident">HttpRequest</span>, <span class="ident">HttpResponse</span>,
+</pre><pre class="rust"><code><span class="kw">use </span>actix_session::Session;
+<span class="kw">use </span>actix_utils::future::{ready, Ready};
+<span class="kw">use </span>actix_web::{
+    cookie::time::OffsetDateTime,
+    dev::{Extensions, Payload},
+    http::StatusCode,
+    Error, FromRequest, HttpMessage, HttpRequest, HttpResponse,
 };
-<span class="kw">use</span> <span class="ident">anyhow</span>::{<span class="ident">anyhow</span>, <span class="ident">Context</span>};
+<span class="kw">use </span>anyhow::{anyhow, Context};
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::config::LogoutBehaviour</span>;
+<span class="kw">use </span><span class="kw">crate</span>::config::LogoutBehaviour;
 
-<span class="doccomment">/// A verified user identity. It can be used as a request extractor.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The lifecycle of a user identity is tied to the lifecycle of the underlying session. If the</span>
-<span class="doccomment">/// session is destroyed (e.g. the session expired), the user identity will be forgotten, de-facto</span>
-<span class="doccomment">/// forcing a user log out.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Examples</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// use actix_web::{</span>
-<span class="doccomment">///     get, post, Responder, HttpRequest, HttpMessage, HttpResponse</span>
-<span class="doccomment">/// };</span>
-<span class="doccomment">/// use actix_identity::Identity;</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// #[get(&quot;/&quot;)]</span>
-<span class="doccomment">/// async fn index(user: Option&lt;Identity&gt;) -&gt; impl Responder {</span>
-<span class="doccomment">///     if let Some(user) = user {</span>
-<span class="doccomment">///         format!(&quot;Welcome! {}&quot;, user.id().unwrap())</span>
-<span class="doccomment">///     } else {</span>
-<span class="doccomment">///         &quot;Welcome Anonymous!&quot;.to_owned()</span>
-<span class="doccomment">///     }</span>
-<span class="doccomment">/// }</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// #[post(&quot;/login&quot;)]</span>
-<span class="doccomment">/// async fn login(request: HttpRequest) -&gt; impl Responder {</span>
-<span class="doccomment">///     Identity::login(&amp;request.extensions(), &quot;User1&quot;.into());</span>
-<span class="doccomment">///     HttpResponse::Ok()</span>
-<span class="doccomment">/// }</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// #[post(&quot;/logout&quot;)]</span>
-<span class="doccomment">/// async fn logout(user: Identity) -&gt; impl Responder {</span>
-<span class="doccomment">///     user.logout();</span>
-<span class="doccomment">///     HttpResponse::Ok()</span>
-<span class="doccomment">/// }</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Extractor Behaviour</span>
-<span class="doccomment">/// What happens if you try to extract an `Identity` out of a request that does not have a valid</span>
-<span class="doccomment">/// identity attached? The API will return a `401 UNAUTHORIZED` to the caller.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// If you want to customise this behaviour, consider extracting `Option&lt;Identity&gt;` or</span>
-<span class="doccomment">/// `Result&lt;Identity, actix_web::Error&gt;` instead of a bare `Identity`: you will then be fully in</span>
-<span class="doccomment">/// control of the error path.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ## Examples</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// use actix_web::{http::header::LOCATION, get, HttpResponse, Responder};</span>
-<span class="doccomment">/// use actix_identity::Identity;</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// #[get(&quot;/&quot;)]</span>
-<span class="doccomment">/// async fn index(user: Option&lt;Identity&gt;) -&gt; impl Responder {</span>
-<span class="doccomment">///     if let Some(user) = user {</span>
-<span class="doccomment">///         HttpResponse::Ok().finish()</span>
-<span class="doccomment">///     } else {</span>
-<span class="doccomment">///         // Redirect to login page if unauthenticated</span>
-<span class="doccomment">///         HttpResponse::TemporaryRedirect()</span>
-<span class="doccomment">///             .insert_header((LOCATION, &quot;/login&quot;))</span>
-<span class="doccomment">///             .finish()</span>
-<span class="doccomment">///     }</span>
-<span class="doccomment">/// }</span>
-<span class="doccomment">/// ```</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Identity</span>(<span class="ident">IdentityInner</span>);
+<span class="doccomment">/// A verified user identity. It can be used as a request extractor.
+///
+/// The lifecycle of a user identity is tied to the lifecycle of the underlying session. If the
+/// session is destroyed (e.g. the session expired), the user identity will be forgotten, de-facto
+/// forcing a user log out.
+///
+/// # Examples
+/// ```
+/// use actix_web::{
+///     get, post, Responder, HttpRequest, HttpMessage, HttpResponse
+/// };
+/// use actix_identity::Identity;
+///
+/// #[get(&quot;/&quot;)]
+/// async fn index(user: Option&lt;Identity&gt;) -&gt; impl Responder {
+///     if let Some(user) = user {
+///         format!(&quot;Welcome! {}&quot;, user.id().unwrap())
+///     } else {
+///         &quot;Welcome Anonymous!&quot;.to_owned()
+///     }
+/// }
+///
+/// #[post(&quot;/login&quot;)]
+/// async fn login(request: HttpRequest) -&gt; impl Responder {
+///     Identity::login(&amp;request.extensions(), &quot;User1&quot;.into());
+///     HttpResponse::Ok()
+/// }
+///
+/// #[post(&quot;/logout&quot;)]
+/// async fn logout(user: Identity) -&gt; impl Responder {
+///     user.logout();
+///     HttpResponse::Ok()
+/// }
+/// ```
+///
+/// # Extractor Behaviour
+/// What happens if you try to extract an `Identity` out of a request that does not have a valid
+/// identity attached? The API will return a `401 UNAUTHORIZED` to the caller.
+///
+/// If you want to customise this behaviour, consider extracting `Option&lt;Identity&gt;` or
+/// `Result&lt;Identity, actix_web::Error&gt;` instead of a bare `Identity`: you will then be fully in
+/// control of the error path.
+///
+/// ## Examples
+/// ```
+/// use actix_web::{http::header::LOCATION, get, HttpResponse, Responder};
+/// use actix_identity::Identity;
+///
+/// #[get(&quot;/&quot;)]
+/// async fn index(user: Option&lt;Identity&gt;) -&gt; impl Responder {
+///     if let Some(user) = user {
+///         HttpResponse::Ok().finish()
+///     } else {
+///         // Redirect to login page if unauthenticated
+///         HttpResponse::TemporaryRedirect()
+///             .insert_header((LOCATION, &quot;/login&quot;))
+///             .finish()
+///     }
+/// }
+/// ```
+</span><span class="kw">pub struct </span>Identity(IdentityInner);
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">IdentityInner</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">session</span>: <span class="ident">Session</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">logout_behaviour</span>: <span class="ident">LogoutBehaviour</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">is_login_deadline_enabled</span>: <span class="ident">bool</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">is_visit_deadline_enabled</span>: <span class="ident">bool</span>,
+<span class="attribute">#[derive(Clone)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>IdentityInner {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) session: Session,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) logout_behaviour: LogoutBehaviour,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) is_login_deadline_enabled: bool,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) is_visit_deadline_enabled: bool,
 }
 
-<span class="kw">impl</span> <span class="ident">IdentityInner</span> {
-    <span class="kw">fn</span> <span class="ident">extract</span>(<span class="ident">ext</span>: <span class="kw-2">&amp;</span><span class="ident">Extensions</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident">ext</span>.<span class="ident">get</span>::<span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>()
-            .<span class="ident">expect</span>(
+<span class="kw">impl </span>IdentityInner {
+    <span class="kw">fn </span>extract(ext: <span class="kw-2">&amp;</span>Extensions) -&gt; <span class="self">Self </span>{
+        ext.get::&lt;<span class="self">Self</span>&gt;()
+            .expect(
                 <span class="string">&quot;No `IdentityInner` instance was found in the extensions attached to the \
                 incoming request. This usually means that `IdentityMiddleware` has not been \
                 registered as an application middleware via `App::wrap`. `Identity` cannot be used \
@@ -356,177 +356,177 @@
                 a middleware for your application to fix this panic. If the problem persists, \
                 please file an issue on GitHub.&quot;</span>,
             )
-            .<span class="ident">to_owned</span>()
+            .to_owned()
     }
 
-    <span class="doccomment">/// Retrieve the user id attached to the current session.</span>
-    <span class="kw">fn</span> <span class="ident">get_identity</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">anyhow::Error</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">session</span>
-            .<span class="ident">get</span>::<span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>(<span class="ident">ID_KEY</span>)
-            .<span class="ident">context</span>(<span class="string">&quot;Failed to deserialize the user identifier attached to the current session&quot;</span>)<span class="question-mark">?</span>
-            .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> {
+    <span class="doccomment">/// Retrieve the user id attached to the current session.
+    </span><span class="kw">fn </span>get_identity(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;String, anyhow::Error&gt; {
+        <span class="self">self</span>.session
+            .get::&lt;String&gt;(ID_KEY)
+            .context(<span class="string">&quot;Failed to deserialize the user identifier attached to the current session&quot;</span>)<span class="question-mark">?
+            </span>.ok_or_else(|| {
                 <span class="macro">anyhow!</span>(<span class="string">&quot;There is no identity information attached to the current session&quot;</span>)
             })
     }
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const</span> <span class="ident">ID_KEY</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;actix_identity.user_id&quot;</span>;
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const</span> <span class="ident">LAST_VISIT_UNIX_TIMESTAMP_KEY</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;actix_identity.last_visited_at&quot;</span>;
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const</span> <span class="ident">LOGIN_UNIX_TIMESTAMP_KEY</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;actix_identity.logged_in_at&quot;</span>;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>ID_KEY: <span class="kw-2">&amp;</span>str = <span class="string">&quot;actix_identity.user_id&quot;</span>;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>LAST_VISIT_UNIX_TIMESTAMP_KEY: <span class="kw-2">&amp;</span>str = <span class="string">&quot;actix_identity.last_visited_at&quot;</span>;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>LOGIN_UNIX_TIMESTAMP_KEY: <span class="kw-2">&amp;</span>str = <span class="string">&quot;actix_identity.logged_in_at&quot;</span>;
 
-<span class="kw">impl</span> <span class="ident">Identity</span> {
-    <span class="doccomment">/// Return the user id associated to the current session.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// use actix_web::{get, Responder};</span>
-    <span class="doccomment">/// use actix_identity::Identity;</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// #[get(&quot;/&quot;)]</span>
-    <span class="doccomment">/// async fn index(user: Option&lt;Identity&gt;) -&gt; impl Responder {</span>
-    <span class="doccomment">///     if let Some(user) = user {</span>
-    <span class="doccomment">///         format!(&quot;Welcome! {}&quot;, user.id().unwrap())</span>
-    <span class="doccomment">///     } else {</span>
-    <span class="doccomment">///         &quot;Welcome Anonymous!&quot;.to_owned()</span>
-    <span class="doccomment">///     }</span>
-    <span class="doccomment">/// }</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">anyhow::Error</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">session</span>.<span class="ident">get</span>(<span class="ident">ID_KEY</span>)<span class="question-mark">?</span>.<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> {
+<span class="kw">impl </span>Identity {
+    <span class="doccomment">/// Return the user id associated to the current session.
+    ///
+    /// # Examples
+    /// ```
+    /// use actix_web::{get, Responder};
+    /// use actix_identity::Identity;
+    ///
+    /// #[get(&quot;/&quot;)]
+    /// async fn index(user: Option&lt;Identity&gt;) -&gt; impl Responder {
+    ///     if let Some(user) = user {
+    ///         format!(&quot;Welcome! {}&quot;, user.id().unwrap())
+    ///     } else {
+    ///         &quot;Welcome Anonymous!&quot;.to_owned()
+    ///     }
+    /// }
+    /// ```
+    </span><span class="kw">pub fn </span>id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;String, anyhow::Error&gt; {
+        <span class="self">self</span>.<span class="number">0</span>.session.get(ID_KEY)<span class="question-mark">?</span>.ok_or_else(|| {
             <span class="macro">anyhow!</span>(<span class="string">&quot;Bug: the identity information attached to the current session has disappeared&quot;</span>)
         })
     }
 
-    <span class="doccomment">/// Attach a valid user identity to the current session.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This method should be called after you have successfully authenticated the user. After</span>
-    <span class="doccomment">/// `login` has been called, the user will be able to access all routes that require a valid</span>
-    <span class="doccomment">/// [`Identity`].</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// use actix_web::{post, Responder, HttpRequest, HttpMessage, HttpResponse};</span>
-    <span class="doccomment">/// use actix_identity::Identity;</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// #[post(&quot;/login&quot;)]</span>
-    <span class="doccomment">/// async fn login(request: HttpRequest) -&gt; impl Responder {</span>
-    <span class="doccomment">///     Identity::login(&amp;request.extensions(), &quot;User1&quot;.into());</span>
-    <span class="doccomment">///     HttpResponse::Ok()</span>
-    <span class="doccomment">/// }</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">login</span>(<span class="ident">ext</span>: <span class="kw-2">&amp;</span><span class="ident">Extensions</span>, <span class="ident">id</span>: <span class="ident">String</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">anyhow::Error</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">inner</span> <span class="op">=</span> <span class="ident">IdentityInner::extract</span>(<span class="ident">ext</span>);
-        <span class="ident">inner</span>.<span class="ident">session</span>.<span class="ident">insert</span>(<span class="ident">ID_KEY</span>, <span class="ident">id</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">now</span> <span class="op">=</span> <span class="ident">OffsetDateTime::now_utc</span>().<span class="ident">unix_timestamp</span>();
-        <span class="kw">if</span> <span class="ident">inner</span>.<span class="ident">is_login_deadline_enabled</span> {
-            <span class="ident">inner</span>.<span class="ident">session</span>.<span class="ident">insert</span>(<span class="ident">LOGIN_UNIX_TIMESTAMP_KEY</span>, <span class="ident">now</span>)<span class="question-mark">?</span>;
+    <span class="doccomment">/// Attach a valid user identity to the current session.
+    ///
+    /// This method should be called after you have successfully authenticated the user. After
+    /// `login` has been called, the user will be able to access all routes that require a valid
+    /// [`Identity`].
+    ///
+    /// # Examples
+    /// ```
+    /// use actix_web::{post, Responder, HttpRequest, HttpMessage, HttpResponse};
+    /// use actix_identity::Identity;
+    ///
+    /// #[post(&quot;/login&quot;)]
+    /// async fn login(request: HttpRequest) -&gt; impl Responder {
+    ///     Identity::login(&amp;request.extensions(), &quot;User1&quot;.into());
+    ///     HttpResponse::Ok()
+    /// }
+    /// ```
+    </span><span class="kw">pub fn </span>login(ext: <span class="kw-2">&amp;</span>Extensions, id: String) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, anyhow::Error&gt; {
+        <span class="kw">let </span>inner = IdentityInner::extract(ext);
+        inner.session.insert(ID_KEY, id)<span class="question-mark">?</span>;
+        <span class="kw">let </span>now = OffsetDateTime::now_utc().unix_timestamp();
+        <span class="kw">if </span>inner.is_login_deadline_enabled {
+            inner.session.insert(LOGIN_UNIX_TIMESTAMP_KEY, now)<span class="question-mark">?</span>;
         }
-        <span class="kw">if</span> <span class="ident">inner</span>.<span class="ident">is_visit_deadline_enabled</span> {
-            <span class="ident">inner</span>.<span class="ident">session</span>.<span class="ident">insert</span>(<span class="ident">LAST_VISIT_UNIX_TIMESTAMP_KEY</span>, <span class="ident">now</span>)<span class="question-mark">?</span>;
+        <span class="kw">if </span>inner.is_visit_deadline_enabled {
+            inner.session.insert(LAST_VISIT_UNIX_TIMESTAMP_KEY, now)<span class="question-mark">?</span>;
         }
-        <span class="ident">inner</span>.<span class="ident">session</span>.<span class="ident">renew</span>();
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span>(<span class="ident">inner</span>))
+        inner.session.renew();
+        <span class="prelude-val">Ok</span>(<span class="self">Self</span>(inner))
     }
 
-    <span class="doccomment">/// Remove the user identity from the current session.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// After `logout` has been called, the user will no longer be able to access routes that</span>
-    <span class="doccomment">/// require a valid [`Identity`].</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The behaviour on logout is determined by [`IdentityMiddlewareBuilder::logout_behaviour`].</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// use actix_web::{post, Responder, HttpResponse};</span>
-    <span class="doccomment">/// use actix_identity::Identity;</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// #[post(&quot;/logout&quot;)]</span>
-    <span class="doccomment">/// async fn logout(user: Identity) -&gt; impl Responder {</span>
-    <span class="doccomment">///     user.logout();</span>
-    <span class="doccomment">///     HttpResponse::Ok()</span>
-    <span class="doccomment">/// }</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`IdentityMiddlewareBuilder::logout_behaviour`]: crate::config::IdentityMiddlewareBuilder::logout_behaviour</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">logout</span>(<span class="self">self</span>) {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">logout_behaviour</span> {
-            <span class="ident">LogoutBehaviour::PurgeSession</span> =&gt; {
-                <span class="self">self</span>.<span class="number">0</span>.<span class="ident">session</span>.<span class="ident">purge</span>();
+    <span class="doccomment">/// Remove the user identity from the current session.
+    ///
+    /// After `logout` has been called, the user will no longer be able to access routes that
+    /// require a valid [`Identity`].
+    ///
+    /// The behaviour on logout is determined by [`IdentityMiddlewareBuilder::logout_behaviour`].
+    ///
+    /// # Examples
+    /// ```
+    /// use actix_web::{post, Responder, HttpResponse};
+    /// use actix_identity::Identity;
+    ///
+    /// #[post(&quot;/logout&quot;)]
+    /// async fn logout(user: Identity) -&gt; impl Responder {
+    ///     user.logout();
+    ///     HttpResponse::Ok()
+    /// }
+    /// ```
+    ///
+    /// [`IdentityMiddlewareBuilder::logout_behaviour`]: crate::config::IdentityMiddlewareBuilder::logout_behaviour
+    </span><span class="kw">pub fn </span>logout(<span class="self">self</span>) {
+        <span class="kw">match </span><span class="self">self</span>.<span class="number">0</span>.logout_behaviour {
+            LogoutBehaviour::PurgeSession =&gt; {
+                <span class="self">self</span>.<span class="number">0</span>.session.purge();
             }
-            <span class="ident">LogoutBehaviour::DeleteIdentityKeys</span> =&gt; {
-                <span class="self">self</span>.<span class="number">0</span>.<span class="ident">session</span>.<span class="ident">remove</span>(<span class="ident">ID_KEY</span>);
-                <span class="kw">if</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">is_login_deadline_enabled</span> {
-                    <span class="self">self</span>.<span class="number">0</span>.<span class="ident">session</span>.<span class="ident">remove</span>(<span class="ident">LOGIN_UNIX_TIMESTAMP_KEY</span>);
+            LogoutBehaviour::DeleteIdentityKeys =&gt; {
+                <span class="self">self</span>.<span class="number">0</span>.session.remove(ID_KEY);
+                <span class="kw">if </span><span class="self">self</span>.<span class="number">0</span>.is_login_deadline_enabled {
+                    <span class="self">self</span>.<span class="number">0</span>.session.remove(LOGIN_UNIX_TIMESTAMP_KEY);
                 }
-                <span class="kw">if</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">is_visit_deadline_enabled</span> {
-                    <span class="self">self</span>.<span class="number">0</span>.<span class="ident">session</span>.<span class="ident">remove</span>(<span class="ident">LAST_VISIT_UNIX_TIMESTAMP_KEY</span>);
+                <span class="kw">if </span><span class="self">self</span>.<span class="number">0</span>.is_visit_deadline_enabled {
+                    <span class="self">self</span>.<span class="number">0</span>.session.remove(LAST_VISIT_UNIX_TIMESTAMP_KEY);
                 }
             }
         }
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">extract</span>(<span class="ident">ext</span>: <span class="kw-2">&amp;</span><span class="ident">Extensions</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">anyhow::Error</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">inner</span> <span class="op">=</span> <span class="ident">IdentityInner::extract</span>(<span class="ident">ext</span>);
-        <span class="ident">inner</span>.<span class="ident">get_identity</span>()<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span>(<span class="ident">inner</span>))
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>extract(ext: <span class="kw-2">&amp;</span>Extensions) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, anyhow::Error&gt; {
+        <span class="kw">let </span>inner = IdentityInner::extract(ext);
+        inner.get_identity()<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(<span class="self">Self</span>(inner))
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">logged_at</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">OffsetDateTime</span><span class="op">&gt;</span>, <span class="ident">anyhow::Error</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="number">0</span>
-            .<span class="ident">session</span>
-            .<span class="ident">get</span>(<span class="ident">LOGIN_UNIX_TIMESTAMP_KEY</span>)<span class="question-mark">?</span>
-            .<span class="ident">map</span>(<span class="ident">OffsetDateTime::from_unix_timestamp</span>)
-            .<span class="ident">transpose</span>()
-            .<span class="ident">map_err</span>(<span class="ident">anyhow::Error::from</span>)
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>logged_at(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;OffsetDateTime&gt;, anyhow::Error&gt; {
+        <span class="self">self</span>.<span class="number">0
+            </span>.session
+            .get(LOGIN_UNIX_TIMESTAMP_KEY)<span class="question-mark">?
+            </span>.map(OffsetDateTime::from_unix_timestamp)
+            .transpose()
+            .map_err(anyhow::Error::from)
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">last_visited_at</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">OffsetDateTime</span><span class="op">&gt;</span>, <span class="ident">anyhow::Error</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="number">0</span>
-            .<span class="ident">session</span>
-            .<span class="ident">get</span>(<span class="ident">LAST_VISIT_UNIX_TIMESTAMP_KEY</span>)<span class="question-mark">?</span>
-            .<span class="ident">map</span>(<span class="ident">OffsetDateTime::from_unix_timestamp</span>)
-            .<span class="ident">transpose</span>()
-            .<span class="ident">map_err</span>(<span class="ident">anyhow::Error::from</span>)
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>last_visited_at(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;OffsetDateTime&gt;, anyhow::Error&gt; {
+        <span class="self">self</span>.<span class="number">0
+            </span>.session
+            .get(LAST_VISIT_UNIX_TIMESTAMP_KEY)<span class="question-mark">?
+            </span>.map(OffsetDateTime::from_unix_timestamp)
+            .transpose()
+            .map_err(anyhow::Error::from)
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">set_last_visited_at</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">anyhow::Error</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">now</span> <span class="op">=</span> <span class="ident">OffsetDateTime::now_utc</span>().<span class="ident">unix_timestamp</span>();
-        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">session</span>.<span class="ident">insert</span>(<span class="ident">LAST_VISIT_UNIX_TIMESTAMP_KEY</span>, <span class="ident">now</span>)<span class="question-mark">?</span>;
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>set_last_visited_at(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), anyhow::Error&gt; {
+        <span class="kw">let </span>now = OffsetDateTime::now_utc().unix_timestamp();
+        <span class="self">self</span>.<span class="number">0</span>.session.insert(LAST_VISIT_UNIX_TIMESTAMP_KEY, now)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
 }
 
-<span class="doccomment">/// Extractor implementation for [`Identity`].</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Examples</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// use actix_web::{get, Responder};</span>
-<span class="doccomment">/// use actix_identity::Identity;</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// #[get(&quot;/&quot;)]</span>
-<span class="doccomment">/// async fn index(user: Option&lt;Identity&gt;) -&gt; impl Responder {</span>
-<span class="doccomment">///     if let Some(user) = user {</span>
-<span class="doccomment">///         format!(&quot;Welcome! {}&quot;, user.id().unwrap())</span>
-<span class="doccomment">///     } else {</span>
-<span class="doccomment">///         &quot;Welcome Anonymous!&quot;.to_owned()</span>
-<span class="doccomment">///     }</span>
-<span class="doccomment">/// }</span>
-<span class="doccomment">/// ```</span>
-<span class="kw">impl</span> <span class="ident">FromRequest</span> <span class="kw">for</span> <span class="ident">Identity</span> {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Error</span>;
-    <span class="kw">type</span> <span class="ident">Future</span> <span class="op">=</span> <span class="ident">Ready</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span><span class="op">&gt;</span>;
+<span class="doccomment">/// Extractor implementation for [`Identity`].
+///
+/// # Examples
+/// ```
+/// use actix_web::{get, Responder};
+/// use actix_identity::Identity;
+///
+/// #[get(&quot;/&quot;)]
+/// async fn index(user: Option&lt;Identity&gt;) -&gt; impl Responder {
+///     if let Some(user) = user {
+///         format!(&quot;Welcome! {}&quot;, user.id().unwrap())
+///     } else {
+///         &quot;Welcome Anonymous!&quot;.to_owned()
+///     }
+/// }
+/// ```
+</span><span class="kw">impl </span>FromRequest <span class="kw">for </span>Identity {
+    <span class="kw">type </span>Error = Error;
+    <span class="kw">type </span>Future = Ready&lt;<span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="self">Self</span>::Error&gt;&gt;;
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">from_request</span>(<span class="ident">req</span>: <span class="kw-2">&amp;</span><span class="ident">HttpRequest</span>, <span class="kw">_</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Payload</span>) -&gt; <span class="ident"><span class="self">Self</span>::Future</span> {
-        <span class="ident">ready</span>(<span class="ident">Identity::extract</span>(<span class="kw-2">&amp;</span><span class="ident">req</span>.<span class="ident">extensions</span>()).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">actix_web::error::InternalError::from_response</span>(
-                <span class="ident">err</span>,
-                <span class="ident">HttpResponse::new</span>(<span class="ident">StatusCode::UNAUTHORIZED</span>),
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>from_request(req: <span class="kw-2">&amp;</span>HttpRequest, <span class="kw">_</span>: <span class="kw-2">&amp;mut </span>Payload) -&gt; <span class="self">Self</span>::Future {
+        ready(Identity::extract(<span class="kw-2">&amp;</span>req.extensions()).map_err(|err| {
+            <span class="kw">let </span>res = actix_web::error::InternalError::from_response(
+                err,
+                HttpResponse::new(StatusCode::UNAUTHORIZED),
             );
 
-            <span class="ident">actix_web::Error::from</span>(<span class="ident">res</span>)
+            actix_web::Error::from(res)
         }))
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_identity" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (34a6cae28 2022-08-09)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_identity" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (060e47f74 2022-08-23)" ></div></body></html>

@@ -121,126 +121,126 @@
 <span id="119">119</span>
 <span id="120">120</span>
 <span id="121">121</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">borrow::Cow</span>, <span class="ident">time::Duration</span>};
+</pre><pre class="rust"><code><span class="kw">use </span>std::{borrow::Cow, time::Duration};
 
-<span class="kw">use</span> <span class="ident">redis::Client</span>;
+<span class="kw">use </span>redis::Client;
 
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">errors::Error</span>, <span class="ident">Limiter</span>};
+<span class="kw">use crate</span>::{errors::Error, Limiter};
 
-<span class="doccomment">/// Rate limiter builder.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Builder</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">redis_url</span>: <span class="ident">String</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">limit</span>: <span class="ident">usize</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">period</span>: <span class="ident">Duration</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">cookie_name</span>: <span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">str</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">session_key</span>: <span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">str</span><span class="op">&gt;</span>,
+<span class="doccomment">/// Rate limiter builder.
+</span><span class="attribute">#[derive(Debug)]
+</span><span class="kw">pub struct </span>Builder {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) redis_url: String,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) limit: usize,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) period: Duration,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) cookie_name: Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) session_key: Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">Builder</span> {
-    <span class="doccomment">/// Set upper limit.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">limit</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">limit</span>: <span class="ident">usize</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">limit</span> <span class="op">=</span> <span class="ident">limit</span>;
-        <span class="self">self</span>
-    }
+<span class="kw">impl </span>Builder {
+    <span class="doccomment">/// Set upper limit.
+    </span><span class="kw">pub fn </span>limit(<span class="kw-2">&amp;mut </span><span class="self">self</span>, limit: usize) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
+        <span class="self">self</span>.limit = limit;
+        <span class="self">self
+    </span>}
 
-    <span class="doccomment">/// Set limit window/period.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">period</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">period</span>: <span class="ident">Duration</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">period</span> <span class="op">=</span> <span class="ident">period</span>;
-        <span class="self">self</span>
-    }
+    <span class="doccomment">/// Set limit window/period.
+    </span><span class="kw">pub fn </span>period(<span class="kw-2">&amp;mut </span><span class="self">self</span>, period: Duration) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
+        <span class="self">self</span>.period = period;
+        <span class="self">self
+    </span>}
 
-    <span class="doccomment">/// Set name of cookie to be sent.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cookie_name</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">cookie_name</span>: <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">cookie_name</span> <span class="op">=</span> <span class="ident">cookie_name</span>.<span class="ident">into</span>();
-        <span class="self">self</span>
-    }
+    <span class="doccomment">/// Set name of cookie to be sent.
+    </span><span class="kw">pub fn </span>cookie_name(<span class="kw-2">&amp;mut </span><span class="self">self</span>, cookie_name: <span class="kw">impl </span>Into&lt;Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;&gt;) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
+        <span class="self">self</span>.cookie_name = cookie_name.into();
+        <span class="self">self
+    </span>}
 
-    <span class="doccomment">/// Set session key to be used in backend.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">session_key</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">session_key</span>: <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">session_key</span> <span class="op">=</span> <span class="ident">session_key</span>.<span class="ident">into</span>();
-        <span class="self">self</span>
-    }
+    <span class="doccomment">/// Set session key to be used in backend.
+    </span><span class="kw">pub fn </span>session_key(<span class="kw-2">&amp;mut </span><span class="self">self</span>, session_key: <span class="kw">impl </span>Into&lt;Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;&gt;) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
+        <span class="self">self</span>.session_key = session_key.into();
+        <span class="self">self
+    </span>}
 
-    <span class="doccomment">/// Finalizes and returns a `Limiter`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Note that this method will connect to the Redis server to test its connection which is a</span>
-    <span class="doccomment">/// **synchronous** operation.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">build</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Limiter</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Ok</span>(<span class="ident">Limiter</span> {
-            <span class="ident">client</span>: <span class="ident">Client::open</span>(<span class="self">self</span>.<span class="ident">redis_url</span>.<span class="ident">as_str</span>())<span class="question-mark">?</span>,
-            <span class="ident">limit</span>: <span class="self">self</span>.<span class="ident">limit</span>,
-            <span class="ident">period</span>: <span class="self">self</span>.<span class="ident">period</span>,
-            <span class="ident">cookie_name</span>: <span class="self">self</span>.<span class="ident">cookie_name</span>.<span class="ident">clone</span>(),
-            <span class="ident">session_key</span>: <span class="self">self</span>.<span class="ident">session_key</span>.<span class="ident">clone</span>(),
+    <span class="doccomment">/// Finalizes and returns a `Limiter`.
+    ///
+    /// Note that this method will connect to the Redis server to test its connection which is a
+    /// **synchronous** operation.
+    </span><span class="kw">pub fn </span>build(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Limiter, Error&gt; {
+        <span class="prelude-val">Ok</span>(Limiter {
+            client: Client::open(<span class="self">self</span>.redis_url.as_str())<span class="question-mark">?</span>,
+            limit: <span class="self">self</span>.limit,
+            period: <span class="self">self</span>.period,
+            cookie_name: <span class="self">self</span>.cookie_name.clone(),
+            session_key: <span class="self">self</span>.session_key.clone(),
         })
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_create_builder</span>() {
-        <span class="kw">let</span> <span class="ident">redis_url</span> <span class="op">=</span> <span class="string">&quot;redis://127.0.0.1&quot;</span>;
-        <span class="kw">let</span> <span class="ident">period</span> <span class="op">=</span> <span class="ident">Duration::from_secs</span>(<span class="number">10</span>);
-        <span class="kw">let</span> <span class="ident">builder</span> <span class="op">=</span> <span class="ident">Builder</span> {
-            <span class="ident">redis_url</span>: <span class="ident">redis_url</span>.<span class="ident">to_owned</span>(),
-            <span class="ident">limit</span>: <span class="number">100</span>,
-            <span class="ident">period</span>,
-            <span class="ident">cookie_name</span>: <span class="ident">Cow::Owned</span>(<span class="string">&quot;session&quot;</span>.<span class="ident">to_string</span>()),
-            <span class="ident">session_key</span>: <span class="ident">Cow::Owned</span>(<span class="string">&quot;rate-api&quot;</span>.<span class="ident">to_string</span>()),
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_create_builder() {
+        <span class="kw">let </span>redis_url = <span class="string">&quot;redis://127.0.0.1&quot;</span>;
+        <span class="kw">let </span>period = Duration::from_secs(<span class="number">10</span>);
+        <span class="kw">let </span>builder = Builder {
+            redis_url: redis_url.to_owned(),
+            limit: <span class="number">100</span>,
+            period,
+            cookie_name: Cow::Owned(<span class="string">&quot;session&quot;</span>.to_string()),
+            session_key: Cow::Owned(<span class="string">&quot;rate-api&quot;</span>.to_string()),
         };
 
-        <span class="macro">assert_eq!</span>(<span class="ident">builder</span>.<span class="ident">redis_url</span>, <span class="ident">redis_url</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">builder</span>.<span class="ident">limit</span>, <span class="number">100</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">builder</span>.<span class="ident">period</span>, <span class="ident">period</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">builder</span>.<span class="ident">session_key</span>, <span class="string">&quot;rate-api&quot;</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">builder</span>.<span class="ident">cookie_name</span>, <span class="string">&quot;session&quot;</span>);
+        <span class="macro">assert_eq!</span>(builder.redis_url, redis_url);
+        <span class="macro">assert_eq!</span>(builder.limit, <span class="number">100</span>);
+        <span class="macro">assert_eq!</span>(builder.period, period);
+        <span class="macro">assert_eq!</span>(builder.session_key, <span class="string">&quot;rate-api&quot;</span>);
+        <span class="macro">assert_eq!</span>(builder.cookie_name, <span class="string">&quot;session&quot;</span>);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_create_limiter</span>() {
-        <span class="kw">let</span> <span class="ident">redis_url</span> <span class="op">=</span> <span class="string">&quot;redis://127.0.0.1&quot;</span>;
-        <span class="kw">let</span> <span class="ident">period</span> <span class="op">=</span> <span class="ident">Duration::from_secs</span>(<span class="number">20</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">builder</span> <span class="op">=</span> <span class="ident">Builder</span> {
-            <span class="ident">redis_url</span>: <span class="ident">redis_url</span>.<span class="ident">to_owned</span>(),
-            <span class="ident">limit</span>: <span class="number">100</span>,
-            <span class="ident">period</span>: <span class="ident">Duration::from_secs</span>(<span class="number">10</span>),
-            <span class="ident">session_key</span>: <span class="ident">Cow::Borrowed</span>(<span class="string">&quot;key&quot;</span>),
-            <span class="ident">cookie_name</span>: <span class="ident">Cow::Borrowed</span>(<span class="string">&quot;sid&quot;</span>),
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_create_limiter() {
+        <span class="kw">let </span>redis_url = <span class="string">&quot;redis://127.0.0.1&quot;</span>;
+        <span class="kw">let </span>period = Duration::from_secs(<span class="number">20</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>builder = Builder {
+            redis_url: redis_url.to_owned(),
+            limit: <span class="number">100</span>,
+            period: Duration::from_secs(<span class="number">10</span>),
+            session_key: Cow::Borrowed(<span class="string">&quot;key&quot;</span>),
+            cookie_name: Cow::Borrowed(<span class="string">&quot;sid&quot;</span>),
         };
 
-        <span class="kw">let</span> <span class="ident">limiter</span> <span class="op">=</span> <span class="ident">builder</span>
-            .<span class="ident">limit</span>(<span class="number">200</span>)
-            .<span class="ident">period</span>(<span class="ident">period</span>)
-            .<span class="ident">cookie_name</span>(<span class="string">&quot;session&quot;</span>.<span class="ident">to_string</span>())
-            .<span class="ident">session_key</span>(<span class="string">&quot;rate-api&quot;</span>.<span class="ident">to_string</span>())
-            .<span class="ident">build</span>()
-            .<span class="ident">unwrap</span>();
+        <span class="kw">let </span>limiter = builder
+            .limit(<span class="number">200</span>)
+            .period(period)
+            .cookie_name(<span class="string">&quot;session&quot;</span>.to_string())
+            .session_key(<span class="string">&quot;rate-api&quot;</span>.to_string())
+            .build()
+            .unwrap();
 
-        <span class="macro">assert_eq!</span>(<span class="ident">limiter</span>.<span class="ident">limit</span>, <span class="number">200</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">limiter</span>.<span class="ident">period</span>, <span class="ident">period</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">limiter</span>.<span class="ident">session_key</span>, <span class="string">&quot;rate-api&quot;</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">limiter</span>.<span class="ident">cookie_name</span>, <span class="string">&quot;session&quot;</span>);
+        <span class="macro">assert_eq!</span>(limiter.limit, <span class="number">200</span>);
+        <span class="macro">assert_eq!</span>(limiter.period, period);
+        <span class="macro">assert_eq!</span>(limiter.session_key, <span class="string">&quot;rate-api&quot;</span>);
+        <span class="macro">assert_eq!</span>(limiter.cookie_name, <span class="string">&quot;session&quot;</span>);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="attribute">#[<span class="ident">should_panic</span> <span class="op">=</span> <span class="string">&quot;Redis URL did not parse&quot;</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_create_limiter_error</span>() {
-        <span class="kw">let</span> <span class="ident">redis_url</span> <span class="op">=</span> <span class="string">&quot;127.0.0.1&quot;</span>;
-        <span class="kw">let</span> <span class="ident">period</span> <span class="op">=</span> <span class="ident">Duration::from_secs</span>(<span class="number">20</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">builder</span> <span class="op">=</span> <span class="ident">Builder</span> {
-            <span class="ident">redis_url</span>: <span class="ident">redis_url</span>.<span class="ident">to_owned</span>(),
-            <span class="ident">limit</span>: <span class="number">100</span>,
-            <span class="ident">period</span>: <span class="ident">Duration::from_secs</span>(<span class="number">10</span>),
-            <span class="ident">session_key</span>: <span class="ident">Cow::Borrowed</span>(<span class="string">&quot;key&quot;</span>),
-            <span class="ident">cookie_name</span>: <span class="ident">Cow::Borrowed</span>(<span class="string">&quot;sid&quot;</span>),
+    <span class="attribute">#[test]
+    #[should_panic = <span class="string">&quot;Redis URL did not parse&quot;</span>]
+    </span><span class="kw">fn </span>test_create_limiter_error() {
+        <span class="kw">let </span>redis_url = <span class="string">&quot;127.0.0.1&quot;</span>;
+        <span class="kw">let </span>period = Duration::from_secs(<span class="number">20</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>builder = Builder {
+            redis_url: redis_url.to_owned(),
+            limit: <span class="number">100</span>,
+            period: Duration::from_secs(<span class="number">10</span>),
+            session_key: Cow::Borrowed(<span class="string">&quot;key&quot;</span>),
+            cookie_name: Cow::Borrowed(<span class="string">&quot;sid&quot;</span>),
         };
 
-        <span class="ident">builder</span>.<span class="ident">limit</span>(<span class="number">200</span>).<span class="ident">period</span>(<span class="ident">period</span>).<span class="ident">build</span>().<span class="ident">unwrap</span>();
+        builder.limit(<span class="number">200</span>).period(period).build().unwrap();
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_limitation" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (34a6cae28 2022-08-09)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_limitation" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (060e47f74 2022-08-23)" ></div></body></html>

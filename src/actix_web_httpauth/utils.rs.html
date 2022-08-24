@@ -110,117 +110,117 @@
 <span id="110">110</span>
 <span id="111">111</span>
 <span id="112">112</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::str</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>std::str;
 
-<span class="kw">use</span> <span class="ident">actix_web::web::BytesMut</span>;
+<span class="kw">use </span>actix_web::web::BytesMut;
 
-<span class="kw">enum</span> <span class="ident">State</span> {
-    <span class="ident">YieldStr</span>,
-    <span class="ident">YieldQuote</span>,
+<span class="kw">enum </span>State {
+    YieldStr,
+    YieldQuote,
 }
 
-<span class="kw">struct</span> <span class="ident">Quoted</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="ident">inner</span>: <span class="ident">::std::iter::Peekable</span><span class="op">&lt;</span><span class="ident">str::Split</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">char</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">state</span>: <span class="ident">State</span>,
+<span class="kw">struct </span>Quoted&lt;<span class="lifetime">&#39;a</span>&gt; {
+    inner: ::std::iter::Peekable&lt;str::Split&lt;<span class="lifetime">&#39;a</span>, char&gt;&gt;,
+    state: State,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Quoted</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span>) -&gt; <span class="ident">Quoted</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
-        <span class="ident">Quoted</span> {
-            <span class="ident">inner</span>: <span class="ident">s</span>.<span class="ident">split</span>(<span class="string">&#39;&quot;&#39;</span>).<span class="ident">peekable</span>(),
-            <span class="ident">state</span>: <span class="ident">State::YieldStr</span>,
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Quoted&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">pub fn </span>new(s: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str) -&gt; Quoted&lt;<span class="lifetime">&#39;_</span>&gt; {
+        Quoted {
+            inner: s.split(<span class="string">&#39;&quot;&#39;</span>).peekable(),
+            state: State::YieldStr,
         }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Iterator</span> <span class="kw">for</span> <span class="ident">Quoted</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span>;
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Iterator <span class="kw">for </span>Quoted&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">type </span>Item = <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str;
 
-    <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Item</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">state</span> {
-            <span class="ident">State::YieldStr</span> =&gt; <span class="kw">match</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">next</span>() {
-                <span class="prelude-val">Some</span>(<span class="ident">val</span>) =&gt; {
-                    <span class="self">self</span>.<span class="ident">state</span> <span class="op">=</span> <span class="ident">State::YieldQuote</span>;
-                    <span class="prelude-val">Some</span>(<span class="ident">val</span>)
+    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Item&gt; {
+        <span class="kw">match </span><span class="self">self</span>.state {
+            State::YieldStr =&gt; <span class="kw">match </span><span class="self">self</span>.inner.next() {
+                <span class="prelude-val">Some</span>(val) =&gt; {
+                    <span class="self">self</span>.state = State::YieldQuote;
+                    <span class="prelude-val">Some</span>(val)
                 }
-                <span class="prelude-val">None</span> =&gt; <span class="prelude-val">None</span>,
+                <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
             },
 
-            <span class="ident">State::YieldQuote</span> =&gt; <span class="kw">match</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">peek</span>() {
+            State::YieldQuote =&gt; <span class="kw">match </span><span class="self">self</span>.inner.peek() {
                 <span class="prelude-val">Some</span>(<span class="kw">_</span>) =&gt; {
-                    <span class="self">self</span>.<span class="ident">state</span> <span class="op">=</span> <span class="ident">State::YieldStr</span>;
+                    <span class="self">self</span>.state = State::YieldStr;
                     <span class="prelude-val">Some</span>(<span class="string">&quot;\\\&quot;&quot;</span>)
                 }
-                <span class="prelude-val">None</span> =&gt; <span class="prelude-val">None</span>,
+                <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
             },
         }
     }
 }
 
-<span class="doccomment">/// Escapes the quotes in `val`.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">put_quoted</span>(<span class="ident">buf</span>: <span class="kw-2">&amp;mut</span> <span class="ident">BytesMut</span>, <span class="ident">val</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) {
-    <span class="kw">for</span> <span class="ident">part</span> <span class="kw">in</span> <span class="ident">Quoted::new</span>(<span class="ident">val</span>) {
-        <span class="ident">buf</span>.<span class="ident">extend_from_slice</span>(<span class="ident">part</span>.<span class="ident">as_bytes</span>());
+<span class="doccomment">/// Escapes the quotes in `val`.
+</span><span class="kw">pub fn </span>put_quoted(buf: <span class="kw-2">&amp;mut </span>BytesMut, val: <span class="kw-2">&amp;</span>str) {
+    <span class="kw">for </span>part <span class="kw">in </span>Quoted::new(val) {
+        buf.extend_from_slice(part.as_bytes());
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="ident">std::str</span>;
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use </span>std::str;
 
-    <span class="kw">use</span> <span class="ident">actix_web::web::BytesMut</span>;
+    <span class="kw">use </span>actix_web::web::BytesMut;
 
-    <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::put_quoted</span>;
+    <span class="kw">use </span><span class="kw">super</span>::put_quoted;
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_quote_str</span>() {
-        <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> <span class="string">&quot;a \&quot;quoted\&quot; string&quot;</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">output</span> <span class="op">=</span> <span class="ident">BytesMut::new</span>();
-        <span class="ident">put_quoted</span>(<span class="kw-2">&amp;mut</span> <span class="ident">output</span>, <span class="ident">input</span>);
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">str::from_utf8</span>(<span class="kw-2">&amp;</span><span class="ident">output</span>).<span class="ident">unwrap</span>();
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_quote_str() {
+        <span class="kw">let </span>input = <span class="string">&quot;a \&quot;quoted\&quot; string&quot;</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>output = BytesMut::new();
+        put_quoted(<span class="kw-2">&amp;mut </span>output, input);
+        <span class="kw">let </span>result = str::from_utf8(<span class="kw-2">&amp;</span>output).unwrap();
 
-        <span class="macro">assert_eq!</span>(<span class="ident">result</span>, <span class="string">&quot;a \\\&quot;quoted\\\&quot; string&quot;</span>);
+        <span class="macro">assert_eq!</span>(result, <span class="string">&quot;a \\\&quot;quoted\\\&quot; string&quot;</span>);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_without_quotes</span>() {
-        <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> <span class="string">&quot;non-quoted string&quot;</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">output</span> <span class="op">=</span> <span class="ident">BytesMut::new</span>();
-        <span class="ident">put_quoted</span>(<span class="kw-2">&amp;mut</span> <span class="ident">output</span>, <span class="ident">input</span>);
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">str::from_utf8</span>(<span class="kw-2">&amp;</span><span class="ident">output</span>).<span class="ident">unwrap</span>();
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_without_quotes() {
+        <span class="kw">let </span>input = <span class="string">&quot;non-quoted string&quot;</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>output = BytesMut::new();
+        put_quoted(<span class="kw-2">&amp;mut </span>output, input);
+        <span class="kw">let </span>result = str::from_utf8(<span class="kw-2">&amp;</span>output).unwrap();
 
-        <span class="macro">assert_eq!</span>(<span class="ident">result</span>, <span class="string">&quot;non-quoted string&quot;</span>);
+        <span class="macro">assert_eq!</span>(result, <span class="string">&quot;non-quoted string&quot;</span>);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_starts_with_quote</span>() {
-        <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> <span class="string">&quot;\&quot;first-quoted string&quot;</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">output</span> <span class="op">=</span> <span class="ident">BytesMut::new</span>();
-        <span class="ident">put_quoted</span>(<span class="kw-2">&amp;mut</span> <span class="ident">output</span>, <span class="ident">input</span>);
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">str::from_utf8</span>(<span class="kw-2">&amp;</span><span class="ident">output</span>).<span class="ident">unwrap</span>();
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_starts_with_quote() {
+        <span class="kw">let </span>input = <span class="string">&quot;\&quot;first-quoted string&quot;</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>output = BytesMut::new();
+        put_quoted(<span class="kw-2">&amp;mut </span>output, input);
+        <span class="kw">let </span>result = str::from_utf8(<span class="kw-2">&amp;</span>output).unwrap();
 
-        <span class="macro">assert_eq!</span>(<span class="ident">result</span>, <span class="string">&quot;\\\&quot;first-quoted string&quot;</span>);
+        <span class="macro">assert_eq!</span>(result, <span class="string">&quot;\\\&quot;first-quoted string&quot;</span>);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_ends_with_quote</span>() {
-        <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> <span class="string">&quot;last-quoted string\&quot;&quot;</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">output</span> <span class="op">=</span> <span class="ident">BytesMut::new</span>();
-        <span class="ident">put_quoted</span>(<span class="kw-2">&amp;mut</span> <span class="ident">output</span>, <span class="ident">input</span>);
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">str::from_utf8</span>(<span class="kw-2">&amp;</span><span class="ident">output</span>).<span class="ident">unwrap</span>();
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_ends_with_quote() {
+        <span class="kw">let </span>input = <span class="string">&quot;last-quoted string\&quot;&quot;</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>output = BytesMut::new();
+        put_quoted(<span class="kw-2">&amp;mut </span>output, input);
+        <span class="kw">let </span>result = str::from_utf8(<span class="kw-2">&amp;</span>output).unwrap();
 
-        <span class="macro">assert_eq!</span>(<span class="ident">result</span>, <span class="string">&quot;last-quoted string\\\&quot;&quot;</span>);
+        <span class="macro">assert_eq!</span>(result, <span class="string">&quot;last-quoted string\\\&quot;&quot;</span>);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_double_quote</span>() {
-        <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> <span class="string">&quot;quote\&quot;\&quot;string&quot;</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">output</span> <span class="op">=</span> <span class="ident">BytesMut::new</span>();
-        <span class="ident">put_quoted</span>(<span class="kw-2">&amp;mut</span> <span class="ident">output</span>, <span class="ident">input</span>);
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">str::from_utf8</span>(<span class="kw-2">&amp;</span><span class="ident">output</span>).<span class="ident">unwrap</span>();
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_double_quote() {
+        <span class="kw">let </span>input = <span class="string">&quot;quote\&quot;\&quot;string&quot;</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>output = BytesMut::new();
+        put_quoted(<span class="kw-2">&amp;mut </span>output, input);
+        <span class="kw">let </span>result = str::from_utf8(<span class="kw-2">&amp;</span>output).unwrap();
 
-        <span class="macro">assert_eq!</span>(<span class="ident">result</span>, <span class="string">&quot;quote\\\&quot;\\\&quot;string&quot;</span>);
+        <span class="macro">assert_eq!</span>(result, <span class="string">&quot;quote\\\&quot;\\\&quot;string&quot;</span>);
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_web_httpauth" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (34a6cae28 2022-08-09)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_web_httpauth" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (060e47f74 2022-08-23)" ></div></body></html>

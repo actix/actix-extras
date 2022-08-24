@@ -69,76 +69,76 @@
 <span id="69">69</span>
 <span id="70">70</span>
 <span id="71">71</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::borrow::Cow</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>std::borrow::Cow;
 
-<span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">Bearer</span>, <span class="ident">Error</span>};
+<span class="kw">use super</span>::{Bearer, Error};
 
-<span class="doccomment">/// Builder for the [`Bearer`] challenge.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// It is up to implementor to fill all required fields, neither this `Builder` nor [`Bearer`]</span>
-<span class="doccomment">/// provide any validation.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BearerBuilder</span>(<span class="ident">Bearer</span>);
+<span class="doccomment">/// Builder for the [`Bearer`] challenge.
+///
+/// It is up to implementor to fill all required fields, neither this `Builder` nor [`Bearer`]
+/// provide any validation.
+</span><span class="attribute">#[derive(Debug, Default)]
+</span><span class="kw">pub struct </span>BearerBuilder(Bearer);
 
-<span class="kw">impl</span> <span class="ident">BearerBuilder</span> {
-    <span class="doccomment">/// Provides the `scope` attribute, as defined in [RFC 6749 §3.3].</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [RFC 6749 §3.3]: https://tools.ietf.org/html/rfc6749#section-3.3</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">scope</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="ident">T</span>) -&gt; <span class="self">Self</span>
-    <span class="kw">where</span>
-        <span class="ident">T</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+<span class="kw">impl </span>BearerBuilder {
+    <span class="doccomment">/// Provides the `scope` attribute, as defined in [RFC 6749 §3.3].
+    ///
+    /// [RFC 6749 §3.3]: https://tools.ietf.org/html/rfc6749#section-3.3
+    </span><span class="kw">pub fn </span>scope&lt;T&gt;(<span class="kw-2">mut </span><span class="self">self</span>, value: T) -&gt; <span class="self">Self
+    </span><span class="kw">where
+        </span>T: Into&lt;Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;&gt;,
     {
-        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">scope</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">value</span>.<span class="ident">into</span>());
-        <span class="self">self</span>
-    }
+        <span class="self">self</span>.<span class="number">0</span>.scope = <span class="prelude-val">Some</span>(value.into());
+        <span class="self">self
+    </span>}
 
-    <span class="doccomment">/// Provides the `realm` attribute, as defined in [RFC 2617].</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [RFC 2617]: https://tools.ietf.org/html/rfc2617</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">realm</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="ident">T</span>) -&gt; <span class="self">Self</span>
-    <span class="kw">where</span>
-        <span class="ident">T</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Provides the `realm` attribute, as defined in [RFC 2617].
+    ///
+    /// [RFC 2617]: https://tools.ietf.org/html/rfc2617
+    </span><span class="kw">pub fn </span>realm&lt;T&gt;(<span class="kw-2">mut </span><span class="self">self</span>, value: T) -&gt; <span class="self">Self
+    </span><span class="kw">where
+        </span>T: Into&lt;Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;&gt;,
     {
-        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">realm</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">value</span>.<span class="ident">into</span>());
-        <span class="self">self</span>
-    }
+        <span class="self">self</span>.<span class="number">0</span>.realm = <span class="prelude-val">Some</span>(value.into());
+        <span class="self">self
+    </span>}
 
-    <span class="doccomment">/// Provides the `error` attribute, as defined in [RFC 6750, Section 3.1].</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [RFC 6750 §3.1]: https://tools.ietf.org/html/rfc6750#section-3.1</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">error</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="ident">Error</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">error</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">value</span>);
-        <span class="self">self</span>
-    }
+    <span class="doccomment">/// Provides the `error` attribute, as defined in [RFC 6750, Section 3.1].
+    ///
+    /// [RFC 6750 §3.1]: https://tools.ietf.org/html/rfc6750#section-3.1
+    </span><span class="kw">pub fn </span>error(<span class="kw-2">mut </span><span class="self">self</span>, value: Error) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.<span class="number">0</span>.error = <span class="prelude-val">Some</span>(value);
+        <span class="self">self
+    </span>}
 
-    <span class="doccomment">/// Provides the `error_description` attribute, as defined in [RFC 6750, Section 3].</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [RFC 6750 §3]: https://tools.ietf.org/html/rfc6750#section-3</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">error_description</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="ident">T</span>) -&gt; <span class="self">Self</span>
-    <span class="kw">where</span>
-        <span class="ident">T</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Provides the `error_description` attribute, as defined in [RFC 6750, Section 3].
+    ///
+    /// [RFC 6750 §3]: https://tools.ietf.org/html/rfc6750#section-3
+    </span><span class="kw">pub fn </span>error_description&lt;T&gt;(<span class="kw-2">mut </span><span class="self">self</span>, value: T) -&gt; <span class="self">Self
+    </span><span class="kw">where
+        </span>T: Into&lt;Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;&gt;,
     {
-        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">error_description</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">value</span>.<span class="ident">into</span>());
-        <span class="self">self</span>
-    }
+        <span class="self">self</span>.<span class="number">0</span>.error_description = <span class="prelude-val">Some</span>(value.into());
+        <span class="self">self
+    </span>}
 
-    <span class="doccomment">/// Provides the `error_uri` attribute, as defined in [RFC 6750 §3].</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// It is up to implementor to provide properly-formed absolute URI.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [RFC 6750 §3](https://tools.ietf.org/html/rfc6750#section-3)</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">error_uri</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="ident">T</span>) -&gt; <span class="self">Self</span>
-    <span class="kw">where</span>
-        <span class="ident">T</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Provides the `error_uri` attribute, as defined in [RFC 6750 §3].
+    ///
+    /// It is up to implementor to provide properly-formed absolute URI.
+    ///
+    /// [RFC 6750 §3](https://tools.ietf.org/html/rfc6750#section-3)
+    </span><span class="kw">pub fn </span>error_uri&lt;T&gt;(<span class="kw-2">mut </span><span class="self">self</span>, value: T) -&gt; <span class="self">Self
+    </span><span class="kw">where
+        </span>T: Into&lt;Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;&gt;,
     {
-        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">error_uri</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">value</span>.<span class="ident">into</span>());
-        <span class="self">self</span>
-    }
+        <span class="self">self</span>.<span class="number">0</span>.error_uri = <span class="prelude-val">Some</span>(value.into());
+        <span class="self">self
+    </span>}
 
-    <span class="doccomment">/// Consumes the builder and returns built `Bearer` instance.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">finish</span>(<span class="self">self</span>) -&gt; <span class="ident">Bearer</span> {
-        <span class="self">self</span>.<span class="number">0</span>
-    }
+    <span class="doccomment">/// Consumes the builder and returns built `Bearer` instance.
+    </span><span class="kw">pub fn </span>finish(<span class="self">self</span>) -&gt; Bearer {
+        <span class="self">self</span>.<span class="number">0
+    </span>}
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../../../" data-current-crate="actix_web_httpauth" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (34a6cae28 2022-08-09)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../../../" data-current-crate="actix_web_httpauth" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (060e47f74 2022-08-23)" ></div></body></html>

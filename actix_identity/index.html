@@ -5,64 +5,64 @@ on top of HTTP sessions, via <a href="https://docs.rs/actix-session"><code>actix
 <p>To start using identity management in your Actix Web application you must register
 <a href="struct.IdentityMiddleware.html" title="IdentityMiddleware"><code>IdentityMiddleware</code></a> and <code>SessionMiddleware</code> as middleware on your <code>App</code>:</p>
 
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">actix_web</span>::{<span class="ident">cookie::Key</span>, <span class="ident">App</span>, <span class="ident">HttpServer</span>, <span class="ident">HttpResponse</span>};
-<span class="kw">use</span> <span class="ident">actix_identity::IdentityMiddleware</span>;
-<span class="kw">use</span> <span class="ident">actix_session</span>::{<span class="ident">storage::RedisSessionStore</span>, <span class="ident">SessionMiddleware</span>};
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>actix_web::{cookie::Key, App, HttpServer, HttpResponse};
+<span class="kw">use </span>actix_identity::IdentityMiddleware;
+<span class="kw">use </span>actix_session::{storage::RedisSessionStore, SessionMiddleware};
 
-<span class="attribute">#[<span class="ident">actix_web::main</span>]</span>
-<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">main</span>() {
-    <span class="kw">let</span> <span class="ident">secret_key</span> <span class="op">=</span> <span class="ident">Key::generate</span>();
-    <span class="kw">let</span> <span class="ident">redis_store</span> <span class="op">=</span> <span class="ident">RedisSessionStore::new</span>(<span class="string">&quot;redis://127.0.0.1:6379&quot;</span>)
-        .<span class="kw">await</span>
-        .<span class="ident">unwrap</span>();
+<span class="attribute">#[actix_web::main]
+</span><span class="kw">async fn </span>main() {
+    <span class="kw">let </span>secret_key = Key::generate();
+    <span class="kw">let </span>redis_store = RedisSessionStore::new(<span class="string">&quot;redis://127.0.0.1:6379&quot;</span>)
+        .<span class="kw">await
+        </span>.unwrap();
 
-    <span class="ident">HttpServer::new</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
-        <span class="ident">App::new</span>()
-            <span class="comment">// Install the identity framework first.</span>
-            .<span class="ident">wrap</span>(<span class="ident">IdentityMiddleware::default</span>())
-            <span class="comment">// The identity system is built on top of sessions. You must install the session</span>
-            <span class="comment">// middleware to leverage `actix-identity`. The session middleware must be mounted</span>
-            <span class="comment">// AFTER the identity middleware: `actix-web` invokes middleware in the OPPOSITE</span>
-            <span class="comment">// order of registration when it receives an incoming request.</span>
-            .<span class="ident">wrap</span>(<span class="ident">SessionMiddleware::new</span>(
-                 <span class="ident">redis_store</span>.<span class="ident">clone</span>(),
-                 <span class="ident">secret_key</span>.<span class="ident">clone</span>()
+    HttpServer::new(<span class="kw">move </span>|| {
+        App::new()
+            <span class="comment">// Install the identity framework first.
+            </span>.wrap(IdentityMiddleware::default())
+            <span class="comment">// The identity system is built on top of sessions. You must install the session
+            // middleware to leverage `actix-identity`. The session middleware must be mounted
+            // AFTER the identity middleware: `actix-web` invokes middleware in the OPPOSITE
+            // order of registration when it receives an incoming request.
+            </span>.wrap(SessionMiddleware::new(
+                 redis_store.clone(),
+                 secret_key.clone()
             ))
-            <span class="comment">// Your request handlers [...]</span>
-    })
+            <span class="comment">// Your request handlers [...]
+    </span>})
 }</code></pre></div>
 <p>User identities can be created, accessed and destroyed using the <a href="struct.Identity.html" title="Identity"><code>Identity</code></a> extractor in your
 request handlers:</p>
 
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">actix_web</span>::{<span class="ident">get</span>, <span class="ident">post</span>, <span class="ident">HttpResponse</span>, <span class="ident">Responder</span>, <span class="ident">HttpRequest</span>, <span class="ident">HttpMessage</span>};
-<span class="kw">use</span> <span class="ident">actix_identity::Identity</span>;
-<span class="kw">use</span> <span class="ident">actix_session::storage::RedisSessionStore</span>;
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>actix_web::{get, post, HttpResponse, Responder, HttpRequest, HttpMessage};
+<span class="kw">use </span>actix_identity::Identity;
+<span class="kw">use </span>actix_session::storage::RedisSessionStore;
 
-<span class="attribute">#[<span class="ident">get</span>(<span class="string">&quot;/&quot;</span>)]</span>
-<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">index</span>(<span class="ident">user</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Identity</span><span class="op">&gt;</span>) -&gt; <span class="kw">impl</span> <span class="ident">Responder</span> {
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">user</span>) <span class="op">=</span> <span class="ident">user</span> {
-        <span class="macro">format!</span>(<span class="string">&quot;Welcome! {}&quot;</span>, <span class="ident">user</span>.<span class="ident">id</span>().<span class="ident">unwrap</span>())
-    } <span class="kw">else</span> {
-        <span class="string">&quot;Welcome Anonymous!&quot;</span>.<span class="ident">to_owned</span>()
+<span class="attribute">#[get(<span class="string">&quot;/&quot;</span>)]
+</span><span class="kw">async fn </span>index(user: <span class="prelude-ty">Option</span>&lt;Identity&gt;) -&gt; <span class="kw">impl </span>Responder {
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(user) = user {
+        <span class="macro">format!</span>(<span class="string">&quot;Welcome! {}&quot;</span>, user.id().unwrap())
+    } <span class="kw">else </span>{
+        <span class="string">&quot;Welcome Anonymous!&quot;</span>.to_owned()
     }
 }
 
-<span class="attribute">#[<span class="ident">post</span>(<span class="string">&quot;/login&quot;</span>)]</span>
-<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">login</span>(<span class="ident">request</span>: <span class="ident">HttpRequest</span>) -&gt; <span class="kw">impl</span> <span class="ident">Responder</span> {
-    <span class="comment">// Some kind of authentication should happen here</span>
-    <span class="comment">// e.g. password-based, biometric, etc.</span>
-    <span class="comment">// [...]</span>
+<span class="attribute">#[post(<span class="string">&quot;/login&quot;</span>)]
+</span><span class="kw">async fn </span>login(request: HttpRequest) -&gt; <span class="kw">impl </span>Responder {
+    <span class="comment">// Some kind of authentication should happen here
+    // e.g. password-based, biometric, etc.
+    // [...]
 
-    <span class="comment">// attach a verified user identity to the active session</span>
-    <span class="ident">Identity::login</span>(<span class="kw-2">&amp;</span><span class="ident">request</span>.<span class="ident">extensions</span>(), <span class="string">&quot;User1&quot;</span>.<span class="ident">into</span>()).<span class="ident">unwrap</span>();
+    // attach a verified user identity to the active session
+    </span>Identity::login(<span class="kw-2">&amp;</span>request.extensions(), <span class="string">&quot;User1&quot;</span>.into()).unwrap();
 
-    <span class="ident">HttpResponse::Ok</span>()
+    HttpResponse::Ok()
 }
 
-<span class="attribute">#[<span class="ident">post</span>(<span class="string">&quot;/logout&quot;</span>)]</span>
-<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">logout</span>(<span class="ident">user</span>: <span class="ident">Identity</span>) -&gt; <span class="kw">impl</span> <span class="ident">Responder</span> {
-    <span class="ident">user</span>.<span class="ident">logout</span>();
-    <span class="ident">HttpResponse::Ok</span>()
+<span class="attribute">#[post(<span class="string">&quot;/logout&quot;</span>)]
+</span><span class="kw">async fn </span>logout(user: Identity) -&gt; <span class="kw">impl </span>Responder {
+    user.logout();
+    HttpResponse::Ok()
 }</code></pre></div>
 <h2 id="advanced-configuration"><a href="#advanced-configuration">Advanced configuration</a></h2>
 <p>By default, <code>actix-identity</code> does not automatically log out users. You can change this behaviour
@@ -76,4 +76,4 @@ by customising the configuration for <a href="struct.IdentityMiddleware.html" ti
 </div></div></div><h2 id="structs" class="small-section-header"><a href="#structs">Structs</a></h2><div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Identity.html" title="actix_identity::Identity struct">Identity</a></div><div class="item-right docblock-short"><p>A verified user identity. It can be used as a request extractor.</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.IdentityMiddleware.html" title="actix_identity::IdentityMiddleware struct">IdentityMiddleware</a></div><div class="item-right docblock-short"><p>Identity management middleware.</p>
 </div></div></div><h2 id="traits" class="small-section-header"><a href="#traits">Traits</a></h2><div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.IdentityExt.html" title="actix_identity::IdentityExt trait">IdentityExt</a></div><div class="item-right docblock-short"><p>Helper trait to retrieve an <a href="struct.Identity.html" title="Identity"><code>Identity</code></a> instance from various <code>actix-web</code>’s types.</p>
-</div></div></div></section></div></main><div id="rustdoc-vars" data-root-path="../" data-current-crate="actix_identity" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (34a6cae28 2022-08-09)" ></div></body></html>
+</div></div></div></section></div></main><div id="rustdoc-vars" data-root-path="../" data-current-crate="actix_identity" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (060e47f74 2022-08-23)" ></div></body></html>
