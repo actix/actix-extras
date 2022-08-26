@@ -46,8 +46,10 @@
 #![doc(html_logo_url = "https://actix.rs/img/logo.png")]
 #![doc(html_favicon_url = "https://actix.rs/favicon.ico")]
 
-use std::{borrow::Cow, time::Duration};
+use std::borrow::Cow;
+use std::{fmt, time::Duration};
 
+use actix_web::dev::ServiceRequest;
 use redis::Client;
 
 mod builder;
@@ -70,16 +72,27 @@ pub const DEFAULT_PERIOD_SECS: u64 = 3600;
 pub const DEFAULT_COOKIE_NAME: &str = "sid";
 
 /// Default session key.
+#[cfg(feature = "session")]
 pub const DEFAULT_SESSION_KEY: &str = "rate-api-id";
 
+/// Helper trait to impl Debug on GetKeyFn type
+pub trait GetKeyFnT: Fn(&ServiceRequest) -> Option<String> + Sync {}
+impl<T> GetKeyFnT for T where T: Fn(&ServiceRequest) -> Option<String> + Sync {}
+/// Get key resolver function type
+pub type GetKeyFn = Box<dyn GetKeyFnT + Send + Sync>;
+impl fmt::Debug for GetKeyFn {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "GetKeyFn")
+    }
+}
+
 /// Rate limiter.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Limiter {
     client: Client,
     limit: usize,
     period: Duration,
-    cookie_name: Cow<'static, str>,
-    session_key: Cow<'static, str>,
+    get_key_fn: GetKeyFn,
 }
 
 impl Limiter {
@@ -93,7 +106,9 @@ impl Limiter {
             redis_url: redis_url.into(),
             limit: DEFAULT_REQUEST_LIMIT,
             period: Duration::from_secs(DEFAULT_PERIOD_SECS),
+            get_key_fn: None,
             cookie_name: Cow::Borrowed(DEFAULT_COOKIE_NAME),
+            #[cfg(feature = "session")]
             session_key: Cow::Borrowed(DEFAULT_SESSION_KEY),
         }
     }
@@ -153,7 +168,5 @@ mod tests {
         let limiter = limiter.unwrap();
         assert_eq!(limiter.limit, 5000);
         assert_eq!(limiter.period, Duration::from_secs(3600));
-        assert_eq!(limiter.cookie_name, DEFAULT_COOKIE_NAME);
-        assert_eq!(limiter.session_key, DEFAULT_SESSION_KEY);
     }
 }

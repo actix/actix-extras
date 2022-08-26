@@ -1,6 +1,5 @@
 use std::{future::Future, pin::Pin, rc::Rc};
 
-use actix_session::SessionExt as _;
 use actix_utils::future::{ok, Ready};
 use actix_web::{
     body::EitherBody,
@@ -61,25 +60,18 @@ where
             .expect("web::Data<Limiter> should be set in app data for RateLimiter middleware")
             .clone();
 
-        let key = req.get_session().get(&limiter.session_key).unwrap_or(None);
+        let key: Option<String> = (limiter.get_key_fn)(&req);
         let service = Rc::clone(&self.service);
 
         let key = match key {
             Some(key) => key,
             None => {
-                let fallback = req.cookie(&limiter.cookie_name).map(|c| c.to_string());
-
-                match fallback {
-                    Some(key) => key,
-                    None => {
-                        return Box::pin(async move {
-                            service
-                                .call(req)
-                                .await
-                                .map(ServiceResponse::map_into_left_body)
-                        });
-                    }
-                }
+                return Box::pin(async move {
+                    service
+                        .call(req)
+                        .await
+                        .map(ServiceResponse::map_into_left_body)
+                });
             }
         };
 
