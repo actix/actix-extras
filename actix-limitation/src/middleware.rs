@@ -88,6 +88,13 @@ where
 
             if let Err(err) = status {
                 match err {
+                    LimitationError::LimitExceeded(_) => {
+                        log::warn!("Rate limit exceed error for {}", key);
+
+                        Ok(req.into_response(
+                            HttpResponse::new(StatusCode::TOO_MANY_REQUESTS).map_into_right_body(),
+                        ))
+                    }
                     LimitationError::Client(e) => {
                         log::error!("Client request failed, redis error: {}", e);
 
@@ -97,10 +104,11 @@ where
                         ))
                     }
                     _ => {
-                        log::warn!("Rate limit exceed error for {}", key);
+                        log::error!("Count failed: {}", err);
 
                         Ok(req.into_response(
-                            HttpResponse::new(StatusCode::TOO_MANY_REQUESTS).map_into_right_body(),
+                            HttpResponse::new(StatusCode::INTERNAL_SERVER_ERROR)
+                                .map_into_right_body(),
                         ))
                     }
                 }
