@@ -9,7 +9,7 @@ use actix_web::{
     web, Error, HttpResponse,
 };
 
-use crate::Limiter;
+use crate::{Error as LimitationError, Limiter};
 
 /// Rate limit middleware.
 #[derive(Debug, Default)]
@@ -86,12 +86,32 @@ where
         Box::pin(async move {
             let status = limiter.count(key.to_string()).await;
 
-            if status.is_err() {
-                log::warn!("Rate limit exceed error for {}", key);
+            if let Err(err) = status {
+                match err {
+                    LimitationError::LimitExceeded(_) => {
+                        log::warn!("Rate limit exceed error for {}", key);
 
-                Ok(req.into_response(
-                    HttpResponse::new(StatusCode::TOO_MANY_REQUESTS).map_into_right_body(),
-                ))
+                        Ok(req.into_response(
+                            HttpResponse::new(StatusCode::TOO_MANY_REQUESTS).map_into_right_body(),
+                        ))
+                    }
+                    LimitationError::Client(e) => {
+                        log::error!("Client request failed, redis error: {}", e);
+
+                        Ok(req.into_response(
+                            HttpResponse::new(StatusCode::INTERNAL_SERVER_ERROR)
+                                .map_into_right_body(),
+                        ))
+                    }
+                    _ => {
+                        log::error!("Count failed: {}", err);
+
+                        Ok(req.into_response(
+                            HttpResponse::new(StatusCode::INTERNAL_SERVER_ERROR)
+                                .map_into_right_body(),
+                        ))
+                    }
+                }
             } else {
                 service
                     .call(req)
