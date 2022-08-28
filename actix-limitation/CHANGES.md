@@ -3,6 +3,8 @@
 ## Unreleased - 2022-xx-xx
 - Implement `Default` for `RateLimiter`.
 - `RateLimiter` is marked `#[non_exhaustive]`; use `RateLimiter::default()` instead.
+- Minimum supported Rust version (MSRV) is now 1.59 due to transitive `time` dependency.
+
 
 ## 0.3.0 - 2022-07-11
 - `Limiter::builder` now takes an `impl Into<String>`.
