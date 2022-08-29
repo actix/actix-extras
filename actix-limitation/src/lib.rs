@@ -8,8 +8,9 @@
 //!
 //! ```no_run
 //! use std::time::Duration;
-//! use actix_web::{get, web, App, HttpServer, Responder};
+//! use actix_web::{get, web, App, HttpServer, Responder, dev::ServiceRequest};
 //! use actix_limitation::{Limiter, RateLimiter};
+//! use actix_session::SessionExt;
 //!
 //! #[get("/{id}/{name}")]
 //! async fn index(info: web::Path<(u32, String)>) -> impl Responder {
@@ -20,8 +21,12 @@
 //! async fn main() -> std::io::Result<()> {
 //!     let limiter = web::Data::new(
 //!         Limiter::builder("redis://127.0.0.1")
-//!             .cookie_name("session-id".to_owned())
-//!             .session_key("rate-api-id".to_owned())
+//!             .get_key(Box::new(|req: &ServiceRequest| {
+//!               req
+//!                 .get_session()
+//!                 .get(&"session-id")
+//!                 .unwrap_or_else(|_| req.cookie(&"rate-api-id").map(|c| c.to_string()))
+//!             }))
 //!             .limit(5000)
 //!             .period(Duration::from_secs(3600)) // 60 minutes
 //!             .build()
