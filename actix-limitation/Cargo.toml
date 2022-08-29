@@ -15,7 +15,7 @@ edition = "2018"
 
 [features]
 default = ["session"]
-session = ["dep:actix-session"]
+session = ["actix-session"]
 
 [dependencies]
 actix-session = { version = "0.7", optional = true }
