@@ -1,4 +1,4 @@
-use std::{borrow::Cow, time::Duration};
+use std::{borrow::Cow, sync::Arc, time::Duration};
 
 #[cfg(feature = "session")]
 use actix_session::SessionExt;
@@ -85,7 +85,7 @@ impl Builder {
             client: Client::open(self.redis_url.as_str())?,
             limit: self.limit,
             period: self.period,
-            get_key_fn: get_key,
+            get_key_fn: Arc::new(get_key),
         })
     }
 }

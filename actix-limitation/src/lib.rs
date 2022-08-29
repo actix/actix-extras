@@ -52,6 +52,7 @@
 #![doc(html_favicon_url = "https://actix.rs/favicon.ico")]
 
 use std::borrow::Cow;
+use std::sync::Arc;
 use std::{fmt, time::Duration};
 
 use actix_web::dev::ServiceRequest;
@@ -92,12 +93,12 @@ impl fmt::Debug for GetKeyFn {
 }
 
 /// Rate limiter.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Limiter {
     client: Client,
     limit: usize,
     period: Duration,
-    get_key_fn: GetKeyFn,
+    get_key_fn: Arc<GetKeyFn>,
 }
 
 impl Limiter {
