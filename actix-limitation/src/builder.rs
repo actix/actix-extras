@@ -5,7 +5,7 @@ use actix_session::SessionExt;
 use actix_web::dev::ServiceRequest;
 use redis::Client;
 
-use crate::{errors::Error, GetKeyFn, Limiter};
+use crate::{errors::Error, GetArcBoxKeyFn, Limiter};
 
 /// Rate limiter builder.
 #[derive(Debug)]
@@ -13,7 +13,7 @@ pub struct Builder {
     pub(crate) redis_url: String,
     pub(crate) limit: usize,
     pub(crate) period: Duration,
-    pub(crate) get_key_fn: Option<GetKeyFn>,
+    pub(crate) get_key_fn: Option<GetArcBoxKeyFn>,
     pub(crate) cookie_name: Cow<'static, str>,
     #[cfg(feature = "session")]
     pub(crate) session_key: Cow<'static, str>,
@@ -21,26 +21,26 @@ pub struct Builder {
 
 impl Builder {
     /// Set upper limit.
-    pub fn limit(mut self, limit: usize) -> Self {
+    pub fn limit(&mut self, limit: usize) -> &mut Self {
         self.limit = limit;
         self
     }
 
     /// Set limit window/period.
-    pub fn period(mut self, period: Duration) -> Self {
+    pub fn period(&mut self, period: Duration) -> &mut Self {
         self.period = period;
         self
     }
 
     /// Set the get_key method, This method should not be used in combination of cookie_name or session_key as they overwrite each other
-    pub fn get_key(mut self, resolver: GetKeyFn) -> Self {
+    pub fn get_key(&mut self, resolver: GetArcBoxKeyFn) -> &mut Self {
         self.get_key_fn = Some(resolver);
         self
     }
 
     /// Set name of cookie to be sent, This method should not be used in combination of get_key_fn as they overwrite each other
     #[deprecated = "prefer using get_key_fn"]
-    pub fn cookie_name(mut self, cookie_name: impl Into<Cow<'static, str>>) -> Self {
+    pub fn cookie_name(&mut self, cookie_name: impl Into<Cow<'static, str>>) -> &mut Self {
         if self.get_key_fn.is_some() {
             panic!("This method should not be used in combination of get_key as they overwrite each other")
         }
@@ -51,7 +51,7 @@ impl Builder {
     /// Set session key to be used in backend. This method should not be used in combination of get_key_fn as they overwrite each other
     #[deprecated = "prefer using get_key_fn"]
     #[cfg(feature = "session")]
-    pub fn session_key(mut self, session_key: impl Into<Cow<'static, str>>) -> Self {
+    pub fn session_key(&mut self, session_key: impl Into<Cow<'static, str>>) -> &mut Self {
         if self.get_key_fn.is_some() {
             panic!("This method should not be used in combination of get_key as they overwrite each other")
         }
@@ -63,14 +63,14 @@ impl Builder {
     ///
     /// Note that this method will connect to the Redis server to test its connection which is a
     /// **synchronous** operation.
-    pub fn build(self) -> Result<Limiter, Error> {
-        let get_key = if let Some(resolver) = self.get_key_fn {
+    pub fn build(&mut self) -> Result<Limiter, Error> {
+        let get_key = if let Some(resolver) = self.get_key_fn.clone() {
             resolver
         } else {
-            let cookie_name = self.cookie_name;
+            let cookie_name = self.cookie_name.clone();
             #[cfg(feature = "session")]
-            let session_key = self.session_key;
-            Box::new(move |req: &ServiceRequest| {
+            let session_key = self.session_key.clone();
+            let closure: GetArcBoxKeyFn = Arc::new(Box::new(move |req: &ServiceRequest| {
                 #[cfg(feature = "session")]
                 let res = req
                     .get_session()
@@ -79,13 +79,14 @@ impl Builder {
                 #[cfg(not(feature = "session"))]
                 let res = req.cookie(&cookie_name).map(|c| c.to_string());
                 res
-            })
+            }));
+            closure
         };
         Ok(Limiter {
             client: Client::open(self.redis_url.as_str())?,
             limit: self.limit,
             period: self.period,
-            get_key_fn: Arc::new(get_key),
+            get_key_fn: get_key,
         })
     }
 }
@@ -102,7 +103,7 @@ mod tests {
             redis_url: redis_url.to_owned(),
             limit: 100,
             period,
-            get_key_fn: Some(Box::new(|_| None)),
+            get_key_fn: Some(Arc::new(Box::new(|_| None))),
             cookie_name: Cow::Owned("session".to_string()),
             #[cfg(feature = "session")]
             session_key: Cow::Owned("rate-api".to_string()),
@@ -120,11 +121,11 @@ mod tests {
     fn test_create_limiter() {
         let redis_url = "redis://127.0.0.1";
         let period = Duration::from_secs(20);
-        let builder = Builder {
+        let mut builder = Builder {
             redis_url: redis_url.to_owned(),
             limit: 100,
             period: Duration::from_secs(10),
-            get_key_fn: Some(Box::new(|_| None)),
+            get_key_fn: Some(Arc::new(Box::new(|_| None))),
             cookie_name: Cow::Borrowed("sid"),
             #[cfg(feature = "session")]
             session_key: Cow::Borrowed("key"),
@@ -141,11 +142,11 @@ mod tests {
     fn test_create_limiter_error() {
         let redis_url = "127.0.0.1";
         let period = Duration::from_secs(20);
-        let builder = Builder {
+        let mut builder = Builder {
             redis_url: redis_url.to_owned(),
             limit: 100,
             period: Duration::from_secs(10),
-            get_key_fn: Some(Box::new(|_| None)),
+            get_key_fn: Some(Arc::new(Box::new(|_| None))),
             cookie_name: Cow::Borrowed("sid"),
             #[cfg(feature = "session")]
             session_key: Cow::Borrowed("key"),

@@ -8,6 +8,7 @@
 //!
 //! ```no_run
 //! use std::time::Duration;
+//! use std::sync::Arc;
 //! use actix_web::{get, web, App, HttpServer, Responder, dev::ServiceRequest};
 //! use actix_limitation::{Limiter, RateLimiter};
 //! use actix_session::SessionExt;
@@ -21,12 +22,12 @@
 //! async fn main() -> std::io::Result<()> {
 //!     let limiter = web::Data::new(
 //!         Limiter::builder("redis://127.0.0.1")
-//!             .get_key(Box::new(|req: &ServiceRequest| {
+//!             .get_key(Arc::new(Box::new(|req: &ServiceRequest| {
 //!               req
 //!                 .get_session()
 //!                 .get(&"session-id")
 //!                 .unwrap_or_else(|_| req.cookie(&"rate-api-id").map(|c| c.to_string()))
-//!             }))
+//!             })))
 //!             .limit(5000)
 //!             .period(Duration::from_secs(3600)) // 60 minutes
 //!             .build()
@@ -82,15 +83,18 @@ pub const DEFAULT_COOKIE_NAME: &str = "sid";
 pub const DEFAULT_SESSION_KEY: &str = "rate-api-id";
 
 /// Helper trait to impl Debug on GetKeyFn type
-pub trait GetKeyFnT: Fn(&ServiceRequest) -> Option<String> + Sync {}
-impl<T> GetKeyFnT for T where T: Fn(&ServiceRequest) -> Option<String> + Sync {}
+pub trait GetKeyFnT: Fn(&ServiceRequest) -> Option<String> {}
+impl<T> GetKeyFnT for T where T: Fn(&ServiceRequest) -> Option<String> {}
+/// Get key function type with auto traits
+type GetKeyFn = dyn GetKeyFnT + Send + Sync;
 /// Get key resolver function type
-pub type GetKeyFn = Box<dyn GetKeyFnT + Send + Sync>;
 impl fmt::Debug for GetKeyFn {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "GetKeyFn")
     }
 }
+/// Wrapped Get key function Trait
+pub type GetArcBoxKeyFn = Arc<Box<GetKeyFn>>;
 
 /// Rate limiter.
 #[derive(Debug, Clone)]
@@ -98,7 +102,7 @@ pub struct Limiter {
     client: Client,
     limit: usize,
     period: Duration,
-    get_key_fn: Arc<GetKeyFn>,
+    get_key_fn: GetArcBoxKeyFn,
 }
 
 impl Limiter {
@@ -167,7 +171,7 @@ mod tests {
 
     #[test]
     fn test_create_limiter() {
-        let builder = Limiter::builder("redis://127.0.0.1:6379/1");
+        let mut builder = Limiter::builder("redis://127.0.0.1:6379/1");
         let limiter = builder.build();
         assert!(limiter.is_ok());
 
