@@ -65,14 +65,14 @@ async fn test_limiter_get_key() -> Result<(), Error> {
         .build()
         .unwrap();
 
-    async fn index(_req: HttpRequest) -> HttpResponse {
-        HttpResponse::Ok().body("ok")
-    }
     let app = test::init_service(
         App::new()
             .wrap(RateLimiter::default())
             .app_data(web::Data::new(limiter))
-            .route("/", web::get().to(index)),
+            .route(
+                "/",
+                web::get().to(|_: HttpRequest| async { HttpResponse::Ok().body("ok") }),
+            ),
     )
     .await;
     for _ in 1..2 {
