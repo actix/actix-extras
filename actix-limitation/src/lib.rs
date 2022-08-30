@@ -22,12 +22,12 @@
 //! async fn main() -> std::io::Result<()> {
 //!     let limiter = web::Data::new(
 //!         Limiter::builder("redis://127.0.0.1")
-//!             .get_key(Arc::new(Box::new(|req: &ServiceRequest| {
+//!             .get_key(|req: &ServiceRequest| {
 //!               req
 //!                 .get_session()
 //!                 .get(&"session-id")
 //!                 .unwrap_or_else(|_| req.cookie(&"rate-api-id").map(|c| c.to_string()))
-//!             })))
+//!             })
 //!             .limit(5000)
 //!             .period(Duration::from_secs(3600)) // 60 minutes
 //!             .build()

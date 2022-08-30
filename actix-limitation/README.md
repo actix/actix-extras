@@ -18,6 +18,7 @@ actix-limitation = "0.3"
 
 ```rust
 use std::time::Duration;
+use std::sync::Arc;
 use actix_web::{get, web, App, HttpServer, Responder, dev::ServiceRequest};
 use actix_limitation::{Limiter, RateLimiter};
 use actix_session::SessionExt;
@@ -31,15 +32,12 @@ async fn index(info: web::Path<(u32, String)>) -> impl Responder {
 async fn main() -> std::io::Result<()> {
     let limiter = web::Data::new(
         Limiter::builder("redis://127.0.0.1")
-            .get_key(Box::new(|req: &ServiceRequest| {
-              // This use actix-session so get set and get a key from your user and fallback on a cookie if it's wasn't found
+            .get_key(|req: &ServiceRequest| {
               req
                 .get_session()
                 .get(&"session-id")
                 .unwrap_or_else(|_| req.cookie(&"rate-api-id").map(|c| c.to_string()))
-                // To use and IP base key you could do something like this
-                // req.peer_addr().map(|sa| sa.ip().to_string())
-            }))
+            })
             .limit(5000)
             .period(Duration::from_secs(3600)) // 60 minutes
             .build()
