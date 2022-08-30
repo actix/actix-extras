@@ -5,7 +5,7 @@ use actix_session::SessionExt;
 use actix_web::dev::ServiceRequest;
 use redis::Client;
 
-use crate::{errors::Error, GetArcBoxKeyFn, Limiter};
+use crate::{errors::Error, GetArcBoxKeyFn, GetKeyFnT, Limiter};
 
 /// Rate limiter builder.
 #[derive(Debug)]
@@ -33,8 +33,8 @@ impl Builder {
     }
 
     /// Set the get_key method, This method should not be used in combination of cookie_name or session_key as they overwrite each other
-    pub fn get_key(&mut self, resolver: GetArcBoxKeyFn) -> &mut Self {
-        self.get_key_fn = Some(resolver);
+    pub fn get_key<F: GetKeyFnT + Send + Sync + 'static>(&mut self, resolver: F) -> &mut Self {
+        self.get_key_fn = Some(Arc::new(Box::new(resolver)));
         self
     }
 
