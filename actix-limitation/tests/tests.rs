@@ -56,12 +56,12 @@ async fn test_limiter_count_error() -> Result<(), Error> {
 }
 
 #[actix_web::test]
-async fn test_limiter_get_key() -> Result<(), Error> {
+async fn test_limiter_key_by() -> Result<(), Error> {
     let cooldown_period = Duration::from_secs(1);
     let limiter = Limiter::builder("redis://127.0.0.1:6379/3")
         .limit(2)
         .period(cooldown_period)
-        .get_key(|_: &ServiceRequest| Some("fix_key".to_string()))
+        .key_by(|_: &ServiceRequest| Some("fix_key".to_string()))
         .build()
         .unwrap();
 

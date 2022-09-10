@@ -7,11 +7,10 @@
 //! ```
 //!
 //! ```no_run
-//! use std::time::Duration;
-//! use std::sync::Arc;
-//! use actix_web::{get, web, App, HttpServer, Responder, dev::ServiceRequest};
+//! use std::{sync::Arc, time::Duration};
+//! use actix_web::{dev::ServiceRequest, get, web, App, HttpServer, Responder};
+//! use actix_session::SessionExt as _;
 //! use actix_limitation::{Limiter, RateLimiter};
-//! use actix_session::SessionExt;
 //!
 //! #[get("/{id}/{name}")]
 //! async fn index(info: web::Path<(u32, String)>) -> impl Responder {
@@ -22,11 +21,10 @@
 //! async fn main() -> std::io::Result<()> {
 //!     let limiter = web::Data::new(
 //!         Limiter::builder("redis://127.0.0.1")
-//!             .get_key(|req: &ServiceRequest| {
-//!               req
-//!                 .get_session()
-//!                 .get(&"session-id")
-//!                 .unwrap_or_else(|_| req.cookie(&"rate-api-id").map(|c| c.to_string()))
+//!             .key_by(|req: &ServiceRequest| {
+//!                 req.get_session()
+//!                     .get(&"session-id")
+//!                     .unwrap_or_else(|_| req.cookie(&"rate-api-id").map(|c| c.to_string()))
 //!             })
 //!             .limit(5000)
 //!             .period(Duration::from_secs(3600)) // 60 minutes
@@ -52,9 +50,7 @@
 #![doc(html_logo_url = "https://actix.rs/img/logo.png")]
 #![doc(html_favicon_url = "https://actix.rs/favicon.ico")]
 
-use std::borrow::Cow;
-use std::sync::Arc;
-use std::{fmt, time::Duration};
+use std::{borrow::Cow, fmt, sync::Arc, time::Duration};
 
 use actix_web::dev::ServiceRequest;
 use redis::Client;
@@ -83,18 +79,22 @@ pub const DEFAULT_COOKIE_NAME: &str = "sid";
 pub const DEFAULT_SESSION_KEY: &str = "rate-api-id";
 
 /// Helper trait to impl Debug on GetKeyFn type
-pub trait GetKeyFnT: Fn(&ServiceRequest) -> Option<String> {}
+trait GetKeyFnT: Fn(&ServiceRequest) -> Option<String> {}
+
 impl<T> GetKeyFnT for T where T: Fn(&ServiceRequest) -> Option<String> {}
+
 /// Get key function type with auto traits
 type GetKeyFn = dyn GetKeyFnT + Send + Sync;
+
 /// Get key resolver function type
 impl fmt::Debug for GetKeyFn {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "GetKeyFn")
     }
 }
+
 /// Wrapped Get key function Trait
-pub type GetArcBoxKeyFn = Arc<Box<GetKeyFn>>;
+type GetArcBoxKeyFn = Arc<GetKeyFn>;
 
 /// Rate limiter.
 #[derive(Debug, Clone)]

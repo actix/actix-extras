@@ -17,11 +17,10 @@ actix-limitation = "0.3"
 ```
 
 ```rust
-use std::time::Duration;
-use std::sync::Arc;
-use actix_web::{get, web, App, HttpServer, Responder, dev::ServiceRequest};
 use actix_limitation::{Limiter, RateLimiter};
-use actix_session::SessionExt;
+use actix_session::SessionExt as _;
+use actix_web::{dev::ServiceRequest, get, web, App, HttpServer, Responder};
+use std::{sync::Arc, time::Duration};
 
 #[get("/{id}/{name}")]
 async fn index(info: web::Path<(u32, String)>) -> impl Responder {
@@ -32,11 +31,10 @@ async fn index(info: web::Path<(u32, String)>) -> impl Responder {
 async fn main() -> std::io::Result<()> {
     let limiter = web::Data::new(
         Limiter::builder("redis://127.0.0.1")
-            .get_key(|req: &ServiceRequest| {
-              req
-                .get_session()
-                .get(&"session-id")
-                .unwrap_or_else(|_| req.cookie(&"rate-api-id").map(|c| c.to_string()))
+            .key_by(|req: &ServiceRequest| {
+                req.get_session()
+                    .get(&"session-id")
+                    .unwrap_or_else(|_| req.cookie(&"rate-api-id").map(|c| c.to_string()))
             })
             .limit(5000)
             .period(Duration::from_secs(3600)) // 60 minutes

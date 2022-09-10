@@ -1,11 +1,12 @@
 # Changes
 
 ## Unreleased - 2022-xx-xx
+- Add `Builder::key_by` for setting a custom rate limit key function.
 - Implement `Default` for `RateLimiter`.
 - `RateLimiter` is marked `#[non_exhaustive]`; use `RateLimiter::default()` instead.
 - In the middleware errors from the count function are matched and respond with `INTERNAL_SERVER_ERROR` if it's an unexpected error, instead of the default `TOO_MANY_REQUESTS`.
 - Minimum supported Rust version (MSRV) is now 1.59 due to transitive `time` dependency.
-- Made the key for user tracking customizable by passing a closure
+
 
 ## 0.3.0 - 2022-07-11
 - `Limiter::builder` now takes an `impl Into<String>`.

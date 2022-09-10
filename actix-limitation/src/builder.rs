@@ -1,11 +1,11 @@
 use std::{borrow::Cow, sync::Arc, time::Duration};
 
 #[cfg(feature = "session")]
-use actix_session::SessionExt;
+use actix_session::SessionExt as _;
 use actix_web::dev::ServiceRequest;
 use redis::Client;
 
-use crate::{errors::Error, GetArcBoxKeyFn, GetKeyFnT, Limiter};
+use crate::{errors::Error, GetArcBoxKeyFn, Limiter};
 
 /// Rate limiter builder.
 #[derive(Debug)]
@@ -32,14 +32,21 @@ impl Builder {
         self
     }
 
-    /// Set the get_key method, This method should not be used in combination of cookie_name or session_key as they overwrite each other
-    pub fn get_key<F: GetKeyFnT + Send + Sync + 'static>(&mut self, resolver: F) -> &mut Self {
-        self.get_key_fn = Some(Arc::new(Box::new(resolver)));
+    /// Sets rate limit key derivation function.
+    ///
+    /// Should not be used in combination with `cookie_name` or `session_key` as they conflict.
+    pub fn key_by<F>(&mut self, resolver: F) -> &mut Self
+    where
+        F: Fn(&ServiceRequest) -> Option<String> + Send + Sync + 'static,
+    {
+        self.get_key_fn = Some(Arc::new(resolver));
         self
     }
 
-    /// Set name of cookie to be sent, This method should not be used in combination of get_key_fn as they overwrite each other
-    #[deprecated = "prefer using get_key_fn"]
+    /// Sets name of cookie to be sent.
+    ///
+    /// This method should not be used in combination of `key_by` as they conflict.
+    #[deprecated = "Prefer `key_by`."]
     pub fn cookie_name(&mut self, cookie_name: impl Into<Cow<'static, str>>) -> &mut Self {
         if self.get_key_fn.is_some() {
             panic!("This method should not be used in combination of get_key as they overwrite each other")
@@ -48,8 +55,10 @@ impl Builder {
         self
     }
 
-    /// Set session key to be used in backend. This method should not be used in combination of get_key_fn as they overwrite each other
-    #[deprecated = "prefer using get_key_fn"]
+    /// Sets session key to be used in backend.
+    ///
+    /// This method should not be used in combination of `key_by` as they conflict.
+    #[deprecated = "Prefer `key_by`."]
     #[cfg(feature = "session")]
     pub fn session_key(&mut self, session_key: impl Into<Cow<'static, str>>) -> &mut Self {
         if self.get_key_fn.is_some() {
@@ -68,20 +77,25 @@ impl Builder {
             resolver
         } else {
             let cookie_name = self.cookie_name.clone();
+
             #[cfg(feature = "session")]
             let session_key = self.session_key.clone();
+
             let closure: GetArcBoxKeyFn = Arc::new(Box::new(move |req: &ServiceRequest| {
                 #[cfg(feature = "session")]
                 let res = req
                     .get_session()
                     .get(&session_key)
                     .unwrap_or_else(|_| req.cookie(&cookie_name).map(|c| c.to_string()));
+
                 #[cfg(not(feature = "session"))]
                 let res = req.cookie(&cookie_name).map(|c| c.to_string());
+
                 res
             }));
             closure
         };
+
         Ok(Limiter {
             client: Client::open(self.redis_url.as_str())?,
             limit: self.limit,
@@ -103,7 +117,7 @@ mod tests {
             redis_url: redis_url.to_owned(),
             limit: 100,
             period,
-            get_key_fn: Some(Arc::new(Box::new(|_| None))),
+            get_key_fn: Some(Arc::new(|_| None)),
             cookie_name: Cow::Owned("session".to_string()),
             #[cfg(feature = "session")]
             session_key: Cow::Owned("rate-api".to_string()),
@@ -125,7 +139,7 @@ mod tests {
             redis_url: redis_url.to_owned(),
             limit: 100,
             period: Duration::from_secs(10),
-            get_key_fn: Some(Arc::new(Box::new(|_| None))),
+            get_key_fn: Some(Arc::new(|_| None)),
             cookie_name: Cow::Borrowed("sid"),
             #[cfg(feature = "session")]
             session_key: Cow::Borrowed("key"),
@@ -146,7 +160,7 @@ mod tests {
             redis_url: redis_url.to_owned(),
             limit: 100,
             period: Duration::from_secs(10),
-            get_key_fn: Some(Arc::new(Box::new(|_| None))),
+            get_key_fn: Some(Arc::new(|_| None)),
             cookie_name: Cow::Borrowed("sid"),
             #[cfg(feature = "session")]
             session_key: Cow::Borrowed("key"),

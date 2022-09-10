@@ -60,7 +60,7 @@ where
             .expect("web::Data<Limiter> should be set in app data for RateLimiter middleware")
             .clone();
 
-        let key: Option<String> = (limiter.get_key_fn)(&req);
+        let key = (limiter.get_key_fn)(&req);
         let service = Rc::clone(&self.service);
 
         let key = match key {
