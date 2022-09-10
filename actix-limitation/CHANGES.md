@@ -1,6 +1,9 @@
 # Changes
 
 ## Unreleased - 2022-xx-xx
+
+
+## 0.4.0 - 2022-09-10
 - Add `Builder::key_by` for setting a custom rate limit key function.
 - Implement `Default` for `RateLimiter`.
 - `RateLimiter` is marked `#[non_exhaustive]`; use `RateLimiter::default()` instead.
