@@ -121,11 +121,64 @@
 <span id="119">119</span>
 <span id="120">120</span>
 <span id="121">121</span>
-</pre><pre class="rust"><code><span class="kw">use </span>std::{borrow::Cow, time::Duration};
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+</pre><pre class="rust"><code><span class="kw">use </span>std::{borrow::Cow, sync::Arc, time::Duration};
 
+<span class="attribute">#[cfg(feature = <span class="string">&quot;session&quot;</span>)]
+</span><span class="kw">use </span>actix_session::SessionExt <span class="kw">as _</span>;
+<span class="kw">use </span>actix_web::dev::ServiceRequest;
 <span class="kw">use </span>redis::Client;
 
-<span class="kw">use crate</span>::{errors::Error, Limiter};
+<span class="kw">use crate</span>::{errors::Error, GetArcBoxKeyFn, Limiter};
 
 <span class="doccomment">/// Rate limiter builder.
 </span><span class="attribute">#[derive(Debug)]
@@ -133,8 +186,10 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) redis_url: String,
     <span class="kw">pub</span>(<span class="kw">crate</span>) limit: usize,
     <span class="kw">pub</span>(<span class="kw">crate</span>) period: Duration,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) get_key_fn: <span class="prelude-ty">Option</span>&lt;GetArcBoxKeyFn&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) cookie_name: Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) session_key: Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;,
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;session&quot;</span>)]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) session_key: Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;,
 }
 
 <span class="kw">impl </span>Builder {
@@ -150,14 +205,38 @@
         <span class="self">self
     </span>}
 
-    <span class="doccomment">/// Set name of cookie to be sent.
+    <span class="doccomment">/// Sets rate limit key derivation function.
+    ///
+    /// Should not be used in combination with `cookie_name` or `session_key` as they conflict.
+    </span><span class="kw">pub fn </span>key_by&lt;F&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, resolver: F) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self
+    </span><span class="kw">where
+        </span>F: Fn(<span class="kw-2">&amp;</span>ServiceRequest) -&gt; <span class="prelude-ty">Option</span>&lt;String&gt; + Send + Sync + <span class="lifetime">&#39;static</span>,
+    {
+        <span class="self">self</span>.get_key_fn = <span class="prelude-val">Some</span>(Arc::new(resolver));
+        <span class="self">self
+    </span>}
+
+    <span class="doccomment">/// Sets name of cookie to be sent.
+    ///
+    /// This method should not be used in combination of `key_by` as they conflict.
+    </span><span class="attribute">#[deprecated = <span class="string">&quot;Prefer `key_by`.&quot;</span>]
     </span><span class="kw">pub fn </span>cookie_name(<span class="kw-2">&amp;mut </span><span class="self">self</span>, cookie_name: <span class="kw">impl </span>Into&lt;Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;&gt;) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
+        <span class="kw">if </span><span class="self">self</span>.get_key_fn.is_some() {
+            <span class="macro">panic!</span>(<span class="string">&quot;This method should not be used in combination of get_key as they overwrite each other&quot;</span>)
+        }
         <span class="self">self</span>.cookie_name = cookie_name.into();
         <span class="self">self
     </span>}
 
-    <span class="doccomment">/// Set session key to be used in backend.
+    <span class="doccomment">/// Sets session key to be used in backend.
+    ///
+    /// This method should not be used in combination of `key_by` as they conflict.
+    </span><span class="attribute">#[deprecated = <span class="string">&quot;Prefer `key_by`.&quot;</span>]
+    #[cfg(feature = <span class="string">&quot;session&quot;</span>)]
     </span><span class="kw">pub fn </span>session_key(<span class="kw-2">&amp;mut </span><span class="self">self</span>, session_key: <span class="kw">impl </span>Into&lt;Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;&gt;) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
+        <span class="kw">if </span><span class="self">self</span>.get_key_fn.is_some() {
+            <span class="macro">panic!</span>(<span class="string">&quot;This method should not be used in combination of get_key as they overwrite each other&quot;</span>)
+        }
         <span class="self">self</span>.session_key = session_key.into();
         <span class="self">self
     </span>}
@@ -166,13 +245,35 @@
     ///
     /// Note that this method will connect to the Redis server to test its connection which is a
     /// **synchronous** operation.
-    </span><span class="kw">pub fn </span>build(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Limiter, Error&gt; {
+    </span><span class="kw">pub fn </span>build(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Limiter, Error&gt; {
+        <span class="kw">let </span>get_key = <span class="kw">if let </span><span class="prelude-val">Some</span>(resolver) = <span class="self">self</span>.get_key_fn.clone() {
+            resolver
+        } <span class="kw">else </span>{
+            <span class="kw">let </span>cookie_name = <span class="self">self</span>.cookie_name.clone();
+
+            <span class="attribute">#[cfg(feature = <span class="string">&quot;session&quot;</span>)]
+            </span><span class="kw">let </span>session_key = <span class="self">self</span>.session_key.clone();
+
+            <span class="kw">let </span>closure: GetArcBoxKeyFn = Arc::new(Box::new(<span class="kw">move </span>|req: <span class="kw-2">&amp;</span>ServiceRequest| {
+                <span class="attribute">#[cfg(feature = <span class="string">&quot;session&quot;</span>)]
+                </span><span class="kw">let </span>res = req
+                    .get_session()
+                    .get(<span class="kw-2">&amp;</span>session_key)
+                    .unwrap_or_else(|<span class="kw">_</span>| req.cookie(<span class="kw-2">&amp;</span>cookie_name).map(|c| c.to_string()));
+
+                <span class="attribute">#[cfg(not(feature = <span class="string">&quot;session&quot;</span>))]
+                </span><span class="kw">let </span>res = req.cookie(<span class="kw-2">&amp;</span>cookie_name).map(|c| c.to_string());
+
+                res
+            }));
+            closure
+        };
+
         <span class="prelude-val">Ok</span>(Limiter {
             client: Client::open(<span class="self">self</span>.redis_url.as_str())<span class="question-mark">?</span>,
             limit: <span class="self">self</span>.limit,
             period: <span class="self">self</span>.period,
-            cookie_name: <span class="self">self</span>.cookie_name.clone(),
-            session_key: <span class="self">self</span>.session_key.clone(),
+            get_key_fn: get_key,
         })
     }
 }
@@ -189,14 +290,17 @@
             redis_url: redis_url.to_owned(),
             limit: <span class="number">100</span>,
             period,
+            get_key_fn: <span class="prelude-val">Some</span>(Arc::new(|<span class="kw">_</span>| <span class="prelude-val">None</span>)),
             cookie_name: Cow::Owned(<span class="string">&quot;session&quot;</span>.to_string()),
-            session_key: Cow::Owned(<span class="string">&quot;rate-api&quot;</span>.to_string()),
+            <span class="attribute">#[cfg(feature = <span class="string">&quot;session&quot;</span>)]
+            </span>session_key: Cow::Owned(<span class="string">&quot;rate-api&quot;</span>.to_string()),
         };
 
         <span class="macro">assert_eq!</span>(builder.redis_url, redis_url);
         <span class="macro">assert_eq!</span>(builder.limit, <span class="number">100</span>);
         <span class="macro">assert_eq!</span>(builder.period, period);
-        <span class="macro">assert_eq!</span>(builder.session_key, <span class="string">&quot;rate-api&quot;</span>);
+        <span class="attribute">#[cfg(feature = <span class="string">&quot;session&quot;</span>)]
+        </span><span class="macro">assert_eq!</span>(builder.session_key, <span class="string">&quot;rate-api&quot;</span>);
         <span class="macro">assert_eq!</span>(builder.cookie_name, <span class="string">&quot;session&quot;</span>);
     }
 
@@ -208,22 +312,16 @@
             redis_url: redis_url.to_owned(),
             limit: <span class="number">100</span>,
             period: Duration::from_secs(<span class="number">10</span>),
-            session_key: Cow::Borrowed(<span class="string">&quot;key&quot;</span>),
+            get_key_fn: <span class="prelude-val">Some</span>(Arc::new(|<span class="kw">_</span>| <span class="prelude-val">None</span>)),
             cookie_name: Cow::Borrowed(<span class="string">&quot;sid&quot;</span>),
+            <span class="attribute">#[cfg(feature = <span class="string">&quot;session&quot;</span>)]
+            </span>session_key: Cow::Borrowed(<span class="string">&quot;key&quot;</span>),
         };
 
-        <span class="kw">let </span>limiter = builder
-            .limit(<span class="number">200</span>)
-            .period(period)
-            .cookie_name(<span class="string">&quot;session&quot;</span>.to_string())
-            .session_key(<span class="string">&quot;rate-api&quot;</span>.to_string())
-            .build()
-            .unwrap();
+        <span class="kw">let </span>limiter = builder.limit(<span class="number">200</span>).period(period).build().unwrap();
 
         <span class="macro">assert_eq!</span>(limiter.limit, <span class="number">200</span>);
         <span class="macro">assert_eq!</span>(limiter.period, period);
-        <span class="macro">assert_eq!</span>(limiter.session_key, <span class="string">&quot;rate-api&quot;</span>);
-        <span class="macro">assert_eq!</span>(limiter.cookie_name, <span class="string">&quot;session&quot;</span>);
     }
 
     <span class="attribute">#[test]
@@ -235,12 +333,14 @@
             redis_url: redis_url.to_owned(),
             limit: <span class="number">100</span>,
             period: Duration::from_secs(<span class="number">10</span>),
-            session_key: Cow::Borrowed(<span class="string">&quot;key&quot;</span>),
+            get_key_fn: <span class="prelude-val">Some</span>(Arc::new(|<span class="kw">_</span>| <span class="prelude-val">None</span>)),
             cookie_name: Cow::Borrowed(<span class="string">&quot;sid&quot;</span>),
+            <span class="attribute">#[cfg(feature = <span class="string">&quot;session&quot;</span>)]
+            </span>session_key: Cow::Borrowed(<span class="string">&quot;key&quot;</span>),
         };
 
         builder.limit(<span class="number">200</span>).period(period).build().unwrap();
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_limitation" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (eaadb8947 2022-08-27)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_limitation" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (1d37ed661 2022-09-09)" ></div></body></html>

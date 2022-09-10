@@ -115,17 +115,8 @@
 <span id="113">113</span>
 <span id="114">114</span>
 <span id="115">115</span>
-<span id="116">116</span>
-<span id="117">117</span>
-<span id="118">118</span>
-<span id="119">119</span>
-<span id="120">120</span>
-<span id="121">121</span>
-<span id="122">122</span>
-<span id="123">123</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::{future::Future, pin::Pin, rc::Rc};
 
-<span class="kw">use </span>actix_session::SessionExt <span class="kw">as _</span>;
 <span class="kw">use </span>actix_utils::future::{ok, Ready};
 <span class="kw">use </span>actix_web::{
     body::EitherBody,
@@ -186,25 +177,18 @@
             .expect(<span class="string">&quot;web::Data&lt;Limiter&gt; should be set in app data for RateLimiter middleware&quot;</span>)
             .clone();
 
-        <span class="kw">let </span>key = req.get_session().get(<span class="kw-2">&amp;</span>limiter.session_key).unwrap_or(<span class="prelude-val">None</span>);
+        <span class="kw">let </span>key = (limiter.get_key_fn)(<span class="kw-2">&amp;</span>req);
         <span class="kw">let </span>service = Rc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.service);
 
         <span class="kw">let </span>key = <span class="kw">match </span>key {
             <span class="prelude-val">Some</span>(key) =&gt; key,
             <span class="prelude-val">None </span>=&gt; {
-                <span class="kw">let </span>fallback = req.cookie(<span class="kw-2">&amp;</span>limiter.cookie_name).map(|c| c.to_string());
-
-                <span class="kw">match </span>fallback {
-                    <span class="prelude-val">Some</span>(key) =&gt; key,
-                    <span class="prelude-val">None </span>=&gt; {
-                        <span class="kw">return </span>Box::pin(<span class="kw">async move </span>{
-                            service
-                                .call(req)
-                                .<span class="kw">await
-                                </span>.map(ServiceResponse::map_into_left_body)
-                        });
-                    }
-                }
+                <span class="kw">return </span>Box::pin(<span class="kw">async move </span>{
+                    service
+                        .call(req)
+                        .<span class="kw">await
+                        </span>.map(ServiceResponse::map_into_left_body)
+                });
             }
         };
 
@@ -247,4 +231,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_limitation" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (eaadb8947 2022-08-27)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_limitation" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (1d37ed661 2022-09-09)" ></div></body></html>
