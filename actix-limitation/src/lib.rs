@@ -7,8 +7,9 @@
 //! ```
 //!
 //! ```no_run
-//! use std::time::Duration;
-//! use actix_web::{get, web, App, HttpServer, Responder};
+//! use std::{sync::Arc, time::Duration};
+//! use actix_web::{dev::ServiceRequest, get, web, App, HttpServer, Responder};
+//! use actix_session::SessionExt as _;
 //! use actix_limitation::{Limiter, RateLimiter};
 //!
 //! #[get("/{id}/{name}")]
@@ -20,8 +21,11 @@
 //! async fn main() -> std::io::Result<()> {
 //!     let limiter = web::Data::new(
 //!         Limiter::builder("redis://127.0.0.1")
-//!             .cookie_name("session-id".to_owned())
-//!             .session_key("rate-api-id".to_owned())
+//!             .key_by(|req: &ServiceRequest| {
+//!                 req.get_session()
+//!                     .get(&"session-id")
+//!                     .unwrap_or_else(|_| req.cookie(&"rate-api-id").map(|c| c.to_string()))
+//!             })
 //!             .limit(5000)
 //!             .period(Duration::from_secs(3600)) // 60 minutes
 //!             .build()
@@ -46,8 +50,9 @@
 #![doc(html_logo_url = "https://actix.rs/img/logo.png")]
 #![doc(html_favicon_url = "https://actix.rs/favicon.ico")]
 
-use std::{borrow::Cow, time::Duration};
+use std::{borrow::Cow, fmt, sync::Arc, time::Duration};
 
+use actix_web::dev::ServiceRequest;
 use redis::Client;
 
 mod builder;
@@ -70,7 +75,26 @@ pub const DEFAULT_PERIOD_SECS: u64 = 3600;
 pub const DEFAULT_COOKIE_NAME: &str = "sid";
 
 /// Default session key.
+#[cfg(feature = "session")]
 pub const DEFAULT_SESSION_KEY: &str = "rate-api-id";
+
+/// Helper trait to impl Debug on GetKeyFn type
+trait GetKeyFnT: Fn(&ServiceRequest) -> Option<String> {}
+
+impl<T> GetKeyFnT for T where T: Fn(&ServiceRequest) -> Option<String> {}
+
+/// Get key function type with auto traits
+type GetKeyFn = dyn GetKeyFnT + Send + Sync;
+
+/// Get key resolver function type
+impl fmt::Debug for GetKeyFn {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "GetKeyFn")
+    }
+}
+
+/// Wrapped Get key function Trait
+type GetArcBoxKeyFn = Arc<GetKeyFn>;
 
 /// Rate limiter.
 #[derive(Debug, Clone)]
@@ -78,8 +102,7 @@ pub struct Limiter {
     client: Client,
     limit: usize,
     period: Duration,
-    cookie_name: Cow<'static, str>,
-    session_key: Cow<'static, str>,
+    get_key_fn: GetArcBoxKeyFn,
 }
 
 impl Limiter {
@@ -93,7 +116,9 @@ impl Limiter {
             redis_url: redis_url.into(),
             limit: DEFAULT_REQUEST_LIMIT,
             period: Duration::from_secs(DEFAULT_PERIOD_SECS),
+            get_key_fn: None,
             cookie_name: Cow::Borrowed(DEFAULT_COOKIE_NAME),
+            #[cfg(feature = "session")]
             session_key: Cow::Borrowed(DEFAULT_SESSION_KEY),
         }
     }
@@ -146,14 +171,12 @@ mod tests {
 
     #[test]
     fn test_create_limiter() {
-        let builder = Limiter::builder("redis://127.0.0.1:6379/1");
+        let mut builder = Limiter::builder("redis://127.0.0.1:6379/1");
         let limiter = builder.build();
         assert!(limiter.is_ok());
 
         let limiter = limiter.unwrap();
         assert_eq!(limiter.limit, 5000);
         assert_eq!(limiter.period, Duration::from_secs(3600));
-        assert_eq!(limiter.cookie_name, DEFAULT_COOKIE_NAME);
-        assert_eq!(limiter.session_key, DEFAULT_SESSION_KEY);
     }
 }

@@ -1,6 +1,7 @@
 # Changes
 
 ## Unreleased - 2022-xx-xx
+- Add `Builder::key_by` for setting a custom rate limit key function.
 - Implement `Default` for `RateLimiter`.
 - `RateLimiter` is marked `#[non_exhaustive]`; use `RateLimiter::default()` instead.
 - In the middleware errors from the count function are matched and respond with `INTERNAL_SERVER_ERROR` if it's an unexpected error, instead of the default `TOO_MANY_REQUESTS`.
