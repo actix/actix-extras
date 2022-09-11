@@ -1,6 +1,9 @@
 # Changes
 
 ## Unreleased - 2021-xx-xx
+
+
+## 0.7.2 - 2022-09-11
 - Set SameSite attribute when adding a session removal cookie. [#284]
 - Minimum supported Rust version (MSRV) is now 1.59 due to transitive `time` dependency.
 
