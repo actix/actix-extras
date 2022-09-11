@@ -1,7 +1,10 @@
 # Changes
 
 ## Unreleased - 2021-xx-xx
+- Set SameSite attribute when adding a session removal cookie. [#284]
 - Minimum supported Rust version (MSRV) is now 1.59 due to transitive `time` dependency.
+
+[#284]: https://github.com/actix/actix-extras/pull/284
 
 
 ## 0.7.1 - 2022-07-24
