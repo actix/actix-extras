@@ -26,13 +26,17 @@
 <span id="24">24</span>
 <span id="25">25</span>
 <span id="26">26</span>
+<span id="27">27</span>
+<span id="28">28</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Pluggable storage backends for session state.
 
 </span><span class="kw">mod </span>interface;
 <span class="kw">mod </span>session_key;
 
-<span class="kw">pub use </span><span class="self">self</span>::interface::{LoadError, SaveError, SessionStore, UpdateError};
-<span class="kw">pub use </span><span class="self">self</span>::session_key::SessionKey;
+<span class="kw">pub use </span><span class="self">self</span>::{
+    interface::{LoadError, SaveError, SessionStore, UpdateError},
+    session_key::SessionKey,
+};
 
 <span class="attribute">#[cfg(feature = <span class="string">&quot;cookie-session&quot;</span>)]
 </span><span class="kw">mod </span>cookie;

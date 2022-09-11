@@ -601,14 +601,14 @@
         value
             .encode(<span class="kw-2">&amp;mut </span>body)
             .map_err(ProtoBufPayloadError::Serialize)<span class="question-mark">?</span>;
+
         <span class="prelude-val">Ok</span>(<span class="self">self</span>.body(body))
     }
 }
 
 <span class="attribute">#[cfg(test)]
 </span><span class="kw">mod </span>tests {
-    <span class="kw">use </span>actix_web::http::header;
-    <span class="kw">use </span>actix_web::test::TestRequest;
+    <span class="kw">use </span>actix_web::{http::header, test::TestRequest};
 
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
 

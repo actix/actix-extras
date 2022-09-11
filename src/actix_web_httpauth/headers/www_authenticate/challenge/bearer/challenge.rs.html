@@ -139,7 +139,6 @@
 <span id="139">139</span>
 <span id="140">140</span>
 <span id="141">141</span>
-<span id="142">142</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::{borrow::Cow, fmt, str};
 
 <span class="kw">use </span>actix_web::{
@@ -147,8 +146,7 @@
     web::{BufMut, Bytes, BytesMut},
 };
 
-<span class="kw">use </span><span class="kw">super</span>::<span class="kw">super</span>::Challenge;
-<span class="kw">use super</span>::{BearerBuilder, Error};
+<span class="kw">use super</span>::{<span class="kw">super</span>::Challenge, BearerBuilder, Error};
 <span class="kw">use </span><span class="kw">crate</span>::utils;
 
 <span class="doccomment">/// Challenge for [`WWW-Authenticate`] header with HTTP Bearer auth scheme, described in [RFC 6750].

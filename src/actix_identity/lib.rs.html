@@ -96,8 +96,6 @@
 <span id="96">96</span>
 <span id="97">97</span>
 <span id="98">98</span>
-<span id="99">99</span>
-<span id="100">100</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Identity management for Actix Web.
 //!
 //! `actix-identity` can be used to track identity of a user across multiple requests. It is built
@@ -195,8 +193,6 @@
 <span class="kw">mod </span>identity_ext;
 <span class="kw">mod </span>middleware;
 
-<span class="kw">pub use </span><span class="self">self</span>::identity::Identity;
-<span class="kw">pub use </span><span class="self">self</span>::identity_ext::IdentityExt;
-<span class="kw">pub use </span><span class="self">self</span>::middleware::IdentityMiddleware;
+<span class="kw">pub use </span><span class="self">self</span>::{identity::Identity, identity_ext::IdentityExt, middleware::IdentityMiddleware};
 </code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_identity" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (228710758 2022-09-10)" ></div></body></html>

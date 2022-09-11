@@ -809,6 +809,8 @@
 <span id="807">807</span>
 <span id="808">808</span>
 <span id="809">809</span>
+<span id="810">810</span>
+<span id="811">811</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Easily manage Actix Web&#39;s settings from a TOML file and environment variables.
 //!
 //! To get started add a [`Settings::parse_toml(&quot;./Server.toml&quot;)`](Settings::parse_toml) call to the
@@ -900,11 +902,13 @@
 <span class="kw">mod </span>parse;
 <span class="kw">mod </span>settings;
 
-<span class="kw">pub use </span><span class="self">self</span>::error::Error;
-<span class="kw">pub use </span><span class="self">self</span>::parse::Parse;
-<span class="kw">pub use </span><span class="self">self</span>::settings::{
-    ActixSettings, Address, Backlog, KeepAlive, MaxConnectionRate, MaxConnections, Mode,
-    NumWorkers, Timeout, Tls,
+<span class="kw">pub use </span><span class="self">self</span>::{
+    error::Error,
+    parse::Parse,
+    settings::{
+        ActixSettings, Address, Backlog, KeepAlive, MaxConnectionRate, MaxConnections, Mode,
+        NumWorkers, Timeout, Tls,
+    },
 };
 
 <span class="doccomment">/// Convenience type alias for `Result&lt;T, AtError&gt;`.

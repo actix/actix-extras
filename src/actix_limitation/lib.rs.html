@@ -179,9 +179,6 @@
 <span id="177">177</span>
 <span id="178">178</span>
 <span id="179">179</span>
-<span id="180">180</span>
-<span id="181">181</span>
-<span id="182">182</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Rate limiter using a fixed window counter for arbitrary keys, backed by Redis for Actix Web.
 //!
 //! ```toml
@@ -244,10 +241,7 @@
 <span class="kw">mod </span>middleware;
 <span class="kw">mod </span>status;
 
-<span class="kw">pub use </span><span class="self">self</span>::builder::Builder;
-<span class="kw">pub use </span><span class="self">self</span>::errors::Error;
-<span class="kw">pub use </span><span class="self">self</span>::middleware::RateLimiter;
-<span class="kw">pub use </span><span class="self">self</span>::status::Status;
+<span class="kw">pub use </span><span class="self">self</span>::{builder::Builder, errors::Error, middleware::RateLimiter, status::Status};
 
 <span class="doccomment">/// Default request limit.
 </span><span class="kw">pub const </span>DEFAULT_REQUEST_LIMIT: usize = <span class="number">5000</span>;

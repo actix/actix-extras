@@ -6,7 +6,6 @@
 <span id="6">6</span>
 <span id="7">7</span>
 <span id="8">8</span>
-<span id="9">9</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Type-safe authentication information extractors.
 
 </span><span class="kw">pub mod </span>basic;
@@ -14,7 +13,6 @@
 <span class="kw">mod </span>config;
 <span class="kw">mod </span>errors;
 
-<span class="kw">pub use </span><span class="self">self</span>::config::AuthExtractorConfig;
-<span class="kw">pub use </span><span class="self">self</span>::errors::AuthenticationError;
+<span class="kw">pub use </span><span class="self">self</span>::{config::AuthExtractorConfig, errors::AuthenticationError};
 </code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="actix_web_httpauth" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (228710758 2022-09-10)" ></div></body></html>

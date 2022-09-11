@@ -61,10 +61,6 @@
 <span id="59">59</span>
 <span id="60">60</span>
 <span id="61">61</span>
-<span id="62">62</span>
-<span id="63">63</span>
-<span id="64">64</span>
-<span id="65">65</span>
 </pre><pre class="rust"><code><span class="kw">use </span>serde::Deserialize;
 
 <span class="kw">mod </span>address;
@@ -77,15 +73,11 @@
 <span class="kw">mod </span>timeout;
 <span class="kw">mod </span>tls;
 
-<span class="kw">pub use </span><span class="self">self</span>::address::Address;
-<span class="kw">pub use </span><span class="self">self</span>::backlog::Backlog;
-<span class="kw">pub use </span><span class="self">self</span>::keep_alive::KeepAlive;
-<span class="kw">pub use </span><span class="self">self</span>::max_connection_rate::MaxConnectionRate;
-<span class="kw">pub use </span><span class="self">self</span>::max_connections::MaxConnections;
-<span class="kw">pub use </span><span class="self">self</span>::mode::Mode;
-<span class="kw">pub use </span><span class="self">self</span>::num_workers::NumWorkers;
-<span class="kw">pub use </span><span class="self">self</span>::timeout::Timeout;
-<span class="kw">pub use </span><span class="self">self</span>::tls::Tls;
+<span class="kw">pub use </span><span class="self">self</span>::{
+    address::Address, backlog::Backlog, keep_alive::KeepAlive,
+    max_connection_rate::MaxConnectionRate, max_connections::MaxConnections, mode::Mode,
+    num_workers::NumWorkers, timeout::Timeout, tls::Tls,
+};
 
 <span class="doccomment">/// Settings types for Actix Web.
 </span><span class="attribute">#[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize)]

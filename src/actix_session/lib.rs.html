@@ -732,6 +732,10 @@
 <span id="730">730</span>
 <span id="731">731</span>
 <span id="732">732</span>
+<span id="733">733</span>
+<span id="734">734</span>
+<span id="735">735</span>
+<span id="736">736</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Session management for Actix Web.
 //!
 //! The HTTP protocol, at a first glance, is stateless: the client sends a request, the server
@@ -880,9 +884,11 @@
 <span class="kw">mod </span>session_ext;
 <span class="kw">pub mod </span>storage;
 
-<span class="kw">pub use </span><span class="self">self</span>::middleware::SessionMiddleware;
-<span class="kw">pub use </span><span class="self">self</span>::session::{Session, SessionGetError, SessionInsertError, SessionStatus};
-<span class="kw">pub use </span><span class="self">self</span>::session_ext::SessionExt;
+<span class="kw">pub use </span><span class="self">self</span>::{
+    middleware::SessionMiddleware,
+    session::{Session, SessionGetError, SessionInsertError, SessionStatus},
+    session_ext::SessionExt,
+};
 
 <span class="attribute">#[cfg(test)]
 </span><span class="kw">pub mod </span>test_helpers {
@@ -941,9 +947,11 @@
         <span class="kw">use </span>serde::{Deserialize, Serialize};
         <span class="kw">use </span>serde_json::json;
 
-        <span class="kw">use </span><span class="kw">crate</span>::config::{CookieContentSecurity, PersistentSession, TtlExtensionPolicy};
         <span class="kw">use crate</span>::{
-            storage::SessionStore, test_helpers::key, Session, SessionExt, SessionMiddleware,
+            config::{CookieContentSecurity, PersistentSession, TtlExtensionPolicy},
+            storage::SessionStore,
+            test_helpers::key,
+            Session, SessionExt, SessionMiddleware,
         };
 
         <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">async fn </span>basic_workflow&lt;F, Store&gt;(
