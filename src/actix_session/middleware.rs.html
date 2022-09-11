@@ -463,6 +463,7 @@
 <span id="461">461</span>
 <span id="462">462</span>
 <span id="463">463</span>
+<span id="464">464</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::{collections::HashMap, convert::TryInto, fmt, future::Future, pin::Pin, rc::Rc};
 
 <span class="kw">use </span>actix_utils::future::{ready, Ready};
@@ -909,7 +910,8 @@
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(), anyhow::Error&gt; {
     <span class="kw">let </span>removal_cookie = Cookie::build(config.name.clone(), <span class="string">&quot;&quot;</span>)
         .path(config.path.clone())
-        .http_only(config.http_only);
+        .http_only(config.http_only)
+        .same_site(config.same_site);
 
     <span class="kw">let </span><span class="kw-2">mut </span>removal_cookie = <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>domain) = config.domain {
         removal_cookie.domain(domain)
@@ -927,4 +929,4 @@
     <span class="prelude-val">Ok</span>(())
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_session" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (1d37ed661 2022-09-09)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_session" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (228710758 2022-09-10)" ></div></body></html>
