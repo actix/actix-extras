@@ -444,7 +444,8 @@ fn delete_session_cookie(
 ) -> Result<(), anyhow::Error> {
     let removal_cookie = Cookie::build(config.name.clone(), "")
         .path(config.path.clone())
-        .http_only(config.http_only);
+        .http_only(config.http_only)
+        .same_site(config.same_site);
 
     let mut removal_cookie = if let Some(ref domain) = config.domain {
         removal_cookie.domain(domain)
