@@ -3,5 +3,7 @@
 mod challenge;
 mod header;
 
-pub use self::challenge::{basic, bearer, Challenge};
-pub use self::header::WwwAuthenticate;
+pub use self::{
+    challenge::{basic, bearer, Challenge},
+    header::WwwAuthenticate,
+};

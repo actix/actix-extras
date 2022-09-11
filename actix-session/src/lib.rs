@@ -146,9 +146,11 @@ mod session;
 mod session_ext;
 pub mod storage;
 
-pub use self::middleware::SessionMiddleware;
-pub use self::session::{Session, SessionGetError, SessionInsertError, SessionStatus};
-pub use self::session_ext::SessionExt;
+pub use self::{
+    middleware::SessionMiddleware,
+    session::{Session, SessionGetError, SessionInsertError, SessionStatus},
+    session_ext::SessionExt,
+};
 
 #[cfg(test)]
 pub mod test_helpers {
@@ -207,9 +209,11 @@ pub mod test_helpers {
         use serde::{Deserialize, Serialize};
         use serde_json::json;
 
-        use crate::config::{CookieContentSecurity, PersistentSession, TtlExtensionPolicy};
         use crate::{
-            storage::SessionStore, test_helpers::key, Session, SessionExt, SessionMiddleware,
+            config::{CookieContentSecurity, PersistentSession, TtlExtensionPolicy},
+            storage::SessionStore,
+            test_helpers::key,
+            Session, SessionExt, SessionMiddleware,
         };
 
         pub(super) async fn basic_workflow<F, Store>(

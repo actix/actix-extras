@@ -4,9 +4,7 @@ mod builder;
 mod challenge;
 mod errors;
 
-pub use self::builder::BearerBuilder;
-pub use self::challenge::Bearer;
-pub use self::errors::Error;
+pub use self::{builder::BearerBuilder, challenge::Bearer, errors::Error};
 
 #[cfg(test)]
 mod tests {

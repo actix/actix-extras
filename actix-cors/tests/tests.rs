@@ -1,8 +1,7 @@
 use actix_cors::Cors;
 use actix_utils::future::ok;
-use actix_web::dev::fn_service;
 use actix_web::{
-    dev::{ServiceRequest, Transform},
+    dev::{fn_service, ServiceRequest, Transform},
     http::{
         header::{self, HeaderValue},
         Method, StatusCode,

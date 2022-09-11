@@ -95,6 +95,4 @@ mod identity;
 mod identity_ext;
 mod middleware;
 
-pub use self::identity::Identity;
-pub use self::identity_ext::IdentityExt;
-pub use self::middleware::IdentityMiddleware;
+pub use self::{identity::Identity, identity_ext::IdentityExt, middleware::IdentityMiddleware};

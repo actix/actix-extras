@@ -5,5 +5,4 @@ pub mod bearer;
 mod config;
 mod errors;
 
-pub use self::config::AuthExtractorConfig;
-pub use self::errors::AuthenticationError;
+pub use self::{config::AuthExtractorConfig, errors::AuthenticationError};

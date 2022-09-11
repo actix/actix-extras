@@ -1,7 +1,5 @@
-use actix_web::dev::ServiceRequest;
-use actix_web::{middleware, web, App, Error, HttpServer};
-use actix_web_httpauth::extractors::basic::BasicAuth;
-use actix_web_httpauth::middleware::HttpAuthentication;
+use actix_web::{dev::ServiceRequest, middleware, web, App, Error, HttpServer};
+use actix_web_httpauth::{extractors::basic::BasicAuth, middleware::HttpAuthentication};
 
 async fn validator(
     req: ServiceRequest,

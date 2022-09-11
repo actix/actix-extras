@@ -266,14 +266,14 @@ impl ProtoBufResponseBuilder for HttpResponseBuilder {
         value
             .encode(&mut body)
             .map_err(ProtoBufPayloadError::Serialize)?;
+
         Ok(self.body(body))
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use actix_web::http::header;
-    use actix_web::test::TestRequest;
+    use actix_web::{http::header, test::TestRequest};
 
     use super::*;
 

@@ -4,6 +4,8 @@ mod errors;
 mod header;
 mod scheme;
 
-pub use self::errors::ParseError;
-pub use self::header::Authorization;
-pub use self::scheme::{basic::Basic, bearer::Bearer, Scheme};
+pub use self::{
+    errors::ParseError,
+    header::Authorization,
+    scheme::{basic::Basic, bearer::Bearer, Scheme},
+};

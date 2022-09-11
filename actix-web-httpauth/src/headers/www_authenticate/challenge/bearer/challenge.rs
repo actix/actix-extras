@@ -5,8 +5,7 @@ use actix_web::{
     web::{BufMut, Bytes, BytesMut},
 };
 
-use super::super::Challenge;
-use super::{BearerBuilder, Error};
+use super::{super::Challenge, BearerBuilder, Error};
 use crate::utils;
 
 /// Challenge for [`WWW-Authenticate`] header with HTTP Bearer auth scheme, described in [RFC 6750].

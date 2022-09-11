@@ -1,13 +1,14 @@
-use std::collections::HashMap;
-use std::convert::TryInto;
+use std::{collections::HashMap, convert::TryInto};
 
-use actix_session::storage::{LoadError, SaveError, SessionKey, SessionStore, UpdateError};
-use actix_session::{Session, SessionMiddleware};
-use actix_web::body::MessageBody;
-use actix_web::http::StatusCode;
+use actix_session::{
+    storage::{LoadError, SaveError, SessionKey, SessionStore, UpdateError},
+    Session, SessionMiddleware,
+};
 use actix_web::{
+    body::MessageBody,
     cookie::{time::Duration, Key},
     dev::Service,
+    http::StatusCode,
     test, web, App, Responder,
 };
 use anyhow::Error;

@@ -10,15 +10,11 @@ mod num_workers;
 mod timeout;
 mod tls;
 
-pub use self::address::Address;
-pub use self::backlog::Backlog;
-pub use self::keep_alive::KeepAlive;
-pub use self::max_connection_rate::MaxConnectionRate;
-pub use self::max_connections::MaxConnections;
-pub use self::mode::Mode;
-pub use self::num_workers::NumWorkers;
-pub use self::timeout::Timeout;
-pub use self::tls::Tls;
+pub use self::{
+    address::Address, backlog::Backlog, keep_alive::KeepAlive,
+    max_connection_rate::MaxConnectionRate, max_connections::MaxConnections, mode::Mode,
+    num_workers::NumWorkers, timeout::Timeout, tls::Tls,
+};
 
 /// Settings types for Actix Web.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize)]

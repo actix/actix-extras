@@ -3,8 +3,10 @@
 mod interface;
 mod session_key;
 
-pub use self::interface::{LoadError, SaveError, SessionStore, UpdateError};
-pub use self::session_key::SessionKey;
+pub use self::{
+    interface::{LoadError, SaveError, SessionStore, UpdateError},
+    session_key::SessionKey,
+};
 
 #[cfg(feature = "cookie-session")]
 mod cookie;

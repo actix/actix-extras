@@ -89,11 +89,13 @@ mod error;
 mod parse;
 mod settings;
 
-pub use self::error::Error;
-pub use self::parse::Parse;
-pub use self::settings::{
-    ActixSettings, Address, Backlog, KeepAlive, MaxConnectionRate, MaxConnections, Mode,
-    NumWorkers, Timeout, Tls,
+pub use self::{
+    error::Error,
+    parse::Parse,
+    settings::{
+        ActixSettings, Address, Backlog, KeepAlive, MaxConnectionRate, MaxConnections, Mode,
+        NumWorkers, Timeout, Tls,
+    },
 };
 
 /// Convenience type alias for `Result<T, AtError>`.

@@ -60,10 +60,7 @@ mod errors;
 mod middleware;
 mod status;
 
-pub use self::builder::Builder;
-pub use self::errors::Error;
-pub use self::middleware::RateLimiter;
-pub use self::status::Status;
+pub use self::{builder::Builder, errors::Error, middleware::RateLimiter, status::Status};
 
 /// Default request limit.
 pub const DEFAULT_REQUEST_LIMIT: usize = 5000;
