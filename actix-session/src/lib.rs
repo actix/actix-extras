@@ -65,7 +65,7 @@
 //! ```
 //!
 //! The session state can be accessed and modified by your request handlers using the [`Session`]
-//! extractor.
+//! extractor. Note that this doesn't work in the stream of a streaming response.
 //!
 //! ```no_run
 //! use actix_web::Error;
