@@ -102,6 +102,7 @@ impl Cors {
             send_wildcard: false,
             supports_credentials: true,
             vary_header: true,
+            block_on_origin_mismatch: true,
         };
 
         Cors {
@@ -448,6 +449,28 @@ impl Cors {
 
         self
     }
+
+    /// Decides if actix-cors should explicitly block requests with mismatches Origin or not
+    ///
+    /// If `true`, actix-cors will return 400 Bad Request if the Origin header from
+    /// the request doesn't match the list of valid Origins.
+    ///
+    /// If `false`, actix-cors won't do anything extra regarding allow requests or
+    /// not and simply add the needed headers to work with CORS in browsers.
+    ///
+    /// With the false set to `false`, it is up to the browser to validate CORS headers
+    /// and block requests. Other HTTP-aware tools like cURL will still function
+    /// as normal, no matter what Origin you send.
+    ///
+    /// Defaults to `true`.
+    ///
+    pub fn block_on_origin_mismatch(mut self, val: bool) -> Cors {
+        if let Some(cors) = cors(&mut self.inner, &self.error) {
+            cors.block_on_origin_mismatch = val
+        }
+
+        self
+    }
 }
 
 impl Default for Cors {
@@ -474,6 +497,7 @@ impl Default for Cors {
             send_wildcard: false,
             supports_credentials: false,
             vary_header: true,
+            block_on_origin_mismatch: true,
         };
 
         Cors {

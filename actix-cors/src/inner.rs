@@ -65,6 +65,7 @@ pub(crate) struct Inner {
     pub(crate) send_wildcard: bool,
     pub(crate) supports_credentials: bool,
     pub(crate) vary_header: bool,
+    pub(crate) block_on_origin_mismatch: bool,
 }
 
 static EMPTY_ORIGIN_SET: Lazy<HashSet<HeaderValue>> = Lazy::new(HashSet::new);
@@ -80,21 +81,26 @@ impl Inner {
             _ => &EMPTY_ORIGIN_SET,
         };
 
-        // get origin header and try to parse as string
-        match req.headers().get(header::ORIGIN) {
-            // origin header exists and is a string
-            Some(origin) => {
-                if allowed_origins.contains(origin) || self.validate_origin_fns(origin, req) {
-                    Ok(())
-                } else {
-                    Err(CorsError::OriginNotAllowed)
+        // Check if we should block requests if Origin doesn't match (or non-existant)
+        if self.block_on_origin_mismatch {
+            // get origin header and try to parse as string
+            match req.headers().get(header::ORIGIN) {
+                // origin header exists and is a string
+                Some(origin) => {
+                    if allowed_origins.contains(origin) || self.validate_origin_fns(origin, req) {
+                        Ok(())
+                    } else {
+                        Err(CorsError::OriginNotAllowed)
+                    }
                 }
-            }
 
-            // origin header is missing
-            // note: with our implementation, the origin header is required for OPTIONS request or
-            // else this would be unreachable
-            None => Err(CorsError::MissingOrigin),
+                // origin header is missing
+                // note: with our implementation, the origin header is required for OPTIONS request or
+                // else this would be unreachable
+                None => Err(CorsError::MissingOrigin),
+            }
+        } else {
+            Ok(())
         }
     }
 

@@ -355,6 +355,39 @@ async fn test_validate_origin() {
 }
 
 #[actix_web::test]
+async fn test_blocks_mismatched_origin_by_default() {
+    let cors = Cors::default()
+        .allowed_origin("https://www.example.com")
+        .new_transform(test::ok_service())
+        .await
+        .unwrap();
+
+    let req = TestRequest::get()
+        .insert_header(("Origin", "https://www.example.test"))
+        .to_srv_request();
+
+    let resp = test::call_service(&cors, req).await;
+    assert_eq!(resp.status(), StatusCode::BAD_REQUEST);
+}
+
+#[actix_web::test]
+async fn test_mismatched_origin_block_turned_off() {
+    let cors = Cors::default()
+        .allowed_origin("https://www.example.com")
+        .block_on_origin_mismatch(false)
+        .new_transform(test::ok_service())
+        .await
+        .unwrap();
+
+    let req = TestRequest::get()
+        .insert_header(("Origin", "https://www.example.test"))
+        .to_srv_request();
+
+    let resp = test::call_service(&cors, req).await;
+    assert_eq!(resp.status(), StatusCode::OK);
+}
+
+#[actix_web::test]
 async fn test_no_origin_response() {
     let cors = Cors::permissive()
         .disable_preflight()
