@@ -458,9 +458,9 @@ impl Cors {
     /// If `false`, actix-cors won't do anything extra regarding allow requests or
     /// not and simply add the needed headers to work with CORS in browsers.
     ///
-    /// With the false set to `false`, it is up to the browser to validate CORS headers
+    /// With the option set to `false`, it is up to the browser to validate CORS headers
     /// and block requests. Other HTTP-aware tools like cURL will still function
-    /// as normal, no matter what Origin you send.
+    /// as normal, no matter what Origin the request has.
     ///
     /// Defaults to `true`.
     ///
