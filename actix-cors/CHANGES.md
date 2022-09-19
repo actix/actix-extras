@@ -2,7 +2,9 @@
 
 ## Unreleased - 2022-xx-xx
 - Minimum supported Rust version (MSRV) is now 1.59 due to transitive `time` dependency.
-- Add `block_on_origin_mismatch` option to actix-cors [#286]
+- Add `Cors::block_on_origin_mismatch()` option for controlling if requests are pre-emptively rejected. [#286]
+
+[#286]: https://github.com/actix/actix-extras/pull/286
 
 
 ## 0.6.2 - 2022-08-07
