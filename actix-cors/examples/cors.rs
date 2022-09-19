@@ -39,6 +39,8 @@ async fn main() -> std::io::Result<()> {
                     .allowed_header(header::CONTENT_TYPE)
                     // set list of headers that are safe to expose
                     .expose_headers(&[header::CONTENT_DISPOSITION])
+                    // allow cURL/HTTPie from working without providing Origin headers
+                    .block_on_origin_mismatch(false)
                     // set preflight cache TTL
                     .max_age(3600),
             )

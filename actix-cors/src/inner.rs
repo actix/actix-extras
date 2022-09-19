@@ -72,6 +72,11 @@ static EMPTY_ORIGIN_SET: Lazy<HashSet<HeaderValue>> = Lazy::new(HashSet::new);
 
 impl Inner {
     pub(crate) fn validate_origin(&self, req: &RequestHead) -> Result<(), CorsError> {
+        // check if we should block requests if Origin doesn't match (or non-existant)
+        if !self.block_on_origin_mismatch {
+            return Ok(());
+        }
+
         // return early if all origins are allowed or get ref to allowed origins set
         #[allow(clippy::mutable_key_type)]
         let allowed_origins = match &self.allowed_origins {
@@ -81,26 +86,21 @@ impl Inner {
             _ => &EMPTY_ORIGIN_SET,
         };
 
-        // Check if we should block requests if Origin doesn't match (or non-existant)
-        if self.block_on_origin_mismatch {
-            // get origin header and try to parse as string
-            match req.headers().get(header::ORIGIN) {
-                // origin header exists and is a string
-                Some(origin) => {
-                    if allowed_origins.contains(origin) || self.validate_origin_fns(origin, req) {
-                        Ok(())
-                    } else {
-                        Err(CorsError::OriginNotAllowed)
-                    }
+        // get origin header and try to parse as string
+        match req.headers().get(header::ORIGIN) {
+            // origin header exists and is a string
+            Some(origin) => {
+                if allowed_origins.contains(origin) || self.validate_origin_fns(origin, req) {
+                    Ok(())
+                } else {
+                    Err(CorsError::OriginNotAllowed)
                 }
-
-                // origin header is missing
-                // note: with our implementation, the origin header is required for OPTIONS request or
-                // else this would be unreachable
-                None => Err(CorsError::MissingOrigin),
             }
-        } else {
-            Ok(())
+
+            // origin header is missing
+            // note: with our implementation, the origin header is required for OPTIONS request or
+            // else this would be unreachable
+            None => Err(CorsError::MissingOrigin),
         }
     }
 

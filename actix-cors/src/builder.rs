@@ -450,23 +450,19 @@ impl Cors {
         self
     }
 
-    /// Decides if actix-cors should explicitly block requests with mismatches Origin or not
+    /// Configures whether requests should be pre-emptively blocked on mismatched origin.
     ///
-    /// If `true`, actix-cors will return 400 Bad Request if the Origin header from
-    /// the request doesn't match the list of valid Origins.
+    /// If `true`, a 400 Bad Request is returned immediately when a request fails origin validation.
     ///
-    /// If `false`, actix-cors won't do anything extra regarding allow requests or
-    /// not and simply add the needed headers to work with CORS in browsers.
-    ///
-    /// With the option set to `false`, it is up to the browser to validate CORS headers
-    /// and block requests. Other HTTP-aware tools like cURL will still function
-    /// as normal, no matter what Origin the request has.
+    /// If `false`, the request will be processed as normal but relevant CORS headers will not be
+    /// appended to the response. In this case, the browser is trusted to validate CORS headers and
+    /// and block requests based on pre-flight requests. Use this setting to allow cURL and other
+    /// non-browser HTTP clients to function as normal, no matter what `Origin` the request has.
     ///
     /// Defaults to `true`.
-    ///
-    pub fn block_on_origin_mismatch(mut self, val: bool) -> Cors {
+    pub fn block_on_origin_mismatch(mut self, block: bool) -> Cors {
         if let Some(cors) = cors(&mut self.inner, &self.error) {
-            cors.block_on_origin_mismatch = val
+            cors.block_on_origin_mismatch = block
         }
 
         self
