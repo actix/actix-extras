@@ -58,7 +58,7 @@ as a middleware on your <code>App</code>:</p>
         .<span class="kw">await
 </span>}</code></pre></div>
 <p>The session state can be accessed and modified by your request handlers using the <a href="struct.Session.html" title="Session"><code>Session</code></a>
-extractor.</p>
+extractor. Note that this doesn’t work in the stream of a streaming response.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>actix_web::Error;
 <span class="kw">use </span>actix_session::Session;
