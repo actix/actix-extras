@@ -123,10 +123,10 @@ impl Cors {
 
     /// Add an origin that is allowed to make requests.
     ///
-    /// This method allows to specify a finite set of origins to verify the value of the `Origin`
-    /// request header. By default no origins are accepted by CORS logic.
+    /// This method allows specifying a finite set of origins to verify the value of the `Origin`
+    /// request header. These are `origin-or-null` types in the [Fetch Standard].
     ///
-    /// These are `origin-or-null` types in the [Fetch Standard].
+    /// By default, no origins are accepted.
     ///
     /// When this list is set, the client's `Origin` request header will be checked in a
     /// case-sensitive manner.
