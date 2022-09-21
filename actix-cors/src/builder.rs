@@ -123,8 +123,8 @@ impl Cors {
 
     /// Add an origin that is allowed to make requests.
     ///
-    /// By default, requests from all origins are accepted by CORS logic. This method allows to
-    /// specify a finite set of origins to verify the value of the `Origin` request header.
+    /// This method allows to specify a finite set of origins to verify the value of the `Origin`
+    /// request header. By default no origins are accepted by CORS logic.
     ///
     /// These are `origin-or-null` types in the [Fetch Standard].
     ///
@@ -211,7 +211,7 @@ impl Cors {
     /// These will be sent in the `Access-Control-Allow-Methods` response header as specified in
     /// the [Fetch Standard CORS protocol].
     ///
-    /// Defaults to `[GET, HEAD, POST, OPTIONS, PUT, PATCH, DELETE]`
+    /// This defaults to an empty set.
     ///
     /// [Fetch Standard CORS protocol]: https://fetch.spec.whatwg.org/#http-cors-protocol
     pub fn allowed_methods<U, M>(mut self, methods: U) -> Cors
@@ -283,7 +283,7 @@ impl Cors {
     /// will be echoed back in the `Access-Control-Allow-Headers` header as specified in
     /// the [Fetch Standard CORS protocol].
     ///
-    /// Defaults to `All`.
+    /// This defaults to an empty set.
     ///
     /// [Fetch Standard CORS protocol]: https://fetch.spec.whatwg.org/#http-cors-protocol
     pub fn allowed_headers<U, H>(mut self, headers: U) -> Cors
