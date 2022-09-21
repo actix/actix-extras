@@ -766,10 +766,10 @@
 
     <span class="doccomment">/// Add an origin that is allowed to make requests.
     ///
-    /// By default, requests from all origins are accepted by CORS logic. This method allows to
-    /// specify a finite set of origins to verify the value of the `Origin` request header.
+    /// This method allows specifying a finite set of origins to verify the value of the `Origin`
+    /// request header. These are `origin-or-null` types in the [Fetch Standard].
     ///
-    /// These are `origin-or-null` types in the [Fetch Standard].
+    /// By default, no origins are accepted.
     ///
     /// When this list is set, the client&#39;s `Origin` request header will be checked in a
     /// case-sensitive manner.
@@ -854,7 +854,7 @@
     /// These will be sent in the `Access-Control-Allow-Methods` response header as specified in
     /// the [Fetch Standard CORS protocol].
     ///
-    /// Defaults to `[GET, HEAD, POST, OPTIONS, PUT, PATCH, DELETE]`
+    /// This defaults to an empty set.
     ///
     /// [Fetch Standard CORS protocol]: https://fetch.spec.whatwg.org/#http-cors-protocol
     </span><span class="kw">pub fn </span>allowed_methods&lt;U, M&gt;(<span class="kw-2">mut </span><span class="self">self</span>, methods: U) -&gt; Cors
@@ -926,7 +926,7 @@
     /// will be echoed back in the `Access-Control-Allow-Headers` header as specified in
     /// the [Fetch Standard CORS protocol].
     ///
-    /// Defaults to `All`.
+    /// This defaults to an empty set.
     ///
     /// [Fetch Standard CORS protocol]: https://fetch.spec.whatwg.org/#http-cors-protocol
     </span><span class="kw">pub fn </span>allowed_headers&lt;U, H&gt;(<span class="kw-2">mut </span><span class="self">self</span>, headers: U) -&gt; Cors
@@ -1283,4 +1283,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_cors" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (228710758 2022-09-10)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_cors" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.0-nightly (432abd86f 2022-09-20)" ></div></body></html>
