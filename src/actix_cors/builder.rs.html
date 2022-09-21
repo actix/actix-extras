@@ -641,6 +641,26 @@
 <span id="639">639</span>
 <span id="640">640</span>
 <span id="641">641</span>
+<span id="642">642</span>
+<span id="643">643</span>
+<span id="644">644</span>
+<span id="645">645</span>
+<span id="646">646</span>
+<span id="647">647</span>
+<span id="648">648</span>
+<span id="649">649</span>
+<span id="650">650</span>
+<span id="651">651</span>
+<span id="652">652</span>
+<span id="653">653</span>
+<span id="654">654</span>
+<span id="655">655</span>
+<span id="656">656</span>
+<span id="657">657</span>
+<span id="658">658</span>
+<span id="659">659</span>
+<span id="660">660</span>
+<span id="661">661</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::{collections::HashSet, convert::TryInto, iter::FromIterator, rc::Rc};
 
 <span class="kw">use </span>actix_utils::future::{<span class="self">self</span>, Ready};
@@ -745,6 +765,7 @@
             send_wildcard: <span class="bool-val">false</span>,
             supports_credentials: <span class="bool-val">true</span>,
             vary_header: <span class="bool-val">true</span>,
+            block_on_origin_mismatch: <span class="bool-val">true</span>,
         };
 
         Cors {
@@ -1091,6 +1112,24 @@
 
         <span class="self">self
     </span>}
+
+    <span class="doccomment">/// Configures whether requests should be pre-emptively blocked on mismatched origin.
+    ///
+    /// If `true`, a 400 Bad Request is returned immediately when a request fails origin validation.
+    ///
+    /// If `false`, the request will be processed as normal but relevant CORS headers will not be
+    /// appended to the response. In this case, the browser is trusted to validate CORS headers and
+    /// and block requests based on pre-flight requests. Use this setting to allow cURL and other
+    /// non-browser HTTP clients to function as normal, no matter what `Origin` the request has.
+    ///
+    /// Defaults to `true`.
+    </span><span class="kw">pub fn </span>block_on_origin_mismatch(<span class="kw-2">mut </span><span class="self">self</span>, block: bool) -&gt; Cors {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(cors) = cors(<span class="kw-2">&amp;mut </span><span class="self">self</span>.inner, <span class="kw-2">&amp;</span><span class="self">self</span>.error) {
+            cors.block_on_origin_mismatch = block
+        }
+
+        <span class="self">self
+    </span>}
 }
 
 <span class="kw">impl </span>Default <span class="kw">for </span>Cors {
@@ -1117,6 +1156,7 @@
             send_wildcard: <span class="bool-val">false</span>,
             supports_credentials: <span class="bool-val">false</span>,
             vary_header: <span class="bool-val">true</span>,
+            block_on_origin_mismatch: <span class="bool-val">true</span>,
         };
 
         Cors {

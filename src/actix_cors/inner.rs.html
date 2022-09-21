@@ -388,6 +388,11 @@
 <span id="386">386</span>
 <span id="387">387</span>
 <span id="388">388</span>
+<span id="389">389</span>
+<span id="390">390</span>
+<span id="391">391</span>
+<span id="392">392</span>
+<span id="393">393</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::{
     collections::HashSet,
     convert::{TryFrom, TryInto},
@@ -455,16 +460,19 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) send_wildcard: bool,
     <span class="kw">pub</span>(<span class="kw">crate</span>) supports_credentials: bool,
     <span class="kw">pub</span>(<span class="kw">crate</span>) vary_header: bool,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) block_on_origin_mismatch: bool,
 }
 
 <span class="kw">static </span>EMPTY_ORIGIN_SET: Lazy&lt;HashSet&lt;HeaderValue&gt;&gt; = Lazy::new(HashSet::new);
 
 <span class="kw">impl </span>Inner {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>validate_origin(<span class="kw-2">&amp;</span><span class="self">self</span>, req: <span class="kw-2">&amp;</span>RequestHead) -&gt; <span class="prelude-ty">Result</span>&lt;(), CorsError&gt; {
+    <span class="doccomment">/// The bool returned in Ok(_) position indicates whether the `Access-Control-Allow-Origin`
+    /// header should be added to the response or not.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>validate_origin(<span class="kw-2">&amp;</span><span class="self">self</span>, req: <span class="kw-2">&amp;</span>RequestHead) -&gt; <span class="prelude-ty">Result</span>&lt;bool, CorsError&gt; {
         <span class="comment">// return early if all origins are allowed or get ref to allowed origins set
         </span><span class="attribute">#[allow(clippy::mutable_key_type)]
         </span><span class="kw">let </span>allowed_origins = <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.allowed_origins {
-            AllOrSome::All <span class="kw">if </span><span class="self">self</span>.allowed_origins_fns.is_empty() =&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(()),
+            AllOrSome::All <span class="kw">if </span><span class="self">self</span>.allowed_origins_fns.is_empty() =&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="bool-val">true</span>),
             AllOrSome::Some(allowed_origins) =&gt; allowed_origins,
             <span class="comment">// only function origin validators are defined
             </span><span class="kw">_ </span>=&gt; <span class="kw-2">&amp;</span>EMPTY_ORIGIN_SET,
@@ -475,9 +483,11 @@
             <span class="comment">// origin header exists and is a string
             </span><span class="prelude-val">Some</span>(origin) =&gt; {
                 <span class="kw">if </span>allowed_origins.contains(origin) || <span class="self">self</span>.validate_origin_fns(origin, req) {
-                    <span class="prelude-val">Ok</span>(())
-                } <span class="kw">else </span>{
+                    <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>)
+                } <span class="kw">else if </span><span class="self">self</span>.block_on_origin_mismatch {
                     <span class="prelude-val">Err</span>(CorsError::OriginNotAllowed)
+                } <span class="kw">else </span>{
+                    <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>)
                 }
             }
 

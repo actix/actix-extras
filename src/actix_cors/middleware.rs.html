@@ -263,6 +263,19 @@
 <span id="261">261</span>
 <span id="262">262</span>
 <span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::{collections::HashSet, rc::Rc};
 
 <span class="kw">use </span>actix_utils::future::ok;
@@ -281,7 +294,7 @@
 <span class="kw">use crate</span>::{
     builder::intersperse_header_values,
     inner::{add_vary_header, header_value_try_into_method},
-    AllOrSome, Inner,
+    AllOrSome, CorsError, Inner,
 };
 
 <span class="doccomment">/// Service wrapper for Cross-Origin Resource Sharing support.
@@ -325,9 +338,14 @@
     </span><span class="kw">fn </span>handle_preflight(<span class="kw-2">&amp;</span><span class="self">self</span>, req: ServiceRequest) -&gt; ServiceResponse {
         <span class="kw">let </span>inner = Rc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.inner);
 
+        <span class="kw">match </span>inner.validate_origin(req.head()) {
+            <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>) =&gt; {}
+            <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>) =&gt; <span class="kw">return </span>req.error_response(CorsError::OriginNotAllowed),
+            <span class="prelude-val">Err</span>(err) =&gt; <span class="kw">return </span>req.error_response(err),
+        };
+
         <span class="kw">if let </span><span class="prelude-val">Err</span>(err) = inner
-            .validate_origin(req.head())
-            .and_then(|<span class="kw">_</span>| inner.validate_allowed_method(req.head()))
+            .validate_allowed_method(req.head())
             .and_then(|<span class="kw">_</span>| inner.validate_allowed_headers(req.head()))
         {
             <span class="kw">return </span>req.error_response(err);
@@ -373,11 +391,17 @@
         req.into_response(res)
     }
 
-    <span class="kw">fn </span>augment_response&lt;B&gt;(inner: <span class="kw-2">&amp;</span>Inner, <span class="kw-2">mut </span>res: ServiceResponse&lt;B&gt;) -&gt; ServiceResponse&lt;B&gt; {
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(origin) = inner.access_control_allow_origin(res.request().head()) {
-            res.headers_mut()
-                .insert(header::ACCESS_CONTROL_ALLOW_ORIGIN, origin);
-        };
+    <span class="kw">fn </span>augment_response&lt;B&gt;(
+        inner: <span class="kw-2">&amp;</span>Inner,
+        origin_allowed: bool,
+        <span class="kw-2">mut </span>res: ServiceResponse&lt;B&gt;,
+    ) -&gt; ServiceResponse&lt;B&gt; {
+        <span class="kw">if </span>origin_allowed {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(origin) = inner.access_control_allow_origin(res.request().head()) {
+                res.headers_mut()
+                    .insert(header::ACCESS_CONTROL_ALLOW_ORIGIN, origin);
+            };
+        }
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>expose) = inner.expose_headers_baked {
             <span class="macro">log::trace!</span>(<span class="string">&quot;exposing selected headers: {:?}&quot;</span>, expose);
@@ -447,8 +471,10 @@
         }
 
         <span class="comment">// only check actual requests with a origin header
-        </span><span class="kw">if </span>origin.is_some() {
-            <span class="kw">if let </span><span class="prelude-val">Err</span>(err) = <span class="self">self</span>.inner.validate_origin(req.head()) {
+        </span><span class="kw">let </span>origin_allowed = <span class="kw">match </span>(origin, <span class="self">self</span>.inner.validate_origin(req.head())) {
+            (<span class="prelude-val">None</span>, <span class="kw">_</span>) =&gt; <span class="bool-val">false</span>,
+            (<span class="kw">_</span>, <span class="prelude-val">Ok</span>(origin_allowed)) =&gt; origin_allowed,
+            (<span class="kw">_</span>, <span class="prelude-val">Err</span>(err)) =&gt; {
                 <span class="macro">debug!</span>(<span class="string">&quot;origin validation failed; inner service is not called&quot;</span>);
                 <span class="kw">let </span><span class="kw-2">mut </span>res = req.error_response(err);
 
@@ -458,14 +484,14 @@
 
                 <span class="kw">return </span>ok(res.map_into_right_body()).boxed_local();
             }
-        }
+        };
 
         <span class="kw">let </span>inner = Rc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.inner);
         <span class="kw">let </span>fut = <span class="self">self</span>.service.call(req);
 
         Box::pin(<span class="kw">async move </span>{
             <span class="kw">let </span>res = fut.<span class="kw">await</span>;
-            <span class="prelude-val">Ok</span>(<span class="self">Self</span>::augment_response(<span class="kw-2">&amp;</span>inner, res<span class="question-mark">?</span>).map_into_left_body())
+            <span class="prelude-val">Ok</span>(<span class="self">Self</span>::augment_response(<span class="kw-2">&amp;</span>inner, origin_allowed, res<span class="question-mark">?</span>).map_into_left_body())
         })
     }
 }
