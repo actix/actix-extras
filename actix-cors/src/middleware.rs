@@ -16,7 +16,7 @@ use log::debug;
 use crate::{
     builder::intersperse_header_values,
     inner::{add_vary_header, header_value_try_into_method},
-    AllOrSome, Inner,
+    AllOrSome, CorsError, Inner,
 };
 
 /// Service wrapper for Cross-Origin Resource Sharing support.
@@ -60,9 +60,14 @@ impl<S> CorsMiddleware<S> {
     fn handle_preflight(&self, req: ServiceRequest) -> ServiceResponse {
         let inner = Rc::clone(&self.inner);
 
+        match inner.validate_origin(req.head()) {
+            Ok(true) => {}
+            Ok(false) => return req.error_response(CorsError::OriginNotAllowed),
+            Err(err) => return req.error_response(err),
+        };
+
         if let Err(err) = inner
-            .validate_origin(req.head())
-            .and_then(|_| inner.validate_allowed_method(req.head()))
+            .validate_allowed_method(req.head())
             .and_then(|_| inner.validate_allowed_headers(req.head()))
         {
             return req.error_response(err);
@@ -108,11 +113,17 @@ impl<S> CorsMiddleware<S> {
         req.into_response(res)
     }
 
-    fn augment_response<B>(inner: &Inner, mut res: ServiceResponse<B>) -> ServiceResponse<B> {
-        if let Some(origin) = inner.access_control_allow_origin(res.request().head()) {
-            res.headers_mut()
-                .insert(header::ACCESS_CONTROL_ALLOW_ORIGIN, origin);
-        };
+    fn augment_response<B>(
+        inner: &Inner,
+        origin_allowed: bool,
+        mut res: ServiceResponse<B>,
+    ) -> ServiceResponse<B> {
+        if origin_allowed {
+            if let Some(origin) = inner.access_control_allow_origin(res.request().head()) {
+                res.headers_mut()
+                    .insert(header::ACCESS_CONTROL_ALLOW_ORIGIN, origin);
+            };
+        }
 
         if let Some(ref expose) = inner.expose_headers_baked {
             log::trace!("exposing selected headers: {:?}", expose);
@@ -182,8 +193,10 @@ where
         }
 
         // only check actual requests with a origin header
-        if origin.is_some() {
-            if let Err(err) = self.inner.validate_origin(req.head()) {
+        let origin_allowed = match (origin, self.inner.validate_origin(req.head())) {
+            (None, _) => false,
+            (_, Ok(origin_allowed)) => origin_allowed,
+            (_, Err(err)) => {
                 debug!("origin validation failed; inner service is not called");
                 let mut res = req.error_response(err);
 
@@ -193,14 +206,14 @@ where
 
                 return ok(res.map_into_right_body()).boxed_local();
             }
-        }
+        };
 
         let inner = Rc::clone(&self.inner);
         let fut = self.service.call(req);
 
         Box::pin(async move {
             let res = fut.await;
-            Ok(Self::augment_response(&inner, res?).map_into_left_body())
+            Ok(Self::augment_response(&inner, origin_allowed, res?).map_into_left_body())
         })
     }
 }

@@ -385,10 +385,18 @@ async fn test_mismatched_origin_block_turned_off() {
         .await
         .unwrap();
 
-    let req = TestRequest::get()
-        .insert_header(("Origin", "https://www.example.test"))
+    let req = TestRequest::default()
+        .method(Method::OPTIONS)
+        .insert_header(("Origin", "https://wrong.com"))
+        .insert_header(("Access-Control-Request-Method", "POST"))
         .to_srv_request();
+    let res = test::call_service(&cors, req).await;
+    assert_eq!(res.status(), StatusCode::BAD_REQUEST);
+    assert_eq!(res.headers().get(header::ACCESS_CONTROL_ALLOW_ORIGIN), None);
 
+    let req = TestRequest::get()
+        .insert_header(("Origin", "https://wrong.com"))
+        .to_srv_request();
     let res = test::call_service(&cors, req).await;
     assert_eq!(res.status(), StatusCode::OK);
     assert_eq!(res.headers().get(header::ACCESS_CONTROL_ALLOW_ORIGIN), None);
