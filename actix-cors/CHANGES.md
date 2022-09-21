@@ -1,8 +1,8 @@
 # Changes
 
 ## Unreleased - 2022-xx-xx
+- Updates Cors function documentation to match behaviour and documentation of the default function. [#289]
 - Minimum supported Rust version (MSRV) is now 1.59 due to transitive `time` dependency.
-
 
 ## 0.6.2 - 2022-08-07
 - Fix `expose_any_header` to return list of response headers. [#273]
