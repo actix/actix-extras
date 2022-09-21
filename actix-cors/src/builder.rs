@@ -102,6 +102,7 @@ impl Cors {
             send_wildcard: false,
             supports_credentials: true,
             vary_header: true,
+            block_on_origin_mismatch: true,
         };
 
         Cors {
@@ -448,6 +449,24 @@ impl Cors {
 
         self
     }
+
+    /// Configures whether requests should be pre-emptively blocked on mismatched origin.
+    ///
+    /// If `true`, a 400 Bad Request is returned immediately when a request fails origin validation.
+    ///
+    /// If `false`, the request will be processed as normal but relevant CORS headers will not be
+    /// appended to the response. In this case, the browser is trusted to validate CORS headers and
+    /// and block requests based on pre-flight requests. Use this setting to allow cURL and other
+    /// non-browser HTTP clients to function as normal, no matter what `Origin` the request has.
+    ///
+    /// Defaults to `true`.
+    pub fn block_on_origin_mismatch(mut self, block: bool) -> Cors {
+        if let Some(cors) = cors(&mut self.inner, &self.error) {
+            cors.block_on_origin_mismatch = block
+        }
+
+        self
+    }
 }
 
 impl Default for Cors {
@@ -474,6 +493,7 @@ impl Default for Cors {
             send_wildcard: false,
             supports_credentials: false,
             vary_header: true,
+            block_on_origin_mismatch: true,
         };
 
         Cors {

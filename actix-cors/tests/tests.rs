@@ -355,6 +355,54 @@ async fn test_validate_origin() {
 }
 
 #[actix_web::test]
+async fn test_blocks_mismatched_origin_by_default() {
+    let cors = Cors::default()
+        .allowed_origin("https://www.example.com")
+        .new_transform(test::ok_service())
+        .await
+        .unwrap();
+
+    let req = TestRequest::get()
+        .insert_header(("Origin", "https://www.example.test"))
+        .to_srv_request();
+
+    let res = test::call_service(&cors, req).await;
+    assert_eq!(res.status(), StatusCode::BAD_REQUEST);
+    assert_eq!(res.headers().get(header::ACCESS_CONTROL_ALLOW_ORIGIN), None);
+    assert!(res
+        .headers()
+        .get(header::ACCESS_CONTROL_ALLOW_METHODS)
+        .is_none());
+}
+
+#[actix_web::test]
+async fn test_mismatched_origin_block_turned_off() {
+    let cors = Cors::default()
+        .allow_any_method()
+        .allowed_origin("https://www.example.com")
+        .block_on_origin_mismatch(false)
+        .new_transform(test::ok_service())
+        .await
+        .unwrap();
+
+    let req = TestRequest::default()
+        .method(Method::OPTIONS)
+        .insert_header(("Origin", "https://wrong.com"))
+        .insert_header(("Access-Control-Request-Method", "POST"))
+        .to_srv_request();
+    let res = test::call_service(&cors, req).await;
+    assert_eq!(res.status(), StatusCode::BAD_REQUEST);
+    assert_eq!(res.headers().get(header::ACCESS_CONTROL_ALLOW_ORIGIN), None);
+
+    let req = TestRequest::get()
+        .insert_header(("Origin", "https://wrong.com"))
+        .to_srv_request();
+    let res = test::call_service(&cors, req).await;
+    assert_eq!(res.status(), StatusCode::OK);
+    assert_eq!(res.headers().get(header::ACCESS_CONTROL_ALLOW_ORIGIN), None);
+}
+
+#[actix_web::test]
 async fn test_no_origin_response() {
     let cors = Cors::permissive()
         .disable_preflight()
