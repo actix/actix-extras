@@ -20,7 +20,7 @@
 //! async fn main() -> std::io::Result<()> {
 //!     HttpServer::new(|| {
 //!         let cors = Cors::default()
-//!               .allowed_origin("https://www.rust-lang.org/")
+//!               .allowed_origin("https://www.rust-lang.org")
 //!               .allowed_origin_fn(|origin, _req_head| {
 //!                   origin.as_bytes().ends_with(b".rust-lang.org")
 //!               })
