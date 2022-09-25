@@ -222,7 +222,7 @@ impl Session {
         req: &mut ServiceRequest,
         data: impl IntoIterator<Item = (String, String)>,
     ) {
-        let session = Session::get_session(&mut *req.extensions_mut());
+        let session = Session::get_session(&mut req.extensions_mut());
         let mut inner = session.0.borrow_mut();
         inner.state.extend(data);
     }
@@ -285,7 +285,7 @@ impl FromRequest for Session {
 
     #[inline]
     fn from_request(req: &HttpRequest, _: &mut Payload) -> Self::Future {
-        ready(Ok(Session::get_session(&mut *req.extensions_mut())))
+        ready(Ok(Session::get_session(&mut req.extensions_mut())))
     }
 }
 

@@ -135,7 +135,7 @@ async fn increment(session: Session, user: Option<Identity>) -> HttpResponse {
         .get::<i32>("counter")
         .unwrap_or(Some(0))
         .map_or(1, |inner| inner + 1);
-    session.insert("counter", &counter).unwrap();
+    session.insert("counter", counter).unwrap();
 
     HttpResponse::Ok().json(&EndpointResponse {
         user_id,

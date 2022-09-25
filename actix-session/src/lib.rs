@@ -674,7 +674,7 @@ pub mod test_helpers {
                 .get::<i32>("counter")
                 .unwrap_or(Some(0))
                 .map_or(1, |inner| inner + 1);
-            session.insert("counter", &counter)?;
+            session.insert("counter", counter)?;
 
             Ok(HttpResponse::Ok().json(&IndexResponse { user_id, counter }))
         }

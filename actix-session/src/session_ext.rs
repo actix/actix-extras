@@ -15,13 +15,13 @@ pub trait SessionExt {
 
 impl SessionExt for HttpRequest {
     fn get_session(&self) -> Session {
-        Session::get_session(&mut *self.extensions_mut())
+        Session::get_session(&mut self.extensions_mut())
     }
 }
 
 impl SessionExt for ServiceRequest {
     fn get_session(&self) -> Session {
-        Session::get_session(&mut *self.extensions_mut())
+        Session::get_session(&mut self.extensions_mut())
     }
 }
 
@@ -33,6 +33,6 @@ impl SessionExt for ServiceResponse {
 
 impl<'a> SessionExt for GuardContext<'a> {
     fn get_session(&self) -> Session {
-        Session::get_session(&mut *self.req_data_mut())
+        Session::get_session(&mut self.req_data_mut())
     }
 }
