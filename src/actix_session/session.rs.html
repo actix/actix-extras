@@ -548,7 +548,7 @@
         req: <span class="kw-2">&amp;mut </span>ServiceRequest,
         data: <span class="kw">impl </span>IntoIterator&lt;Item = (String, String)&gt;,
     ) {
-        <span class="kw">let </span>session = Session::get_session(<span class="kw-2">&amp;mut *</span>req.extensions_mut());
+        <span class="kw">let </span>session = Session::get_session(<span class="kw-2">&amp;mut </span>req.extensions_mut());
         <span class="kw">let </span><span class="kw-2">mut </span>inner = session.<span class="number">0</span>.borrow_mut();
         inner.state.extend(data);
     }
@@ -611,7 +611,7 @@
 
     <span class="attribute">#[inline]
     </span><span class="kw">fn </span>from_request(req: <span class="kw-2">&amp;</span>HttpRequest, <span class="kw">_</span>: <span class="kw-2">&amp;mut </span>Payload) -&gt; <span class="self">Self</span>::Future {
-        ready(<span class="prelude-val">Ok</span>(Session::get_session(<span class="kw-2">&amp;mut *</span>req.extensions_mut())))
+        ready(<span class="prelude-val">Ok</span>(Session::get_session(<span class="kw-2">&amp;mut </span>req.extensions_mut())))
     }
 }
 
@@ -649,4 +649,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_session" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.0-nightly (9062b780b 2022-09-21)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_session" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.0-nightly (3f83906b3 2022-09-24)" ></div></body></html>

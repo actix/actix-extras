@@ -1412,7 +1412,7 @@
                 .get::&lt;i32&gt;(<span class="string">&quot;counter&quot;</span>)
                 .unwrap_or(<span class="prelude-val">Some</span>(<span class="number">0</span>))
                 .map_or(<span class="number">1</span>, |inner| inner + <span class="number">1</span>);
-            session.insert(<span class="string">&quot;counter&quot;</span>, <span class="kw-2">&amp;</span>counter)<span class="question-mark">?</span>;
+            session.insert(<span class="string">&quot;counter&quot;</span>, counter)<span class="question-mark">?</span>;
 
             <span class="prelude-val">Ok</span>(HttpResponse::Ok().json(<span class="kw-2">&amp;</span>IndexResponse { user_id, counter }))
         }
@@ -1473,4 +1473,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_session" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.0-nightly (9062b780b 2022-09-21)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_session" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.0-nightly (3f83906b3 2022-09-24)" ></div></body></html>
