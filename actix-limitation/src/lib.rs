@@ -7,7 +7,7 @@
 //! ```
 //!
 //! ```no_run
-//! use std::{sync::Arc, time::Duration};
+//! use std::{time::Duration};
 //! use actix_web::{dev::ServiceRequest, get, web, App, HttpServer, Responder};
 //! use actix_session::SessionExt as _;
 //! use actix_limitation::{Limiter, RateLimiter};
@@ -23,8 +23,8 @@
 //!         Limiter::builder("redis://127.0.0.1")
 //!             .key_by(|req: &ServiceRequest| {
 //!                 req.get_session()
-//!                     .get(&"session-id")
-//!                     .unwrap_or_else(|_| req.cookie(&"rate-api-id").map(|c| c.to_string()))
+//!                     .get("session-id")
+//!                     .unwrap_or_else(|_| req.cookie("rate-api-id").map(|c| c.to_string()))
 //!             })
 //!             .limit(5000)
 //!             .period(Duration::from_secs(3600)) // 60 minutes
@@ -175,5 +175,42 @@ mod tests {
         let limiter = limiter.unwrap();
         assert_eq!(limiter.limit, 5000);
         assert_eq!(limiter.period, Duration::from_secs(3600));
+    }
+
+    #[actix_web::test]
+    async fn test_create_scoped_limiter() {
+        todo!("finish tests")
+        // use actix_session::SessionExt as _;
+        // use actix_web::{dev::ServiceRequest, get, web, App, HttpServer, Responder};
+        // use std::time::Duration;
+
+        // #[get("/{id}/{name}")]
+        // async fn index(info: web::Path<(u32, String)>) -> impl Responder {
+        //     format!("Hello {}! id:{}", info.1, info.0)
+        // }
+
+        // let limiter = web::Data::new(
+        //     Limiter::builder("redis://127.0.0.1")
+        //         .key_by(|req: &ServiceRequest| {
+        //             req.get_session()
+        //                 .get("session-id")
+        //                 .unwrap_or_else(|_| req.cookie("rate-api-id").map(|c| c.to_string()))
+        //         })
+        //         .limit(5000)
+        //         .period(Duration::from_secs(3600)) // 60 minutes
+        //         .build()
+        //         .unwrap(),
+        // );
+
+        // HttpServer::new(move || {
+        //     App::new()
+        //         .wrap(RateLimiter::default())
+        //         .app_data(limiter.clone())
+        //         .service(index)
+        // })
+        // .bind(("127.0.0.1", 8080))
+        // .expect("test")
+        // .run()
+        // .await;
     }
 }

@@ -1,4 +1,4 @@
-use std::{future::Future, pin::Pin, rc::Rc};
+use std::{collections::HashMap, future::Future, pin::Pin, rc::Rc};
 
 use actix_utils::future::{ok, Ready};
 use actix_web::{
@@ -11,9 +11,16 @@ use actix_web::{
 use crate::{Error as LimitationError, Limiter};
 
 /// Rate limit middleware.
+///
+/// Use the `scope` variable to define multiple limiter
 #[derive(Debug, Default)]
 #[non_exhaustive]
-pub struct RateLimiter;
+pub struct RateLimiter {
+    /// Used to define multiple limiter, with different configurations
+    ///
+    /// WARNING: When used (not None) the middleware will expect a `HashMap<Limiter>` in the actix-web `app_data`
+    pub scope: Option<&'static str>,
+}
 
 impl<S, B> Transform<S, ServiceRequest> for RateLimiter
 where
@@ -30,6 +37,7 @@ where
     fn new_transform(&self, service: S) -> Self::Future {
         ok(RateLimiterMiddleware {
             service: Rc::new(service),
+            scope: self.scope,
         })
     }
 }
@@ -38,6 +46,7 @@ where
 #[derive(Debug)]
 pub struct RateLimiterMiddleware<S> {
     service: Rc<S>,
+    scope: Option<&'static str>,
 }
 
 impl<S, B> Service<ServiceRequest> for RateLimiterMiddleware<S>
@@ -55,10 +64,21 @@ where
     fn call(&self, req: ServiceRequest) -> Self::Future {
         // A mis-configuration of the Actix App will result in a **runtime** failure, so the expect
         // method description is important context for the developer.
-        let limiter = req
-            .app_data::<web::Data<Limiter>>()
-            .expect("web::Data<Limiter> should be set in app data for RateLimiter middleware")
-            .clone();
+        let limiter = if let Some(scope) = self.scope {
+            let limiters = req.app_data::<web::Data<HashMap<&str, Limiter>>>().expect(
+                "web::Data<HashMap<Limiter>> should be set in app data for RateLimiter middleware",
+            );
+            limiters
+                .get(scope)
+                .unwrap_or_else(|| panic!("Unable to find defined limiter with scope: {}", scope))
+                .clone()
+        } else {
+            let a = req
+                .app_data::<web::Data<Limiter>>()
+                .expect("web::Data<Limiter> should be set in app data for RateLimiter middleware");
+            // Deref to get the Limiter
+            (***a).clone()
+        };
 
         let key = (limiter.get_key_fn)(&req);
         let service = Rc::clone(&self.service);
