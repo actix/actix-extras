@@ -73,11 +73,11 @@ where
                 .unwrap_or_else(|| panic!("Unable to find defined limiter with scope: {}", scope))
                 .clone()
         } else {
-            let a = req
+            let limiter = req
                 .app_data::<web::Data<Limiter>>()
                 .expect("web::Data<Limiter> should be set in app data for RateLimiter middleware");
             // Deref to get the Limiter
-            (***a).clone()
+            (***limiter).clone()
         };
 
         let key = (limiter.get_key_fn)(&req);

@@ -53,6 +53,7 @@
 use std::{borrow::Cow, fmt, sync::Arc, time::Duration};
 
 use actix_web::dev::ServiceRequest;
+use builder::RedisConnectionKind;
 use redis::Client;
 
 mod builder;
@@ -106,11 +107,27 @@ impl Limiter {
     /// Construct rate limiter builder with defaults.
     ///
     /// See [`redis-rs` docs](https://docs.rs/redis/0.21/redis/#connection-parameters) on connection
-    /// parameters for how to set the Redis URL.
+    /// redis_url parameter is used for connecting to Redis.
     #[must_use]
     pub fn builder(redis_url: impl Into<String>) -> Builder {
         Builder {
-            redis_url: redis_url.into(),
+            redis_connection: RedisConnectionKind::Url(redis_url.into()),
+            limit: DEFAULT_REQUEST_LIMIT,
+            period: Duration::from_secs(DEFAULT_PERIOD_SECS),
+            get_key_fn: None,
+            cookie_name: Cow::Borrowed(DEFAULT_COOKIE_NAME),
+            #[cfg(feature = "session")]
+            session_key: Cow::Borrowed(DEFAULT_SESSION_KEY),
+        }
+    }
+
+    /// Construct rate limiter builder with defaults.
+    ///
+    /// parameters for how to set the Redis URL.
+    #[must_use]
+    pub fn builder_with_redis_client(redis_client: Client) -> Builder {
+        Builder {
+            redis_connection: RedisConnectionKind::Client(redis_client),
             limit: DEFAULT_REQUEST_LIMIT,
             period: Duration::from_secs(DEFAULT_PERIOD_SECS),
             get_key_fn: None,
@@ -177,40 +194,78 @@ mod tests {
         assert_eq!(limiter.period, Duration::from_secs(3600));
     }
 
+    use std::{collections::HashMap, time::Duration};
+
+    use actix_web::{
+        dev::ServiceRequest, get, http::StatusCode, test as actix_test, web, Responder,
+    };
+
     #[actix_web::test]
     async fn test_create_scoped_limiter() {
-        todo!("finish tests")
-        // use actix_session::SessionExt as _;
-        // use actix_web::{dev::ServiceRequest, get, web, App, HttpServer, Responder};
-        // use std::time::Duration;
+        #[get("/")]
+        async fn index() -> impl Responder {
+            "index"
+        }
 
-        // #[get("/{id}/{name}")]
-        // async fn index(info: web::Path<(u32, String)>) -> impl Responder {
-        //     format!("Hello {}! id:{}", info.1, info.0)
-        // }
+        let mut limiters = HashMap::new();
+        let redis_client =
+            Client::open("redis://127.0.0.1/2").expect("unable to create redis client");
+        limiters.insert(
+            "default",
+            Limiter::builder_with_redis_client(redis_client.clone())
+                .key_by(|_req: &ServiceRequest| Some("something_default".to_string()))
+                .limit(5000)
+                .period(Duration::from_secs(60))
+                .build()
+                .unwrap(),
+        );
+        limiters.insert(
+            "scoped",
+            Limiter::builder_with_redis_client(redis_client)
+                .key_by(|_req: &ServiceRequest| Some("something_scoped".to_string()))
+                .limit(1)
+                .period(Duration::from_secs(60))
+                .build()
+                .unwrap(),
+        );
+        let limiters = web::Data::new(limiters);
 
-        // let limiter = web::Data::new(
-        //     Limiter::builder("redis://127.0.0.1")
-        //         .key_by(|req: &ServiceRequest| {
-        //             req.get_session()
-        //                 .get("session-id")
-        //                 .unwrap_or_else(|_| req.cookie("rate-api-id").map(|c| c.to_string()))
-        //         })
-        //         .limit(5000)
-        //         .period(Duration::from_secs(3600)) // 60 minutes
-        //         .build()
-        //         .unwrap(),
-        // );
+        let app = actix_web::test::init_service(
+            actix_web::App::new()
+                .wrap(RateLimiter {
+                    scope: Some("default"),
+                })
+                .app_data(limiters.clone())
+                .service(
+                    web::scope("/scoped")
+                        .wrap(RateLimiter {
+                            scope: Some("scoped"),
+                        })
+                        .service(index),
+                )
+                .service(index),
+        )
+        .await;
 
-        // HttpServer::new(move || {
-        //     App::new()
-        //         .wrap(RateLimiter::default())
-        //         .app_data(limiter.clone())
-        //         .service(index)
-        // })
-        // .bind(("127.0.0.1", 8080))
-        // .expect("test")
-        // .run()
-        // .await;
+        for _ in 0..3 {
+            let req = actix_test::TestRequest::get().uri("/").to_request();
+            let resp = actix_test::call_service(&app, req).await;
+            assert_eq!(resp.status(), StatusCode::OK, "{:#?}", resp);
+        }
+        for request_count in 0..3 {
+            let req = actix_test::TestRequest::get().uri("/scoped/").to_request();
+            let resp = actix_test::call_service(&app, req).await;
+
+            assert_eq!(
+                resp.status(),
+                if request_count > 0 {
+                    StatusCode::TOO_MANY_REQUESTS
+                } else {
+                    StatusCode::OK
+                },
+                "{:#?}",
+                resp
+            );
+        }
     }
 }
