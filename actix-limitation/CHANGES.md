@@ -1,7 +1,7 @@
 # Changes
 
 ## Unreleased - 2022-xx-xx
-
+- Added optional scopes to the middleware enabling use of multiple Limiters by passing an `HashMap<Limiter>` to the Http server `app_data`
 
 ## 0.4.0 - 2022-09-10
 - Add `Builder::key_by` for setting a custom rate limit key function.
