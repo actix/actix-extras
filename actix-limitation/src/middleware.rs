@@ -22,6 +22,13 @@ pub struct RateLimiter {
     pub scope: Option<&'static str>,
 }
 
+impl RateLimiter {
+    /// Construct the rate limiter with a scope
+    pub fn scoped(scope: &'static str) -> Self {
+        RateLimiter { scope: Some(scope) }
+    }
+}
+
 impl<S, B> Transform<S, ServiceRequest> for RateLimiter
 where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,

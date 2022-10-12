@@ -232,15 +232,11 @@ mod tests {
 
         let app = actix_web::test::init_service(
             actix_web::App::new()
-                .wrap(RateLimiter {
-                    scope: Some("default"),
-                })
+                .wrap(RateLimiter::scoped("default"))
                 .app_data(limiters.clone())
                 .service(
                     web::scope("/scoped")
-                        .wrap(RateLimiter {
-                            scope: Some("scoped"),
-                        })
+                        .wrap(RateLimiter::scoped("scoped"))
                         .service(index),
                 )
                 .service(index),
