@@ -99,7 +99,7 @@
 //!   actix-session = { version = "...", features = ["cookie-session"] }
 //!   ```
 //!
-//! - a Redis-based backend via [`actix-redis`](https://docs.rs/acitx-redis),
+//! - a Redis-based backend via [`actix-redis`](https://docs.rs/actix-redis),
 //!   [`RedisActorSessionStore`], using the `redis-actor-session` feature flag.
 //!
 //!   ```toml
