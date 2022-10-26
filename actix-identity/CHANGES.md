@@ -3,7 +3,7 @@
 ## Unreleased - 2022-xx-xx
 
 - Minimum supported Rust version (MSRV) is now 1.59 due to transitive `time` dependency.
-- Replace use of anyhow::Error with `IdentityError`
+- Replace use of anyhow::Error with identity specific errors
 
 ## 0.5.2 - 2022-07-19
 

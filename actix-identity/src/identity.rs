@@ -7,7 +7,7 @@ use actix_web::{
     Error, FromRequest, HttpMessage, HttpRequest, HttpResponse,
 };
 
-use crate::{config::LogoutBehaviour, IdentityError};
+use crate::{config::LogoutBehaviour, identity_errors::LoginError, IdentityError};
 
 /// A verified user identity. It can be used as a request extractor.
 ///
@@ -96,7 +96,7 @@ impl IdentityInner {
     /// Retrieve the user id attached to the current session.
     fn get_identity(&self) -> Result<String, IdentityError> {
         self.session.get::<String>(ID_KEY)?.ok_or_else(|| {
-            IdentityError::NoIdentity(
+            IdentityError::MissingIdentityError(
                 "There is no identity information attached to the current session".to_owned(),
             )
         })
@@ -126,7 +126,7 @@ impl Identity {
     /// ```
     pub fn id(&self) -> Result<String, IdentityError> {
         self.0.session.get(ID_KEY)?.ok_or_else(|| {
-            IdentityError::NoIdentity(
+            IdentityError::MissingIdentityError(
                 "Bug: the identity information attached to the current session has disappeared"
                     .to_owned(),
             )
@@ -150,7 +150,7 @@ impl Identity {
     ///     HttpResponse::Ok()
     /// }
     /// ```
-    pub fn login(ext: &Extensions, id: String) -> Result<Self, IdentityError> {
+    pub fn login(ext: &Extensions, id: String) -> Result<Self, LoginError> {
         let inner = IdentityInner::extract(ext);
         inner.session.insert(ID_KEY, id)?;
         let now = OffsetDateTime::now_utc().unix_timestamp();
@@ -225,7 +225,7 @@ impl Identity {
             .transpose()?)
     }
 
-    pub(crate) fn set_last_visited_at(&self) -> Result<(), IdentityError> {
+    pub(crate) fn set_last_visited_at(&self) -> Result<(), LoginError> {
         let now = OffsetDateTime::now_utc().unix_timestamp();
         self.0.session.insert(LAST_VISIT_UNIX_TIMESTAMP_KEY, now)?;
         Ok(())

@@ -92,11 +92,11 @@
 
 pub mod config;
 mod identity;
-mod identity_error;
+mod identity_errors;
 mod identity_ext;
 mod middleware;
 
 pub use self::{
-    identity::Identity, identity_error::IdentityError, identity_ext::IdentityExt,
+    identity::Identity, identity_errors::IdentityError, identity_ext::IdentityExt,
     middleware::IdentityMiddleware,
 };
