@@ -1,5 +1,5 @@
 use actix_session::{SessionGetError, SessionInsertError};
-use actix_web::{cookie::time::error::ComponentRange, ResponseError};
+use actix_web::cookie::time::error::ComponentRange;
 
 /// Possible errors which can emerge from storing and retrieving identities.
 #[derive(Debug)]
@@ -23,19 +23,14 @@ impl std::fmt::Display for IdentityError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::NoIdentity(content) => write!(f, "{}", content),
-            Self::SessionExpired(interior) => {
-                write!(f, "{}", interior.to_string())
-            }
-            Self::SessionInsertError(interior) => {
-                write!(f, "{}", interior.to_string())
-            }
+            Self::SessionExpired(interior) => write!(f, "{}", interior),
+            Self::SessionInsertError(interior) => write!(f, "{}", interior),
             Self::SessionGetError { source, message } => {
                 write!(
                     f,
                     "{} \
                     {}",
-                    message,
-                    source.to_string()
+                    message, source
                 )
             }
         }
