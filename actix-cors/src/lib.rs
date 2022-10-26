@@ -1,10 +1,15 @@
 //! Cross-Origin Resource Sharing (CORS) controls for Actix Web.
 //!
-//! This middleware can be applied to both applications and resources. Once built, a
-//! [`Cors`] builder can be used as an argument for Actix Web's `App::wrap()`,
-//! `Scope::wrap()`, or `Resource::wrap()` methods.
+//! This middleware can be applied to both applications and resources. Once built, a [`Cors`]
+//! builder can be used as an argument for Actix Web's `App::wrap()`, `Scope::wrap()`, or
+//! `Resource::wrap()` methods.
 //!
 //! This CORS middleware automatically handles `OPTIONS` preflight requests.
+//!
+//! # Crate Features
+//! - `draft-private-network-access`: ⚠️ Unstable. Adds opt-in support for the [Private Network
+//!   Access] spec extensions. This feature is unstable since it will follow any breaking changes in
+//!   the draft spec until it is finalized.
 //!
 //! # Example
 //! ```no_run
@@ -40,12 +45,15 @@
 //!     Ok(())
 //! }
 //! ```
+//!
+//! [Private Network Access]: https://wicg.github.io/private-network-access
 
 #![forbid(unsafe_code)]
 #![deny(rust_2018_idioms, nonstandard_style)]
 #![warn(future_incompatible, missing_docs, missing_debug_implementations)]
 #![doc(html_logo_url = "https://actix.rs/img/logo.png")]
 #![doc(html_favicon_url = "https://actix.rs/favicon.ico")]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 
 mod all_or_some;
 mod builder;

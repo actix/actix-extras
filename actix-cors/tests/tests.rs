@@ -264,9 +264,15 @@ async fn test_response() {
             .get(header::ACCESS_CONTROL_ALLOW_ORIGIN)
             .map(HeaderValue::as_bytes)
     );
+    #[cfg(not(feature = "draft-private-network-access"))]
     assert_eq!(
         resp.headers().get(header::VARY).map(HeaderValue::as_bytes),
         Some(&b"Origin, Access-Control-Request-Method, Access-Control-Request-Headers"[..]),
+    );
+    #[cfg(feature = "draft-private-network-access")]
+    assert_eq!(
+        resp.headers().get(header::VARY).map(HeaderValue::as_bytes),
+        Some(&b"Origin, Access-Control-Request-Method, Access-Control-Request-Headers, Access-Control-Allow-Private-Network"[..]),
     );
 
     #[allow(clippy::needless_collect)]
@@ -311,9 +317,18 @@ async fn test_response() {
         .method(Method::OPTIONS)
         .to_srv_request();
     let resp = test::call_service(&cors, req).await;
+    #[cfg(not(feature = "draft-private-network-access"))]
     assert_eq!(
-        resp.headers().get(header::VARY).map(HeaderValue::as_bytes),
-        Some(&b"Accept, Origin, Access-Control-Request-Method, Access-Control-Request-Headers"[..]),
+        resp.headers()
+            .get(header::VARY)
+            .map(HeaderValue::as_bytes)
+            .unwrap(),
+        b"Accept, Origin, Access-Control-Request-Method, Access-Control-Request-Headers",
+    );
+    #[cfg(feature = "draft-private-network-access")]
+    assert_eq!(
+        resp.headers().get(header::VARY).map(HeaderValue::as_bytes).unwrap(),
+        b"Accept, Origin, Access-Control-Request-Method, Access-Control-Request-Headers, Access-Control-Allow-Private-Network",
     );
 
     let cors = Cors::default()
@@ -463,6 +478,7 @@ async fn vary_header_on_all_handled_responses() {
     assert!(resp
         .headers()
         .contains_key(header::ACCESS_CONTROL_ALLOW_METHODS));
+    #[cfg(not(feature = "draft-private-network-access"))]
     assert_eq!(
         resp.headers()
             .get(header::VARY)
@@ -470,6 +486,15 @@ async fn vary_header_on_all_handled_responses() {
             .to_str()
             .unwrap(),
         "Origin, Access-Control-Request-Method, Access-Control-Request-Headers",
+    );
+    #[cfg(feature = "draft-private-network-access")]
+    assert_eq!(
+        resp.headers()
+            .get(header::VARY)
+            .expect("response should have Vary header")
+            .to_str()
+            .unwrap(),
+        "Origin, Access-Control-Request-Method, Access-Control-Request-Headers, Access-Control-Allow-Private-Network",
     );
 
     // follow-up regular request
@@ -479,6 +504,7 @@ async fn vary_header_on_all_handled_responses() {
         .to_srv_request();
     let resp = test::call_service(&cors, req).await;
     assert_eq!(resp.status(), StatusCode::OK);
+    #[cfg(not(feature = "draft-private-network-access"))]
     assert_eq!(
         resp.headers()
             .get(header::VARY)
@@ -486,6 +512,15 @@ async fn vary_header_on_all_handled_responses() {
             .to_str()
             .unwrap(),
         "Origin, Access-Control-Request-Method, Access-Control-Request-Headers",
+    );
+    #[cfg(feature = "draft-private-network-access")]
+    assert_eq!(
+        resp.headers()
+            .get(header::VARY)
+            .expect("response should have Vary header")
+            .to_str()
+            .unwrap(),
+        "Origin, Access-Control-Request-Method, Access-Control-Request-Headers, Access-Control-Allow-Private-Network",
     );
 
     let cors = Cors::default()
@@ -501,6 +536,7 @@ async fn vary_header_on_all_handled_responses() {
         .to_srv_request();
     let resp = test::call_service(&cors, req).await;
     assert_eq!(resp.status(), StatusCode::BAD_REQUEST);
+    #[cfg(not(feature = "draft-private-network-access"))]
     assert_eq!(
         resp.headers()
             .get(header::VARY)
@@ -509,11 +545,21 @@ async fn vary_header_on_all_handled_responses() {
             .unwrap(),
         "Origin, Access-Control-Request-Method, Access-Control-Request-Headers",
     );
+    #[cfg(feature = "draft-private-network-access")]
+    assert_eq!(
+        resp.headers()
+            .get(header::VARY)
+            .expect("response should have Vary header")
+            .to_str()
+            .unwrap(),
+        "Origin, Access-Control-Request-Method, Access-Control-Request-Headers, Access-Control-Allow-Private-Network",
+    );
 
     // regular request no origin
     let req = TestRequest::default().method(Method::PUT).to_srv_request();
     let resp = test::call_service(&cors, req).await;
     assert_eq!(resp.status(), StatusCode::OK);
+    #[cfg(not(feature = "draft-private-network-access"))]
     assert_eq!(
         resp.headers()
             .get(header::VARY)
@@ -521,6 +567,15 @@ async fn vary_header_on_all_handled_responses() {
             .to_str()
             .unwrap(),
         "Origin, Access-Control-Request-Method, Access-Control-Request-Headers",
+    );
+    #[cfg(feature = "draft-private-network-access")]
+    assert_eq!(
+        resp.headers()
+            .get(header::VARY)
+            .expect("response should have Vary header")
+            .to_str()
+            .unwrap(),
+        "Origin, Access-Control-Request-Method, Access-Control-Request-Headers, Access-Control-Allow-Private-Network",
     );
 }
 
@@ -577,4 +632,43 @@ async fn expose_all_request_header_values() {
 
     assert!(cd_hdr.contains("content-disposition"));
     assert!(cd_hdr.contains("access-control-allow-origin"));
+}
+
+#[cfg(feature = "draft-private-network-access")]
+#[actix_web::test]
+async fn private_network_access() {
+    let cors = Cors::permissive()
+        .allowed_origin("https://public.site")
+        .allow_private_network_access()
+        .new_transform(fn_service(|req: ServiceRequest| async move {
+            let res = req.into_response(
+                HttpResponse::Ok()
+                    .insert_header((header::CONTENT_DISPOSITION, "test disposition"))
+                    .finish(),
+            );
+
+            Ok(res)
+        }))
+        .await
+        .unwrap();
+
+    let req = TestRequest::default()
+        .insert_header((header::ORIGIN, "https://public.site"))
+        .insert_header((header::ACCESS_CONTROL_REQUEST_METHOD, "POST"))
+        .insert_header((header::ACCESS_CONTROL_ALLOW_CREDENTIALS, "true"))
+        .to_srv_request();
+    let res = test::call_service(&cors, req).await;
+    assert!(res.headers().contains_key("access-control-allow-origin"));
+
+    let req = TestRequest::default()
+        .insert_header((header::ORIGIN, "https://public.site"))
+        .insert_header((header::ACCESS_CONTROL_REQUEST_METHOD, "POST"))
+        .insert_header((header::ACCESS_CONTROL_ALLOW_CREDENTIALS, "true"))
+        .insert_header(("Access-Control-Request-Private-Network", "true"))
+        .to_srv_request();
+    let res = test::call_service(&cors, req).await;
+    assert!(res.headers().contains_key("access-control-allow-origin"));
+    assert!(res
+        .headers()
+        .contains_key("access-control-allow-private-network"));
 }
