@@ -12,9 +12,12 @@ repository = "https://github.com/actix/actix-extras.git"
 license = "MIT OR Apache-2.0"
 edition = "2018"
 
-[lib]
-name = "actix_cors"
-path = "src/lib.rs"
+[package.metadata.docs.rs]
+rustdoc-args = ["--cfg", "docsrs"]
+all-features = true
+
+[features]
+draft-private-network-access = []
 
 [dependencies]
 actix-utils = "3"
