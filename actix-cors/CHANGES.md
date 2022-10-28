@@ -1,6 +1,9 @@
 # Changes
 
 ## Unreleased - 2022-xx-xx
+
+
+## 0.6.4 - 2022-10-28
 - Add `Cors::allow_private_network_access()` behind an unstable flag (`draft-private-network-access`). [#297]
 
 
