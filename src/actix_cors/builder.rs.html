@@ -1,6 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `actix-cors/src/builder.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>builder.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" href="https://actix.rs/favicon.ico"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><a class="sidebar-logo" href="../../actix_cors/index.html"><div class="logo-container">
-                    <img src="https://actix.rs/img/logo.png" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../actix_cors/index.html">
-                        <img src="https://actix.rs/img/logo.png" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `actix-cors/src/builder.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>builder.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" href="https://actix.rs/favicon.ico"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../actix_cors/index.html">
+                        <img src="https://actix.rs/img/logo.png" alt="logo"></a><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -661,6 +660,30 @@
 <span id="659">659</span>
 <span id="660">660</span>
 <span id="661">661</span>
+<span id="662">662</span>
+<span id="663">663</span>
+<span id="664">664</span>
+<span id="665">665</span>
+<span id="666">666</span>
+<span id="667">667</span>
+<span id="668">668</span>
+<span id="669">669</span>
+<span id="670">670</span>
+<span id="671">671</span>
+<span id="672">672</span>
+<span id="673">673</span>
+<span id="674">674</span>
+<span id="675">675</span>
+<span id="676">676</span>
+<span id="677">677</span>
+<span id="678">678</span>
+<span id="679">679</span>
+<span id="680">680</span>
+<span id="681">681</span>
+<span id="682">682</span>
+<span id="683">683</span>
+<span id="684">684</span>
+<span id="685">685</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::{collections::HashSet, convert::TryInto, iter::FromIterator, rc::Rc};
 
 <span class="kw">use </span>actix_utils::future::{<span class="self">self</span>, Ready};
@@ -764,6 +787,8 @@
             preflight: <span class="bool-val">true</span>,
             send_wildcard: <span class="bool-val">false</span>,
             supports_credentials: <span class="bool-val">true</span>,
+            <span class="attribute">#[cfg(feature = <span class="string">&quot;draft-private-network-access&quot;</span>)]
+            </span>allow_private_network_access: <span class="bool-val">false</span>,
             vary_header: <span class="bool-val">true</span>,
             block_on_origin_mismatch: <span class="bool-val">true</span>,
         };
@@ -1033,7 +1058,7 @@
     /// [Fetch Standard CORS protocol]: https://fetch.spec.whatwg.org/#http-cors-protocol
     </span><span class="kw">pub fn </span>max_age(<span class="kw-2">mut </span><span class="self">self</span>, max_age: <span class="kw">impl </span>Into&lt;<span class="prelude-ty">Option</span>&lt;usize&gt;&gt;) -&gt; Cors {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(cors) = cors(<span class="kw-2">&amp;mut </span><span class="self">self</span>.inner, <span class="kw-2">&amp;</span><span class="self">self</span>.error) {
-            cors.max_age = max_age.into()
+            cors.max_age = max_age.into();
         }
 
         <span class="self">self
@@ -1052,8 +1077,8 @@
     /// Defaults to `false`.
     </span><span class="kw">pub fn </span>send_wildcard(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; Cors {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(cors) = cors(<span class="kw-2">&amp;mut </span><span class="self">self</span>.inner, <span class="kw-2">&amp;</span><span class="self">self</span>.error) {
-            cors.send_wildcard = <span class="bool-val">true
-        </span>}
+            cors.send_wildcard = <span class="bool-val">true</span>;
+        }
 
         <span class="self">self
     </span>}
@@ -1075,8 +1100,28 @@
     /// [Fetch Standard CORS protocol]: https://fetch.spec.whatwg.org/#http-cors-protocol
     </span><span class="kw">pub fn </span>supports_credentials(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; Cors {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(cors) = cors(<span class="kw-2">&amp;mut </span><span class="self">self</span>.inner, <span class="kw-2">&amp;</span><span class="self">self</span>.error) {
-            cors.supports_credentials = <span class="bool-val">true
-        </span>}
+            cors.supports_credentials = <span class="bool-val">true</span>;
+        }
+
+        <span class="self">self
+    </span>}
+
+    <span class="doccomment">/// Allow private network access.
+    ///
+    /// If true, injects the `Access-Control-Allow-Private-Network: true` header in responses if the
+    /// request contained the `Access-Control-Request-Private-Network: true` header.
+    ///
+    /// For more information on this behavior, see the draft [Private Network Access] spec.
+    ///
+    /// Defaults to `false`.
+    ///
+    /// [Private Network Access]: https://wicg.github.io/private-network-access
+    </span><span class="attribute">#[cfg(feature = <span class="string">&quot;draft-private-network-access&quot;</span>)]
+    #[cfg_attr(docsrs, doc(cfg(feature = <span class="string">&quot;draft-private-network-access&quot;</span>)))]
+    </span><span class="kw">pub fn </span>allow_private_network_access(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; Cors {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(cors) = cors(<span class="kw-2">&amp;mut </span><span class="self">self</span>.inner, <span class="kw-2">&amp;</span><span class="self">self</span>.error) {
+            cors.allow_private_network_access = <span class="bool-val">true</span>;
+        }
 
         <span class="self">self
     </span>}
@@ -1093,8 +1138,8 @@
     /// By default, `Vary` header support is enabled.
     </span><span class="kw">pub fn </span>disable_vary_header(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; Cors {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(cors) = cors(<span class="kw-2">&amp;mut </span><span class="self">self</span>.inner, <span class="kw-2">&amp;</span><span class="self">self</span>.error) {
-            cors.vary_header = <span class="bool-val">false
-        </span>}
+            cors.vary_header = <span class="bool-val">false</span>;
+        }
 
         <span class="self">self
     </span>}
@@ -1107,8 +1152,8 @@
     /// By default *preflight* support is enabled.
     </span><span class="kw">pub fn </span>disable_preflight(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; Cors {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(cors) = cors(<span class="kw-2">&amp;mut </span><span class="self">self</span>.inner, <span class="kw-2">&amp;</span><span class="self">self</span>.error) {
-            cors.preflight = <span class="bool-val">false
-        </span>}
+            cors.preflight = <span class="bool-val">false</span>;
+        }
 
         <span class="self">self
     </span>}
@@ -1125,7 +1170,7 @@
     /// Defaults to `true`.
     </span><span class="kw">pub fn </span>block_on_origin_mismatch(<span class="kw-2">mut </span><span class="self">self</span>, block: bool) -&gt; Cors {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(cors) = cors(<span class="kw-2">&amp;mut </span><span class="self">self</span>.inner, <span class="kw-2">&amp;</span><span class="self">self</span>.error) {
-            cors.block_on_origin_mismatch = block
+            cors.block_on_origin_mismatch = block;
         }
 
         <span class="self">self
@@ -1155,6 +1200,8 @@
             preflight: <span class="bool-val">true</span>,
             send_wildcard: <span class="bool-val">false</span>,
             supports_credentials: <span class="bool-val">false</span>,
+            <span class="attribute">#[cfg(feature = <span class="string">&quot;draft-private-network-access&quot;</span>)]
+            </span>allow_private_network_access: <span class="bool-val">false</span>,
             vary_header: <span class="bool-val">true</span>,
             block_on_origin_mismatch: <span class="bool-val">true</span>,
         };
@@ -1323,4 +1370,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_cors" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.0-nightly (bf15a9e52 2022-10-14)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_cors" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.0-nightly (0da281b60 2022-10-27)" ></div></body></html>
