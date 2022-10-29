@@ -182,6 +182,35 @@ We need to use a macro because `tracing` requires all the properties attached to
 You cannot add new ones afterwards. This makes it extremely fast, but it pushes us to reach for macros when we need some level of
 composition.
 
+[`root_span!`] exposes more or less the same knob you can find on `tracing`'s `span!` macro. You can, for example, customise
+the span level:
+
+```rust
+use actix_web::dev::{ServiceResponse, ServiceRequest};
+use actix_web::Error;
+use tracing_actix_web::{TracingLogger, DefaultRootSpanBuilder, RootSpanBuilder, Level};
+use tracing::Span;
+
+pub struct CustomLevelRootSpanBuilder;
+
+impl RootSpanBuilder for CustomLevelRootSpanBuilder {
+    fn on_request_start(request: &ServiceRequest) -> Span {
+        let level = if request.path() == "/health_check" {
+            Level::DEBUG
+        } else {
+            Level::INFO
+        };
+        tracing_actix_web::root_span!(level = level, request)
+    }
+
+    fn on_request_end<B>(span: Span, outcome: &Result<ServiceResponse<B>, Error>) {
+        DefaultRootSpanBuilder::on_request_end(span, outcome);
+    }
+}
+
+let custom_middleware = TracingLogger::<CustomLevelRootSpanBuilder>::new();
+```
+
 ## The [`RootSpan`] extractor
 
 It often happens that not all information about a task is known upfront, encoded in the incoming request.  

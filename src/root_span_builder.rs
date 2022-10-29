@@ -37,7 +37,7 @@ pub struct DefaultRootSpanBuilder;
 
 impl RootSpanBuilder for DefaultRootSpanBuilder {
     fn on_request_start(request: &ServiceRequest) -> Span {
-        root_span!(request)
+        root_span!(level = crate::Level::INFO, request)
     }
 
     fn on_request_end<B>(span: Span, outcome: &Result<ServiceResponse<B>, Error>) {

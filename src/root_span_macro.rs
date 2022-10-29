@@ -39,6 +39,7 @@
 ///
 /// ```rust,should_panic
 /// # let request: &actix_web::dev::ServiceRequest = todo!();
+/// use tracing_actix_web::Level;
 ///
 /// // Define a `client_id` field as empty. It might be populated later.
 /// tracing_actix_web::root_span!(request, client_id = tracing::field::Empty);
@@ -50,6 +51,9 @@
 /// let app_id = "XYZ";
 /// tracing_actix_web::root_span!(request, app_id);
 ///
+/// // Use a custom level, `DEBUG`, instead of the default (`INFO`).
+/// tracing_actix_web::root_span!(level = Level::DEBUG, request);
+///
 /// // All together
 /// tracing_actix_web::root_span!(request, client_id = tracing::field::Empty, name = "AppName", app_id);
 /// ```
@@ -58,10 +62,18 @@
 macro_rules! root_span {
     // Vanilla root span, with no additional fields
     ($request:ident) => {
-        root_span!($request,)
+        $crate::root_span!($request,)
+    };
+    // Vanilla root span, with a level but no additional fields
+    (level = $lvl:expr, $request:ident) => {
+        $crate::root_span!(level = $lvl, $request,)
+    };
+    // One or more additional fields, comma separated, without a level
+    ($request:ident, $($field:tt)*) => {
+        $crate::root_span!(level = $crate::Level::INFO, $request, $($field)*)
     };
     // One or more additional fields, comma separated
-    ($request:ident, $($field:tt)*) => {
+    (level = $lvl:expr, $request:ident, $($field:tt)*) => {
         {
             let user_agent = $request
                 .headers()
@@ -75,27 +87,40 @@ macro_rules! root_span {
             let http_method = $crate::root_span_macro::private::http_method_str($request.method());
             let connection_info = $request.connection_info();
             let request_id = $crate::root_span_macro::private::get_request_id($request);
-            let span = $crate::root_span_macro::private::tracing::info_span!(
-                "HTTP request",
-                http.method = %http_method,
-                http.route = %http_route,
-                http.flavor = %$crate::root_span_macro::private::http_flavor($request.version()),
-                http.scheme = %$crate::root_span_macro::private::http_scheme(connection_info.scheme()),
-                http.host = %connection_info.host(),
-                http.client_ip = %$request.connection_info().realip_remote_addr().unwrap_or(""),
-                http.user_agent = %user_agent,
-                http.target = %$request.uri().path_and_query().map(|p| p.as_str()).unwrap_or(""),
-                http.status_code = $crate::root_span_macro::private::tracing::field::Empty,
-                otel.name = %format!("HTTP {} {}", http_method, http_route),
-                otel.kind = "server",
-                otel.status_code = $crate::root_span_macro::private::tracing::field::Empty,
-                trace_id = $crate::root_span_macro::private::tracing::field::Empty,
-                request_id = %request_id,
-                exception.message = $crate::root_span_macro::private::tracing::field::Empty,
-                // Not proper OpenTelemetry, but their terminology is fairly exception-centric
-                exception.details = $crate::root_span_macro::private::tracing::field::Empty,
-                $($field)*
-            );
+
+            macro_rules! inner_span {
+                ($level:expr) => {
+                    $crate::root_span_macro::private::tracing::span!(
+                        $level,
+                        "HTTP request",
+                        http.method = %http_method,
+                        http.route = %http_route,
+                        http.flavor = %$crate::root_span_macro::private::http_flavor($request.version()),
+                        http.scheme = %$crate::root_span_macro::private::http_scheme(connection_info.scheme()),
+                        http.host = %connection_info.host(),
+                        http.client_ip = %$request.connection_info().realip_remote_addr().unwrap_or(""),
+                        http.user_agent = %user_agent,
+                        http.target = %$request.uri().path_and_query().map(|p| p.as_str()).unwrap_or(""),
+                        http.status_code = $crate::root_span_macro::private::tracing::field::Empty,
+                        otel.name = %format!("HTTP {} {}", http_method, http_route),
+                        otel.kind = "server",
+                        otel.status_code = $crate::root_span_macro::private::tracing::field::Empty,
+                        trace_id = $crate::root_span_macro::private::tracing::field::Empty,
+                        request_id = %request_id,
+                        exception.message = $crate::root_span_macro::private::tracing::field::Empty,
+                        // Not proper OpenTelemetry, but their terminology is fairly exception-centric
+                        exception.details = $crate::root_span_macro::private::tracing::field::Empty,
+                        $($field)*
+                    )
+                };
+            }
+            let span = match $lvl {
+                $crate::Level::TRACE => inner_span!($crate::Level::TRACE),
+                $crate::Level::DEBUG => inner_span!($crate::Level::DEBUG),
+                $crate::Level::INFO => inner_span!($crate::Level::INFO),
+                $crate::Level::WARN => inner_span!($crate::Level::WARN),
+                $crate::Level::ERROR => inner_span!($crate::Level::ERROR),
+            };
             std::mem::drop(connection_info);
 
             // Previously, this line was instrumented with an opentelemetry-specific feature
