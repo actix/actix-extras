@@ -7,7 +7,7 @@ use actix_web::{
     Error, FromRequest, HttpMessage, HttpRequest, HttpResponse,
 };
 
-use crate::{config::LogoutBehaviour, identity_errors::LoginError, IdentityError};
+use crate::{config::LogoutBehaviour, identity_errors::LoginError, GetIdentityError};
 
 /// A verified user identity. It can be used as a request extractor.
 ///
@@ -94,12 +94,10 @@ impl IdentityInner {
     }
 
     /// Retrieve the user id attached to the current session.
-    fn get_identity(&self) -> Result<String, IdentityError> {
-        self.session.get::<String>(ID_KEY)?.ok_or_else(|| {
-            IdentityError::MissingIdentityError(
-                "There is no identity information attached to the current session".to_owned(),
-            )
-        })
+    fn get_identity(&self) -> Result<String, GetIdentityError> {
+        self.session
+            .get::<String>(ID_KEY)?
+            .ok_or_else(|| GetIdentityError::MissingIdentityError)
     }
 }
 
@@ -124,13 +122,11 @@ impl Identity {
     ///     }
     /// }
     /// ```
-    pub fn id(&self) -> Result<String, IdentityError> {
-        self.0.session.get(ID_KEY)?.ok_or_else(|| {
-            IdentityError::MissingIdentityError(
-                "Bug: the identity information attached to the current session has disappeared"
-                    .to_owned(),
-            )
-        })
+    pub fn id(&self) -> Result<String, GetIdentityError> {
+        self.0
+            .session
+            .get(ID_KEY)?
+            .ok_or_else(|| GetIdentityError::LostIdentityError)
     }
 
     /// Attach a valid user identity to the current session.
@@ -201,13 +197,13 @@ impl Identity {
         }
     }
 
-    pub(crate) fn extract(ext: &Extensions) -> Result<Self, IdentityError> {
+    pub(crate) fn extract(ext: &Extensions) -> Result<Self, GetIdentityError> {
         let inner = IdentityInner::extract(ext);
         inner.get_identity()?;
         Ok(Self(inner))
     }
 
-    pub(crate) fn logged_at(&self) -> Result<Option<OffsetDateTime>, IdentityError> {
+    pub(crate) fn logged_at(&self) -> Result<Option<OffsetDateTime>, GetIdentityError> {
         Ok(self
             .0
             .session
@@ -216,7 +212,7 @@ impl Identity {
             .transpose()?)
     }
 
-    pub(crate) fn last_visited_at(&self) -> Result<Option<OffsetDateTime>, IdentityError> {
+    pub(crate) fn last_visited_at(&self) -> Result<Option<OffsetDateTime>, GetIdentityError> {
         Ok(self
             .0
             .session

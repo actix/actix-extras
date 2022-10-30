@@ -97,6 +97,6 @@ mod identity_ext;
 mod middleware;
 
 pub use self::{
-    identity::Identity, identity_errors::IdentityError, identity_ext::IdentityExt,
+    identity::Identity, identity_errors::GetIdentityError, identity_ext::IdentityExt,
     middleware::IdentityMiddleware,
 };
