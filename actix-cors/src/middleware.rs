@@ -93,6 +93,18 @@ impl<S> CorsMiddleware<S> {
             res.insert_header((header::ACCESS_CONTROL_ALLOW_HEADERS, headers.clone()));
         }
 
+        #[cfg(feature = "draft-private-network-access")]
+        if inner.allow_private_network_access
+            && req
+                .headers()
+                .contains_key("access-control-request-private-network")
+        {
+            res.insert_header((
+                header::HeaderName::from_static("access-control-allow-private-network"),
+                HeaderValue::from_static("true"),
+            ));
+        }
+
         if inner.supports_credentials {
             res.insert_header((
                 header::ACCESS_CONTROL_ALLOW_CREDENTIALS,
@@ -158,6 +170,19 @@ impl<S> CorsMiddleware<S> {
         if inner.supports_credentials {
             res.headers_mut().insert(
                 header::ACCESS_CONTROL_ALLOW_CREDENTIALS,
+                HeaderValue::from_static("true"),
+            );
+        }
+
+        #[cfg(feature = "draft-private-network-access")]
+        if inner.allow_private_network_access
+            && res
+                .request()
+                .headers()
+                .contains_key("access-control-request-private-network")
+        {
+            res.headers_mut().insert(
+                header::HeaderName::from_static("access-control-allow-private-network"),
                 HeaderValue::from_static("true"),
             );
         }
