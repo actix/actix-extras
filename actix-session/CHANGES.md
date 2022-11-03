@@ -1,7 +1,7 @@
 # Changes
 
 ## Unreleased - 2021-xx-xx
-
+- Added Sqlite session backend
 
 ## 0.7.2 - 2022-09-11
 - Set SameSite attribute when adding a session removal cookie. [#284]
