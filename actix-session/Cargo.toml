@@ -26,6 +26,7 @@ cookie-session = []
 redis-actor-session = ["actix-redis", "actix", "futures-core", "rand"]
 redis-rs-session = ["redis", "rand"]
 redis-rs-tls-session = ["redis-rs-session", "redis/tokio-native-tls-comp"]
+sqlite-session = ["rusqlite", "r2d2", "r2d2_sqlite", "rand"]
 
 [dependencies]
 actix-service = "2"
@@ -48,8 +49,13 @@ futures-core = { version = "0.3.7", default-features = false, optional = true }
 # redis-rs-session
 redis = { version = "0.21", default-features = false, features = ["aio", "tokio-comp", "connection-manager"], optional = true }
 
+# sqlite-session
+rusqlite = { version = "0.27", features = ["bundled", "chrono"], optional = true }
+r2d2 = { version = "0.8", optional = true }
+r2d2_sqlite = { version = "0.20", optional = true }
+
 [dev-dependencies]
-actix-session = { path = ".", features = ["cookie-session", "redis-actor-session", "redis-rs-session"] }
+actix-session = { path = ".", features = ["cookie-session", "sqlite-session"] }
 actix-test = "0.1.0-beta.10"
 actix-web = { version = "4", default_features = false, features = ["cookies", "secure-cookies", "macros"] }
 env_logger = "0.9"
@@ -57,7 +63,7 @@ log = "0.4"
 
 [[example]]
 name = "basic"
-required-features = ["redis-actor-session"]
+required-features = ["sqlite-session"]
 
 [[example]]
 name = "authentication"
