@@ -15,10 +15,10 @@ use super::{
 /// Use Sqlite as session storage backend.
 ///
 /// ```no_run
-/// use actix_session::{storage::SqliteSessionStore, Session, SessionMiddleware};
+/// use actix_session::{storage::SqliteSessionStore, SessionMiddleware};
 /// use actix_web::{
-///   cookie::{time::Duration, Key},
-///   middleware, web, App, Error, HttpRequest, HttpServer, Responder,
+///   cookie::Key,
+///   web, App, HttpServer, HttpResponse
 /// };
 /// use r2d2_sqlite::{self, SqliteConnectionManager};
 ///
@@ -42,7 +42,7 @@ use super::{
 ///                 store.clone(),
 ///                 secret_key.clone()
 ///            ))
-///           .default_service(web::to(|| HttpResponse::Ok())))
+///           .default_service(web::to(|| HttpResponse::Ok()))
 ///   })
 ///   .bind(("127.0.0.1", 8080))?
 ///   .run()
