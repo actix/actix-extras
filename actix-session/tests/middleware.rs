@@ -48,7 +48,7 @@ async fn cookie_storage() -> std::io::Result<()> {
     let deletion_cookie = logout_response.response().cookies().next().unwrap();
     assert_eq!(deletion_cookie.name(), "id");
     assert_eq!(deletion_cookie.path().unwrap(), "/test");
-    assert!(deletion_cookie.secure().is_none());
+    assert!(deletion_cookie.secure().unwrap());
     assert!(deletion_cookie.http_only().unwrap());
     assert_eq!(deletion_cookie.max_age().unwrap(), Duration::ZERO);
     assert_eq!(deletion_cookie.domain().unwrap(), "localhost");
