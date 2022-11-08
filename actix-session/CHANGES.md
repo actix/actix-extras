@@ -1,7 +1,9 @@
 # Changes
 
 ## Unreleased - 2021-xx-xx
+- Set secure attribute when adding a session removal cookie. [#300]
 
+[#300]: https://github.com/actix/actix-extras/pull/300
 
 ## 0.7.2 - 2022-09-11
 - Set SameSite attribute when adding a session removal cookie. [#284]
