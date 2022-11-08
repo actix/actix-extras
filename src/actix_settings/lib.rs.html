@@ -1,5 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `actix-settings/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" href="https://actix.rs/favicon.ico"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../actix_settings/index.html">
-                        <img src="https://actix.rs/img/logo.png" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `actix-settings/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-ef244fc9943488f7.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../static.files/light-c11f492748536797.css"><link rel="stylesheet" disabled href="../../static.files/dark-a78f946771c40031.css"><link rel="stylesheet" disabled href="../../static.files/ayu-70b683d68cb31790.css"><script id="default-settings" ></script><script src="../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../static.files/source-script-74087aa2e88f4475.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-0dede64717b247ca.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-201a7e04dc4c6fce.css"></noscript><link rel="icon" href="https://actix.rs/favicon.ico"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../actix_settings/index.html">
+                        <img src="https://actix.rs/img/logo.png" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -872,7 +872,7 @@
 //! }
 //! ```
 
-</span><span class="attribute">#![forbid(unsafe_code)]
+</span><span class="attr">#![forbid(unsafe_code)]
 #![deny(rust_2018_idioms, nonstandard_style)]
 #![warn(future_incompatible, missing_docs, missing_debug_implementations)]
 #![doc(html_logo_url = <span class="string">&quot;https://actix.rs/img/logo.png&quot;</span>)]
@@ -896,7 +896,7 @@
 };
 <span class="kw">use </span>serde::{de, Deserialize};
 
-<span class="attribute">#[macro_use]
+<span class="attr">#[macro_use]
 </span><span class="kw">mod </span>error;
 <span class="kw">mod </span>parse;
 <span class="kw">mod </span>settings;
@@ -914,7 +914,7 @@
 </span><span class="kw">type </span>AsResult&lt;T&gt; = std::result::Result&lt;T, Error&gt;;
 
 <span class="doccomment">/// Wrapper for server and application-specific settings.
-</span><span class="attribute">#[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize)]
+</span><span class="attr">#[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize)]
 #[serde(bound = <span class="string">&quot;A: Deserialize&lt;&#39;de&gt;&quot;</span>)]
 </span><span class="kw">pub struct </span>BasicSettings&lt;A&gt; {
     <span class="doccomment">/// Actix Web server settings.
@@ -928,7 +928,7 @@
 </span><span class="kw">pub type </span>Settings = BasicSettings&lt;NoSettings&gt;;
 
 <span class="doccomment">/// Marker type representing no defined application-specific settings.
-</span><span class="attribute">#[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize)]
+</span><span class="attr">#[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize)]
 #[non_exhaustive]
 </span><span class="kw">pub struct </span>NoSettings {<span class="comment">/* NOTE: turning this into a unit struct will cause deserialization failures. */</span>}
 
@@ -1057,7 +1057,7 @@
     <span class="doccomment">/// Apply a [`BasicSettings`] value to `self`.
     ///
     /// [`BasicSettings`]: ./struct.BasicSettings.html
-    </span><span class="attribute">#[must_use]
+    </span><span class="attr">#[must_use]
     </span><span class="kw">fn </span>apply_settings&lt;A&gt;(<span class="self">self</span>, settings: <span class="kw-2">&amp;</span>BasicSettings&lt;A&gt;) -&gt; <span class="self">Self
     </span><span class="kw">where
         </span>A: de::DeserializeOwned;
@@ -1144,19 +1144,19 @@
     </span>}
 }
 
-<span class="attribute">#[cfg(test)]
+<span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>tests {
     <span class="kw">use </span>actix_web::App;
 
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>apply_settings() {
         <span class="kw">let </span>settings = Settings::parse_toml(<span class="string">&quot;Server.toml&quot;</span>).unwrap();
         <span class="kw">let _ </span>= HttpServer::new(App::new).apply_settings(<span class="kw-2">&amp;</span>settings);
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_hosts() {
         <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
 
@@ -1192,7 +1192,7 @@
         );
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_with_env_var_hosts() {
         <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
 
@@ -1230,7 +1230,7 @@
         );
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_mode() {
         <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
         <span class="macro">assert_eq!</span>(settings.actix.mode, Mode::Development);
@@ -1238,7 +1238,7 @@
         <span class="macro">assert_eq!</span>(settings.actix.mode, Mode::Production);
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_with_env_var_mode() {
         <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
         <span class="macro">assert_eq!</span>(settings.actix.mode, Mode::Development);
@@ -1247,7 +1247,7 @@
         <span class="macro">assert_eq!</span>(settings.actix.mode, Mode::Production);
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_enable_compression() {
         <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
         <span class="macro">assert!</span>(settings.actix.enable_compression);
@@ -1255,7 +1255,7 @@
         <span class="macro">assert!</span>(!settings.actix.enable_compression);
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_with_env_var_enable_compression() {
         <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
         <span class="macro">assert!</span>(settings.actix.enable_compression);
@@ -1268,7 +1268,7 @@
         <span class="macro">assert!</span>(!settings.actix.enable_compression);
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_enable_log() {
         <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
         <span class="macro">assert!</span>(settings.actix.enable_log);
@@ -1276,7 +1276,7 @@
         <span class="macro">assert!</span>(!settings.actix.enable_log);
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_with_env_var_enable_log() {
         <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
         <span class="macro">assert!</span>(settings.actix.enable_log);
@@ -1289,7 +1289,7 @@
         <span class="macro">assert!</span>(!settings.actix.enable_log);
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_num_workers() {
         <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
         <span class="macro">assert_eq!</span>(settings.actix.num_workers, NumWorkers::Default);
@@ -1297,7 +1297,7 @@
         <span class="macro">assert_eq!</span>(settings.actix.num_workers, NumWorkers::Manual(<span class="number">42</span>));
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_with_env_var_num_workers() {
         <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
         <span class="macro">assert_eq!</span>(settings.actix.num_workers, NumWorkers::Default);
@@ -1310,7 +1310,7 @@
         <span class="macro">assert_eq!</span>(settings.actix.num_workers, NumWorkers::Manual(<span class="number">42</span>));
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_backlog() {
         <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
         <span class="macro">assert_eq!</span>(settings.actix.backlog, Backlog::Default);
@@ -1318,7 +1318,7 @@
         <span class="macro">assert_eq!</span>(settings.actix.backlog, Backlog::Manual(<span class="number">42</span>));
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_with_env_var_backlog() {
         <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
         <span class="macro">assert_eq!</span>(settings.actix.backlog, Backlog::Default);
@@ -1328,7 +1328,7 @@
         <span class="macro">assert_eq!</span>(settings.actix.backlog, Backlog::Manual(<span class="number">42</span>));
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_max_connections() {
         <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
         <span class="macro">assert_eq!</span>(settings.actix.max_connections, MaxConnections::Default);
@@ -1336,7 +1336,7 @@
         <span class="macro">assert_eq!</span>(settings.actix.max_connections, MaxConnections::Manual(<span class="number">42</span>));
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_with_env_var_max_connections() {
         <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
         <span class="macro">assert_eq!</span>(settings.actix.max_connections, MaxConnections::Default);
@@ -1349,7 +1349,7 @@
         <span class="macro">assert_eq!</span>(settings.actix.max_connections, MaxConnections::Manual(<span class="number">42</span>));
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_max_connection_rate() {
         <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
         <span class="macro">assert_eq!</span>(
@@ -1363,7 +1363,7 @@
         );
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_with_env_var_max_connection_rate() {
         <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
         <span class="macro">assert_eq!</span>(
@@ -1382,7 +1382,7 @@
         );
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_keep_alive() {
         <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
         <span class="macro">assert_eq!</span>(settings.actix.keep_alive, KeepAlive::Default);
@@ -1390,7 +1390,7 @@
         <span class="macro">assert_eq!</span>(settings.actix.keep_alive, KeepAlive::Seconds(<span class="number">42</span>));
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_with_env_var_keep_alive() {
         <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
         <span class="macro">assert_eq!</span>(settings.actix.keep_alive, KeepAlive::Default);
@@ -1403,7 +1403,7 @@
         <span class="macro">assert_eq!</span>(settings.actix.keep_alive, KeepAlive::Seconds(<span class="number">42</span>));
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_client_timeout() {
         <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
         <span class="macro">assert_eq!</span>(settings.actix.client_timeout, Timeout::Default);
@@ -1411,7 +1411,7 @@
         <span class="macro">assert_eq!</span>(settings.actix.client_timeout, Timeout::Seconds(<span class="number">42</span>));
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_with_env_var_client_timeout() {
         <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
         <span class="macro">assert_eq!</span>(settings.actix.client_timeout, Timeout::Default);
@@ -1424,7 +1424,7 @@
         <span class="macro">assert_eq!</span>(settings.actix.client_timeout, Timeout::Seconds(<span class="number">42</span>));
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_client_shutdown() {
         <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
         <span class="macro">assert_eq!</span>(settings.actix.client_shutdown, Timeout::Default);
@@ -1432,7 +1432,7 @@
         <span class="macro">assert_eq!</span>(settings.actix.client_shutdown, Timeout::Seconds(<span class="number">42</span>));
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_with_env_var_client_shutdown() {
         <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
         <span class="macro">assert_eq!</span>(settings.actix.client_shutdown, Timeout::Default);
@@ -1445,7 +1445,7 @@
         <span class="macro">assert_eq!</span>(settings.actix.client_shutdown, Timeout::Seconds(<span class="number">42</span>));
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_shutdown_timeout() {
         <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
         <span class="macro">assert_eq!</span>(settings.actix.shutdown_timeout, Timeout::Default);
@@ -1453,7 +1453,7 @@
         <span class="macro">assert_eq!</span>(settings.actix.shutdown_timeout, Timeout::Seconds(<span class="number">42</span>));
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_with_env_var_shutdown_timeout() {
         <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
         <span class="macro">assert_eq!</span>(settings.actix.shutdown_timeout, Timeout::Default);
@@ -1466,7 +1466,7 @@
         <span class="macro">assert_eq!</span>(settings.actix.shutdown_timeout, Timeout::Seconds(<span class="number">42</span>));
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_tls_enabled() {
         <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
         <span class="macro">assert!</span>(!settings.actix.tls.enabled);
@@ -1474,7 +1474,7 @@
         <span class="macro">assert!</span>(settings.actix.tls.enabled);
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_with_env_var_tls_enabled() {
         <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
         <span class="macro">assert!</span>(!settings.actix.tls.enabled);
@@ -1487,7 +1487,7 @@
         <span class="macro">assert!</span>(settings.actix.tls.enabled);
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_tls_certificate() {
         <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
         <span class="macro">assert_eq!</span>(
@@ -1505,7 +1505,7 @@
         );
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_with_env_var_tls_certificate() {
         <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
         <span class="macro">assert_eq!</span>(
@@ -1527,7 +1527,7 @@
         );
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_tls_private_key() {
         <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
         <span class="macro">assert_eq!</span>(
@@ -1545,7 +1545,7 @@
         );
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_with_env_var_tls_private_key() {
         <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
         <span class="macro">assert_eq!</span>(
@@ -1567,15 +1567,15 @@
         );
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>override_extended_field_with_custom_type() {
-        <span class="attribute">#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+        <span class="attr">#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
         </span><span class="kw">struct </span>NestedSetting {
             foo: String,
             bar: bool,
         }
 
-        <span class="attribute">#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+        <span class="attr">#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
         #[serde(rename_all = <span class="string">&quot;kebab-case&quot;</span>)]
         </span><span class="kw">struct </span>AppSettings {
             example_name: String,
@@ -1622,4 +1622,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="actix_settings" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.0-nightly (5e9772042 2022-10-29)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="actix_settings" data-themes="" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (73c9eaf21 2022-11-07)" data-search-js="search-39ee4160c7dc16c9.js" data-settings-js="settings-3a0b9947ba1bd99a.js" data-settings-css="settings-a66f7524084a489a.css" ></div></body></html>
