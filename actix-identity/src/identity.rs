@@ -7,7 +7,11 @@ use actix_web::{
     Error, FromRequest, HttpMessage, HttpRequest, HttpResponse,
 };
 
-use crate::{config::LogoutBehaviour, identity_errors::LoginError, GetIdentityError};
+use crate::{
+    config::LogoutBehaviour,
+    identity_errors::{LoginError, MissingIdentityError},
+    GetIdentityError,
+};
 
 /// A verified user identity. It can be used as a request extractor.
 ///
@@ -97,7 +101,7 @@ impl IdentityInner {
     fn get_identity(&self) -> Result<String, GetIdentityError> {
         self.session
             .get::<String>(ID_KEY)?
-            .ok_or_else(|| GetIdentityError::MissingIdentityError)
+            .ok_or_else(|| MissingIdentityError.into())
     }
 }
 
