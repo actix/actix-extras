@@ -42,6 +42,7 @@ These crates are provided by the community.
 | [tracing-actix-web]        | [![crates.io](https://img.shields.io/crates/v/tracing-actix-web?label=latest)][tracing-actix-web] [![dependency status](https://deps.rs/crate/tracing-actix-web/0.6.0/status.svg)](https://deps.rs/crate/tracing-actix-web/0.6.0)                             | A middleware to collect telemetry data from applications built on top of the actix-web framework. |
 | [actix-ws]                 | [![crates.io](https://img.shields.io/crates/v/actix-ws?label=latest)][actix-ws] [![dependency status](https://deps.rs/crate/actix-ws/0.2.5/status.svg)](https://deps.rs/crate/actix-ws/0.2.5)                                                                 | Actor-less WebSockets for the Actix Runtime.                                                      |
 | [actix-hash]               | [![crates.io](https://img.shields.io/crates/v/actix-hash?label=latest)][actix-hash] [![dependency status](https://deps.rs/crate/actix-hash/0.4.0/status.svg)](https://deps.rs/crate/actix-hash/0.4.0)                                                         | Hashing utilities for Actix Web.                                                                  |
+| [actix-bincode]            | ![crates.io](https://img.shields.io/crates/v/actix-bincode?label=latest) [![dependency status](https://deps.rs/crate/actix-bincode/0.2.0/status.svg)](https://deps.rs/crate/actix-bincode/0.2.0)                                                              | Bincode payload extractor for Actix Web                                                           |
 
 To add a crate to this list, submit a pull request.
 
@@ -72,3 +73,4 @@ To add a crate to this list, submit a pull request.
 [tracing-actix-web]: https://crates.io/crates/tracing-actix-web
 [actix-ws]: https://crates.io/crates/actix-ws
 [actix-hash]: https://crates.io/crates/actix-hash
+[actix-bincode]: https://crates.io/crates/actix-bincode
