@@ -45,14 +45,14 @@ impl std::error::Error for SessionExpiryError {
     }
 }
 
-/// A marker left for any identity error nuance we may want to communicate.
+/// There is no identity information attached to the current session.
 #[derive(Debug)]
 #[non_exhaustive]
 pub struct MissingIdentityError;
 
 impl std::fmt::Display for MissingIdentityError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self)
+        write!(f, "There is no identity information attached to the current session.")
     }
 }
 
@@ -83,12 +83,9 @@ impl std::fmt::Display for GetIdentityError {
         match self {
             Self::LostIdentityError => write!(
                 f,
-                "Bug: the identity information attached to the current session has disappeared"
+                "The identity information in the current session has disappeared after having been successfully validated. This is likely to be a bug."
             ),
-            Self::MissingIdentityError(_) => write!(
-                f,
-                "There is no identity information attached to the current session"
-            ),
+            Self::MissingIdentityError(e) => write!(f, "{}", e),
             Self::SessionExpiryError(source) => write!(f, "{}", source),
             Self::SessionGetError(source) => write!(f, "{}", source),
         }
@@ -98,7 +95,8 @@ impl std::fmt::Display for GetIdentityError {
 impl std::error::Error for GetIdentityError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
-            Self::LostIdentityError | Self::MissingIdentityError(_) => None,
+            Self::LostIdentityError => None,
+            Self::MissingIdentityError(source) => Some(source),
             Self::SessionExpiryError(source) => Some(source),
             Self::SessionGetError(source) => Some(source),
         }
