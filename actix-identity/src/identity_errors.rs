@@ -29,7 +29,7 @@ impl From<SessionInsertError> for LoginError {
     }
 }
 
-/// A wrapper for [ComponentRange] which adds expiration context.
+/// An error encountered when working with a session that has expired.
 #[derive(Debug)]
 pub struct SessionExpiryError(ComponentRange);
 
