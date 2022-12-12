@@ -130,6 +130,12 @@ impl ResponseError for GetIdentityError {
     }
 }
 
+impl From<LostIdentityError> for GetIdentityError {
+    fn from(error: LostIdentityError) -> Self {
+        Self::LostIdentityError(error)
+    }
+}
+
 impl From<MissingIdentityError> for GetIdentityError {
     fn from(error: MissingIdentityError) -> Self {
         Self::MissingIdentityError(error)

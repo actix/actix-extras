@@ -130,7 +130,7 @@ impl Identity {
         self.0
             .session
             .get(ID_KEY)?
-            .ok_or_else(|| GetIdentityError::LostIdentityError(LostIdentityError))
+            .ok_or_else(|| LostIdentityError.into())
     }
 
     /// Attach a valid user identity to the current session.
