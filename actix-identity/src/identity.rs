@@ -9,7 +9,7 @@ use actix_web::{
 
 use crate::{
     config::LogoutBehaviour,
-    identity_errors::{LoginError, MissingIdentityError},
+    identity_errors::{LoginError, LostIdentityError, MissingIdentityError},
     GetIdentityError,
 };
 
@@ -130,7 +130,7 @@ impl Identity {
         self.0
             .session
             .get(ID_KEY)?
-            .ok_or_else(|| GetIdentityError::LostIdentityError)
+            .ok_or_else(|| GetIdentityError::LostIdentityError(LostIdentityError))
     }
 
     /// Attach a valid user identity to the current session.

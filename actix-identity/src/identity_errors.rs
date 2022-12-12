@@ -45,6 +45,27 @@ impl std::error::Error for SessionExpiryError {
     }
 }
 
+/// The identity information has been lost somehow.
+#[derive(Debug)]
+#[non_exhaustive]
+pub struct LostIdentityError;
+
+impl std::fmt::Display for LostIdentityError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "The identity information in the current session has disappeared \
+            after having been successfully validated. This is likely to be a bug."
+        )
+    }
+}
+
+impl std::error::Error for LostIdentityError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        Some(self)
+    }
+}
+
 /// There is no identity information attached to the current session.
 #[derive(Debug)]
 #[non_exhaustive]
@@ -52,7 +73,10 @@ pub struct MissingIdentityError;
 
 impl std::fmt::Display for MissingIdentityError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "There is no identity information attached to the current session.")
+        write!(
+            f,
+            "There is no identity information attached to the current session."
+        )
     }
 }
 
@@ -68,7 +92,7 @@ impl std::error::Error for MissingIdentityError {
 #[non_exhaustive]
 pub enum GetIdentityError {
     /// This is an error which shouldn't occur, and indicates some kind of bug.
-    LostIdentityError,
+    LostIdentityError(LostIdentityError),
     /// This occurs whenever no identity is found in a session.
     MissingIdentityError(MissingIdentityError),
 
@@ -81,10 +105,7 @@ pub enum GetIdentityError {
 impl std::fmt::Display for GetIdentityError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::LostIdentityError => write!(
-                f,
-                "The identity information in the current session has disappeared after having been successfully validated. This is likely to be a bug."
-            ),
+            Self::LostIdentityError(e) => write!(f, "{}", e),
             Self::MissingIdentityError(e) => write!(f, "{}", e),
             Self::SessionExpiryError(source) => write!(f, "{}", source),
             Self::SessionGetError(source) => write!(f, "{}", source),
@@ -95,7 +116,7 @@ impl std::fmt::Display for GetIdentityError {
 impl std::error::Error for GetIdentityError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
-            Self::LostIdentityError => None,
+            Self::LostIdentityError(source) => Some(source),
             Self::MissingIdentityError(source) => Some(source),
             Self::SessionExpiryError(source) => Some(source),
             Self::SessionGetError(source) => Some(source),
