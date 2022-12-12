@@ -21,22 +21,19 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Install stable
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable-x86_64-unknown-linux-gnu
-          profile: minimal
-          override: true
+        run: |
+          rustup override set stable
+          rustup update stable
 
       - name: Generate Cargo.lock
-        uses: actions-rs/cargo@v1
-        with: { command: generate-lockfile }
+        run: cargo generate-lockfile
       - name: Cache Dependencies
-        uses: Swatinem/rust-cache@v1.2.0
+        uses: Swatinem/rust-cache@v2.1.0
 
       - name: Generate coverage file
         run: |
           cargo install cargo-tarpaulin --vers "^0.13"
           cargo tarpaulin --workspace --out Xml --verbose
       - name: Upload to Codecov
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v3
         with: { file: cobertura.xml }
