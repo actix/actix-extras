@@ -106,9 +106,9 @@ impl Session {
     }
     /// Get a the session key itself from the overall session.
     ///
-    /// Needs to be implemented
+    /// Retrieve the overall session key
     pub fn get_session_key(&self) -> secrecy::Secret<SessionKey> {
-        let key = self.0.borrow().session_key.clone();
+        let key = todo!("populate key somehow");
         secrecy::Secret::new(key)
     }
     /// Get all raw key-value data from the session.
