@@ -17,8 +17,8 @@ use derive_more::{Display, From};
 /// let session_key: Result<SessionKey, _> = key.try_into();
 /// assert!(session_key.is_err());
 /// ```
-#[derive(Debug, PartialEq, Eq)]
-pub struct SessionKey(String);
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
+pub struct SessionKey(pub String);
 
 impl TryFrom<String> for SessionKey {
     type Error = InvalidSessionKeyError;
@@ -38,6 +38,12 @@ impl TryFrom<String> for SessionKey {
 impl AsRef<str> for SessionKey {
     fn as_ref(&self) -> &str {
         &self.0
+    }
+}
+
+impl secrecy::Zeroize for SessionKey {
+    fn zeroize(&mut self) {
+        self.0.zeroize();
     }
 }
 
