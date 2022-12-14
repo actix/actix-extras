@@ -17,6 +17,8 @@ use anyhow::Context;
 use derive_more::{Display, From};
 use serde::{de::DeserializeOwned, Serialize};
 
+use crate::storage::SessionKey;
+
 /// The primary interface to access and modify session state.
 ///
 /// [`Session`] is an [extractor](#impl-FromRequest)—you can specify it as an input type for your
@@ -77,6 +79,7 @@ impl Default for SessionStatus {
 struct SessionInner {
     state: HashMap<String, String>,
     status: SessionStatus,
+    session_key: Option<SessionKey>,
 }
 
 impl Session {
@@ -101,7 +104,15 @@ impl Session {
             Ok(None)
         }
     }
-
+    /// Get a the session key itself from the overall session.
+    ///
+    /// Retrieve the overall session key
+    pub fn get_session_key(&self) -> secrecy::Secret<SessionKey> {
+        todo!("either grab the key or figure out how to populate InnerSession session_key field");
+        // let key = Session::set_session(&mut self.0., self.0);
+        let key = self.0.borrow().session_key.clone(); //
+        secrecy::Secret::new(key.unwrap())
+    }
     /// Get all raw key-value data from the session.
     ///
     /// Note that values are JSON encoded.
