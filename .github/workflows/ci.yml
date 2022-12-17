@@ -36,38 +36,30 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Install ${{ matrix.version }}
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: ${{ matrix.version }}-${{ matrix.target.triple }}
-          profile: minimal
-          override: true
+        run: |
+          rustup install ${{ matrix.version }}-${{ matrix.target.triple }}
+          rustup override set ${{ matrix.version }}-${{ matrix.target.triple }}
 
       - name: Install cargo-hack
         uses: taiki-e/install-action@cargo-hack
 
       - name: Generate Cargo.lock
-        uses: actions-rs/cargo@v1
-        with:
-          command: generate-lockfile
+        run: cargo generate-lockfile
       - name: Cache Dependencies
-        uses: Swatinem/rust-cache@v1.2.0
+        uses: Swatinem/rust-cache@v2.1.0
 
       - name: check minimal
-        uses: actions-rs/cargo@v1
-        with: { command: ci-min }
+        run: cargo ci-min
 
       - name: check minimal + examples
-        uses: actions-rs/cargo@v1
-        with: { command: ci-check-min-examples }
+        run: cargo ci-check-min-examples
 
       - name: check default
-        uses: actions-rs/cargo@v1
-        with: { command: ci-check }
+        run: cargo ci-check
 
       - name: tests
-        uses: actions-rs/cargo@v1
         timeout-minutes: 40
-        with: { command: ci-test }
+        run: cargo ci-test
 
       - name: Clear the cargo caches
         run: |
@@ -80,7 +72,11 @@ jobs:
       matrix:
         target:
           - { name: macOS, os: macos-latest, triple: x86_64-apple-darwin }
-          - { name: Windows, os: windows-latest, triple: x86_64-pc-windows-msvc }
+          - {
+              name: Windows,
+              os: windows-latest,
+              triple: x86_64-pc-windows-msvc,
+            }
         version:
           - 1.59 # MSRV
           - stable
@@ -92,43 +88,30 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Install ${{ matrix.version }}
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: ${{ matrix.version }}-${{ matrix.target.triple }}
-          profile: minimal
-          override: true
+        run: |
+          rustup install ${{ matrix.version }}-${{ matrix.target.triple }}
+          rustup override set ${{ matrix.version }}-${{ matrix.target.triple }}
 
       - name: Install cargo-hack
         uses: taiki-e/install-action@cargo-hack
 
       - name: Generate Cargo.lock
-        uses: actions-rs/cargo@v1
-        with:
-          command: generate-lockfile
+        run: cargo generate-lockfile
       - name: Cache Dependencies
-        uses: Swatinem/rust-cache@v1.2.0
+        uses: Swatinem/rust-cache@v2.1.0
 
       - name: check minimal
-        uses: actions-rs/cargo@v1
-        with: { command: ci-min }
+        run: cargo ci-min
 
       - name: check minimal + examples
-        uses: actions-rs/cargo@v1
-        with: { command: ci-check-min-examples }
+        run: cargo ci-check-min-examples
 
       - name: check default
-        uses: actions-rs/cargo@v1
-        with: { command: ci-check }
+        run: cargo ci-check
 
       - name: tests
-        uses: actions-rs/cargo@v1
         timeout-minutes: 40
-        with:
-          command: ci-test
-          args: >-
-            --exclude=actix-redis
-            --exclude=actix-session
-            --exclude=actix-limitation
+        run: cargo ci-test --exclude=actix-redis --exclude=actix-session --exclude=actix-limitation
 
       - name: Clear the cargo caches
         run: |
@@ -142,21 +125,15 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Install Rust (nightly)
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: nightly-x86_64-unknown-linux-gnu
-          profile: minimal
-          override: true
+        run: |
+          rustup install nightly
+          rustup override set nightly
 
       - name: Generate Cargo.lock
-        uses: actions-rs/cargo@v1
-        with: { command: generate-lockfile }
+        run: cargo generate-lockfile
       - name: Cache Dependencies
-        uses: Swatinem/rust-cache@v1.3.0
+        uses: Swatinem/rust-cache@v2.1.0
 
       - name: doc tests
-        uses: actions-rs/cargo@v1
         timeout-minutes: 40
-        with:
-          command: ci-doctest
-          args: -- --nocapture
+        run: cargo ci-doctest -- --nocapture

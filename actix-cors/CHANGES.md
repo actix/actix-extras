@@ -3,6 +3,12 @@
 ## Unreleased - 2022-xx-xx
 
 
+## 0.6.4 - 2022-10-28
+- Add `Cors::allow_private_network_access()` behind an unstable flag (`draft-private-network-access`). [#297]
+
+[#297]: https://github.com/actix/actix-extras/pull/297
+
+
 ## 0.6.3 - 2022-09-21
 - Add `Cors::block_on_origin_mismatch()` option for controlling if requests are pre-emptively rejected. [#287]
 - Minimum supported Rust version (MSRV) is now 1.59 due to transitive `time` dependency.

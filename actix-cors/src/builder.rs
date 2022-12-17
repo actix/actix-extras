@@ -101,6 +101,8 @@ impl Cors {
             preflight: true,
             send_wildcard: false,
             supports_credentials: true,
+            #[cfg(feature = "draft-private-network-access")]
+            allow_private_network_access: false,
             vary_header: true,
             block_on_origin_mismatch: true,
         };
@@ -370,7 +372,7 @@ impl Cors {
     /// [Fetch Standard CORS protocol]: https://fetch.spec.whatwg.org/#http-cors-protocol
     pub fn max_age(mut self, max_age: impl Into<Option<usize>>) -> Cors {
         if let Some(cors) = cors(&mut self.inner, &self.error) {
-            cors.max_age = max_age.into()
+            cors.max_age = max_age.into();
         }
 
         self
@@ -389,7 +391,7 @@ impl Cors {
     /// Defaults to `false`.
     pub fn send_wildcard(mut self) -> Cors {
         if let Some(cors) = cors(&mut self.inner, &self.error) {
-            cors.send_wildcard = true
+            cors.send_wildcard = true;
         }
 
         self
@@ -412,7 +414,27 @@ impl Cors {
     /// [Fetch Standard CORS protocol]: https://fetch.spec.whatwg.org/#http-cors-protocol
     pub fn supports_credentials(mut self) -> Cors {
         if let Some(cors) = cors(&mut self.inner, &self.error) {
-            cors.supports_credentials = true
+            cors.supports_credentials = true;
+        }
+
+        self
+    }
+
+    /// Allow private network access.
+    ///
+    /// If true, injects the `Access-Control-Allow-Private-Network: true` header in responses if the
+    /// request contained the `Access-Control-Request-Private-Network: true` header.
+    ///
+    /// For more information on this behavior, see the draft [Private Network Access] spec.
+    ///
+    /// Defaults to `false`.
+    ///
+    /// [Private Network Access]: https://wicg.github.io/private-network-access
+    #[cfg(feature = "draft-private-network-access")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "draft-private-network-access")))]
+    pub fn allow_private_network_access(mut self) -> Cors {
+        if let Some(cors) = cors(&mut self.inner, &self.error) {
+            cors.allow_private_network_access = true;
         }
 
         self
@@ -430,7 +452,7 @@ impl Cors {
     /// By default, `Vary` header support is enabled.
     pub fn disable_vary_header(mut self) -> Cors {
         if let Some(cors) = cors(&mut self.inner, &self.error) {
-            cors.vary_header = false
+            cors.vary_header = false;
         }
 
         self
@@ -444,7 +466,7 @@ impl Cors {
     /// By default *preflight* support is enabled.
     pub fn disable_preflight(mut self) -> Cors {
         if let Some(cors) = cors(&mut self.inner, &self.error) {
-            cors.preflight = false
+            cors.preflight = false;
         }
 
         self
@@ -462,7 +484,7 @@ impl Cors {
     /// Defaults to `true`.
     pub fn block_on_origin_mismatch(mut self, block: bool) -> Cors {
         if let Some(cors) = cors(&mut self.inner, &self.error) {
-            cors.block_on_origin_mismatch = block
+            cors.block_on_origin_mismatch = block;
         }
 
         self
@@ -492,6 +514,8 @@ impl Default for Cors {
             preflight: true,
             send_wildcard: false,
             supports_credentials: false,
+            #[cfg(feature = "draft-private-network-access")]
+            allow_private_network_access: false,
             vary_header: true,
             block_on_origin_mismatch: true,
         };
