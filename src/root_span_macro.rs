@@ -192,7 +192,7 @@ pub mod private {
             Version::HTTP_11 => "1.1".into(),
             Version::HTTP_2 => "2.0".into(),
             Version::HTTP_3 => "3.0".into(),
-            other => format!("{:?}", other).into(),
+            other => format!("{other:?}").into(),
         }
     }
 

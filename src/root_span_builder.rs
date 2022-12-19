@@ -49,8 +49,8 @@ impl RootSpanBuilder for DefaultRootSpanBuilder {
                     handle_error(span, response.status(), error.as_response_error());
                 } else {
                     let code: i32 = response.response().status().as_u16().into();
-                    span.record("http.status_code", &code);
-                    span.record("otel.status_code", &"OK");
+                    span.record("http.status_code", code);
+                    span.record("otel.status_code", "OK");
                 }
             }
             Err(error) => {
@@ -63,17 +63,17 @@ impl RootSpanBuilder for DefaultRootSpanBuilder {
 
 fn handle_error(span: Span, status_code: StatusCode, response_error: &dyn ResponseError) {
     // pre-formatting errors is a workaround for https://github.com/tokio-rs/tracing/issues/1565
-    let display = format!("{}", response_error);
-    let debug = format!("{:?}", response_error);
+    let display = format!("{response_error}");
+    let debug = format!("{response_error:?}");
     span.record("exception.message", &tracing::field::display(display));
     span.record("exception.details", &tracing::field::display(debug));
     let code: i32 = status_code.as_u16().into();
 
-    span.record("http.status_code", &code);
+    span.record("http.status_code", code);
 
     if status_code.is_client_error() {
-        span.record("otel.status_code", &"OK");
+        span.record("otel.status_code", "OK");
     } else {
-        span.record("otel.status_code", &"ERROR");
+        span.record("otel.status_code", "ERROR");
     }
 }
