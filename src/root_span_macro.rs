@@ -14,6 +14,7 @@
 /// The first argument passed to `root_span!` must be a reference to an [`actix_web::dev::ServiceRequest`].
 ///
 /// ```rust
+/// use actix_web::body::MessageBody;
 /// use actix_web::dev::{ServiceResponse, ServiceRequest};
 /// use actix_web::Error;
 /// use tracing_actix_web::{TracingLogger, DefaultRootSpanBuilder, RootSpanBuilder, root_span};
@@ -26,7 +27,7 @@
 ///         root_span!(request)
 ///     }
 ///
-///     fn on_request_end<B>(span: Span, outcome: &Result<ServiceResponse<B>, Error>) {
+///     fn on_request_end<B: MessageBody>(span: Span, outcome: &Result<ServiceResponse<B>, Error>) {
 ///         DefaultRootSpanBuilder::on_request_end(span, outcome);
 ///     }
 /// }
