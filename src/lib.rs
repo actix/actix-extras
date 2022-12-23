@@ -10,7 +10,7 @@
 //! ```toml
 //! [dependencies]
 //! # ...
-//! tracing-actix-web = "0.6"
+//! tracing-actix-web = "0.7"
 //! tracing = "0.1"
 //! actix-web = "4"
 //! ```
