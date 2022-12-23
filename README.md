@@ -128,6 +128,7 @@ Let's imagine, for example, that our system cares about a client identifier embe
 We could add a `client_id` property to the root span using a custom builder, `DomainRootSpanBuilder`:
 
 ```rust
+use actix_web::body::MessageBody;
 use actix_web::dev::{ServiceResponse, ServiceRequest};
 use actix_web::Error;
 use tracing_actix_web::{TracingLogger, DefaultRootSpanBuilder, RootSpanBuilder};
@@ -141,7 +142,7 @@ impl RootSpanBuilder for DomainRootSpanBuilder {
         tracing::info_span!("Request", client_id)
     }
 
-    fn on_request_end<B>(_span: Span, _outcome: &Result<ServiceResponse<B>, Error>) {}
+    fn on_request_end<B: MessageBody>(_span: Span, _outcome: &Result<ServiceResponse<B>, Error>) {}
 }
 
 let custom_middleware = TracingLogger::<DomainRootSpanBuilder>::new();
@@ -154,6 +155,7 @@ With `DomainRootSpanBuilder`, as it is, we do not get any of that useful HTTP-re
 We can do better!
 
 ```rust
+use actix_web::body::MessageBody;
 use actix_web::dev::{ServiceResponse, ServiceRequest};
 use actix_web::Error;
 use tracing_actix_web::{TracingLogger, DefaultRootSpanBuilder, RootSpanBuilder};
@@ -167,7 +169,7 @@ impl RootSpanBuilder for DomainRootSpanBuilder {
         tracing_actix_web::root_span!(request, client_id)
     }
 
-    fn on_request_end<B>(span: Span, outcome: &Result<ServiceResponse<B>, Error>) {
+    fn on_request_end<B: MessageBody>(span: Span, outcome: &Result<ServiceResponse<B>, Error>) {
         DefaultRootSpanBuilder::on_request_end(span, outcome);
     }
 }
@@ -186,6 +188,7 @@ composition.
 the span level:
 
 ```rust
+use actix_web::body::MessageBody;
 use actix_web::dev::{ServiceResponse, ServiceRequest};
 use actix_web::Error;
 use tracing_actix_web::{TracingLogger, DefaultRootSpanBuilder, RootSpanBuilder, Level};
@@ -203,7 +206,7 @@ impl RootSpanBuilder for CustomLevelRootSpanBuilder {
         tracing_actix_web::root_span!(level = level, request)
     }
 
-    fn on_request_end<B>(span: Span, outcome: &Result<ServiceResponse<B>, Error>) {
+    fn on_request_end<B: MessageBody>(span: Span, outcome: &Result<ServiceResponse<B>, Error>) {
         DefaultRootSpanBuilder::on_request_end(span, outcome);
     }
 }
@@ -218,6 +221,7 @@ You can use the [`RootSpan`] extractor to grab the root span in your handlers an
 to your root span as it becomes available:
 
 ```rust
+use actix_web::body::MessageBody;
 use actix_web::dev::{ServiceResponse, ServiceRequest};
 use actix_web::{Error, HttpResponse};
 use tracing_actix_web::{RootSpan, DefaultRootSpanBuilder, RootSpanBuilder};
@@ -249,7 +253,7 @@ impl RootSpanBuilder for DomainRootSpanBuilder {
         )
     }
 
-    fn on_request_end<B>(span: Span, response: &Result<ServiceResponse<B>, Error>) {
+    fn on_request_end<B: MessageBody>(span: Span, response: &Result<ServiceResponse<B>, Error>) {
         DefaultRootSpanBuilder::on_request_end(span, response);
     }
 }
