@@ -1,3 +1,4 @@
+use actix_web::body::MessageBody;
 use actix_web::dev::{ServiceRequest, ServiceResponse};
 use actix_web::{web, App, Error, HttpServer};
 use opentelemetry::{
@@ -31,7 +32,7 @@ impl RootSpanBuilder for CustomRootSpanBuilder {
         )
     }
 
-    fn on_request_end<B>(span: Span, outcome: &Result<ServiceResponse<B>, Error>) {
+    fn on_request_end<B: MessageBody>(span: Span, outcome: &Result<ServiceResponse<B>, Error>) {
         // Capture the standard fields when the request finishes.
         DefaultRootSpanBuilder::on_request_end(span, outcome);
     }
