@@ -79,7 +79,7 @@ impl Default for SessionStatus {
 struct SessionInner {
     state: HashMap<String, String>,
     status: SessionStatus,
-    session_key: SessionKey,
+    session_key: Option<SessionKey>,
 }
 
 impl Session {
@@ -108,8 +108,10 @@ impl Session {
     ///
     /// Retrieve the overall session key
     pub fn get_session_key(&self) -> secrecy::Secret<SessionKey> {
-        let key = todo!("populate key somehow");
-        secrecy::Secret::new(key)
+        todo!("either grab the key or figure out how to populate InnerSession session_key field");
+        // let key = Session::set_session(&mut self.0., self.0);
+        let key = self.0.borrow().session_key.clone(); //
+        secrecy::Secret::new(key.unwrap())
     }
     /// Get all raw key-value data from the session.
     ///
