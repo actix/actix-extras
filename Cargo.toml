@@ -31,7 +31,7 @@ emit_event_on_error = []
 [dependencies]
 actix-web = { version = "4", default-features = false }
 pin-project = "1.0.0"
-tracing = "0.1.19"
+tracing = "0.1.36"
 uuid = { version = "1", features = ["v4"] }
 opentelemetry_0_13_pkg = { package = "opentelemetry", version = "0.13", optional = true }
 opentelemetry_0_14_pkg = { package = "opentelemetry", version = "0.14", optional = true }
