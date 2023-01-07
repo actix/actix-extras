@@ -32,7 +32,7 @@ actix-tls = { version = "3", default-features = false, features = ["connect"] }
 
 log = "0.4.6"
 backoff = "0.4.0"
-derive_more = "0.99.5"
+derive_more = "0.99.7"
 futures-core = { version = "0.3.7", default-features = false }
 redis-async = "0.13"
 time = "0.3"
@@ -43,5 +43,5 @@ actix-web = { version = "4", default_features = false, optional = true }
 [dev-dependencies]
 actix-test = "0.1.0-beta.12"
 actix-web = { version = "4", default_features = false, features = ["macros"] }
-env_logger = "0.9"
+env_logger = "0.10"
 serde = { version = "1.0.101", features = ["derive"] }

@@ -34,7 +34,7 @@ actix-web = { version = "4", default_features = false, features = ["cookies", "s
 
 anyhow = "1"
 async-trait = "0.1"
-derive_more = "0.99.5"
+derive_more = "0.99.7"
 rand = { version = "0.8", optional = true }
 serde = { version = "1" }
 serde_json = { version = "1" }
@@ -52,7 +52,7 @@ redis = { version = "0.21", default-features = false, features = ["aio", "tokio-
 actix-session = { path = ".", features = ["cookie-session", "redis-actor-session", "redis-rs-session"] }
 actix-test = "0.1.0-beta.10"
 actix-web = { version = "4", default_features = false, features = ["cookies", "secure-cookies", "macros"] }
-env_logger = "0.9"
+env_logger = "0.10"
 log = "0.4"
 
 [[example]]
