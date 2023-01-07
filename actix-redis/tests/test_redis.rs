@@ -31,7 +31,7 @@ async fn test_redis() {
             let res = addr.send(Command(resp_array!["GET", "test"])).await;
             match res {
                 Ok(Ok(resp)) => {
-                    println!("RESP: {:?}", resp);
+                    println!("RESP: {resp:?}");
                     assert_eq!(resp, RespValue::BulkString((&b"value"[..]).into()));
                 }
                 _ => panic!("Should not happen {:?}", res),

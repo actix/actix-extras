@@ -21,7 +21,7 @@ async fn test_limiter_count() -> Result<(), Error> {
 
     for i in 0..20 {
         let status = limiter.count(id.to_string()).await?;
-        println!("status: {:?}", status);
+        println!("status: {status:?}");
         assert_eq!(20 - status.remaining(), i + 1);
     }
 

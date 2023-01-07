@@ -6,7 +6,7 @@ async fn ok_validator(
     req: ServiceRequest,
     credentials: BearerAuth,
 ) -> Result<ServiceRequest, (Error, ServiceRequest)> {
-    eprintln!("{:?}", credentials);
+    eprintln!("{credentials:?}");
     Ok(req)
 }
 

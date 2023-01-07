@@ -179,7 +179,7 @@ pub mod test_helpers {
             CookieContentSecurity::Signed,
             CookieContentSecurity::Private,
         ] {
-            println!("Using {:?} as cookie content security policy.", policy);
+            println!("Using {policy:?} as cookie content security policy.");
             acceptance_tests::basic_workflow(store_builder.clone(), *policy).await;
             acceptance_tests::expiration_is_refreshed_on_changes(store_builder.clone(), *policy)
                 .await;
@@ -243,7 +243,7 @@ pub mod test_helpers {
                     }))
                     .service(web::resource("/test/").to(|ses: Session| async move {
                         let val: usize = ses.get("counter").unwrap().unwrap();
-                        format!("counter: {}", val)
+                        format!("counter: {val}")
                     })),
             )
             .await;
@@ -710,9 +710,9 @@ pub mod test_helpers {
         async fn logout(session: Session) -> Result<HttpResponse> {
             let id: Option<String> = session.get("user_id")?;
 
-            let body = if let Some(x) = id {
+            let body = if let Some(id) = id {
                 session.purge();
-                format!("Logged out: {}", x)
+                format!("Logged out: {id}")
             } else {
                 "Could not log out anonymous user".to_owned()
             };

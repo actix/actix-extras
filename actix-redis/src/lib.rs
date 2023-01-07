@@ -13,7 +13,7 @@ pub use self::redis::{Command, RedisActor};
 /// General purpose `actix-redis` error.
 #[derive(Debug, Display, Error, From)]
 pub enum Error {
-    #[display(fmt = "Redis error: {}", _0)]
+    #[display(fmt = "Redis error: {_0}")]
     Redis(redis_async::error::Error),
 
     /// Receiving message during reconnecting.
