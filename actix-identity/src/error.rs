@@ -43,6 +43,8 @@ impl fmt::Display for SessionExpiryError {
     }
 }
 
+impl std::error::Error for SessionExpiryError {}
+
 /// The identity information has been lost.
 ///
 /// Seeing this error in user code indicates a bug in actix-identity.
