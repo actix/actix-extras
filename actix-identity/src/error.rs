@@ -1,12 +1,16 @@
+//! Failure modes of identity operations.
+
+use std::fmt;
+
 use actix_session::{SessionGetError, SessionInsertError};
 use actix_web::{cookie::time::error::ComponentRange, http::StatusCode, ResponseError};
 
-/// This error can occur during login attempts.
+/// Error that can occur during login attempts.
 #[derive(Debug)]
 pub struct LoginError(SessionInsertError);
 
-impl std::fmt::Display for LoginError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for LoginError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.0)
     }
 }
@@ -29,33 +33,28 @@ impl From<SessionInsertError> for LoginError {
     }
 }
 
-/// An error encountered when working with a session that has expired.
+/// Error encountered when working with a session that has expired.
 #[derive(Debug)]
 pub struct SessionExpiryError(ComponentRange);
 
-impl std::fmt::Display for SessionExpiryError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "The given session has expired and is no longer valid")
+impl fmt::Display for SessionExpiryError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str("The given session has expired and is no longer valid")
     }
 }
 
-impl std::error::Error for SessionExpiryError {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        Some(&self.0)
-    }
-}
-
-/// The identity information has been lost somehow.
+/// The identity information has been lost.
+///
+/// Seeing this error in user code indicates a bug in actix-identity.
 #[derive(Debug)]
 #[non_exhaustive]
 pub struct LostIdentityError;
 
-impl std::fmt::Display for LostIdentityError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
+impl fmt::Display for LostIdentityError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(
             "The identity information in the current session has disappeared \
-            after having been successfully validated. This is likely to be a bug."
+            after having been successfully validated. This is likely to be a bug.",
         )
     }
 }
@@ -71,12 +70,9 @@ impl std::error::Error for LostIdentityError {
 #[non_exhaustive]
 pub struct MissingIdentityError;
 
-impl std::fmt::Display for MissingIdentityError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "There is no identity information attached to the current session."
-        )
+impl fmt::Display for MissingIdentityError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str("There is no identity information attached to the current session.")
     }
 }
 
@@ -86,29 +82,32 @@ impl std::error::Error for MissingIdentityError {
     }
 }
 
-/// This error describes all of the potential failures which can happen
-/// while retrieving an identity.
+/// Errors that can occur while retrieving an identity.
 #[derive(Debug)]
 #[non_exhaustive]
 pub enum GetIdentityError {
-    /// This is an error which shouldn't occur, and indicates some kind of bug.
-    LostIdentityError(LostIdentityError),
-    /// This occurs whenever no identity is found in a session.
+    /// The session has expired.
+    SessionExpiryError(SessionExpiryError),
+
+    /// No identity is found in a session.
     MissingIdentityError(MissingIdentityError),
 
-    /// This occurs whenever something goes wrong accessing a session store.
+    /// Failed to accessing the session store.
     SessionGetError(SessionGetError),
-    /// This occurs whenever any kind of expiration of a session has taken place.
-    SessionExpiryError(SessionExpiryError),
+
+    /// Identity info was lost after being validated.
+    ///
+    /// Seeing this error indicates a bug in actix-identity.
+    LostIdentityError(LostIdentityError),
 }
 
-impl std::fmt::Display for GetIdentityError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for GetIdentityError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::LostIdentityError(e) => write!(f, "{}", e),
-            Self::MissingIdentityError(e) => write!(f, "{}", e),
-            Self::SessionExpiryError(source) => write!(f, "{}", source),
-            Self::SessionGetError(source) => write!(f, "{}", source),
+            Self::SessionExpiryError(err) => write!(f, "{err}"),
+            Self::MissingIdentityError(err) => write!(f, "{err}"),
+            Self::SessionGetError(err) => write!(f, "{err}"),
+            Self::LostIdentityError(err) => write!(f, "{err}"),
         }
     }
 }
@@ -116,10 +115,10 @@ impl std::fmt::Display for GetIdentityError {
 impl std::error::Error for GetIdentityError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
-            Self::LostIdentityError(source) => Some(source),
-            Self::MissingIdentityError(source) => Some(source),
-            Self::SessionExpiryError(source) => Some(source),
-            Self::SessionGetError(source) => Some(source),
+            Self::SessionExpiryError(err) => Some(err),
+            Self::MissingIdentityError(err) => Some(err),
+            Self::SessionGetError(err) => Some(err),
+            Self::LostIdentityError(err) => Some(err),
         }
     }
 }

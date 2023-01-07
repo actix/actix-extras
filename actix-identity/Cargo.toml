@@ -22,7 +22,6 @@ actix-session = "0.7"
 actix-utils = "3"
 actix-web = { version = "4", default-features = false, features = ["cookies", "secure-cookies"] }
 
-anyhow = "1"
 futures-core = "0.3.7"
 serde = { version = "1", features = ["derive"] }
 tracing = { version = "0.1.30", default-features = false, features = ["log"] }

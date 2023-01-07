@@ -9,8 +9,7 @@ use actix_web::{
 
 use crate::{
     config::LogoutBehaviour,
-    identity_errors::{LoginError, LostIdentityError, MissingIdentityError},
-    GetIdentityError,
+    error::{GetIdentityError, LoginError, LostIdentityError, MissingIdentityError},
 };
 
 /// A verified user identity. It can be used as a request extractor.

@@ -91,12 +91,9 @@
 #![warn(future_incompatible)]
 
 pub mod config;
+pub mod error;
 mod identity;
-mod identity_errors;
 mod identity_ext;
 mod middleware;
 
-pub use self::{
-    identity::Identity, identity_errors::GetIdentityError, identity_ext::IdentityExt,
-    middleware::IdentityMiddleware,
-};
+pub use self::{identity::Identity, identity_ext::IdentityExt, middleware::IdentityMiddleware};
