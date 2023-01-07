@@ -3,6 +3,7 @@
 ## Unreleased - 2021-xx-xx
 
 - Set secure attribute when adding a session removal cookie. [#300]
+- Update `redis` dependency to `0.22`.
 
 [#300]: https://github.com/actix/actix-extras/pull/300
 

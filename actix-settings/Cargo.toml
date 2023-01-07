@@ -21,4 +21,4 @@ serde = { version = "1", features = ["derive"] }
 toml = "0.5"
 
 [dev-dependencies]
-env_logger = "0.9"
+env_logger = "0.10"

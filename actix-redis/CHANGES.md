@@ -2,6 +2,7 @@
 
 ## Unreleased - 2022-xx-xx
 
+- Update `redis-async` dependency to `0.14`.
 - Minimum supported Rust version (MSRV) is now 1.59 due to transitive `time` dependency.
 
 ## 0.12.0 - 2022-07-09

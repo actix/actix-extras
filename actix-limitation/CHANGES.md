@@ -2,6 +2,8 @@
 
 ## Unreleased - 2022-xx-xx
 
+- Update `redis` dependency to `0.22`.
+
 ## 0.4.0 - 2022-09-10
 
 - Add `Builder::key_by` for setting a custom rate limit key function.
