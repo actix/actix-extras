@@ -30,7 +30,10 @@ redis-rs-tls-session = ["redis-rs-session", "redis/tokio-native-tls-comp"]
 [dependencies]
 actix-service = "2"
 actix-utils = "3"
-actix-web = { version = "4", default_features = false, features = ["cookies", "secure-cookies"] }
+actix-web = { version = "4", default_features = false, features = [
+  "cookies",
+  "secure-cookies",
+] }
 
 anyhow = "1"
 async-trait = "0.1"
@@ -44,14 +47,27 @@ tracing = { version = "0.1.30", default-features = false, features = ["log"] }
 actix = { version = "0.13", default-features = false, optional = true }
 actix-redis = { version = "0.12", optional = true }
 futures-core = { version = "0.3.7", default-features = false, optional = true }
+secrecy = "0.8"
 
 # redis-rs-session
-redis = { version = "0.21", default-features = false, features = ["aio", "tokio-comp", "connection-manager"], optional = true }
+redis = { version = "0.21", default-features = false, features = [
+  "aio",
+  "tokio-comp",
+  "connection-manager",
+], optional = true }
 
 [dev-dependencies]
-actix-session = { path = ".", features = ["cookie-session", "redis-actor-session", "redis-rs-session"] }
+actix-session = { path = ".", features = [
+  "cookie-session",
+  "redis-actor-session",
+  "redis-rs-session",
+] }
 actix-test = "0.1.0-beta.10"
-actix-web = { version = "4", default_features = false, features = ["cookies", "secure-cookies", "macros"] }
+actix-web = { version = "4", default_features = false, features = [
+  "cookies",
+  "secure-cookies",
+  "macros",
+] }
 env_logger = "0.9"
 log = "0.4"
 
