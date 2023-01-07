@@ -9,7 +9,9 @@ use actix_web::{
 
 use crate::{
     config::LogoutBehaviour,
-    error::{GetIdentityError, LoginError, LostIdentityError, MissingIdentityError},
+    error::{
+        GetIdentityError, LoginError, LostIdentityError, MissingIdentityError, SessionExpiryError,
+    },
 };
 
 /// A verified user identity. It can be used as a request extractor.
@@ -212,7 +214,8 @@ impl Identity {
             .session
             .get(LOGIN_UNIX_TIMESTAMP_KEY)?
             .map(OffsetDateTime::from_unix_timestamp)
-            .transpose()?)
+            .transpose()
+            .map_err(SessionExpiryError)?)
     }
 
     pub(crate) fn last_visited_at(&self) -> Result<Option<OffsetDateTime>, GetIdentityError> {
@@ -221,7 +224,8 @@ impl Identity {
             .session
             .get(LAST_VISIT_UNIX_TIMESTAMP_KEY)?
             .map(OffsetDateTime::from_unix_timestamp)
-            .transpose()?)
+            .transpose()
+            .map_err(SessionExpiryError)?)
     }
 
     pub(crate) fn set_last_visited_at(&self) -> Result<(), LoginError> {
