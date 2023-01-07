@@ -91,6 +91,7 @@
 #![warn(future_incompatible)]
 
 pub mod config;
+pub mod error;
 mod identity;
 mod identity_ext;
 mod middleware;
