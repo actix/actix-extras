@@ -43,6 +43,16 @@ jobs:
       - name: Install cargo-hack
         uses: taiki-e/install-action@cargo-hack
 
+      - name: workaround MSRV issues
+        if: matrix.version != 'stable'
+        run: |
+          cargo install cargo-edit --version=0.8.0
+          cargo add env_logger@0.9 --dev -p=actix-cors
+          cargo add env_logger@0.9 --dev -p=actix-identity
+          cargo add env_logger@0.9 --dev -p=actix-redis
+          cargo add env_logger@0.9 --dev -p=actix-session
+          cargo add env_logger@0.9 --dev -p=actix-settings
+
       - name: Generate Cargo.lock
         run: cargo generate-lockfile
       - name: Cache Dependencies
