@@ -89,7 +89,7 @@ impl From<Error> for io::Error {
     fn from(err: Error) -> Self {
         match err {
             Error::EnvVarError(var_error) => {
-                let msg = format!("Env var error: {}", var_error);
+                let msg = format!("Env var error: {var_error}");
                 io::Error::new(io::ErrorKind::InvalidInput, msg)
             }
 
@@ -105,32 +105,29 @@ impl From<Error> for io::Error {
                 line,
                 column,
             } => {
-                let msg = format!(
-                    "Expected {}, got {}  (@ {}:{}:{})",
-                    expected, got, file, line, column
-                );
+                let msg = format!("Expected {expected}, got {got}  (@ {file}:{line}:{column})");
                 io::Error::new(io::ErrorKind::InvalidInput, msg)
             }
 
             Error::IoError(io_error) => io_error.into(),
 
             Error::ParseBoolError(parse_bool_error) => {
-                let msg = format!("Failed to parse boolean: {}", parse_bool_error);
+                let msg = format!("Failed to parse boolean: {parse_bool_error}");
                 io::Error::new(io::ErrorKind::InvalidInput, msg)
             }
 
             Error::ParseIntError(parse_int_error) => {
-                let msg = format!("Failed to parse integer: {}", parse_int_error);
+                let msg = format!("Failed to parse integer: {parse_int_error}");
                 io::Error::new(io::ErrorKind::InvalidInput, msg)
             }
 
             Error::ParseAddressError(string) => {
-                let msg = format!("Failed to parse address: {}", string);
+                let msg = format!("Failed to parse address: {string}");
                 io::Error::new(io::ErrorKind::InvalidInput, msg)
             }
 
             Error::TomlError(toml_error) => {
-                let msg = format!("TOML error: {}", toml_error);
+                let msg = format!("TOML error: {toml_error}");
                 io::Error::new(io::ErrorKind::InvalidInput, msg)
             }
         }

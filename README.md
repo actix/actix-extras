@@ -43,6 +43,7 @@ These crates are provided by the community.
 | [actix-ws]                 | [![crates.io](https://img.shields.io/crates/v/actix-ws?label=latest)][actix-ws] [![dependency status](https://deps.rs/crate/actix-ws/0.2.5/status.svg)](https://deps.rs/crate/actix-ws/0.2.5)                                                                 | Actor-less WebSockets for the Actix Runtime.                                                      |
 | [actix-hash]               | [![crates.io](https://img.shields.io/crates/v/actix-hash?label=latest)][actix-hash] [![dependency status](https://deps.rs/crate/actix-hash/0.4.0/status.svg)](https://deps.rs/crate/actix-hash/0.4.0)                                                         | Hashing utilities for Actix Web.                                                                  |
 | [actix-bincode]            | ![crates.io](https://img.shields.io/crates/v/actix-bincode?label=latest) [![dependency status](https://deps.rs/crate/actix-bincode/0.2.0/status.svg)](https://deps.rs/crate/actix-bincode/0.2.0)                                                              | Bincode payload extractor for Actix Web                                                           |
+| [sentinel-actix]            | ![crates.io](https://img.shields.io/crates/v/sentinel-actix?label=latest) [![dependency status](https://deps.rs/crate/sentinel-actix/0.1.0/status.svg)](https://deps.rs/crate/sentinel-actix/0.1.0)                                                              | General and flexible protection for Actix Web                                                           |
 
 To add a crate to this list, submit a pull request.
 
@@ -74,3 +75,4 @@ To add a crate to this list, submit a pull request.
 [actix-ws]: https://crates.io/crates/actix-ws
 [actix-hash]: https://crates.io/crates/actix-hash
 [actix-bincode]: https://crates.io/crates/actix-bincode
+[sentinel-actix]: https://crates.io/crates/sentinel-actix

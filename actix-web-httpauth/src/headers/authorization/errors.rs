@@ -32,7 +32,7 @@ impl fmt::Display for ParseError {
         match self {
             ParseError::Invalid => f.write_str("Invalid header value"),
             ParseError::MissingScheme => f.write_str("Missing authorization scheme"),
-            ParseError::MissingField(field) => write!(f, "Missing header field ({})", field),
+            ParseError::MissingField(field) => write!(f, "Missing header field ({field})"),
             ParseError::ToStrError(err) => fmt::Display::fmt(err, f),
             ParseError::Base64DecodeError(err) => fmt::Display::fmt(err, f),
             ParseError::Utf8Error(err) => fmt::Display::fmt(err, f),

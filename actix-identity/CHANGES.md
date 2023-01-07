@@ -2,8 +2,10 @@
 
 ## Unreleased - 2022-xx-xx
 
+- Replace use of anyhow::Error with identity specific errors. [#296]
 - Minimum supported Rust version (MSRV) is now 1.59 due to transitive `time` dependency.
-- Replace use of anyhow::Error with identity specific errors
+
+[#296]: https://github.com/actix/actix-extras/pull/296
 
 ## 0.5.2 - 2022-07-19
 

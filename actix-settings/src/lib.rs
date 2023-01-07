@@ -274,7 +274,7 @@ where
             todo!("[ApplySettings] TLS support has not been implemented yet.");
         } else {
             for Address { host, port } in &settings.actix.hosts {
-                self = self.bind(format!("{}:{}", host, port))
+                self = self.bind(format!("{host}:{port}"))
                     .unwrap(/*TODO*/);
             }
         }

@@ -32,7 +32,8 @@ impl TestApp {
         .listen(listener)
         .unwrap()
         .run();
-        let _ = actix_web::rt::spawn(server);
+
+        actix_web::rt::spawn(server);
 
         let client = reqwest::Client::builder()
             .cookie_store(true)
