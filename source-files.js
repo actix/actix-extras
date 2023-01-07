@@ -1,6 +1,6 @@
 var sourcesIndex = JSON.parse('{\
 "actix_cors":["",[],["all_or_some.rs","builder.rs","error.rs","inner.rs","lib.rs","middleware.rs"]],\
-"actix_identity":["",[],["config.rs","identity.rs","identity_ext.rs","lib.rs","middleware.rs"]],\
+"actix_identity":["",[],["config.rs","error.rs","identity.rs","identity_ext.rs","lib.rs","middleware.rs"]],\
 "actix_limitation":["",[],["builder.rs","errors.rs","lib.rs","middleware.rs","status.rs"]],\
 "actix_protobuf":["",[],["lib.rs"]],\
 "actix_redis":["",[],["lib.rs","redis.rs"]],\

@@ -271,9 +271,11 @@
     http::StatusCode,
     Error, FromRequest, HttpMessage, HttpRequest, HttpResponse,
 };
-<span class="kw">use </span>anyhow::{anyhow, Context};
 
-<span class="kw">use </span><span class="kw">crate</span>::config::LogoutBehaviour;
+<span class="kw">use crate</span>::{
+    config::LogoutBehaviour,
+    error::{GetIdentityError, LoginError, LostIdentityError, MissingIdentityError},
+};
 
 <span class="doccomment">/// A verified user identity. It can be used as a request extractor.
 ///
@@ -360,13 +362,10 @@
     }
 
     <span class="doccomment">/// Retrieve the user id attached to the current session.
-    </span><span class="kw">fn </span>get_identity(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;String, anyhow::Error&gt; {
+    </span><span class="kw">fn </span>get_identity(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;String, GetIdentityError&gt; {
         <span class="self">self</span>.session
-            .get::&lt;String&gt;(ID_KEY)
-            .context(<span class="string">&quot;Failed to deserialize the user identifier attached to the current session&quot;</span>)<span class="question-mark">?
-            </span>.ok_or_else(|| {
-                <span class="macro">anyhow!</span>(<span class="string">&quot;There is no identity information attached to the current session&quot;</span>)
-            })
+            .get::&lt;String&gt;(ID_KEY)<span class="question-mark">?
+            </span>.ok_or_else(|| MissingIdentityError.into())
     }
 }
 
@@ -391,10 +390,11 @@
     ///     }
     /// }
     /// ```
-    </span><span class="kw">pub fn </span>id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;String, anyhow::Error&gt; {
-        <span class="self">self</span>.<span class="number">0</span>.session.get(ID_KEY)<span class="question-mark">?</span>.ok_or_else(|| {
-            <span class="macro">anyhow!</span>(<span class="string">&quot;Bug: the identity information attached to the current session has disappeared&quot;</span>)
-        })
+    </span><span class="kw">pub fn </span>id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;String, GetIdentityError&gt; {
+        <span class="self">self</span>.<span class="number">0
+            </span>.session
+            .get(ID_KEY)<span class="question-mark">?
+            </span>.ok_or_else(|| LostIdentityError.into())
     }
 
     <span class="doccomment">/// Attach a valid user identity to the current session.
@@ -414,7 +414,7 @@
     ///     HttpResponse::Ok()
     /// }
     /// ```
-    </span><span class="kw">pub fn </span>login(ext: <span class="kw-2">&amp;</span>Extensions, id: String) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, anyhow::Error&gt; {
+    </span><span class="kw">pub fn </span>login(ext: <span class="kw-2">&amp;</span>Extensions, id: String) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, LoginError&gt; {
         <span class="kw">let </span>inner = IdentityInner::extract(ext);
         inner.session.insert(ID_KEY, id)<span class="question-mark">?</span>;
         <span class="kw">let </span>now = OffsetDateTime::now_utc().unix_timestamp();
@@ -465,31 +465,31 @@
         }
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>extract(ext: <span class="kw-2">&amp;</span>Extensions) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, anyhow::Error&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>extract(ext: <span class="kw-2">&amp;</span>Extensions) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, GetIdentityError&gt; {
         <span class="kw">let </span>inner = IdentityInner::extract(ext);
         inner.get_identity()<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="self">Self</span>(inner))
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>logged_at(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;OffsetDateTime&gt;, anyhow::Error&gt; {
-        <span class="self">self</span>.<span class="number">0
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>logged_at(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;OffsetDateTime&gt;, GetIdentityError&gt; {
+        <span class="prelude-val">Ok</span>(<span class="self">self
+            </span>.<span class="number">0
             </span>.session
             .get(LOGIN_UNIX_TIMESTAMP_KEY)<span class="question-mark">?
             </span>.map(OffsetDateTime::from_unix_timestamp)
-            .transpose()
-            .map_err(anyhow::Error::from)
+            .transpose()<span class="question-mark">?</span>)
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>last_visited_at(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;OffsetDateTime&gt;, anyhow::Error&gt; {
-        <span class="self">self</span>.<span class="number">0
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>last_visited_at(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;OffsetDateTime&gt;, GetIdentityError&gt; {
+        <span class="prelude-val">Ok</span>(<span class="self">self
+            </span>.<span class="number">0
             </span>.session
             .get(LAST_VISIT_UNIX_TIMESTAMP_KEY)<span class="question-mark">?
             </span>.map(OffsetDateTime::from_unix_timestamp)
-            .transpose()
-            .map_err(anyhow::Error::from)
+            .transpose()<span class="question-mark">?</span>)
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>set_last_visited_at(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), anyhow::Error&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>set_last_visited_at(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), LoginError&gt; {
         <span class="kw">let </span>now = OffsetDateTime::now_utc().unix_timestamp();
         <span class="self">self</span>.<span class="number">0</span>.session.insert(LAST_VISIT_UNIX_TIMESTAMP_KEY, now)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())

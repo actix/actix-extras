@@ -27,28 +27,28 @@
 <a href="#27" id="27">27</a>
 </pre><pre class="rust"><code><span class="kw">use </span>actix_web::{dev::ServiceRequest, guard::GuardContext, HttpMessage, HttpRequest};
 
-<span class="kw">use </span><span class="kw">crate</span>::Identity;
+<span class="kw">use crate</span>::{error::GetIdentityError, Identity};
 
 <span class="doccomment">/// Helper trait to retrieve an [`Identity`] instance from various `actix-web`&#39;s types.
 </span><span class="kw">pub trait </span>IdentityExt {
     <span class="doccomment">/// Retrieve the identity attached to the current session, if available.
-    </span><span class="kw">fn </span>get_identity(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Identity, anyhow::Error&gt;;
+    </span><span class="kw">fn </span>get_identity(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Identity, GetIdentityError&gt;;
 }
 
 <span class="kw">impl </span>IdentityExt <span class="kw">for </span>HttpRequest {
-    <span class="kw">fn </span>get_identity(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Identity, anyhow::Error&gt; {
+    <span class="kw">fn </span>get_identity(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Identity, GetIdentityError&gt; {
         Identity::extract(<span class="kw-2">&amp;</span><span class="self">self</span>.extensions())
     }
 }
 
 <span class="kw">impl </span>IdentityExt <span class="kw">for </span>ServiceRequest {
-    <span class="kw">fn </span>get_identity(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Identity, anyhow::Error&gt; {
+    <span class="kw">fn </span>get_identity(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Identity, GetIdentityError&gt; {
         Identity::extract(<span class="kw-2">&amp;</span><span class="self">self</span>.extensions())
     }
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; IdentityExt <span class="kw">for </span>GuardContext&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">fn </span>get_identity(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Identity, anyhow::Error&gt; {
+    <span class="kw">fn </span>get_identity(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Identity, GetIdentityError&gt; {
         Identity::extract(<span class="kw-2">&amp;</span><span class="self">self</span>.req_data())
     }
 }
