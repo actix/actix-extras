@@ -20,10 +20,7 @@ path = "src/lib.rs"
 actix-service = "2"
 actix-session = "0.7"
 actix-utils = "3"
-actix-web = { version = "4", default-features = false, features = [
-    "cookies",
-    "secure-cookies",
-] }
+actix-web = { version = "4", default-features = false, features = ["cookies", "secure-cookies"] }
 
 futures-core = "0.3.7"
 serde = { version = "1", features = ["derive"] }
@@ -31,19 +28,9 @@ tracing = { version = "0.1.30", default-features = false, features = ["log"] }
 
 [dev-dependencies]
 actix-http = "3"
-actix-web = { version = "4", default_features = false, features = [
-    "macros",
-    "cookies",
-    "secure-cookies",
-] }
-actix-session = { version = "0.7", features = [
-    "redis-rs-session",
-    "cookie-session",
-] }
+actix-web = { version = "4", default_features = false, features = ["macros", "cookies", "secure-cookies"] }
+actix-session = { version = "0.7", features = ["redis-rs-session", "cookie-session"] }
 
 env_logger = "0.9"
-reqwest = { version = "0.11", default_features = false, features = [
-    "cookies",
-    "json",
-] }
+reqwest = { version = "0.11", default_features = false, features = ["cookies", "json"] }
 uuid = { version = "1", features = ["v4"] }
