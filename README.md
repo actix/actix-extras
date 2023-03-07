@@ -42,7 +42,7 @@ tracing = "0.1"
 actix-web = "4"
 ```
 
-`tracing-actix-web` exposes three feature flags:
+`tracing-actix-web` exposes these feature flags:
 
 - `opentelemetry_0_13`: attach [OpenTelemetry](https://github.com/open-telemetry/opentelemetry-rust)'s context to the root span using `opentelemetry` 0.13;
 - `opentelemetry_0_14`: same as above but using `opentelemetry` 0.14;
