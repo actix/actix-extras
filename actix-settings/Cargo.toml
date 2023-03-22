@@ -5,9 +5,10 @@ authors = [
     "Joey Ezechiels <joey.ezechiels@gmail.com>",
     "Rob Ede <robjtede@icloud.com>",
 ]
-edition = "2018"
 description = "Easily manage Actix Web's settings from a TOML file and environment variables"
 license = "MIT OR Apache-2.0"
+edition.workspace = true
+rust-version.workspace = true
 
 [dependencies]
 actix-http = "3"
