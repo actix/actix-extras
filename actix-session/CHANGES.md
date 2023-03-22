@@ -2,10 +2,9 @@
 
 ## Unreleased - 2021-xx-xx
 
-- Set secure attribute when adding a session removal cookie. [#300]
+- Set secure attribute when adding a session removal cookie.
 - Update `redis` dependency to `0.22`.
-
-[#300]: https://github.com/actix/actix-extras/pull/300
+- Minimum supported Rust version (MSRV) is now 1.60.
 
 ## 0.7.2 - 2022-09-11
 
