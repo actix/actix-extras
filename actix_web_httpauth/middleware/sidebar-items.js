@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["HttpAuthentication","Middleware for checking HTTP authentication."]]};
+window.SIDEBAR_ITEMS = {"struct":["HttpAuthentication"]};

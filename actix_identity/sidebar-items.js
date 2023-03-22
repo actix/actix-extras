@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":[["config","Configuration options to tune the behaviour of [`IdentityMiddleware`]."],["error","Failure modes of identity operations."]],"struct":[["Identity","A verified user identity. It can be used as a request extractor."],["IdentityMiddleware","Identity management middleware."]],"trait":[["IdentityExt","Helper trait to retrieve an [`Identity`] instance from various `actix-web`’s types."]]};
+window.SIDEBAR_ITEMS = {"mod":["config","error"],"struct":["Identity","IdentityMiddleware"],"trait":["IdentityExt"]};

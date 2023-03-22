@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":[["Error","Bearer authorization error types, described in RFC 6750."]],"struct":[["Bearer","Challenge for `WWW-Authenticate` header with HTTP Bearer auth scheme, described in RFC 6750."],["BearerBuilder","Builder for the [`Bearer`] challenge."]]};
+window.SIDEBAR_ITEMS = {"enum":["Error"],"struct":["Bearer","BearerBuilder"]};

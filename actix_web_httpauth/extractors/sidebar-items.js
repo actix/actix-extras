@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":[["basic","Extractor for the “Basic” HTTP Authentication Scheme."],["bearer","Extractor for the “Bearer” HTTP Authentication Scheme."]],"struct":[["AuthenticationError","Authentication error returned by authentication extractors."]],"trait":[["AuthExtractorConfig","Trait implemented for types that provides configuration for the authentication extractors."]]};
+window.SIDEBAR_ITEMS = {"mod":["basic","bearer"],"struct":["AuthenticationError"],"trait":["AuthExtractorConfig"]};
