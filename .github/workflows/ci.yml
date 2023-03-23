@@ -58,6 +58,11 @@ jobs:
       - name: Cache Dependencies
         uses: Swatinem/rust-cache@v2.1.0
 
+      - name: workaround MSRV issues
+        if: matrix.version != 'stable'
+        run: |
+          cargo update -p=time --precise=0.3.13
+
       - name: check minimal
         run: cargo ci-min
 
@@ -119,6 +124,11 @@ jobs:
         run: cargo generate-lockfile
       - name: Cache Dependencies
         uses: Swatinem/rust-cache@v2.1.0
+
+      - name: workaround MSRV issues
+        if: matrix.version != 'stable'
+        run: |
+          cargo update -p=time --precise=0.3.13
 
       - name: check minimal
         run: cargo ci-min
