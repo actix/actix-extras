@@ -8,8 +8,8 @@ keywords = ["actix", "redis", "async"]
 homepage = "https://actix.rs"
 repository = "https://github.com/actix/actix-extras.git"
 categories = ["network-programming", "asynchronous"]
-edition.workspace = true
-rust-version.workspace = true
+edition = "2018"
+rust-version = "1.60"
 
 [package.metadata.docs.rs]
 all-features = true

@@ -7,8 +7,8 @@ authors = [
 ]
 description = "Easily manage Actix Web's settings from a TOML file and environment variables"
 license = "MIT OR Apache-2.0"
-edition.workspace = true
-rust-version.workspace = true
+edition = "2018"
+rust-version = "1.60"
 
 [dependencies]
 actix-http = "3"

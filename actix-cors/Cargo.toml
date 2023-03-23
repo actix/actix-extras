@@ -10,8 +10,8 @@ keywords = ["actix", "cors", "web", "security", "crossorigin"]
 homepage = "https://actix.rs"
 repository = "https://github.com/actix/actix-extras.git"
 license = "MIT OR Apache-2.0"
-edition.workspace = true
-rust-version.workspace = true
+edition = "2018"
+rust-version = "1.60"
 
 [package.metadata.docs.rs]
 rustdoc-args = ["--cfg", "docsrs"]
