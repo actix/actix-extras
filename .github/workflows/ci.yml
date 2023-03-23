@@ -14,7 +14,7 @@ jobs:
         target:
           - { name: Linux, os: ubuntu-latest, triple: x86_64-unknown-linux-gnu }
         version:
-          - 1.60 # MSRV
+          - '1.60' # MSRV
           - stable
 
     name: ${{ matrix.target.name }} / ${{ matrix.version }}
@@ -88,7 +88,7 @@ jobs:
               triple: x86_64-pc-windows-msvc,
             }
         version:
-          - 1.60 # MSRV
+          - '1.60' # MSRV
           - stable
 
     name: ${{ matrix.target.name }} / ${{ matrix.version }}
