@@ -101,8 +101,8 @@ impl Cors {
             preflight: true,
             send_wildcard: false,
             supports_credentials: true,
-            #[cfg(feature = "draft-private-network-access")]
-            allow_private_network_access: false,
+            #[cfg(feature = "draft-local-network-access")]
+            allow_local_network_access: false,
             vary_header: true,
             block_on_origin_mismatch: true,
         };
@@ -422,19 +422,19 @@ impl Cors {
 
     /// Allow private network access.
     ///
-    /// If true, injects the `Access-Control-Allow-Private-Network: true` header in responses if the
-    /// request contained the `Access-Control-Request-Private-Network: true` header.
+    /// If true, injects the `Access-Control-Allow-Local-Network: true` header in responses if the
+    /// request contained the `Access-Control-Request-Local-Network: true` header.
     ///
-    /// For more information on this behavior, see the draft [Private Network Access] spec.
+    /// For more information on this behavior, see the draft [Local Network Access] spec.
     ///
     /// Defaults to `false`.
     ///
-    /// [Private Network Access]: https://wicg.github.io/private-network-access
-    #[cfg(feature = "draft-private-network-access")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "draft-private-network-access")))]
-    pub fn allow_private_network_access(mut self) -> Cors {
+    /// [Private Network Access]: https://wicg.github.io/local-network-access
+    #[cfg(feature = "draft-local-network-access")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "draft-local-network-access")))]
+    pub fn allow_local_network_access(mut self) -> Cors {
         if let Some(cors) = cors(&mut self.inner, &self.error) {
-            cors.allow_private_network_access = true;
+            cors.allow_local_network_access = true;
         }
 
         self
@@ -514,8 +514,8 @@ impl Default for Cors {
             preflight: true,
             send_wildcard: false,
             supports_credentials: false,
-            #[cfg(feature = "draft-private-network-access")]
-            allow_private_network_access: false,
+            #[cfg(feature = "draft-local-network-access")]
+            allow_local_network_access: false,
             vary_header: true,
             block_on_origin_mismatch: true,
         };
