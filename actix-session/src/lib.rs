@@ -726,10 +726,7 @@ pub mod test_helpers {
 
         impl ServiceResponseExt for ServiceResponse {
             fn get_cookie(&self, cookie_name: &str) -> Option<actix_web::cookie::Cookie<'_>> {
-                self.response()
-                    .cookies()
-                    .into_iter()
-                    .find(|c| c.name() == cookie_name)
+                self.response().cookies().find(|c| c.name() == cookie_name)
             }
         }
     }
