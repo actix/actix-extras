@@ -2,7 +2,6 @@
 
 ## Unreleased - 2022-xx-xx
 
-- Rename `Cors::{allow_private_network_access => allow_local_network_access}()` and its unstable flag (`draft-private-network-access` => `draft-local-network-access`).
 - Minimum supported Rust version (MSRV) is now 1.60.
 
 ## 0.6.4 - 2022-10-28

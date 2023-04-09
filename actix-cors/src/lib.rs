@@ -7,8 +7,8 @@
 //! This CORS middleware automatically handles `OPTIONS` preflight requests.
 //!
 //! # Crate Features
-//! - `draft-local-network-access`: ⚠️ Unstable. Adds opt-in support for the [Local Network Access]
-//!   spec extensions. This feature is unstable since it will follow any breaking changes in the
+//! - `draft-private-network-access`: ⚠️ Unstable. Adds opt-in support for the [Private Network
+//!   Access] spec extensions. This feature is unstable since it will follow breaking changes in the
 //!   draft spec until it is finalized.
 //!
 //! # Example
@@ -46,7 +46,7 @@
 //! }
 //! ```
 //!
-//! [Local Network Access]: https://wicg.github.io/local-network-access
+//! [Private Network Access]: https://wicg.github.io/private-network-access
 
 #![forbid(unsafe_code)]
 #![deny(rust_2018_idioms, nonstandard_style)]

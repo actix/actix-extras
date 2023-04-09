@@ -93,14 +93,14 @@ impl<S> CorsMiddleware<S> {
             res.insert_header((header::ACCESS_CONTROL_ALLOW_HEADERS, headers.clone()));
         }
 
-        #[cfg(feature = "draft-local-network-access")]
-        if inner.allow_local_network_access
+        #[cfg(feature = "draft-private-network-access")]
+        if inner.allow_private_network_access
             && req
                 .headers()
-                .contains_key("access-control-request-local-network")
+                .contains_key("access-control-request-private-network")
         {
             res.insert_header((
-                header::HeaderName::from_static("access-control-allow-local-network"),
+                header::HeaderName::from_static("access-control-allow-private-network"),
                 HeaderValue::from_static("true"),
             ));
         }
@@ -173,15 +173,15 @@ impl<S> CorsMiddleware<S> {
             );
         }
 
-        #[cfg(feature = "draft-local-network-access")]
-        if inner.allow_local_network_access
+        #[cfg(feature = "draft-private-network-access")]
+        if inner.allow_private_network_access
             && res
                 .request()
                 .headers()
-                .contains_key("access-control-request-local-network")
+                .contains_key("access-control-request-private-network")
         {
             res.headers_mut().insert(
-                header::HeaderName::from_static("access-control-allow-local-network"),
+                header::HeaderName::from_static("access-control-allow-private-network"),
                 HeaderValue::from_static("true"),
             );
         }
