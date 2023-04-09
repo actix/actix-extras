@@ -60,7 +60,6 @@ use crate::storage::{
 /// `RedisSessionStore` leverages [`redis-rs`] as Redis client.
 ///
 /// [`redis-rs`]: https://github.com/mitsuhiko/redis-rs
-#[cfg_attr(docsrs, doc(cfg(feature = "redis-rs-session")))]
 #[derive(Clone)]
 pub struct RedisSessionStore {
     configuration: CacheConfiguration,
@@ -105,7 +104,6 @@ impl RedisSessionStore {
 /// parameters.
 ///
 /// [`RedisSessionStore`]: crate::storage::RedisSessionStore
-#[cfg_attr(docsrs, doc(cfg(feature = "redis-rs-session")))]
 #[must_use]
 pub struct RedisSessionStoreBuilder {
     connection_string: String,

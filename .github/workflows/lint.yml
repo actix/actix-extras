@@ -2,8 +2,7 @@ name: Lint
 
 on: [pull_request]
 
-permissions:
-  contents: read # to fetch code (actions/checkout)
+permissions: { contents: read }
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -47,14 +46,18 @@ jobs:
       - name: checkout ${{ github.head_ref }}
         uses: actions/checkout@v3
 
-      - uses: actions-rust-lang/setup-rust-toolchain@v1
+      - name: Install Rust (nightly)
+        uses: actions-rust-lang/setup-rust-toolchain@v1
         with: { toolchain: nightly }
 
-      - uses: taiki-e/cache-cargo-install-action@v1
+      - name: Install cargo-public-api
+        uses: taiki-e/cache-cargo-install-action@v1
         with: { tool: cargo-public-api }
 
       - name: generate API diff
         run: |
           for f in $(find -mindepth 2 -maxdepth 2 -name Cargo.toml); do
-            cargo public-api --manifest-path "$f" --all-features diff ${{ github.event.pull_request.base.sha }}..${{ github.sha }}
+
+            cargo public-api --manifest-path "$f" --all-features diff ${{ github.event.pull_request.base.sha }}..${{ github.sha }} >> /tmp/diff.txt
           done
+          cat /tmp/diff.txt

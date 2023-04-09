@@ -3,8 +3,7 @@ name: CI (post-merge)
 on:
   push: { branches: [master] }
 
-permissions:
-  contents: read # to fetch code (actions/checkout)
+permissions: { contents: read }
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

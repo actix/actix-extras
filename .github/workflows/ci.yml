@@ -4,8 +4,7 @@ on:
   pull_request: {}
   push: { branches: [master] }
 
-permissions:
-  contents: read # to fetch code (actions/checkout)
+permissions: { contents: read }
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -45,7 +44,8 @@ jobs:
         with:
           toolchain: ${{ matrix.version }}
 
-      - uses: taiki-e/cache-cargo-install-action@v1
+      - name: Install cargo-hack
+        uses: taiki-e/cache-cargo-install-action@v1
         with: { tool: cargo-hack }
 
       - name: workaround MSRV issues
@@ -97,10 +97,8 @@ jobs:
         with:
           toolchain: ${{ matrix.version }}
 
-      - uses: taiki-e/cache-cargo-install-action@v1
-        with: { tool: cargo-hack }
-        
-      - uses: taiki-e/cache-cargo-install-action@v1
+      - name: Install cargo-hack
+        uses: taiki-e/cache-cargo-install-action@v1
         with: { tool: cargo-hack }
 
       - name: workaround MSRV issues

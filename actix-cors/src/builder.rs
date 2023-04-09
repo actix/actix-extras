@@ -431,7 +431,6 @@ impl Cors {
     ///
     /// [Private Network Access]: https://wicg.github.io/local-network-access
     #[cfg(feature = "draft-local-network-access")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "draft-local-network-access")))]
     pub fn allow_local_network_access(mut self) -> Cors {
         if let Some(cors) = cors(&mut self.inner, &self.error) {
             cors.allow_local_network_access = true;
