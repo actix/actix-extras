@@ -1,10 +1,15 @@
 name: CI
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
-  push:
-    branches: [master]
+  pull_request: {}
+  push: { branches: [master] }
+
+permissions:
+  contents: read # to fetch code (actions/checkout)
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build_and_test_linux:

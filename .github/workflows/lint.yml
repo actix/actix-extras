@@ -1,8 +1,13 @@
 name: Lint
 
-on:
-  pull_request:
-    types: [opened, synchronize, reopened]
+on: [pull_request]
+
+permissions:
+  contents: read # to fetch code (actions/checkout)
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   fmt:
