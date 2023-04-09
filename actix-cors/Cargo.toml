@@ -18,9 +18,7 @@ rustdoc-args = ["--cfg", "docsrs"]
 all-features = true
 
 [features]
-default = ["draft-local-network-access"] # XXX
 draft-local-network-access = []
-draft-private-network-access = ["draft-local-network-access"] # backwards compat for unstable feature
 
 [dependencies]
 actix-utils = "3"

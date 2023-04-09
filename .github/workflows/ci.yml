@@ -40,33 +40,18 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install ${{ matrix.version }}
-        run: |
-          rustup install ${{ matrix.version }}-${{ matrix.target.triple }}
-          rustup override set ${{ matrix.version }}-${{ matrix.target.triple }}
+      - name: Install Rust (${{ matrix.version }})
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: ${{ matrix.version }}
 
-      - name: Install cargo-hack
-        uses: taiki-e/install-action@cargo-hack
-
-      - name: workaround MSRV issues
-        if: matrix.version != 'stable'
-        run: |
-          cargo install cargo-edit --version=0.8.0
-          cargo add env_logger@0.9 --dev -p=actix-cors
-          cargo add env_logger@0.9 --dev -p=actix-identity
-          cargo add env_logger@0.9 --dev -p=actix-redis
-          cargo add env_logger@0.9 --dev -p=actix-session
-          cargo add env_logger@0.9 --dev -p=actix-settings
-
-      - name: Generate Cargo.lock
-        run: cargo generate-lockfile
-      - name: Cache Dependencies
-        uses: Swatinem/rust-cache@v2.1.0
+      - uses: taiki-e/cache-cargo-install-action@v1
+        with: { tool: cargo-hack }
 
       - name: workaround MSRV issues
         if: matrix.version != 'stable'
         run: |
-          cargo update -p=time --precise=0.3.13
+          cargo update -p=time@0.3.20 --precise=0.3.16
 
       - name: check minimal
         run: cargo ci-min
@@ -107,33 +92,21 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install ${{ matrix.version }}
-        run: |
-          rustup install ${{ matrix.version }}-${{ matrix.target.triple }}
-          rustup override set ${{ matrix.version }}-${{ matrix.target.triple }}
+      - name: Install Rust (${{ matrix.version }})
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: ${{ matrix.version }}
 
-      - name: Install cargo-hack
-        uses: taiki-e/install-action@cargo-hack
-
-      - name: workaround MSRV issues
-        if: matrix.version != 'stable'
-        run: |
-          cargo install cargo-edit --version=0.8.0
-          cargo add env_logger@0.9 --dev -p=actix-cors
-          cargo add env_logger@0.9 --dev -p=actix-identity
-          cargo add env_logger@0.9 --dev -p=actix-redis
-          cargo add env_logger@0.9 --dev -p=actix-session
-          cargo add env_logger@0.9 --dev -p=actix-settings
-
-      - name: Generate Cargo.lock
-        run: cargo generate-lockfile
-      - name: Cache Dependencies
-        uses: Swatinem/rust-cache@v2.1.0
+      - uses: taiki-e/cache-cargo-install-action@v1
+        with: { tool: cargo-hack }
+        
+      - uses: taiki-e/cache-cargo-install-action@v1
+        with: { tool: cargo-hack }
 
       - name: workaround MSRV issues
         if: matrix.version != 'stable'
         run: |
-          cargo update -p=time --precise=0.3.13
+          cargo update -p=time@0.3.20 --precise=0.3.16
 
       - name: check minimal
         run: cargo ci-min
@@ -160,14 +133,8 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Install Rust (nightly)
-        run: |
-          rustup install nightly
-          rustup override set nightly
-
-      - name: Generate Cargo.lock
-        run: cargo generate-lockfile
-      - name: Cache Dependencies
-        uses: Swatinem/rust-cache@v2.1.0
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with: { toolchain: nightly }
 
       - name: doc tests
         timeout-minutes: 40
