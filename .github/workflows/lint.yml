@@ -1,8 +1,13 @@
 name: Lint
 
-on:
-  pull_request:
-    types: [opened, synchronize, reopened]
+on: [pull_request]
+
+permissions:
+  contents: read # to fetch code (actions/checkout)
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   fmt:
@@ -10,11 +15,12 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install Rust
-        run: |
-          rustup override set nightly
-          rustup update nightly
-          rustup component add rustfmt
+      - name: Install Rust (nightly)
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: nightly
+          components: rustfmt
+
       - name: Check with rustfmt
         run: cargo fmt --all -- --check
 
@@ -24,9 +30,31 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Install Rust
-        run: |
-          rustup override set stable
-          rustup update stable
-          rustup component add rustfmt
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with: { components: clippy }
+
       - name: Check with Clippy
         run: cargo clippy --workspace --tests --all-features
+
+  public-api-diff:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout ${{ github.base_ref }}
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.base_ref }}
+
+      - name: checkout ${{ github.head_ref }}
+        uses: actions/checkout@v3
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with: { toolchain: nightly }
+
+      - uses: taiki-e/cache-cargo-install-action@v1
+        with: { tool: cargo-public-api }
+
+      - name: generate API diff
+        run: |
+          for f in $(find -mindepth 2 -maxdepth 2 -name Cargo.toml); do
+            cargo public-api --manifest-path "$f" --all-features diff ${{ github.event.pull_request.base.sha }}..${{ github.sha }}
+          done

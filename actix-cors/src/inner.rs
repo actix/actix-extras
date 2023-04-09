@@ -64,8 +64,8 @@ pub(crate) struct Inner {
     pub(crate) preflight: bool,
     pub(crate) send_wildcard: bool,
     pub(crate) supports_credentials: bool,
-    #[cfg(feature = "draft-private-network-access")]
-    pub(crate) allow_private_network_access: bool,
+    #[cfg(feature = "draft-local-network-access")]
+    pub(crate) allow_local_network_access: bool,
     pub(crate) vary_header: bool,
     pub(crate) block_on_origin_mismatch: bool,
 }
@@ -222,19 +222,19 @@ pub(crate) fn add_vary_header(headers: &mut HeaderMap) {
             val.extend(hdr.as_bytes());
             val.extend(b", Origin, Access-Control-Request-Method, Access-Control-Request-Headers");
 
-            #[cfg(feature = "draft-private-network-access")]
-            val.extend(b", Access-Control-Allow-Private-Network");
+            #[cfg(feature = "draft-local-network-access")]
+            val.extend(b", Access-Control-Allow-Local-Network");
 
             val.try_into().unwrap()
         }
 
-        #[cfg(feature = "draft-private-network-access")]
+        #[cfg(feature = "draft-local-network-access")]
         None => HeaderValue::from_static(
             "Origin, Access-Control-Request-Method, Access-Control-Request-Headers, \
-            Access-Control-Allow-Private-Network",
+            Access-Control-Allow-Local-Network",
         ),
 
-        #[cfg(not(feature = "draft-private-network-access"))]
+        #[cfg(not(feature = "draft-local-network-access"))]
         None => HeaderValue::from_static(
             "Origin, Access-Control-Request-Method, Access-Control-Request-Headers",
         ),

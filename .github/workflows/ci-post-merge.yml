@@ -1,8 +1,14 @@
 name: CI (post-merge)
 
 on:
-  push:
-    branches: [master]
+  push: { branches: [master] }
+
+permissions:
+  contents: read # to fetch code (actions/checkout)
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build_and_test_linux_nightly:
@@ -27,39 +33,26 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install ${{ matrix.version }}
-        uses: actions-rs/toolchain@v1
+      - name: Install Rust (${{ matrix.version }})
+        uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          toolchain: ${{ matrix.version }}-${{ matrix.target.triple }}
-          profile: minimal
-          override: true
+          toolchain: ${{ matrix.version }}
 
-      - name: Install cargo-hack
-        uses: taiki-e/install-action@cargo-hack
-
-      - name: Generate Cargo.lock
-        uses: actions-rs/cargo@v1
-        with:
-          command: generate-lockfile
-      - name: Cache Dependencies
-        uses: Swatinem/rust-cache@v2.1.0
+      - uses: taiki-e/cache-cargo-install-action@v1
+        with: { tool: cargo-hack }
 
       - name: check minimal
-        uses: actions-rs/cargo@v1
-        with: { command: ci-min }
+        run: cargo ci-min
 
       - name: check minimal + examples
-        uses: actions-rs/cargo@v1
-        with: { command: ci-check-min-examples }
+        run: cargo ci-check-min-examples
 
       - name: check default
-        uses: actions-rs/cargo@v1
-        with: { command: ci-check }
+        run: cargo ci-check
 
       - name: tests
-        uses: actions-rs/cargo@v1
         timeout-minutes: 40
-        with: { command: ci-test }
+        run: cargo ci-test
 
       - name: Clear the cargo caches
         run: |
@@ -86,18 +79,13 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install ${{ matrix.version }}
-        run: |
-          rustup install ${{ matrix.version }}-${{ matrix.target.triple }}
-          rustup override set ${{ matrix.version }}-${{ matrix.target.triple }}
+      - name: Install Rust (${{ matrix.version }})
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: ${{ matrix.version }}
 
-      - name: Install cargo-hack
-        uses: taiki-e/install-action@cargo-hack
-
-      - name: Generate Cargo.lock
-        run: cargo generate-lockfile
-      - name: Cache Dependencies
-        uses: Swatinem/rust-cache@v2.1.0
+      - uses: taiki-e/cache-cargo-install-action@v1
+        with: { tool: cargo-hack }
 
       - name: check minimal
         run: cargo ci-min
