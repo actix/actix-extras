@@ -785,8 +785,8 @@
             preflight: <span class="bool-val">true</span>,
             send_wildcard: <span class="bool-val">false</span>,
             supports_credentials: <span class="bool-val">true</span>,
-            <span class="attr">#[cfg(feature = <span class="string">&quot;draft-local-network-access&quot;</span>)]
-            </span>allow_local_network_access: <span class="bool-val">false</span>,
+            <span class="attr">#[cfg(feature = <span class="string">&quot;draft-private-network-access&quot;</span>)]
+            </span>allow_private_network_access: <span class="bool-val">false</span>,
             vary_header: <span class="bool-val">true</span>,
             block_on_origin_mismatch: <span class="bool-val">true</span>,
         };
@@ -1106,18 +1106,18 @@
 
     <span class="doccomment">/// Allow private network access.
     ///
-    /// If true, injects the `Access-Control-Allow-Local-Network: true` header in responses if the
-    /// request contained the `Access-Control-Request-Local-Network: true` header.
+    /// If true, injects the `Access-Control-Allow-Private-Network: true` header in responses if the
+    /// request contained the `Access-Control-Request-Private-Network: true` header.
     ///
-    /// For more information on this behavior, see the draft [Local Network Access] spec.
+    /// For more information on this behavior, see the draft [Private Network Access] spec.
     ///
     /// Defaults to `false`.
     ///
-    /// [Private Network Access]: https://wicg.github.io/local-network-access
-    </span><span class="attr">#[cfg(feature = <span class="string">&quot;draft-local-network-access&quot;</span>)]
-    </span><span class="kw">pub fn </span>allow_local_network_access(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; Cors {
+    /// [Private Network Access]: https://wicg.github.io/private-network-access
+    </span><span class="attr">#[cfg(feature = <span class="string">&quot;draft-private-network-access&quot;</span>)]
+    </span><span class="kw">pub fn </span>allow_private_network_access(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; Cors {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(cors) = cors(<span class="kw-2">&amp;mut </span><span class="self">self</span>.inner, <span class="kw-2">&amp;</span><span class="self">self</span>.error) {
-            cors.allow_local_network_access = <span class="bool-val">true</span>;
+            cors.allow_private_network_access = <span class="bool-val">true</span>;
         }
 
         <span class="self">self
@@ -1197,8 +1197,8 @@
             preflight: <span class="bool-val">true</span>,
             send_wildcard: <span class="bool-val">false</span>,
             supports_credentials: <span class="bool-val">false</span>,
-            <span class="attr">#[cfg(feature = <span class="string">&quot;draft-local-network-access&quot;</span>)]
-            </span>allow_local_network_access: <span class="bool-val">false</span>,
+            <span class="attr">#[cfg(feature = <span class="string">&quot;draft-private-network-access&quot;</span>)]
+            </span>allow_private_network_access: <span class="bool-val">false</span>,
             vary_header: <span class="bool-val">true</span>,
             block_on_origin_mismatch: <span class="bool-val">true</span>,
         };

@@ -471,8 +471,8 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) preflight: bool,
     <span class="kw">pub</span>(<span class="kw">crate</span>) send_wildcard: bool,
     <span class="kw">pub</span>(<span class="kw">crate</span>) supports_credentials: bool,
-    <span class="attr">#[cfg(feature = <span class="string">&quot;draft-local-network-access&quot;</span>)]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) allow_local_network_access: bool,
+    <span class="attr">#[cfg(feature = <span class="string">&quot;draft-private-network-access&quot;</span>)]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) allow_private_network_access: bool,
     <span class="kw">pub</span>(<span class="kw">crate</span>) vary_header: bool,
     <span class="kw">pub</span>(<span class="kw">crate</span>) block_on_origin_mismatch: bool,
 }
@@ -629,19 +629,19 @@
             val.extend(hdr.as_bytes());
             val.extend(<span class="string">b&quot;, Origin, Access-Control-Request-Method, Access-Control-Request-Headers&quot;</span>);
 
-            <span class="attr">#[cfg(feature = <span class="string">&quot;draft-local-network-access&quot;</span>)]
-            </span>val.extend(<span class="string">b&quot;, Access-Control-Allow-Local-Network&quot;</span>);
+            <span class="attr">#[cfg(feature = <span class="string">&quot;draft-private-network-access&quot;</span>)]
+            </span>val.extend(<span class="string">b&quot;, Access-Control-Allow-Private-Network&quot;</span>);
 
             val.try_into().unwrap()
         }
 
-        <span class="attr">#[cfg(feature = <span class="string">&quot;draft-local-network-access&quot;</span>)]
+        <span class="attr">#[cfg(feature = <span class="string">&quot;draft-private-network-access&quot;</span>)]
         </span><span class="prelude-val">None </span>=&gt; HeaderValue::from_static(
             <span class="string">&quot;Origin, Access-Control-Request-Method, Access-Control-Request-Headers, \
-            Access-Control-Allow-Local-Network&quot;</span>,
+            Access-Control-Allow-Private-Network&quot;</span>,
         ),
 
-        <span class="attr">#[cfg(not(feature = <span class="string">&quot;draft-local-network-access&quot;</span>))]
+        <span class="attr">#[cfg(not(feature = <span class="string">&quot;draft-private-network-access&quot;</span>))]
         </span><span class="prelude-val">None </span>=&gt; HeaderValue::from_static(
             <span class="string">&quot;Origin, Access-Control-Request-Method, Access-Control-Request-Headers&quot;</span>,
         ),

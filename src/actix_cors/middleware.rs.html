@@ -393,14 +393,14 @@
             </span>res.insert_header((header::ACCESS_CONTROL_ALLOW_HEADERS, headers.clone()));
         }
 
-        <span class="attr">#[cfg(feature = <span class="string">&quot;draft-local-network-access&quot;</span>)]
-        </span><span class="kw">if </span>inner.allow_local_network_access
+        <span class="attr">#[cfg(feature = <span class="string">&quot;draft-private-network-access&quot;</span>)]
+        </span><span class="kw">if </span>inner.allow_private_network_access
             &amp;&amp; req
                 .headers()
-                .contains_key(<span class="string">&quot;access-control-request-local-network&quot;</span>)
+                .contains_key(<span class="string">&quot;access-control-request-private-network&quot;</span>)
         {
             res.insert_header((
-                header::HeaderName::from_static(<span class="string">&quot;access-control-allow-local-network&quot;</span>),
+                header::HeaderName::from_static(<span class="string">&quot;access-control-allow-private-network&quot;</span>),
                 HeaderValue::from_static(<span class="string">&quot;true&quot;</span>),
             ));
         }
@@ -473,15 +473,15 @@
             );
         }
 
-        <span class="attr">#[cfg(feature = <span class="string">&quot;draft-local-network-access&quot;</span>)]
-        </span><span class="kw">if </span>inner.allow_local_network_access
+        <span class="attr">#[cfg(feature = <span class="string">&quot;draft-private-network-access&quot;</span>)]
+        </span><span class="kw">if </span>inner.allow_private_network_access
             &amp;&amp; res
                 .request()
                 .headers()
-                .contains_key(<span class="string">&quot;access-control-request-local-network&quot;</span>)
+                .contains_key(<span class="string">&quot;access-control-request-private-network&quot;</span>)
         {
             res.headers_mut().insert(
-                header::HeaderName::from_static(<span class="string">&quot;access-control-allow-local-network&quot;</span>),
+                header::HeaderName::from_static(<span class="string">&quot;access-control-allow-private-network&quot;</span>),
                 HeaderValue::from_static(<span class="string">&quot;true&quot;</span>),
             );
         }
