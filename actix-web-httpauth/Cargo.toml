@@ -14,9 +14,9 @@ license = "MIT OR Apache-2.0"
 edition = "2018"
 rust-version = "1.60"
 
-[lib]
-name = "actix_web_httpauth"
-path = "src/lib.rs"
+[package.metadata.docs.rs]
+rustdoc-args = ["--cfg", "docsrs"]
+all-features = true
 
 [dependencies]
 actix-utils = "3"

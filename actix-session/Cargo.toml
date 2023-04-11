@@ -14,12 +14,8 @@ edition = "2018"
 rust-version = "1.60"
 
 [package.metadata.docs.rs]
-all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
-
-[lib]
-name = "actix_session"
-path = "src/lib.rs"
+all-features = true
 
 [features]
 default = []
