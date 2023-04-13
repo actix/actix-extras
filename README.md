@@ -28,6 +28,8 @@
 
 `tracing-actix-web` provides [`TracingLogger`], a middleware to collect telemetry data from applications built on top of the [`actix-web`] framework.
 
+> `tracing-actix-web` was initially developed for the telemetry chapter of [Zero to Production In Rust](https://zero2prod.com), a hands-on introduction to backend development using the Rust programming language.
+
 # Getting started 
 
 ## How to install
