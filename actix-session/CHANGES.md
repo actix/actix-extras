@@ -1,6 +1,9 @@
 # Changes
 
-## Unreleased - 2021-xx-xx
+## Unreleased - 2022-xx-xx
+ - Add an `empty()` function to `Session` for simple testing. [#253]
+
+[#253]: https://github.com/actix/actix-extras/pull/253
 
 - Set secure attribute when adding a session removal cookie.
 - Update `redis` dependency to `0.22`.
