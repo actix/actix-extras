@@ -241,17 +241,13 @@ where
 }
 
 /// Extension trait for applying parsed settings to the server object.
-pub trait ApplySettings {
-    /// Apply a [`BasicSettings`] value to `self`.
-    ///
-    /// [`BasicSettings`]: ./struct.BasicSettings.html
+pub trait ApplySettings<S> {
+    /// Apply some settings object value to `self`.
     #[must_use]
-    fn apply_settings<A>(self, settings: &BasicSettings<A>) -> Self
-    where
-        A: de::DeserializeOwned;
+    fn apply_settings(self, settings: &S) -> Self;
 }
 
-impl<F, I, S, B> ApplySettings for HttpServer<F, I, S, B>
+impl<F, I, S, B> ApplySettings<ActixSettings> for HttpServer<F, I, S, B>
 where
     F: Fn() -> I + Send + Clone + 'static,
     I: IntoServiceFactory<S, Request>,
@@ -262,51 +258,48 @@ where
     S::Future: 'static,
     B: MessageBody + 'static,
 {
-    fn apply_settings<A>(mut self, settings: &BasicSettings<A>) -> Self
-    where
-        A: de::DeserializeOwned,
-    {
-        if settings.actix.tls.enabled {
+    fn apply_settings(mut self, settings: &ActixSettings) -> Self {
+        if settings.tls.enabled {
             // for Address { host, port } in &settings.actix.hosts {
             //     self = self.bind(format!("{}:{}", host, port))
             //         .unwrap(/*TODO*/);
             // }
             todo!("[ApplySettings] TLS support has not been implemented yet.");
         } else {
-            for Address { host, port } in &settings.actix.hosts {
+            for Address { host, port } in &settings.hosts {
                 self = self.bind(format!("{host}:{port}"))
                     .unwrap(/*TODO*/);
             }
         }
 
-        self = match settings.actix.num_workers {
+        self = match settings.num_workers {
             NumWorkers::Default => self,
             NumWorkers::Manual(n) => self.workers(n),
         };
 
-        self = match settings.actix.backlog {
+        self = match settings.backlog {
             Backlog::Default => self,
             Backlog::Manual(n) => self.backlog(n as u32),
         };
 
-        self = match settings.actix.max_connections {
+        self = match settings.max_connections {
             MaxConnections::Default => self,
             MaxConnections::Manual(n) => self.max_connections(n),
         };
 
-        self = match settings.actix.max_connection_rate {
+        self = match settings.max_connection_rate {
             MaxConnectionRate::Default => self,
             MaxConnectionRate::Manual(n) => self.max_connection_rate(n),
         };
 
-        self = match settings.actix.keep_alive {
+        self = match settings.keep_alive {
             KeepAlive::Default => self,
             KeepAlive::Disabled => self.keep_alive(ActixKeepAlive::Disabled),
             KeepAlive::Os => self.keep_alive(ActixKeepAlive::Os),
             KeepAlive::Seconds(n) => self.keep_alive(Duration::from_secs(n as u64)),
         };
 
-        self = match settings.actix.client_timeout {
+        self = match settings.client_timeout {
             Timeout::Default => self,
             Timeout::Milliseconds(n) => {
                 self.client_request_timeout(Duration::from_millis(n as u64))
@@ -314,7 +307,7 @@ where
             Timeout::Seconds(n) => self.client_request_timeout(Duration::from_secs(n as u64)),
         };
 
-        self = match settings.actix.client_shutdown {
+        self = match settings.client_shutdown {
             Timeout::Default => self,
             Timeout::Milliseconds(n) => {
                 self.client_disconnect_timeout(Duration::from_millis(n as u64))
@@ -322,13 +315,30 @@ where
             Timeout::Seconds(n) => self.client_disconnect_timeout(Duration::from_secs(n as u64)),
         };
 
-        self = match settings.actix.shutdown_timeout {
+        self = match settings.shutdown_timeout {
             Timeout::Default => self,
             Timeout::Milliseconds(_) => self.shutdown_timeout(1),
             Timeout::Seconds(n) => self.shutdown_timeout(n as u64),
         };
 
         self
+    }
+}
+
+impl<F, I, S, B, A> ApplySettings<BasicSettings<A>> for HttpServer<F, I, S, B>
+where
+    F: Fn() -> I + Send + Clone + 'static,
+    I: IntoServiceFactory<S, Request>,
+    S: ServiceFactory<Request, Config = AppConfig> + 'static,
+    S::Error: Into<WebError> + 'static,
+    S::InitError: fmt::Debug,
+    S::Response: Into<Response<B>> + 'static,
+    S::Future: 'static,
+    B: MessageBody + 'static,
+    A: de::DeserializeOwned,
+{
+    fn apply_settings(self, settings: &BasicSettings<A>) -> Self {
+        self.apply_settings(&settings.actix)
     }
 }
 
