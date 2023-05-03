@@ -107,12 +107,10 @@ impl Session {
     /// Get a the session key itself from the overall session.
     ///
     /// Retrieve the overall session key
-    pub fn get_session_key(&self) -> secrecy::Secret<SessionKey> {
-        todo!("either grab the key or figure out how to populate InnerSession session_key field");
-        // let key = Session::set_session(&mut self.0., self.0);
-        let key = self.0.borrow().session_key.clone(); //
-        secrecy::Secret::new(key.unwrap())
+    pub fn get_session_key(&self) -> Option<SessionKey> {
+        self.0.borrow().session_key.clone()
     }
+
     /// Get all raw key-value data from the session.
     ///
     /// Note that values are JSON encoded.
@@ -232,10 +230,12 @@ impl Session {
     pub(crate) fn set_session(
         req: &mut ServiceRequest,
         data: impl IntoIterator<Item = (String, String)>,
+        session_key: Option<SessionKey>,
     ) {
         let session = Session::get_session(&mut req.extensions_mut());
         let mut inner = session.0.borrow_mut();
         inner.state.extend(data);
+        inner.session_key = session_key;
     }
 
     /// Returns session status and iterator of key-value pairs of changes.

@@ -2,6 +2,7 @@ use actix::Addr;
 use actix_redis::{resp_array, Command, RedisActor, RespValue};
 use actix_web::cookie::time::Duration;
 use anyhow::Error;
+use secrecy::ExposeSecret;
 
 use super::SessionKey;
 use crate::storage::{
@@ -121,7 +122,7 @@ impl RedisActorSessionStoreBuilder {
 #[async_trait::async_trait(?Send)]
 impl SessionStore for RedisActorSessionStore {
     async fn load(&self, session_key: &SessionKey) -> Result<Option<SessionState>, LoadError> {
-        let cache_key = (self.configuration.cache_keygen)(session_key.as_ref());
+        let cache_key = (self.configuration.cache_keygen)(session_key.as_ref().expose_secret());
         let val = self
             .addr
             .send(Command(resp_array!["GET", cache_key]))
@@ -155,7 +156,7 @@ impl SessionStore for RedisActorSessionStore {
             .map_err(Into::into)
             .map_err(SaveError::Serialization)?;
         let session_key = generate_session_key();
-        let cache_key = (self.configuration.cache_keygen)(session_key.as_ref());
+        let cache_key = (self.configuration.cache_keygen)(session_key.as_ref().expose_secret());
 
         let cmd = Command(resp_array![
             "SET",
@@ -196,7 +197,7 @@ impl SessionStore for RedisActorSessionStore {
         let body = serde_json::to_string(&session_state)
             .map_err(Into::into)
             .map_err(UpdateError::Serialization)?;
-        let cache_key = (self.configuration.cache_keygen)(session_key.as_ref());
+        let cache_key = (self.configuration.cache_keygen)(session_key.as_ref().expose_secret());
 
         let cmd = Command(resp_array![
             "SET",
@@ -238,7 +239,7 @@ impl SessionStore for RedisActorSessionStore {
     }
 
     async fn update_ttl(&self, session_key: &SessionKey, ttl: &Duration) -> Result<(), Error> {
-        let cache_key = (self.configuration.cache_keygen)(session_key.as_ref());
+        let cache_key = (self.configuration.cache_keygen)(session_key.as_ref().expose_secret());
 
         let cmd = Command(resp_array![
             "EXPIRE",
@@ -256,7 +257,7 @@ impl SessionStore for RedisActorSessionStore {
     }
 
     async fn delete(&self, session_key: &SessionKey) -> Result<(), anyhow::Error> {
-        let cache_key = (self.configuration.cache_keygen)(session_key.as_ref());
+        let cache_key = (self.configuration.cache_keygen)(session_key.as_ref().expose_secret());
 
         let res = self
             .addr
@@ -303,11 +304,14 @@ mod tests {
     async fn updating_of_an_expired_state_is_handled_gracefully() {
         let store = redis_actor_store();
         let session_key = generate_session_key();
-        let initial_session_key = session_key.as_ref().to_owned();
+        let initial_session_key = session_key.as_ref().expose_secret().to_owned();
         let updated_session_key = store
             .update(session_key, HashMap::new(), &Duration::seconds(1))
             .await
             .unwrap();
-        assert_ne!(initial_session_key, updated_session_key.as_ref());
+        assert_ne!(
+            &initial_session_key,
+            updated_session_key.as_ref().expose_secret()
+        );
     }
 }

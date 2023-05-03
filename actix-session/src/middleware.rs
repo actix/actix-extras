@@ -218,7 +218,7 @@ where
             let (session_key, session_state) =
                 load_session_state(session_key, storage_backend.as_ref()).await?;
 
-            Session::set_session(&mut req, session_state);
+            Session::set_session(&mut req, session_state, session_key.clone());
 
             let mut res = service.call(req).await?;
             let (status, session_state) = Session::get_changes(&mut res);

@@ -1,7 +1,7 @@
 use std::convert::TryFrom;
 
 use derive_more::{Display, From};
-use secrecy::Secret;
+use secrecy::{ExposeSecret, Secret};
 
 /// A session key, the string stored in a client-side cookie to associate a user with its session
 /// state on the backend.
@@ -21,6 +21,13 @@ use secrecy::Secret;
 #[derive(Debug, Clone)]
 pub struct SessionKey(secrecy::Secret<String>);
 
+impl SessionKey {
+    /// Convert the SessionKey into the inner Secret
+    pub fn into_inner(self) -> secrecy::Secret<String> {
+        self.0
+    }
+}
+
 impl TryFrom<String> for SessionKey {
     type Error = InvalidSessionKeyError;
 
@@ -31,8 +38,7 @@ impl TryFrom<String> for SessionKey {
             )
             .into());
         }
-        let val_secret = Secret::new(val);
-        Ok(SessionKey(val_secret))
+        Ok(SessionKey(Secret::new(val)))
     }
 }
 
@@ -42,15 +48,9 @@ impl AsRef<secrecy::Secret<String>> for SessionKey {
     }
 }
 
-impl secrecy::Zeroize for SessionKey {
-    fn zeroize(&mut self) {
-        self.0.zeroize();
-    }
-}
-
 impl From<SessionKey> for String {
     fn from(key: SessionKey) -> Self {
-        key.0
+        key.0.expose_secret().into()
     }
 }
 

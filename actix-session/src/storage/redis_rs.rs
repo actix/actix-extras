@@ -3,6 +3,7 @@ use std::{convert::TryInto, sync::Arc};
 use actix_web::cookie::time::Duration;
 use anyhow::{Context, Error};
 use redis::{aio::ConnectionManager, AsyncCommands, Cmd, FromRedisValue, RedisResult, Value};
+use secrecy::ExposeSecret;
 
 use super::SessionKey;
 use crate::storage::{
@@ -135,7 +136,7 @@ impl RedisSessionStoreBuilder {
 #[async_trait::async_trait(?Send)]
 impl SessionStore for RedisSessionStore {
     async fn load(&self, session_key: &SessionKey) -> Result<Option<SessionState>, LoadError> {
-        let cache_key = (self.configuration.cache_keygen)(session_key.as_ref());
+        let cache_key = (self.configuration.cache_keygen)(session_key.as_ref().expose_secret());
 
         let value: Option<String> = self
             .execute_command(redis::cmd("GET").arg(&[&cache_key]))
@@ -160,7 +161,7 @@ impl SessionStore for RedisSessionStore {
             .map_err(Into::into)
             .map_err(SaveError::Serialization)?;
         let session_key = generate_session_key();
-        let cache_key = (self.configuration.cache_keygen)(session_key.as_ref());
+        let cache_key = (self.configuration.cache_keygen)(session_key.as_ref().expose_secret());
 
         self.execute_command(redis::cmd("SET").arg(&[
             &cache_key,
@@ -186,7 +187,7 @@ impl SessionStore for RedisSessionStore {
             .map_err(Into::into)
             .map_err(UpdateError::Serialization)?;
 
-        let cache_key = (self.configuration.cache_keygen)(session_key.as_ref());
+        let cache_key = (self.configuration.cache_keygen)(session_key.as_ref().expose_secret());
 
         let v: redis::Value = self
             .execute_command(redis::cmd("SET").arg(&[
@@ -222,7 +223,7 @@ impl SessionStore for RedisSessionStore {
     }
 
     async fn update_ttl(&self, session_key: &SessionKey, ttl: &Duration) -> Result<(), Error> {
-        let cache_key = (self.configuration.cache_keygen)(session_key.as_ref());
+        let cache_key = (self.configuration.cache_keygen)(session_key.as_ref().expose_secret());
 
         self.client
             .clone()
@@ -237,7 +238,7 @@ impl SessionStore for RedisSessionStore {
     }
 
     async fn delete(&self, session_key: &SessionKey) -> Result<(), anyhow::Error> {
-        let cache_key = (self.configuration.cache_keygen)(session_key.as_ref());
+        let cache_key = (self.configuration.cache_keygen)(session_key.as_ref().expose_secret());
         self.execute_command(redis::cmd("DEL").arg(&[&cache_key]))
             .await
             .map_err(Into::into)
@@ -322,7 +323,10 @@ mod tests {
         store
             .client
             .clone()
-            .set::<_, _, ()>(session_key.as_ref(), "random-thing-which-is-not-json")
+            .set::<_, _, ()>(
+                session_key.as_ref().expose_secret(),
+                "random-thing-which-is-not-json",
+            )
             .await
             .unwrap();
         assert!(matches!(
@@ -335,11 +339,14 @@ mod tests {
     async fn updating_of_an_expired_state_is_handled_gracefully() {
         let store = redis_store().await;
         let session_key = generate_session_key();
-        let initial_session_key = session_key.as_ref().to_owned();
+        let initial_session_key = session_key.as_ref().expose_secret().to_owned();
         let updated_session_key = store
             .update(session_key, HashMap::new(), &time::Duration::seconds(1))
             .await
             .unwrap();
-        assert_ne!(initial_session_key, updated_session_key.as_ref());
+        assert_ne!(
+            &initial_session_key,
+            updated_session_key.as_ref().expose_secret()
+        );
     }
 }

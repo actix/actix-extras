@@ -2,6 +2,7 @@ use std::convert::TryInto;
 
 use actix_web::cookie::time::Duration;
 use anyhow::Error;
+use secrecy::ExposeSecret;
 
 use super::SessionKey;
 use crate::storage::{
@@ -54,7 +55,7 @@ pub struct CookieSessionStore;
 #[async_trait::async_trait(?Send)]
 impl SessionStore for CookieSessionStore {
     async fn load(&self, session_key: &SessionKey) -> Result<Option<SessionState>, LoadError> {
-        serde_json::from_str(session_key.as_ref())
+        serde_json::from_str(session_key.as_ref().expose_secret())
             .map(Some)
             .map_err(anyhow::Error::new)
             .map_err(LoadError::Deserialization)
