@@ -52,6 +52,7 @@ actix-web = "4"
 - `opentelemetry_0_16`: same as above but using `opentelemetry` 0.16;
 - `opentelemetry_0_17`: same as above but using `opentelemetry` 0.17;
 - `opentelemetry_0_18`: same as above but using `opentelemetry` 0.18;
+- `opentelemetry_0_19`: same as above but using `opentelemetry` 0.19;
 - `emit_event_on_error`: emit a [`tracing`] event when request processing fails with an error (enabled by default).
 
 ## Quickstart

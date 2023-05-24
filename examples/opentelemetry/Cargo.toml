@@ -9,9 +9,9 @@ license = "MIT/Apache-2.0"
 [dependencies]
 actix-web = "4"
 tracing = "0.1.19"
-opentelemetry = { version = "0.17", features = ["rt-tokio-current-thread"] }
-opentelemetry-jaeger = { version = "0.16", features = ["rt-tokio-current-thread"] }
-tracing-opentelemetry = { version = "0.17" }
+opentelemetry = { version = "0.19", features = ["rt-tokio-current-thread"] }
+opentelemetry-jaeger = { version = "0.18", features = ["rt-tokio-current-thread"] }
+tracing-opentelemetry = { version = "0.19" }
 tracing-subscriber = { version = "0.3", features = ["registry", "env-filter"] }
 tracing-bunyan-formatter = "0.3"
-tracing-actix-web = { path = "../..", features = ["opentelemetry_0_17"] }
+tracing-actix-web = { path = "../..", features = ["opentelemetry_0_19"] }

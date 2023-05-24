@@ -3,7 +3,7 @@ members = [".", "examples/opentelemetry", "examples/custom-root-span"]
 
 [package]
 name = "tracing-actix-web"
-version = "0.7.4"
+version = "0.7.5"
 authors = ["Luca Palmieri <rust@lpalmieri.com>"]
 edition = "2018"
 
@@ -26,6 +26,7 @@ opentelemetry_0_15 = ["opentelemetry_0_15_pkg", "tracing-opentelemetry_0_14_pkg"
 opentelemetry_0_16 = ["opentelemetry_0_16_pkg", "tracing-opentelemetry_0_16_pkg"]
 opentelemetry_0_17 = ["opentelemetry_0_17_pkg", "tracing-opentelemetry_0_17_pkg"]
 opentelemetry_0_18 = ["opentelemetry_0_18_pkg", "tracing-opentelemetry_0_18_pkg"]
+opentelemetry_0_19 = ["opentelemetry_0_19_pkg", "tracing-opentelemetry_0_19_pkg"]
 emit_event_on_error = []
 
 [dependencies]
@@ -39,12 +40,14 @@ opentelemetry_0_15_pkg = { package = "opentelemetry", version = "0.15", optional
 opentelemetry_0_16_pkg = { package = "opentelemetry", version = "0.16", optional = true }
 opentelemetry_0_17_pkg = { package = "opentelemetry", version = "0.17", optional = true }
 opentelemetry_0_18_pkg = { package = "opentelemetry", version = "0.18", optional = true }
+opentelemetry_0_19_pkg = { package = "opentelemetry", version = "0.19", optional = true }
 tracing-opentelemetry_0_12_pkg = { package = "tracing-opentelemetry",version = "0.12", optional = true }
 tracing-opentelemetry_0_13_pkg = { package = "tracing-opentelemetry", version = "0.13", optional = true }
 tracing-opentelemetry_0_14_pkg = { package = "tracing-opentelemetry",version = "0.14", optional = true }
 tracing-opentelemetry_0_16_pkg = { package = "tracing-opentelemetry",version = "0.16", optional = true }
 tracing-opentelemetry_0_17_pkg = { package = "tracing-opentelemetry",version = "0.17", optional = true }
 tracing-opentelemetry_0_18_pkg = { package = "tracing-opentelemetry",version = "0.18", optional = true }
+tracing-opentelemetry_0_19_pkg = { package = "tracing-opentelemetry",version = "0.19", optional = true }
 
 [dev-dependencies]
 actix-web = { version = "4", default-features = false, features = ["macros"] }

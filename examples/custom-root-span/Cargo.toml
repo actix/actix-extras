@@ -8,9 +8,9 @@ edition = "2018"
 
 [dependencies]
 actix-web = "4"
-opentelemetry = { version = "0.17", features = ["rt-tokio-current-thread"] }
-opentelemetry-jaeger = { version = "0.16", features = ["rt-tokio-current-thread"] }
-tracing-opentelemetry = { version = "0.17" }
+opentelemetry = { version = "0.19", features = ["rt-tokio-current-thread"] }
+opentelemetry-jaeger = { version = "0.18", features = ["rt-tokio-current-thread"] }
+tracing-opentelemetry = { version = "0.19" }
 tracing = "0.1.19"
 tracing-subscriber = { version = "0.3", features = ["registry", "env-filter"] }
 tracing-bunyan-formatter = "0.3"
