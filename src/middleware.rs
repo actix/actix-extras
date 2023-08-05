@@ -119,7 +119,7 @@ where
     fn new_transform(&self, service: S) -> Self::Future {
         ready(Ok(TracingLoggerMiddleware {
             service,
-            root_span_builder: std::marker::PhantomData::default(),
+            root_span_builder: std::marker::PhantomData,
         }))
     }
 }
