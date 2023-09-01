@@ -11,6 +11,11 @@ members = [
     "actix-web-httpauth",
 ]
 
+# TODO(MSRV 1.64)
+# [workspace.package]
+# edition = "2018"
+# rust-version = "1.60"
+
 [patch.crates-io]
 actix-cors = { path = "./actix-cors" }
 actix-identity = { path = "./actix-identity" }

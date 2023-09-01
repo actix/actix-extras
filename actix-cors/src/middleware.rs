@@ -149,7 +149,6 @@ impl<S> CorsMiddleware<S> {
                 let expose_all_request_headers = res
                     .headers()
                     .keys()
-                    .into_iter()
                     .map(|name| name.as_str())
                     .collect::<HashSet<_>>();
 

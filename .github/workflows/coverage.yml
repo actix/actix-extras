@@ -1,10 +1,13 @@
-# disabled because `cargo tarpaulin` currently segfaults
-
 name: Coverage
 
 on:
-  push:
-    branches: [master]
+  push: { branches: [master] }
+
+permissions: { contents: read }
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   coverage:
@@ -20,20 +23,15 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install stable
-        run: |
-          rustup override set stable
-          rustup update stable
-
-      - name: Generate Cargo.lock
-        run: cargo generate-lockfile
-      - name: Cache Dependencies
-        uses: Swatinem/rust-cache@v2.1.0
+      - name: Install Rust (nightly)
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with: { toolchain: nightly }
 
       - name: Generate coverage file
         run: |
           cargo install cargo-tarpaulin --vers "^0.13"
           cargo tarpaulin --workspace --out Xml --verbose
+
       - name: Upload to Codecov
         uses: codecov/codecov-action@v3
         with: { file: cobertura.xml }

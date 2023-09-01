@@ -5,9 +5,14 @@ authors = [
     "Joey Ezechiels <joey.ezechiels@gmail.com>",
     "Rob Ede <robjtede@icloud.com>",
 ]
-edition = "2018"
 description = "Easily manage Actix Web's settings from a TOML file and environment variables"
 license = "MIT OR Apache-2.0"
+edition = "2018"
+rust-version = "1.60"
+
+[package.metadata.docs.rs]
+rustdoc-args = ["--cfg", "docsrs"]
+all-features = true
 
 [dependencies]
 actix-http = "3"
@@ -21,4 +26,4 @@ serde = { version = "1", features = ["derive"] }
 toml = "0.5"
 
 [dev-dependencies]
-env_logger = "0.9"
+env_logger = "0.10"

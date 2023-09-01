@@ -8,8 +8,8 @@
 //!
 //! # Crate Features
 //! - `draft-private-network-access`: ⚠️ Unstable. Adds opt-in support for the [Private Network
-//!   Access] spec extensions. This feature is unstable since it will follow any breaking changes in
-//!   the draft spec until it is finalized.
+//!   Access] spec extensions. This feature is unstable since it will follow breaking changes in the
+//!   draft spec until it is finalized.
 //!
 //! # Example
 //! ```no_run
@@ -53,7 +53,7 @@
 #![warn(future_incompatible, missing_docs, missing_debug_implementations)]
 #![doc(html_logo_url = "https://actix.rs/img/logo.png")]
 #![doc(html_favicon_url = "https://actix.rs/favicon.ico")]
-#![cfg_attr(docsrs, feature(doc_cfg))]
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
 
 mod all_or_some;
 mod builder;

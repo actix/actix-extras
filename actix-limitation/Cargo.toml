@@ -11,6 +11,11 @@ categories = ["asynchronous", "web-programming"]
 repository = "https://github.com/actix/actix-extras.git"
 license = "MIT OR Apache-2.0"
 edition = "2018"
+rust-version = "1.60"
+
+[package.metadata.docs.rs]
+rustdoc-args = ["--cfg", "docsrs"]
+all-features = true
 
 [features]
 default = ["session"]
@@ -21,9 +26,9 @@ actix-utils = "3"
 actix-web = { version = "4", features = ["cookies"] }
 
 chrono = "0.4"
-derive_more = "0.99.5"
+derive_more = "0.99.7"
 log = "0.4"
-redis = { version = "0.21", default-features = false, features = ["tokio-comp"] }
+redis = { version = "0.22", default-features = false, features = ["tokio-comp"] }
 time = "0.3"
 
 # session

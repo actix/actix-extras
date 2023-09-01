@@ -4,6 +4,7 @@ use actix_web::{
     http::header::{HeaderValue, InvalidHeaderValue, TryIntoHeaderValue},
     web::{BufMut, BytesMut},
 };
+use base64::{prelude::BASE64_STANDARD, Engine};
 
 use crate::headers::authorization::{errors::ParseError, Scheme};
 
@@ -58,7 +59,7 @@ impl Scheme for Basic {
             _ => return Err(ParseError::MissingScheme),
         }
 
-        let decoded = base64::decode(parts.next().ok_or(ParseError::Invalid)?)?;
+        let decoded = BASE64_STANDARD.decode(parts.next().ok_or(ParseError::Invalid)?)?;
         let mut credentials = str::from_utf8(&decoded)?.splitn(2, ':');
 
         let user_id = credentials
@@ -97,11 +98,13 @@ impl TryIntoHeaderValue for Basic {
     type Error = InvalidHeaderValue;
 
     fn try_into_value(self) -> Result<HeaderValue, Self::Error> {
-        let mut credentials = BytesMut::with_capacity(
-            self.user_id.len()
-                + 1 // ':'
-                + self.password.as_ref().map_or(0, |pwd| pwd.len()),
-        );
+        let credential_length =
+            self.user_id.len() + 1 + self.password.as_ref().map_or(0, |pwd| pwd.len());
+        // The length of BASE64 encoded bytes is `4 * credential_length.div_ceil(3)`
+        // TODO: Use credential_length.div_ceil(3) when `int_roundings` becomes stable
+        // https://github.com/rust-lang/rust/issues/88581
+        let mut value = String::with_capacity(6 + 4 * (credential_length + 2) / 3);
+        let mut credentials = BytesMut::with_capacity(credential_length);
 
         credentials.extend_from_slice(self.user_id.as_bytes());
         credentials.put_u8(b':');
@@ -109,14 +112,10 @@ impl TryIntoHeaderValue for Basic {
             credentials.extend_from_slice(password.as_bytes());
         }
 
-        // TODO: It would be nice not to allocate new `String`  here but write
-        // directly to `value`
-        let encoded = base64::encode(&credentials);
-        let mut value = BytesMut::with_capacity(6 + encoded.len());
-        value.put(&b"Basic "[..]);
-        value.put(encoded.as_bytes());
+        value.push_str("Basic ");
+        BASE64_STANDARD.encode_string(&credentials, &mut value);
 
-        HeaderValue::from_maybe_shared(value.freeze())
+        HeaderValue::from_maybe_shared(value)
     }
 }
 

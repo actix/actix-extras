@@ -6,9 +6,13 @@ use actix_web::{
     http::StatusCode,
     Error, FromRequest, HttpMessage, HttpRequest, HttpResponse,
 };
-use anyhow::{anyhow, Context};
 
-use crate::config::LogoutBehaviour;
+use crate::{
+    config::LogoutBehaviour,
+    error::{
+        GetIdentityError, LoginError, LostIdentityError, MissingIdentityError, SessionExpiryError,
+    },
+};
 
 /// A verified user identity. It can be used as a request extractor.
 ///
@@ -95,13 +99,10 @@ impl IdentityInner {
     }
 
     /// Retrieve the user id attached to the current session.
-    fn get_identity(&self) -> Result<String, anyhow::Error> {
+    fn get_identity(&self) -> Result<String, GetIdentityError> {
         self.session
-            .get::<String>(ID_KEY)
-            .context("Failed to deserialize the user identifier attached to the current session")?
-            .ok_or_else(|| {
-                anyhow!("There is no identity information attached to the current session")
-            })
+            .get::<String>(ID_KEY)?
+            .ok_or_else(|| MissingIdentityError.into())
     }
 }
 
@@ -126,10 +127,11 @@ impl Identity {
     ///     }
     /// }
     /// ```
-    pub fn id(&self) -> Result<String, anyhow::Error> {
-        self.0.session.get(ID_KEY)?.ok_or_else(|| {
-            anyhow!("Bug: the identity information attached to the current session has disappeared")
-        })
+    pub fn id(&self) -> Result<String, GetIdentityError> {
+        self.0
+            .session
+            .get(ID_KEY)?
+            .ok_or_else(|| LostIdentityError.into())
     }
 
     /// Attach a valid user identity to the current session.
@@ -149,7 +151,7 @@ impl Identity {
     ///     HttpResponse::Ok()
     /// }
     /// ```
-    pub fn login(ext: &Extensions, id: String) -> Result<Self, anyhow::Error> {
+    pub fn login(ext: &Extensions, id: String) -> Result<Self, LoginError> {
         let inner = IdentityInner::extract(ext);
         inner.session.insert(ID_KEY, id)?;
         let now = OffsetDateTime::now_utc().unix_timestamp();
@@ -200,31 +202,33 @@ impl Identity {
         }
     }
 
-    pub(crate) fn extract(ext: &Extensions) -> Result<Self, anyhow::Error> {
+    pub(crate) fn extract(ext: &Extensions) -> Result<Self, GetIdentityError> {
         let inner = IdentityInner::extract(ext);
         inner.get_identity()?;
         Ok(Self(inner))
     }
 
-    pub(crate) fn logged_at(&self) -> Result<Option<OffsetDateTime>, anyhow::Error> {
-        self.0
+    pub(crate) fn logged_at(&self) -> Result<Option<OffsetDateTime>, GetIdentityError> {
+        Ok(self
+            .0
             .session
             .get(LOGIN_UNIX_TIMESTAMP_KEY)?
             .map(OffsetDateTime::from_unix_timestamp)
             .transpose()
-            .map_err(anyhow::Error::from)
+            .map_err(SessionExpiryError)?)
     }
 
-    pub(crate) fn last_visited_at(&self) -> Result<Option<OffsetDateTime>, anyhow::Error> {
-        self.0
+    pub(crate) fn last_visited_at(&self) -> Result<Option<OffsetDateTime>, GetIdentityError> {
+        Ok(self
+            .0
             .session
             .get(LAST_VISIT_UNIX_TIMESTAMP_KEY)?
             .map(OffsetDateTime::from_unix_timestamp)
             .transpose()
-            .map_err(anyhow::Error::from)
+            .map_err(SessionExpiryError)?)
     }
 
-    pub(crate) fn set_last_visited_at(&self) -> Result<(), anyhow::Error> {
+    pub(crate) fn set_last_visited_at(&self) -> Result<(), LoginError> {
         let now = OffsetDateTime::now_utc().unix_timestamp();
         self.0.session.insert(LAST_VISIT_UNIX_TIMESTAMP_KEY, now)?;
         Ok(())

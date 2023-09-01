@@ -9,10 +9,11 @@ homepage = "https://actix.rs"
 repository = "https://github.com/actix/actix-extras.git"
 categories = ["network-programming", "asynchronous"]
 edition = "2018"
+rust-version = "1.60"
 
 [package.metadata.docs.rs]
-all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
+all-features = true
 
 [lib]
 name = "actix_redis"
@@ -32,16 +33,16 @@ actix-tls = { version = "3", default-features = false, features = ["connect"] }
 
 log = "0.4.6"
 backoff = "0.4.0"
-derive_more = "0.99.5"
+derive_more = "0.99.7"
 futures-core = { version = "0.3.7", default-features = false }
-redis-async = "0.13"
+redis-async = "0.14"
 time = "0.3"
-tokio = { version = "1.13.1", features = ["sync"] }
+tokio = { version = "1.18.4", features = ["sync"] }
 tokio-util = "0.7"
-actix-web = { version = "4", default_features = false, optional = true }
+actix-web = { version = "4", default-features = false, optional = true }
 
 [dev-dependencies]
 actix-test = "0.1.0-beta.12"
-actix-web = { version = "4", default_features = false, features = ["macros"] }
-env_logger = "0.9"
+actix-web = { version = "4", default-features = false, features = ["macros"] }
+env_logger = "0.10"
 serde = { version = "1.0.101", features = ["derive"] }

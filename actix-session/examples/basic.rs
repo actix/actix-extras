@@ -3,11 +3,11 @@ use actix_web::{cookie::Key, middleware, web, App, Error, HttpRequest, HttpServe
 
 /// simple handler
 async fn index(req: HttpRequest, session: Session) -> Result<impl Responder, Error> {
-    println!("{:?}", req);
+    println!("{req:?}");
 
     // session
     if let Some(count) = session.get::<i32>("counter")? {
-        println!("SESSION value: {}", count);
+        println!("SESSION value: {count}");
         session.insert("counter", count + 1)?;
     } else {
         session.insert("counter", 1)?;

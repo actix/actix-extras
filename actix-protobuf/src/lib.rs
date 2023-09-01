@@ -39,15 +39,15 @@ pub enum ProtoBufPayloadError {
     ContentType,
 
     /// Serialize error
-    #[display(fmt = "ProtoBuf serialize error: {}", _0)]
+    #[display(fmt = "ProtoBuf serialize error: {_0}")]
     Serialize(ProtoBufEncodeError),
 
     /// Deserialize error
-    #[display(fmt = "ProtoBuf deserialize error: {}", _0)]
+    #[display(fmt = "ProtoBuf deserialize error: {_0}")]
     Deserialize(ProtoBufDecodeError),
 
     /// Payload error
-    #[display(fmt = "Error that occur during reading payload: {}", _0)]
+    #[display(fmt = "Error that occur during reading payload: {_0}")]
     Payload(PayloadError),
 }
 

@@ -12,16 +12,17 @@ repository = "https://github.com/actix/actix-extras.git"
 categories = ["web-programming::http-server"]
 license = "MIT OR Apache-2.0"
 edition = "2018"
+rust-version = "1.60"
 
-[lib]
-name = "actix_web_httpauth"
-path = "src/lib.rs"
+[package.metadata.docs.rs]
+rustdoc-args = ["--cfg", "docsrs"]
+all-features = true
 
 [dependencies]
 actix-utils = "3"
-actix-web = { version = "4.1", default_features = false }
+actix-web = { version = "4.1", default-features = false }
 
-base64 = "0.13"
+base64 = "0.21"
 futures-core = "0.3.7"
 futures-util = { version = "0.3.7", default-features = false, features = ["std"] }
 log = "0.4"
@@ -30,4 +31,4 @@ pin-project-lite = "0.2.7"
 [dev-dependencies]
 actix-cors = "0.6"
 actix-service = "2"
-actix-web = { version = "4.1", default_features = false, features = ["macros"] }
+actix-web = { version = "4.1", default-features = false, features = ["macros"] }

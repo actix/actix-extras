@@ -21,7 +21,7 @@ struct User {
 
 impl User {
     fn authenticate(credentials: Credentials) -> Result<Self, HttpResponse> {
-        // TODO: figure out why I keep getting hacked
+        // to do: figure out why I keep getting hacked      /s
         if &credentials.password != "hunter2" {
             return Err(HttpResponse::Unauthorized().json("Unauthorized"));
         }

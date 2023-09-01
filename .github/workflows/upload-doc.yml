@@ -1,8 +1,13 @@
 name: Upload Documentation
 
 on:
-  push:
-    branches: [master]
+  push: { branches: [master] }
+
+permissions: { contents: write }
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -11,10 +16,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install Rust
-        run: |
-          rustup override set nightly
-          rustup update nightly
+      - name: Install Rust (nightly)
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with: { toolchain: nightly }
 
       - name: Build Docs
         run: cargo doc --workspace --all-features --no-deps

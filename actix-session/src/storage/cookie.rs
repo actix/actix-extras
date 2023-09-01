@@ -47,7 +47,6 @@ use crate::storage::{
 /// storage backend.
 ///
 /// [`CookieContentSecurity::Private`]: crate::config::CookieContentSecurity::Private
-#[cfg_attr(docsrs, doc(cfg(feature = "cookie-session")))]
 #[derive(Default)]
 #[non_exhaustive]
 pub struct CookieSessionStore;
