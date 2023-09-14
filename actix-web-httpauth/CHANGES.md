@@ -2,8 +2,10 @@
 
 ## Unreleased - 2022-xx-xx
 
-- Implement `From<Basic>` for `BasicAuth`. [#???]
+- Implement `From<Basic>` for `BasicAuth`. [#327]
 - Minimum supported Rust version (MSRV) is now 1.60.
+
+[#327]: https://github.com/actix/actix-extras/pull/327
 
 ## 0.8.0 - 2022-07-21
 
