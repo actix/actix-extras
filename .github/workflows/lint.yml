@@ -34,7 +34,7 @@ jobs:
           components: clippy
 
       - name: Check with Clippy
-        run: cargo clippy --workspace --tests --all-features
+        run: cargo clippy --workspace --tests --all-features -- -A unknown_lints
 
   public-api-diff:
     runs-on: ubuntu-latest

@@ -53,10 +53,10 @@ jobs:
         with:
           tool: cargo-hack
 
-      - name: workaround MSRV issues
-        if: matrix.version != 'stable'
-        run: |
-          cargo update -p=time:0.3.20 --precise=0.3.16
+      # - name: workaround MSRV issues
+      #   if: matrix.version.name == 'msrv'
+      #   run: |
+      #     cargo update -p=time:0.3.20 --precise=0.3.16
 
       - name: check minimal
         run: cargo ci-min
@@ -104,10 +104,10 @@ jobs:
         with:
           tool: cargo-hack
 
-      - name: workaround MSRV issues
-        if: matrix.version != 'stable'
-        run: |
-          cargo update -p=time:0.3.20 --precise=0.3.16
+      # - name: workaround MSRV issues
+      #   if: matrix.version.name == 'msrv'
+      #   run: |
+      #     cargo update -p=time:0.3.20 --precise=0.3.16
 
       - name: check minimal
         run: cargo ci-min

@@ -1,39 +1,39 @@
 # Changes
 
-## Unreleased - 2022-xx-xx
+## Unreleased
 
 - Minimum supported Rust version (MSRV) is now 1.68.
 
-## 0.9.0 - 2022-08-24
+## 0.9.0
 
 - Added `application/x-protobuf` as an acceptable header.
 - Updated `prost` dependency to `0.11`.
 
-## 0.8.0 - 2022-06-25
+## 0.8.0
 
 - Update `prost` dependency to `0.10`.
 - Minimum supported Rust version (MSRV) is now 1.57 due to transitive `time` dependency.
 
-## 0.7.0 - 2022-03-01
+## 0.7.0
 
 - Update `actix-web` dependency to `4`.
 
-## 0.7.0-beta.5 - 2022-02-03
+## 0.7.0-beta.5
 
 - Update `prost` dependency to `0.9`.
 - Update `actix-web` dependency to `4.0.0-rc.1`.
 
-## 0.7.0-beta.4 - 2021-12-29
+## 0.7.0-beta.4
 
 - Minimum supported Rust version (MSRV) is now 1.54.
 
-## 0.7.0-beta.3 - 2021-12-12
+## 0.7.0-beta.3
 
 - Update `actix-web` dependency to `4.0.0.beta-14`. [#209]
 
 [#209]: https://github.com/actix/actix-extras/pull/209
 
-## 0.7.0-beta.2 - 2021-10-21
+## 0.7.0-beta.2
 
 - Bump `prost` version to 0.8. [#197]
 - Update `actix-web` dependency to v4.0.0-beta.10. [#203]
@@ -42,7 +42,7 @@
 [#197]: https://github.com/actix/actix-extras/pull/197
 [#203]: https://github.com/actix/actix-extras/pull/203
 
-## 0.7.0-beta.1 - 2021-06-27
+## 0.7.0-beta.1
 
 - Bump `prost` version to 0.7. [#144]
 - Update `actix-web` dependency to 4.0.0 beta.
@@ -50,12 +50,12 @@
 
 [#144]: https://github.com/actix/actix-extras/pull/144
 
-## 0.6.0 - 2020-09-11
+## 0.6.0
 
 - Update `actix-web` dependency to 3.0.0.
 - Minimum supported Rust version (MSRV) is now 1.42.0 to use `matches!` macro.
 
-## 0.6.0-alpha.1 - 2020-07-06
+## 0.6.0-alpha.1
 
 - Update `actix-web` to 3.0.0-alpha.3
 - Minimum supported Rust version(MSRV) is now 1.40.0.

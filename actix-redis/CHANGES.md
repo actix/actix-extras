@@ -1,18 +1,18 @@
 # Changes
 
-## Unreleased - 2022-xx-xx
+## Unreleased
 
 - Update `redis-async` dependency to `0.14`.
 - Minimum supported Rust version (MSRV) is now 1.68.
 
-## 0.12.0 - 2022-07-09
+## 0.12.0
 
 - Update `actix` dependency to `0.13`.
 - Update `redis-async` dependency to `0.13`.
 - Update `tokio-util` dependency to `0.7`.
 - Minimum supported Rust version (MSRV) is now 1.57 due to transitive `time` dependency.
 
-## 0.11.0 - 2022-03-15
+## 0.11.0
 
 ### Removed
 
@@ -24,22 +24,22 @@
 
 [#212]: https://github.com/actix/actix-extras/pull/212
 
-## 0.10.0 - 2022-03-01
+## 0.10.0
 
 - Update `actix-web` dependency to `4`.
 
-## 0.10.0-beta.6 - 2022-02-07
+## 0.10.0-beta.6
 
 - Update `actix-web` dependency to `4.0.0-rc.1`.
 
-## 0.10.0-beta.5 - 2021-12-29
+## 0.10.0-beta.5
 
 - Update `actix-web` dependency to `4.0.0.beta-18`. [#218]
 - Minimum supported Rust version (MSRV) is now 1.54.
 
 [#218]: https://github.com/actix/actix-extras/pull/218
 
-## 0.10.0-beta.4 - 2021-12-12
+## 0.10.0-beta.4
 
 - A session will be created in Redis if and only if there is some data inside the session state. This reduces the performance impact of `RedisSession` on routes that do not leverage sessions. [#207]
 - Update `actix-web` dependency to `4.0.0.beta-14`. [#209]
@@ -47,23 +47,23 @@
 [#207]: https://github.com/actix/actix-extras/pull/207
 [#209]: https://github.com/actix/actix-extras/pull/209
 
-## 0.10.0-beta.3 - 2021-10-21
+## 0.10.0-beta.3
 
 - Update `actix-web` dependency to v4.0.0-beta.10. [#203]
 - Minimum supported Rust version (MSRV) is now 1.52.
 
 [#203]: https://github.com/actix/actix-extras/pull/203
 
-## 0.10.0-beta.2 - 2021-06-27
+## 0.10.0-beta.2
 
 - No notable changes.
 
-## 0.10.0-beta.1 - 2021-04-02
+## 0.10.0-beta.1
 
 - Update `actix-web` dependency to 4.0.0 beta.
 - Minimum supported Rust version (MSRV) is now 1.46.0.
 
-## 0.9.2 - 2021-03-21
+## 0.9.2
 
 - Implement `std::error::Error` for `Error` [#135]
 - Allow the removal of `Max-Age` for session-only cookies. [#161]
@@ -71,16 +71,16 @@
 [#135]: https://github.com/actix/actix-extras/pull/135
 [#161]: https://github.com/actix/actix-extras/pull/161
 
-## 0.9.1 - 2020-09-12
+## 0.9.1
 
 - Enforce minimum redis-async version of 0.6.3 to workaround breaking patch change.
 
-## 0.9.0 - 2020-09-11
+## 0.9.0
 
 - Update `actix-web` dependency to 3.0.0.
 - Minimize `futures` dependency.
 
-## 0.9.0-alpha.2 - 2020-05-17
+## 0.9.0-alpha.2
 
 - Add `cookie_http_only` functionality to RedisSession builder, setting this
   to false allows JavaScript to access cookies. Defaults to true.
@@ -89,14 +89,14 @@
 - Update `tokio-util` to 0.3
 - Minimum supported Rust version(MSRV) is now 1.40.0.
 
-## 0.9.0-alpha.1 - 2020-03-28
+## 0.9.0-alpha.1
 
 - Update `actix` to 0.10.0-alpha.2
 - Update `actix-session` to 0.4.0-alpha.1
 - Update `actix-web` to 3.0.0-alpha.1
 - Update `time` to 0.2.9
 
-## 0.8.1 - 2020-02-18
+## 0.8.1
 
 - Move `env_logger` dependency to dev-dependencies and update to 0.7
 - Update `actix_web` to 2.0.0 from 2.0.0-rc
