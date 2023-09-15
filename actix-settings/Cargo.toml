@@ -23,7 +23,7 @@ ioe = "0.5"
 once_cell = "1.13"
 regex = "1.5.5"
 serde = { version = "1", features = ["derive"] }
-toml = "0.5"
+toml = "0.8"
 
 [dev-dependencies]
 env_logger = "0.10"
