@@ -69,15 +69,18 @@ impl SessionStore for MockStore {
         _session_state: HashMap<String, String>,
         _ttl: &Duration,
     ) -> Result<SessionKey, UpdateError> {
-        todo!()
+        #![allow(clippy::diverging_sub_expression)]
+        unimplemented!()
     }
 
     async fn update_ttl(&self, _session_key: &SessionKey, _ttl: &Duration) -> Result<(), Error> {
-        todo!()
+        #![allow(clippy::diverging_sub_expression)]
+        unimplemented!()
     }
 
     async fn delete(&self, _session_key: &SessionKey) -> Result<(), Error> {
-        todo!()
+        #![allow(clippy::diverging_sub_expression)]
+        unimplemented!()
     }
 }
 

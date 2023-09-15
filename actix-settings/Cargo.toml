@@ -6,9 +6,9 @@ authors = [
     "Rob Ede <robjtede@icloud.com>",
 ]
 description = "Easily manage Actix Web's settings from a TOML file and environment variables"
-license = "MIT OR Apache-2.0"
-edition = "2018"
-rust-version = "1.60"
+license.workspace = true
+edition.workspace = true
+rust-version.workspace = true
 
 [package.metadata.docs.rs]
 rustdoc-args = ["--cfg", "docsrs"]
