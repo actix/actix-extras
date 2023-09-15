@@ -102,7 +102,7 @@ impl FromRequest for BearerAuth {
                     let bearer = req
                         .app_data::<Config>()
                         .map(|config| config.0.clone())
-                        .unwrap_or_else(Default::default);
+                        .unwrap_or_default();
 
                     AuthenticationError::new(bearer)
                 }),

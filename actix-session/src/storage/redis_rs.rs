@@ -261,6 +261,7 @@ impl RedisSessionStore {
     /// This helper method catches this case (`.is_connection_dropped`) to execute a retry. The
     /// retry will be executed on a fresh connection, therefore it is likely to succeed (or fail for
     /// a different more meaningful reason).
+    #[allow(clippy::needless_pass_by_ref_mut)]
     async fn execute_command<T: FromRedisValue>(&self, cmd: &mut Cmd) -> RedisResult<T> {
         let mut can_retry = true;
 
