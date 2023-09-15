@@ -4,7 +4,7 @@
 
 - Rename `AtError => Error`.
 - Remove `AtResult` type alias.
-- Minimum supported Rust version (MSRV) is now 1.60.
+- Minimum supported Rust version (MSRV) is now 1.68.
 
 ## 0.6.0 - 2022-07-31
 
