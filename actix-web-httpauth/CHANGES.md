@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.8.1
+
 - Implement `From<Basic>` for `BasicAuth`.
 - Minimum supported Rust version (MSRV) is now 1.68.
 
