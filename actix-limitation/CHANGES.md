@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.5.1
+
+- No significant changes since `0.5.0`.
+
 ## 0.5.0
 
 - Update `redis` dependency to `0.23`.

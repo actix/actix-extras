@@ -1,6 +1,6 @@
 [package]
 name = "actix-limitation"
-version = "0.5.0"
+version = "0.5.1"
 authors = [
     "0xmad <0xmad@users.noreply.github.com>",
     "Rob Ede <robjtede@icloud.com>",
