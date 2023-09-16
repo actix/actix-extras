@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.6.0
+
 - Add `error` module.
 - Replace use of `anyhow::Error` in return types with specific error types.
 - Update `actix-session` dependency to `0.8`.

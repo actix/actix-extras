@@ -3,9 +3,9 @@
 > Identity management for Actix Web.
 
 [![crates.io](https://img.shields.io/crates/v/actix-identity?label=latest)](https://crates.io/crates/actix-identity)
-[![Documentation](https://docs.rs/actix-identity/badge.svg?version=0.5.2)](https://docs.rs/actix-identity/0.5.2)
+[![Documentation](https://docs.rs/actix-identity/badge.svg?version=0.6.0)](https://docs.rs/actix-identity/0.6.0)
 ![Apache 2.0 or MIT licensed](https://img.shields.io/crates/l/actix-identity)
-[![Dependency Status](https://deps.rs/crate/actix-identity/0.5.2/status.svg)](https://deps.rs/crate/actix-identity/0.5.2)
+[![Dependency Status](https://deps.rs/crate/actix-identity/0.6.0/status.svg)](https://deps.rs/crate/actix-identity/0.6.0)
 
 ## Documentation & community resources
 
