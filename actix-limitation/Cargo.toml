@@ -1,6 +1,6 @@
 [package]
 name = "actix-limitation"
-version = "0.4.0"
+version = "0.5.1"
 authors = [
     "0xmad <0xmad@users.noreply.github.com>",
     "Rob Ede <robjtede@icloud.com>",
@@ -23,7 +23,7 @@ session = ["actix-session"]
 
 [dependencies]
 actix-utils = "3"
-actix-web = { version = "4", features = ["cookies"] }
+actix-web = { version = "4", default-features = false, features = ["cookies"] }
 
 chrono = "0.4"
 derive_more = "0.99.7"
@@ -32,7 +32,7 @@ redis = { version = "0.23", default-features = false, features = ["tokio-comp"] 
 time = "0.3"
 
 # session
-actix-session = { version = "0.7", optional = true }
+actix-session = { version = "0.8", optional = true }
 
 [dev-dependencies]
 actix-web = "4"

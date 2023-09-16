@@ -1,6 +1,6 @@
 [package]
 name = "actix-web-httpauth"
-version = "0.8.0"
+version = "0.8.1"
 authors = [
     "svartalf <self@svartalf.info>",
     "Yuki Okushi <huyuumi.dev@gmail.com>",
@@ -24,7 +24,7 @@ actix-web = { version = "4.1", default-features = false }
 
 base64 = "0.21"
 futures-core = "0.3.7"
-futures-util = { version = "0.3.7", default-features = false, features = ["std"] }
+futures-util = { version = "0.3.17", default-features = false, features = ["std"] }
 log = "0.4"
 pin-project-lite = "0.2.7"
 

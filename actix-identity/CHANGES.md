@@ -2,10 +2,12 @@
 
 ## Unreleased
 
-- Replace use of `anyhow::Error` with specific error types. [#296]
-- Minimum supported Rust version (MSRV) is now 1.68.
+## 0.6.0
 
-[#296]: https://github.com/actix/actix-extras/pull/296
+- Add `error` module.
+- Replace use of `anyhow::Error` in return types with specific error types.
+- Update `actix-session` dependency to `0.8`.
+- Minimum supported Rust version (MSRV) is now 1.68.
 
 ## 0.5.2
 

@@ -1,6 +1,6 @@
 [package]
 name = "actix-redis"
-version = "0.12.0"
+version = "0.13.0"
 authors = ["Nikolay Kim <fafhrd91@gmail.com>"]
 description = "Actor-based Redis client"
 keywords = ["actix", "redis", "async"]
@@ -35,7 +35,7 @@ log = "0.4.6"
 backoff = "0.4.0"
 derive_more = "0.99.7"
 futures-core = { version = "0.3.7", default-features = false }
-redis-async = "0.14"
+redis-async = "0.16"
 time = "0.3"
 tokio = { version = "1.18.4", features = ["sync"] }
 tokio-util = "0.7"
