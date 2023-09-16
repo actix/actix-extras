@@ -809,6 +809,7 @@
 <a href="#809" id="809">809</a>
 <a href="#810" id="810">810</a>
 <a href="#811" id="811">811</a>
+<a href="#812" id="812">812</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Easily manage Actix Web&#39;s settings from a TOML file and environment variables.
 //!
 //! To get started add a [`Settings::parse_toml(&quot;./Server.toml&quot;)`](Settings::parse_toml) call to the
@@ -980,7 +981,8 @@
     <span class="doccomment">/// Writes the default TOML template to a new file, located at `filepath`.
     ///
     /// # Errors
-    /// Returns a [`FileExists`](crate::AtError::FileExists) error if a file already exists at that
+    ///
+    /// Returns a [`FileExists`](crate::Error::FileExists) error if a file already exists at that
     /// location.
     </span><span class="kw">pub fn </span>write_toml_file&lt;P&gt;(filepath: P) -&gt; AsResult&lt;()&gt;
     <span class="kw">where

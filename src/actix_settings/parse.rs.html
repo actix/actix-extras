@@ -42,7 +42,7 @@
 
 <span class="kw">use </span><span class="kw">crate</span>::Error;
 
-<span class="doccomment">/// A specialized `FromStr` trait that returns [`AtError`] errors
+<span class="doccomment">/// A specialized `FromStr` trait that returns [`Error`] errors
 </span><span class="kw">pub trait </span>Parse: Sized {
     <span class="doccomment">/// Parse `Self` from `string`.
     </span><span class="kw">fn </span>parse(string: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, Error&gt;;
