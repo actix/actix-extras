@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Update `redis` dependency to `0.22`.
+- Update `redis` dependency to `0.23`.
 
 ## 0.4.0
 

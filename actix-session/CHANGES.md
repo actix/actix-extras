@@ -3,7 +3,7 @@
 ## Unreleased
 
 - Set secure attribute when adding a session removal cookie.
-- Update `redis` dependency to `0.22`.
+- Update `redis` dependency to `0.23`.
 - Minimum supported Rust version (MSRV) is now 1.68.
 
 ## 0.7.2
