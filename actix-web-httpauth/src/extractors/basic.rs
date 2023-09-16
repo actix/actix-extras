@@ -89,6 +89,12 @@ impl BasicAuth {
     }
 }
 
+impl From<Basic> for BasicAuth {
+    fn from(basic: Basic) -> Self {
+        Self(basic)
+    }
+}
+
 impl FromRequest for BasicAuth {
     type Future = Ready<Result<Self, Self::Error>>;
     type Error = AuthenticationError<Challenge>;
