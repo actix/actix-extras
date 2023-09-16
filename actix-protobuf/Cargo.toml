@@ -9,9 +9,9 @@ description = "Protobuf payload extractor for Actix Web"
 keywords = ["actix", "web", "protobuf", "protocol", "rpc"]
 homepage = "https://actix.rs"
 repository = "https://github.com/actix/actix-extras.git"
-license = "MIT OR Apache-2.0"
-edition = "2018"
-rust-version = "1.60"
+license.workspace = true
+edition.workspace = true
+rust-version.workspace = true
 
 [package.metadata.docs.rs]
 rustdoc-args = ["--cfg", "docsrs"]
@@ -21,8 +21,8 @@ all-features = true
 actix-web = { version = "4", default-features = false }
 derive_more = "0.99.7"
 futures-util = { version = "0.3.7", default-features = false }
-prost = { version = "0.11", default-features = false }
+prost = { version = "0.12", default-features = false }
 
 [dev-dependencies]
 actix-web = { version = "4", default-features = false, features = ["macros"] }
-prost = { version = "0.11", default-features = false, features = ["prost-derive"] }
+prost = { version = "0.12", default-features = false, features = ["prost-derive"] }

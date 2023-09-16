@@ -50,7 +50,7 @@ impl Scheme for Bearer {
         let mut parts = header.to_str()?.splitn(2, ' ');
 
         match parts.next() {
-            Some(scheme) if scheme == "Bearer" => {}
+            Some("Bearer") => {}
             _ => return Err(ParseError::MissingScheme),
         }
 

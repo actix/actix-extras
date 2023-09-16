@@ -169,7 +169,8 @@ where
     /// Writes the default TOML template to a new file, located at `filepath`.
     ///
     /// # Errors
-    /// Returns a [`FileExists`](crate::AtError::FileExists) error if a file already exists at that
+    ///
+    /// Returns a [`FileExists`](crate::Error::FileExists) error if a file already exists at that
     /// location.
     pub fn write_toml_file<P>(filepath: P) -> AsResult<()>
     where

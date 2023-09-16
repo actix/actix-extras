@@ -1,7 +1,8 @@
 name: Coverage
 
 on:
-  push: { branches: [master] }
+  push:
+    branches: [master]
 
 permissions: { contents: read }
 
@@ -21,11 +22,12 @@ jobs:
         options: --entrypoint redis-server
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install Rust (nightly)
-        uses: actions-rust-lang/setup-rust-toolchain@v1
-        with: { toolchain: nightly }
+        uses: actions-rust-lang/setup-rust-toolchain@v1.5.0
+        with:
+          toolchain: nightly
 
       - name: Generate coverage file
         run: |
@@ -34,4 +36,5 @@ jobs:
 
       - name: Upload to Codecov
         uses: codecov/codecov-action@v3
-        with: { file: cobertura.xml }
+        with:
+          file: cobertura.xml

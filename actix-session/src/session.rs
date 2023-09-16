@@ -46,7 +46,7 @@ use serde::{de::DeserializeOwned, Serialize};
 pub struct Session(Rc<RefCell<SessionInner>>);
 
 /// Status of a [`Session`].
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub enum SessionStatus {
     /// Session state has been updated - the changes will have to be persisted to the backend.
     Changed,
@@ -64,13 +64,8 @@ pub enum SessionStatus {
     Renewed,
 
     /// The session state has not been modified since its creation/retrieval.
+    #[default]
     Unchanged,
-}
-
-impl Default for SessionStatus {
-    fn default() -> SessionStatus {
-        SessionStatus::Unchanged
-    }
 }
 
 #[derive(Default)]
@@ -218,6 +213,7 @@ impl Session {
     ///
     /// Values that match keys already existing on the session will be overwritten. Values should
     /// already be JSON serialized.
+    #[allow(clippy::needless_pass_by_ref_mut)]
     pub(crate) fn set_session(
         req: &mut ServiceRequest,
         data: impl IntoIterator<Item = (String, String)>,
@@ -232,6 +228,7 @@ impl Session {
     /// This is a destructive operation - the session state is removed from the request extensions
     /// typemap, leaving behind a new empty map. It should only be used when the session is being
     /// finalised (i.e. in `SessionMiddleware`).
+    #[allow(clippy::needless_pass_by_ref_mut)]
     pub(crate) fn get_changes<B>(
         res: &mut ServiceResponse<B>,
     ) -> (SessionStatus, HashMap<String, String>) {

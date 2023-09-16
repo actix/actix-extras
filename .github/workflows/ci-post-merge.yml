@@ -16,10 +16,8 @@ jobs:
       matrix:
         target:
           - { name: Linux, os: ubuntu-latest, triple: x86_64-unknown-linux-gnu }
-        version:
-          - nightly
 
-    name: ${{ matrix.target.name }} / ${{ matrix.version }}
+    name: ${{ matrix.target.name }} / nightly
     runs-on: ${{ matrix.target.os }}
 
     services:
@@ -30,15 +28,16 @@ jobs:
         options: --entrypoint redis-server
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - name: Install Rust (${{ matrix.version }})
-        uses: actions-rust-lang/setup-rust-toolchain@v1
+      - name: Install Rust (nightly)
+        uses: actions-rust-lang/setup-rust-toolchain@v1.5.0
         with:
-          toolchain: ${{ matrix.version }}
+          toolchain: nightly
 
-      - uses: taiki-e/cache-cargo-install-action@v1
-        with: { tool: cargo-hack }
+      - uses: taiki-e/install-action@v2.18.11
+        with:
+          tool: cargo-hack
 
       - name: check minimal
         run: cargo ci-min
@@ -61,30 +60,26 @@ jobs:
   build_and_test_other_nightly:
     strategy:
       fail-fast: false
+      # prettier-ignore
       matrix:
         target:
           - { name: macOS, os: macos-latest, triple: x86_64-apple-darwin }
-          - {
-              name: Windows,
-              os: windows-latest,
-              triple: x86_64-pc-windows-msvc,
-            }
-        version:
-          - nightly
+          - { name: Windows, os: windows-latest, triple: x86_64-pc-windows-msvc }
 
-    name: ${{ matrix.target.name }} / ${{ matrix.version }}
+    name: ${{ matrix.target.name }} / nightly
     runs-on: ${{ matrix.target.os }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - name: Install Rust (${{ matrix.version }})
-        uses: actions-rust-lang/setup-rust-toolchain@v1
+      - name: Install Rust (nightly)
+        uses: actions-rust-lang/setup-rust-toolchain@v1.5.0
         with:
-          toolchain: ${{ matrix.version }}
+          toolchain: nightly
 
-      - uses: taiki-e/cache-cargo-install-action@v1
-        with: { tool: cargo-hack }
+      - uses: taiki-e/install-action@v2.18.11
+        with:
+          tool: cargo-hack
 
       - name: check minimal
         run: cargo ci-min

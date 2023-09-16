@@ -6,9 +6,9 @@ authors = [
     "Rob Ede <robjtede@icloud.com>",
 ]
 description = "Easily manage Actix Web's settings from a TOML file and environment variables"
-license = "MIT OR Apache-2.0"
-edition = "2018"
-rust-version = "1.60"
+license.workspace = true
+edition.workspace = true
+rust-version.workspace = true
 
 [package.metadata.docs.rs]
 rustdoc-args = ["--cfg", "docsrs"]
@@ -18,12 +18,11 @@ all-features = true
 actix-http = "3"
 actix-service = "2"
 actix-web = "4"
-
-ioe = "0.5"
+derive_more = "0.99.7"
 once_cell = "1.13"
 regex = "1.5.5"
 serde = { version = "1", features = ["derive"] }
-toml = "0.5"
+toml = "0.8"
 
 [dev-dependencies]
 env_logger = "0.10"

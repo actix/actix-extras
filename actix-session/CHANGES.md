@@ -1,25 +1,25 @@
 # Changes
 
-## Unreleased - 2021-xx-xx
+## Unreleased
 
 - Set secure attribute when adding a session removal cookie.
-- Update `redis` dependency to `0.22`.
-- Minimum supported Rust version (MSRV) is now 1.60.
+- Update `redis` dependency to `0.23`.
+- Minimum supported Rust version (MSRV) is now 1.68.
 
-## 0.7.2 - 2022-09-11
+## 0.7.2
 
 - Set SameSite attribute when adding a session removal cookie. [#284]
 - Minimum supported Rust version (MSRV) is now 1.59 due to transitive `time` dependency.
 
 [#284]: https://github.com/actix/actix-extras/pull/284
 
-## 0.7.1 - 2022-07-24
+## 0.7.1
 
 - Fix interaction between session state changes and renewal. [#265]
 
 [#265]: https://github.com/actix/actix-extras/pull/265
 
-## 0.7.0 - 2022-07-09
+## 0.7.0
 
 - Added `TtlExtensionPolicy` enum to support different strategies for extending the TTL attached to the session state. `TtlExtensionPolicy::OnEveryRequest` now allows for long-lived sessions that do not expire if the user remains active. [#233]
 - `SessionLength` is now called `SessionLifecycle`. [#233]
@@ -36,7 +36,7 @@
 
 [#233]: https://github.com/actix/actix-extras/pull/233
 
-## 0.6.2 - 2022-03-25
+## 0.6.2
 
 - Implement `SessionExt` for `GuardContext`. [#234]
 - `RedisSessionStore` will prevent connection timeouts from causing user-visible errors. [#235]
@@ -46,11 +46,11 @@
 [#236]: https://github.com/actix/actix-extras/pull/236
 [#235]: https://github.com/actix/actix-extras/pull/235
 
-## 0.6.1 - 2022-03-21
+## 0.6.1
 
 - No significant changes since `0.6.0`.
 
-## 0.6.0 - 2022-03-15
+## 0.6.0
 
 ### Added
 
@@ -72,28 +72,28 @@
 
 [#212]: https://github.com/actix/actix-extras/pull/212
 
-## 0.5.0 - 2022-03-01
+## 0.5.0
 
 - Update `actix-web` dependency to `4`.
 
-## 0.5.0-beta.8 - 2022-02-07
+## 0.5.0-beta.8
 
 - Update `actix-web` dependency to `4.0.0-rc.1`.
 
-## 0.5.0-beta.7 - 2021-12-29
+## 0.5.0-beta.7
 
 - Update `actix-web` dependency to `4.0.0.beta-18`. [#218]
 - Minimum supported Rust version (MSRV) is now 1.54.
 
 [#218]: https://github.com/actix/actix-extras/pull/218
 
-## 0.5.0-beta.6 - 2021-12-18
+## 0.5.0-beta.6
 
 - Update `actix-web` dependency to `4.0.0.beta-15`. [#216]
 
 [#216]: https://github.com/actix/actix-extras/pull/216
 
-## 0.5.0-beta.5 - 2021-12-12
+## 0.5.0-beta.5
 
 - Update `actix-web` dependency to `4.0.0.beta-14`. [#209]
 - Remove `UserSession` implementation for `RequestHead`. [#209]
@@ -102,11 +102,11 @@
 [#207]: https://github.com/actix/actix-extras/pull/207
 [#209]: https://github.com/actix/actix-extras/pull/209
 
-## 0.5.0-beta.4 - 2021-11-22
+## 0.5.0-beta.4
 
 - No significant changes since `0.5.0-beta.3`.
 
-## 0.5.0-beta.3 - 2021-10-21
+## 0.5.0-beta.3
 
 - Impl `Clone` for `CookieSession`. [#201]
 - Update `actix-web` dependency to v4.0.0-beta.10. [#203]
@@ -115,11 +115,11 @@
 [#201]: https://github.com/actix/actix-extras/pull/201
 [#203]: https://github.com/actix/actix-extras/pull/203
 
-## 0.5.0-beta.2 - 2021-06-27
+## 0.5.0-beta.2
 
 - No notable changes.
 
-## 0.5.0-beta.1 - 2021-04-02
+## 0.5.0-beta.1
 
 - Add `Session::entries`. [#170]
 - Rename `Session::{set => insert}` to match standard hash map naming. [#170]
@@ -132,7 +132,7 @@
 
 [#170]: https://github.com/actix/actix-extras/pull/170
 
-## 0.4.1 - 2021-03-21
+## 0.4.1
 
 - `Session::set_session` takes a `IntoIterator` instead of `Iterator`. [#105]
 - Fix calls to `session.purge()` from paths other than the one specified in the cookie. [#129]
@@ -140,12 +140,12 @@
 [#105]: https://github.com/actix/actix-extras/pull/105
 [#129]: https://github.com/actix/actix-extras/pull/129
 
-## 0.4.0 - 2020-09-11
+## 0.4.0
 
 - Update `actix-web` dependency to 3.0.0.
 - Minimum supported Rust version (MSRV) is now 1.42.0.
 
-## 0.4.0-alpha.1 - 2020-03-14
+## 0.4.0-alpha.1
 
 - Update the `time` dependency to 0.2.7
 - Update the `actix-web` dependency to 3.0.0-alpha.1

@@ -55,7 +55,7 @@ impl Scheme for Basic {
 
         let mut parts = header.to_str()?.splitn(2, ' ');
         match parts.next() {
-            Some(scheme) if scheme == "Basic" => (),
+            Some("Basic") => (),
             _ => return Err(ParseError::MissingScheme),
         }
 
