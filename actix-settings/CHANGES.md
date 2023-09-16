@@ -5,6 +5,10 @@
 - Rename `AtError => Error`.
 - Remove `AtResult` type alias.
 - Update `toml` dependency to `0.8`.
+- Remove `ioe` dependency; `std::io::Error` is now used directly.
+- Remove `Clone` implementation for `Error`.
+- Implement `Display` for `Error`.
+- Implement std's `Error` for `Error`.
 - Minimum supported Rust version (MSRV) is now 1.68.
 
 ## 0.6.0
