@@ -27,7 +27,7 @@ opentelemetry_0_16 = ["opentelemetry_0_16_pkg", "tracing-opentelemetry_0_16_pkg"
 opentelemetry_0_17 = ["opentelemetry_0_17_pkg", "tracing-opentelemetry_0_17_pkg"]
 opentelemetry_0_18 = ["opentelemetry_0_18_pkg", "tracing-opentelemetry_0_18_pkg"]
 opentelemetry_0_19 = ["opentelemetry_0_19_pkg", "tracing-opentelemetry_0_19_pkg"]
-opentelemetry_0_20 = ["opentelemetry_0_20_pkg", "tracing-opentelemetry_0_20_pkg"]
+opentelemetry_0_20 = ["opentelemetry_0_20_pkg", "tracing-opentelemetry_0_21_pkg"]
 emit_event_on_error = []
 
 [dependencies]
@@ -50,7 +50,7 @@ tracing-opentelemetry_0_16_pkg = { package = "tracing-opentelemetry",version = "
 tracing-opentelemetry_0_17_pkg = { package = "tracing-opentelemetry",version = "0.17", optional = true }
 tracing-opentelemetry_0_18_pkg = { package = "tracing-opentelemetry",version = "0.18", optional = true }
 tracing-opentelemetry_0_19_pkg = { package = "tracing-opentelemetry",version = "0.19", optional = true }
-tracing-opentelemetry_0_20_pkg = { package = "tracing-opentelemetry",version = "0.20", optional = true }
+tracing-opentelemetry_0_21_pkg = { package = "tracing-opentelemetry",version = "0.21", optional = true }
 
 [dev-dependencies]
 actix-web = { version = "4", default-features = false, features = ["macros"] }

@@ -32,7 +32,7 @@ use tracing_opentelemetry_0_18_pkg as tracing_opentelemetry;
 #[cfg(feature = "opentelemetry_0_19")]
 use tracing_opentelemetry_0_19_pkg as tracing_opentelemetry;
 #[cfg(feature = "opentelemetry_0_20")]
-use tracing_opentelemetry_0_20_pkg as tracing_opentelemetry;
+use tracing_opentelemetry_0_21_pkg as tracing_opentelemetry;
 
 use opentelemetry::propagation::Extractor;
 
