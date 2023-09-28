@@ -49,7 +49,7 @@ jobs:
           toolchain: ${{ matrix.version.version }}
 
       - name: Install cargo-hack
-        uses: taiki-e/install-action@v2.18.17
+        uses: taiki-e/install-action@v2.19.1
         with:
           tool: cargo-hack
 
@@ -100,7 +100,7 @@ jobs:
           toolchain: ${{ matrix.version.version }}
 
       - name: Install cargo-hack
-        uses: taiki-e/install-action@v2.18.17
+        uses: taiki-e/install-action@v2.19.1
         with:
           tool: cargo-hack
 
