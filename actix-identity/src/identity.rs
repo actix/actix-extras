@@ -158,7 +158,9 @@ impl Identity {
             inner.session.insert(inner.login_unix_timestamp_key, now)?;
         }
         if inner.is_visit_deadline_enabled {
-            inner.session.insert(inner.last_visit_unix_timestamp_key, now)?;
+            inner
+                .session
+                .insert(inner.last_visit_unix_timestamp_key, now)?;
         }
         inner.session.renew();
         Ok(Self(inner))
@@ -229,7 +231,9 @@ impl Identity {
 
     pub(crate) fn set_last_visited_at(&self) -> Result<(), LoginError> {
         let now = OffsetDateTime::now_utc().unix_timestamp();
-        self.0.session.insert(self.0.last_visit_unix_timestamp_key, now)?;
+        self.0
+            .session
+            .insert(self.0.last_visit_unix_timestamp_key, now)?;
         Ok(())
     }
 }

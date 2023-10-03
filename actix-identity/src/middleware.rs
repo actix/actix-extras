@@ -116,7 +116,7 @@ where
                 is_visit_deadline_enabled: configuration.visit_deadline.is_some(),
                 id_key: configuration.id_key,
                 last_visit_unix_timestamp_key: configuration.last_visit_unix_timestamp_key,
-                login_unix_timestamp_key: configuration.login_unix_timestamp_key
+                login_unix_timestamp_key: configuration.login_unix_timestamp_key,
             };
             req.extensions_mut().insert(identity_inner);
             enforce_policies(&req, &configuration);
