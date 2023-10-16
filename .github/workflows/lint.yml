@@ -53,7 +53,7 @@ jobs:
           toolchain: nightly
 
       - name: Install cargo-public-api
-        uses: taiki-e/cache-cargo-install-action@v1.2.2
+        uses: taiki-e/cache-cargo-install-action@v1.3.0
         with:
           tool: cargo-public-api
 
