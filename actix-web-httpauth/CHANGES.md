@@ -1,10 +1,13 @@
 # Changes
 
-## Unreleased - 2022-xx-xx
+## Unreleased
 
-- Minimum supported Rust version (MSRV) is now 1.60.
+## 0.8.1
 
-## 0.8.0 - 2022-07-21
+- Implement `From<Basic>` for `BasicAuth`.
+- Minimum supported Rust version (MSRV) is now 1.68.
+
+## 0.8.0
 
 - Removed `AuthExtractor` trait; implement `FromRequest` for your custom auth types. [#264]
 - `BasicAuth::user_id()` now returns `&str`. [#249]
@@ -16,74 +19,74 @@
 [#249]: https://github.com/actix/actix-extras/pull/249
 [#264]: https://github.com/actix/actix-extras/pull/264
 
-## 0.7.0 - 2022-07-19
+## 0.7.0
 
 - Auth validator functions now need to return `(Error, ServiceRequest)` in error cases. [#260]
 - Minimum supported Rust version (MSRV) is now 1.57 due to transitive `time` dependency.
 
 [#260]: https://github.com/actix/actix-extras/pull/260
 
-## 0.6.0 - 2022-03-01
+## 0.6.0
 
 - Update `actix-web` dependency to `4`.
 
-## 0.6.0-beta.8 - 2022-02-07
+## 0.6.0-beta.8
 
 - Relax body type bounds on middleware impl. [#223]
 - Update `actix-web` dependency to `4.0.0-rc.1`.
 
 [#223]: https://github.com/actix/actix-extras/pull/223
 
-## 0.6.0-beta.7 - 2021-12-29
+## 0.6.0-beta.7
 
 - Minimum supported Rust version (MSRV) is now 1.54.
 
-## 0.6.0-beta.6 - 2021-12-18
+## 0.6.0-beta.6
 
 - Update `actix-web` dependency to `4.0.0.beta-15`. [#216]
 
 [#216]: https://github.com/actix/actix-extras/pull/216
 
-## 0.6.0-beta.5 - 2021-12-12
+## 0.6.0-beta.5
 
 - Update `actix-web` dependency to `4.0.0.beta-14`. [#209]
 
 [#209]: https://github.com/actix/actix-extras/pull/209
 
-## 0.6.0-beta.4 - 2021-11-22
+## 0.6.0-beta.4
 
 - impl `AuthExtractor` trait for `Option<T: AuthExtractor>` and `Result<T: AuthExtractor, T::Error>`. [#205]
 
 [#205]: https://github.com/actix/actix-extras/pull/205
 
-## 0.6.0-beta.3 - 2021-10-21
+## 0.6.0-beta.3
 
 - Update `actix-web` dependency to v4.0.0-beta.10. [#203]
 - Minimum supported Rust version (MSRV) is now 1.52.
 
 [#203]: https://github.com/actix/actix-extras/pull/203
 
-## 0.6.0-beta.2 - 2021-06-27
+## 0.6.0-beta.2
 
 - No notable changes.
 
-## 0.6.0-beta.1 - 2021-04-02
+## 0.6.0-beta.1
 
 - Update `actix-web` dependency to 4.0.0 beta.
 - Minimum supported Rust version (MSRV) is now 1.46.0.
 
-## 0.5.1 - 2021-03-21
+## 0.5.1
 
 - Correct error handling when extracting auth details from request. [#128]
 
 [#128]: https://github.com/actix/actix-extras/pull/128
 
-## 0.5.0 - 2020-09-11
+## 0.5.0
 
 - Update `actix-web` dependency to 3.0.0.
 - Minimum supported Rust version (MSRV) is now 1.42.0.
 
-## 0.4.2 - 2020-07-08
+## 0.4.2
 
 - Update the `base64` dependency to 0.12
 - AuthenticationError's status code is preserved when converting to a ResponseError
@@ -92,11 +95,11 @@
 
 [#69]: https://github.com/actix/actix-web-httpauth/pull/69
 
-## 0.4.1 - 2020-02-19
+## 0.4.1
 
 - Move repository to actix-extras
 
-## 0.4.0 - 2020-01-14
+## 0.4.0
 
 - Depends on `actix-web = "^2.0"`, `actix-service = "^1.0"`, and `futures = "^0.3"` version now ([#14])
 - Depends on `bytes = "^0.5"` and `base64 = "^0.11"` now

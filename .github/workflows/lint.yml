@@ -12,10 +12,10 @@ jobs:
   fmt:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install Rust (nightly)
-        uses: actions-rust-lang/setup-rust-toolchain@v1
+        uses: actions-rust-lang/setup-rust-toolchain@v1.5.0
         with:
           toolchain: nightly
           components: rustfmt
@@ -26,33 +26,36 @@ jobs:
   clippy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install Rust
-        uses: actions-rust-lang/setup-rust-toolchain@v1
-        with: { components: clippy }
+        uses: actions-rust-lang/setup-rust-toolchain@v1.5.0
+        with:
+          components: clippy
 
       - name: Check with Clippy
-        run: cargo clippy --workspace --tests --all-features
+        run: cargo clippy --workspace --tests --all-features -- -A unknown_lints
 
   public-api-diff:
     runs-on: ubuntu-latest
     steps:
       - name: checkout ${{ github.base_ref }}
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.base_ref }}
 
       - name: checkout ${{ github.head_ref }}
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install Rust (nightly)
-        uses: actions-rust-lang/setup-rust-toolchain@v1
-        with: { toolchain: nightly }
+        uses: actions-rust-lang/setup-rust-toolchain@v1.5.0
+        with:
+          toolchain: nightly
 
       - name: Install cargo-public-api
-        uses: taiki-e/cache-cargo-install-action@v1
-        with: { tool: cargo-public-api }
+        uses: taiki-e/cache-cargo-install-action@v1.3.0
+        with:
+          tool: cargo-public-api
 
       - name: generate API diff
         run: |

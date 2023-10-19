@@ -1,8 +1,12 @@
 name: CI
 
 on:
-  pull_request: {}
-  push: { branches: [master] }
+  pull_request:
+    types: [opened, synchronize, reopened]
+  merge_group:
+    types: [checks_requested]
+  push:
+    branches: [master]
 
 permissions: { contents: read }
 
@@ -18,10 +22,10 @@ jobs:
         target:
           - { name: Linux, os: ubuntu-latest, triple: x86_64-unknown-linux-gnu }
         version:
-          - '1.60' # MSRV
-          - stable
+          - { name: msrv, version: 1.68.0 }
+          - { name: stable, version: stable }
 
-    name: ${{ matrix.target.name }} / ${{ matrix.version }}
+    name: ${{ matrix.target.name }} / ${{ matrix.version.name }}
     runs-on: ${{ matrix.target.os }}
 
     services:
@@ -37,21 +41,22 @@ jobs:
           --entrypoint redis-server
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - name: Install Rust (${{ matrix.version }})
-        uses: actions-rust-lang/setup-rust-toolchain@v1
+      - name: Install Rust (${{ matrix.version.name }})
+        uses: actions-rust-lang/setup-rust-toolchain@v1.5.0
         with:
-          toolchain: ${{ matrix.version }}
+          toolchain: ${{ matrix.version.version }}
 
       - name: Install cargo-hack
-        uses: taiki-e/cache-cargo-install-action@v1
-        with: { tool: cargo-hack }
+        uses: taiki-e/install-action@v2.20.3
+        with:
+          tool: cargo-hack
 
-      - name: workaround MSRV issues
-        if: matrix.version != 'stable'
-        run: |
-          cargo update -p=time:0.3.20 --precise=0.3.16
+      # - name: workaround MSRV issues
+      #   if: matrix.version.name == 'msrv'
+      #   run: |
+      #     cargo update -p=time:0.3.20 --precise=0.3.16
 
       - name: check minimal
         run: cargo ci-min
@@ -75,36 +80,34 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # prettier-ignore
         target:
           - { name: macOS, os: macos-latest, triple: x86_64-apple-darwin }
-          - {
-              name: Windows,
-              os: windows-latest,
-              triple: x86_64-pc-windows-msvc,
-            }
+          - { name: Windows, os: windows-latest, triple: x86_64-pc-windows-msvc }
         version:
-          - '1.60' # MSRV
-          - stable
+          - { name: msrv, version: 1.68.0 }
+          - { name: stable, version: stable }
 
-    name: ${{ matrix.target.name }} / ${{ matrix.version }}
+    name: ${{ matrix.target.name }} / ${{ matrix.version.name }}
     runs-on: ${{ matrix.target.os }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - name: Install Rust (${{ matrix.version }})
-        uses: actions-rust-lang/setup-rust-toolchain@v1
+      - name: Install Rust (${{ matrix.version.name }})
+        uses: actions-rust-lang/setup-rust-toolchain@v1.5.0
         with:
-          toolchain: ${{ matrix.version }}
+          toolchain: ${{ matrix.version.version }}
 
       - name: Install cargo-hack
-        uses: taiki-e/cache-cargo-install-action@v1
-        with: { tool: cargo-hack }
+        uses: taiki-e/install-action@v2.20.3
+        with:
+          tool: cargo-hack
 
-      - name: workaround MSRV issues
-        if: matrix.version != 'stable'
-        run: |
-          cargo update -p=time:0.3.20 --precise=0.3.16
+      # - name: workaround MSRV issues
+      #   if: matrix.version.name == 'msrv'
+      #   run: |
+      #     cargo update -p=time:0.3.20 --precise=0.3.16
 
       - name: check minimal
         run: cargo ci-min
@@ -128,11 +131,12 @@ jobs:
     name: doc tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install Rust (nightly)
-        uses: actions-rust-lang/setup-rust-toolchain@v1
-        with: { toolchain: nightly }
+        uses: actions-rust-lang/setup-rust-toolchain@v1.5.0
+        with:
+          toolchain: nightly
 
       - name: doc tests
         timeout-minutes: 40

@@ -9,9 +9,9 @@ description = "Cross-Origin Resource Sharing (CORS) controls for Actix Web"
 keywords = ["actix", "cors", "web", "security", "crossorigin"]
 homepage = "https://actix.rs"
 repository = "https://github.com/actix/actix-extras.git"
-license = "MIT OR Apache-2.0"
-edition = "2018"
-rust-version = "1.60"
+license.workspace = true
+edition.workspace = true
+rust-version.workspace = true
 
 [package.metadata.docs.rs]
 rustdoc-args = ["--cfg", "docsrs"]
@@ -25,10 +25,10 @@ actix-utils = "3"
 actix-web = { version = "4", default-features = false }
 
 derive_more = "0.99.7"
-futures-util = { version = "0.3.7", default-features = false }
+futures-util = { version = "0.3.17", default-features = false, features = ["std"] }
 log = "0.4"
 once_cell = "1"
-smallvec = "1.6.1"
+smallvec = "1"
 
 [dev-dependencies]
 actix-web = { version = "4", default-features = false, features = ["macros"] }

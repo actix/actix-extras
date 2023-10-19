@@ -1,18 +1,22 @@
 use std::{env::VarError, io, num::ParseIntError, path::PathBuf, str::ParseBoolError};
 
+use derive_more::{Display, Error};
 use toml::de::Error as TomlError;
 
 /// Errors that can be returned from methods in this crate.
-#[derive(Debug, Clone)]
+#[derive(Debug, Display, Error)]
 pub enum Error {
     /// Environment variable does not exists or is invalid.
+    #[display(fmt = "Env var error: {_0}")]
     EnvVarError(VarError),
 
     /// File already exists on disk.
-    FileExists(PathBuf),
+    #[display(fmt = "File exists: {}", "_0.display()")]
+    FileExists(#[error(not(source))] PathBuf),
 
     /// Invalid value.
     #[allow(missing_docs)]
+    #[display(fmt = "Expected {expected}, got {got} (@ {file}:{line}:{column})")]
     InvalidValue {
         expected: &'static str,
         got: String,
@@ -22,18 +26,23 @@ pub enum Error {
     },
 
     /// I/O error.
-    IoError(ioe::IoError),
+    #[display(fmt = "")]
+    IoError(io::Error),
 
     /// Value is not a boolean.
+    #[display(fmt = "Failed to parse boolean: {_0}")]
     ParseBoolError(ParseBoolError),
 
     /// Value is not an integer.
+    #[display(fmt = "Failed to parse integer: {_0}")]
     ParseIntError(ParseIntError),
 
     /// Value is not an address.
-    ParseAddressError(String),
+    #[display(fmt = "Failed to parse address: {_0}")]
+    ParseAddressError(#[error(not(source))] String),
 
     /// Error deserializing as TOML.
+    #[display(fmt = "TOML error: {_0}")]
     TomlError(TomlError),
 }
 
@@ -51,12 +60,6 @@ macro_rules! InvalidValue {
 
 impl From<io::Error> for Error {
     fn from(err: io::Error) -> Self {
-        Self::IoError(ioe::IoError::from(err))
-    }
-}
-
-impl From<ioe::IoError> for Error {
-    fn from(err: ioe::IoError) -> Self {
         Self::IoError(err)
     }
 }
@@ -88,48 +91,27 @@ impl From<VarError> for Error {
 impl From<Error> for io::Error {
     fn from(err: Error) -> Self {
         match err {
-            Error::EnvVarError(var_error) => {
-                let msg = format!("Env var error: {var_error}");
-                io::Error::new(io::ErrorKind::InvalidInput, msg)
+            Error::EnvVarError(_) => io::Error::new(io::ErrorKind::InvalidInput, err.to_string()),
+
+            Error::FileExists(_) => io::Error::new(io::ErrorKind::AlreadyExists, err.to_string()),
+
+            Error::InvalidValue { .. } => {
+                io::Error::new(io::ErrorKind::InvalidInput, err.to_string())
             }
 
-            Error::FileExists(path_buf) => {
-                let msg = format!("File exists: {}", path_buf.display());
-                io::Error::new(io::ErrorKind::AlreadyExists, msg)
+            Error::IoError(io_error) => io_error,
+
+            Error::ParseBoolError(_) => {
+                io::Error::new(io::ErrorKind::InvalidInput, err.to_string())
             }
 
-            Error::InvalidValue {
-                expected,
-                ref got,
-                file,
-                line,
-                column,
-            } => {
-                let msg = format!("Expected {expected}, got {got}  (@ {file}:{line}:{column})");
-                io::Error::new(io::ErrorKind::InvalidInput, msg)
+            Error::ParseIntError(_) => io::Error::new(io::ErrorKind::InvalidInput, err.to_string()),
+
+            Error::ParseAddressError(_) => {
+                io::Error::new(io::ErrorKind::InvalidInput, err.to_string())
             }
 
-            Error::IoError(io_error) => io_error.into(),
-
-            Error::ParseBoolError(parse_bool_error) => {
-                let msg = format!("Failed to parse boolean: {parse_bool_error}");
-                io::Error::new(io::ErrorKind::InvalidInput, msg)
-            }
-
-            Error::ParseIntError(parse_int_error) => {
-                let msg = format!("Failed to parse integer: {parse_int_error}");
-                io::Error::new(io::ErrorKind::InvalidInput, msg)
-            }
-
-            Error::ParseAddressError(string) => {
-                let msg = format!("Failed to parse address: {string}");
-                io::Error::new(io::ErrorKind::InvalidInput, msg)
-            }
-
-            Error::TomlError(toml_error) => {
-                let msg = format!("TOML error: {toml_error}");
-                io::Error::new(io::ErrorKind::InvalidInput, msg)
-            }
+            Error::TomlError(_) => io::Error::new(io::ErrorKind::InvalidInput, err.to_string()),
         }
     }
 }
