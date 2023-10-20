@@ -29,6 +29,7 @@ opentelemetry_0_18 = ["opentelemetry_0_18_pkg", "tracing-opentelemetry_0_18_pkg"
 opentelemetry_0_19 = ["opentelemetry_0_19_pkg", "tracing-opentelemetry_0_19_pkg"]
 opentelemetry_0_20 = ["opentelemetry_0_20_pkg", "tracing-opentelemetry_0_21_pkg"]
 emit_event_on_error = []
+uuid_v7 = ["uuid/v7"]
 
 [dependencies]
 actix-web = { version = "4", default-features = false }
