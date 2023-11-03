@@ -2,7 +2,7 @@ use super::AuthenticationError;
 use crate::headers::www_authenticate::Challenge;
 
 /// Trait implemented for types that provides configuration for the authentication
-/// [extractors](super::AuthExtractor).
+/// [extractors](crate::extractors).
 pub trait AuthExtractorConfig {
     /// Associated challenge type.
     type Inner: Challenge;
