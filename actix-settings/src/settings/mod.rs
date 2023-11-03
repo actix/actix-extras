@@ -26,7 +26,7 @@ pub struct ActixSettings {
     /// Marker of intended deployment environment.
     pub mode: Mode,
 
-    /// True if the [`Compress`](actix_web::middleware::Compress) middleware should be enabled.
+    /// True if the `Compress` middleware should be enabled.
     pub enable_compression: bool,
 
     /// True if the [`Logger`](actix_web::middleware::Logger) middleware should be enabled.
