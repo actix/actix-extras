@@ -811,6 +811,16 @@
 <a href="#811" id="811">811</a>
 <a href="#812" id="812">812</a>
 <a href="#813" id="813">813</a>
+<a href="#814" id="814">814</a>
+<a href="#815" id="815">815</a>
+<a href="#816" id="816">816</a>
+<a href="#817" id="817">817</a>
+<a href="#818" id="818">818</a>
+<a href="#819" id="819">819</a>
+<a href="#820" id="820">820</a>
+<a href="#821" id="821">821</a>
+<a href="#822" id="822">822</a>
+<a href="#823" id="823">823</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Easily manage Actix Web&#39;s settings from a TOML file and environment variables.
 //!
 //! To get started add a [`Settings::parse_toml(&quot;./Server.toml&quot;)`](Settings::parse_toml) call to the
@@ -1056,17 +1066,13 @@
 }
 
 <span class="doccomment">/// Extension trait for applying parsed settings to the server object.
-</span><span class="kw">pub trait </span>ApplySettings {
-    <span class="doccomment">/// Apply a [`BasicSettings`] value to `self`.
-    ///
-    /// [`BasicSettings`]: ./struct.BasicSettings.html
+</span><span class="kw">pub trait </span>ApplySettings&lt;S&gt; {
+    <span class="doccomment">/// Apply some settings object value to `self`.
     </span><span class="attr">#[must_use]
-    </span><span class="kw">fn </span>apply_settings&lt;A&gt;(<span class="self">self</span>, settings: <span class="kw-2">&amp;</span>BasicSettings&lt;A&gt;) -&gt; <span class="self">Self
-    </span><span class="kw">where
-        </span>A: de::DeserializeOwned;
+    </span><span class="kw">fn </span>apply_settings(<span class="self">self</span>, settings: <span class="kw-2">&amp;</span>S) -&gt; <span class="self">Self</span>;
 }
 
-<span class="kw">impl</span>&lt;F, I, S, B&gt; ApplySettings <span class="kw">for </span>HttpServer&lt;F, I, S, B&gt;
+<span class="kw">impl</span>&lt;F, I, S, B&gt; ApplySettings&lt;ActixSettings&gt; <span class="kw">for </span>HttpServer&lt;F, I, S, B&gt;
 <span class="kw">where
     </span>F: Fn() -&gt; I + Send + Clone + <span class="lifetime">&#39;static</span>,
     I: IntoServiceFactory&lt;S, Request&gt;,
@@ -1077,51 +1083,48 @@
     S::Future: <span class="lifetime">&#39;static</span>,
     B: MessageBody + <span class="lifetime">&#39;static</span>,
 {
-    <span class="kw">fn </span>apply_settings&lt;A&gt;(<span class="kw-2">mut </span><span class="self">self</span>, settings: <span class="kw-2">&amp;</span>BasicSettings&lt;A&gt;) -&gt; <span class="self">Self
-    </span><span class="kw">where
-        </span>A: de::DeserializeOwned,
-    {
-        <span class="kw">if </span>settings.actix.tls.enabled {
+    <span class="kw">fn </span>apply_settings(<span class="kw-2">mut </span><span class="self">self</span>, settings: <span class="kw-2">&amp;</span>ActixSettings) -&gt; <span class="self">Self </span>{
+        <span class="kw">if </span>settings.tls.enabled {
             <span class="comment">// for Address { host, port } in &amp;settings.actix.hosts {
             //     self = self.bind(format!(&quot;{}:{}&quot;, host, port))
             //         .unwrap(/*TODO*/);
             // }
             </span><span class="macro">todo!</span>(<span class="string">&quot;[ApplySettings] TLS support has not been implemented yet.&quot;</span>);
         } <span class="kw">else </span>{
-            <span class="kw">for </span>Address { host, port } <span class="kw">in </span><span class="kw-2">&amp;</span>settings.actix.hosts {
+            <span class="kw">for </span>Address { host, port } <span class="kw">in </span><span class="kw-2">&amp;</span>settings.hosts {
                 <span class="self">self </span>= <span class="self">self</span>.bind(<span class="macro">format!</span>(<span class="string">&quot;{host}:{port}&quot;</span>))
                     .unwrap(<span class="comment">/*TODO*/</span>);
             }
         }
 
-        <span class="self">self </span>= <span class="kw">match </span>settings.actix.num_workers {
+        <span class="self">self </span>= <span class="kw">match </span>settings.num_workers {
             NumWorkers::Default =&gt; <span class="self">self</span>,
             NumWorkers::Manual(n) =&gt; <span class="self">self</span>.workers(n),
         };
 
-        <span class="self">self </span>= <span class="kw">match </span>settings.actix.backlog {
+        <span class="self">self </span>= <span class="kw">match </span>settings.backlog {
             Backlog::Default =&gt; <span class="self">self</span>,
             Backlog::Manual(n) =&gt; <span class="self">self</span>.backlog(n <span class="kw">as </span>u32),
         };
 
-        <span class="self">self </span>= <span class="kw">match </span>settings.actix.max_connections {
+        <span class="self">self </span>= <span class="kw">match </span>settings.max_connections {
             MaxConnections::Default =&gt; <span class="self">self</span>,
             MaxConnections::Manual(n) =&gt; <span class="self">self</span>.max_connections(n),
         };
 
-        <span class="self">self </span>= <span class="kw">match </span>settings.actix.max_connection_rate {
+        <span class="self">self </span>= <span class="kw">match </span>settings.max_connection_rate {
             MaxConnectionRate::Default =&gt; <span class="self">self</span>,
             MaxConnectionRate::Manual(n) =&gt; <span class="self">self</span>.max_connection_rate(n),
         };
 
-        <span class="self">self </span>= <span class="kw">match </span>settings.actix.keep_alive {
+        <span class="self">self </span>= <span class="kw">match </span>settings.keep_alive {
             KeepAlive::Default =&gt; <span class="self">self</span>,
             KeepAlive::Disabled =&gt; <span class="self">self</span>.keep_alive(ActixKeepAlive::Disabled),
             KeepAlive::Os =&gt; <span class="self">self</span>.keep_alive(ActixKeepAlive::Os),
             KeepAlive::Seconds(n) =&gt; <span class="self">self</span>.keep_alive(Duration::from_secs(n <span class="kw">as </span>u64)),
         };
 
-        <span class="self">self </span>= <span class="kw">match </span>settings.actix.client_timeout {
+        <span class="self">self </span>= <span class="kw">match </span>settings.client_timeout {
             Timeout::Default =&gt; <span class="self">self</span>,
             Timeout::Milliseconds(n) =&gt; {
                 <span class="self">self</span>.client_request_timeout(Duration::from_millis(n <span class="kw">as </span>u64))
@@ -1129,7 +1132,7 @@
             Timeout::Seconds(n) =&gt; <span class="self">self</span>.client_request_timeout(Duration::from_secs(n <span class="kw">as </span>u64)),
         };
 
-        <span class="self">self </span>= <span class="kw">match </span>settings.actix.client_shutdown {
+        <span class="self">self </span>= <span class="kw">match </span>settings.client_shutdown {
             Timeout::Default =&gt; <span class="self">self</span>,
             Timeout::Milliseconds(n) =&gt; {
                 <span class="self">self</span>.client_disconnect_timeout(Duration::from_millis(n <span class="kw">as </span>u64))
@@ -1137,7 +1140,7 @@
             Timeout::Seconds(n) =&gt; <span class="self">self</span>.client_disconnect_timeout(Duration::from_secs(n <span class="kw">as </span>u64)),
         };
 
-        <span class="self">self </span>= <span class="kw">match </span>settings.actix.shutdown_timeout {
+        <span class="self">self </span>= <span class="kw">match </span>settings.shutdown_timeout {
             Timeout::Default =&gt; <span class="self">self</span>,
             Timeout::Milliseconds(<span class="kw">_</span>) =&gt; <span class="self">self</span>.shutdown_timeout(<span class="number">1</span>),
             Timeout::Seconds(n) =&gt; <span class="self">self</span>.shutdown_timeout(n <span class="kw">as </span>u64),
@@ -1145,6 +1148,23 @@
 
         <span class="self">self
     </span>}
+}
+
+<span class="kw">impl</span>&lt;F, I, S, B, A&gt; ApplySettings&lt;BasicSettings&lt;A&gt;&gt; <span class="kw">for </span>HttpServer&lt;F, I, S, B&gt;
+<span class="kw">where
+    </span>F: Fn() -&gt; I + Send + Clone + <span class="lifetime">&#39;static</span>,
+    I: IntoServiceFactory&lt;S, Request&gt;,
+    S: ServiceFactory&lt;Request, Config = AppConfig&gt; + <span class="lifetime">&#39;static</span>,
+    S::Error: Into&lt;WebError&gt; + <span class="lifetime">&#39;static</span>,
+    S::InitError: fmt::Debug,
+    S::Response: Into&lt;Response&lt;B&gt;&gt; + <span class="lifetime">&#39;static</span>,
+    S::Future: <span class="lifetime">&#39;static</span>,
+    B: MessageBody + <span class="lifetime">&#39;static</span>,
+    A: de::DeserializeOwned,
+{
+    <span class="kw">fn </span>apply_settings(<span class="self">self</span>, settings: <span class="kw-2">&amp;</span>BasicSettings&lt;A&gt;) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.apply_settings(<span class="kw-2">&amp;</span>settings.actix)
+    }
 }
 
 <span class="attr">#[cfg(test)]
