@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.7.1
+
+- Fix doc examples.
+
 ## 0.7.0
 
 - The `ApplySettings` trait now includes a type parameter, allowing multiple types to be implemented per configuration target.
