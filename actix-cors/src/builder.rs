@@ -52,13 +52,20 @@ static ALL_METHODS_SET: Lazy<HashSet<Method>> = Lazy::new(|| {
 /// The alternative [`Cors::permissive()`] constructor is available for local development, allowing
 /// all origins and headers, etc. **The permissive constructor should not be used in production.**
 ///
+/// # Behavior
+///
+/// In all cases, behavior for this crate follows the [Fetch Standard CORS protocol]. See that
+/// document for information on exact semantics for configuration options and combinations.
+///
 /// # Errors
+///
 /// Errors surface in the middleware initialization phase. This means that, if you have logs enabled
 /// in Actix Web (using `env_logger` or other crate that exposes logs from the `log` crate), error
 /// messages will outline what is wrong with the CORS configuration in the server logs and the
 /// server will fail to start up or serve requests.
 ///
 /// # Example
+///
 /// ```
 /// use actix_cors::Cors;
 /// use actix_web::http::header;
@@ -72,6 +79,8 @@ static ALL_METHODS_SET: Lazy<HashSet<Method>> = Lazy::new(|| {
 ///
 /// // `cors` can now be used in `App::wrap`.
 /// ```
+///
+/// [Fetch Standard CORS protocol]: https://fetch.spec.whatwg.org/#http-cors-protocol
 #[derive(Debug)]
 pub struct Cors {
     inner: Rc<Inner>,
@@ -79,7 +88,8 @@ pub struct Cors {
 }
 
 impl Cors {
-    /// A very permissive set of default for quick development. Not recommended for production use.
+    /// Constructs a very permissive set of defaults for quick development. (Not recommended for
+    /// production use.)
     ///
     /// *All* origins, methods, request headers and exposed headers allowed. Credentials supported.
     /// Max age 1 hour. Does not send wildcard.
@@ -124,7 +134,7 @@ impl Cors {
         self
     }
 
-    /// Add an origin that is allowed to make requests.
+    /// Adds an origin that is allowed to make requests.
     ///
     /// This method allows specifying a finite set of origins to verify the value of the `Origin`
     /// request header. These are `origin-or-null` types in the [Fetch Standard].
@@ -177,7 +187,7 @@ impl Cors {
         self
     }
 
-    /// Determinate allowed origins by processing requests which didn't match any origins specified
+    /// Determinates allowed origins by processing requests which didn't match any origins specified
     /// in the `allowed_origin`.
     ///
     /// The function will receive two parameters, the Origin header value, and the `RequestHead` of
@@ -209,14 +219,11 @@ impl Cors {
         self
     }
 
-    /// Set a list of methods which allowed origins can perform.
+    /// Sets a list of methods which allowed origins can perform.
     ///
-    /// These will be sent in the `Access-Control-Allow-Methods` response header as specified in
-    /// the [Fetch Standard CORS protocol].
+    /// These will be sent in the `Access-Control-Allow-Methods` response header.
     ///
     /// This defaults to an empty set.
-    ///
-    /// [Fetch Standard CORS protocol]: https://fetch.spec.whatwg.org/#http-cors-protocol
     pub fn allowed_methods<U, M>(mut self, methods: U) -> Cors
     where
         U: IntoIterator<Item = M>,
@@ -279,16 +286,13 @@ impl Cors {
         self
     }
 
-    /// Set a list of request header field names which can be used when this resource is accessed by
-    /// allowed origins.
+    /// Sets a list of request header field names which can be used when this resource is accessed
+    /// by allowed origins.
     ///
     /// If `All` is set, whatever is requested by the client in `Access-Control-Request-Headers`
-    /// will be echoed back in the `Access-Control-Allow-Headers` header as specified in
-    /// the [Fetch Standard CORS protocol].
+    /// will be echoed back in the `Access-Control-Allow-Headers` header.
     ///
     /// This defaults to an empty set.
-    ///
-    /// [Fetch Standard CORS protocol]: https://fetch.spec.whatwg.org/#http-cors-protocol
     pub fn allowed_headers<U, H>(mut self, headers: U) -> Cors
     where
         U: IntoIterator<Item = H>,
@@ -329,13 +333,11 @@ impl Cors {
         self
     }
 
-    /// Set a list of headers which are safe to expose to the API of a CORS API specification.
-    /// This corresponds to the `Access-Control-Expose-Headers` response header as specified in
-    /// the [Fetch Standard CORS protocol].
+    /// Sets a list of headers which are safe to expose to the API of a CORS API specification.
+    ///
+    /// This corresponds to the `Access-Control-Expose-Headers` response header.
     ///
     /// This defaults to an empty set.
-    ///
-    /// [Fetch Standard CORS protocol]: https://fetch.spec.whatwg.org/#http-cors-protocol
     pub fn expose_headers<U, H>(mut self, headers: U) -> Cors
     where
         U: IntoIterator<Item = H>,
@@ -364,12 +366,11 @@ impl Cors {
         self
     }
 
-    /// Set a maximum time (in seconds) for which this CORS request may be cached. This value is set
-    /// as the `Access-Control-Max-Age` header as specified in the [Fetch Standard CORS protocol].
+    /// Sets a maximum time (in seconds) for which this CORS request may be cached.
+    ///
+    /// This value is set as the `Access-Control-Max-Age` header.
     ///
     /// Pass a number (of seconds) or use None to disable sending max age header.
-    ///
-    /// [Fetch Standard CORS protocol]: https://fetch.spec.whatwg.org/#http-cors-protocol
     pub fn max_age(mut self, max_age: impl Into<Option<usize>>) -> Cors {
         if let Some(cors) = cors(&mut self.inner, &self.error) {
             cors.max_age = max_age.into();
@@ -378,17 +379,17 @@ impl Cors {
         self
     }
 
-    /// Set to use wildcard origins.
+    /// Configures use of wildcard (`*`) origin in responses when appropriate.
     ///
     /// If send wildcard is set and the `allowed_origins` parameter is `All`, a wildcard
     /// `Access-Control-Allow-Origin` response header is sent, rather than the request’s
     /// `Origin` header.
     ///
-    /// This **CANNOT** be used in conjunction with `allowed_origins` set to `All` and
-    /// `allow_credentials` set to `true`. Depending on the mode of usage, this will either result
-    /// in an `CorsError::CredentialsWithWildcardOrigin` error during actix launch or runtime.
+    /// This option **CANNOT** be used in conjunction with a [credential
+    /// supported](Self::supports_credentials()) configuration. Doing so will result in an error
+    /// during server startup.
     ///
-    /// Defaults to `false`.
+    /// Defaults to disabled.
     pub fn send_wildcard(mut self) -> Cors {
         if let Some(cors) = cors(&mut self.inner, &self.error) {
             cors.send_wildcard = true;
@@ -397,21 +398,16 @@ impl Cors {
         self
     }
 
-    /// Allows users to make authenticated requests
+    /// Allows users to make authenticated requests.
     ///
     /// If true, injects the `Access-Control-Allow-Credentials` header in responses. This allows
-    /// cookies and credentials to be submitted across domains as specified in
-    /// the [Fetch Standard CORS protocol].
+    /// cookies and credentials to be submitted across domains.
     ///
-    /// This option cannot be used in conjunction with an `allowed_origin` set to `All` and
-    /// `send_wildcards` set to `true`.
+    /// This option **CANNOT** be used in conjunction with option cannot be used in conjunction
+    /// with [wildcard origins](Self::send_wildcard()) configured. Doing so will result in an error
+    /// during server startup.
     ///
-    /// Defaults to `false`.
-    ///
-    /// A server initialization error will occur if credentials are allowed, but the Origin is set
-    /// to send wildcards (`*`); this is not allowed by the CORS protocol.
-    ///
-    /// [Fetch Standard CORS protocol]: https://fetch.spec.whatwg.org/#http-cors-protocol
+    /// Defaults to disabled.
     pub fn supports_credentials(mut self) -> Cors {
         if let Some(cors) = cors(&mut self.inner, &self.error) {
             cors.supports_credentials = true;
@@ -439,7 +435,7 @@ impl Cors {
         self
     }
 
-    /// Disable `Vary` header support.
+    /// Disables `Vary` header support.
     ///
     /// When enabled the header `Vary: Origin` will be returned as per the Fetch Standard
     /// implementation guidelines.
@@ -457,12 +453,12 @@ impl Cors {
         self
     }
 
-    /// Disable support for preflight requests.
+    /// Disables preflight request handling.
     ///
-    /// When enabled CORS middleware automatically handles `OPTIONS` requests.
-    /// This is useful for application level middleware.
+    /// When enabled CORS middleware automatically handles `OPTIONS` requests. This is useful for
+    /// application level middleware.
     ///
-    /// By default *preflight* support is enabled.
+    /// By default, preflight support is enabled.
     pub fn disable_preflight(mut self) -> Cors {
         if let Some(cors) = cors(&mut self.inner, &self.error) {
             cors.preflight = false;
@@ -480,7 +476,7 @@ impl Cors {
     /// and block requests based on pre-flight requests. Use this setting to allow cURL and other
     /// non-browser HTTP clients to function as normal, no matter what `Origin` the request has.
     ///
-    /// Defaults to `true`.
+    /// Defaults to true.
     pub fn block_on_origin_mismatch(mut self, block: bool) -> Cors {
         if let Some(cors) = cors(&mut self.inner, &self.error) {
             cors.block_on_origin_mismatch = block;
