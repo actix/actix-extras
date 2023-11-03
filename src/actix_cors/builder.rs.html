@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `actix-cors/src/builder.rs`."><title>builder.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="actix_cors" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0-nightly (608e9682f 2023-10-29)" data-channel="nightly" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="icon" href="https://actix.rs/favicon.ico"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../actix_cors/index.html"><img src="https://actix.rs/img/logo.png" alt="actix_cors"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `actix-cors/src/builder.rs`."><title>builder.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="actix_cors" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0-nightly (a2f5f9691 2023-11-02)" data-channel="nightly" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="icon" href="https://actix.rs/favicon.ico"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../actix_cors/index.html"><img src="https://actix.rs/img/logo.png" alt="actix_cors"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -678,10 +678,6 @@
 <a href="#678" id="678">678</a>
 <a href="#679" id="679">679</a>
 <a href="#680" id="680">680</a>
-<a href="#681" id="681">681</a>
-<a href="#682" id="682">682</a>
-<a href="#683" id="683">683</a>
-<a href="#684" id="684">684</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{collections::HashSet, convert::TryInto, iter::FromIterator, rc::Rc};
 
 <span class="kw">use </span>actix_utils::future::{<span class="self">self</span>, Ready};
@@ -736,13 +732,20 @@
 /// The alternative [`Cors::permissive()`] constructor is available for local development, allowing
 /// all origins and headers, etc. **The permissive constructor should not be used in production.**
 ///
+/// # Behavior
+///
+/// In all cases, behavior for this crate follows the [Fetch Standard CORS protocol]. See that
+/// document for information on exact semantics for configuration options and combinations.
+///
 /// # Errors
+///
 /// Errors surface in the middleware initialization phase. This means that, if you have logs enabled
 /// in Actix Web (using `env_logger` or other crate that exposes logs from the `log` crate), error
 /// messages will outline what is wrong with the CORS configuration in the server logs and the
 /// server will fail to start up or serve requests.
 ///
 /// # Example
+///
 /// ```
 /// use actix_cors::Cors;
 /// use actix_web::http::header;
@@ -756,6 +759,8 @@
 ///
 /// // `cors` can now be used in `App::wrap`.
 /// ```
+///
+/// [Fetch Standard CORS protocol]: https://fetch.spec.whatwg.org/#http-cors-protocol
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>Cors {
     inner: Rc&lt;Inner&gt;,
@@ -763,7 +768,8 @@
 }
 
 <span class="kw">impl </span>Cors {
-    <span class="doccomment">/// A very permissive set of default for quick development. Not recommended for production use.
+    <span class="doccomment">/// Constructs a very permissive set of defaults for quick development. (Not recommended for
+    /// production use.)
     ///
     /// *All* origins, methods, request headers and exposed headers allowed. Credentials supported.
     /// Max age 1 hour. Does not send wildcard.
@@ -808,7 +814,7 @@
         <span class="self">self
     </span>}
 
-    <span class="doccomment">/// Add an origin that is allowed to make requests.
+    <span class="doccomment">/// Adds an origin that is allowed to make requests.
     ///
     /// This method allows specifying a finite set of origins to verify the value of the `Origin`
     /// request header. These are `origin-or-null` types in the [Fetch Standard].
@@ -861,7 +867,7 @@
         <span class="self">self
     </span>}
 
-    <span class="doccomment">/// Determinate allowed origins by processing requests which didn&#39;t match any origins specified
+    <span class="doccomment">/// Determinates allowed origins by processing requests which didn&#39;t match any origins specified
     /// in the `allowed_origin`.
     ///
     /// The function will receive two parameters, the Origin header value, and the `RequestHead` of
@@ -893,14 +899,11 @@
         <span class="self">self
     </span>}
 
-    <span class="doccomment">/// Set a list of methods which allowed origins can perform.
+    <span class="doccomment">/// Sets a list of methods which allowed origins can perform.
     ///
-    /// These will be sent in the `Access-Control-Allow-Methods` response header as specified in
-    /// the [Fetch Standard CORS protocol].
+    /// These will be sent in the `Access-Control-Allow-Methods` response header.
     ///
     /// This defaults to an empty set.
-    ///
-    /// [Fetch Standard CORS protocol]: https://fetch.spec.whatwg.org/#http-cors-protocol
     </span><span class="kw">pub fn </span>allowed_methods&lt;U, M&gt;(<span class="kw-2">mut </span><span class="self">self</span>, methods: U) -&gt; Cors
     <span class="kw">where
         </span>U: IntoIterator&lt;Item = M&gt;,
@@ -963,16 +966,13 @@
         <span class="self">self
     </span>}
 
-    <span class="doccomment">/// Set a list of request header field names which can be used when this resource is accessed by
-    /// allowed origins.
+    <span class="doccomment">/// Sets a list of request header field names which can be used when this resource is accessed
+    /// by allowed origins.
     ///
     /// If `All` is set, whatever is requested by the client in `Access-Control-Request-Headers`
-    /// will be echoed back in the `Access-Control-Allow-Headers` header as specified in
-    /// the [Fetch Standard CORS protocol].
+    /// will be echoed back in the `Access-Control-Allow-Headers` header.
     ///
     /// This defaults to an empty set.
-    ///
-    /// [Fetch Standard CORS protocol]: https://fetch.spec.whatwg.org/#http-cors-protocol
     </span><span class="kw">pub fn </span>allowed_headers&lt;U, H&gt;(<span class="kw-2">mut </span><span class="self">self</span>, headers: U) -&gt; Cors
     <span class="kw">where
         </span>U: IntoIterator&lt;Item = H&gt;,
@@ -1013,13 +1013,11 @@
         <span class="self">self
     </span>}
 
-    <span class="doccomment">/// Set a list of headers which are safe to expose to the API of a CORS API specification.
-    /// This corresponds to the `Access-Control-Expose-Headers` response header as specified in
-    /// the [Fetch Standard CORS protocol].
+    <span class="doccomment">/// Sets a list of headers which are safe to expose to the API of a CORS API specification.
+    ///
+    /// This corresponds to the `Access-Control-Expose-Headers` response header.
     ///
     /// This defaults to an empty set.
-    ///
-    /// [Fetch Standard CORS protocol]: https://fetch.spec.whatwg.org/#http-cors-protocol
     </span><span class="kw">pub fn </span>expose_headers&lt;U, H&gt;(<span class="kw-2">mut </span><span class="self">self</span>, headers: U) -&gt; Cors
     <span class="kw">where
         </span>U: IntoIterator&lt;Item = H&gt;,
@@ -1048,12 +1046,11 @@
         <span class="self">self
     </span>}
 
-    <span class="doccomment">/// Set a maximum time (in seconds) for which this CORS request may be cached. This value is set
-    /// as the `Access-Control-Max-Age` header as specified in the [Fetch Standard CORS protocol].
+    <span class="doccomment">/// Sets a maximum time (in seconds) for which this CORS request may be cached.
+    ///
+    /// This value is set as the `Access-Control-Max-Age` header.
     ///
     /// Pass a number (of seconds) or use None to disable sending max age header.
-    ///
-    /// [Fetch Standard CORS protocol]: https://fetch.spec.whatwg.org/#http-cors-protocol
     </span><span class="kw">pub fn </span>max_age(<span class="kw-2">mut </span><span class="self">self</span>, max_age: <span class="kw">impl </span>Into&lt;<span class="prelude-ty">Option</span>&lt;usize&gt;&gt;) -&gt; Cors {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(cors) = cors(<span class="kw-2">&amp;mut </span><span class="self">self</span>.inner, <span class="kw-2">&amp;</span><span class="self">self</span>.error) {
             cors.max_age = max_age.into();
@@ -1062,17 +1059,17 @@
         <span class="self">self
     </span>}
 
-    <span class="doccomment">/// Set to use wildcard origins.
+    <span class="doccomment">/// Configures use of wildcard (`*`) origin in responses when appropriate.
     ///
     /// If send wildcard is set and the `allowed_origins` parameter is `All`, a wildcard
     /// `Access-Control-Allow-Origin` response header is sent, rather than the request’s
     /// `Origin` header.
     ///
-    /// This **CANNOT** be used in conjunction with `allowed_origins` set to `All` and
-    /// `allow_credentials` set to `true`. Depending on the mode of usage, this will either result
-    /// in an `CorsError::CredentialsWithWildcardOrigin` error during actix launch or runtime.
+    /// This option **CANNOT** be used in conjunction with a [credential
+    /// supported](Self::supports_credentials()) configuration. Doing so will result in an error
+    /// during server startup.
     ///
-    /// Defaults to `false`.
+    /// Defaults to disabled.
     </span><span class="kw">pub fn </span>send_wildcard(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; Cors {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(cors) = cors(<span class="kw-2">&amp;mut </span><span class="self">self</span>.inner, <span class="kw-2">&amp;</span><span class="self">self</span>.error) {
             cors.send_wildcard = <span class="bool-val">true</span>;
@@ -1081,21 +1078,16 @@
         <span class="self">self
     </span>}
 
-    <span class="doccomment">/// Allows users to make authenticated requests
+    <span class="doccomment">/// Allows users to make authenticated requests.
     ///
     /// If true, injects the `Access-Control-Allow-Credentials` header in responses. This allows
-    /// cookies and credentials to be submitted across domains as specified in
-    /// the [Fetch Standard CORS protocol].
+    /// cookies and credentials to be submitted across domains.
     ///
-    /// This option cannot be used in conjunction with an `allowed_origin` set to `All` and
-    /// `send_wildcards` set to `true`.
+    /// This option **CANNOT** be used in conjunction with option cannot be used in conjunction
+    /// with [wildcard origins](Self::send_wildcard()) configured. Doing so will result in an error
+    /// during server startup.
     ///
-    /// Defaults to `false`.
-    ///
-    /// A server initialization error will occur if credentials are allowed, but the Origin is set
-    /// to send wildcards (`*`); this is not allowed by the CORS protocol.
-    ///
-    /// [Fetch Standard CORS protocol]: https://fetch.spec.whatwg.org/#http-cors-protocol
+    /// Defaults to disabled.
     </span><span class="kw">pub fn </span>supports_credentials(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; Cors {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(cors) = cors(<span class="kw-2">&amp;mut </span><span class="self">self</span>.inner, <span class="kw-2">&amp;</span><span class="self">self</span>.error) {
             cors.supports_credentials = <span class="bool-val">true</span>;
@@ -1123,7 +1115,7 @@
         <span class="self">self
     </span>}
 
-    <span class="doccomment">/// Disable `Vary` header support.
+    <span class="doccomment">/// Disables `Vary` header support.
     ///
     /// When enabled the header `Vary: Origin` will be returned as per the Fetch Standard
     /// implementation guidelines.
@@ -1141,12 +1133,12 @@
         <span class="self">self
     </span>}
 
-    <span class="doccomment">/// Disable support for preflight requests.
+    <span class="doccomment">/// Disables preflight request handling.
     ///
-    /// When enabled CORS middleware automatically handles `OPTIONS` requests.
-    /// This is useful for application level middleware.
+    /// When enabled CORS middleware automatically handles `OPTIONS` requests. This is useful for
+    /// application level middleware.
     ///
-    /// By default *preflight* support is enabled.
+    /// By default, preflight support is enabled.
     </span><span class="kw">pub fn </span>disable_preflight(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; Cors {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(cors) = cors(<span class="kw-2">&amp;mut </span><span class="self">self</span>.inner, <span class="kw-2">&amp;</span><span class="self">self</span>.error) {
             cors.preflight = <span class="bool-val">false</span>;
@@ -1164,7 +1156,7 @@
     /// and block requests based on pre-flight requests. Use this setting to allow cURL and other
     /// non-browser HTTP clients to function as normal, no matter what `Origin` the request has.
     ///
-    /// Defaults to `true`.
+    /// Defaults to true.
     </span><span class="kw">pub fn </span>block_on_origin_mismatch(<span class="kw-2">mut </span><span class="self">self</span>, block: bool) -&gt; Cors {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(cors) = cors(<span class="kw-2">&amp;mut </span><span class="self">self</span>.inner, <span class="kw-2">&amp;</span><span class="self">self</span>.error) {
             cors.block_on_origin_mismatch = block;
