@@ -1,9 +1,11 @@
 name: Upload Documentation
 
 on:
-  push: { branches: [master] }
+  push:
+    branches: [master]
 
-permissions: { contents: write }
+permissions:
+  contents: write
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -18,10 +20,11 @@ jobs:
 
       - name: Install Rust (nightly)
         uses: actions-rust-lang/setup-rust-toolchain@v1.5.0
-        with: { toolchain: nightly }
+        with:
+          toolchain: nightly
 
       - name: Build Docs
-        run: cargo doc --workspace --all-features --no-deps
+        run: cargo doc --no-deps --workspace --all-features
 
       - name: Tweak HTML
         run: echo '<meta http-equiv="refresh" content="0;url=actix_cors/index.html">' > target/doc/index.html
@@ -29,6 +32,5 @@ jobs:
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4.4.3
         with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BRANCH: gh-pages
-          FOLDER: target/doc
+          folder: target/doc
+          branch: gh-pages
