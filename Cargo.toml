@@ -9,6 +9,7 @@ members = [
     "actix-session",
     "actix-settings",
     "actix-web-httpauth",
+    "actix-ws",
 ]
 
 [workspace.package]

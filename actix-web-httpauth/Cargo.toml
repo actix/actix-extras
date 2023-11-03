@@ -1,15 +1,15 @@
 [package]
 name = "actix-web-httpauth"
 version = "0.8.1"
+description = "HTTP authentication schemes for Actix Web"
+categories = ["web-programming"]
+keywords = ["http", "web", "framework", "authentication", "security"]
 authors = [
     "svartalf <self@svartalf.info>",
     "Yuki Okushi <huyuumi.dev@gmail.com>",
 ]
-description = "HTTP authentication schemes for Actix Web"
-keywords = ["http", "web", "framework", "authentication", "security"]
 homepage = "https://actix.rs"
-repository = "https://github.com/actix/actix-extras.git"
-categories = ["web-programming::http-server"]
+repository = "https://github.com/actix/actix-extras"
 license.workspace = true
 edition.workspace = true
 rust-version.workspace = true
