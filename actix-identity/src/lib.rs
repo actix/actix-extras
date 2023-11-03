@@ -89,6 +89,9 @@
 #![forbid(unsafe_code)]
 #![deny(rust_2018_idioms, nonstandard_style, missing_docs)]
 #![warn(future_incompatible)]
+#![doc(html_logo_url = "https://actix.rs/img/logo.png")]
+#![doc(html_favicon_url = "https://actix.rs/favicon.ico")]
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
 
 pub mod config;
 pub mod error;

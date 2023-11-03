@@ -65,6 +65,7 @@
 #![warn(future_incompatible, missing_docs, missing_debug_implementations)]
 #![doc(html_logo_url = "https://actix.rs/img/logo.png")]
 #![doc(html_favicon_url = "https://actix.rs/favicon.ico")]
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
 
 use std::{
     env, fmt,
