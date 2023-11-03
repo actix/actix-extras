@@ -177,6 +177,7 @@
 <a href="#177" id="177">177</a>
 <a href="#178" id="178">178</a>
 <a href="#179" id="179">179</a>
+<a href="#180" id="180">180</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Rate limiter using a fixed window counter for arbitrary keys, backed by Redis for Actix Web.
 //!
 //! ```toml
@@ -228,6 +229,7 @@
 #![warn(future_incompatible, missing_docs, missing_debug_implementations)]
 #![doc(html_logo_url = <span class="string">&quot;https://actix.rs/img/logo.png&quot;</span>)]
 #![doc(html_favicon_url = <span class="string">&quot;https://actix.rs/favicon.ico&quot;</span>)]
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
 
 </span><span class="kw">use </span>std::{borrow::Cow, fmt, sync::Arc, time::Duration};
 
