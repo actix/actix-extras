@@ -1,0 +1,3 @@
+(function() {var implementors = {
+"actix_ws":[["impl Stream for <a class=\"struct\" href=\"actix_ws/struct.StreamingBody.html\" title=\"struct actix_ws::StreamingBody\">StreamingBody</a>"],["impl Stream for <a class=\"struct\" href=\"actix_ws/struct.MessageStream.html\" title=\"struct actix_ws::MessageStream\">MessageStream</a>"]]
+};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
