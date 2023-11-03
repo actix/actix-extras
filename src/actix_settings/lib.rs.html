@@ -818,9 +818,6 @@
 <a href="#818" id="818">818</a>
 <a href="#819" id="819">819</a>
 <a href="#820" id="820">820</a>
-<a href="#821" id="821">821</a>
-<a href="#822" id="822">822</a>
-<a href="#823" id="823">823</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Easily manage Actix Web&#39;s settings from a TOML file and environment variables.
 //!
 //! To get started add a [`Settings::parse_toml(&quot;./Server.toml&quot;)`](Settings::parse_toml) call to the
@@ -978,14 +975,11 @@
     }
 
     <span class="doccomment">/// Parse an instance of `Self` straight from the default TOML template.
-    </span><span class="comment">// TODO: make infallible
-    // TODO: consider &quot;template&quot; rename
-    </span><span class="kw">pub fn </span>from_default_template() -&gt; AsResult&lt;<span class="self">Self</span>&gt; {
-        <span class="self">Self</span>::from_template(<span class="self">Self</span>::DEFAULT_TOML_TEMPLATE)
+    </span><span class="kw">pub fn </span>from_default_template() -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::from_template(<span class="self">Self</span>::DEFAULT_TOML_TEMPLATE).unwrap()
     }
 
     <span class="doccomment">/// Parse an instance of `Self` straight from the default TOML template.
-    </span><span class="comment">// TODO: consider &quot;template&quot; rename
     </span><span class="kw">pub fn </span>from_template(template: <span class="kw-2">&amp;</span>str) -&gt; AsResult&lt;<span class="self">Self</span>&gt; {
         <span class="prelude-val">Ok</span>(toml::from_str(template)<span class="question-mark">?</span>)
     }
@@ -1089,7 +1083,7 @@
             //     self = self.bind(format!(&quot;{}:{}&quot;, host, port))
             //         .unwrap(/*TODO*/);
             // }
-            </span><span class="macro">todo!</span>(<span class="string">&quot;[ApplySettings] TLS support has not been implemented yet.&quot;</span>);
+            </span><span class="macro">unimplemented!</span>(<span class="string">&quot;[ApplySettings] TLS support has not been implemented yet.&quot;</span>);
         } <span class="kw">else </span>{
             <span class="kw">for </span>Address { host, port } <span class="kw">in </span><span class="kw-2">&amp;</span>settings.hosts {
                 <span class="self">self </span>= <span class="self">self</span>.bind(<span class="macro">format!</span>(<span class="string">&quot;{host}:{port}&quot;</span>))
@@ -1181,7 +1175,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_hosts() {
-        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template();
 
         <span class="macro">assert_eq!</span>(
             settings.actix.hosts,
@@ -1217,7 +1211,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_with_env_var_hosts() {
-        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template();
 
         <span class="macro">assert_eq!</span>(
             settings.actix.hosts,
@@ -1255,7 +1249,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_mode() {
-        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template();
         <span class="macro">assert_eq!</span>(settings.actix.mode, Mode::Development);
         Settings::override_field(<span class="kw-2">&amp;mut </span>settings.actix.mode, <span class="string">&quot;production&quot;</span>).unwrap();
         <span class="macro">assert_eq!</span>(settings.actix.mode, Mode::Production);
@@ -1263,7 +1257,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_with_env_var_mode() {
-        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template();
         <span class="macro">assert_eq!</span>(settings.actix.mode, Mode::Development);
         std::env::set_var(<span class="string">&quot;OVERRIDE__MODE&quot;</span>, <span class="string">&quot;production&quot;</span>);
         Settings::override_field_with_env_var(<span class="kw-2">&amp;mut </span>settings.actix.mode, <span class="string">&quot;OVERRIDE__MODE&quot;</span>).unwrap();
@@ -1272,7 +1266,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_enable_compression() {
-        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template();
         <span class="macro">assert!</span>(settings.actix.enable_compression);
         Settings::override_field(<span class="kw-2">&amp;mut </span>settings.actix.enable_compression, <span class="string">&quot;false&quot;</span>).unwrap();
         <span class="macro">assert!</span>(!settings.actix.enable_compression);
@@ -1280,7 +1274,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_with_env_var_enable_compression() {
-        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template();
         <span class="macro">assert!</span>(settings.actix.enable_compression);
         std::env::set_var(<span class="string">&quot;OVERRIDE__ENABLE_COMPRESSION&quot;</span>, <span class="string">&quot;false&quot;</span>);
         Settings::override_field_with_env_var(
@@ -1293,7 +1287,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_enable_log() {
-        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template();
         <span class="macro">assert!</span>(settings.actix.enable_log);
         Settings::override_field(<span class="kw-2">&amp;mut </span>settings.actix.enable_log, <span class="string">&quot;false&quot;</span>).unwrap();
         <span class="macro">assert!</span>(!settings.actix.enable_log);
@@ -1301,7 +1295,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_with_env_var_enable_log() {
-        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template();
         <span class="macro">assert!</span>(settings.actix.enable_log);
         std::env::set_var(<span class="string">&quot;OVERRIDE__ENABLE_LOG&quot;</span>, <span class="string">&quot;false&quot;</span>);
         Settings::override_field_with_env_var(
@@ -1314,7 +1308,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_num_workers() {
-        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template();
         <span class="macro">assert_eq!</span>(settings.actix.num_workers, NumWorkers::Default);
         Settings::override_field(<span class="kw-2">&amp;mut </span>settings.actix.num_workers, <span class="string">&quot;42&quot;</span>).unwrap();
         <span class="macro">assert_eq!</span>(settings.actix.num_workers, NumWorkers::Manual(<span class="number">42</span>));
@@ -1322,7 +1316,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_with_env_var_num_workers() {
-        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template();
         <span class="macro">assert_eq!</span>(settings.actix.num_workers, NumWorkers::Default);
         std::env::set_var(<span class="string">&quot;OVERRIDE__NUM_WORKERS&quot;</span>, <span class="string">&quot;42&quot;</span>);
         Settings::override_field_with_env_var(
@@ -1335,7 +1329,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_backlog() {
-        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template();
         <span class="macro">assert_eq!</span>(settings.actix.backlog, Backlog::Default);
         Settings::override_field(<span class="kw-2">&amp;mut </span>settings.actix.backlog, <span class="string">&quot;42&quot;</span>).unwrap();
         <span class="macro">assert_eq!</span>(settings.actix.backlog, Backlog::Manual(<span class="number">42</span>));
@@ -1343,7 +1337,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_with_env_var_backlog() {
-        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template();
         <span class="macro">assert_eq!</span>(settings.actix.backlog, Backlog::Default);
         std::env::set_var(<span class="string">&quot;OVERRIDE__BACKLOG&quot;</span>, <span class="string">&quot;42&quot;</span>);
         Settings::override_field_with_env_var(<span class="kw-2">&amp;mut </span>settings.actix.backlog, <span class="string">&quot;OVERRIDE__BACKLOG&quot;</span>)
@@ -1353,7 +1347,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_max_connections() {
-        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template();
         <span class="macro">assert_eq!</span>(settings.actix.max_connections, MaxConnections::Default);
         Settings::override_field(<span class="kw-2">&amp;mut </span>settings.actix.max_connections, <span class="string">&quot;42&quot;</span>).unwrap();
         <span class="macro">assert_eq!</span>(settings.actix.max_connections, MaxConnections::Manual(<span class="number">42</span>));
@@ -1361,7 +1355,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_with_env_var_max_connections() {
-        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template();
         <span class="macro">assert_eq!</span>(settings.actix.max_connections, MaxConnections::Default);
         std::env::set_var(<span class="string">&quot;OVERRIDE__MAX_CONNECTIONS&quot;</span>, <span class="string">&quot;42&quot;</span>);
         Settings::override_field_with_env_var(
@@ -1374,7 +1368,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_max_connection_rate() {
-        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template();
         <span class="macro">assert_eq!</span>(
             settings.actix.max_connection_rate,
             MaxConnectionRate::Default
@@ -1388,7 +1382,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_with_env_var_max_connection_rate() {
-        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template();
         <span class="macro">assert_eq!</span>(
             settings.actix.max_connection_rate,
             MaxConnectionRate::Default
@@ -1407,7 +1401,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_keep_alive() {
-        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template();
         <span class="macro">assert_eq!</span>(settings.actix.keep_alive, KeepAlive::Default);
         Settings::override_field(<span class="kw-2">&amp;mut </span>settings.actix.keep_alive, <span class="string">&quot;42 seconds&quot;</span>).unwrap();
         <span class="macro">assert_eq!</span>(settings.actix.keep_alive, KeepAlive::Seconds(<span class="number">42</span>));
@@ -1415,7 +1409,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_with_env_var_keep_alive() {
-        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template();
         <span class="macro">assert_eq!</span>(settings.actix.keep_alive, KeepAlive::Default);
         std::env::set_var(<span class="string">&quot;OVERRIDE__KEEP_ALIVE&quot;</span>, <span class="string">&quot;42 seconds&quot;</span>);
         Settings::override_field_with_env_var(
@@ -1428,7 +1422,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_client_timeout() {
-        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template();
         <span class="macro">assert_eq!</span>(settings.actix.client_timeout, Timeout::Default);
         Settings::override_field(<span class="kw-2">&amp;mut </span>settings.actix.client_timeout, <span class="string">&quot;42 seconds&quot;</span>).unwrap();
         <span class="macro">assert_eq!</span>(settings.actix.client_timeout, Timeout::Seconds(<span class="number">42</span>));
@@ -1436,7 +1430,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_with_env_var_client_timeout() {
-        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template();
         <span class="macro">assert_eq!</span>(settings.actix.client_timeout, Timeout::Default);
         std::env::set_var(<span class="string">&quot;OVERRIDE__CLIENT_TIMEOUT&quot;</span>, <span class="string">&quot;42 seconds&quot;</span>);
         Settings::override_field_with_env_var(
@@ -1449,7 +1443,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_client_shutdown() {
-        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template();
         <span class="macro">assert_eq!</span>(settings.actix.client_shutdown, Timeout::Default);
         Settings::override_field(<span class="kw-2">&amp;mut </span>settings.actix.client_shutdown, <span class="string">&quot;42 seconds&quot;</span>).unwrap();
         <span class="macro">assert_eq!</span>(settings.actix.client_shutdown, Timeout::Seconds(<span class="number">42</span>));
@@ -1457,7 +1451,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_with_env_var_client_shutdown() {
-        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template();
         <span class="macro">assert_eq!</span>(settings.actix.client_shutdown, Timeout::Default);
         std::env::set_var(<span class="string">&quot;OVERRIDE__CLIENT_SHUTDOWN&quot;</span>, <span class="string">&quot;42 seconds&quot;</span>);
         Settings::override_field_with_env_var(
@@ -1470,7 +1464,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_shutdown_timeout() {
-        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template();
         <span class="macro">assert_eq!</span>(settings.actix.shutdown_timeout, Timeout::Default);
         Settings::override_field(<span class="kw-2">&amp;mut </span>settings.actix.shutdown_timeout, <span class="string">&quot;42 seconds&quot;</span>).unwrap();
         <span class="macro">assert_eq!</span>(settings.actix.shutdown_timeout, Timeout::Seconds(<span class="number">42</span>));
@@ -1478,7 +1472,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_with_env_var_shutdown_timeout() {
-        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template();
         <span class="macro">assert_eq!</span>(settings.actix.shutdown_timeout, Timeout::Default);
         std::env::set_var(<span class="string">&quot;OVERRIDE__SHUTDOWN_TIMEOUT&quot;</span>, <span class="string">&quot;42 seconds&quot;</span>);
         Settings::override_field_with_env_var(
@@ -1491,7 +1485,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_tls_enabled() {
-        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template();
         <span class="macro">assert!</span>(!settings.actix.tls.enabled);
         Settings::override_field(<span class="kw-2">&amp;mut </span>settings.actix.tls.enabled, <span class="string">&quot;true&quot;</span>).unwrap();
         <span class="macro">assert!</span>(settings.actix.tls.enabled);
@@ -1499,7 +1493,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_with_env_var_tls_enabled() {
-        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template();
         <span class="macro">assert!</span>(!settings.actix.tls.enabled);
         std::env::set_var(<span class="string">&quot;OVERRIDE__TLS_ENABLED&quot;</span>, <span class="string">&quot;true&quot;</span>);
         Settings::override_field_with_env_var(
@@ -1512,7 +1506,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_tls_certificate() {
-        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template();
         <span class="macro">assert_eq!</span>(
             settings.actix.tls.certificate,
             Path::new(<span class="string">&quot;path/to/cert/cert.pem&quot;</span>)
@@ -1530,7 +1524,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_with_env_var_tls_certificate() {
-        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template();
         <span class="macro">assert_eq!</span>(
             settings.actix.tls.certificate,
             Path::new(<span class="string">&quot;path/to/cert/cert.pem&quot;</span>)
@@ -1552,7 +1546,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_tls_private_key() {
-        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template();
         <span class="macro">assert_eq!</span>(
             settings.actix.tls.private_key,
             Path::new(<span class="string">&quot;path/to/cert/key.pem&quot;</span>)
@@ -1570,7 +1564,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>override_field_with_env_var_tls_private_key() {
-        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template().unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>settings = Settings::from_default_template();
         <span class="macro">assert_eq!</span>(
             settings.actix.tls.private_key,
             Path::new(<span class="string">&quot;path/to/cert/key.pem&quot;</span>)
