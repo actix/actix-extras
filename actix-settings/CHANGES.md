@@ -4,6 +4,7 @@
 
 - The `ApplySettings` trait now includes a type parameter, allowing multiple types to be implemented per configuration target.
 - Implement `ApplySettings` for `ActixSettings`.
+- `BasicSettings::from_default_template()` is now infallible.
 - Rename `AtError => Error`.
 - Remove `AtResult` type alias.
 - Update `toml` dependency to `0.8`.

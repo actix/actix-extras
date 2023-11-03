@@ -155,14 +155,11 @@ where
     }
 
     /// Parse an instance of `Self` straight from the default TOML template.
-    // TODO: make infallible
-    // TODO: consider "template" rename
-    pub fn from_default_template() -> AsResult<Self> {
-        Self::from_template(Self::DEFAULT_TOML_TEMPLATE)
+    pub fn from_default_template() -> Self {
+        Self::from_template(Self::DEFAULT_TOML_TEMPLATE).unwrap()
     }
 
     /// Parse an instance of `Self` straight from the default TOML template.
-    // TODO: consider "template" rename
     pub fn from_template(template: &str) -> AsResult<Self> {
         Ok(toml::from_str(template)?)
     }
@@ -266,7 +263,7 @@ where
             //     self = self.bind(format!("{}:{}", host, port))
             //         .unwrap(/*TODO*/);
             // }
-            todo!("[ApplySettings] TLS support has not been implemented yet.");
+            unimplemented!("[ApplySettings] TLS support has not been implemented yet.");
         } else {
             for Address { host, port } in &settings.hosts {
                 self = self.bind(format!("{host}:{port}"))
@@ -358,7 +355,7 @@ mod tests {
 
     #[test]
     fn override_field_hosts() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
 
         assert_eq!(
             settings.actix.hosts,
@@ -394,7 +391,7 @@ mod tests {
 
     #[test]
     fn override_field_with_env_var_hosts() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
 
         assert_eq!(
             settings.actix.hosts,
@@ -432,7 +429,7 @@ mod tests {
 
     #[test]
     fn override_field_mode() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert_eq!(settings.actix.mode, Mode::Development);
         Settings::override_field(&mut settings.actix.mode, "production").unwrap();
         assert_eq!(settings.actix.mode, Mode::Production);
@@ -440,7 +437,7 @@ mod tests {
 
     #[test]
     fn override_field_with_env_var_mode() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert_eq!(settings.actix.mode, Mode::Development);
         std::env::set_var("OVERRIDE__MODE", "production");
         Settings::override_field_with_env_var(&mut settings.actix.mode, "OVERRIDE__MODE").unwrap();
@@ -449,7 +446,7 @@ mod tests {
 
     #[test]
     fn override_field_enable_compression() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert!(settings.actix.enable_compression);
         Settings::override_field(&mut settings.actix.enable_compression, "false").unwrap();
         assert!(!settings.actix.enable_compression);
@@ -457,7 +454,7 @@ mod tests {
 
     #[test]
     fn override_field_with_env_var_enable_compression() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert!(settings.actix.enable_compression);
         std::env::set_var("OVERRIDE__ENABLE_COMPRESSION", "false");
         Settings::override_field_with_env_var(
@@ -470,7 +467,7 @@ mod tests {
 
     #[test]
     fn override_field_enable_log() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert!(settings.actix.enable_log);
         Settings::override_field(&mut settings.actix.enable_log, "false").unwrap();
         assert!(!settings.actix.enable_log);
@@ -478,7 +475,7 @@ mod tests {
 
     #[test]
     fn override_field_with_env_var_enable_log() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert!(settings.actix.enable_log);
         std::env::set_var("OVERRIDE__ENABLE_LOG", "false");
         Settings::override_field_with_env_var(
@@ -491,7 +488,7 @@ mod tests {
 
     #[test]
     fn override_field_num_workers() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert_eq!(settings.actix.num_workers, NumWorkers::Default);
         Settings::override_field(&mut settings.actix.num_workers, "42").unwrap();
         assert_eq!(settings.actix.num_workers, NumWorkers::Manual(42));
@@ -499,7 +496,7 @@ mod tests {
 
     #[test]
     fn override_field_with_env_var_num_workers() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert_eq!(settings.actix.num_workers, NumWorkers::Default);
         std::env::set_var("OVERRIDE__NUM_WORKERS", "42");
         Settings::override_field_with_env_var(
@@ -512,7 +509,7 @@ mod tests {
 
     #[test]
     fn override_field_backlog() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert_eq!(settings.actix.backlog, Backlog::Default);
         Settings::override_field(&mut settings.actix.backlog, "42").unwrap();
         assert_eq!(settings.actix.backlog, Backlog::Manual(42));
@@ -520,7 +517,7 @@ mod tests {
 
     #[test]
     fn override_field_with_env_var_backlog() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert_eq!(settings.actix.backlog, Backlog::Default);
         std::env::set_var("OVERRIDE__BACKLOG", "42");
         Settings::override_field_with_env_var(&mut settings.actix.backlog, "OVERRIDE__BACKLOG")
@@ -530,7 +527,7 @@ mod tests {
 
     #[test]
     fn override_field_max_connections() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert_eq!(settings.actix.max_connections, MaxConnections::Default);
         Settings::override_field(&mut settings.actix.max_connections, "42").unwrap();
         assert_eq!(settings.actix.max_connections, MaxConnections::Manual(42));
@@ -538,7 +535,7 @@ mod tests {
 
     #[test]
     fn override_field_with_env_var_max_connections() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert_eq!(settings.actix.max_connections, MaxConnections::Default);
         std::env::set_var("OVERRIDE__MAX_CONNECTIONS", "42");
         Settings::override_field_with_env_var(
@@ -551,7 +548,7 @@ mod tests {
 
     #[test]
     fn override_field_max_connection_rate() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert_eq!(
             settings.actix.max_connection_rate,
             MaxConnectionRate::Default
@@ -565,7 +562,7 @@ mod tests {
 
     #[test]
     fn override_field_with_env_var_max_connection_rate() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert_eq!(
             settings.actix.max_connection_rate,
             MaxConnectionRate::Default
@@ -584,7 +581,7 @@ mod tests {
 
     #[test]
     fn override_field_keep_alive() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert_eq!(settings.actix.keep_alive, KeepAlive::Default);
         Settings::override_field(&mut settings.actix.keep_alive, "42 seconds").unwrap();
         assert_eq!(settings.actix.keep_alive, KeepAlive::Seconds(42));
@@ -592,7 +589,7 @@ mod tests {
 
     #[test]
     fn override_field_with_env_var_keep_alive() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert_eq!(settings.actix.keep_alive, KeepAlive::Default);
         std::env::set_var("OVERRIDE__KEEP_ALIVE", "42 seconds");
         Settings::override_field_with_env_var(
@@ -605,7 +602,7 @@ mod tests {
 
     #[test]
     fn override_field_client_timeout() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert_eq!(settings.actix.client_timeout, Timeout::Default);
         Settings::override_field(&mut settings.actix.client_timeout, "42 seconds").unwrap();
         assert_eq!(settings.actix.client_timeout, Timeout::Seconds(42));
@@ -613,7 +610,7 @@ mod tests {
 
     #[test]
     fn override_field_with_env_var_client_timeout() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert_eq!(settings.actix.client_timeout, Timeout::Default);
         std::env::set_var("OVERRIDE__CLIENT_TIMEOUT", "42 seconds");
         Settings::override_field_with_env_var(
@@ -626,7 +623,7 @@ mod tests {
 
     #[test]
     fn override_field_client_shutdown() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert_eq!(settings.actix.client_shutdown, Timeout::Default);
         Settings::override_field(&mut settings.actix.client_shutdown, "42 seconds").unwrap();
         assert_eq!(settings.actix.client_shutdown, Timeout::Seconds(42));
@@ -634,7 +631,7 @@ mod tests {
 
     #[test]
     fn override_field_with_env_var_client_shutdown() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert_eq!(settings.actix.client_shutdown, Timeout::Default);
         std::env::set_var("OVERRIDE__CLIENT_SHUTDOWN", "42 seconds");
         Settings::override_field_with_env_var(
@@ -647,7 +644,7 @@ mod tests {
 
     #[test]
     fn override_field_shutdown_timeout() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert_eq!(settings.actix.shutdown_timeout, Timeout::Default);
         Settings::override_field(&mut settings.actix.shutdown_timeout, "42 seconds").unwrap();
         assert_eq!(settings.actix.shutdown_timeout, Timeout::Seconds(42));
@@ -655,7 +652,7 @@ mod tests {
 
     #[test]
     fn override_field_with_env_var_shutdown_timeout() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert_eq!(settings.actix.shutdown_timeout, Timeout::Default);
         std::env::set_var("OVERRIDE__SHUTDOWN_TIMEOUT", "42 seconds");
         Settings::override_field_with_env_var(
@@ -668,7 +665,7 @@ mod tests {
 
     #[test]
     fn override_field_tls_enabled() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert!(!settings.actix.tls.enabled);
         Settings::override_field(&mut settings.actix.tls.enabled, "true").unwrap();
         assert!(settings.actix.tls.enabled);
@@ -676,7 +673,7 @@ mod tests {
 
     #[test]
     fn override_field_with_env_var_tls_enabled() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert!(!settings.actix.tls.enabled);
         std::env::set_var("OVERRIDE__TLS_ENABLED", "true");
         Settings::override_field_with_env_var(
@@ -689,7 +686,7 @@ mod tests {
 
     #[test]
     fn override_field_tls_certificate() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert_eq!(
             settings.actix.tls.certificate,
             Path::new("path/to/cert/cert.pem")
@@ -707,7 +704,7 @@ mod tests {
 
     #[test]
     fn override_field_with_env_var_tls_certificate() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert_eq!(
             settings.actix.tls.certificate,
             Path::new("path/to/cert/cert.pem")
@@ -729,7 +726,7 @@ mod tests {
 
     #[test]
     fn override_field_tls_private_key() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert_eq!(
             settings.actix.tls.private_key,
             Path::new("path/to/cert/key.pem")
@@ -747,7 +744,7 @@ mod tests {
 
     #[test]
     fn override_field_with_env_var_tls_private_key() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert_eq!(
             settings.actix.tls.private_key,
             Path::new("path/to/cert/key.pem")
