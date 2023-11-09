@@ -140,10 +140,10 @@ impl Limiter {
 
     /// Consumes one rate limit unit, returning the status.
     pub async fn count(&self, key: impl Into<String>) -> Result<Status, Error> {
-        let (count, reset) = self.track(key).await?;
+        let (count, reset) = dbg!(self.track(key).await?);
         let status = Status::new(count, self.limit, reset);
 
-        if count > self.limit {
+        if dbg!(count) > dbg!(self.limit) {
             Err(Error::LimitExceeded(status))
         } else {
             Ok(status)
