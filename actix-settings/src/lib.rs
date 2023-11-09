@@ -65,6 +65,7 @@
 #![warn(future_incompatible, missing_docs, missing_debug_implementations)]
 #![doc(html_logo_url = "https://actix.rs/img/logo.png")]
 #![doc(html_favicon_url = "https://actix.rs/favicon.ico")]
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
 
 use std::{
     env, fmt,
@@ -154,14 +155,11 @@ where
     }
 
     /// Parse an instance of `Self` straight from the default TOML template.
-    // TODO: make infallible
-    // TODO: consider "template" rename
-    pub fn from_default_template() -> AsResult<Self> {
-        Self::from_template(Self::DEFAULT_TOML_TEMPLATE)
+    pub fn from_default_template() -> Self {
+        Self::from_template(Self::DEFAULT_TOML_TEMPLATE).unwrap()
     }
 
     /// Parse an instance of `Self` straight from the default TOML template.
-    // TODO: consider "template" rename
     pub fn from_template(template: &str) -> AsResult<Self> {
         Ok(toml::from_str(template)?)
     }
@@ -196,7 +194,7 @@ where
     /// use actix_settings::{Settings, Mode};
     ///
     /// # fn inner() -> Result<(), actix_settings::Error> {
-    /// let mut settings = Settings::from_default_template()?;
+    /// let mut settings = Settings::from_default_template();
     /// assert_eq!(settings.actix.mode, Mode::Development);
     ///
     /// Settings::override_field(&mut settings.actix.mode, "production")?;
@@ -221,7 +219,7 @@ where
     /// std::env::set_var("OVERRIDE__MODE", "production");
     ///
     /// # fn inner() -> Result<(), actix_settings::Error> {
-    /// let mut settings = Settings::from_default_template()?;
+    /// let mut settings = Settings::from_default_template();
     /// assert_eq!(settings.actix.mode, Mode::Development);
     ///
     /// Settings::override_field_with_env_var(&mut settings.actix.mode, "OVERRIDE__MODE")?;
@@ -242,17 +240,13 @@ where
 }
 
 /// Extension trait for applying parsed settings to the server object.
-pub trait ApplySettings {
-    /// Apply a [`BasicSettings`] value to `self`.
-    ///
-    /// [`BasicSettings`]: ./struct.BasicSettings.html
+pub trait ApplySettings<S> {
+    /// Apply some settings object value to `self`.
     #[must_use]
-    fn apply_settings<A>(self, settings: &BasicSettings<A>) -> Self
-    where
-        A: de::DeserializeOwned;
+    fn apply_settings(self, settings: &S) -> Self;
 }
 
-impl<F, I, S, B> ApplySettings for HttpServer<F, I, S, B>
+impl<F, I, S, B> ApplySettings<ActixSettings> for HttpServer<F, I, S, B>
 where
     F: Fn() -> I + Send + Clone + 'static,
     I: IntoServiceFactory<S, Request>,
@@ -263,51 +257,48 @@ where
     S::Future: 'static,
     B: MessageBody + 'static,
 {
-    fn apply_settings<A>(mut self, settings: &BasicSettings<A>) -> Self
-    where
-        A: de::DeserializeOwned,
-    {
-        if settings.actix.tls.enabled {
+    fn apply_settings(mut self, settings: &ActixSettings) -> Self {
+        if settings.tls.enabled {
             // for Address { host, port } in &settings.actix.hosts {
             //     self = self.bind(format!("{}:{}", host, port))
             //         .unwrap(/*TODO*/);
             // }
-            todo!("[ApplySettings] TLS support has not been implemented yet.");
+            unimplemented!("[ApplySettings] TLS support has not been implemented yet.");
         } else {
-            for Address { host, port } in &settings.actix.hosts {
+            for Address { host, port } in &settings.hosts {
                 self = self.bind(format!("{host}:{port}"))
                     .unwrap(/*TODO*/);
             }
         }
 
-        self = match settings.actix.num_workers {
+        self = match settings.num_workers {
             NumWorkers::Default => self,
             NumWorkers::Manual(n) => self.workers(n),
         };
 
-        self = match settings.actix.backlog {
+        self = match settings.backlog {
             Backlog::Default => self,
             Backlog::Manual(n) => self.backlog(n as u32),
         };
 
-        self = match settings.actix.max_connections {
+        self = match settings.max_connections {
             MaxConnections::Default => self,
             MaxConnections::Manual(n) => self.max_connections(n),
         };
 
-        self = match settings.actix.max_connection_rate {
+        self = match settings.max_connection_rate {
             MaxConnectionRate::Default => self,
             MaxConnectionRate::Manual(n) => self.max_connection_rate(n),
         };
 
-        self = match settings.actix.keep_alive {
+        self = match settings.keep_alive {
             KeepAlive::Default => self,
             KeepAlive::Disabled => self.keep_alive(ActixKeepAlive::Disabled),
             KeepAlive::Os => self.keep_alive(ActixKeepAlive::Os),
             KeepAlive::Seconds(n) => self.keep_alive(Duration::from_secs(n as u64)),
         };
 
-        self = match settings.actix.client_timeout {
+        self = match settings.client_timeout {
             Timeout::Default => self,
             Timeout::Milliseconds(n) => {
                 self.client_request_timeout(Duration::from_millis(n as u64))
@@ -315,7 +306,7 @@ where
             Timeout::Seconds(n) => self.client_request_timeout(Duration::from_secs(n as u64)),
         };
 
-        self = match settings.actix.client_shutdown {
+        self = match settings.client_shutdown {
             Timeout::Default => self,
             Timeout::Milliseconds(n) => {
                 self.client_disconnect_timeout(Duration::from_millis(n as u64))
@@ -323,13 +314,30 @@ where
             Timeout::Seconds(n) => self.client_disconnect_timeout(Duration::from_secs(n as u64)),
         };
 
-        self = match settings.actix.shutdown_timeout {
+        self = match settings.shutdown_timeout {
             Timeout::Default => self,
             Timeout::Milliseconds(_) => self.shutdown_timeout(1),
             Timeout::Seconds(n) => self.shutdown_timeout(n as u64),
         };
 
         self
+    }
+}
+
+impl<F, I, S, B, A> ApplySettings<BasicSettings<A>> for HttpServer<F, I, S, B>
+where
+    F: Fn() -> I + Send + Clone + 'static,
+    I: IntoServiceFactory<S, Request>,
+    S: ServiceFactory<Request, Config = AppConfig> + 'static,
+    S::Error: Into<WebError> + 'static,
+    S::InitError: fmt::Debug,
+    S::Response: Into<Response<B>> + 'static,
+    S::Future: 'static,
+    B: MessageBody + 'static,
+    A: de::DeserializeOwned,
+{
+    fn apply_settings(self, settings: &BasicSettings<A>) -> Self {
+        self.apply_settings(&settings.actix)
     }
 }
 
@@ -347,7 +355,7 @@ mod tests {
 
     #[test]
     fn override_field_hosts() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
 
         assert_eq!(
             settings.actix.hosts,
@@ -383,7 +391,7 @@ mod tests {
 
     #[test]
     fn override_field_with_env_var_hosts() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
 
         assert_eq!(
             settings.actix.hosts,
@@ -421,7 +429,7 @@ mod tests {
 
     #[test]
     fn override_field_mode() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert_eq!(settings.actix.mode, Mode::Development);
         Settings::override_field(&mut settings.actix.mode, "production").unwrap();
         assert_eq!(settings.actix.mode, Mode::Production);
@@ -429,7 +437,7 @@ mod tests {
 
     #[test]
     fn override_field_with_env_var_mode() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert_eq!(settings.actix.mode, Mode::Development);
         std::env::set_var("OVERRIDE__MODE", "production");
         Settings::override_field_with_env_var(&mut settings.actix.mode, "OVERRIDE__MODE").unwrap();
@@ -438,7 +446,7 @@ mod tests {
 
     #[test]
     fn override_field_enable_compression() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert!(settings.actix.enable_compression);
         Settings::override_field(&mut settings.actix.enable_compression, "false").unwrap();
         assert!(!settings.actix.enable_compression);
@@ -446,7 +454,7 @@ mod tests {
 
     #[test]
     fn override_field_with_env_var_enable_compression() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert!(settings.actix.enable_compression);
         std::env::set_var("OVERRIDE__ENABLE_COMPRESSION", "false");
         Settings::override_field_with_env_var(
@@ -459,7 +467,7 @@ mod tests {
 
     #[test]
     fn override_field_enable_log() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert!(settings.actix.enable_log);
         Settings::override_field(&mut settings.actix.enable_log, "false").unwrap();
         assert!(!settings.actix.enable_log);
@@ -467,7 +475,7 @@ mod tests {
 
     #[test]
     fn override_field_with_env_var_enable_log() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert!(settings.actix.enable_log);
         std::env::set_var("OVERRIDE__ENABLE_LOG", "false");
         Settings::override_field_with_env_var(
@@ -480,7 +488,7 @@ mod tests {
 
     #[test]
     fn override_field_num_workers() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert_eq!(settings.actix.num_workers, NumWorkers::Default);
         Settings::override_field(&mut settings.actix.num_workers, "42").unwrap();
         assert_eq!(settings.actix.num_workers, NumWorkers::Manual(42));
@@ -488,7 +496,7 @@ mod tests {
 
     #[test]
     fn override_field_with_env_var_num_workers() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert_eq!(settings.actix.num_workers, NumWorkers::Default);
         std::env::set_var("OVERRIDE__NUM_WORKERS", "42");
         Settings::override_field_with_env_var(
@@ -501,7 +509,7 @@ mod tests {
 
     #[test]
     fn override_field_backlog() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert_eq!(settings.actix.backlog, Backlog::Default);
         Settings::override_field(&mut settings.actix.backlog, "42").unwrap();
         assert_eq!(settings.actix.backlog, Backlog::Manual(42));
@@ -509,7 +517,7 @@ mod tests {
 
     #[test]
     fn override_field_with_env_var_backlog() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert_eq!(settings.actix.backlog, Backlog::Default);
         std::env::set_var("OVERRIDE__BACKLOG", "42");
         Settings::override_field_with_env_var(&mut settings.actix.backlog, "OVERRIDE__BACKLOG")
@@ -519,7 +527,7 @@ mod tests {
 
     #[test]
     fn override_field_max_connections() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert_eq!(settings.actix.max_connections, MaxConnections::Default);
         Settings::override_field(&mut settings.actix.max_connections, "42").unwrap();
         assert_eq!(settings.actix.max_connections, MaxConnections::Manual(42));
@@ -527,7 +535,7 @@ mod tests {
 
     #[test]
     fn override_field_with_env_var_max_connections() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert_eq!(settings.actix.max_connections, MaxConnections::Default);
         std::env::set_var("OVERRIDE__MAX_CONNECTIONS", "42");
         Settings::override_field_with_env_var(
@@ -540,7 +548,7 @@ mod tests {
 
     #[test]
     fn override_field_max_connection_rate() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert_eq!(
             settings.actix.max_connection_rate,
             MaxConnectionRate::Default
@@ -554,7 +562,7 @@ mod tests {
 
     #[test]
     fn override_field_with_env_var_max_connection_rate() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert_eq!(
             settings.actix.max_connection_rate,
             MaxConnectionRate::Default
@@ -573,7 +581,7 @@ mod tests {
 
     #[test]
     fn override_field_keep_alive() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert_eq!(settings.actix.keep_alive, KeepAlive::Default);
         Settings::override_field(&mut settings.actix.keep_alive, "42 seconds").unwrap();
         assert_eq!(settings.actix.keep_alive, KeepAlive::Seconds(42));
@@ -581,7 +589,7 @@ mod tests {
 
     #[test]
     fn override_field_with_env_var_keep_alive() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert_eq!(settings.actix.keep_alive, KeepAlive::Default);
         std::env::set_var("OVERRIDE__KEEP_ALIVE", "42 seconds");
         Settings::override_field_with_env_var(
@@ -594,7 +602,7 @@ mod tests {
 
     #[test]
     fn override_field_client_timeout() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert_eq!(settings.actix.client_timeout, Timeout::Default);
         Settings::override_field(&mut settings.actix.client_timeout, "42 seconds").unwrap();
         assert_eq!(settings.actix.client_timeout, Timeout::Seconds(42));
@@ -602,7 +610,7 @@ mod tests {
 
     #[test]
     fn override_field_with_env_var_client_timeout() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert_eq!(settings.actix.client_timeout, Timeout::Default);
         std::env::set_var("OVERRIDE__CLIENT_TIMEOUT", "42 seconds");
         Settings::override_field_with_env_var(
@@ -615,7 +623,7 @@ mod tests {
 
     #[test]
     fn override_field_client_shutdown() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert_eq!(settings.actix.client_shutdown, Timeout::Default);
         Settings::override_field(&mut settings.actix.client_shutdown, "42 seconds").unwrap();
         assert_eq!(settings.actix.client_shutdown, Timeout::Seconds(42));
@@ -623,7 +631,7 @@ mod tests {
 
     #[test]
     fn override_field_with_env_var_client_shutdown() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert_eq!(settings.actix.client_shutdown, Timeout::Default);
         std::env::set_var("OVERRIDE__CLIENT_SHUTDOWN", "42 seconds");
         Settings::override_field_with_env_var(
@@ -636,7 +644,7 @@ mod tests {
 
     #[test]
     fn override_field_shutdown_timeout() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert_eq!(settings.actix.shutdown_timeout, Timeout::Default);
         Settings::override_field(&mut settings.actix.shutdown_timeout, "42 seconds").unwrap();
         assert_eq!(settings.actix.shutdown_timeout, Timeout::Seconds(42));
@@ -644,7 +652,7 @@ mod tests {
 
     #[test]
     fn override_field_with_env_var_shutdown_timeout() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert_eq!(settings.actix.shutdown_timeout, Timeout::Default);
         std::env::set_var("OVERRIDE__SHUTDOWN_TIMEOUT", "42 seconds");
         Settings::override_field_with_env_var(
@@ -657,7 +665,7 @@ mod tests {
 
     #[test]
     fn override_field_tls_enabled() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert!(!settings.actix.tls.enabled);
         Settings::override_field(&mut settings.actix.tls.enabled, "true").unwrap();
         assert!(settings.actix.tls.enabled);
@@ -665,7 +673,7 @@ mod tests {
 
     #[test]
     fn override_field_with_env_var_tls_enabled() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert!(!settings.actix.tls.enabled);
         std::env::set_var("OVERRIDE__TLS_ENABLED", "true");
         Settings::override_field_with_env_var(
@@ -678,7 +686,7 @@ mod tests {
 
     #[test]
     fn override_field_tls_certificate() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert_eq!(
             settings.actix.tls.certificate,
             Path::new("path/to/cert/cert.pem")
@@ -696,7 +704,7 @@ mod tests {
 
     #[test]
     fn override_field_with_env_var_tls_certificate() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert_eq!(
             settings.actix.tls.certificate,
             Path::new("path/to/cert/cert.pem")
@@ -718,7 +726,7 @@ mod tests {
 
     #[test]
     fn override_field_tls_private_key() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert_eq!(
             settings.actix.tls.private_key,
             Path::new("path/to/cert/key.pem")
@@ -736,7 +744,7 @@ mod tests {
 
     #[test]
     fn override_field_with_env_var_tls_private_key() {
-        let mut settings = Settings::from_default_template().unwrap();
+        let mut settings = Settings::from_default_template();
         assert_eq!(
             settings.actix.tls.private_key,
             Path::new("path/to/cert/key.pem")

@@ -9,9 +9,10 @@ use crate::headers::authorization::{errors::ParseError, scheme::Scheme};
 
 /// Credentials for `Bearer` authentication scheme, defined in [RFC 6750].
 ///
-/// Should be used in combination with [`Authorization`](super::Authorization) header.
+/// Should be used in combination with [`Authorization`] header.
 ///
 /// [RFC 6750]: https://tools.ietf.org/html/rfc6750
+/// [`Authorization`]: crate::headers::authorization::Authorization
 #[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Bearer {
     token: Cow<'static, str>,
