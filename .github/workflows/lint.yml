@@ -2,7 +2,8 @@ name: Lint
 
 on: [pull_request]
 
-permissions: { contents: read }
+permissions:
+  contents: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -24,6 +25,10 @@ jobs:
         run: cargo fmt --all -- --check
 
   clippy:
+    permissions:
+      contents: read
+      checks: write # to add clippy checks to PR diffs
+
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -34,7 +39,13 @@ jobs:
           components: clippy
 
       - name: Check with Clippy
-        run: cargo clippy --workspace --tests --all-features -- -A unknown_lints -D clippy::dbg_macro
+        uses: giraffate/clippy-action@v1.0.1
+        with:
+          reporter: github-pr-check
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          clippy_flags: >-
+            --workspace --all-features --tests --examples --bins --
+            -A unknown_lints -D clippy::todo -D clippy::dbg_macro
 
   public-api-diff:
     runs-on: ubuntu-latest
