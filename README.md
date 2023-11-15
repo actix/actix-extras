@@ -44,6 +44,7 @@ These crates are provided by the community.
 | [actix-hash]               | [![crates.io](https://img.shields.io/crates/v/actix-hash?label=latest)][actix-hash] [![dependency status](https://deps.rs/crate/actix-hash/latest/status.svg)](https://deps.rs/crate/actix-hash)                                                         | Hashing utilities for Actix Web.                                                                  |
 | [actix-bincode]            | ![crates.io](https://img.shields.io/crates/v/actix-bincode?label=latest) [![dependency status](https://deps.rs/crate/actix-bincode/latest/status.svg)](https://deps.rs/crate/actix-bincode)                                                              | Bincode payload extractor for Actix Web                                                           |
 | [sentinel-actix]           | ![crates.io](https://img.shields.io/crates/v/sentinel-actix?label=latest) [![dependency status](https://deps.rs/crate/sentinel-actix/latest/status.svg)](https://deps.rs/crate/sentinel-actix)                                                           | General and flexible protection for Actix Web                                                     |
+| [actix-telepathy]           | ![crates.io](https://img.shields.io/crates/v/actix-telepathy?label=latest) [![dependency status](https://deps.rs/crate/actix-telepathy/latest/status.svg)](https://deps.rs/crate/actix-telepathy)                                                           | Build distributed applications with `RemoteActors` and `RemoteMessages`.                                                     |
 
 To add a crate to this list, submit a pull request.
 
@@ -76,3 +77,4 @@ To add a crate to this list, submit a pull request.
 [actix-hash]: https://crates.io/crates/actix-hash
 [actix-bincode]: https://crates.io/crates/actix-bincode
 [sentinel-actix]: https://crates.io/crates/sentinel-actix
+[actix-telepathy]: https://github.com/wenig/actix-telepathy
