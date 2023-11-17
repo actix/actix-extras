@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Remove use of `async-trait` on `SessionStore` trait.
+
 ## 0.8.0
 
 - Set secure attribute when adding a session removal cookie.

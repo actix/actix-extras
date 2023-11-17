@@ -118,7 +118,6 @@ impl RedisActorSessionStoreBuilder {
     }
 }
 
-#[async_trait::async_trait(?Send)]
 impl SessionStore for RedisActorSessionStore {
     async fn load(&self, session_key: &SessionKey) -> Result<Option<SessionState>, LoadError> {
         let cache_key = (self.configuration.cache_keygen)(session_key.as_ref());

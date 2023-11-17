@@ -49,7 +49,6 @@ use crate::storage::{
 #[non_exhaustive]
 pub struct CookieSessionStore;
 
-#[async_trait::async_trait(?Send)]
 impl SessionStore for CookieSessionStore {
     async fn load(&self, session_key: &SessionKey) -> Result<Option<SessionState>, LoadError> {
         serde_json::from_str(session_key.as_ref())
@@ -67,10 +66,10 @@ impl SessionStore for CookieSessionStore {
             .map_err(anyhow::Error::new)
             .map_err(SaveError::Serialization)?;
 
-        Ok(session_key
+        session_key
             .try_into()
             .map_err(Into::into)
-            .map_err(SaveError::Other)?)
+            .map_err(SaveError::Other)
     }
 
     async fn update(

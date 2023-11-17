@@ -30,7 +30,6 @@ actix-utils = "3"
 actix-web = { version = "4", default-features = false, features = ["cookies", "secure-cookies"] }
 
 anyhow = "1"
-async-trait = "0.1"
 derive_more = "0.99.7"
 rand = { version = "0.8", optional = true }
 serde = { version = "1" }
