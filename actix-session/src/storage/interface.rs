@@ -1,6 +1,6 @@
-use serde_json::{Map,Value};
 use actix_web::cookie::time::Duration;
 use derive_more::Display;
+use serde_json::{Map, Value};
 
 use super::SessionKey;
 

@@ -1,3 +1,10 @@
+use std::{
+    cell::{Ref, RefCell},
+    error::Error as StdError,
+    mem,
+    rc::Rc,
+};
+
 use actix_utils::future::{ready, Ready};
 use actix_web::{
     body::BoxBody,
@@ -9,12 +16,6 @@ use anyhow::Context;
 use derive_more::{Display, From};
 use serde::de::DeserializeOwned;
 use serde_json::{Map, Value};
-use std::{
-    cell::{Ref, RefCell},
-    error::Error as StdError,
-    mem,
-    rc::Rc,
-};
 
 /// The primary interface to access and modify session state.
 ///
