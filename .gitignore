@@ -14,3 +14,5 @@ guide/build/
 .DS_Store
 
 Server.toml
+
+.idea
