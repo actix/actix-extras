@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Updated the usage of `HashMap` with `serde::Map` to be compatible with `actix-session` `0.9`.
+- Replace the usages of `HashMap` with `serde::Map`.
 
 ## 0.6.0
 
