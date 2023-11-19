@@ -2,9 +2,7 @@
 
 ## Unreleased
 
-## 0.9.0
-
-- Replace the usages of `HashMap` with serde `Map`.
+- Replace the usages of `HashMap` with `serde::Map`.
 - Fix double serialization when inserting values into the session.
 
 ## 0.8.0
