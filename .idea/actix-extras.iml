@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="JAVA_MODULE" version="4">
+  <component name="NewModuleRootManager" inherit-compiler-output="true">
+    <exclude-output />
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/actix-cors/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/actix-cors/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/actix-cors/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/actix-identity/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/actix-identity/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/actix-identity/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/actix-limitation/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/actix-limitation/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/actix-protobuf/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/actix-redis/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/actix-redis/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/actix-session/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/actix-session/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/actix-session/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/actix-settings/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/actix-settings/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/actix-web-httpauth/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/actix-web-httpauth/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/actix-ws/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/actix-ws/src" isTestSource="false" />
+      <excludeFolder url="file://$MODULE_DIR$/target" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+</module>

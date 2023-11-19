@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.7.0
+
+- Updated the usage of HashMap with serde Map to be compatible with `actix-session@0.9.0`.
+
 ## 0.6.0
 
 - Add `error` module.

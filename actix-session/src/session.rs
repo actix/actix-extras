@@ -1,11 +1,3 @@
-use std::{
-    cell::{Ref, RefCell},
-    collections::HashMap,
-    error::Error as StdError,
-    mem,
-    rc::Rc,
-};
-
 use actix_utils::future::{ready, Ready};
 use actix_web::{
     body::BoxBody,
@@ -15,7 +7,14 @@ use actix_web::{
 };
 use anyhow::Context;
 use derive_more::{Display, From};
-use serde::{de::DeserializeOwned, Serialize};
+use serde::de::DeserializeOwned;
+use serde_json::{Map, Value};
+use std::{
+    cell::{Ref, RefCell},
+    error::Error as StdError,
+    mem,
+    rc::Rc,
+};
 
 /// The primary interface to access and modify session state.
 ///
@@ -23,14 +22,15 @@ use serde::{de::DeserializeOwned, Serialize};
 /// request handlers and it will be automatically extracted from the incoming request.
 ///
 /// ```
+/// use serde_json::Value;
 /// use actix_session::Session;
 ///
 /// async fn index(session: Session) -> actix_web::Result<&'static str> {
 ///     // access session data
 ///     if let Some(count) = session.get::<i32>("counter")? {
-///         session.insert("counter", count + 1)?;
+///         session.insert("counter", Value::from(count + 1));
 ///     } else {
-///         session.insert("counter", 1)?;
+///         session.insert("counter", Value::from(1));
 ///     }
 ///
 ///     Ok("Welcome!")
@@ -70,7 +70,7 @@ pub enum SessionStatus {
 
 #[derive(Default)]
 struct SessionInner {
-    state: HashMap<String, String>,
+    state: Map<String, Value>,
     status: SessionStatus,
 }
 
@@ -79,9 +79,9 @@ impl Session {
     ///
     /// It returns an error if it fails to deserialize as `T` the JSON value associated with `key`.
     pub fn get<T: DeserializeOwned>(&self, key: &str) -> Result<Option<T>, SessionGetError> {
-        if let Some(val_str) = self.0.borrow().state.get(key) {
+        if let Some(value) = self.0.borrow().state.get(key) {
             Ok(Some(
-                serde_json::from_str(val_str)
+                serde_json::from_value::<T>(value.clone())
                     .with_context(|| {
                         format!(
                             "Failed to deserialize the JSON-encoded session data attached to key \
@@ -100,7 +100,7 @@ impl Session {
     /// Get all raw key-value data from the session.
     ///
     /// Note that values are JSON encoded.
-    pub fn entries(&self) -> Ref<'_, HashMap<String, String>> {
+    pub fn entries(&self) -> Ref<'_, Map<String, Value>> {
         Ref::map(self.0.borrow(), |inner| &inner.state)
     }
 
@@ -111,15 +111,8 @@ impl Session {
 
     /// Inserts a key-value pair into the session.
     ///
-    /// Any serializable value can be used and will be encoded as JSON in session data, hence why
-    /// only a reference to the value is taken.
-    ///
-    /// It returns an error if it fails to serialize `value` to JSON.
-    pub fn insert<T: Serialize>(
-        &self,
-        key: impl Into<String>,
-        value: T,
-    ) -> Result<(), SessionInsertError> {
+    /// Any serializable value can be used and will be encoded as JSON in session data.
+    pub fn insert(&self, key: impl Into<String>, value: Value) {
         let mut inner = self.0.borrow_mut();
 
         if inner.status != SessionStatus::Purged {
@@ -127,28 +120,14 @@ impl Session {
                 inner.status = SessionStatus::Changed;
             }
 
-            let key = key.into();
-            let val = serde_json::to_string(&value)
-                .with_context(|| {
-                    format!(
-                        "Failed to serialize the provided `{}` type instance as JSON in order to \
-                        attach as session data to the `{}` key",
-                        std::any::type_name::<T>(),
-                        &key
-                    )
-                })
-                .map_err(SessionInsertError)?;
-
-            inner.state.insert(key, val);
+            inner.state.insert(key.into(), value);
         }
-
-        Ok(())
     }
 
     /// Remove value from the session.
     ///
     /// If present, the JSON encoded value is returned.
-    pub fn remove(&self, key: &str) -> Option<String> {
+    pub fn remove(&self, key: &str) -> Option<Value> {
         let mut inner = self.0.borrow_mut();
 
         if inner.status != SessionStatus::Purged {
@@ -165,9 +144,9 @@ impl Session {
     ///
     /// Returns `None` if key was not present in session. Returns `T` if deserialization succeeds,
     /// otherwise returns un-deserialized JSON string.
-    pub fn remove_as<T: DeserializeOwned>(&self, key: &str) -> Option<Result<T, String>> {
+    pub fn remove_as<T: DeserializeOwned>(&self, key: &str) -> Option<Result<T, Value>> {
         self.remove(key)
-            .map(|val_str| match serde_json::from_str(&val_str) {
+            .map(|value| match serde_json::from_value::<T>(value.clone()) {
                 Ok(val) => Ok(val),
                 Err(_err) => {
                     tracing::debug!(
@@ -176,7 +155,7 @@ impl Session {
                         std::any::type_name::<T>()
                     );
 
-                    Err(val_str)
+                    Err(value)
                 }
             })
     }
@@ -216,7 +195,7 @@ impl Session {
     #[allow(clippy::needless_pass_by_ref_mut)]
     pub(crate) fn set_session(
         req: &mut ServiceRequest,
-        data: impl IntoIterator<Item = (String, String)>,
+        data: impl IntoIterator<Item = (String, Value)>,
     ) {
         let session = Session::get_session(&mut req.extensions_mut());
         let mut inner = session.0.borrow_mut();
@@ -231,7 +210,7 @@ impl Session {
     #[allow(clippy::needless_pass_by_ref_mut)]
     pub(crate) fn get_changes<B>(
         res: &mut ServiceResponse<B>,
-    ) -> (SessionStatus, HashMap<String, String>) {
+    ) -> (SessionStatus, Map<String, Value>) {
         if let Some(s_impl) = res
             .request()
             .extensions()
@@ -240,7 +219,7 @@ impl Session {
             let state = mem::take(&mut s_impl.borrow_mut().state);
             (s_impl.borrow().status.clone(), state)
         } else {
-            (SessionStatus::Unchanged, HashMap::new())
+            (SessionStatus::Unchanged, Map::new())
         }
     }
 
@@ -261,15 +240,16 @@ impl Session {
 /// # Examples
 /// ```
 /// # use actix_web::*;
+/// use serde_json::Value;
 /// use actix_session::Session;
 ///
 /// #[get("/")]
 /// async fn index(session: Session) -> Result<impl Responder> {
 ///     // access session data
 ///     if let Some(count) = session.get::<i32>("counter")? {
-///         session.insert("counter", count + 1)?;
+///         session.insert("counter", Value::from(count + 1));
 ///     } else {
-///         session.insert("counter", 1)?;
+///         session.insert("counter", Value::from(1));
 ///     }
 ///
 ///     let count = session.get::<i32>("counter")?.unwrap();

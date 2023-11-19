@@ -1,5 +1,6 @@
 use actix_session::{storage::RedisActorSessionStore, Session, SessionMiddleware};
 use actix_web::{cookie::Key, middleware, web, App, Error, HttpRequest, HttpServer, Responder};
+use serde_json::Value;
 
 /// simple handler
 async fn index(req: HttpRequest, session: Session) -> Result<impl Responder, Error> {
@@ -8,9 +9,9 @@ async fn index(req: HttpRequest, session: Session) -> Result<impl Responder, Err
     // session
     if let Some(count) = session.get::<i32>("counter")? {
         println!("SESSION value: {count}");
-        session.insert("counter", count + 1)?;
+        session.insert("counter", Value::from(count + 1));
     } else {
-        session.insert("counter", 1)?;
+        session.insert("counter", Value::from(1));
     }
 
     Ok("Welcome!")
