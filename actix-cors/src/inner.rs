@@ -223,7 +223,7 @@ pub(crate) fn add_vary_header(headers: &mut HeaderMap) {
             val.extend(b", Origin, Access-Control-Request-Method, Access-Control-Request-Headers");
 
             #[cfg(feature = "draft-private-network-access")]
-            val.extend(b", Access-Control-Allow-Private-Network");
+            val.extend(b", Access-Control-Request-Private-Network");
 
             val.try_into().unwrap()
         }
@@ -231,7 +231,7 @@ pub(crate) fn add_vary_header(headers: &mut HeaderMap) {
         #[cfg(feature = "draft-private-network-access")]
         None => HeaderValue::from_static(
             "Origin, Access-Control-Request-Method, Access-Control-Request-Headers, \
-            Access-Control-Allow-Private-Network",
+            Access-Control-Request-Private-Network",
         ),
 
         #[cfg(not(feature = "draft-private-network-access"))]
