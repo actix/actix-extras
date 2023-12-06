@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `actix-identity/src/identity.rs`."><title>identity.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="actix_identity" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="icon" href="https://actix.rs/favicon.ico"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../actix_identity/index.html"><img src="https://actix.rs/img/logo.png" alt="actix_identity"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `actix-identity/src/identity.rs`."><title>identity.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="actix_identity" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="icon" href="https://actix.rs/favicon.ico"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../actix_identity/index.html"><img src="https://actix.rs/img/logo.png" alt="actix_identity"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -296,22 +296,22 @@
 /// };
 /// use actix_identity::Identity;
 ///
-/// #[get(&quot;/&quot;)]
+/// #[get("/")]
 /// async fn index(user: Option&lt;Identity&gt;) -&gt; impl Responder {
 ///     if let Some(user) = user {
-///         format!(&quot;Welcome! {}&quot;, user.id().unwrap())
+///         format!("Welcome! {}", user.id().unwrap())
 ///     } else {
-///         &quot;Welcome Anonymous!&quot;.to_owned()
+///         "Welcome Anonymous!".to_owned()
 ///     }
 /// }
 ///
-/// #[post(&quot;/login&quot;)]
+/// #[post("/login")]
 /// async fn login(request: HttpRequest) -&gt; impl Responder {
-///     Identity::login(&amp;request.extensions(), &quot;User1&quot;.into());
+///     Identity::login(&amp;request.extensions(), "User1".into());
 ///     HttpResponse::Ok()
 /// }
 ///
-/// #[post(&quot;/logout&quot;)]
+/// #[post("/logout")]
 /// async fn logout(user: Identity) -&gt; impl Responder {
 ///     user.logout();
 ///     HttpResponse::Ok()
@@ -331,14 +331,14 @@
 /// use actix_web::{http::header::LOCATION, get, HttpResponse, Responder};
 /// use actix_identity::Identity;
 ///
-/// #[get(&quot;/&quot;)]
+/// #[get("/")]
 /// async fn index(user: Option&lt;Identity&gt;) -&gt; impl Responder {
 ///     if let Some(user) = user {
 ///         HttpResponse::Ok().finish()
 ///     } else {
 ///         // Redirect to login page if unauthenticated
 ///         HttpResponse::TemporaryRedirect()
-///             .insert_header((LOCATION, &quot;/login&quot;))
+///             .insert_header((LOCATION, "/login"))
 ///             .finish()
 ///     }
 /// }
@@ -357,12 +357,12 @@
     <span class="kw">fn </span>extract(ext: <span class="kw-2">&amp;</span>Extensions) -&gt; <span class="self">Self </span>{
         ext.get::&lt;<span class="self">Self</span>&gt;()
             .expect(
-                <span class="string">&quot;No `IdentityInner` instance was found in the extensions attached to the \
+                <span class="string">"No `IdentityInner` instance was found in the extensions attached to the \
                 incoming request. This usually means that `IdentityMiddleware` has not been \
                 registered as an application middleware via `App::wrap`. `Identity` cannot be used \
                 unless the identity machine is properly mounted: register `IdentityMiddleware` as \
                 a middleware for your application to fix this panic. If the problem persists, \
-                please file an issue on GitHub.&quot;</span>,
+                please file an issue on GitHub."</span>,
             )
             .to_owned()
     }
@@ -375,9 +375,9 @@
     }
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>ID_KEY: <span class="kw-2">&amp;</span>str = <span class="string">&quot;actix_identity.user_id&quot;</span>;
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>LAST_VISIT_UNIX_TIMESTAMP_KEY: <span class="kw-2">&amp;</span>str = <span class="string">&quot;actix_identity.last_visited_at&quot;</span>;
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>LOGIN_UNIX_TIMESTAMP_KEY: <span class="kw-2">&amp;</span>str = <span class="string">&quot;actix_identity.logged_in_at&quot;</span>;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>ID_KEY: <span class="kw-2">&amp;</span>str = <span class="string">"actix_identity.user_id"</span>;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>LAST_VISIT_UNIX_TIMESTAMP_KEY: <span class="kw-2">&amp;</span>str = <span class="string">"actix_identity.last_visited_at"</span>;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>LOGIN_UNIX_TIMESTAMP_KEY: <span class="kw-2">&amp;</span>str = <span class="string">"actix_identity.logged_in_at"</span>;
 
 <span class="kw">impl </span>Identity {
     <span class="doccomment">/// Return the user id associated to the current session.
@@ -387,12 +387,12 @@
     /// use actix_web::{get, Responder};
     /// use actix_identity::Identity;
     ///
-    /// #[get(&quot;/&quot;)]
+    /// #[get("/")]
     /// async fn index(user: Option&lt;Identity&gt;) -&gt; impl Responder {
     ///     if let Some(user) = user {
-    ///         format!(&quot;Welcome! {}&quot;, user.id().unwrap())
+    ///         format!("Welcome! {}", user.id().unwrap())
     ///     } else {
-    ///         &quot;Welcome Anonymous!&quot;.to_owned()
+    ///         "Welcome Anonymous!".to_owned()
     ///     }
     /// }
     /// ```
@@ -414,9 +414,9 @@
     /// use actix_web::{post, Responder, HttpRequest, HttpMessage, HttpResponse};
     /// use actix_identity::Identity;
     ///
-    /// #[post(&quot;/login&quot;)]
+    /// #[post("/login")]
     /// async fn login(request: HttpRequest) -&gt; impl Responder {
-    ///     Identity::login(&amp;request.extensions(), &quot;User1&quot;.into());
+    ///     Identity::login(&amp;request.extensions(), "User1".into());
     ///     HttpResponse::Ok()
     /// }
     /// ```
@@ -446,7 +446,7 @@
     /// use actix_web::{post, Responder, HttpResponse};
     /// use actix_identity::Identity;
     ///
-    /// #[post(&quot;/logout&quot;)]
+    /// #[post("/logout")]
     /// async fn logout(user: Identity) -&gt; impl Responder {
     ///     user.logout();
     ///     HttpResponse::Ok()
@@ -511,12 +511,12 @@
 /// use actix_web::{get, Responder};
 /// use actix_identity::Identity;
 ///
-/// #[get(&quot;/&quot;)]
+/// #[get("/")]
 /// async fn index(user: Option&lt;Identity&gt;) -&gt; impl Responder {
 ///     if let Some(user) = user {
-///         format!(&quot;Welcome! {}&quot;, user.id().unwrap())
+///         format!("Welcome! {}", user.id().unwrap())
 ///     } else {
-///         &quot;Welcome Anonymous!&quot;.to_owned()
+///         "Welcome Anonymous!".to_owned()
 ///     }
 /// }
 /// ```

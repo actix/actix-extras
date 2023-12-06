@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `actix-cors/src/lib.rs`."><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="actix_cors" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="icon" href="https://actix.rs/favicon.ico"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../actix_cors/index.html"><img src="https://actix.rs/img/logo.png" alt="actix_cors"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `actix-cors/src/lib.rs`."><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="actix_cors" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="icon" href="https://actix.rs/favicon.ico"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../actix_cors/index.html"><img src="https://actix.rs/img/logo.png" alt="actix_cors"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -69,7 +69,7 @@
 </pre></div><pre class="rust"><code><span class="doccomment">//! Cross-Origin Resource Sharing (CORS) controls for Actix Web.
 //!
 //! This middleware can be applied to both applications and resources. Once built, a [`Cors`]
-//! builder can be used as an argument for Actix Web&#39;s `App::wrap()`, `Scope::wrap()`, or
+//! builder can be used as an argument for Actix Web's `App::wrap()`, `Scope::wrap()`, or
 //! `Resource::wrap()` methods.
 //!
 //! This CORS middleware automatically handles `OPTIONS` preflight requests.
@@ -84,20 +84,20 @@
 //! use actix_cors::Cors;
 //! use actix_web::{get, http, web, App, HttpRequest, HttpResponse, HttpServer};
 //!
-//! #[get(&quot;/index.html&quot;)]
-//! async fn index(req: HttpRequest) -&gt; &amp;&#39;static str {
-//!     &quot;&lt;p&gt;Hello World!&lt;/p&gt;&quot;
+//! #[get("/index.html")]
+//! async fn index(req: HttpRequest) -&gt; &amp;'static str {
+//!     "&lt;p&gt;Hello World!&lt;/p&gt;"
 //! }
 //!
 //! #[actix_web::main]
 //! async fn main() -&gt; std::io::Result&lt;()&gt; {
 //!     HttpServer::new(|| {
 //!         let cors = Cors::default()
-//!               .allowed_origin(&quot;https://www.rust-lang.org&quot;)
+//!               .allowed_origin("https://www.rust-lang.org")
 //!               .allowed_origin_fn(|origin, _req_head| {
-//!                   origin.as_bytes().ends_with(b&quot;.rust-lang.org&quot;)
+//!                   origin.as_bytes().ends_with(b".rust-lang.org")
 //!               })
-//!               .allowed_methods(vec![&quot;GET&quot;, &quot;POST&quot;])
+//!               .allowed_methods(vec!["GET", "POST"])
 //!               .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
 //!               .allowed_header(http::header::CONTENT_TYPE)
 //!               .max_age(3600);
@@ -106,7 +106,7 @@
 //!             .wrap(cors)
 //!             .service(index)
 //!     })
-//!     .bind((&quot;127.0.0.1&quot;, 8080))?
+//!     .bind(("127.0.0.1", 8080))?
 //!     .run()
 //!     .await;
 //!
@@ -119,8 +119,8 @@
 </span><span class="attr">#![forbid(unsafe_code)]
 #![deny(rust_2018_idioms, nonstandard_style)]
 #![warn(future_incompatible, missing_docs, missing_debug_implementations)]
-#![doc(html_logo_url = <span class="string">&quot;https://actix.rs/img/logo.png&quot;</span>)]
-#![doc(html_favicon_url = <span class="string">&quot;https://actix.rs/favicon.ico&quot;</span>)]
+#![doc(html_logo_url = <span class="string">"https://actix.rs/img/logo.png"</span>)]
+#![doc(html_favicon_url = <span class="string">"https://actix.rs/favicon.ico"</span>)]
 #![cfg_attr(docsrs, feature(doc_auto_cfg))]
 
 </span><span class="kw">mod </span>all_or_some;

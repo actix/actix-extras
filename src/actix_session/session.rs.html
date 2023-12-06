@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `actix-session/src/session.rs`."><title>session.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="actix_session" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="icon" href="https://actix.rs/favicon.ico"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../actix_session/index.html"><img src="https://actix.rs/img/logo.png" alt="actix_session"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `actix-session/src/session.rs`."><title>session.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="actix_session" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="icon" href="https://actix.rs/favicon.ico"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../actix_session/index.html"><img src="https://actix.rs/img/logo.png" alt="actix_session"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -346,15 +346,15 @@
 /// ```
 /// use actix_session::Session;
 ///
-/// async fn index(session: Session) -&gt; actix_web::Result&lt;&amp;&#39;static str&gt; {
+/// async fn index(session: Session) -&gt; actix_web::Result&lt;&amp;'static str&gt; {
 ///     // access session data
-///     if let Some(count) = session.get::&lt;i32&gt;(&quot;counter&quot;)? {
-///         session.insert(&quot;counter&quot;, count + 1)?;
+///     if let Some(count) = session.get::&lt;i32&gt;("counter")? {
+///         session.insert("counter", count + 1)?;
 ///     } else {
-///         session.insert(&quot;counter&quot;, 1)?;
+///         session.insert("counter", 1)?;
 ///     }
 ///
-///     Ok(&quot;Welcome!&quot;)
+///     Ok("Welcome!")
 /// }
 /// # actix_web::web::to(index);
 /// ```
@@ -405,8 +405,8 @@
                 serde_json::from_str(val_str)
                     .with_context(|| {
                         <span class="macro">format!</span>(
-                            <span class="string">&quot;Failed to deserialize the JSON-encoded session data attached to key \
-                            `{}` as a `{}` type&quot;</span>,
+                            <span class="string">"Failed to deserialize the JSON-encoded session data attached to key \
+                            `{}` as a `{}` type"</span>,
                             key,
                             std::any::type_name::&lt;T&gt;()
                         )
@@ -421,7 +421,7 @@
     <span class="doccomment">/// Get all raw key-value data from the session.
     ///
     /// Note that values are JSON encoded.
-    </span><span class="kw">pub fn </span>entries(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Ref&lt;<span class="lifetime">&#39;_</span>, HashMap&lt;String, String&gt;&gt; {
+    </span><span class="kw">pub fn </span>entries(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Ref&lt;<span class="lifetime">'_</span>, HashMap&lt;String, String&gt;&gt; {
         Ref::map(<span class="self">self</span>.<span class="number">0</span>.borrow(), |inner| <span class="kw-2">&amp;</span>inner.state)
     }
 
@@ -452,8 +452,8 @@
             <span class="kw">let </span>val = serde_json::to_string(<span class="kw-2">&amp;</span>value)
                 .with_context(|| {
                     <span class="macro">format!</span>(
-                        <span class="string">&quot;Failed to serialize the provided `{}` type instance as JSON in order to \
-                        attach as session data to the `{}` key&quot;</span>,
+                        <span class="string">"Failed to serialize the provided `{}` type instance as JSON in order to \
+                        attach as session data to the `{}` key"</span>,
                         std::any::type_name::&lt;T&gt;(),
                         <span class="kw-2">&amp;</span>key
                     )
@@ -492,7 +492,7 @@
                 <span class="prelude-val">Ok</span>(val) =&gt; <span class="prelude-val">Ok</span>(val),
                 <span class="prelude-val">Err</span>(_err) =&gt; {
                     <span class="macro">tracing::debug!</span>(
-                        <span class="string">&quot;Removed value (key: {}) could not be deserialized as {}&quot;</span>,
+                        <span class="string">"Removed value (key: {}) could not be deserialized as {}"</span>,
                         key,
                         std::any::type_name::&lt;T&gt;()
                     );
@@ -584,17 +584,17 @@
 /// # use actix_web::*;
 /// use actix_session::Session;
 ///
-/// #[get(&quot;/&quot;)]
+/// #[get("/")]
 /// async fn index(session: Session) -&gt; Result&lt;impl Responder&gt; {
 ///     // access session data
-///     if let Some(count) = session.get::&lt;i32&gt;(&quot;counter&quot;)? {
-///         session.insert(&quot;counter&quot;, count + 1)?;
+///     if let Some(count) = session.get::&lt;i32&gt;("counter")? {
+///         session.insert("counter", count + 1)?;
 ///     } else {
-///         session.insert(&quot;counter&quot;, 1)?;
+///         session.insert("counter", 1)?;
 ///     }
 ///
-///     let count = session.get::&lt;i32&gt;(&quot;counter&quot;)?.unwrap();
-///     Ok(format!(&quot;Counter: {}&quot;, count))
+///     let count = session.get::&lt;i32&gt;("counter")?.unwrap();
+///     Ok(format!("Counter: {}", count))
 /// }
 /// ```
 </span><span class="kw">impl </span>FromRequest <span class="kw">for </span>Session {
@@ -609,11 +609,11 @@
 
 <span class="doccomment">/// Error returned by [`Session::get`].
 </span><span class="attr">#[derive(Debug, Display, From)]
-#[display(fmt = <span class="string">&quot;{_0}&quot;</span>)]
+#[display(fmt = <span class="string">"{_0}"</span>)]
 </span><span class="kw">pub struct </span>SessionGetError(anyhow::Error);
 
 <span class="kw">impl </span>StdError <span class="kw">for </span>SessionGetError {
-    <span class="kw">fn </span>source(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>(<span class="kw">dyn </span>StdError + <span class="lifetime">&#39;static</span>)&gt; {
+    <span class="kw">fn </span>source(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>(<span class="kw">dyn </span>StdError + <span class="lifetime">'static</span>)&gt; {
         <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="number">0</span>.as_ref())
     }
 }
@@ -626,11 +626,11 @@
 
 <span class="doccomment">/// Error returned by [`Session::insert`].
 </span><span class="attr">#[derive(Debug, Display, From)]
-#[display(fmt = <span class="string">&quot;{_0}&quot;</span>)]
+#[display(fmt = <span class="string">"{_0}"</span>)]
 </span><span class="kw">pub struct </span>SessionInsertError(anyhow::Error);
 
 <span class="kw">impl </span>StdError <span class="kw">for </span>SessionInsertError {
-    <span class="kw">fn </span>source(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>(<span class="kw">dyn </span>StdError + <span class="lifetime">&#39;static</span>)&gt; {
+    <span class="kw">fn </span>source(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>(<span class="kw">dyn </span>StdError + <span class="lifetime">'static</span>)&gt; {
         <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="number">0</span>.as_ref())
     }
 }

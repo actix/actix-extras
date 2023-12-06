@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `actix-identity/src/middleware.rs`."><title>middleware.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="actix_identity" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="icon" href="https://actix.rs/favicon.ico"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../actix_identity/index.html"><img src="https://actix.rs/img/logo.png" alt="actix_identity"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `actix-identity/src/middleware.rs`."><title>middleware.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="actix_identity" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="icon" href="https://actix.rs/favicon.ico"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../actix_identity/index.html"><img src="https://actix.rs/img/logo.png" alt="actix_identity"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -283,7 +283,7 @@
 /// #[actix_web::main]
 /// async fn main() {
 ///     let secret_key = Key::generate();
-///     let redis_store = RedisSessionStore::new(&quot;redis://127.0.0.1:6379&quot;).await.unwrap();
+///     let redis_store = RedisSessionStore::new("redis://127.0.0.1:6379").await.unwrap();
 ///
 ///     HttpServer::new(move || {
 ///        App::new()
@@ -316,9 +316,9 @@
 
 <span class="kw">impl</span>&lt;S, B&gt; Transform&lt;S, ServiceRequest&gt; <span class="kw">for </span>IdentityMiddleware
 <span class="kw">where
-    </span>S: Service&lt;ServiceRequest, Response = ServiceResponse&lt;B&gt;, Error = Error&gt; + <span class="lifetime">&#39;static</span>,
-    S::Future: <span class="lifetime">&#39;static</span>,
-    B: MessageBody + <span class="lifetime">&#39;static</span>,
+    </span>S: Service&lt;ServiceRequest, Response = ServiceResponse&lt;B&gt;, Error = Error&gt; + <span class="lifetime">'static</span>,
+    S::Future: <span class="lifetime">'static</span>,
+    B: MessageBody + <span class="lifetime">'static</span>,
 {
     <span class="kw">type </span>Response = ServiceResponse&lt;B&gt;;
     <span class="kw">type </span>Error = Error;
@@ -351,13 +351,13 @@
 
 <span class="kw">impl</span>&lt;S, B&gt; Service&lt;ServiceRequest&gt; <span class="kw">for </span>InnerIdentityMiddleware&lt;S&gt;
 <span class="kw">where
-    </span>S: Service&lt;ServiceRequest, Response = ServiceResponse&lt;B&gt;, Error = Error&gt; + <span class="lifetime">&#39;static</span>,
-    S::Future: <span class="lifetime">&#39;static</span>,
-    B: MessageBody + <span class="lifetime">&#39;static</span>,
+    </span>S: Service&lt;ServiceRequest, Response = ServiceResponse&lt;B&gt;, Error = Error&gt; + <span class="lifetime">'static</span>,
+    S::Future: <span class="lifetime">'static</span>,
+    B: MessageBody + <span class="lifetime">'static</span>,
 {
     <span class="kw">type </span>Response = ServiceResponse&lt;B&gt;;
     <span class="kw">type </span>Error = Error;
-    <span class="kw">type </span>Future = LocalBoxFuture&lt;<span class="lifetime">&#39;static</span>, <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Response, <span class="self">Self</span>::Error&gt;&gt;;
+    <span class="kw">type </span>Future = LocalBoxFuture&lt;<span class="lifetime">'static</span>, <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Response, <span class="self">Self</span>::Error&gt;&gt;;
 
     <span class="macro">actix_service::forward_ready!</span>(service);
 
@@ -395,7 +395,7 @@
             <span class="macro">tracing::debug!</span>(
                 error.display = %err,
                 error.debug = <span class="question-mark">?</span>err,
-                <span class="string">&quot;Failed to extract an `Identity` from the incoming request.&quot;
+                <span class="string">"Failed to extract an `Identity` from the incoming request."
             </span>);
             <span class="kw">return</span>;
         }
@@ -422,7 +422,7 @@
             <span class="macro">tracing::warn!</span>(
                 error.display = %err,
                 error.debug = <span class="question-mark">?</span>err,
-                <span class="string">&quot;Failed to set the last visited timestamp on `Identity` for an incoming request.&quot;
+                <span class="string">"Failed to set the last visited timestamp on `Identity` for an incoming request."
             </span>);
         }
     }
@@ -435,8 +435,8 @@
     <span class="kw">match </span>identity.logged_at() {
         <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) =&gt; {
             <span class="macro">tracing::info!</span>(
-                <span class="string">&quot;Login deadline is enabled, but there is no login timestamp in the session \
-                state attached to the incoming request. Logging the user out.&quot;
+                <span class="string">"Login deadline is enabled, but there is no login timestamp in the session \
+                state attached to the incoming request. Logging the user out."
             </span>);
             PolicyDecision::LogOut
         }
@@ -444,8 +444,8 @@
             <span class="macro">tracing::info!</span>(
                 error.display = %err,
                 error.debug = <span class="question-mark">?</span>err,
-                <span class="string">&quot;Login deadline is enabled but we failed to extract the login timestamp from the \
-                session state attached to the incoming request. Logging the user out.&quot;
+                <span class="string">"Login deadline is enabled but we failed to extract the login timestamp from the \
+                session state attached to the incoming request. Logging the user out."
             </span>);
             PolicyDecision::LogOut
         }
@@ -456,8 +456,8 @@
                     user.logged_in_at = %logged_in_at.format(<span class="kw-2">&amp;</span>Rfc3339).unwrap_or_default(),
                     identity.login_deadline_seconds = login_deadline.as_secs(),
                     identity.elapsed_since_login_seconds = elapsed.whole_seconds(),
-                    <span class="string">&quot;Login deadline is enabled and too much time has passed since the user logged \
-                    in. Logging the user out.&quot;
+                    <span class="string">"Login deadline is enabled and too much time has passed since the user logged \
+                    in. Logging the user out."
                 </span>);
                 PolicyDecision::LogOut
             } <span class="kw">else </span>{
@@ -474,8 +474,8 @@
     <span class="kw">match </span>identity.last_visited_at() {
         <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) =&gt; {
             <span class="macro">tracing::info!</span>(
-                <span class="string">&quot;Last visit deadline is enabled, but there is no last visit timestamp in the \
-                session state attached to the incoming request. Logging the user out.&quot;
+                <span class="string">"Last visit deadline is enabled, but there is no last visit timestamp in the \
+                session state attached to the incoming request. Logging the user out."
             </span>);
             PolicyDecision::LogOut
         }
@@ -483,8 +483,8 @@
             <span class="macro">tracing::info!</span>(
                 error.display = %err,
                 error.debug = <span class="question-mark">?</span>err,
-                <span class="string">&quot;Last visit deadline is enabled but we failed to extract the last visit timestamp \
-                from the session state attached to the incoming request. Logging the user out.&quot;
+                <span class="string">"Last visit deadline is enabled but we failed to extract the last visit timestamp \
+                from the session state attached to the incoming request. Logging the user out."
             </span>);
             PolicyDecision::LogOut
         }
@@ -495,8 +495,8 @@
                     user.last_visited_at = %last_visited_at.format(<span class="kw-2">&amp;</span>Rfc3339).unwrap_or_default(),
                     identity.visit_deadline_seconds = visit_deadline.as_secs(),
                     identity.elapsed_since_last_visit_seconds = elapsed.whole_seconds(),
-                    <span class="string">&quot;Last visit deadline is enabled and too much time has passed since the last \
-                    time the user visited. Logging the user out.&quot;
+                    <span class="string">"Last visit deadline is enabled and too much time has passed since the last \
+                    time the user visited. Logging the user out."
                 </span>);
                 PolicyDecision::LogOut
             } <span class="kw">else </span>{

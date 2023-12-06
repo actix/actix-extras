@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `actix-web-httpauth/src/headers/authorization/scheme/basic.rs`."><title>basic.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../../../" data-static-root-path="../../../../../static.files/" data-current-crate="actix_web_httpauth" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../../src-files.js"></script><script defer src="../../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="icon" href="https://actix.rs/favicon.ico"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../../../actix_web_httpauth/index.html"><img src="https://actix.rs/img/logo.png" alt="actix_web_httpauth"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `actix-web-httpauth/src/headers/authorization/scheme/basic.rs`."><title>basic.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../../../../" data-static-root-path="../../../../../static.files/" data-current-crate="actix_web_httpauth" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../../src-files.js"></script><script defer src="../../../../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="icon" href="https://actix.rs/favicon.ico"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../../../actix_web_httpauth/index.html"><img src="https://actix.rs/img/logo.png" alt="actix_web_httpauth"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -205,8 +205,8 @@
 <span class="doccomment">/// Credentials for `Basic` authentication scheme, defined in [RFC 7617](https://tools.ietf.org/html/rfc7617)
 </span><span class="attr">#[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
 </span><span class="kw">pub struct </span>Basic {
-    user_id: Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;,
-    password: <span class="prelude-ty">Option</span>&lt;Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;&gt;,
+    user_id: Cow&lt;<span class="lifetime">'static</span>, str&gt;,
+    password: <span class="prelude-ty">Option</span>&lt;Cow&lt;<span class="lifetime">'static</span>, str&gt;&gt;,
 }
 
 <span class="kw">impl </span>Basic {
@@ -216,12 +216,12 @@
     /// # Examples
     /// ```
     /// # use actix_web_httpauth::headers::authorization::Basic;
-    /// let credentials = Basic::new(&quot;Alladin&quot;, Some(&quot;open sesame&quot;));
+    /// let credentials = Basic::new("Alladin", Some("open sesame"));
     /// ```
     </span><span class="kw">pub fn </span>new&lt;U, P&gt;(user_id: U, password: <span class="prelude-ty">Option</span>&lt;P&gt;) -&gt; Basic
     <span class="kw">where
-        </span>U: Into&lt;Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;&gt;,
-        P: Into&lt;Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;&gt;,
+        </span>U: Into&lt;Cow&lt;<span class="lifetime">'static</span>, str&gt;&gt;,
+        P: Into&lt;Cow&lt;<span class="lifetime">'static</span>, str&gt;&gt;,
     {
         Basic {
             user_id: user_id.into(),
@@ -229,12 +229,12 @@
         }
     }
 
-    <span class="doccomment">/// Returns client&#39;s user-ID.
+    <span class="doccomment">/// Returns client's user-ID.
     </span><span class="kw">pub fn </span>user_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str {
         <span class="self">self</span>.user_id.as_ref()
     }
 
-    <span class="doccomment">/// Returns client&#39;s password if provided.
+    <span class="doccomment">/// Returns client's password if provided.
     </span><span class="kw">pub fn </span>password(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt; {
         <span class="self">self</span>.password.as_deref()
     }
@@ -242,28 +242,28 @@
 
 <span class="kw">impl </span>Scheme <span class="kw">for </span>Basic {
     <span class="kw">fn </span>parse(header: <span class="kw-2">&amp;</span>HeaderValue) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, ParseError&gt; {
-        <span class="comment">// &quot;Basic *&quot; length
+        <span class="comment">// "Basic *" length
         </span><span class="kw">if </span>header.len() &lt; <span class="number">7 </span>{
             <span class="kw">return </span><span class="prelude-val">Err</span>(ParseError::Invalid);
         }
 
-        <span class="kw">let </span><span class="kw-2">mut </span>parts = header.to_str()<span class="question-mark">?</span>.splitn(<span class="number">2</span>, <span class="string">&#39; &#39;</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>parts = header.to_str()<span class="question-mark">?</span>.splitn(<span class="number">2</span>, <span class="string">' '</span>);
         <span class="kw">match </span>parts.next() {
-            <span class="prelude-val">Some</span>(<span class="string">&quot;Basic&quot;</span>) =&gt; (),
+            <span class="prelude-val">Some</span>(<span class="string">"Basic"</span>) =&gt; (),
             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ParseError::MissingScheme),
         }
 
         <span class="kw">let </span>decoded = BASE64_STANDARD.decode(parts.next().ok_or(ParseError::Invalid)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
-        <span class="kw">let </span><span class="kw-2">mut </span>credentials = str::from_utf8(<span class="kw-2">&amp;</span>decoded)<span class="question-mark">?</span>.splitn(<span class="number">2</span>, <span class="string">&#39;:&#39;</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>credentials = str::from_utf8(<span class="kw-2">&amp;</span>decoded)<span class="question-mark">?</span>.splitn(<span class="number">2</span>, <span class="string">':'</span>);
 
         <span class="kw">let </span>user_id = credentials
             .next()
-            .ok_or(ParseError::MissingField(<span class="string">&quot;user_id&quot;</span>))
+            .ok_or(ParseError::MissingField(<span class="string">"user_id"</span>))
             .map(|user_id| user_id.to_string().into())<span class="question-mark">?</span>;
 
         <span class="kw">let </span>password = credentials
             .next()
-            .ok_or(ParseError::MissingField(<span class="string">&quot;password&quot;</span>))
+            .ok_or(ParseError::MissingField(<span class="string">"password"</span>))
             .map(|password| {
                 <span class="kw">if </span>password.is_empty() {
                     <span class="prelude-val">None
@@ -277,14 +277,14 @@
 }
 
 <span class="kw">impl </span>fmt::Debug <span class="kw">for </span>Basic {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
-        f.write_fmt(<span class="macro">format_args!</span>(<span class="string">&quot;Basic {}:******&quot;</span>, <span class="self">self</span>.user_id))
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        f.write_fmt(<span class="macro">format_args!</span>(<span class="string">"Basic {}:******"</span>, <span class="self">self</span>.user_id))
     }
 }
 
 <span class="kw">impl </span>fmt::Display <span class="kw">for </span>Basic {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
-        f.write_fmt(<span class="macro">format_args!</span>(<span class="string">&quot;Basic {}:******&quot;</span>, <span class="self">self</span>.user_id))
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        f.write_fmt(<span class="macro">format_args!</span>(<span class="string">"Basic {}:******"</span>, <span class="self">self</span>.user_id))
     }
 }
 
@@ -301,12 +301,12 @@
         <span class="kw">let </span><span class="kw-2">mut </span>credentials = BytesMut::with_capacity(credential_length);
 
         credentials.extend_from_slice(<span class="self">self</span>.user_id.as_bytes());
-        credentials.put_u8(<span class="string">b&#39;:&#39;</span>);
+        credentials.put_u8(<span class="string">b':'</span>);
         <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>password) = <span class="self">self</span>.password {
             credentials.extend_from_slice(password.as_bytes());
         }
 
-        value.push_str(<span class="string">&quot;Basic &quot;</span>);
+        value.push_str(<span class="string">"Basic "</span>);
         BASE64_STANDARD.encode_string(<span class="kw-2">&amp;</span>credentials, <span class="kw-2">&amp;mut </span>value);
 
         HeaderValue::from_maybe_shared(value)
@@ -319,29 +319,29 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_parse_header() {
-        <span class="kw">let </span>value = HeaderValue::from_static(<span class="string">&quot;Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==&quot;</span>);
+        <span class="kw">let </span>value = HeaderValue::from_static(<span class="string">"Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ=="</span>);
         <span class="kw">let </span>scheme = Basic::parse(<span class="kw-2">&amp;</span>value);
 
         <span class="macro">assert!</span>(scheme.is_ok());
         <span class="kw">let </span>scheme = scheme.unwrap();
-        <span class="macro">assert_eq!</span>(scheme.user_id, <span class="string">&quot;Aladdin&quot;</span>);
-        <span class="macro">assert_eq!</span>(scheme.password, <span class="prelude-val">Some</span>(<span class="string">&quot;open sesame&quot;</span>.into()));
+        <span class="macro">assert_eq!</span>(scheme.user_id, <span class="string">"Aladdin"</span>);
+        <span class="macro">assert_eq!</span>(scheme.password, <span class="prelude-val">Some</span>(<span class="string">"open sesame"</span>.into()));
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_empty_password() {
-        <span class="kw">let </span>value = HeaderValue::from_static(<span class="string">&quot;Basic QWxhZGRpbjo=&quot;</span>);
+        <span class="kw">let </span>value = HeaderValue::from_static(<span class="string">"Basic QWxhZGRpbjo="</span>);
         <span class="kw">let </span>scheme = Basic::parse(<span class="kw-2">&amp;</span>value);
 
         <span class="macro">assert!</span>(scheme.is_ok());
         <span class="kw">let </span>scheme = scheme.unwrap();
-        <span class="macro">assert_eq!</span>(scheme.user_id, <span class="string">&quot;Aladdin&quot;</span>);
+        <span class="macro">assert_eq!</span>(scheme.user_id, <span class="string">"Aladdin"</span>);
         <span class="macro">assert_eq!</span>(scheme.password, <span class="prelude-val">None</span>);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_empty_header() {
-        <span class="kw">let </span>value = HeaderValue::from_static(<span class="string">&quot;&quot;</span>);
+        <span class="kw">let </span>value = HeaderValue::from_static(<span class="string">""</span>);
         <span class="kw">let </span>scheme = Basic::parse(<span class="kw-2">&amp;</span>value);
 
         <span class="macro">assert!</span>(scheme.is_err());
@@ -349,7 +349,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_wrong_scheme() {
-        <span class="kw">let </span>value = HeaderValue::from_static(<span class="string">&quot;THOUSHALLNOTPASS please?&quot;</span>);
+        <span class="kw">let </span>value = HeaderValue::from_static(<span class="string">"THOUSHALLNOTPASS please?"</span>);
         <span class="kw">let </span>scheme = Basic::parse(<span class="kw-2">&amp;</span>value);
 
         <span class="macro">assert!</span>(scheme.is_err());
@@ -357,7 +357,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_missing_credentials() {
-        <span class="kw">let </span>value = HeaderValue::from_static(<span class="string">&quot;Basic &quot;</span>);
+        <span class="kw">let </span>value = HeaderValue::from_static(<span class="string">"Basic "</span>);
         <span class="kw">let </span>scheme = Basic::parse(<span class="kw-2">&amp;</span>value);
 
         <span class="macro">assert!</span>(scheme.is_err());
@@ -365,7 +365,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_missing_credentials_colon() {
-        <span class="kw">let </span>value = HeaderValue::from_static(<span class="string">&quot;Basic QWxsYWRpbg==&quot;</span>);
+        <span class="kw">let </span>value = HeaderValue::from_static(<span class="string">"Basic QWxsYWRpbg=="</span>);
         <span class="kw">let </span>scheme = Basic::parse(<span class="kw-2">&amp;</span>value);
 
         <span class="macro">assert!</span>(scheme.is_err());
@@ -374,15 +374,15 @@
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_into_header_value() {
         <span class="kw">let </span>basic = Basic {
-            user_id: <span class="string">&quot;Aladdin&quot;</span>.into(),
-            password: <span class="prelude-val">Some</span>(<span class="string">&quot;open sesame&quot;</span>.into()),
+            user_id: <span class="string">"Aladdin"</span>.into(),
+            password: <span class="prelude-val">Some</span>(<span class="string">"open sesame"</span>.into()),
         };
 
         <span class="kw">let </span>result = basic.try_into_value();
         <span class="macro">assert!</span>(result.is_ok());
         <span class="macro">assert_eq!</span>(
             result.unwrap(),
-            HeaderValue::from_static(<span class="string">&quot;Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==&quot;</span>)
+            HeaderValue::from_static(<span class="string">"Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ=="</span>)
         );
     }
 }

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `actix-cors/src/builder.rs`."><title>builder.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="actix_cors" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="icon" href="https://actix.rs/favicon.ico"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../actix_cors/index.html"><img src="https://actix.rs/img/logo.png" alt="actix_cors"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `actix-cors/src/builder.rs`."><title>builder.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="actix_cors" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="icon" href="https://actix.rs/favicon.ico"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../actix_cors/index.html"><img src="https://actix.rs/img/logo.png" alt="actix_cors"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -699,10 +699,10 @@
 
 <span class="doccomment">/// Convenience for getting mut refs to inner. Cleaner than `Rc::get_mut`.
 /// Additionally, always causes first error (if any) to be reported during initialization.
-</span><span class="kw">fn </span>cors&lt;<span class="lifetime">&#39;a</span>&gt;(
-    inner: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>Rc&lt;Inner&gt;,
+</span><span class="kw">fn </span>cors&lt;<span class="lifetime">'a</span>&gt;(
+    inner: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>Rc&lt;Inner&gt;,
     err: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;Either&lt;HttpError, CorsError&gt;&gt;,
-) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>Inner&gt; {
+) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>Inner&gt; {
     <span class="kw">if </span>err.is_some() {
         <span class="kw">return </span><span class="prelude-val">None</span>;
     }
@@ -751,8 +751,8 @@
 /// use actix_web::http::header;
 ///
 /// let cors = Cors::default()
-///     .allowed_origin(&quot;https://www.rust-lang.org&quot;)
-///     .allowed_methods(vec![&quot;GET&quot;, &quot;POST&quot;])
+///     .allowed_origin("https://www.rust-lang.org")
+///     .allowed_methods(vec!["GET", "POST"])
 ///     .allowed_headers(vec![header::AUTHORIZATION, header::ACCEPT])
 ///     .allowed_header(header::CONTENT_TYPE)
 ///     .max_age(3600);
@@ -791,7 +791,7 @@
             preflight: <span class="bool-val">true</span>,
             send_wildcard: <span class="bool-val">false</span>,
             supports_credentials: <span class="bool-val">true</span>,
-            <span class="attr">#[cfg(feature = <span class="string">&quot;draft-private-network-access&quot;</span>)]
+            <span class="attr">#[cfg(feature = <span class="string">"draft-private-network-access"</span>)]
             </span>allow_private_network_access: <span class="bool-val">false</span>,
             vary_header: <span class="bool-val">true</span>,
             block_on_origin_mismatch: <span class="bool-val">true</span>,
@@ -821,15 +821,15 @@
     ///
     /// By default, no origins are accepted.
     ///
-    /// When this list is set, the client&#39;s `Origin` request header will be checked in a
+    /// When this list is set, the client's `Origin` request header will be checked in a
     /// case-sensitive manner.
     ///
     /// When all origins are allowed and `send_wildcard` is set, `*` will be sent in the
-    /// `Access-Control-Allow-Origin` response header. If `send_wildcard` is not set, the client&#39;s
+    /// `Access-Control-Allow-Origin` response header. If `send_wildcard` is not set, the client's
     /// `Origin` request header will be echoed back in the `Access-Control-Allow-Origin`
     /// response header.
     ///
-    /// If the origin of the request doesn&#39;t match any allowed origins and at least one
+    /// If the origin of the request doesn't match any allowed origins and at least one
     /// `allowed_origin_fn` function is set, these functions will be used to determinate
     /// allowed origins.
     ///
@@ -841,8 +841,8 @@
     </span><span class="kw">pub fn </span>allowed_origin(<span class="kw-2">mut </span><span class="self">self</span>, origin: <span class="kw-2">&amp;</span>str) -&gt; Cors {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(cors) = cors(<span class="kw-2">&amp;mut </span><span class="self">self</span>.inner, <span class="kw-2">&amp;</span><span class="self">self</span>.error) {
             <span class="kw">match </span>TryInto::&lt;Uri&gt;::try_into(origin) {
-                <span class="prelude-val">Ok</span>(<span class="kw">_</span>) <span class="kw">if </span>origin == <span class="string">&quot;*&quot; </span>=&gt; {
-                    <span class="macro">error!</span>(<span class="string">&quot;Wildcard in `allowed_origin` is not allowed. Use `send_wildcard`.&quot;</span>);
+                <span class="prelude-val">Ok</span>(<span class="kw">_</span>) <span class="kw">if </span>origin == <span class="string">"*" </span>=&gt; {
+                    <span class="macro">error!</span>(<span class="string">"Wildcard in `allowed_origin` is not allowed. Use `send_wildcard`."</span>);
                     <span class="self">self</span>.error = <span class="prelude-val">Some</span>(Either::Right(CorsError::WildcardOrigin));
                 }
 
@@ -867,17 +867,17 @@
         <span class="self">self
     </span>}
 
-    <span class="doccomment">/// Determinates allowed origins by processing requests which didn&#39;t match any origins specified
+    <span class="doccomment">/// Determinates allowed origins by processing requests which didn't match any origins specified
     /// in the `allowed_origin`.
     ///
     /// The function will receive two parameters, the Origin header value, and the `RequestHead` of
     /// each request, which can be used to determine whether to allow the request or not.
     ///
-    /// If the function returns `true`, the client&#39;s `Origin` request header will be echoed back
+    /// If the function returns `true`, the client's `Origin` request header will be echoed back
     /// into the `Access-Control-Allow-Origin` response header.
     </span><span class="kw">pub fn </span>allowed_origin_fn&lt;F&gt;(<span class="kw-2">mut </span><span class="self">self</span>, f: F) -&gt; Cors
     <span class="kw">where
-        </span>F: (Fn(<span class="kw-2">&amp;</span>HeaderValue, <span class="kw-2">&amp;</span>RequestHead) -&gt; bool) + <span class="lifetime">&#39;static</span>,
+        </span>F: (Fn(<span class="kw-2">&amp;</span>HeaderValue, <span class="kw-2">&amp;</span>RequestHead) -&gt; bool) + <span class="lifetime">'static</span>,
     {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(cors) = cors(<span class="kw-2">&amp;mut </span><span class="self">self</span>.inner, <span class="kw-2">&amp;</span><span class="self">self</span>.error) {
             cors.allowed_origins_fns.push(OriginFn {
@@ -1106,7 +1106,7 @@
     /// Defaults to `false`.
     ///
     /// [Private Network Access]: https://wicg.github.io/private-network-access
-    </span><span class="attr">#[cfg(feature = <span class="string">&quot;draft-private-network-access&quot;</span>)]
+    </span><span class="attr">#[cfg(feature = <span class="string">"draft-private-network-access"</span>)]
     </span><span class="kw">pub fn </span>allow_private_network_access(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; Cors {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(cors) = cors(<span class="kw-2">&amp;mut </span><span class="self">self</span>.inner, <span class="kw-2">&amp;</span><span class="self">self</span>.error) {
             cors.allow_private_network_access = <span class="bool-val">true</span>;
@@ -1121,7 +1121,7 @@
     /// implementation guidelines.
     ///
     /// Setting this header when the `Access-Control-Allow-Origin` is dynamically generated
-    /// (eg. when there is more than one allowed origin, and an Origin other than &#39;*&#39; is returned)
+    /// (eg. when there is more than one allowed origin, and an Origin other than '*' is returned)
     /// informs CDNs and other caches that the CORS headers are dynamic, and cannot be cached.
     ///
     /// By default, `Vary` header support is enabled.
@@ -1170,7 +1170,7 @@
     <span class="doccomment">/// A restrictive (security paranoid) set of defaults.
     ///
     /// *No* allowed origins, methods, request headers or exposed headers. Credentials
-    /// not supported. No max age (will use browser&#39;s default).
+    /// not supported. No max age (will use browser's default).
     </span><span class="kw">fn </span>default() -&gt; Cors {
         <span class="kw">let </span>inner = Inner {
             allowed_origins: AllOrSome::Some(HashSet::with_capacity(<span class="number">8</span>)),
@@ -1189,7 +1189,7 @@
             preflight: <span class="bool-val">true</span>,
             send_wildcard: <span class="bool-val">false</span>,
             supports_credentials: <span class="bool-val">false</span>,
-            <span class="attr">#[cfg(feature = <span class="string">&quot;draft-private-network-access&quot;</span>)]
+            <span class="attr">#[cfg(feature = <span class="string">"draft-private-network-access"</span>)]
             </span>allow_private_network_access: <span class="bool-val">false</span>,
             vary_header: <span class="bool-val">true</span>,
             block_on_origin_mismatch: <span class="bool-val">true</span>,
@@ -1205,9 +1205,9 @@
 <span class="kw">impl</span>&lt;S, B&gt; Transform&lt;S, ServiceRequest&gt; <span class="kw">for </span>Cors
 <span class="kw">where
     </span>S: Service&lt;ServiceRequest, Response = ServiceResponse&lt;B&gt;, Error = Error&gt;,
-    S::Future: <span class="lifetime">&#39;static</span>,
+    S::Future: <span class="lifetime">'static</span>,
 
-    B: MessageBody + <span class="lifetime">&#39;static</span>,
+    B: MessageBody + <span class="lifetime">'static</span>,
 {
     <span class="kw">type </span>Response = ServiceResponse&lt;EitherBody&lt;B&gt;&gt;;
     <span class="kw">type </span>Error = Error;
@@ -1218,8 +1218,8 @@
     <span class="kw">fn </span>new_transform(<span class="kw-2">&amp;</span><span class="self">self</span>, service: S) -&gt; <span class="self">Self</span>::Future {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>err) = <span class="self">self</span>.error {
             <span class="kw">match </span>err {
-                Either::Left(err) =&gt; <span class="macro">error!</span>(<span class="string">&quot;{}&quot;</span>, err),
-                Either::Right(err) =&gt; <span class="macro">error!</span>(<span class="string">&quot;{}&quot;</span>, err),
+                Either::Left(err) =&gt; <span class="macro">error!</span>(<span class="string">"{}"</span>, err),
+                Either::Right(err) =&gt; <span class="macro">error!</span>(<span class="string">"{}"</span>, err),
             }
 
             <span class="kw">return </span>future::err(());
@@ -1229,8 +1229,8 @@
 
         <span class="kw">if </span>inner.supports_credentials &amp;&amp; inner.send_wildcard &amp;&amp; inner.allowed_origins.is_all() {
             <span class="macro">error!</span>(
-                <span class="string">&quot;Illegal combination of CORS options: credentials can not be supported when all \
-                    origins are allowed and `send_wildcard` is enabled.&quot;
+                <span class="string">"Illegal combination of CORS options: credentials can not be supported when all \
+                    origins are allowed and `send_wildcard` is enabled."
             </span>);
             <span class="kw">return </span>future::err(());
         }
@@ -1270,17 +1270,17 @@
 {
     <span class="macro">debug_assert!</span>(
         !val_set.is_empty(),
-        <span class="string">&quot;only call `intersperse_header_values` when set is not empty&quot;
+        <span class="string">"only call `intersperse_header_values` when set is not empty"
     </span>);
 
     val_set
         .iter()
         .fold(String::with_capacity(<span class="number">64</span>), |<span class="kw-2">mut </span>acc, val| {
-            acc.push_str(<span class="string">&quot;, &quot;</span>);
+            acc.push_str(<span class="string">", "</span>);
             acc.push_str(val.as_ref());
             acc
         })
-        <span class="comment">// set is not empty so string will always have leading &quot;, &quot; to trim
+        <span class="comment">// set is not empty so string will always have leading ", " to trim
         </span>[<span class="number">2</span>..]
         .try_into()
         <span class="comment">// all method names are valid header values
@@ -1322,7 +1322,7 @@
             </span>.unwrap();
 
         <span class="kw">let </span>req = TestRequest::default()
-            .insert_header((<span class="string">&quot;Origin&quot;</span>, <span class="string">&quot;https://www.example.com&quot;</span>))
+            .insert_header((<span class="string">"Origin"</span>, <span class="string">"https://www.example.com"</span>))
             .to_srv_request();
 
         <span class="kw">let </span>resp = test::call_service(<span class="kw-2">&amp;</span>cors, req).<span class="kw">await</span>;
@@ -1331,7 +1331,7 @@
 
     <span class="attr">#[actix_web::test]
     </span><span class="kw">async fn </span>allowed_header_try_from() {
-        <span class="kw">let </span>_cors = Cors::default().allowed_header(<span class="string">&quot;Content-Type&quot;</span>);
+        <span class="kw">let </span>_cors = Cors::default().allowed_header(<span class="string">"Content-Type"</span>);
     }
 
     <span class="attr">#[actix_web::test]
@@ -1342,7 +1342,7 @@
             <span class="kw">type </span>Error = Infallible;
 
             <span class="kw">fn </span>try_into(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;HeaderName, <span class="self">Self</span>::Error&gt; {
-                <span class="prelude-val">Ok</span>(HeaderName::from_static(<span class="string">&quot;content-type&quot;</span>))
+                <span class="prelude-val">Ok</span>(HeaderName::from_static(<span class="string">"content-type"</span>))
             }
         }
 

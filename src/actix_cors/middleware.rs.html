@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `actix-cors/src/middleware.rs`."><title>middleware.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="actix_cors" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="icon" href="https://actix.rs/favicon.ico"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../actix_cors/index.html"><img src="https://actix.rs/img/logo.png" alt="actix_cors"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `actix-cors/src/middleware.rs`."><title>middleware.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="actix_cors" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="icon" href="https://actix.rs/favicon.ico"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../actix_cors/index.html"><img src="https://actix.rs/img/logo.png" alt="actix_cors"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -393,22 +393,22 @@
             </span>res.insert_header((header::ACCESS_CONTROL_ALLOW_HEADERS, headers.clone()));
         }
 
-        <span class="attr">#[cfg(feature = <span class="string">&quot;draft-private-network-access&quot;</span>)]
+        <span class="attr">#[cfg(feature = <span class="string">"draft-private-network-access"</span>)]
         </span><span class="kw">if </span>inner.allow_private_network_access
             &amp;&amp; req
                 .headers()
-                .contains_key(<span class="string">&quot;access-control-request-private-network&quot;</span>)
+                .contains_key(<span class="string">"access-control-request-private-network"</span>)
         {
             res.insert_header((
-                header::HeaderName::from_static(<span class="string">&quot;access-control-allow-private-network&quot;</span>),
-                HeaderValue::from_static(<span class="string">&quot;true&quot;</span>),
+                header::HeaderName::from_static(<span class="string">"access-control-allow-private-network"</span>),
+                HeaderValue::from_static(<span class="string">"true"</span>),
             ));
         }
 
         <span class="kw">if </span>inner.supports_credentials {
             res.insert_header((
                 header::ACCESS_CONTROL_ALLOW_CREDENTIALS,
-                HeaderValue::from_static(<span class="string">&quot;true&quot;</span>),
+                HeaderValue::from_static(<span class="string">"true"</span>),
             ));
         }
 
@@ -438,7 +438,7 @@
         }
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>expose) = inner.expose_headers_baked {
-            <span class="macro">log::trace!</span>(<span class="string">&quot;exposing selected headers: {:?}&quot;</span>, expose);
+            <span class="macro">log::trace!</span>(<span class="string">"exposing selected headers: {:?}"</span>, expose);
 
             res.headers_mut()
                 .insert(header::ACCESS_CONTROL_EXPOSE_HEADERS, expose.clone());
@@ -456,7 +456,7 @@
                 </span><span class="kw">let </span>expose_headers_value = intersperse_header_values(<span class="kw-2">&amp;</span>expose_all_request_headers);
 
                 <span class="macro">log::trace!</span>(
-                    <span class="string">&quot;exposing all headers from request: {:?}&quot;</span>,
+                    <span class="string">"exposing all headers from request: {:?}"</span>,
                     expose_headers_value
                 );
 
@@ -469,20 +469,20 @@
         <span class="kw">if </span>inner.supports_credentials {
             res.headers_mut().insert(
                 header::ACCESS_CONTROL_ALLOW_CREDENTIALS,
-                HeaderValue::from_static(<span class="string">&quot;true&quot;</span>),
+                HeaderValue::from_static(<span class="string">"true"</span>),
             );
         }
 
-        <span class="attr">#[cfg(feature = <span class="string">&quot;draft-private-network-access&quot;</span>)]
+        <span class="attr">#[cfg(feature = <span class="string">"draft-private-network-access"</span>)]
         </span><span class="kw">if </span>inner.allow_private_network_access
             &amp;&amp; res
                 .request()
                 .headers()
-                .contains_key(<span class="string">&quot;access-control-request-private-network&quot;</span>)
+                .contains_key(<span class="string">"access-control-request-private-network"</span>)
         {
             res.headers_mut().insert(
-                header::HeaderName::from_static(<span class="string">&quot;access-control-allow-private-network&quot;</span>),
-                HeaderValue::from_static(<span class="string">&quot;true&quot;</span>),
+                header::HeaderName::from_static(<span class="string">"access-control-allow-private-network"</span>),
+                HeaderValue::from_static(<span class="string">"true"</span>),
             );
         }
 
@@ -497,13 +497,13 @@
 <span class="kw">impl</span>&lt;S, B&gt; Service&lt;ServiceRequest&gt; <span class="kw">for </span>CorsMiddleware&lt;S&gt;
 <span class="kw">where
     </span>S: Service&lt;ServiceRequest, Response = ServiceResponse&lt;B&gt;, Error = Error&gt;,
-    S::Future: <span class="lifetime">&#39;static</span>,
+    S::Future: <span class="lifetime">'static</span>,
 
-    B: MessageBody + <span class="lifetime">&#39;static</span>,
+    B: MessageBody + <span class="lifetime">'static</span>,
 {
     <span class="kw">type </span>Response = ServiceResponse&lt;EitherBody&lt;B&gt;&gt;;
     <span class="kw">type </span>Error = Error;
-    <span class="kw">type </span>Future = LocalBoxFuture&lt;<span class="lifetime">&#39;static</span>, <span class="prelude-ty">Result</span>&lt;ServiceResponse&lt;EitherBody&lt;B&gt;&gt;, Error&gt;&gt;;
+    <span class="kw">type </span>Future = LocalBoxFuture&lt;<span class="lifetime">'static</span>, <span class="prelude-ty">Result</span>&lt;ServiceResponse&lt;EitherBody&lt;B&gt;&gt;, Error&gt;&gt;;
 
     <span class="macro">forward_ready!</span>(service);
 
@@ -521,7 +521,7 @@
             (<span class="prelude-val">None</span>, <span class="kw">_</span>) =&gt; <span class="bool-val">false</span>,
             (<span class="kw">_</span>, <span class="prelude-val">Ok</span>(origin_allowed)) =&gt; origin_allowed,
             (<span class="kw">_</span>, <span class="prelude-val">Err</span>(err)) =&gt; {
-                <span class="macro">debug!</span>(<span class="string">&quot;origin validation failed; inner service is not called&quot;</span>);
+                <span class="macro">debug!</span>(<span class="string">"origin validation failed; inner service is not called"</span>);
                 <span class="kw">let </span><span class="kw-2">mut </span>res = req.error_response(err);
 
                 <span class="kw">if </span><span class="self">self</span>.inner.vary_header {
@@ -575,7 +575,7 @@
             </span>.unwrap();
 
         <span class="kw">let </span>req = TestRequest::get()
-            .insert_header((header::ORIGIN, <span class="string">&quot;http://example.com&quot;</span>))
+            .insert_header((header::ORIGIN, <span class="string">"http://example.com"</span>))
             .to_srv_request();
         <span class="kw">let </span>res = cors.call(req).<span class="kw">await</span>.unwrap();
         <span class="macro">assert_eq!</span>(
@@ -586,12 +586,12 @@
         );
 
         <span class="kw">let </span>req = TestRequest::get()
-            .insert_header((header::ORIGIN, <span class="string">&quot;http://example.com&quot;</span>))
-            .insert_header((header::DNT, <span class="string">&quot;1&quot;</span>))
+            .insert_header((header::ORIGIN, <span class="string">"http://example.com"</span>))
+            .insert_header((header::DNT, <span class="string">"1"</span>))
             .to_srv_request();
         <span class="kw">let </span>res = cors.call(req).<span class="kw">await</span>.unwrap();
         <span class="macro">assert_eq!</span>(
-            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="string">b&quot;http://example.com&quot;</span>[..]),
+            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="string">b"http://example.com"</span>[..]),
             res.headers()
                 .get(header::ACCESS_CONTROL_ALLOW_ORIGIN)
                 .map(HeaderValue::as_bytes)

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `actix-session/src/middleware.rs`."><title>middleware.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="actix_session" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="icon" href="https://actix.rs/favicon.ico"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../actix_session/index.html"><img src="https://actix.rs/img/logo.png" alt="actix_session"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `actix-session/src/middleware.rs`."><title>middleware.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="actix_session" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="icon" href="https://actix.rs/favicon.ico"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../actix_session/index.html"><img src="https://actix.rs/img/logo.png" alt="actix_session"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -524,7 +524,7 @@
 /// #[actix_web::main]
 /// async fn main() -&gt; std::io::Result&lt;()&gt; {
 ///     let secret_key = get_secret_key();
-///     let redis_connection_string = &quot;127.0.0.1:6379&quot;;
+///     let redis_connection_string = "127.0.0.1:6379";
 ///     HttpServer::new(move ||
 ///             App::new()
 ///             // Add session management to your application using Redis for session state storage
@@ -535,7 +535,7 @@
 ///                 )
 ///             )
 ///             .default_service(web::to(|| HttpResponse::Ok())))
-///         .bind((&quot;127.0.0.1&quot;, 8080))?
+///         .bind(("127.0.0.1", 8080))?
 ///         .run()
 ///         .await
 /// }
@@ -557,7 +557,7 @@
 /// #[actix_web::main]
 /// async fn main() -&gt; std::io::Result&lt;()&gt; {
 ///     let secret_key = get_secret_key();
-///     let redis_connection_string = &quot;127.0.0.1:6379&quot;;
+///     let redis_connection_string = "127.0.0.1:6379";
 ///     HttpServer::new(move ||
 ///             App::new()
 ///             // Customise session length!
@@ -573,7 +573,7 @@
 ///                 .build(),
 ///             )
 ///             .default_service(web::to(|| HttpResponse::Ok())))
-///         .bind((&quot;127.0.0.1&quot;, 8080))?
+///         .bind(("127.0.0.1", 8080))?
 ///         .run()
 ///         .await
 /// }
@@ -616,10 +616,10 @@
 
 <span class="kw">impl</span>&lt;S, B, Store&gt; Transform&lt;S, ServiceRequest&gt; <span class="kw">for </span>SessionMiddleware&lt;Store&gt;
 <span class="kw">where
-    </span>S: Service&lt;ServiceRequest, Response = ServiceResponse&lt;B&gt;, Error = actix_web::Error&gt; + <span class="lifetime">&#39;static</span>,
-    S::Future: <span class="lifetime">&#39;static</span>,
-    B: MessageBody + <span class="lifetime">&#39;static</span>,
-    Store: SessionStore + <span class="lifetime">&#39;static</span>,
+    </span>S: Service&lt;ServiceRequest, Response = ServiceResponse&lt;B&gt;, Error = actix_web::Error&gt; + <span class="lifetime">'static</span>,
+    S::Future: <span class="lifetime">'static</span>,
+    B: MessageBody + <span class="lifetime">'static</span>,
+    Store: SessionStore + <span class="lifetime">'static</span>,
 {
     <span class="kw">type </span>Response = ServiceResponse&lt;B&gt;;
     <span class="kw">type </span>Error = actix_web::Error;
@@ -638,13 +638,13 @@
 
 <span class="doccomment">/// Short-hand to create an `actix_web::Error` instance that will result in an `Internal Server
 /// Error` response while preserving the error root cause (e.g. in logs).
-</span><span class="kw">fn </span>e500&lt;E: fmt::Debug + fmt::Display + <span class="lifetime">&#39;static</span>&gt;(err: E) -&gt; actix_web::Error {
+</span><span class="kw">fn </span>e500&lt;E: fmt::Debug + fmt::Display + <span class="lifetime">'static</span>&gt;(err: E) -&gt; actix_web::Error {
     <span class="comment">// We do not use `actix_web::error::ErrorInternalServerError` because we do not want to
     // leak internal implementation details to the caller.
     //
     // `actix_web::error::ErrorInternalServerError` includes the error Display representation
-    // as body of the error responses, leading to messages like &quot;There was an issue persisting
-    // the session state&quot; reaching API clients. We don&#39;t want that, we want opaque 500s.
+    // as body of the error responses, leading to messages like "There was an issue persisting
+    // the session state" reaching API clients. We don't want that, we want opaque 500s.
     </span>actix_web::error::InternalError::from_response(
         err,
         HttpResponse::InternalServerError().finish(),
@@ -654,7 +654,7 @@
 
 <span class="attr">#[doc(hidden)]
 #[non_exhaustive]
-</span><span class="kw">pub struct </span>InnerSessionMiddleware&lt;S, Store: SessionStore + <span class="lifetime">&#39;static</span>&gt; {
+</span><span class="kw">pub struct </span>InnerSessionMiddleware&lt;S, Store: SessionStore + <span class="lifetime">'static</span>&gt; {
     service: Rc&lt;S&gt;,
     configuration: Rc&lt;Configuration&gt;,
     storage_backend: Rc&lt;Store&gt;,
@@ -662,9 +662,9 @@
 
 <span class="kw">impl</span>&lt;S, B, Store&gt; Service&lt;ServiceRequest&gt; <span class="kw">for </span>InnerSessionMiddleware&lt;S, Store&gt;
 <span class="kw">where
-    </span>S: Service&lt;ServiceRequest, Response = ServiceResponse&lt;B&gt;, Error = actix_web::Error&gt; + <span class="lifetime">&#39;static</span>,
-    S::Future: <span class="lifetime">&#39;static</span>,
-    Store: SessionStore + <span class="lifetime">&#39;static</span>,
+    </span>S: Service&lt;ServiceRequest, Response = ServiceResponse&lt;B&gt;, Error = actix_web::Error&gt; + <span class="lifetime">'static</span>,
+    S::Future: <span class="lifetime">'static</span>,
+    Store: SessionStore + <span class="lifetime">'static</span>,
 {
     <span class="kw">type </span>Response = ServiceResponse&lt;B&gt;;
     <span class="kw">type </span>Error = actix_web::Error;
@@ -803,8 +803,8 @@
 
     <span class="kw">if </span>verification_result.is_none() {
         <span class="macro">tracing::warn!</span>(
-            <span class="string">&quot;The session cookie attached to the incoming request failed to pass cryptographic \
-            checks (signature verification/decryption).&quot;
+            <span class="string">"The session cookie attached to the incoming request failed to pass cryptographic \
+            checks (signature verification/decryption)."
         </span>);
     }
 
@@ -814,7 +814,7 @@
             <span class="macro">tracing::warn!</span>(
                 error.message = %err,
                 error.cause_chain = <span class="question-mark">?</span>err,
-                <span class="string">&quot;Invalid session key, ignoring.&quot;
+                <span class="string">"Invalid session key, ignoring."
             </span>);
 
             <span class="prelude-val">None
@@ -839,8 +839,8 @@
                     // lifecycle of the current request.
 
                     </span><span class="macro">tracing::info!</span>(
-                        <span class="string">&quot;No session state has been found for a valid session key, creating a new \
-                        empty session.&quot;
+                        <span class="string">"No session state has been found for a valid session key, creating a new \
+                        empty session."
                     </span>);
 
                     <span class="prelude-val">Ok</span>((<span class="prelude-val">None</span>, HashMap::new()))
@@ -852,7 +852,7 @@
                     <span class="macro">tracing::warn!</span>(
                         error.message = %err,
                         error.cause_chain = <span class="question-mark">?</span>err,
-                        <span class="string">&quot;Invalid session state, creating a new empty session.&quot;
+                        <span class="string">"Invalid session state, creating a new empty session."
                     </span>);
 
                     <span class="prelude-val">Ok</span>((<span class="prelude-val">Some</span>(session_key), HashMap::new()))
@@ -896,7 +896,7 @@
     <span class="comment">// set cookie
     </span><span class="kw">let </span>cookie = jar.delta().next().unwrap();
     <span class="kw">let </span>val = HeaderValue::from_str(<span class="kw-2">&amp;</span>cookie.encoded().to_string())
-        .context(<span class="string">&quot;Failed to attach a session cookie to the outgoing response&quot;</span>)<span class="question-mark">?</span>;
+        .context(<span class="string">"Failed to attach a session cookie to the outgoing response"</span>)<span class="question-mark">?</span>;
 
     response.headers_mut().append(SET_COOKIE, val);
 
@@ -907,7 +907,7 @@
     response: <span class="kw-2">&amp;mut </span>ResponseHead,
     config: <span class="kw-2">&amp;</span>CookieConfiguration,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(), anyhow::Error&gt; {
-    <span class="kw">let </span>removal_cookie = Cookie::build(config.name.clone(), <span class="string">&quot;&quot;</span>)
+    <span class="kw">let </span>removal_cookie = Cookie::build(config.name.clone(), <span class="string">""</span>)
         .path(config.path.clone())
         .secure(config.secure)
         .http_only(config.http_only)
@@ -923,7 +923,7 @@
     removal_cookie.make_removal();
 
     <span class="kw">let </span>val = HeaderValue::from_str(<span class="kw-2">&amp;</span>removal_cookie.to_string())
-        .context(<span class="string">&quot;Failed to attach a session removal cookie to the outgoing response&quot;</span>)<span class="question-mark">?</span>;
+        .context(<span class="string">"Failed to attach a session removal cookie to the outgoing response"</span>)<span class="question-mark">?</span>;
     response.headers_mut().append(SET_COOKIE, val);
 
     <span class="prelude-val">Ok</span>(())

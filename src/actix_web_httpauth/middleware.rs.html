@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `actix-web-httpauth/src/middleware.rs`."><title>middleware.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="actix_web_httpauth" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="icon" href="https://actix.rs/favicon.ico"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../actix_web_httpauth/index.html"><img src="https://actix.rs/img/logo.png" alt="actix_web_httpauth"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `actix-web-httpauth/src/middleware.rs`."><title>middleware.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="actix_web_httpauth" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="icon" href="https://actix.rs/favicon.ico"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../actix_web_httpauth/index.html"><img src="https://actix.rs/img/logo.png" alt="actix_web_httpauth"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -473,7 +473,7 @@
     </span>F: Fn(ServiceRequest, basic::BasicAuth) -&gt; O,
     O: Future&lt;Output = <span class="prelude-ty">Result</span>&lt;ServiceRequest, (Error, ServiceRequest)&gt;&gt;,
 {
-    <span class="doccomment">/// Construct `HttpAuthentication` middleware for the HTTP &quot;Basic&quot; authentication scheme.
+    <span class="doccomment">/// Construct `HttpAuthentication` middleware for the HTTP "Basic" authentication scheme.
     ///
     /// # Examples
     /// ```
@@ -502,7 +502,7 @@
     </span>F: Fn(ServiceRequest, bearer::BearerAuth) -&gt; O,
     O: Future&lt;Output = <span class="prelude-ty">Result</span>&lt;ServiceRequest, (Error, ServiceRequest)&gt;&gt;,
 {
-    <span class="doccomment">/// Construct `HttpAuthentication` middleware for the HTTP &quot;Bearer&quot; authentication scheme.
+    <span class="doccomment">/// Construct `HttpAuthentication` middleware for the HTTP "Bearer" authentication scheme.
     ///
     /// # Examples
     /// ```
@@ -515,13 +515,13 @@
     ///     req: ServiceRequest,
     ///     credentials: BearerAuth
     /// ) -&gt; Result&lt;ServiceRequest, (Error, ServiceRequest)&gt; {
-    ///     if credentials.token() == &quot;mF_9.B5f-4.1JqM&quot; {
+    ///     if credentials.token() == "mF_9.B5f-4.1JqM" {
     ///         Ok(req)
     ///     } else {
     ///         let config = req.app_data::&lt;bearer::Config&gt;()
     ///             .cloned()
     ///             .unwrap_or_default()
-    ///             .scope(&quot;urn:example:channel=HBO&amp;urn:example:rating=G,PG-13&quot;);
+    ///             .scope("urn:example:channel=HBO&amp;urn:example:rating=G,PG-13");
     ///
     ///         Err((AuthenticationError::from(config).into(), req))
     ///     }
@@ -536,12 +536,12 @@
 
 <span class="kw">impl</span>&lt;S, B, T, F, O&gt; Transform&lt;S, ServiceRequest&gt; <span class="kw">for </span>HttpAuthentication&lt;T, F&gt;
 <span class="kw">where
-    </span>S: Service&lt;ServiceRequest, Response = ServiceResponse&lt;B&gt;, Error = Error&gt; + <span class="lifetime">&#39;static</span>,
-    S::Future: <span class="lifetime">&#39;static</span>,
-    F: Fn(ServiceRequest, T) -&gt; O + <span class="lifetime">&#39;static</span>,
-    O: Future&lt;Output = <span class="prelude-ty">Result</span>&lt;ServiceRequest, (Error, ServiceRequest)&gt;&gt; + <span class="lifetime">&#39;static</span>,
-    T: FromRequest + <span class="lifetime">&#39;static</span>,
-    B: MessageBody + <span class="lifetime">&#39;static</span>,
+    </span>S: Service&lt;ServiceRequest, Response = ServiceResponse&lt;B&gt;, Error = Error&gt; + <span class="lifetime">'static</span>,
+    S::Future: <span class="lifetime">'static</span>,
+    F: Fn(ServiceRequest, T) -&gt; O + <span class="lifetime">'static</span>,
+    O: Future&lt;Output = <span class="prelude-ty">Result</span>&lt;ServiceRequest, (Error, ServiceRequest)&gt;&gt; + <span class="lifetime">'static</span>,
+    T: FromRequest + <span class="lifetime">'static</span>,
+    B: MessageBody + <span class="lifetime">'static</span>,
 {
     <span class="kw">type </span>Response = ServiceResponse&lt;EitherBody&lt;B&gt;&gt;;
     <span class="kw">type </span>Error = Error;
@@ -570,16 +570,16 @@
 
 <span class="kw">impl</span>&lt;S, B, F, T, O&gt; Service&lt;ServiceRequest&gt; <span class="kw">for </span>AuthenticationMiddleware&lt;S, F, T&gt;
 <span class="kw">where
-    </span>S: Service&lt;ServiceRequest, Response = ServiceResponse&lt;B&gt;, Error = Error&gt; + <span class="lifetime">&#39;static</span>,
-    S::Future: <span class="lifetime">&#39;static</span>,
-    F: Fn(ServiceRequest, T) -&gt; O + <span class="lifetime">&#39;static</span>,
-    O: Future&lt;Output = <span class="prelude-ty">Result</span>&lt;ServiceRequest, (Error, ServiceRequest)&gt;&gt; + <span class="lifetime">&#39;static</span>,
-    T: FromRequest + <span class="lifetime">&#39;static</span>,
-    B: MessageBody + <span class="lifetime">&#39;static</span>,
+    </span>S: Service&lt;ServiceRequest, Response = ServiceResponse&lt;B&gt;, Error = Error&gt; + <span class="lifetime">'static</span>,
+    S::Future: <span class="lifetime">'static</span>,
+    F: Fn(ServiceRequest, T) -&gt; O + <span class="lifetime">'static</span>,
+    O: Future&lt;Output = <span class="prelude-ty">Result</span>&lt;ServiceRequest, (Error, ServiceRequest)&gt;&gt; + <span class="lifetime">'static</span>,
+    T: FromRequest + <span class="lifetime">'static</span>,
+    B: MessageBody + <span class="lifetime">'static</span>,
 {
     <span class="kw">type </span>Response = ServiceResponse&lt;EitherBody&lt;B&gt;&gt;;
     <span class="kw">type </span>Error = S::Error;
-    <span class="kw">type </span>Future = LocalBoxFuture&lt;<span class="lifetime">&#39;static</span>, <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Response, <span class="self">Self</span>::Error&gt;&gt;;
+    <span class="kw">type </span>Future = LocalBoxFuture&lt;<span class="lifetime">'static</span>, <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Response, <span class="self">Self</span>::Error&gt;&gt;;
 
     <span class="macro">actix_web::dev::forward_ready!</span>(service);
 
@@ -609,7 +609,7 @@
 
 <span class="kw">struct </span>Extract&lt;T&gt; {
     req: <span class="prelude-ty">Option</span>&lt;ServiceRequest&gt;,
-    fut: <span class="prelude-ty">Option</span>&lt;LocalBoxFuture&lt;<span class="lifetime">&#39;static</span>, <span class="prelude-ty">Result</span>&lt;T, Error&gt;&gt;&gt;,
+    fut: <span class="prelude-ty">Option</span>&lt;LocalBoxFuture&lt;<span class="lifetime">'static</span>, <span class="prelude-ty">Result</span>&lt;T, Error&gt;&gt;&gt;,
     _extractor: PhantomData&lt;<span class="kw">fn</span>() -&gt; T&gt;,
 }
 
@@ -626,14 +626,14 @@
 <span class="kw">impl</span>&lt;T&gt; Future <span class="kw">for </span>Extract&lt;T&gt;
 <span class="kw">where
     </span>T: FromRequest,
-    T::Future: <span class="lifetime">&#39;static</span>,
-    T::Error: <span class="lifetime">&#39;static</span>,
+    T::Future: <span class="lifetime">'static</span>,
+    T::Error: <span class="lifetime">'static</span>,
 {
     <span class="kw">type </span>Output = <span class="prelude-ty">Result</span>&lt;(ServiceRequest, T), (Error, ServiceRequest)&gt;;
 
-    <span class="kw">fn </span>poll(<span class="kw-2">mut </span><span class="self">self</span>: Pin&lt;<span class="kw-2">&amp;mut </span><span class="self">Self</span>&gt;, ctx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; Poll&lt;<span class="self">Self</span>::Output&gt; {
+    <span class="kw">fn </span>poll(<span class="kw-2">mut </span><span class="self">self</span>: Pin&lt;<span class="kw-2">&amp;mut </span><span class="self">Self</span>&gt;, ctx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">'_</span>&gt;) -&gt; Poll&lt;<span class="self">Self</span>::Output&gt; {
         <span class="kw">if </span><span class="self">self</span>.fut.is_none() {
-            <span class="kw">let </span>req = <span class="self">self</span>.req.as_mut().expect(<span class="string">&quot;Extract future was polled twice!&quot;</span>);
+            <span class="kw">let </span>req = <span class="self">self</span>.req.as_mut().expect(<span class="string">"Extract future was polled twice!"</span>);
             <span class="kw">let </span>fut = req.extract::&lt;T&gt;().map_err(Into::into);
             <span class="self">self</span>.fut = <span class="prelude-val">Some</span>(Box::pin(fut));
         }
@@ -641,17 +641,17 @@
         <span class="kw">let </span>fut = <span class="self">self
             </span>.fut
             .as_mut()
-            .expect(<span class="string">&quot;Extraction future should be initialized at this point&quot;</span>);
+            .expect(<span class="string">"Extraction future should be initialized at this point"</span>);
 
         <span class="kw">let </span>credentials = <span class="macro">ready!</span>(fut.as_mut().poll(ctx)).map_err(|err| {
             (
                 err,
                 <span class="comment">// returning request allows a proper error response to be created
-                </span><span class="self">self</span>.req.take().expect(<span class="string">&quot;Extract future was polled twice!&quot;</span>),
+                </span><span class="self">self</span>.req.take().expect(<span class="string">"Extract future was polled twice!"</span>),
             )
         })<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>req = <span class="self">self</span>.req.take().expect(<span class="string">&quot;Extract future was polled twice!&quot;</span>);
+        <span class="kw">let </span>req = <span class="self">self</span>.req.take().expect(<span class="string">"Extract future was polled twice!"</span>);
         Poll::Ready(<span class="prelude-val">Ok</span>((req, credentials)))
     }
 }
@@ -676,14 +676,14 @@
         <span class="kw">let </span>middleware = AuthenticationMiddleware {
             service: Rc::new(into_service(|<span class="kw">_</span>: ServiceRequest| <span class="kw">async move </span>{
                 actix_web::rt::time::sleep(std::time::Duration::from_secs(<span class="number">1</span>)).<span class="kw">await</span>;
-                <span class="prelude-val">Err</span>::&lt;ServiceResponse, <span class="kw">_</span>&gt;(error::ErrorBadRequest(<span class="string">&quot;error&quot;</span>))
+                <span class="prelude-val">Err</span>::&lt;ServiceResponse, <span class="kw">_</span>&gt;(error::ErrorBadRequest(<span class="string">"error"</span>))
             })),
             process_fn: Arc::new(|req, <span class="kw">_</span>: BearerAuth| <span class="kw">async </span>{ <span class="prelude-val">Ok</span>(req) }),
             _extractor: PhantomData,
         };
 
         <span class="kw">let </span>req = TestRequest::get()
-            .append_header((<span class="string">&quot;Authorization&quot;</span>, <span class="string">&quot;Bearer 1&quot;</span>))
+            .append_header((<span class="string">"Authorization"</span>, <span class="string">"Bearer 1"</span>))
             .to_srv_request();
 
         <span class="kw">let </span>f = middleware.call(req).<span class="kw">await</span>;
@@ -699,26 +699,26 @@
         <span class="kw">let </span>middleware = AuthenticationMiddleware {
             service: Rc::new(into_service(|<span class="kw">_</span>: ServiceRequest| <span class="kw">async move </span>{
                 actix_web::rt::time::sleep(std::time::Duration::from_secs(<span class="number">1</span>)).<span class="kw">await</span>;
-                <span class="prelude-val">Err</span>::&lt;ServiceResponse, <span class="kw">_</span>&gt;(error::ErrorBadRequest(<span class="string">&quot;error&quot;</span>))
+                <span class="prelude-val">Err</span>::&lt;ServiceResponse, <span class="kw">_</span>&gt;(error::ErrorBadRequest(<span class="string">"error"</span>))
             })),
             process_fn: Arc::new(|req, <span class="kw">_</span>: BearerAuth| <span class="kw">async </span>{ <span class="prelude-val">Ok</span>(req) }),
             _extractor: PhantomData,
         };
 
         <span class="kw">let </span>req = TestRequest::get()
-            .append_header((<span class="string">&quot;Authorization&quot;</span>, <span class="string">&quot;Bearer 1&quot;</span>))
+            .append_header((<span class="string">"Authorization"</span>, <span class="string">"Bearer 1"</span>))
             .to_srv_request();
 
         <span class="kw">let </span>f1 = middleware.call(req).<span class="kw">await</span>;
 
         <span class="kw">let </span>req = TestRequest::get()
-            .append_header((<span class="string">&quot;Authorization&quot;</span>, <span class="string">&quot;Bearer 1&quot;</span>))
+            .append_header((<span class="string">"Authorization"</span>, <span class="string">"Bearer 1"</span>))
             .to_srv_request();
 
         <span class="kw">let </span>f2 = middleware.call(req).<span class="kw">await</span>;
 
         <span class="kw">let </span>req = TestRequest::get()
-            .append_header((<span class="string">&quot;Authorization&quot;</span>, <span class="string">&quot;Bearer 1&quot;</span>))
+            .append_header((<span class="string">"Authorization"</span>, <span class="string">"Bearer 1"</span>))
             .to_srv_request();
 
         <span class="kw">let </span>f3 = middleware.call(req).<span class="kw">await</span>;
@@ -744,7 +744,7 @@
         };
 
         <span class="kw">let </span>req = TestRequest::get()
-            .append_header((<span class="string">&quot;Authorization996&quot;</span>, <span class="string">&quot;Bearer 1&quot;</span>))
+            .append_header((<span class="string">"Authorization996"</span>, <span class="string">"Bearer 1"</span>))
             .to_srv_request();
 
         <span class="kw">let </span>f = middleware.call(req).<span class="kw">await</span>;
@@ -770,7 +770,7 @@
         };
 
         <span class="kw">let </span>req = TestRequest::get()
-            .append_header((<span class="string">&quot;Authorization&quot;</span>, <span class="string">&quot;BearerLOL&quot;</span>))
+            .append_header((<span class="string">"Authorization"</span>, <span class="string">"BearerLOL"</span>))
             .to_srv_request();
 
         <span class="kw">let </span>f = middleware.call(req).<span class="kw">await</span>;
@@ -786,19 +786,19 @@
             req: ServiceRequest,
             _credentials: BasicAuth,
         ) -&gt; <span class="prelude-ty">Result</span>&lt;ServiceRequest, (actix_web::Error, ServiceRequest)&gt; {
-            <span class="prelude-val">Err</span>((ErrorForbidden(<span class="string">&quot;You are not welcome!&quot;</span>), req))
+            <span class="prelude-val">Err</span>((ErrorForbidden(<span class="string">"You are not welcome!"</span>), req))
         }
         <span class="kw">let </span>middleware = HttpAuthentication::basic(validator);
 
         <span class="kw">let </span>srv = actix_web::test::init_service(
             App::new()
                 .wrap(middleware)
-                .route(<span class="string">&quot;/&quot;</span>, web::get().to(HttpResponse::Ok)),
+                .route(<span class="string">"/"</span>, web::get().to(HttpResponse::Ok)),
         )
         .<span class="kw">await</span>;
 
-        <span class="kw">let </span>req = actix_web::test::TestRequest::with_uri(<span class="string">&quot;/&quot;</span>)
-            .append_header((<span class="string">&quot;Authorization&quot;</span>, <span class="string">&quot;Basic DontCare&quot;</span>))
+        <span class="kw">let </span>req = actix_web::test::TestRequest::with_uri(<span class="string">"/"</span>)
+            .append_header((<span class="string">"Authorization"</span>, <span class="string">"Basic DontCare"</span>))
             .to_request();
 
         <span class="kw">let </span>resp = srv.call(req).<span class="kw">await</span>.unwrap();
@@ -811,21 +811,21 @@
             req: ServiceRequest,
             _credentials: BasicAuth,
         ) -&gt; <span class="prelude-ty">Result</span>&lt;ServiceRequest, (actix_web::Error, ServiceRequest)&gt; {
-            <span class="prelude-val">Err</span>((ErrorForbidden(<span class="string">&quot;You are not welcome!&quot;</span>), req))
+            <span class="prelude-val">Err</span>((ErrorForbidden(<span class="string">"You are not welcome!"</span>), req))
         }
         <span class="kw">let </span>middleware = actix_web::middleware::Compat::new(HttpAuthentication::basic(validator));
 
         <span class="kw">let </span>srv = actix_web::test::init_service(
             App::new().service(
-                web::scope(<span class="string">&quot;/&quot;</span>)
+                web::scope(<span class="string">"/"</span>)
                     .wrap(middleware)
-                    .route(<span class="string">&quot;/&quot;</span>, web::get().to(HttpResponse::Ok)),
+                    .route(<span class="string">"/"</span>, web::get().to(HttpResponse::Ok)),
             ),
         )
         .<span class="kw">await</span>;
 
-        <span class="kw">let </span>req = actix_web::test::TestRequest::with_uri(<span class="string">&quot;/&quot;</span>)
-            .append_header((<span class="string">&quot;Authorization&quot;</span>, <span class="string">&quot;Basic DontCare&quot;</span>))
+        <span class="kw">let </span>req = actix_web::test::TestRequest::with_uri(<span class="string">"/"</span>)
+            .append_header((<span class="string">"Authorization"</span>, <span class="string">"Basic DontCare"</span>))
             .to_request();
 
         <span class="kw">let </span>resp = srv.call(req).<span class="kw">await</span>.unwrap();

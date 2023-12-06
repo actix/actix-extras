@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `actix-protobuf/src/lib.rs`."><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="actix_protobuf" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="icon" href="https://actix.rs/favicon.ico"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../actix_protobuf/index.html"><img src="https://actix.rs/img/logo.png" alt="actix_protobuf"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `actix-protobuf/src/lib.rs`."><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="actix_protobuf" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="icon" href="https://actix.rs/favicon.ico"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../actix_protobuf/index.html"><img src="https://actix.rs/img/logo.png" alt="actix_protobuf"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -341,8 +341,8 @@
 </span><span class="attr">#![forbid(unsafe_code)]
 #![deny(rust_2018_idioms, nonstandard_style)]
 #![warn(future_incompatible)]
-#![doc(html_logo_url = <span class="string">&quot;https://actix.rs/img/logo.png&quot;</span>)]
-#![doc(html_favicon_url = <span class="string">&quot;https://actix.rs/favicon.ico&quot;</span>)]
+#![doc(html_logo_url = <span class="string">"https://actix.rs/img/logo.png"</span>)]
+#![doc(html_favicon_url = <span class="string">"https://actix.rs/favicon.ico"</span>)]
 #![cfg_attr(docsrs, feature(doc_auto_cfg))]
 
 </span><span class="kw">use </span>std::{
@@ -372,23 +372,23 @@
 <span class="attr">#[derive(Debug, Display)]
 </span><span class="kw">pub enum </span>ProtoBufPayloadError {
     <span class="doccomment">/// Payload size is bigger than 256k
-    </span><span class="attr">#[display(fmt = <span class="string">&quot;Payload size is bigger than 256k&quot;</span>)]
+    </span><span class="attr">#[display(fmt = <span class="string">"Payload size is bigger than 256k"</span>)]
     </span>Overflow,
 
     <span class="doccomment">/// Content type error
-    </span><span class="attr">#[display(fmt = <span class="string">&quot;Content type error&quot;</span>)]
+    </span><span class="attr">#[display(fmt = <span class="string">"Content type error"</span>)]
     </span>ContentType,
 
     <span class="doccomment">/// Serialize error
-    </span><span class="attr">#[display(fmt = <span class="string">&quot;ProtoBuf serialize error: {_0}&quot;</span>)]
+    </span><span class="attr">#[display(fmt = <span class="string">"ProtoBuf serialize error: {_0}"</span>)]
     </span>Serialize(ProtoBufEncodeError),
 
     <span class="doccomment">/// Deserialize error
-    </span><span class="attr">#[display(fmt = <span class="string">&quot;ProtoBuf deserialize error: {_0}&quot;</span>)]
+    </span><span class="attr">#[display(fmt = <span class="string">"ProtoBuf deserialize error: {_0}"</span>)]
     </span>Deserialize(ProtoBufDecodeError),
 
     <span class="doccomment">/// Payload error
-    </span><span class="attr">#[display(fmt = <span class="string">&quot;Error that occur during reading payload: {_0}&quot;</span>)]
+    </span><span class="attr">#[display(fmt = <span class="string">"Error that occur during reading payload: {_0}"</span>)]
     </span>Payload(PayloadError),
 }
 
@@ -433,8 +433,8 @@
 <span class="kw">where
     </span>T: fmt::Debug,
 {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
-        <span class="macro">write!</span>(f, <span class="string">&quot;ProtoBuf: {:?}&quot;</span>, <span class="self">self</span>.<span class="number">0</span>)
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        <span class="macro">write!</span>(f, <span class="string">"ProtoBuf: {:?}"</span>, <span class="self">self</span>.<span class="number">0</span>)
     }
 }
 
@@ -442,7 +442,7 @@
 <span class="kw">where
     </span>T: fmt::Display,
 {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         fmt::Display::fmt(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, f)
     }
 }
@@ -467,10 +467,10 @@
 
 <span class="kw">impl</span>&lt;T&gt; FromRequest <span class="kw">for </span>ProtoBuf&lt;T&gt;
 <span class="kw">where
-    </span>T: Message + Default + <span class="lifetime">&#39;static</span>,
+    </span>T: Message + Default + <span class="lifetime">'static</span>,
 {
     <span class="kw">type </span>Error = Error;
-    <span class="kw">type </span>Future = LocalBoxFuture&lt;<span class="lifetime">&#39;static</span>, <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, Error&gt;&gt;;
+    <span class="kw">type </span>Future = LocalBoxFuture&lt;<span class="lifetime">'static</span>, <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, Error&gt;&gt;;
 
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>from_request(req: <span class="kw-2">&amp;</span>HttpRequest, payload: <span class="kw-2">&amp;mut </span>Payload) -&gt; <span class="self">Self</span>::Future {
@@ -495,7 +495,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>buf = Vec::new();
         <span class="kw">match </span><span class="self">self</span>.<span class="number">0</span>.encode(<span class="kw-2">&amp;mut </span>buf) {
             <span class="prelude-val">Ok</span>(()) =&gt; HttpResponse::Ok()
-                .content_type(<span class="string">&quot;application/protobuf&quot;</span>)
+                .content_type(<span class="string">"application/protobuf"</span>)
                 .body(buf),
             <span class="prelude-val">Err</span>(err) =&gt; HttpResponse::from_error(Error::from(ProtoBufPayloadError::Serialize(err))),
         }
@@ -507,14 +507,14 @@
     length: <span class="prelude-ty">Option</span>&lt;usize&gt;,
     stream: <span class="prelude-ty">Option</span>&lt;Payload&gt;,
     err: <span class="prelude-ty">Option</span>&lt;ProtoBufPayloadError&gt;,
-    fut: <span class="prelude-ty">Option</span>&lt;LocalBoxFuture&lt;<span class="lifetime">&#39;static</span>, <span class="prelude-ty">Result</span>&lt;T, ProtoBufPayloadError&gt;&gt;&gt;,
+    fut: <span class="prelude-ty">Option</span>&lt;LocalBoxFuture&lt;<span class="lifetime">'static</span>, <span class="prelude-ty">Result</span>&lt;T, ProtoBufPayloadError&gt;&gt;&gt;,
 }
 
 <span class="kw">impl</span>&lt;T: Message + Default&gt; ProtoBufMessage&lt;T&gt; {
     <span class="doccomment">/// Create `ProtoBufMessage` for request.
     </span><span class="kw">pub fn </span>new(req: <span class="kw-2">&amp;</span>HttpRequest, payload: <span class="kw-2">&amp;mut </span>Payload) -&gt; <span class="self">Self </span>{
-        <span class="kw">if </span>req.content_type() != <span class="string">&quot;application/protobuf&quot;
-            </span>&amp;&amp; req.content_type() != <span class="string">&quot;application/x-protobuf&quot;
+        <span class="kw">if </span>req.content_type() != <span class="string">"application/protobuf"
+            </span>&amp;&amp; req.content_type() != <span class="string">"application/x-protobuf"
         </span>{
             <span class="kw">return </span>ProtoBufMessage {
                 limit: <span class="number">262_144</span>,
@@ -550,10 +550,10 @@
     </span>}
 }
 
-<span class="kw">impl</span>&lt;T: Message + Default + <span class="lifetime">&#39;static</span>&gt; Future <span class="kw">for </span>ProtoBufMessage&lt;T&gt; {
+<span class="kw">impl</span>&lt;T: Message + Default + <span class="lifetime">'static</span>&gt; Future <span class="kw">for </span>ProtoBufMessage&lt;T&gt; {
     <span class="kw">type </span>Output = <span class="prelude-ty">Result</span>&lt;T, ProtoBufPayloadError&gt;;
 
-    <span class="kw">fn </span>poll(<span class="kw-2">mut </span><span class="self">self</span>: Pin&lt;<span class="kw-2">&amp;mut </span><span class="self">Self</span>&gt;, task: <span class="kw-2">&amp;mut </span>task::Context&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; Poll&lt;<span class="self">Self</span>::Output&gt; {
+    <span class="kw">fn </span>poll(<span class="kw-2">mut </span><span class="self">self</span>: Pin&lt;<span class="kw-2">&amp;mut </span><span class="self">Self</span>&gt;, task: <span class="kw-2">&amp;mut </span>task::Context&lt;<span class="lifetime">'_</span>&gt;) -&gt; Poll&lt;<span class="self">Self</span>::Output&gt; {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>fut) = <span class="self">self</span>.fut {
             <span class="kw">return </span>Pin::new(fut).poll(task);
         }
@@ -572,7 +572,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>stream = <span class="self">self
             </span>.stream
             .take()
-            .expect(<span class="string">&quot;ProtoBufMessage could not be used second time&quot;</span>);
+            .expect(<span class="string">"ProtoBufMessage could not be used second time"</span>);
 
         <span class="self">self</span>.fut = <span class="prelude-val">Some</span>(
             <span class="kw">async move </span>{
@@ -601,7 +601,7 @@
 
 <span class="kw">impl </span>ProtoBufResponseBuilder <span class="kw">for </span>HttpResponseBuilder {
     <span class="kw">fn </span>protobuf&lt;T: Message&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value: T) -&gt; <span class="prelude-ty">Result</span>&lt;HttpResponse, Error&gt; {
-        <span class="self">self</span>.insert_header((CONTENT_TYPE, <span class="string">&quot;application/protobuf&quot;</span>));
+        <span class="self">self</span>.insert_header((CONTENT_TYPE, <span class="string">"application/protobuf"</span>));
 
         <span class="kw">let </span><span class="kw-2">mut </span>body = Vec::new();
         value
@@ -634,9 +634,9 @@
 
     <span class="attr">#[derive(Clone, PartialEq, Eq, Message)]
     </span><span class="kw">pub struct </span>MyObject {
-        <span class="attr">#[prost(int32, tag = <span class="string">&quot;1&quot;</span>)]
+        <span class="attr">#[prost(int32, tag = <span class="string">"1"</span>)]
         </span><span class="kw">pub </span>number: i32,
-        <span class="attr">#[prost(string, tag = <span class="string">&quot;2&quot;</span>)]
+        <span class="attr">#[prost(string, tag = <span class="string">"2"</span>)]
         </span><span class="kw">pub </span>name: String,
     }
 
@@ -644,12 +644,12 @@
     </span><span class="kw">async fn </span>test_protobuf() {
         <span class="kw">let </span>protobuf = ProtoBuf(MyObject {
             number: <span class="number">9</span>,
-            name: <span class="string">&quot;test&quot;</span>.to_owned(),
+            name: <span class="string">"test"</span>.to_owned(),
         });
         <span class="kw">let </span>req = TestRequest::default().to_http_request();
         <span class="kw">let </span>resp = protobuf.respond_to(<span class="kw-2">&amp;</span>req);
         <span class="kw">let </span>ct = resp.headers().get(header::CONTENT_TYPE).unwrap();
-        <span class="macro">assert_eq!</span>(ct, <span class="string">&quot;application/protobuf&quot;</span>);
+        <span class="macro">assert_eq!</span>(ct, <span class="string">"application/protobuf"</span>);
     }
 
     <span class="attr">#[actix_web::test]
@@ -659,14 +659,14 @@
         <span class="macro">assert_eq!</span>(protobuf.err().unwrap(), ProtoBufPayloadError::ContentType);
 
         <span class="kw">let </span>(req, <span class="kw-2">mut </span>pl) = TestRequest::get()
-            .insert_header((header::CONTENT_TYPE, <span class="string">&quot;application/text&quot;</span>))
+            .insert_header((header::CONTENT_TYPE, <span class="string">"application/text"</span>))
             .to_http_parts();
         <span class="kw">let </span>protobuf = ProtoBufMessage::&lt;MyObject&gt;::new(<span class="kw-2">&amp;</span>req, <span class="kw-2">&amp;mut </span>pl).<span class="kw">await</span>;
         <span class="macro">assert_eq!</span>(protobuf.err().unwrap(), ProtoBufPayloadError::ContentType);
 
         <span class="kw">let </span>(req, <span class="kw-2">mut </span>pl) = TestRequest::get()
-            .insert_header((header::CONTENT_TYPE, <span class="string">&quot;application/protobuf&quot;</span>))
-            .insert_header((header::CONTENT_LENGTH, <span class="string">&quot;10000&quot;</span>))
+            .insert_header((header::CONTENT_TYPE, <span class="string">"application/protobuf"</span>))
+            .insert_header((header::CONTENT_LENGTH, <span class="string">"10000"</span>))
             .to_http_parts();
         <span class="kw">let </span>protobuf = ProtoBufMessage::&lt;MyObject&gt;::new(<span class="kw-2">&amp;</span>req, <span class="kw-2">&amp;mut </span>pl)
             .limit(<span class="number">100</span>)

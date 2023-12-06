@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `actix-cors/src/inner.rs`."><title>inner.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="actix_cors" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9fad68599 2023-12-03)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="icon" href="https://actix.rs/favicon.ico"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../actix_cors/index.html"><img src="https://actix.rs/img/logo.png" alt="actix_cors"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `actix-cors/src/inner.rs`."><title>inner.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-c67e44d78ab2db17.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="actix_cors" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (e9013ac0e 2023-12-05)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="icon" href="https://actix.rs/favicon.ico"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../actix_cors/index.html"><img src="https://actix.rs/img/logo.png" alt="actix_cors"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -440,8 +440,8 @@
 }
 
 <span class="kw">impl </span>fmt::Debug <span class="kw">for </span>OriginFn {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
-        f.write_str(<span class="string">&quot;origin_fn&quot;</span>)
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        f.write_str(<span class="string">"origin_fn"</span>)
     }
 }
 
@@ -471,7 +471,7 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) preflight: bool,
     <span class="kw">pub</span>(<span class="kw">crate</span>) send_wildcard: bool,
     <span class="kw">pub</span>(<span class="kw">crate</span>) supports_credentials: bool,
-    <span class="attr">#[cfg(feature = <span class="string">&quot;draft-private-network-access&quot;</span>)]
+    <span class="attr">#[cfg(feature = <span class="string">"draft-private-network-access"</span>)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) allow_private_network_access: bool,
     <span class="kw">pub</span>(<span class="kw">crate</span>) vary_header: bool,
     <span class="kw">pub</span>(<span class="kw">crate</span>) block_on_origin_mismatch: bool,
@@ -519,14 +519,14 @@
             .any(|origin_fn| (origin_fn.boxed_fn)(origin, req))
     }
 
-    <span class="doccomment">/// Only called if origin exists and always after it&#39;s validated.
+    <span class="doccomment">/// Only called if origin exists and always after it's validated.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>access_control_allow_origin(<span class="kw-2">&amp;</span><span class="self">self</span>, req: <span class="kw-2">&amp;</span>RequestHead) -&gt; <span class="prelude-ty">Option</span>&lt;HeaderValue&gt; {
         <span class="kw">let </span>origin = req.headers().get(header::ORIGIN);
 
         <span class="kw">match </span><span class="self">self</span>.allowed_origins {
             AllOrSome::All =&gt; {
                 <span class="kw">if </span><span class="self">self</span>.send_wildcard {
-                    <span class="prelude-val">Some</span>(HeaderValue::from_static(<span class="string">&quot;*&quot;</span>))
+                    <span class="prelude-val">Some</span>(HeaderValue::from_static(<span class="string">"*"</span>))
                 } <span class="kw">else </span>{
                     <span class="comment">// see note below about why `.cloned()` is correct
                     </span>origin.cloned()
@@ -590,7 +590,7 @@
                 </span><span class="kw">let </span><span class="kw-2">mut </span>request_headers = HashSet::with_capacity(<span class="number">8</span>);
 
                 <span class="comment">// try to convert each header name in the comma-separated list
-                </span><span class="kw">for </span>hdr <span class="kw">in </span>headers.split(<span class="string">&#39;,&#39;</span>) {
+                </span><span class="kw">for </span>hdr <span class="kw">in </span>headers.split(<span class="string">','</span>) {
                     <span class="kw">match </span>hdr.trim().try_into() {
                         <span class="prelude-val">Ok</span>(hdr) =&gt; request_headers.insert(hdr),
                         <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(CorsError::BadRequestHeaders),
@@ -619,7 +619,7 @@
     }
 }
 
-<span class="doccomment">/// Add CORS related request headers to response&#39;s Vary header.
+<span class="doccomment">/// Add CORS related request headers to response's Vary header.
 ///
 /// See &lt;https://fetch.spec.whatwg.org/#cors-protocol-and-http-caches&gt;.
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>add_vary_header(headers: <span class="kw-2">&amp;mut </span>HeaderMap) {
@@ -627,23 +627,23 @@
         <span class="prelude-val">Some</span>(hdr) =&gt; {
             <span class="kw">let </span><span class="kw-2">mut </span>val: Vec&lt;u8&gt; = Vec::with_capacity(hdr.len() + <span class="number">71</span>);
             val.extend(hdr.as_bytes());
-            val.extend(<span class="string">b&quot;, Origin, Access-Control-Request-Method, Access-Control-Request-Headers&quot;</span>);
+            val.extend(<span class="string">b", Origin, Access-Control-Request-Method, Access-Control-Request-Headers"</span>);
 
-            <span class="attr">#[cfg(feature = <span class="string">&quot;draft-private-network-access&quot;</span>)]
-            </span>val.extend(<span class="string">b&quot;, Access-Control-Allow-Private-Network&quot;</span>);
+            <span class="attr">#[cfg(feature = <span class="string">"draft-private-network-access"</span>)]
+            </span>val.extend(<span class="string">b", Access-Control-Request-Private-Network"</span>);
 
             val.try_into().unwrap()
         }
 
-        <span class="attr">#[cfg(feature = <span class="string">&quot;draft-private-network-access&quot;</span>)]
+        <span class="attr">#[cfg(feature = <span class="string">"draft-private-network-access"</span>)]
         </span><span class="prelude-val">None </span>=&gt; HeaderValue::from_static(
-            <span class="string">&quot;Origin, Access-Control-Request-Method, Access-Control-Request-Headers, \
-            Access-Control-Allow-Private-Network&quot;</span>,
+            <span class="string">"Origin, Access-Control-Request-Method, Access-Control-Request-Headers, \
+            Access-Control-Request-Private-Network"</span>,
         ),
 
-        <span class="attr">#[cfg(not(feature = <span class="string">&quot;draft-private-network-access&quot;</span>))]
+        <span class="attr">#[cfg(not(feature = <span class="string">"draft-private-network-access"</span>))]
         </span><span class="prelude-val">None </span>=&gt; HeaderValue::from_static(
-            <span class="string">&quot;Origin, Access-Control-Request-Method, Access-Control-Request-Headers&quot;</span>,
+            <span class="string">"Origin, Access-Control-Request-Method, Access-Control-Request-Headers"</span>,
         ),
     };
 
@@ -672,14 +672,14 @@
     <span class="attr">#[actix_web::test]
     </span><span class="kw">async fn </span>test_validate_not_allowed_origin() {
         <span class="kw">let </span>cors = Cors::default()
-            .allowed_origin(<span class="string">&quot;https://www.example.com&quot;</span>)
+            .allowed_origin(<span class="string">"https://www.example.com"</span>)
             .new_transform(test::ok_service())
             .<span class="kw">await
             </span>.unwrap();
 
         <span class="kw">let </span>req = TestRequest::get()
-            .insert_header((header::ORIGIN, <span class="string">&quot;https://www.unknown.com&quot;</span>))
-            .insert_header((header::ACCESS_CONTROL_REQUEST_HEADERS, <span class="string">&quot;DNT&quot;</span>))
+            .insert_header((header::ORIGIN, <span class="string">"https://www.unknown.com"</span>))
+            .insert_header((header::ACCESS_CONTROL_REQUEST_HEADERS, <span class="string">"DNT"</span>))
             .to_srv_request();
 
         <span class="macro">assert!</span>(cors.inner.validate_origin(req.head()).is_err());
@@ -702,8 +702,8 @@
 
         <span class="kw">let </span>req = TestRequest::default()
             .method(Method::OPTIONS)
-            .insert_header((<span class="string">&quot;Origin&quot;</span>, <span class="string">&quot;https://www.example.com&quot;</span>))
-            .insert_header((header::ACCESS_CONTROL_REQUEST_HEADERS, <span class="string">&quot;X-Not-Allowed&quot;</span>))
+            .insert_header((<span class="string">"Origin"</span>, <span class="string">"https://www.example.com"</span>))
+            .insert_header((header::ACCESS_CONTROL_REQUEST_HEADERS, <span class="string">"X-Not-Allowed"</span>))
             .to_srv_request();
 
         <span class="macro">assert!</span>(cors.inner.validate_allowed_method(req.head()).is_err());
@@ -713,8 +713,8 @@
 
         <span class="kw">let </span>req = TestRequest::default()
             .method(Method::OPTIONS)
-            .insert_header((<span class="string">&quot;Origin&quot;</span>, <span class="string">&quot;https://www.example.com&quot;</span>))
-            .insert_header((header::ACCESS_CONTROL_REQUEST_METHOD, <span class="string">&quot;put&quot;</span>))
+            .insert_header((<span class="string">"Origin"</span>, <span class="string">"https://www.example.com"</span>))
+            .insert_header((header::ACCESS_CONTROL_REQUEST_METHOD, <span class="string">"put"</span>))
             .to_srv_request();
 
         <span class="macro">assert!</span>(cors.inner.validate_allowed_method(req.head()).is_err());
@@ -722,23 +722,23 @@
 
         <span class="kw">let </span>req = TestRequest::default()
             .method(Method::OPTIONS)
-            .insert_header((<span class="string">&quot;Origin&quot;</span>, <span class="string">&quot;https://www.example.com&quot;</span>))
-            .insert_header((header::ACCESS_CONTROL_REQUEST_METHOD, <span class="string">&quot;POST&quot;</span>))
+            .insert_header((<span class="string">"Origin"</span>, <span class="string">"https://www.example.com"</span>))
+            .insert_header((header::ACCESS_CONTROL_REQUEST_METHOD, <span class="string">"POST"</span>))
             .insert_header((
                 header::ACCESS_CONTROL_REQUEST_HEADERS,
-                <span class="string">&quot;AUTHORIZATION,ACCEPT&quot;</span>,
+                <span class="string">"AUTHORIZATION,ACCEPT"</span>,
             ))
             .to_srv_request();
 
         <span class="kw">let </span>resp = test::call_service(<span class="kw-2">&amp;</span>cors, req).<span class="kw">await</span>;
         <span class="macro">assert_eq!</span>(
-            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="string">b&quot;*&quot;</span>[..]),
+            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="string">b"*"</span>[..]),
             resp.headers()
                 .get(header::ACCESS_CONTROL_ALLOW_ORIGIN)
                 .map(HeaderValue::as_bytes)
         );
         <span class="macro">assert_eq!</span>(
-            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="string">b&quot;3600&quot;</span>[..]),
+            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="string">b"3600"</span>[..]),
             resp.headers()
                 .get(header::ACCESS_CONTROL_MAX_AGE)
                 .map(HeaderValue::as_bytes)
@@ -749,9 +749,9 @@
             .get(header::ACCESS_CONTROL_ALLOW_HEADERS)
             .map(val_as_str)
             .unwrap();
-        <span class="macro">assert!</span>(hdr.contains(<span class="string">&quot;authorization&quot;</span>));
-        <span class="macro">assert!</span>(hdr.contains(<span class="string">&quot;accept&quot;</span>));
-        <span class="macro">assert!</span>(hdr.contains(<span class="string">&quot;content-type&quot;</span>));
+        <span class="macro">assert!</span>(hdr.contains(<span class="string">"authorization"</span>));
+        <span class="macro">assert!</span>(hdr.contains(<span class="string">"accept"</span>));
+        <span class="macro">assert!</span>(hdr.contains(<span class="string">"content-type"</span>));
 
         <span class="kw">let </span>methods = resp
             .headers()
@@ -759,19 +759,19 @@
             .unwrap()
             .to_str()
             .unwrap();
-        <span class="macro">assert!</span>(methods.contains(<span class="string">&quot;POST&quot;</span>));
-        <span class="macro">assert!</span>(methods.contains(<span class="string">&quot;GET&quot;</span>));
-        <span class="macro">assert!</span>(methods.contains(<span class="string">&quot;OPTIONS&quot;</span>));
+        <span class="macro">assert!</span>(methods.contains(<span class="string">"POST"</span>));
+        <span class="macro">assert!</span>(methods.contains(<span class="string">"GET"</span>));
+        <span class="macro">assert!</span>(methods.contains(<span class="string">"OPTIONS"</span>));
 
         Rc::get_mut(<span class="kw-2">&amp;mut </span>cors.inner).unwrap().preflight = <span class="bool-val">false</span>;
 
         <span class="kw">let </span>req = TestRequest::default()
             .method(Method::OPTIONS)
-            .insert_header((<span class="string">&quot;Origin&quot;</span>, <span class="string">&quot;https://www.example.com&quot;</span>))
-            .insert_header((header::ACCESS_CONTROL_REQUEST_METHOD, <span class="string">&quot;POST&quot;</span>))
+            .insert_header((<span class="string">"Origin"</span>, <span class="string">"https://www.example.com"</span>))
+            .insert_header((header::ACCESS_CONTROL_REQUEST_METHOD, <span class="string">"POST"</span>))
             .insert_header((
                 header::ACCESS_CONTROL_REQUEST_HEADERS,
-                <span class="string">&quot;AUTHORIZATION,ACCEPT&quot;</span>,
+                <span class="string">"AUTHORIZATION,ACCEPT"</span>,
             ))
             .to_srv_request();
 
@@ -786,7 +786,7 @@
                 <span class="kw">let </span>head_origin = head
                     .headers()
                     .get(header::ORIGIN)
-                    .expect(<span class="string">&quot;unwrapping origin header should never fail in allowed_origin_fn&quot;</span>);
+                    .expect(<span class="string">"unwrapping origin header should never fail in allowed_origin_fn"</span>);
                 <span class="macro">assert!</span>(origin == head_origin);
                 <span class="bool-val">true
             </span>})
@@ -798,15 +798,15 @@
 
         <span class="kw">let </span>req = TestRequest::default()
             .method(Method::OPTIONS)
-            .insert_header((<span class="string">&quot;Origin&quot;</span>, <span class="string">&quot;https://www.example.com&quot;</span>))
-            .insert_header((header::ACCESS_CONTROL_REQUEST_METHOD, <span class="string">&quot;POST&quot;</span>))
+            .insert_header((<span class="string">"Origin"</span>, <span class="string">"https://www.example.com"</span>))
+            .insert_header((header::ACCESS_CONTROL_REQUEST_METHOD, <span class="string">"POST"</span>))
             .to_srv_request();
         <span class="kw">let </span>resp = test::call_service(<span class="kw-2">&amp;</span>cors, req).<span class="kw">await</span>;
         <span class="macro">assert_eq!</span>(resp.status(), StatusCode::OK);
 
         <span class="kw">let </span>req = TestRequest::default()
             .method(Method::GET)
-            .insert_header((<span class="string">&quot;Origin&quot;</span>, <span class="string">&quot;https://www.example.com&quot;</span>))
+            .insert_header((<span class="string">"Origin"</span>, <span class="string">"https://www.example.com"</span>))
             .to_srv_request();
         <span class="kw">let </span>resp = test::call_service(<span class="kw-2">&amp;</span>cors, req).<span class="kw">await</span>;
         <span class="macro">assert_eq!</span>(resp.status(), StatusCode::NO_CONTENT);
