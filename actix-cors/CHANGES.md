@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Fix `add_vary_header` to provide `Access-Control-Request-Private-Network`.
 - Minimum supported Rust version (MSRV) is now 1.68.
 
 ## 0.6.4
