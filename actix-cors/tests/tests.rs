@@ -272,7 +272,7 @@ async fn test_response() {
     #[cfg(feature = "draft-private-network-access")]
     assert_eq!(
         resp.headers().get(header::VARY).map(HeaderValue::as_bytes),
-        Some(&b"Origin, Access-Control-Request-Method, Access-Control-Request-Headers, Access-Control-Allow-Private-Network"[..]),
+        Some(&b"Origin, Access-Control-Request-Method, Access-Control-Request-Headers, Access-Control-Request-Private-Network"[..]),
     );
 
     #[allow(clippy::needless_collect)]
@@ -328,7 +328,7 @@ async fn test_response() {
     #[cfg(feature = "draft-private-network-access")]
     assert_eq!(
         resp.headers().get(header::VARY).map(HeaderValue::as_bytes).unwrap(),
-        b"Accept, Origin, Access-Control-Request-Method, Access-Control-Request-Headers, Access-Control-Allow-Private-Network",
+        b"Accept, Origin, Access-Control-Request-Method, Access-Control-Request-Headers, Access-Control-Request-Private-Network",
     );
 
     let cors = Cors::default()
@@ -494,7 +494,7 @@ async fn vary_header_on_all_handled_responses() {
             .expect("response should have Vary header")
             .to_str()
             .unwrap(),
-        "Origin, Access-Control-Request-Method, Access-Control-Request-Headers, Access-Control-Allow-Private-Network",
+        "Origin, Access-Control-Request-Method, Access-Control-Request-Headers, Access-Control-Request-Private-Network",
     );
 
     // follow-up regular request
@@ -520,7 +520,7 @@ async fn vary_header_on_all_handled_responses() {
             .expect("response should have Vary header")
             .to_str()
             .unwrap(),
-        "Origin, Access-Control-Request-Method, Access-Control-Request-Headers, Access-Control-Allow-Private-Network",
+        "Origin, Access-Control-Request-Method, Access-Control-Request-Headers, Access-Control-Request-Private-Network",
     );
 
     let cors = Cors::default()
@@ -552,7 +552,7 @@ async fn vary_header_on_all_handled_responses() {
             .expect("response should have Vary header")
             .to_str()
             .unwrap(),
-        "Origin, Access-Control-Request-Method, Access-Control-Request-Headers, Access-Control-Allow-Private-Network",
+        "Origin, Access-Control-Request-Method, Access-Control-Request-Headers, Access-Control-Request-Private-Network",
     );
 
     // regular request no origin
@@ -575,7 +575,7 @@ async fn vary_header_on_all_handled_responses() {
             .expect("response should have Vary header")
             .to_str()
             .unwrap(),
-        "Origin, Access-Control-Request-Method, Access-Control-Request-Headers, Access-Control-Allow-Private-Network",
+        "Origin, Access-Control-Request-Method, Access-Control-Request-Headers, Access-Control-Request-Private-Network",
     );
 }
 
