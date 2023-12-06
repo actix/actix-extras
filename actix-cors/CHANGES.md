@@ -2,7 +2,9 @@
 
 ## Unreleased
 
-- Fix `add_vary_header` to provide `Access-Control-Request-Private-Network`.
+## 0.6.5
+
+- Fix `Vary` header when Private Network Access is enabled.
 - Minimum supported Rust version (MSRV) is now 1.68.
 
 ## 0.6.4
