@@ -35,7 +35,7 @@ jobs:
         with:
           toolchain: nightly
 
-      - uses: taiki-e/install-action@v2.22.6
+      - uses: taiki-e/install-action@v2.23.1
         with:
           tool: cargo-hack
 
@@ -77,7 +77,7 @@ jobs:
         with:
           toolchain: nightly
 
-      - uses: taiki-e/install-action@v2.22.6
+      - uses: taiki-e/install-action@v2.23.1
         with:
           tool: cargo-hack
 
