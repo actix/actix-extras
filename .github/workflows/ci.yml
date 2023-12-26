@@ -48,10 +48,10 @@ jobs:
         with:
           toolchain: ${{ matrix.version.version }}
 
-      - name: Install cargo-hack
+      - name: Install cargo-hack and cargo-ci-cache-clean
         uses: taiki-e/install-action@v2.23.1
         with:
-          tool: cargo-hack
+          tool: cargo-hack,cargo-ci-cache-clean
 
       # - name: workaround MSRV issues
       #   if: matrix.version.name == 'msrv'
@@ -70,11 +70,6 @@ jobs:
       - name: tests
         timeout-minutes: 40
         run: cargo ci-test
-
-      - name: Install cargo-ci-cache-clean
-        uses: taiki-e/install-action@v2.23.2
-        with:
-          tool: cargo-ci-cache-clean
 
       - name: CI cache clean
         run: cargo-ci-cache-clean
@@ -102,10 +97,10 @@ jobs:
         with:
           toolchain: ${{ matrix.version.version }}
 
-      - name: Install cargo-hack
+      - name: Install cargo-hack and cargo-ci-cache-clean
         uses: taiki-e/install-action@v2.23.1
         with:
-          tool: cargo-hack
+          tool: cargo-hack,cargo-ci-cache-clean
 
       # - name: workaround MSRV issues
       #   if: matrix.version.name == 'msrv'
@@ -124,11 +119,6 @@ jobs:
       - name: tests
         timeout-minutes: 40
         run: cargo ci-test --exclude=actix-redis --exclude=actix-session --exclude=actix-limitation
-
-      - name: Install cargo-ci-cache-clean
-        uses: taiki-e/install-action@v2.23.2
-        with:
-          tool: cargo-ci-cache-clean
 
       - name: CI cache clean
         run: cargo-ci-cache-clean
