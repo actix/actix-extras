@@ -1,13 +1,10 @@
 use actix::Addr;
 use actix_redis::{resp_array, Command, RedisActor, RespValue};
 use actix_web::cookie::time::Duration;
-use anyhow::Error;
 
-use super::SessionKey;
-use crate::storage::{
-    interface::{LoadError, SaveError, SessionState, UpdateError},
-    utils::generate_session_key,
-    SessionStore,
+use super::{
+    interface::SessionState, utils::generate_session_key, LoadError, SaveError, SessionKey,
+    SessionStore, UpdateError,
 };
 
 /// Use Redis as session storage backend.
@@ -154,6 +151,7 @@ impl SessionStore for RedisActorSessionStore {
         let body = serde_json::to_string(&session_state)
             .map_err(Into::into)
             .map_err(SaveError::Serialization)?;
+
         let session_key = generate_session_key();
         let cache_key = (self.configuration.cache_keygen)(session_key.as_ref());
 
@@ -237,7 +235,11 @@ impl SessionStore for RedisActorSessionStore {
         }
     }
 
-    async fn update_ttl(&self, session_key: &SessionKey, ttl: &Duration) -> Result<(), Error> {
+    async fn update_ttl(
+        &self,
+        session_key: &SessionKey,
+        ttl: &Duration,
+    ) -> Result<(), anyhow::Error> {
         let cache_key = (self.configuration.cache_keygen)(session_key.as_ref());
 
         let cmd = Command(resp_array![

@@ -1,14 +1,12 @@
-use std::{convert::TryInto, sync::Arc};
+use std::{convert::TryInto as _, sync::Arc};
 
 use actix_web::cookie::time::Duration;
-use anyhow::{Context, Error};
+use anyhow::Context as _;
 use redis::{aio::ConnectionManager, AsyncCommands, Cmd, FromRedisValue, RedisResult, Value};
 
-use super::SessionKey;
-use crate::storage::{
-    interface::{LoadError, SaveError, SessionState, UpdateError},
-    utils::generate_session_key,
-    SessionStore,
+use super::{
+    interface::SessionState, utils::generate_session_key, LoadError, SaveError, SessionKey,
+    SessionStore, UpdateError,
 };
 
 /// Use Redis as session storage backend.
@@ -137,8 +135,8 @@ impl SessionStore for RedisSessionStore {
     async fn load(&self, session_key: &SessionKey) -> Result<Option<SessionState>, LoadError> {
         let cache_key = (self.configuration.cache_keygen)(session_key.as_ref());
 
-        let value: Option<String> = self
-            .execute_command(redis::cmd("GET").arg(&[&cache_key]))
+        let value = self
+            .execute_command::<Option<String>>(redis::cmd("GET").arg(&[&cache_key]))
             .await
             .map_err(Into::into)
             .map_err(LoadError::Other)?;
@@ -159,6 +157,7 @@ impl SessionStore for RedisSessionStore {
         let body = serde_json::to_string(&session_state)
             .map_err(Into::into)
             .map_err(SaveError::Serialization)?;
+
         let session_key = generate_session_key();
         let cache_key = (self.configuration.cache_keygen)(session_key.as_ref());
 
@@ -167,7 +166,7 @@ impl SessionStore for RedisSessionStore {
             &body,
             "NX", // NX: only set the key if it does not already exist
             "EX", // EX: set expiry
-            &format!("{}", ttl.whole_seconds()),
+            ttl.whole_seconds().to_string().as_str(),
         ]))
         .await
         .map_err(Into::into)
@@ -192,9 +191,9 @@ impl SessionStore for RedisSessionStore {
             .execute_command(redis::cmd("SET").arg(&[
                 &cache_key,
                 &body,
-                "XX", // XX: Only set the key if it already exist.
+                "XX", // XX: only set the key if it already exists
                 "EX", // EX: set expiry
-                &format!("{}", ttl.whole_seconds()),
+                ttl.whole_seconds().to_string().as_str(),
             ]))
             .await
             .map_err(Into::into)
@@ -221,7 +220,11 @@ impl SessionStore for RedisSessionStore {
         }
     }
 
-    async fn update_ttl(&self, session_key: &SessionKey, ttl: &Duration) -> Result<(), Error> {
+    async fn update_ttl(
+        &self,
+        session_key: &SessionKey,
+        ttl: &Duration,
+    ) -> Result<(), anyhow::Error> {
         let cache_key = (self.configuration.cache_keygen)(session_key.as_ref());
 
         self.client
@@ -233,6 +236,7 @@ impl SessionStore for RedisSessionStore {
                 )?,
             )
             .await?;
+
         Ok(())
     }
 
@@ -320,12 +324,14 @@ mod tests {
     async fn loading_an_invalid_session_state_returns_deserialization_error() {
         let store = redis_store().await;
         let session_key = generate_session_key();
+
         store
             .client
             .clone()
             .set::<_, _, ()>(session_key.as_ref(), "random-thing-which-is-not-json")
             .await
             .unwrap();
+
         assert!(matches!(
             store.load(&session_key).await.unwrap_err(),
             LoadError::Deserialization(_),
@@ -337,10 +343,12 @@ mod tests {
         let store = redis_store().await;
         let session_key = generate_session_key();
         let initial_session_key = session_key.as_ref().to_owned();
+
         let updated_session_key = store
             .update(session_key, HashMap::new(), &time::Duration::seconds(1))
             .await
             .unwrap();
+
         assert_ne!(initial_session_key, updated_session_key.as_ref());
     }
 }

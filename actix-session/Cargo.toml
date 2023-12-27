@@ -20,6 +20,7 @@ all-features = true
 [features]
 default = []
 cookie-session = []
+sled-session = ["sled"]
 redis-actor-session = ["actix-redis", "actix", "futures-core", "rand"]
 redis-rs-session = ["redis", "rand"]
 redis-rs-tls-session = ["redis-rs-session", "redis/tokio-native-tls-comp"]
@@ -36,6 +37,9 @@ rand = { version = "0.8", optional = true }
 serde = { version = "1" }
 serde_json = { version = "1" }
 tracing = { version = "0.1.30", default-features = false, features = ["log"] }
+
+# sled-session
+sled = { version = "0.34", optional = true }
 
 # redis-actor-session
 actix = { version = "0.13", default-features = false, optional = true }
@@ -54,7 +58,7 @@ log = "0.4"
 
 [[example]]
 name = "basic"
-required-features = ["redis-actor-session"]
+required-features = ["sled-session"]
 
 [[example]]
 name = "authentication"

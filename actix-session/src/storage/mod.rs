@@ -11,6 +11,9 @@ pub use self::{
 #[cfg(feature = "cookie-session")]
 mod cookie;
 
+#[cfg(feature = "sled-session")]
+mod sled;
+
 #[cfg(feature = "redis-actor-session")]
 mod redis_actor;
 
@@ -21,8 +24,10 @@ mod redis_rs;
 mod utils;
 
 #[cfg(feature = "cookie-session")]
-pub use cookie::CookieSessionStore;
+pub use self::cookie::CookieSessionStore;
 #[cfg(feature = "redis-actor-session")]
-pub use redis_actor::{RedisActorSessionStore, RedisActorSessionStoreBuilder};
+pub use self::redis_actor::{RedisActorSessionStore, RedisActorSessionStoreBuilder};
 #[cfg(feature = "redis-rs-session")]
-pub use redis_rs::{RedisSessionStore, RedisSessionStoreBuilder};
+pub use self::redis_rs::{RedisSessionStore, RedisSessionStoreBuilder};
+#[cfg(feature = "sled-session")]
+pub use self::sled::SledSessionStore;

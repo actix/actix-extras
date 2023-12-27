@@ -1,4 +1,4 @@
-use actix_session::{storage::RedisActorSessionStore, Session, SessionMiddleware};
+use actix_session::{storage::SledSessionStore, Session, SessionMiddleware};
 use actix_web::{cookie::Key, middleware, web, App, Error, HttpRequest, HttpServer, Responder};
 
 /// simple handler
@@ -21,7 +21,9 @@ async fn main() -> std::io::Result<()> {
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
 
     // The signing key would usually be read from a configuration file/environment variables.
-    let signing_key = Key::generate();
+    let signing_key = Key::from(&[0; 64]);
+
+    let sled_session_store = SledSessionStore::new("./session.db").unwrap();
 
     log::info!("starting HTTP server at http://localhost:8080");
 
@@ -31,7 +33,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(middleware::Logger::default())
             // cookie session middleware
             .wrap(SessionMiddleware::new(
-                RedisActorSessionStore::new("127.0.0.1:6379"),
+                sled_session_store.clone(),
                 signing_key.clone(),
             ))
             // register simple route, handle all methods

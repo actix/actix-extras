@@ -10,6 +10,7 @@ guide/build/
 *.pyc
 *.pid
 *.sock
+*.db
 *~
 .DS_Store
 
