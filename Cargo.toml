@@ -13,9 +13,10 @@ members = [
 ]
 
 [workspace.package]
+homepage = "https://actix.rs"
 license = "MIT OR Apache-2.0"
 edition = "2021"
-rust-version = "1.68"
+rust-version = "1.75"
 
 [patch.crates-io]
 actix-cors = { path = "./actix-cors" }

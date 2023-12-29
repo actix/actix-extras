@@ -10,8 +10,8 @@
 ## Documentation & Resources
 
 - [API Documentation](https://docs.rs/actix-ws)
-- [Example Projects](https://github.com/actix/examples/tree/master/websockets)
-- Minimum Supported Rust Version (MSRV): 1.68
+- [Example Chat Project](https://github.com/actix/examples/tree/master/websockets/chat-actorless)
+- Minimum Supported Rust Version (MSRV): 1.75
 
 ## Usage
 

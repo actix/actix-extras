@@ -10,10 +10,6 @@ pub(crate) type SessionState = HashMap<String, String>;
 /// The interface to retrieve and save the current session data from/to the chosen storage backend.
 ///
 /// You can provide your own custom session store backend by implementing this trait.
-///
-/// [`async-trait`](https://docs.rs/async-trait) is used for this trait's definition. Therefore, it
-/// is required for implementations, too. In particular, we use the send-optional variant:
-/// `#[async_trait(?Send)]`.
 pub trait SessionStore {
     /// Loads the session state associated to a session key.
     fn load(

@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Remove use of `async-trait` on `SessionStore` trait.
+- Minimum supported Rust version (MSRV) is now 1.75.
 
 ## 0.8.0
 
