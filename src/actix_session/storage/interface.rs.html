@@ -113,9 +113,7 @@
 <a href="#111" id="111">111</a>
 <a href="#112" id="112">112</a>
 <a href="#113" id="113">113</a>
-<a href="#114" id="114">114</a>
-<a href="#115" id="115">115</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::HashMap;
+</pre></div><pre class="rust"><code><span class="kw">use </span>std::{collections::HashMap, future::Future};
 
 <span class="kw">use </span>actix_web::cookie::time::Duration;
 <span class="kw">use </span>derive_more::Display;
@@ -127,41 +125,39 @@
 <span class="doccomment">/// The interface to retrieve and save the current session data from/to the chosen storage backend.
 ///
 /// You can provide your own custom session store backend by implementing this trait.
-///
-/// [`async-trait`](https://docs.rs/async-trait) is used for this trait's definition. Therefore, it
-/// is required for implementations, too. In particular, we use the send-optional variant:
-/// `#[async_trait(?Send)]`.
-</span><span class="attr">#[async_trait::async_trait(<span class="question-mark">?</span>Send)]
 </span><span class="kw">pub trait </span>SessionStore {
     <span class="doccomment">/// Loads the session state associated to a session key.
-    </span><span class="kw">async fn </span>load(<span class="kw-2">&amp;</span><span class="self">self</span>, session_key: <span class="kw-2">&amp;</span>SessionKey) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;SessionState&gt;, LoadError&gt;;
+    </span><span class="kw">fn </span>load(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        session_key: <span class="kw-2">&amp;</span>SessionKey,
+    ) -&gt; <span class="kw">impl </span>Future&lt;Output = <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;SessionState&gt;, LoadError&gt;&gt;;
 
     <span class="doccomment">/// Persist the session state for a newly created session.
     ///
     /// Returns the corresponding session key.
-    </span><span class="kw">async fn </span>save(
+    </span><span class="kw">fn </span>save(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         session_state: SessionState,
         ttl: <span class="kw-2">&amp;</span>Duration,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;SessionKey, SaveError&gt;;
+    ) -&gt; <span class="kw">impl </span>Future&lt;Output = <span class="prelude-ty">Result</span>&lt;SessionKey, SaveError&gt;&gt;;
 
     <span class="doccomment">/// Updates the session state associated to a pre-existing session key.
-    </span><span class="kw">async fn </span>update(
+    </span><span class="kw">fn </span>update(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         session_key: SessionKey,
         session_state: SessionState,
         ttl: <span class="kw-2">&amp;</span>Duration,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;SessionKey, UpdateError&gt;;
+    ) -&gt; <span class="kw">impl </span>Future&lt;Output = <span class="prelude-ty">Result</span>&lt;SessionKey, UpdateError&gt;&gt;;
 
     <span class="doccomment">/// Updates the TTL of the session state associated to a pre-existing session key.
-    </span><span class="kw">async fn </span>update_ttl(
+    </span><span class="kw">fn </span>update_ttl(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         session_key: <span class="kw-2">&amp;</span>SessionKey,
         ttl: <span class="kw-2">&amp;</span>Duration,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), anyhow::Error&gt;;
+    ) -&gt; <span class="kw">impl </span>Future&lt;Output = <span class="prelude-ty">Result</span>&lt;(), anyhow::Error&gt;&gt;;
 
     <span class="doccomment">/// Deletes a session from the store.
-    </span><span class="kw">async fn </span>delete(<span class="kw-2">&amp;</span><span class="self">self</span>, session_key: <span class="kw-2">&amp;</span>SessionKey) -&gt; <span class="prelude-ty">Result</span>&lt;(), anyhow::Error&gt;;
+    </span><span class="kw">fn </span>delete(<span class="kw-2">&amp;</span><span class="self">self</span>, session_key: <span class="kw-2">&amp;</span>SessionKey) -&gt; <span class="kw">impl </span>Future&lt;Output = <span class="prelude-ty">Result</span>&lt;(), anyhow::Error&gt;&gt;;
 }
 
 <span class="comment">// We cannot derive the `Error` implementation using `derive_more` for our custom errors:

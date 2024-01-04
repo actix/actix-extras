@@ -312,7 +312,6 @@
 <a href="#310" id="310">310</a>
 <a href="#311" id="311">311</a>
 <a href="#312" id="312">312</a>
-<a href="#313" id="313">313</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>actix::Addr;
 <span class="kw">use </span>actix_redis::{resp_array, Command, RedisActor, RespValue};
 <span class="kw">use </span>actix_web::cookie::time::Duration;
@@ -433,8 +432,7 @@
     }
 }
 
-<span class="attr">#[async_trait::async_trait(<span class="question-mark">?</span>Send)]
-</span><span class="kw">impl </span>SessionStore <span class="kw">for </span>RedisActorSessionStore {
+<span class="kw">impl </span>SessionStore <span class="kw">for </span>RedisActorSessionStore {
     <span class="kw">async fn </span>load(<span class="kw-2">&amp;</span><span class="self">self</span>, session_key: <span class="kw-2">&amp;</span>SessionKey) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;SessionState&gt;, LoadError&gt; {
         <span class="kw">let </span>cache_key = (<span class="self">self</span>.configuration.cache_keygen)(session_key.as_ref());
         <span class="kw">let </span>val = <span class="self">self

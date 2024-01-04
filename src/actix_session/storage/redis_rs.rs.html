@@ -340,7 +340,6 @@
 <a href="#338" id="338">338</a>
 <a href="#339" id="339">339</a>
 <a href="#340" id="340">340</a>
-<a href="#341" id="341">341</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">use </span>actix_web::cookie::time::Duration;
@@ -475,8 +474,7 @@
     }
 }
 
-<span class="attr">#[async_trait::async_trait(<span class="question-mark">?</span>Send)]
-</span><span class="kw">impl </span>SessionStore <span class="kw">for </span>RedisSessionStore {
+<span class="kw">impl </span>SessionStore <span class="kw">for </span>RedisSessionStore {
     <span class="kw">async fn </span>load(<span class="kw-2">&amp;</span><span class="self">self</span>, session_key: <span class="kw-2">&amp;</span>SessionKey) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;SessionState&gt;, LoadError&gt; {
         <span class="kw">let </span>cache_key = (<span class="self">self</span>.configuration.cache_keygen)(session_key.as_ref());
 
