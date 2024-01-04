@@ -680,6 +680,7 @@
 <a href="#678" id="678">678</a>
 <a href="#679" id="679">679</a>
 <a href="#680" id="680">680</a>
+<a href="#681" id="681">681</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{collections::HashSet, convert::TryInto, iter::FromIterator, rc::Rc};
 
 <span class="kw">use </span>actix_utils::future::{<span class="self">self</span>, Ready};
@@ -764,6 +765,7 @@
 ///
 /// [Fetch Standard CORS protocol]: https://fetch.spec.whatwg.org/#http-cors-protocol
 </span><span class="attr">#[derive(Debug)]
+#[must_use]
 </span><span class="kw">pub struct </span>Cors {
     inner: Rc&lt;Inner&gt;,
     error: <span class="prelude-ty">Option</span>&lt;Either&lt;HttpError, CorsError&gt;&gt;,
