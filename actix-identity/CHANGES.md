@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Replace the usages of `HashMap` with `serde::Map`.
+
 ## 0.6.0
 
 - Add `error` module.

@@ -6,6 +6,7 @@ use actix_web::{
     http::StatusCode,
     Error, FromRequest, HttpMessage, HttpRequest, HttpResponse,
 };
+use serde_json::Value;
 
 use crate::{
     config::LogoutBehaviour,
@@ -153,13 +154,17 @@ impl Identity {
     /// ```
     pub fn login(ext: &Extensions, id: String) -> Result<Self, LoginError> {
         let inner = IdentityInner::extract(ext);
-        inner.session.insert(ID_KEY, id)?;
+        inner.session.insert(ID_KEY, Value::from(id));
         let now = OffsetDateTime::now_utc().unix_timestamp();
         if inner.is_login_deadline_enabled {
-            inner.session.insert(LOGIN_UNIX_TIMESTAMP_KEY, now)?;
+            inner
+                .session
+                .insert(LOGIN_UNIX_TIMESTAMP_KEY, Value::from(now));
         }
         if inner.is_visit_deadline_enabled {
-            inner.session.insert(LAST_VISIT_UNIX_TIMESTAMP_KEY, now)?;
+            inner
+                .session
+                .insert(LAST_VISIT_UNIX_TIMESTAMP_KEY, Value::from(now));
         }
         inner.session.renew();
         Ok(Self(inner))
@@ -230,7 +235,9 @@ impl Identity {
 
     pub(crate) fn set_last_visited_at(&self) -> Result<(), LoginError> {
         let now = OffsetDateTime::now_utc().unix_timestamp();
-        self.0.session.insert(LAST_VISIT_UNIX_TIMESTAMP_KEY, now)?;
+        self.0
+            .session
+            .insert(LAST_VISIT_UNIX_TIMESTAMP_KEY, Value::from(now));
         Ok(())
     }
 }

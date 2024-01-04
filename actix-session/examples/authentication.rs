@@ -5,6 +5,7 @@ use actix_web::{
     middleware, web, App, Error, HttpResponse, HttpServer, Responder,
 };
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 #[derive(Deserialize)]
 struct Credentials {
@@ -54,7 +55,7 @@ async fn login(
     let credentials = credentials.into_inner();
 
     match User::authenticate(credentials) {
-        Ok(user) => session.insert("user_id", user.id).unwrap(),
+        Ok(user) => session.insert("user_id", Value::from(user.id)),
         Err(err) => return Err(InternalError::from_response("", err).into()),
     };
 
