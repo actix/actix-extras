@@ -44,7 +44,6 @@ async fn errors_are_opaque() {
 
 struct MockStore;
 
-#[async_trait::async_trait(?Send)]
 impl SessionStore for MockStore {
     async fn load(
         &self,

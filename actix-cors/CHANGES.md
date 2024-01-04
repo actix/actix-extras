@@ -3,6 +3,7 @@
 ## Unreleased
 
 - `Cors` is now marked `#[must_use]`.
+- Minimum supported Rust version (MSRV) is now 1.75.
 
 ## 0.6.5
 
