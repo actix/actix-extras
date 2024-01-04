@@ -82,6 +82,7 @@ static ALL_METHODS_SET: Lazy<HashSet<Method>> = Lazy::new(|| {
 ///
 /// [Fetch Standard CORS protocol]: https://fetch.spec.whatwg.org/#http-cors-protocol
 #[derive(Debug)]
+#[must_use]
 pub struct Cors {
     inner: Rc<Inner>,
     error: Option<Either<HttpError, CorsError>>,

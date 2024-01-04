@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- `Cors` is now marked `#[must_use]`.
+
 ## 0.6.5
 
 - Fix `Vary` header when Private Network Access is enabled.
