@@ -131,9 +131,9 @@
 <span class="kw">mod </span>inner;
 <span class="kw">mod </span>middleware;
 
-<span class="kw">use </span>all_or_some::AllOrSome;
-<span class="kw">pub use </span>builder::Cors;
-<span class="kw">pub use </span>error::CorsError;
-<span class="kw">use </span>inner::{Inner, OriginFn};
-<span class="kw">pub use </span>middleware::CorsMiddleware;
+<span class="kw">use crate</span>::{
+    all_or_some::AllOrSome,
+    inner::{Inner, OriginFn},
+};
+<span class="kw">pub use crate</span>::{builder::Cors, error::CorsError, middleware::CorsMiddleware};
 </code></pre></div></section></main></body></html>

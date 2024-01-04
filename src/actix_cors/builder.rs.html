@@ -681,7 +681,7 @@
 <a href="#679" id="679">679</a>
 <a href="#680" id="680">680</a>
 <a href="#681" id="681">681</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>std::{collections::HashSet, convert::TryInto, iter::FromIterator, rc::Rc};
+</pre></div><pre class="rust"><code><span class="kw">use </span>std::{collections::HashSet, iter::FromIterator, rc::Rc};
 
 <span class="kw">use </span>actix_utils::future::{<span class="self">self</span>, Ready};
 <span class="kw">use </span>actix_web::{
@@ -1293,7 +1293,7 @@
 
 <span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>test {
-    <span class="kw">use </span>std::convert::{Infallible, TryInto};
+    <span class="kw">use </span>std::convert::Infallible;
 
     <span class="kw">use </span>actix_web::{
         body,

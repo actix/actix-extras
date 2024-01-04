@@ -341,15 +341,10 @@
 <a href="#339" id="339">339</a>
 <a href="#340" id="340">340</a>
 <a href="#341" id="341">341</a>
-<a href="#342" id="342">342</a>
-<a href="#343" id="343">343</a>
-<a href="#344" id="344">344</a>
-<a href="#345" id="345">345</a>
-<a href="#346" id="346">346</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>std::{convert::TryInto, sync::Arc};
+</pre></div><pre class="rust"><code><span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">use </span>actix_web::cookie::time::Duration;
-<span class="kw">use </span>anyhow::{Context, Error};
+<span class="kw">use </span>anyhow::Error;
 <span class="kw">use </span>redis::{aio::ConnectionManager, AsyncCommands, Cmd, FromRedisValue, RedisResult, Value};
 
 <span class="kw">use </span><span class="kw">super</span>::SessionKey;
@@ -574,12 +569,7 @@
 
         <span class="self">self</span>.client
             .clone()
-            .expire(
-                <span class="kw-2">&amp;</span>cache_key,
-                ttl.whole_seconds().try_into().context(
-                    <span class="string">"Failed to convert the state TTL into the number of whole seconds remaining"</span>,
-                )<span class="question-mark">?</span>,
-            )
+            .expire(<span class="kw-2">&amp;</span>cache_key, ttl.whole_seconds())
             .<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
