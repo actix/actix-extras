@@ -1,5 +1,3 @@
-use std::convert::TryInto;
-
 use actix_web::cookie::time::Duration;
 use anyhow::Error;
 

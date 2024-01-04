@@ -1,5 +1,3 @@
-use std::convert::TryInto;
-
 use rand::{distributions::Alphanumeric, rngs::OsRng, Rng as _};
 
 use crate::storage::SessionKey;

@@ -1,4 +1,4 @@
-use std::{collections::HashSet, convert::TryInto, iter::FromIterator, rc::Rc};
+use std::{collections::HashSet, iter::FromIterator, rc::Rc};
 
 use actix_utils::future::{self, Ready};
 use actix_web::{
@@ -610,7 +610,7 @@ where
 
 #[cfg(test)]
 mod test {
-    use std::convert::{Infallible, TryInto};
+    use std::convert::Infallible;
 
     use actix_web::{
         body,

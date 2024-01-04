@@ -61,8 +61,8 @@ mod error;
 mod inner;
 mod middleware;
 
-use all_or_some::AllOrSome;
-pub use builder::Cors;
-pub use error::CorsError;
-use inner::{Inner, OriginFn};
-pub use middleware::CorsMiddleware;
+use crate::{
+    all_or_some::AllOrSome,
+    inner::{Inner, OriginFn},
+};
+pub use crate::{builder::Cors, error::CorsError, middleware::CorsMiddleware};

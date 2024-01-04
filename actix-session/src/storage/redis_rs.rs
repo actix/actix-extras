@@ -1,7 +1,7 @@
-use std::{convert::TryInto, sync::Arc};
+use std::sync::Arc;
 
 use actix_web::cookie::time::Duration;
-use anyhow::{Context, Error};
+use anyhow::Error;
 use redis::{aio::ConnectionManager, AsyncCommands, Cmd, FromRedisValue, RedisResult, Value};
 
 use super::SessionKey;
@@ -226,12 +226,7 @@ impl SessionStore for RedisSessionStore {
 
         self.client
             .clone()
-            .expire(
-                &cache_key,
-                ttl.whole_seconds().try_into().context(
-                    "Failed to convert the state TTL into the number of whole seconds remaining",
-                )?,
-            )
+            .expire(&cache_key, ttl.whole_seconds())
             .await?;
         Ok(())
     }

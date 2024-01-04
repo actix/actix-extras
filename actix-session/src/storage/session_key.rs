@@ -1,5 +1,3 @@
-use std::convert::TryFrom;
-
 use derive_more::{Display, From};
 
 /// A session key, the string stored in a client-side cookie to associate a user with its session
@@ -10,7 +8,6 @@ use derive_more::{Display, From};
 /// required to be smaller than 4064 bytes.
 ///
 /// ```rust
-/// # use std::convert::TryInto;
 /// use actix_session::storage::SessionKey;
 ///
 /// let key: String = std::iter::repeat('a').take(4065).collect();
