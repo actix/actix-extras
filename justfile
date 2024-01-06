@@ -1,6 +1,14 @@
 _list:
     @just --list
 
+# Format workspace.
+fmt:
+    npx -y prettier --write $(fd --hidden --extension=yml --extension=md)
+
+# Update READMEs from crate root documentation.
+update-readmes: && fmt
+    cd ./actix-cors && cargo rdme --force
+
 # Document crates in workspace.
 doc:
     RUSTDOCFLAGS="--cfg=docsrs" cargo +nightly doc --no-deps --workspace --all-features
