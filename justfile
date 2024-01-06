@@ -3,6 +3,7 @@ _list:
 
 # Format workspace.
 fmt:
+    cargo +nightly fmt
     npx -y prettier --write $(fd --hidden --extension=yml --extension=md)
 
 # Update READMEs from crate root documentation.

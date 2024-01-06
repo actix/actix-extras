@@ -2,10 +2,14 @@
 
 > WebSockets for Actix Web, without actors.
 
+<!-- prettier-ignore-start -->
+
 [![crates.io](https://img.shields.io/crates/v/actix-ws?label=latest)](https://crates.io/crates/actix-ws)
 [![Documentation](https://docs.rs/actix-ws/badge.svg?version=0.2.0)](https://docs.rs/actix-ws/0.2.0)
 ![Apache 2.0 or MIT licensed](https://img.shields.io/crates/l/actix-ws)
 [![Dependency Status](https://deps.rs/crate/actix-ws/0.2.0/status.svg)](https://deps.rs/crate/actix-ws/0.2.0)
+
+<!-- prettier-ignore-end -->
 
 ## Documentation & Resources
 

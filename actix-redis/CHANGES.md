@@ -86,8 +86,7 @@
 
 ## 0.9.0-alpha.2
 
-- Add `cookie_http_only` functionality to RedisSession builder, setting this
-  to false allows JavaScript to access cookies. Defaults to true.
+- Add `cookie_http_only` functionality to RedisSession builder, setting this to false allows JavaScript to access cookies. Defaults to true.
 - Change type of parameter of ttl method to u32.
 - Update `actix` to 0.10.0-alpha.3
 - Update `tokio-util` to 0.3
@@ -116,8 +115,7 @@
 
 ## 0.7.0 - 2019-09-25
 
-- added cache_keygen functionality to RedisSession builder, enabling support for
-  customizable cache key creation
+- added cache_keygen functionality to RedisSession builder, enabling support for customizable cache key creation
 
 ## 0.6.1 - 2019-07-19
 
@@ -127,12 +125,7 @@
 ## 0.6.0 - 2019-07-08
 
 - actix-web 1.0.0 compatibility
-- Upgraded logic that evaluates session state, including new SessionStatus field,
-  and introduced `session.renew()` and `session.purge()` functionality.
-  Use `renew()` to cycle the session key at successful login. `renew()` keeps a
-  session's state while replacing the old cookie and session key with new ones.
-  Use `purge()` at logout to invalidate the session cookie and remove the
-  session's redis cache entry.
+- Upgraded logic that evaluates session state, including new SessionStatus field, and introduced `session.renew()` and `session.purge()` functionality. Use `renew()` to cycle the session key at successful login. `renew()` keeps a session's state while replacing the old cookie and session key with new ones. Use `purge()` at logout to invalidate the session cookie and remove the session's redis cache entry.
 
 ## 0.5.1 - 2018-08-02
 

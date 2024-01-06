@@ -2,10 +2,14 @@
 
 > A collection of additional crates supporting [Actix Web].
 
+<!-- prettier-ignore-start -->
+
 [![CI](https://github.com/actix/actix-extras/actions/workflows/ci.yml/badge.svg)](https://github.com/actix/actix-extras/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/actix/actix-extras/branch/master/graph/badge.svg)](https://codecov.io/gh/actix/actix-extras)
 [![Chat on Discord](https://img.shields.io/discord/771444961383153695?label=chat&logo=discord)](https://discord.gg/5Ux4QGChWc)
 [![Dependency Status](https://deps.rs/repo/github/actix/actix-extras/status.svg)](https://deps.rs/repo/github/actix/actix-extras)
+
+<!-- prettier-ignore-end -->
 
 ## Crates by @actix
 

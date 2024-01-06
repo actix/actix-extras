@@ -2,10 +2,14 @@
 
 > HTTP authentication schemes for [Actix Web](https://actix.rs).
 
+<!-- prettier-ignore-start -->
+
 [![crates.io](https://img.shields.io/crates/v/actix-web-httpauth?label=latest)](https://crates.io/crates/actix-web-httpauth)
 [![Documentation](https://docs.rs/actix-web-httpauth/badge.svg?version=0.8.1)](https://docs.rs/actix-web-httpauth/0.8.1)
 ![Apache 2.0 or MIT licensed](https://img.shields.io/crates/l/actix-web-httpauth)
 [![Dependency Status](https://deps.rs/crate/actix-web-httpauth/0.8.1/status.svg)](https://deps.rs/crate/actix-web-httpauth/0.8.1)
+
+<!-- prettier-ignore-end -->
 
 ## Documentation & Resources
 

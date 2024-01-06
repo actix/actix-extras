@@ -2,10 +2,14 @@
 
 > Protobuf payload extractor for Actix Web.
 
+<!-- prettier-ignore-start -->
+
 [![crates.io](https://img.shields.io/crates/v/actix-protobuf?label=latest)](https://crates.io/crates/actix-protobuf)
 [![Documentation](https://docs.rs/actix-protobuf/badge.svg?version=0.10.0)](https://docs.rs/actix-protobuf/0.10.0)
 ![Apache 2.0 or MIT licensed](https://img.shields.io/crates/l/actix-protobuf)
 [![Dependency Status](https://deps.rs/crate/actix-protobuf/0.10.0/status.svg)](https://deps.rs/crate/actix-protobuf/0.10.0)
+
+<!-- prettier-ignore-end -->
 
 ## Documentation & Resources
 
