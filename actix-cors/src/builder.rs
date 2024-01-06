@@ -115,7 +115,7 @@ impl Cors {
             #[cfg(feature = "draft-private-network-access")]
             allow_private_network_access: false,
             vary_header: true,
-            block_on_origin_mismatch: true,
+            block_on_origin_mismatch: false,
         };
 
         Cors {
@@ -477,7 +477,7 @@ impl Cors {
     /// and block requests based on pre-flight requests. Use this setting to allow cURL and other
     /// non-browser HTTP clients to function as normal, no matter what `Origin` the request has.
     ///
-    /// Defaults to true.
+    /// Defaults to false.
     pub fn block_on_origin_mismatch(mut self, block: bool) -> Cors {
         if let Some(cors) = cors(&mut self.inner, &self.error) {
             cors.block_on_origin_mismatch = block;
@@ -513,7 +513,7 @@ impl Default for Cors {
             #[cfg(feature = "draft-private-network-access")]
             allow_private_network_access: false,
             vary_header: true,
-            block_on_origin_mismatch: true,
+            block_on_origin_mismatch: false,
         };
 
         Cors {
@@ -646,8 +646,9 @@ mod test {
             .insert_header(("Origin", "https://www.example.com"))
             .to_srv_request();
 
-        let resp = test::call_service(&cors, req).await;
-        assert_eq!(resp.status(), StatusCode::BAD_REQUEST);
+        let res = test::call_service(&cors, req).await;
+        assert_eq!(res.status(), StatusCode::OK);
+        assert!(!res.headers().contains_key("Access-Control-Allow-Origin"));
     }
 
     #[actix_web::test]

@@ -266,6 +266,7 @@ mod test {
     async fn test_validate_not_allowed_origin() {
         let cors = Cors::default()
             .allowed_origin("https://www.example.com")
+            .block_on_origin_mismatch(true)
             .new_transform(test::ok_service())
             .await
             .unwrap();

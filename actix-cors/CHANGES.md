@@ -3,6 +3,7 @@
 ## Unreleased
 
 - `Cors` is now marked `#[must_use]`.
+- Default for `Cors::block_on_origin_mismatch` is now false.
 - Minimum supported Rust version (MSRV) is now 1.75.
 
 ## 0.6.5
@@ -12,33 +13,28 @@
 
 ## 0.6.4
 
-- Add `Cors::allow_private_network_access()` behind an unstable flag (`draft-private-network-access`). [#297]
-
-[#297]: https://github.com/actix/actix-extras/pull/297
+- Add `Cors::allow_private_network_access()` behind an unstable flag (`draft-private-network-access`).
 
 ## 0.6.3
 
-- Add `Cors::block_on_origin_mismatch()` option for controlling if requests are pre-emptively rejected. [#287]
+- Add `Cors::block_on_origin_mismatch()` option for controlling if requests are pre-emptively rejected.
 - Minimum supported Rust version (MSRV) is now 1.59 due to transitive `time` dependency.
-
-[#287]: https://github.com/actix/actix-extras/pull/287
 
 ## 0.6.2
 
-- Fix `expose_any_header` to return list of response headers. [#273]
+- Fix `expose_any_header` to return list of response headers.
 - Minimum supported Rust version (MSRV) is now 1.57 due to transitive `time` dependency.
-
-[#273]: https://github.com/actix/actix-extras/pull/273
 
 ## 0.6.1
 
-- Do not consider requests without a `Access-Control-Request-Method` as preflight. [#226]
-
-[#226]: https://github.com/actix/actix-extras/pull/226
+- Do not consider requests without a `Access-Control-Request-Method` as preflight.
 
 ## 0.6.0
 
 - Update `actix-web` dependency to 4.0.
+
+<details>
+<summary>0.6.0 pre-releases</summary>
 
 ## 0.6.0-beta.10
 
@@ -98,6 +94,8 @@
 
 - Update `actix-web` dependency to 4.0.0 beta.
 - Minimum supported Rust version (MSRV) is now 1.46.0.
+
+</details>
 
 ## 0.5.4
 
