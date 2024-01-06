@@ -29,6 +29,6 @@ log = "0.4"
 pin-project-lite = "0.2.7"
 
 [dev-dependencies]
-actix-cors = "0.6"
+actix-cors = "0.7"
 actix-service = "2"
 actix-web = { version = "4.1", default-features = false, features = ["macros"] }
