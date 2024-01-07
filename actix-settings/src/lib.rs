@@ -83,6 +83,7 @@ use actix_web::{
     http::KeepAlive as ActixKeepAlive,
     Error as WebError, HttpServer,
 };
+use openssl::ssl::{SslAcceptor, SslMethod};
 use serde::{de, Deserialize};
 
 #[macro_use]
@@ -258,17 +259,19 @@ where
     B: MessageBody + 'static,
 {
     fn apply_settings(mut self, settings: &ActixSettings) -> Self {
-        if settings.tls.enabled {
-            // for Address { host, port } in &settings.actix.hosts {
-            //     self = self.bind(format!("{}:{}", host, port))
-            //         .unwrap(/*TODO*/);
-            // }
-            unimplemented!("[ApplySettings] TLS support has not been implemented yet.");
-        } else {
-            for Address { host, port } in &settings.hosts {
+        for Address { host, port } in &settings.hosts {
+            #[cfg(feature = "tls")]
+            if settings.tls.enabled {
+                self = self.bind_openssl(format!("{}:{}", host, port), settings.tls.get_ssl_acceptor_builder())
+                    .unwrap(/*TODO*/)
+            } else {
                 self = self.bind(format!("{host}:{port}"))
                     .unwrap(/*TODO*/);
             }
+
+            #[cfg(not(feature = "tls"))]
+            self = self.bind(format!("{host}:{port}"))
+                .unwrap(/*TODO*/);
         }
 
         self = match settings.num_workers {
