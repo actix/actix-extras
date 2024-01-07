@@ -11,14 +11,13 @@ mod timeout;
 #[cfg(feature = "tls")]
 mod tls;
 
+#[cfg(feature = "tls")]
+pub use self::tls::Tls;
 pub use self::{
     address::Address, backlog::Backlog, keep_alive::KeepAlive,
     max_connection_rate::MaxConnectionRate, max_connections::MaxConnections, mode::Mode,
     num_workers::NumWorkers, timeout::Timeout,
 };
-
-#[cfg(feature = "tls")]
-pub use self::tls::Tls;
 
 /// Settings types for Actix Web.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize)]
