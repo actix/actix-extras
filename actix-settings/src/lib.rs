@@ -261,17 +261,21 @@ where
     fn apply_settings(mut self, settings: &ActixSettings) -> Self {
         for Address { host, port } in &settings.hosts {
             #[cfg(feature = "tls")]
-            if settings.tls.enabled {
-                self = self.bind_openssl(format!("{}:{}", host, port), settings.tls.get_ssl_acceptor_builder())
-                    .unwrap(/*TODO*/)
-            } else {
-                self = self.bind(format!("{host}:{port}"))
-                    .unwrap(/*TODO*/);
+            {
+                if settings.tls.enabled {
+                    self = self.bind_openssl(format!("{}:{}", host, port), settings.tls.get_ssl_acceptor_builder())
+                        .unwrap(/*TODO*/)
+                } else {
+                    self = self.bind(format!("{host}:{port}"))
+                        .unwrap(/*TODO*/);
+                }
             }
 
             #[cfg(not(feature = "tls"))]
-            self = self.bind(format!("{host}:{port}"))
-                .unwrap(/*TODO*/);
+            {
+                self = self.bind(format!("{host}:{port}"))
+                    .unwrap(/*TODO*/);
+            }
         }
 
         self = match settings.num_workers {
