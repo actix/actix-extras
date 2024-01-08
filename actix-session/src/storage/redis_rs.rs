@@ -2,12 +2,13 @@ use std::sync::Arc;
 
 use actix_web::cookie::time::Duration;
 use anyhow::Error;
-
-#[cfg(feature = "redis-rs-session")]
-use redis::{aio::ConnectionManager, AsyncCommands, Cmd, cmd, FromRedisValue, RedisResult, Value};
-
 #[cfg(not(feature = "redis-rs-session"))]
-use deadpool_redis::{Pool, redis::{AsyncCommands, Cmd, cmd, FromRedisValue, RedisResult, Value}};
+use deadpool_redis::{
+    redis::{cmd, AsyncCommands, Cmd, FromRedisValue, RedisResult, Value},
+    Pool,
+};
+#[cfg(feature = "redis-rs-session")]
+use redis::{aio::ConnectionManager, cmd, AsyncCommands, Cmd, FromRedisValue, RedisResult, Value};
 
 use super::SessionKey;
 use crate::storage::{
@@ -71,7 +72,7 @@ pub struct RedisSessionStore {
     #[cfg(feature = "redis-rs-session")]
     client: ConnectionManager,
     #[cfg(not(feature = "redis-rs-session"))]
-    pool: Pool
+    pool: Pool,
 }
 
 #[derive(Clone)]
@@ -95,7 +96,7 @@ impl RedisSessionStore {
     pub fn builder<S: Into<String>>(connection_string: S) -> RedisSessionStoreBuilder {
         RedisSessionStoreBuilder {
             configuration: CacheConfiguration::default(),
-            connection_string: connection_string.into()
+            connection_string: connection_string.into(),
         }
     }
 
@@ -106,7 +107,7 @@ impl RedisSessionStore {
     pub fn builder<P: Into<Pool>>(pool: P) -> RedisSessionStoreBuilder {
         RedisSessionStoreBuilder {
             configuration: CacheConfiguration::default(),
-            pool: pool.into()
+            pool: pool.into(),
         }
     }
 
@@ -139,7 +140,7 @@ pub struct RedisSessionStoreBuilder {
     #[cfg(feature = "redis-rs-session")]
     connection_string: String,
     #[cfg(not(feature = "redis-rs-session"))]
-    pool: Pool
+    pool: Pool,
 }
 
 impl RedisSessionStoreBuilder {
@@ -160,7 +161,7 @@ impl RedisSessionStoreBuilder {
         let client = ConnectionManager::new(redis::Client::open(self.connection_string)?).await?;
         Ok(RedisSessionStore {
             configuration: self.configuration,
-            client
+            client,
         })
     }
 
@@ -171,7 +172,7 @@ impl RedisSessionStoreBuilder {
     pub fn build(self) -> RedisSessionStore {
         RedisSessionStore {
             configuration: self.configuration,
-            pool: self.pool
+            pool: self.pool,
         }
     }
 }
