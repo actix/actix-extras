@@ -2,7 +2,13 @@
 
 ## Unreleased
 
+- Use new feature named `tls` for TLS settings. [#380]
+- Add new function `settings::tls::Tls::get_ssl_acceptor_builder()` to build `openssl::ssl::SslAcceptorBuilder`. [#380]
+- Implement TLS logic for `ApplySettings<S>::apply_settings()`. [#380]
+- Add `openssl` dependency;
 - Minimum supported Rust version (MSRV) is now 1.75.
+
+[#380]: https://github.com/actix/actix-extras/pull/380
 
 ## 0.7.1
 
