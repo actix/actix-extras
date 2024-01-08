@@ -3,7 +3,11 @@
 ## Unreleased
 
 - Remove use of `async-trait` on `SessionStore` trait.
+- Add `deadpool-redis` dependency; Implement `deadpool_redis::Pool` for `RedisSessionStore`. [#381]
+- Update `actix-redis` dependency to `0.13`.
 - Minimum supported Rust version (MSRV) is now 1.75.
+
+[#381]: https://github.com/actix/actix-extras/pull/381
 
 ## 0.8.0
 
