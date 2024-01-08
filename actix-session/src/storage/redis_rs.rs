@@ -2,7 +2,12 @@ use std::sync::Arc;
 
 use actix_web::cookie::time::Duration;
 use anyhow::Error;
-use redis::{aio::ConnectionManager, AsyncCommands, Cmd, FromRedisValue, RedisResult, Value};
+
+#[cfg(feature = "redis-rs-session")]
+use redis::{aio::ConnectionManager, AsyncCommands, Cmd, cmd, FromRedisValue, RedisResult, Value};
+
+#[cfg(not(feature = "redis-rs-session"))]
+use deadpool_redis::{Pool, redis::{AsyncCommands, Cmd, cmd, FromRedisValue, RedisResult, Value}};
 
 use super::SessionKey;
 use crate::storage::{
@@ -63,7 +68,10 @@ use crate::storage::{
 #[derive(Clone)]
 pub struct RedisSessionStore {
     configuration: CacheConfiguration,
+    #[cfg(feature = "redis-rs-session")]
     client: ConnectionManager,
+    #[cfg(not(feature = "redis-rs-session"))]
+    pool: Pool
 }
 
 #[derive(Clone)]
@@ -83,20 +91,41 @@ impl RedisSessionStore {
     /// A fluent API to configure [`RedisSessionStore`].
     /// It takes as input the only required input to create a new instance of [`RedisSessionStore`] - a
     /// connection string for Redis.
+    #[cfg(feature = "redis-rs-session")]
     pub fn builder<S: Into<String>>(connection_string: S) -> RedisSessionStoreBuilder {
         RedisSessionStoreBuilder {
             configuration: CacheConfiguration::default(),
-            connection_string: connection_string.into(),
+            connection_string: connection_string.into()
+        }
+    }
+
+    /// A fluent API to configure [`RedisSessionStore`].
+    /// It takes as input the only required input to create a new instance of [`RedisSessionStore`] - a
+    /// pool object for Redis.
+    #[cfg(not(feature = "redis-rs-session"))]
+    pub fn builder<P: Into<Pool>>(pool: P) -> RedisSessionStoreBuilder {
+        RedisSessionStoreBuilder {
+            configuration: CacheConfiguration::default(),
+            pool: pool.into()
         }
     }
 
     /// Create a new instance of [`RedisSessionStore`] using the default configuration.
     /// It takes as input the only required input to create a new instance of [`RedisSessionStore`] - a
     /// connection string for Redis.
+    #[cfg(feature = "redis-rs-session")]
     pub async fn new<S: Into<String>>(
         connection_string: S,
     ) -> Result<RedisSessionStore, anyhow::Error> {
         Self::builder(connection_string).build().await
+    }
+
+    /// Create a new instance of [`RedisSessionStore`] using the default configuration.
+    /// It takes as input the only required input to create a new instance of [`RedisSessionStore`] - a
+    /// pool object for Redis.
+    #[cfg(not(feature = "redis-rs-session"))]
+    pub fn new<P: Into<Pool>>(pool: P) -> RedisSessionStore {
+        Self::builder(pool).build()
     }
 }
 
@@ -106,8 +135,11 @@ impl RedisSessionStore {
 /// [`RedisSessionStore`]: crate::storage::RedisSessionStore
 #[must_use]
 pub struct RedisSessionStoreBuilder {
-    connection_string: String,
     configuration: CacheConfiguration,
+    #[cfg(feature = "redis-rs-session")]
+    connection_string: String,
+    #[cfg(not(feature = "redis-rs-session"))]
+    pool: Pool
 }
 
 impl RedisSessionStoreBuilder {
@@ -123,12 +155,24 @@ impl RedisSessionStoreBuilder {
     /// Finalise the builder and return a [`RedisActorSessionStore`] instance.
     ///
     /// [`RedisActorSessionStore`]: crate::storage::RedisActorSessionStore
+    #[cfg(feature = "redis-rs-session")]
     pub async fn build(self) -> Result<RedisSessionStore, anyhow::Error> {
         let client = ConnectionManager::new(redis::Client::open(self.connection_string)?).await?;
         Ok(RedisSessionStore {
             configuration: self.configuration,
-            client,
+            client
         })
+    }
+
+    /// Finalise the builder and return a [`RedisActorSessionStore`] instance.
+    ///
+    /// [`RedisActorSessionStore`]: crate::storage::RedisActorSessionStore
+    #[cfg(not(feature = "redis-rs-session"))]
+    pub fn build(self) -> RedisSessionStore {
+        RedisSessionStore {
+            configuration: self.configuration,
+            pool: self.pool
+        }
     }
 }
 
@@ -137,7 +181,7 @@ impl SessionStore for RedisSessionStore {
         let cache_key = (self.configuration.cache_keygen)(session_key.as_ref());
 
         let value: Option<String> = self
-            .execute_command(redis::cmd("GET").arg(&[&cache_key]))
+            .execute_command(cmd("GET").arg(&[&cache_key]))
             .await
             .map_err(Into::into)
             .map_err(LoadError::Other)?;
@@ -161,7 +205,7 @@ impl SessionStore for RedisSessionStore {
         let session_key = generate_session_key();
         let cache_key = (self.configuration.cache_keygen)(session_key.as_ref());
 
-        self.execute_command(redis::cmd("SET").arg(&[
+        self.execute_command(cmd("SET").arg(&[
             &cache_key,
             &body,
             "NX", // NX: only set the key if it does not already exist
@@ -187,8 +231,8 @@ impl SessionStore for RedisSessionStore {
 
         let cache_key = (self.configuration.cache_keygen)(session_key.as_ref());
 
-        let v: redis::Value = self
-            .execute_command(redis::cmd("SET").arg(&[
+        let v: Value = self
+            .execute_command(cmd("SET").arg(&[
                 &cache_key,
                 &body,
                 "XX", // XX: Only set the key if it already exist.
@@ -223,16 +267,25 @@ impl SessionStore for RedisSessionStore {
     async fn update_ttl(&self, session_key: &SessionKey, ttl: &Duration) -> Result<(), Error> {
         let cache_key = (self.configuration.cache_keygen)(session_key.as_ref());
 
+        #[cfg(feature = "redis-rs-session")]
         self.client
             .clone()
             .expire(&cache_key, ttl.whole_seconds())
             .await?;
+
+        #[cfg(not(feature = "redis-rs-session"))]
+        self.pool
+            .get()
+            .await?
+            .expire(&cache_key, ttl.whole_seconds())
+            .await?;
+
         Ok(())
     }
 
     async fn delete(&self, session_key: &SessionKey) -> Result<(), anyhow::Error> {
         let cache_key = (self.configuration.cache_keygen)(session_key.as_ref());
-        self.execute_command(redis::cmd("DEL").arg(&[&cache_key]))
+        self.execute_command(cmd("DEL").arg(&[&cache_key]))
             .await
             .map_err(Into::into)
             .map_err(UpdateError::Other)?;
@@ -259,8 +312,14 @@ impl RedisSessionStore {
     async fn execute_command<T: FromRedisValue>(&self, cmd: &mut Cmd) -> RedisResult<T> {
         let mut can_retry = true;
 
+        #[cfg(feature = "redis-rs-session")]
+        let client = &mut self.client.clone();
+
+        #[cfg(not(feature = "redis-rs-session"))]
+        let client = &mut self.pool.get().await.unwrap();
+
         loop {
-            match cmd.query_async(&mut self.client.clone()).await {
+            match cmd.query_async(client).await {
                 Ok(value) => return Ok(value),
                 Err(err) => {
                     if can_retry && err.is_connection_dropped() {

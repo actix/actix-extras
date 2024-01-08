@@ -23,6 +23,7 @@ cookie-session = []
 redis-actor-session = ["actix-redis", "actix", "futures-core", "rand"]
 redis-rs-session = ["redis", "rand"]
 redis-rs-tls-session = ["redis-rs-session", "redis/tokio-native-tls-comp"]
+redis-dp-session = ["deadpool-redis", "rand"]
 
 [dependencies]
 actix-service = "2"
@@ -43,6 +44,9 @@ futures-core = { version = "0.3.7", default-features = false, optional = true }
 
 # redis-rs-session
 redis = { version = "0.24", default-features = false, features = ["tokio-comp", "connection-manager"], optional = true }
+
+# redis-dp-session
+deadpool-redis = { version = "0.14", optional = true }
 
 [dev-dependencies]
 actix-session = { path = ".", features = ["cookie-session", "redis-actor-session", "redis-rs-session"] }
