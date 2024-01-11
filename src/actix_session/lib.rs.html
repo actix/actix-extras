@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `actix-session/src/lib.rs`."><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-4e54bb2b497cc83f.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="actix_session" data-themes="" data-resource-suffix="" data-rustdoc-version="1.77.0-nightly (75c68cfd2 2024-01-07)" data-channel="nightly" data-search-js="search-1cefe72944ee87e6.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-0b2e2def73e61cbe.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="icon" href="https://actix.rs/favicon.ico"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `actix-session/src/lib.rs`."><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-4e54bb2b497cc83f.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="actix_session" data-themes="" data-resource-suffix="" data-rustdoc-version="1.77.0-nightly (a2d9d73e6 2024-01-10)" data-channel="nightly" data-search-js="search-dd67cee4cfa65049.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-0b2e2def73e61cbe.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="icon" href="https://actix.rs/favicon.ico"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
             <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
     <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../actix_session/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
@@ -733,140 +733,156 @@
 <a href="#731" id="731">731</a>
 <a href="#732" id="732">732</a>
 <a href="#733" id="733">733</a>
-</pre></div><pre class="rust"><code><span class="doccomment">//! Session management for Actix Web.
-//!
-//! The HTTP protocol, at a first glance, is stateless: the client sends a request, the server
-//! parses its content, performs some processing and returns a response. The outcome is only
-//! influenced by the provided inputs (i.e. the request content) and whatever state the server
-//! queries while performing its processing.
-//!
-//! Stateless systems are easier to reason about, but they are not quite as powerful as we need them
-//! to be - e.g. how do you authenticate a user? The user would be forced to authenticate **for
-//! every single request**. That is, for example, how 'Basic' Authentication works. While it may
-//! work for a machine user (i.e. an API client), it is impractical for a person—you do not want a
-//! login prompt on every single page you navigate to!
-//!
-//! There is a solution - **sessions**. Using sessions the server can attach state to a set of
-//! requests coming from the same client. They are built on top of cookies - the server sets a
-//! cookie in the HTTP response (`Set-Cookie` header), the client (e.g. the browser) will store the
-//! cookie and play it back to the server when sending new requests (using the `Cookie` header).
-//!
-//! We refer to the cookie used for sessions as a **session cookie**. Its content is called
-//! **session key** (or **session ID**), while the state attached to the session is referred to as
-//! **session state**.
-//!
-//! `actix-session` provides an easy-to-use framework to manage sessions in applications built on
-//! top of Actix Web. [`SessionMiddleware`] is the middleware underpinning the functionality
-//! provided by `actix-session`; it takes care of all the session cookie handling and instructs the
-//! **storage backend** to create/delete/update the session state based on the operations performed
-//! against the active [`Session`].
-//!
-//! `actix-session` provides some built-in storage backends: ([`CookieSessionStore`],
-//! [`RedisSessionStore`], and [`RedisActorSessionStore`]) - you can create a custom storage backend
-//! by implementing the [`SessionStore`] trait.
-//!
-//! Further reading on sessions:
-//! - [RFC6265](https://datatracker.ietf.org/doc/html/rfc6265);
-//! - [OWASP's session management cheat-sheet](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html).
-//!
-//! # Getting started
-//! To start using sessions in your Actix Web application you must register [`SessionMiddleware`]
-//! as a middleware on your `App`:
-//!
-//! ```no_run
-//! use actix_web::{web, App, HttpServer, HttpResponse, Error};
-//! use actix_session::{Session, SessionMiddleware, storage::RedisActorSessionStore};
-//! use actix_web::cookie::Key;
-//!
-//! #[actix_web::main]
-//! async fn main() -&gt; std::io::Result&lt;()&gt; {
-//!     // The secret key would usually be read from a configuration file/environment variables.
-//!     let secret_key = Key::generate();
-//!     let redis_connection_string = "127.0.0.1:6379";
-//!     HttpServer::new(move ||
-//!             App::new()
-//!             // Add session management to your application using Redis for session state storage
-//!             .wrap(
-//!                 SessionMiddleware::new(
-//!                     RedisActorSessionStore::new(redis_connection_string),
-//!                     secret_key.clone()
-//!                 )
-//!             )
-//!             .default_service(web::to(|| HttpResponse::Ok())))
-//!         .bind(("127.0.0.1", 8080))?
-//!         .run()
-//!         .await
-//! }
-//! ```
-//!
-//! The session state can be accessed and modified by your request handlers using the [`Session`]
-//! extractor. Note that this doesn't work in the stream of a streaming response.
-//!
-//! ```no_run
-//! use actix_web::Error;
-//! use actix_session::Session;
-//!
-//! fn index(session: Session) -&gt; Result&lt;&amp;'static str, Error&gt; {
-//!     // access the session state
-//!     if let Some(count) = session.get::&lt;i32&gt;("counter")? {
-//!         println!("SESSION value: {}", count);
-//!         // modify the session state
-//!         session.insert("counter", count + 1)?;
-//!     } else {
-//!         session.insert("counter", 1)?;
-//!     }
-//!
-//!     Ok("Welcome!")
-//! }
-//! ```
-//!
-//! # Choosing A Backend
-//!
-//! By default, `actix-session` does not provide any storage backend to retrieve and save the state
-//! attached to your sessions. You can enable:
-//!
-//! - a purely cookie-based "backend", [`CookieSessionStore`], using the `cookie-session` feature
-//!   flag.
-//!
-//!   ```toml
-//!   [dependencies]
-//!   # ...
-//!   actix-session = { version = "...", features = ["cookie-session"] }
-//!   ```
-//!
-//! - a Redis-based backend via [`actix-redis`](https://docs.rs/actix-redis),
-//!   [`RedisActorSessionStore`], using the `redis-actor-session` feature flag.
-//!
-//!   ```toml
-//!   [dependencies]
-//!   # ...
-//!   actix-session = { version = "...", features = ["redis-actor-session"] }
-//!   ```
-//!
-//! - a Redis-based backend via [`redis-rs`](https://docs.rs/redis-rs), [`RedisSessionStore`], using
-//!   the `redis-rs-session` feature flag.
-//!
-//!   ```toml
-//!   [dependencies]
-//!   # ...
-//!   actix-session = { version = "...", features = ["redis-rs-session"] }
-//!   ```
-//!
-//!   Add the `redis-rs-tls-session` feature flag if you want to connect to Redis using a secured
-//!   connection:
-//!
-//!   ```toml
-//!   [dependencies]
-//!   # ...
-//!   actix-session = { version = "...", features = ["redis-rs-session", "redis-rs-tls-session"] }
-//!   ```
-//!
-//! You can implement your own session storage backend using the [`SessionStore`] trait.
-//!
-//! [`SessionStore`]: storage::SessionStore
-//! [`CookieSessionStore`]: storage::CookieSessionStore
-//! [`RedisSessionStore`]: storage::RedisSessionStore
-//! [`RedisActorSessionStore`]: storage::RedisActorSessionStore
+<a href="#734" id="734">734</a>
+<a href="#735" id="735">735</a>
+<a href="#736" id="736">736</a>
+<a href="#737" id="737">737</a>
+<a href="#738" id="738">738</a>
+<a href="#739" id="739">739</a>
+<a href="#740" id="740">740</a>
+<a href="#741" id="741">741</a>
+</pre></div><pre class="rust"><code><span class="doccomment">/*!
+Session management for Actix Web.
+
+The HTTP protocol, at a first glance, is stateless: the client sends a request, the server
+parses its content, performs some processing and returns a response. The outcome is only
+influenced by the provided inputs (i.e. the request content) and whatever state the server
+queries while performing its processing.
+
+Stateless systems are easier to reason about, but they are not quite as powerful as we need them
+to be - e.g. how do you authenticate a user? The user would be forced to authenticate **for
+every single request**. That is, for example, how 'Basic' Authentication works. While it may
+work for a machine user (i.e. an API client), it is impractical for a person—you do not want a
+login prompt on every single page you navigate to!
+
+There is a solution - **sessions**. Using sessions the server can attach state to a set of
+requests coming from the same client. They are built on top of cookies - the server sets a
+cookie in the HTTP response (`Set-Cookie` header), the client (e.g. the browser) will store the
+cookie and play it back to the server when sending new requests (using the `Cookie` header).
+
+We refer to the cookie used for sessions as a **session cookie**. Its content is called
+**session key** (or **session ID**), while the state attached to the session is referred to as
+**session state**.
+
+`actix-session` provides an easy-to-use framework to manage sessions in applications built on
+top of Actix Web. [`SessionMiddleware`] is the middleware underpinning the functionality
+provided by `actix-session`; it takes care of all the session cookie handling and instructs the
+**storage backend** to create/delete/update the session state based on the operations performed
+against the active [`Session`].
+
+`actix-session` provides some built-in storage backends: ([`CookieSessionStore`],
+[`RedisSessionStore`], and [`RedisActorSessionStore`]) - you can create a custom storage backend
+by implementing the [`SessionStore`] trait.
+
+Further reading on sessions:
+- [RFC 6265](https://datatracker.ietf.org/doc/html/rfc6265);
+- [OWASP's session management cheat-sheet](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html).
+
+# Getting started
+To start using sessions in your Actix Web application you must register [`SessionMiddleware`]
+as a middleware on your `App`:
+
+```no_run
+use actix_web::{web, App, HttpServer, HttpResponse, Error};
+use actix_session::{Session, SessionMiddleware, storage::RedisSessionStore};
+use actix_web::cookie::Key;
+
+#[actix_web::main]
+async fn main() -&gt; std::io::Result&lt;()&gt; {
+    // When using `Key::generate()` it is important to initialize outside of the
+    // `HttpServer::new` closure. When deployed the secret key should be read from a
+    // configuration file or environment variables.
+    let secret_key = Key::generate();
+
+    let redis_store = RedisSessionStore::new("redis://127.0.0.1:6379")
+        .await
+        .unwrap();
+
+    HttpServer::new(move ||
+            App::new()
+            // Add session management to your application using Redis for session state storage
+            .wrap(
+                SessionMiddleware::new(
+                    redis_store.clone(),
+                    secret_key.clone(),
+                )
+            )
+            .default_service(web::to(|| HttpResponse::Ok())))
+        .bind(("127.0.0.1", 8080))?
+        .run()
+        .await
+}
+```
+
+The session state can be accessed and modified by your request handlers using the [`Session`]
+extractor. Note that this doesn't work in the stream of a streaming response.
+
+```no_run
+use actix_web::Error;
+use actix_session::Session;
+
+fn index(session: Session) -&gt; Result&lt;&amp;'static str, Error&gt; {
+    // access the session state
+    if let Some(count) = session.get::&lt;i32&gt;("counter")? {
+        println!("SESSION value: {}", count);
+        // modify the session state
+        session.insert("counter", count + 1)?;
+    } else {
+        session.insert("counter", 1)?;
+    }
+
+    Ok("Welcome!")
+}
+```
+
+# Choosing A Backend
+
+By default, `actix-session` does not provide any storage backend to retrieve and save the state
+attached to your sessions. You can enable:
+
+- a purely cookie-based "backend", [`CookieSessionStore`], using the `cookie-session` feature
+  flag.
+
+  ```toml
+  [dependencies]
+  # ...
+  actix-session = { version = "...", features = ["cookie-session"] }
+  ```
+
+- a Redis-based backend via [`actix-redis`](https://docs.rs/actix-redis),
+  [`RedisActorSessionStore`], using the `redis-actor-session` feature flag.
+
+  ```toml
+  [dependencies]
+  # ...
+  actix-session = { version = "...", features = ["redis-actor-session"] }
+  ```
+
+- a Redis-based backend via [`redis-rs`](https://docs.rs/redis-rs), [`RedisSessionStore`], using
+  the `redis-rs-session` feature flag.
+
+  ```toml
+  [dependencies]
+  # ...
+  actix-session = { version = "...", features = ["redis-rs-session"] }
+  ```
+
+  Add the `redis-rs-tls-session` feature flag if you want to connect to Redis using a secured
+  connection:
+
+  ```toml
+  [dependencies]
+  # ...
+  actix-session = { version = "...", features = ["redis-rs-session", "redis-rs-tls-session"] }
+  ```
+
+You can implement your own session storage backend using the [`SessionStore`] trait.
+
+[`SessionStore`]: storage::SessionStore
+[`CookieSessionStore`]: storage::CookieSessionStore
+[`RedisSessionStore`]: storage::RedisSessionStore
+[`RedisActorSessionStore`]: storage::RedisActorSessionStore
+*/
 
 </span><span class="attr">#![forbid(unsafe_code)]
 #![deny(rust_2018_idioms, nonstandard_style)]
