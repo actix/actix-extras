@@ -2,13 +2,16 @@ _list:
     @just --list
 
 # Format workspace.
-fmt:
+fmt: update-readmes
     cargo +nightly fmt
     npx -y prettier --write $(fd --hidden --extension=yml --extension=md)
 
 # Update READMEs from crate root documentation.
-update-readmes: && fmt
+update-readmes:
     cd ./actix-cors && cargo rdme --force
+    cd ./actix-session && cargo rdme --force
+    cd ./actix-identity && cargo rdme --force
+    npx -y prettier --write $(fd README.md)
 
 # Document crates in workspace.
 doc:
