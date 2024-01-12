@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.9.0
+
 - Remove use of `async-trait` on `SessionStore` trait.
 - Add `deadpool-redis` dependency; Implement `deadpool_redis::Pool` for `RedisSessionStore`. [#381]
 - Update `actix-redis` dependency to `0.13`.

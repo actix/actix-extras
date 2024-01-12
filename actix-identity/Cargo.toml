@@ -1,6 +1,6 @@
 [package]
 name = "actix-identity"
-version = "0.6.0"
+version = "0.7.0"
 authors = [
     "Nikolay Kim <fafhrd91@gmail.com>",
     "Luca Palmieri <rust@lpalmieri.com>",
@@ -19,7 +19,7 @@ all-features = true
 
 [dependencies]
 actix-service = "2"
-actix-session = "0.8"
+actix-session = "0.9"
 actix-utils = "3"
 actix-web = { version = "4", default-features = false, features = ["cookies", "secure-cookies"] }
 
@@ -31,7 +31,7 @@ tracing = { version = "0.1.30", default-features = false, features = ["log"] }
 [dev-dependencies]
 actix-http = "3"
 actix-web = { version = "4", default-features = false, features = ["macros", "cookies", "secure-cookies"] }
-actix-session = { version = "0.8", features = ["redis-rs-session", "cookie-session"] }
+actix-session = { version = "0.9", features = ["redis-rs-session", "cookie-session"] }
 
 env_logger = "0.10"
 reqwest = { version = "0.11", default-features = false, features = ["cookies", "json"] }
