@@ -26,4 +26,4 @@ toml = "0.8"
 
 [dev-dependencies]
 actix-web = "4"
-env_logger = "0.10"
+env_logger = "0.11"
