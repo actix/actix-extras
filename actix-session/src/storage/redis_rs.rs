@@ -65,28 +65,12 @@ use crate::storage::{
 /// # Deadpool Redis
 ///
 /// ```no_run
-/// use actix_web::{web, App, HttpServer, HttpResponse};
-/// use actix_session::{SessionMiddleware, storage::RedisSessionStore};
-/// use actix_web::cookie::Key;
+/// use actix_session::storage::RedisSessionStore;
 /// use deadpool_redis::{Config, Runtime};
 ///
-/// #[actix_web::main]
-/// async fn main() -> std::io::Result<()> {
-///     let redis_cfg = Config::from_url("redis://127.0.0.1:6379");
-///     let redis_pool = redis_cfg.create_pool(Some(Runtime::Tokio1)).unwrap();
-///     let secret_key = Key::generate();
-///
-///     HttpServer::new(move ||
-///             App::new()
-///             .wrap(SessionMiddleware::new(
-///                 RedisSessionStore::new(redis_pool.clone()),
-///                 secret_key.clone()
-///             ))
-///             .default_service(web::to(|| HttpResponse::Ok())))
-///         .bind(("127.0.0.1", 8080))?
-///         .run()
-///         .await
-/// }
+/// let redis_cfg = Config::from_url("redis://127.0.0.1:6379");
+/// let redis_pool = redis_cfg.create_pool(Some(Runtime::Tokio1)).unwrap();
+/// let store = RedisSessionStore::new(redis_pool.clone());
 /// ```
 ///
 /// # Implementation notes
