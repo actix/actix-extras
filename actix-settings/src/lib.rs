@@ -83,7 +83,6 @@ use actix_web::{
     http::KeepAlive as ActixKeepAlive,
     Error as WebError, HttpServer,
 };
-use openssl::ssl::{SslAcceptor, SslMethod};
 use serde::{de, Deserialize};
 
 #[macro_use]
@@ -91,12 +90,14 @@ mod error;
 mod parse;
 mod settings;
 
+#[cfg(feature = "tls")]
+pub use self::settings::Tls;
 pub use self::{
     error::Error,
     parse::Parse,
     settings::{
         ActixSettings, Address, Backlog, KeepAlive, MaxConnectionRate, MaxConnections, Mode,
-        NumWorkers, Timeout, Tls,
+        NumWorkers, Timeout,
     },
 };
 
