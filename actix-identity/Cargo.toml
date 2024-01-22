@@ -33,6 +33,6 @@ actix-http = "3"
 actix-web = { version = "4", default-features = false, features = ["macros", "cookies", "secure-cookies"] }
 actix-session = { version = "0.9", features = ["redis-rs-session", "cookie-session"] }
 
-env_logger = "0.10"
+env_logger = "0.11"
 reqwest = { version = "0.11", default-features = false, features = ["cookies", "json"] }
 uuid = { version = "1", features = ["v4"] }
