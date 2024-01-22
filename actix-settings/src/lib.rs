@@ -671,6 +671,7 @@ mod tests {
         assert_eq!(settings.actix.shutdown_timeout, Timeout::Seconds(42));
     }
 
+    #[cfg(feature = "tls")]
     #[test]
     fn override_field_tls_enabled() {
         let mut settings = Settings::from_default_template();
@@ -679,6 +680,7 @@ mod tests {
         assert!(settings.actix.tls.enabled);
     }
 
+    #[cfg(feature = "tls")]
     #[test]
     fn override_field_with_env_var_tls_enabled() {
         let mut settings = Settings::from_default_template();
@@ -692,6 +694,7 @@ mod tests {
         assert!(settings.actix.tls.enabled);
     }
 
+    #[cfg(feature = "tls")]
     #[test]
     fn override_field_tls_certificate() {
         let mut settings = Settings::from_default_template();
@@ -710,6 +713,7 @@ mod tests {
         );
     }
 
+    #[cfg(feature = "tls")]
     #[test]
     fn override_field_with_env_var_tls_certificate() {
         let mut settings = Settings::from_default_template();
@@ -732,6 +736,7 @@ mod tests {
         );
     }
 
+    #[cfg(feature = "tls")]
     #[test]
     fn override_field_tls_private_key() {
         let mut settings = Settings::from_default_template();
@@ -750,6 +755,7 @@ mod tests {
         );
     }
 
+    #[cfg(feature = "tls")]
     #[test]
     fn override_field_with_env_var_tls_private_key() {
         let mut settings = Settings::from_default_template();
