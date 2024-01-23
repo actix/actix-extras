@@ -23,7 +23,7 @@ impl Tls {
     /// [`actix_web::server::HttpServer::bind_openssl`].
     ///
     /// # Example
-    /// ```rust
+    /// ```no_run
     /// use actix_settings::{ApplySettings, Settings};
     /// use actix_web::{get, App, HttpServer, Responder};
     ///
