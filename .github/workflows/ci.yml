@@ -92,6 +92,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install OpenSSL
+        if: matrix.target.os == 'windows-latest'
+        run: choco install openssl -y --forcex64 --no-progress
+      - name: Set OpenSSL dir in env
+        if: matrix.target.os == 'windows-latest'
+        run: |
+          echo 'OPENSSL_DIR=C:\Program Files\OpenSSL-Win64' | Out-File -FilePath $env:GITHUB_ENV -Append
+          echo 'OPENSSL_DIR=C:\Program Files\OpenSSL' | Out-File -FilePath $env:GITHUB_ENV -Append
+
       - name: Install Rust (${{ matrix.version.name }})
         uses: actions-rust-lang/setup-rust-toolchain@v1.8.0
         with:
