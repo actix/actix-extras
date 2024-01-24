@@ -47,7 +47,7 @@ async fn main() {
             // order of registration when it receives an incoming request.
             .wrap(SessionMiddleware::new(
                  redis_store.clone(),
-                 secret_key.clone()
+                 secret_key.clone(),
             ))
             // Your request handlers [...]
     })
@@ -95,7 +95,7 @@ By default, `actix-identity` does not automatically log out users. You can chang
 
 In particular, you can automatically log out users who:
 
-- have been inactive for a while (see [`IdentityMiddlewareBuilder::visit_deadline`];
+- have been inactive for a while (see [`IdentityMiddlewareBuilder::visit_deadline`]);
 - logged in too long ago (see [`IdentityMiddlewareBuilder::login_deadline`]).
 
 [`IdentityMiddlewareBuilder::visit_deadline`]: config::IdentityMiddlewareBuilder::visit_deadline

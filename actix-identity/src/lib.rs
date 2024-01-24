@@ -85,7 +85,7 @@ By default, `actix-identity` does not automatically log out users. You can chang
 by customising the configuration for [`IdentityMiddleware`] via [`IdentityMiddleware::builder`].
 
 In particular, you can automatically log out users who:
-- have been inactive for a while (see [`IdentityMiddlewareBuilder::visit_deadline`];
+- have been inactive for a while (see [`IdentityMiddlewareBuilder::visit_deadline`]);
 - logged in too long ago (see [`IdentityMiddlewareBuilder::login_deadline`]).
 
 [`IdentityMiddlewareBuilder::visit_deadline`]: config::IdentityMiddlewareBuilder::visit_deadline
