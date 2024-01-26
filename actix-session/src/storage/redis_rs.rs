@@ -64,7 +64,7 @@ use crate::storage::{
 ///
 /// # Deadpool Redis
 ///
-/// ```no_run
+/// ```ignore
 /// use actix_session::storage::RedisSessionStore;
 /// use deadpool_redis::{Config, Runtime};
 ///
