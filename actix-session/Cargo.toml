@@ -23,6 +23,7 @@ cookie-session = []
 redis-actor-session = ["actix-redis", "actix", "futures-core", "rand"]
 redis-rs-session = ["redis", "rand"]
 redis-rs-tls-session = ["redis-rs-session", "redis/tokio-native-tls-comp"]
+dynamo-db = ["hyper-rustls", "aws-config", "aws-smithy-runtime", "aws-sdk-dynamodb"]
 
 [dependencies]
 actix-service = "2"
@@ -44,8 +45,15 @@ futures-core = { version = "0.3.7", default-features = false, optional = true }
 # redis-rs-session
 redis = { version = "0.24", default-features = false, features = ["tokio-comp", "connection-manager"], optional = true }
 
+# dynamo-db
+hyper = {version="1", features=["client"], default-features = false, optional = true }
+hyper-rustls = {  version = "0.24.2", features=["webpki-roots", "http1", "http2"], default-features = true, optional = true }
+aws-config = {  version = "1", default-features = false, optional = true }
+aws-smithy-runtime = { version = "1", default-features = false, optional = true, features = ["connector-hyper-0-14-x"] }
+aws-sdk-dynamodb = {  version = "1", default-features = false, optional = true }
+
 [dev-dependencies]
-actix-session = { path = ".", features = ["cookie-session", "redis-actor-session", "redis-rs-session"] }
+actix-session = { path = ".", features = ["cookie-session", "redis-actor-session", "redis-rs-session", "dynamo-db"] }
 actix-test = "0.1.0-beta.10"
 actix-web = { version = "4", default-features = false, features = ["cookies", "secure-cookies", "macros"] }
 env_logger = "0.11"
