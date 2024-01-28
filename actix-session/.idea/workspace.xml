@@ -7,11 +7,7 @@
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="cb819d82-9f95-407f-a4e2-c022b965cd2d" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/storage/dynamo_db.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/storage/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/storage/mod.rs" afterDir="false" />
-    </list>
+    <list default="true" id="cb819d82-9f95-407f-a4e2-c022b965cd2d" name="Changes" comment="Fix tests" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -41,17 +37,22 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/Users/jameseastham/source/github/actix-extras/actix-session&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;org.rust.cargo.project.model.PROJECT_DISCOVERY&quot;: &quot;true&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Cargo.Test actix-session.executor": "Run",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "master",
+    "last_opened_file_path": "/Users/jameseastham/source/github/actix-extras/actix-session",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "org.rust.cargo.project.model.PROJECT_DISCOVERY": "true",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RunManager">
     <configuration name="Test actix-session" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="command" value="test --workspace" />
@@ -85,10 +86,42 @@
       <workItem from="1706382232373" duration="277000" />
       <workItem from="1706382513749" duration="129000" />
       <workItem from="1706382644812" duration="107000" />
+      <workItem from="1706382753760" duration="5701000" />
     </task>
+    <task id="LOCAL-00001" summary="Add DynamoDB implementation">
+      <option name="closed" value="true" />
+      <created>1706383632691</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1706383632691</updated>
+    </task>
+    <task id="LOCAL-00002" summary="Fix CI build errors">
+      <option name="closed" value="true" />
+      <created>1706432853958</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1706432853958</updated>
+    </task>
+    <task id="LOCAL-00003" summary="Fix tests">
+      <option name="closed" value="true" />
+      <created>1706435598339</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1706435598339</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Add DynamoDB implementation" />
+    <MESSAGE value="Fix CI build errors" />
+    <MESSAGE value="Fix tests" />
+    <option name="LAST_COMMIT_MESSAGE" value="Fix tests" />
   </component>
 </project>

@@ -77,6 +77,10 @@ pub struct DynamoDbSessionStore {
     client: Client,
 }
 
+
+/// Struct for configuring the DynamoDB Session Store. To add custom configuration, use the `DynamoDbSessionStoreBuilder`
+///
+/// [`DynamoDbSessionStoreBuilder`]: crate::storage::DynamoDbSessionStoreBuilder
 #[derive(Clone)]
 pub struct CacheConfiguration {
     cache_keygen: Arc<dyn Fn(&str) -> String + Send + Sync>,
@@ -92,6 +96,22 @@ pub struct CacheConfiguration {
 }
 
 impl Default for CacheConfiguration {
+    /// Default values for the cache configuration
+    ///
+    /// ```no_run
+    /// Self {
+    ///     cache_keygen: Arc::new(str::to_owned),
+    ///     table_name: "sessions".to_string(),
+    ///     use_dynamo_db_local: false,
+    ///     key_name: "SessionId".to_string(),
+    ///     ttl_name: "session_ttl".to_string(),
+    ///     session_data_name: "session_data".to_string(),
+    ///     dynamo_db_local_endpoint: "http://localhost:8000".to_string(),
+    ///     sdk_config: None,
+    ///     region: None,
+    ///     credentials: None,
+    /// }
+    /// ```
     fn default() -> Self {
         Self {
             cache_keygen: Arc::new(str::to_owned),
