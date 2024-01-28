@@ -1,16 +1,23 @@
+use std::{
+    ops::Add,
+    sync::Arc,
+    time::{SystemTime, UNIX_EPOCH},
+};
+
 use actix_web::cookie::time::Duration;
-use aws_config::default_provider::credentials::DefaultCredentialsChain;
-use aws_config::BehaviorVersion;
-use aws_sdk_dynamodb::config::{Credentials, ProvideCredentials, Region};
-use aws_sdk_dynamodb::{Client, Config};
+use aws_config::{
+    default_provider::credentials::DefaultCredentialsChain, meta::region::RegionProviderChain,
+    BehaviorVersion,
+};
+use aws_sdk_dynamodb::{
+    config::{Credentials, ProvideCredentials, Region},
+    error::SdkError,
+    operation::update_item::UpdateItemError,
+    types::AttributeValue,
+    Client, Config,
+};
 use aws_smithy_runtime::client::http::hyper_014::HyperClientBuilder;
-use std::ops::Add;
-use std::sync::Arc;
-use std::time::{SystemTime, UNIX_EPOCH};
-use aws_config::meta::region::RegionProviderChain;
-use aws_sdk_dynamodb::error::SdkError;
-use aws_sdk_dynamodb::operation::update_item::UpdateItemError;
-use aws_sdk_dynamodb::types::AttributeValue;
+
 use super::SessionKey;
 use crate::storage::{
     interface::{LoadError, SaveError, SessionState, UpdateError},
@@ -107,7 +114,7 @@ impl DynamoDbSessionStore {
     /// As a default, it expects a DynamoDB table name of 'sessions', with a single partition key of 'SessionId' this can be overridden using the [`DynamoDbSessionStoreBuilder`].
     pub fn builder() -> DynamoDbSessionStoreBuilder {
         DynamoDbSessionStoreBuilder {
-            configuration: CacheConfiguration::default()
+            configuration: CacheConfiguration::default(),
         }
     }
 
@@ -123,14 +130,14 @@ impl DynamoDbSessionStore {
 /// [`DynamoDbSessionStore`]: crate::storage::DynamoDbSessionStore
 #[must_use]
 pub struct DynamoDbSessionStoreBuilder {
-    configuration: CacheConfiguration
+    configuration: CacheConfiguration,
 }
 
 impl DynamoDbSessionStoreBuilder {
     /// Set a custom cache key generation strategy, expecting a session key as input.
     pub fn cache_keygen<F>(mut self, keygen: F) -> Self
-        where
-            F: Fn(&str) -> String + 'static + Send + Sync,
+    where
+        F: Fn(&str) -> String + 'static + Send + Sync,
     {
         self.configuration.cache_keygen = Arc::new(keygen);
         self
@@ -306,36 +313,40 @@ impl SessionStore for DynamoDbSessionStore {
 
         match put_res {
             Ok(_) => Ok(session_key),
-            Err(err) => match err {
-                // A response error can occur if the condition expression checking the session exists fails
-                // // This can happen if the session state expired between the load operation and the
-                // update operation. Unlucky, to say the least. We fall back to the `save` routine
-                // to ensure that the new key is unique.
-                SdkError::ResponseError(_resp_err) => {
-                    self.save(session_state, ttl)
+            Err(err) => {
+                match err {
+                    // A response error can occur if the condition expression checking the session exists fails
+                    // // This can happen if the session state expired between the load operation and the
+                    // update operation. Unlucky, to say the least. We fall back to the `save` routine
+                    // to ensure that the new key is unique.
+                    SdkError::ResponseError(_resp_err) => self
+                        .save(session_state, ttl)
                         .await
                         .map_err(|err| match err {
                             SaveError::Serialization(err) => UpdateError::Serialization(err),
                             SaveError::Other(err) => UpdateError::Other(err),
-                        })
-                },
-                SdkError::ServiceError(_resp_err) => {
-                    self.save(session_state, ttl)
+                        }),
+                    SdkError::ServiceError(_resp_err) => self
+                        .save(session_state, ttl)
                         .await
                         .map_err(|err| match err {
                             SaveError::Serialization(err) => UpdateError::Serialization(err),
                             SaveError::Other(err) => UpdateError::Other(err),
-                        })
+                        }),
+                    _ => Err(UpdateError::Other(anyhow::anyhow!(
+                        "Failed to update session state. {:?}",
+                        err
+                    ))),
                 }
-                _ => Err(UpdateError::Other(anyhow::anyhow!(
-                    "Failed to update session state. {:?}",
-                    err
-                ))),
-            },
+            }
         }
     }
 
-    async fn update_ttl(&self, session_key: &SessionKey, ttl: &Duration) -> Result<(), anyhow::Error> {
+    async fn update_ttl(
+        &self,
+        session_key: &SessionKey,
+        ttl: &Duration,
+    ) -> Result<(), anyhow::Error> {
         let cache_key = (self.configuration.cache_keygen)(session_key.as_ref());
 
         let _update_res = self
@@ -463,8 +474,14 @@ mod tests {
             .clone()
             .put_item()
             .table_name(&store.configuration.table_name)
-            .item(&store.configuration.key_name, AttributeValue::S(session_key.as_ref().to_string()))
-            .item("session_data", AttributeValue::S("random-thing-that-is-not-json".to_string()))
+            .item(
+                &store.configuration.key_name,
+                AttributeValue::S(session_key.as_ref().to_string()),
+            )
+            .item(
+                "session_data",
+                AttributeValue::S("random-thing-that-is-not-json".to_string()),
+            )
             .item(
                 &store.configuration.ttl_name,
                 AttributeValue::N(get_epoch_ms(Duration::seconds(10)).to_string()),

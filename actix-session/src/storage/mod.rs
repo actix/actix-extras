@@ -25,9 +25,9 @@ mod dynamo_db;
 
 #[cfg(feature = "cookie-session")]
 pub use cookie::CookieSessionStore;
+#[cfg(feature = "dynamo-db")]
+pub use dynamo_db::{DynamoDbSessionStore, DynamoDbSessionStoreBuilder};
 #[cfg(feature = "redis-actor-session")]
 pub use redis_actor::{RedisActorSessionStore, RedisActorSessionStoreBuilder};
 #[cfg(feature = "redis-rs-session")]
 pub use redis_rs::{RedisSessionStore, RedisSessionStoreBuilder};
-#[cfg(feature = "dynamo-db")]
-pub use dynamo_db::{DynamoDbSessionStore, DynamoDbSessionStoreBuilder};
