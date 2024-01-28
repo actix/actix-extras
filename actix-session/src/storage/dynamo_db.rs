@@ -12,7 +12,6 @@ use aws_config::{
 use aws_sdk_dynamodb::{
     config::{Credentials, ProvideCredentials, Region},
     error::SdkError,
-    operation::update_item::UpdateItemError,
     types::AttributeValue,
     Client, Config,
 };
