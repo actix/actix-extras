@@ -48,9 +48,9 @@ redis = { version = "0.24", default-features = false, features = ["tokio-comp", 
 # dynamo-db
 hyper = {version="1", features=["client"], default-features = false, optional = true }
 hyper-rustls = {  version = "0.24.2", features=["webpki-roots", "http1", "http2"], default-features = true, optional = true }
-aws-config = {  version = "1", default-features = false, optional = true }
-aws-smithy-runtime = { version = "1", default-features = false, optional = true, features = ["connector-hyper-0-14-x"] }
-aws-sdk-dynamodb = {  version = "1", default-features = false, optional = true }
+aws-config = {  version = "1", default-features = false, optional = true, features = ["rt-tokio", "rustls"] }
+aws-smithy-runtime = { version = "1", optional = true, features = ["connector-hyper-0-14-x", "tls-rustls"] }
+aws-sdk-dynamodb = {  version = "1", optional = true }
 
 [dev-dependencies]
 actix-session = { path = ".", features = ["cookie-session", "redis-actor-session", "redis-rs-session", "dynamo-db"] }

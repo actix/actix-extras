@@ -9,6 +9,7 @@ use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 use aws_config::meta::region::RegionProviderChain;
 use aws_sdk_dynamodb::error::SdkError;
+use aws_sdk_dynamodb::operation::update_item::UpdateItemError;
 use aws_sdk_dynamodb::types::AttributeValue;
 use super::SessionKey;
 use crate::storage::{
@@ -90,7 +91,7 @@ impl Default for CacheConfiguration {
             table_name: "sessions".to_string(),
             use_dynamo_db_local: false,
             key_name: "SessionId".to_string(),
-            ttl_name: "ttl".to_string(),
+            ttl_name: "session_ttl".to_string(),
             session_data_name: "session_data".to_string(),
             dynamo_db_local_endpoint: "http://localhost:8000".to_string(),
             sdk_config: None,
@@ -142,6 +143,7 @@ impl DynamoDbSessionStoreBuilder {
     /// Set if DynamoDB local should be used, useful for local testing.
     pub fn use_dynamo_db_local(mut self, should_use: bool) -> Self {
         self.configuration.use_dynamo_db_local = should_use;
+        self.configuration.dynamo_db_local_endpoint = "http://localhost:8000".to_string();
         self
     }
 
@@ -316,6 +318,14 @@ impl SessionStore for DynamoDbSessionStore {
                             SaveError::Serialization(err) => UpdateError::Serialization(err),
                             SaveError::Other(err) => UpdateError::Other(err),
                         })
+                },
+                SdkError::ServiceError(_resp_err) => {
+                    self.save(session_state, ttl)
+                        .await
+                        .map_err(|err| match err {
+                            SaveError::Serialization(err) => UpdateError::Serialization(err),
+                            SaveError::Other(err) => UpdateError::Other(err),
+                        })
                 }
                 _ => Err(UpdateError::Other(anyhow::anyhow!(
                     "Failed to update session state. {:?}",
@@ -339,9 +349,8 @@ impl SessionStore for DynamoDbSessionStore {
                 AttributeValue::N(get_epoch_ms(*ttl).to_string()),
             )
             .send()
-            .await
-            .map_err(Into::into)
-            .map_err(SaveError::Other)?;
+            .await;
+
         Ok(())
     }
 
@@ -409,4 +418,76 @@ async fn make_config(
 
 fn make_region_provider() -> RegionProviderChain {
     RegionProviderChain::default_provider().or_else(Region::new("us-east-1"))
+}
+
+#[cfg(test)]
+mod tests {
+    use std::collections::HashMap;
+
+    use actix_web::cookie::time;
+
+    use super::*;
+    use crate::test_helpers::acceptance_test_suite;
+
+    async fn dynamo_store() -> DynamoDbSessionStore {
+        DynamoDbSessionStore::builder()
+            .table_name("auth".to_string())
+            .key_name("PK".to_string())
+            .ttl_name("session_ttl".to_string())
+            .use_dynamo_db_local(true)
+            .dynamo_db_local_endpoint("http://localhost:8000".to_string())
+            .build()
+            .await
+            .unwrap()
+    }
+
+    #[actix_web::test]
+    async fn test_session_workflow() {
+        let dynamo_store = dynamo_store().await;
+        acceptance_test_suite(move || dynamo_store.clone(), true).await;
+    }
+
+    #[actix_web::test]
+    async fn loading_a_missing_session_returns_none() {
+        let store = dynamo_store().await;
+        let session_key = generate_session_key();
+        assert!(store.load(&session_key).await.unwrap().is_none());
+    }
+
+    #[actix_web::test]
+    async fn loading_an_invalid_session_state_returns_deserialization_error() {
+        let store = dynamo_store().await;
+        let session_key = generate_session_key();
+        store
+            .client
+            .clone()
+            .put_item()
+            .table_name(&store.configuration.table_name)
+            .item(&store.configuration.key_name, AttributeValue::S(session_key.as_ref().to_string()))
+            .item("session_data", AttributeValue::S("random-thing-that-is-not-json".to_string()))
+            .item(
+                &store.configuration.ttl_name,
+                AttributeValue::N(get_epoch_ms(Duration::seconds(10)).to_string()),
+            )
+            .send()
+            .await
+            .unwrap();
+
+        assert!(matches!(
+            store.load(&session_key).await.unwrap_err(),
+            LoadError::Deserialization(_),
+        ));
+    }
+
+    #[actix_web::test]
+    async fn updating_of_an_expired_state_is_handled_gracefully() {
+        let store = dynamo_store().await;
+        let session_key = generate_session_key();
+        let initial_session_key = session_key.as_ref().to_owned();
+        let updated_session_key = store
+            .update(session_key, HashMap::new(), &time::Duration::seconds(1))
+            .await
+            .unwrap();
+        assert_ne!(initial_session_key, updated_session_key.as_ref());
+    }
 }
