@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.8.0
+
+- Added support for DynamoDB.
+
+[#391](https://github.com/actix/actix-extras/pull/391)
+
 ## 0.7.0
 
 - `Cors` is now marked `#[must_use]`.
