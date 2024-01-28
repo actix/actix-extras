@@ -17,6 +17,52 @@ use crate::storage::{
     SessionStore,
 };
 
+/// Use DynamoDB as session storage backend.
+///
+/// ```no_run
+/// use actix_web::{web, App, HttpServer, HttpResponse, Error};
+/// use actix_session::{SessionMiddleware, storage::DynamoDbSessionStore};
+/// use actix_web::cookie::Key;
+/// use aws_config::meta::region::RegionProviderChain;
+/// use aws_config::Region;
+/// use aws_config::default_provider::credentials::DefaultCredentialsChain;
+/// use aws_sdk_dynamodb::config::ProvideCredentials;
+/// use aws_sdk_dynamodb::Client;
+///
+///
+/// // The secret key would usually be read from a configuration file/environment variables.
+/// fn get_secret_key() -> Key {
+///     # todo!()
+///     // [...]
+/// }
+///
+/// #[actix_web::main]
+/// async fn main() -> std::io::Result<()> {
+///     let secret_key = get_secret_key();
+///
+///     let dynamo_db_store = DynamoDbSessionStore::builder()
+///         .table_name(String::from("MyTableName"))
+///         .key_name("PK".to_string())
+///         .build()
+///         .await?;
+///
+///     HttpServer::new(move ||
+///             App::new()
+///             .wrap(SessionMiddleware::new(
+///                 dynamo_db_store.clone(),
+///                 secret_key.clone()
+///             ))
+///             .default_service(web::to(|| HttpResponse::Ok())))
+///         .bind(("127.0.0.1", 8080))?
+///         .run()
+///         .await
+/// }
+/// ```
+///
+/// # Implementation notes
+/// `DynamoDbSessionStore` leverages [`aws-sdk-dynamodb`] as a DynamoDB client.
+///
+/// [`aws-sdk-dynamodb`]: https://github.com/awslabs/aws-sdk-rust
 #[derive(Clone)]
 pub struct DynamoDbSessionStore {
     configuration: CacheConfiguration,
@@ -60,7 +106,7 @@ impl DynamoDbSessionStore {
     /// As a default, it expects a DynamoDB table name of 'sessions', with a single partition key of 'SessionId' this can be overridden using the [`DynamoDbSessionStoreBuilder`].
     pub fn builder() -> DynamoDbSessionStoreBuilder {
         DynamoDbSessionStoreBuilder {
-            configuration: CacheConfiguration::default(),
+            configuration: CacheConfiguration::default()
         }
     }
 
@@ -76,7 +122,7 @@ impl DynamoDbSessionStore {
 /// [`DynamoDbSessionStore`]: crate::storage::DynamoDbSessionStore
 #[must_use]
 pub struct DynamoDbSessionStoreBuilder {
-    configuration: CacheConfiguration,
+    configuration: CacheConfiguration
 }
 
 impl DynamoDbSessionStoreBuilder {
@@ -96,6 +142,27 @@ impl DynamoDbSessionStoreBuilder {
     /// Set if DynamoDB local should be used, useful for local testing.
     pub fn use_dynamo_db_local(mut self, should_use: bool) -> Self {
         self.configuration.use_dynamo_db_local = should_use;
+        self
+    }
+
+    /// Set the credentials to use for the DynamoDB client.
+    pub fn with_credentials(mut self, credentials: Credentials) -> Self {
+        self.configuration.credentials = Some(credentials);
+
+        self
+    }
+
+    /// Set the SDK config to use for the DynamoDB client.
+    pub fn with_sdk_config(mut self, config: Config) -> Self {
+        self.configuration.sdk_config = Some(config);
+
+        self
+    }
+
+    /// Set the region to use for the DynamoDB client.
+    pub fn with_region(mut self, region: Region) -> Self {
+        self.configuration.region = Some(region);
+
         self
     }
 

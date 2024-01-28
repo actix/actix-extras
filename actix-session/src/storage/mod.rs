@@ -20,7 +20,7 @@ mod redis_rs;
 #[cfg(any(feature = "redis-actor-session", feature = "redis-rs-session"))]
 mod utils;
 
-#[cfg(any(feature = "dynamo-db"))]
+#[cfg(feature = "dynamo-db")]
 mod dynamo_db;
 
 #[cfg(feature = "cookie-session")]
