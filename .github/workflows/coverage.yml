@@ -24,17 +24,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Rust (nightly)
+      - name: Install Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1.8.0
         with:
-          toolchain: nightly
+          components: llvm-tools-preview
 
-      - name: Generate coverage file
-        run: |
-          cargo install cargo-tarpaulin --vers "^0.13"
-          cargo tarpaulin --workspace --out Xml --verbose
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@v2.26.8
+        with:
+          tool: cargo-llvm-cov
+
+      - name: Generate code coverage
+        run: cargo llvm-cov --workspace --all-features --codecov --output-path codecov.json
 
       - name: Upload to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v4.0.1
         with:
-          file: cobertura.xml
+          files: codecov.json
+          fail_ci_if_error: true
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
