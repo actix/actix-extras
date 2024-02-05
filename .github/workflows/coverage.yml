@@ -35,6 +35,6 @@ jobs:
           cargo tarpaulin --workspace --out Xml --verbose
 
       - name: Upload to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           file: cobertura.xml
