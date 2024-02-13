@@ -17,7 +17,7 @@ use actix_web::{
 use futures_core::ready;
 use futures_util::future::{self, LocalBoxFuture, TryFutureExt as _};
 
-use crate::extractors::{basic, bearer};
+use crate::extractors::{api_key, basic, bearer};
 
 /// Middleware for checking HTTP authentication.
 ///
@@ -113,6 +113,35 @@ where
     /// let middleware = HttpAuthentication::bearer(validator);
     /// ```
     pub fn bearer(process_fn: F) -> Self {
+        Self::with_fn(process_fn)
+    }
+}
+
+impl<F, O> HttpAuthentication<api_key::APIKeyAuth, F>
+where
+    F: Fn(ServiceRequest, api_key::APIKeyAuth) -> O,
+    O: Future<Output = Result<ServiceRequest, (Error, ServiceRequest)>>,
+{
+    /// Construct `HttpAuthentication` middleware for the HTTP "Basic" authentication scheme.
+    ///
+    /// # Examples
+    /// ```
+    /// # use actix_web::{Error, dev::ServiceRequest};
+    /// # use actix_web_httpauth::{extractors::basic::BasicAuth, middleware::HttpAuthentication};
+    /// // In this example validator returns immediately, but since it is required to return
+    /// // anything that implements `IntoFuture` trait, it can be extended to query database or to
+    /// // do something else in a async manner.
+    /// async fn validator(
+    ///     req: ServiceRequest,
+    ///     credentials: BasicAuth,
+    /// ) -> Result<ServiceRequest, (Error, ServiceRequest)> {
+    ///     // All users are great and more than welcome!
+    ///     Ok(req)
+    /// }
+    ///
+    /// let middleware = HttpAuthentication::basic(validator);
+    /// ```
+    pub fn api_key(process_fn: F) -> Self {
         Self::with_fn(process_fn)
     }
 }

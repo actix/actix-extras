@@ -2,8 +2,7 @@ use std::fmt::{Debug, Display};
 
 use actix_web::http::header::{HeaderValue, TryIntoHeaderValue};
 
-pub mod basic;
-pub mod bearer;
+pub mod api_key;
 
 use crate::headers::errors::ParseError;
 

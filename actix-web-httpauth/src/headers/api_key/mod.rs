@@ -4,6 +4,6 @@ mod header;
 mod scheme;
 
 pub use self::{
-    header::Authorization,
-    scheme::{basic::Basic, bearer::Bearer, Scheme},
+    header::XAPIKey,
+    scheme::{api_key::APIKey, Scheme},
 };

@@ -6,7 +6,8 @@ use actix_web::{
 };
 use base64::{prelude::BASE64_STANDARD, Engine};
 
-use crate::headers::authorization::{errors::ParseError, Scheme};
+use crate::headers::authorization::Scheme;
+use crate::headers::errors::ParseError;
 
 /// Credentials for `Basic` authentication scheme, defined in [RFC 7617](https://tools.ietf.org/html/rfc7617)
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]

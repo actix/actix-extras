@@ -5,7 +5,8 @@ use actix_web::{
     web::{BufMut, BytesMut},
 };
 
-use crate::headers::authorization::{errors::ParseError, scheme::Scheme};
+use crate::headers::authorization::scheme::Scheme;
+use crate::headers::errors::ParseError;
 
 /// Credentials for `Bearer` authentication scheme, defined in [RFC 6750].
 ///
