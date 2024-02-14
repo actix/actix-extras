@@ -38,7 +38,7 @@ To start using sessions in your Actix Web application you must register [`Sessio
 
 ```rust
 use actix_web::{web, App, HttpServer, HttpResponse, Error};
-use actix_session::{Session, SessionMiddleware, storage::RedisActorSessionStore};
+use actix_session::{Session, SessionMiddleware, storage::RedisSessionStore};
 use actix_web::cookie::Key;
 
 #[actix_web::main]
