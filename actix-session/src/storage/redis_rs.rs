@@ -6,7 +6,6 @@ use anyhow::Error;
 use deadpool_redis::{redis, Pool};
 #[cfg(feature = "redis-rs-session")]
 use redis::aio::ConnectionManager;
-
 use redis::{AsyncCommands, Cmd, FromRedisValue, RedisResult, Value};
 
 use super::SessionKey;
