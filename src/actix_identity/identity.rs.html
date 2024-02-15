@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `actix-identity/src/identity.rs`."><title>identity.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-5bc39a1768837dd0.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="actix_identity" data-themes="" data-resource-suffix="" data-rustdoc-version="1.78.0-nightly (a84bb95a1 2024-02-13)" data-channel="nightly" data-search-js="search-dd67cee4cfa65049.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-48f368f3872407c8.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="icon" href="https://actix.rs/favicon.ico"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `actix-identity/src/identity.rs`."><title>identity.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-5bc39a1768837dd0.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="actix_identity" data-themes="" data-resource-suffix="" data-rustdoc-version="1.78.0-nightly (ee9c7c940 2024-02-14)" data-channel="nightly" data-search-js="search-dd67cee4cfa65049.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-48f368f3872407c8.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="icon" href="https://actix.rs/favicon.ico"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
             <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
     <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../actix_identity/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
@@ -269,6 +269,9 @@
 <a href="#267" id="267">267</a>
 <a href="#268" id="268">268</a>
 <a href="#269" id="269">269</a>
+<a href="#270" id="270">270</a>
+<a href="#271" id="271">271</a>
+<a href="#272" id="272">272</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>actix_session::Session;
 <span class="kw">use </span>actix_utils::future::{ready, Ready};
 <span class="kw">use </span>actix_web::{
@@ -353,6 +356,9 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) logout_behaviour: LogoutBehaviour,
     <span class="kw">pub</span>(<span class="kw">crate</span>) is_login_deadline_enabled: bool,
     <span class="kw">pub</span>(<span class="kw">crate</span>) is_visit_deadline_enabled: bool,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) id_key: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) last_visit_unix_timestamp_key: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) login_unix_timestamp_key: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
 }
 
 <span class="kw">impl </span>IdentityInner {
@@ -372,14 +378,10 @@
     <span class="doccomment">/// Retrieve the user id attached to the current session.
     </span><span class="kw">fn </span>get_identity(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;String, GetIdentityError&gt; {
         <span class="self">self</span>.session
-            .get::&lt;String&gt;(ID_KEY)<span class="question-mark">?
+            .get::&lt;String&gt;(<span class="self">self</span>.id_key)<span class="question-mark">?
             </span>.ok_or_else(|| MissingIdentityError.into())
     }
 }
-
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>ID_KEY: <span class="kw-2">&amp;</span>str = <span class="string">"actix_identity.user_id"</span>;
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>LAST_VISIT_UNIX_TIMESTAMP_KEY: <span class="kw-2">&amp;</span>str = <span class="string">"actix_identity.last_visited_at"</span>;
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>LOGIN_UNIX_TIMESTAMP_KEY: <span class="kw-2">&amp;</span>str = <span class="string">"actix_identity.logged_in_at"</span>;
 
 <span class="kw">impl </span>Identity {
     <span class="doccomment">/// Return the user id associated to the current session.
@@ -401,7 +403,7 @@
     </span><span class="kw">pub fn </span>id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;String, GetIdentityError&gt; {
         <span class="self">self</span>.<span class="number">0
             </span>.session
-            .get(ID_KEY)<span class="question-mark">?
+            .get(<span class="self">self</span>.<span class="number">0</span>.id_key)<span class="question-mark">?
             </span>.ok_or_else(|| LostIdentityError.into())
     }
 
@@ -424,13 +426,15 @@
     /// ```
     </span><span class="kw">pub fn </span>login(ext: <span class="kw-2">&amp;</span>Extensions, id: String) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, LoginError&gt; {
         <span class="kw">let </span>inner = IdentityInner::extract(ext);
-        inner.session.insert(ID_KEY, id)<span class="question-mark">?</span>;
+        inner.session.insert(inner.id_key, id)<span class="question-mark">?</span>;
         <span class="kw">let </span>now = OffsetDateTime::now_utc().unix_timestamp();
         <span class="kw">if </span>inner.is_login_deadline_enabled {
-            inner.session.insert(LOGIN_UNIX_TIMESTAMP_KEY, now)<span class="question-mark">?</span>;
+            inner.session.insert(inner.login_unix_timestamp_key, now)<span class="question-mark">?</span>;
         }
         <span class="kw">if </span>inner.is_visit_deadline_enabled {
-            inner.session.insert(LAST_VISIT_UNIX_TIMESTAMP_KEY, now)<span class="question-mark">?</span>;
+            inner
+                .session
+                .insert(inner.last_visit_unix_timestamp_key, now)<span class="question-mark">?</span>;
         }
         inner.session.renew();
         <span class="prelude-val">Ok</span>(<span class="self">Self</span>(inner))
@@ -462,12 +466,12 @@
                 <span class="self">self</span>.<span class="number">0</span>.session.purge();
             }
             LogoutBehaviour::DeleteIdentityKeys =&gt; {
-                <span class="self">self</span>.<span class="number">0</span>.session.remove(ID_KEY);
+                <span class="self">self</span>.<span class="number">0</span>.session.remove(<span class="self">self</span>.<span class="number">0</span>.id_key);
                 <span class="kw">if </span><span class="self">self</span>.<span class="number">0</span>.is_login_deadline_enabled {
-                    <span class="self">self</span>.<span class="number">0</span>.session.remove(LOGIN_UNIX_TIMESTAMP_KEY);
+                    <span class="self">self</span>.<span class="number">0</span>.session.remove(<span class="self">self</span>.<span class="number">0</span>.login_unix_timestamp_key);
                 }
                 <span class="kw">if </span><span class="self">self</span>.<span class="number">0</span>.is_visit_deadline_enabled {
-                    <span class="self">self</span>.<span class="number">0</span>.session.remove(LAST_VISIT_UNIX_TIMESTAMP_KEY);
+                    <span class="self">self</span>.<span class="number">0</span>.session.remove(<span class="self">self</span>.<span class="number">0</span>.last_visit_unix_timestamp_key);
                 }
             }
         }
@@ -483,7 +487,7 @@
         <span class="prelude-val">Ok</span>(<span class="self">self
             </span>.<span class="number">0
             </span>.session
-            .get(LOGIN_UNIX_TIMESTAMP_KEY)<span class="question-mark">?
+            .get(<span class="self">self</span>.<span class="number">0</span>.login_unix_timestamp_key)<span class="question-mark">?
             </span>.map(OffsetDateTime::from_unix_timestamp)
             .transpose()
             .map_err(SessionExpiryError)<span class="question-mark">?</span>)
@@ -493,7 +497,7 @@
         <span class="prelude-val">Ok</span>(<span class="self">self
             </span>.<span class="number">0
             </span>.session
-            .get(LAST_VISIT_UNIX_TIMESTAMP_KEY)<span class="question-mark">?
+            .get(<span class="self">self</span>.<span class="number">0</span>.last_visit_unix_timestamp_key)<span class="question-mark">?
             </span>.map(OffsetDateTime::from_unix_timestamp)
             .transpose()
             .map_err(SessionExpiryError)<span class="question-mark">?</span>)
@@ -501,7 +505,9 @@
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>set_last_visited_at(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), LoginError&gt; {
         <span class="kw">let </span>now = OffsetDateTime::now_utc().unix_timestamp();
-        <span class="self">self</span>.<span class="number">0</span>.session.insert(LAST_VISIT_UNIX_TIMESTAMP_KEY, now)<span class="question-mark">?</span>;
+        <span class="self">self</span>.<span class="number">0
+            </span>.session
+            .insert(<span class="self">self</span>.<span class="number">0</span>.last_visit_unix_timestamp_key, now)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
 }
