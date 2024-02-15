@@ -9,6 +9,9 @@ pub(crate) struct Configuration {
     pub(crate) on_logout: LogoutBehaviour,
     pub(crate) login_deadline: Option<Duration>,
     pub(crate) visit_deadline: Option<Duration>,
+    pub(crate) id_key: &'static str,
+    pub(crate) last_visit_unix_timestamp_key: &'static str,
+    pub(crate) login_unix_timestamp_key: &'static str,
 }
 
 impl Default for Configuration {
@@ -17,6 +20,9 @@ impl Default for Configuration {
             on_logout: LogoutBehaviour::PurgeSession,
             login_deadline: None,
             visit_deadline: None,
+            id_key: "actix_identity.user_id",
+            last_visit_unix_timestamp_key: "actix_identity.last_visited_at",
+            login_unix_timestamp_key: "actix_identity.logged_in_at",
         }
     }
 }
@@ -56,6 +62,24 @@ impl IdentityMiddlewareBuilder {
         Self {
             configuration: Configuration::default(),
         }
+    }
+
+    /// Set a custom key to identify the user in the session.
+    pub fn id_key(mut self, key: &'static str) -> Self {
+        self.configuration.id_key = key;
+        self
+    }
+
+    /// Set a custom key to store the last visited unix timestamp.
+    pub fn last_visit_unix_timestamp_key(mut self, key: &'static str) -> Self {
+        self.configuration.last_visit_unix_timestamp_key = key;
+        self
+    }
+
+    /// Set a custom key to store the login unix timestamp.
+    pub fn login_unix_timestamp_key(mut self, key: &'static str) -> Self {
+        self.configuration.login_unix_timestamp_key = key;
+        self
     }
 
     /// Determines how [`Identity::logout`](crate::Identity::logout) affects the current session.
