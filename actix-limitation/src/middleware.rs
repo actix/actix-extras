@@ -53,7 +53,7 @@ where
     forward_ready!(service);
 
     fn call(&self, req: ServiceRequest) -> Self::Future {
-        // A mis-configuration of the Actix App will result in a **runtime** failure, so the expect
+        // A misconfiguration of the Actix App will result in a **runtime** failure, so the expect
         // method description is important context for the developer.
         let limiter = req
             .app_data::<web::Data<Limiter>>()

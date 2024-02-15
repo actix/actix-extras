@@ -1,3 +1,6 @@
+# depends on:
+# - https://crates.io/crates/fd-find
+# - https://crates.io/crates/cargo-check-external-types
 _list:
     @just --list
 
