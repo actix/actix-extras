@@ -396,6 +396,7 @@
 <a href="#394" id="394">394</a>
 <a href="#395" id="395">395</a>
 <a href="#396" id="396">396</a>
+<a href="#397" id="397">397</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Configuration options to tune the behaviour of [`SessionMiddleware`].
 
 </span><span class="kw">use </span>actix_web::cookie::{time::Duration, Key, SameSite};
@@ -529,6 +530,7 @@
     ///
     /// A persistent session can live more than the specified TTL if the TTL is extended.
     /// See [`session_ttl_extension_policy`](Self::session_ttl_extension_policy) for more details.
+    </span><span class="attr">#[doc(alias = <span class="string">"max_age"</span>, alias = <span class="string">"max age"</span>, alias = <span class="string">"expires"</span>)]
     </span><span class="kw">pub fn </span>session_ttl(<span class="kw-2">mut </span><span class="self">self</span>, session_ttl: Duration) -&gt; <span class="self">Self </span>{
         <span class="self">self</span>.session_ttl = session_ttl;
         <span class="self">self
