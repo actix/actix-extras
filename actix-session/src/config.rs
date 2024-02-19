@@ -131,6 +131,7 @@ impl PersistentSession {
     ///
     /// A persistent session can live more than the specified TTL if the TTL is extended.
     /// See [`session_ttl_extension_policy`](Self::session_ttl_extension_policy) for more details.
+    #[doc(alias = "max_age", alias = "max age", alias = "expires")]
     pub fn session_ttl(mut self, session_ttl: Duration) -> Self {
         self.session_ttl = session_ttl;
         self
