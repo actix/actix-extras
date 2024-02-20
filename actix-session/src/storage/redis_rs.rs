@@ -286,7 +286,6 @@ mod tests {
     use std::collections::HashMap;
 
     use actix_web::cookie::time;
-    use redis::AsyncCommands;
 
     use super::*;
     use crate::test_helpers::acceptance_test_suite;

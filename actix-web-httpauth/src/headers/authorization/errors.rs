@@ -1,4 +1,4 @@
-use std::{convert::From, error::Error, fmt, str};
+use std::{error::Error, fmt, str};
 
 use actix_web::http::header;
 
