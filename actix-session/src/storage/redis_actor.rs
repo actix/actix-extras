@@ -277,8 +277,6 @@ impl SessionStore for RedisActorSessionStore {
 mod tests {
     use std::collections::HashMap;
 
-    use actix_web::cookie::time::Duration;
-
     use super::*;
     use crate::test_helpers::acceptance_test_suite;
 

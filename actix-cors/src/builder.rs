@@ -1,4 +1,4 @@
-use std::{collections::HashSet, iter::FromIterator, rc::Rc};
+use std::{collections::HashSet, rc::Rc};
 
 use actix_utils::future::{self, Ready};
 use actix_web::{
@@ -614,8 +614,8 @@ mod test {
 
     use actix_web::{
         body,
-        dev::{fn_service, Transform},
-        http::{header::HeaderName, StatusCode},
+        dev::fn_service,
+        http::StatusCode,
         test::{self, TestRequest},
         HttpResponse,
     };
