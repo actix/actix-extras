@@ -243,7 +243,6 @@ where
 mod tests {
     use actix_service::into_service;
     use actix_web::{
-        dev::Service,
         error::{self, ErrorForbidden},
         http::StatusCode,
         test::TestRequest,
