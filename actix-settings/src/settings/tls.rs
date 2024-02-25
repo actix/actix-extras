@@ -50,9 +50,11 @@ impl Tls {
     /// }
     /// ```
     pub fn get_ssl_acceptor_builder(&self) -> AsResult<SslAcceptorBuilder> {
-        let mut builder = SslAcceptor::mozilla_intermediate(SslMethod::tls()).unwrap();
+        let mut builder = SslAcceptor::mozilla_intermediate(SslMethod::tls())?;
         builder.set_certificate_chain_file(&self.certificate)?;
         builder.set_private_key_file(&self.private_key, SslFiletype::PEM)?;
+        builder.check_private_key()?;
+
         Ok(builder)
     }
 }
