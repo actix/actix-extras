@@ -3,6 +3,8 @@ use std::path::PathBuf;
 use openssl::ssl::{SslAcceptor, SslAcceptorBuilder, SslFiletype, SslMethod};
 use serde::Deserialize;
 
+use crate::AsResult;
+
 /// TLS (HTTPS) configuration.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize)]
 #[serde(rename_all = "kebab-case")]
@@ -40,21 +42,17 @@ impl Tls {
     ///         App::new()
     ///             .service(index)
     ///     })
-    ///     .apply_settings(&settings)
+    ///     .try_apply_settings(&settings)?
     ///     .bind(("127.0.0.1", 8080))?
-    ///     .bind_openssl(("127.0.0.1", 8081), settings.actix.tls.get_ssl_acceptor_builder())?
+    ///     .bind_openssl(("127.0.0.1", 8081), settings.actix.tls.get_ssl_acceptor_builder()?)?
     ///     .run()
     ///     .await
     /// }
     /// ```
-    pub fn get_ssl_acceptor_builder(&self) -> SslAcceptorBuilder {
+    pub fn get_ssl_acceptor_builder(&self) -> AsResult<SslAcceptorBuilder> {
         let mut builder = SslAcceptor::mozilla_intermediate(SslMethod::tls()).unwrap();
-        builder
-            .set_certificate_chain_file(&self.certificate)
-            .unwrap();
-        builder
-            .set_private_key_file(&self.private_key, SslFiletype::PEM)
-            .unwrap();
-        builder
+        builder.set_certificate_chain_file(&self.certificate)?;
+        builder.set_private_key_file(&self.private_key, SslFiletype::PEM)?;
+        Ok(builder)
     }
 }

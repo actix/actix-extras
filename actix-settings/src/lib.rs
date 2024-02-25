@@ -54,7 +54,7 @@
 //!         }
 //!     })
 //!     // apply the `Settings` to Actix Web's `HttpServer`
-//!     .apply_settings(&settings)
+//!     .try_apply_settings(&settings)?
 //!     .run()
 //!     .await
 //! }
@@ -242,10 +242,13 @@ where
 }
 
 /// Extension trait for applying parsed settings to the server object.
-pub trait ApplySettings<S> {
+pub trait ApplySettings<S>: Sized {
     /// Apply some settings object value to `self`.
-    #[must_use]
+    #[deprecated = "Prefer `try_apply_settings`."]
     fn apply_settings(self, settings: &S) -> Self;
+
+    /// Apply some settings object value to `self`.
+    fn try_apply_settings(self, settings: &S) -> AsResult<Self>;
 }
 
 impl<F, I, S, B> ApplySettings<ActixSettings> for HttpServer<F, I, S, B>
@@ -259,23 +262,27 @@ where
     S::Future: 'static,
     B: MessageBody + 'static,
 {
-    fn apply_settings(mut self, settings: &ActixSettings) -> Self {
+    fn apply_settings(self, settings: &ActixSettings) -> Self {
+        self.try_apply_settings(settings).unwrap()
+    }
+
+    fn try_apply_settings(mut self, settings: &ActixSettings) -> AsResult<Self> {
         for Address { host, port } in &settings.hosts {
             #[cfg(feature = "tls")]
             {
                 if settings.tls.enabled {
-                    self = self.bind_openssl(format!("{}:{}", host, port), settings.tls.get_ssl_acceptor_builder())
-                        .unwrap(/*TODO*/)
+                    self = self.bind_openssl(
+                        format!("{}:{}", host, port),
+                        settings.tls.get_ssl_acceptor_builder()?,
+                    )?;
                 } else {
-                    self = self.bind(format!("{host}:{port}"))
-                        .unwrap(/*TODO*/);
+                    self = self.bind(format!("{host}:{port}"))?;
                 }
             }
 
             #[cfg(not(feature = "tls"))]
             {
-                self = self.bind(format!("{host}:{port}"))
-                    .unwrap(/*TODO*/);
+                self = self.bind(format!("{host}:{port}"))?;
             }
         }
 
@@ -328,7 +335,7 @@ where
             Timeout::Seconds(n) => self.shutdown_timeout(n as u64),
         };
 
-        self
+        Ok(self)
     }
 }
 
@@ -345,7 +352,11 @@ where
     A: de::DeserializeOwned,
 {
     fn apply_settings(self, settings: &BasicSettings<A>) -> Self {
-        self.apply_settings(&settings.actix)
+        self.try_apply_settings(&settings.actix).unwrap()
+    }
+
+    fn try_apply_settings(self, settings: &BasicSettings<A>) -> AsResult<Self> {
+        self.try_apply_settings(&settings.actix)
     }
 }
 
@@ -358,7 +369,8 @@ mod tests {
     #[test]
     fn apply_settings() {
         let settings = Settings::parse_toml("Server.toml").unwrap();
-        let _ = HttpServer::new(App::new).apply_settings(&settings);
+        let server = HttpServer::new(App::new).try_apply_settings(&settings);
+        assert!(server.is_ok());
     }
 
     #[test]
