@@ -34,7 +34,7 @@ actix-tls = { version = "3", default-features = false, features = ["connect"] }
 log = "0.4.6"
 backoff = "0.4.0"
 derive_more = "0.99.7"
-futures-core = { version = "0.3.7", default-features = false }
+futures-core = { version = "0.3.30", default-features = false }
 redis-async = "0.16"
 time = "0.3"
 tokio = { version = "1.18.4", features = ["sync"] }
