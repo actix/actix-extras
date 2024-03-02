@@ -115,7 +115,7 @@
 /// ```no_run
 /// use actix_web::{middleware::Logger, web, App, Error, HttpRequest, HttpResponse, HttpServer};
 /// use actix_ws::Message;
-/// use futures::stream::StreamExt as _;
+/// use futures_util::StreamExt as _;
 ///
 /// async fn ws(req: HttpRequest, body: web::Payload) -&gt; Result&lt;HttpResponse, Error&gt; {
 ///     let (response, mut session, mut msg_stream) = actix_ws::handle(&amp;req, body)?;
