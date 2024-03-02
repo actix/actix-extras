@@ -118,7 +118,7 @@ jobs:
 
       - name: tests
         timeout-minutes: 40
-        run: cargo ci-test --exclude=actix-redis --exclude=actix-session --exclude=actix-limitation
+        run: cargo ci-test --exclude=actix-session --exclude=actix-limitation
 
       - name: CI cache clean
         run: cargo-ci-cache-clean
