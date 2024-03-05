@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Introduce the `redis-rs-tls-session-rustls` feature
+
 ## 0.9.0
 
 - Remove use of `async-trait` on `SessionStore` trait.

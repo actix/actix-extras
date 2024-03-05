@@ -124,6 +124,14 @@ By default, `actix-session` does not provide any storage backend to retrieve and
   actix-session = { version = "...", features = ["redis-rs-session", "redis-rs-tls-session"] }
   ```
 
+  If you instead prefer using `rustls`, use the `redis-rs-tls-session-rustls`
+
+  ```toml
+  [dependencies]
+  # ...
+  actix-session = { version = "...", features = ["redis-rs-session", "redis-rs-tls-session-rustls"] }
+  ```
+
 You can implement your own session storage backend using the [`SessionStore`] trait.
 
 [`SessionStore`]: storage::SessionStore

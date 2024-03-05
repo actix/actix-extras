@@ -23,6 +23,7 @@ cookie-session = []
 redis-actor-session = ["actix-redis", "actix", "futures-core", "rand"]
 redis-rs-session = ["redis", "rand"]
 redis-rs-tls-session = ["redis-rs-session", "redis/tokio-native-tls-comp"]
+redis-rs-tls-session-rustls = ["redis-rs-session", "redis/tokio-rustls-comp"]
 
 [dependencies]
 actix-service = "2"
