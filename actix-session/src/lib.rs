@@ -28,7 +28,7 @@ provided by `actix-session`; it takes care of all the session cookie handling an
 against the active [`Session`].
 
 `actix-session` provides some built-in storage backends: ([`CookieSessionStore`],
-[`RedisSessionStore`], and [`RedisActorSessionStore`]) - you can create a custom storage backend
+[`RedisSessionStore`], [`RedisActorSessionStore`], and [`DynamoDbSessionStore`]) - you can create a custom storage backend
 by implementing the [`SessionStore`] trait.
 
 Further reading on sessions:
@@ -133,12 +133,22 @@ attached to your sessions. You can enable:
   actix-session = { version = "...", features = ["redis-rs-session", "redis-rs-tls-session"] }
   ```
 
+- a DynamoDB-based backend via [`dynamo-db`](https://docs.rs/aws-sdk-dynamodb), [`DynamoDbSessionStore`], using
+  the `dynamo-db` feature flag.
+
+  ```toml
+  [dependencies]
+  # ...
+  actix-session = { version = "...", features = ["dynamo-db"] }
+  ```
+
 You can implement your own session storage backend using the [`SessionStore`] trait.
 
 [`SessionStore`]: storage::SessionStore
 [`CookieSessionStore`]: storage::CookieSessionStore
 [`RedisSessionStore`]: storage::RedisSessionStore
 [`RedisActorSessionStore`]: storage::RedisActorSessionStore
+[`DynamoDbSessionStore`]: storage::DynamoDbSessionStore
 */
 
 #![forbid(unsafe_code)]
