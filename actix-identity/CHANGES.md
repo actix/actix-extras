@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.7.1
+
+- Add `IdentityMiddlewareBuilder::{id_key, last_visit_unix_timestamp_key, login_unix_timestamp_key}()` methods for customizing keys used in session. Defaults remain the same as before.
+
 ## 0.7.0
 
 - Update `actix-session` dependency to `0.9`.

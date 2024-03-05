@@ -5,7 +5,7 @@ use std::{
 
 use actix_web::{middleware::Logger, web, App, HttpRequest, HttpResponse, HttpServer};
 use actix_ws::{Message, Session};
-use futures::stream::{FuturesUnordered, StreamExt as _};
+use futures_util::{stream::FuturesUnordered, StreamExt as _};
 use log::info;
 use tokio::sync::Mutex;
 

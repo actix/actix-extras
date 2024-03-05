@@ -40,7 +40,7 @@ tracing = { version = "0.1.30", default-features = false, features = ["log"] }
 # redis-actor-session
 actix = { version = "0.13", default-features = false, optional = true }
 actix-redis = { version = "0.13", optional = true }
-futures-core = { version = "0.3.7", default-features = false, optional = true }
+futures-core = { version = "0.3.17", default-features = false, optional = true }
 
 # redis-rs-session
 redis = { version = "0.24", default-features = false, features = ["tokio-comp", "connection-manager"], optional = true }
