@@ -29,7 +29,7 @@ pub use self::{
 /// ```no_run
 /// use actix_web::{middleware::Logger, web, App, Error, HttpRequest, HttpResponse, HttpServer};
 /// use actix_ws::Message;
-/// use futures::stream::StreamExt as _;
+/// use futures_util::StreamExt as _;
 ///
 /// async fn ws(req: HttpRequest, body: web::Payload) -> Result<HttpResponse, Error> {
 ///     let (response, mut session, mut msg_stream) = actix_ws::handle(&req, body)?;
