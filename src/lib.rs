@@ -28,6 +28,7 @@
 //! - `opentelemetry_0_19`: same as above but using `opentelemetry` 0.19;
 //! - `opentelemetry_0_20`: same as above but using `opentelemetry` 0.20;
 //! - `opentelemetry_0_21`: same as above but using `opentelemetry` 0.21;
+//! - `opentelemetry_0_22`: same as above but using `opentelemetry` 0.22;
 //! - `emit_event_on_error`: emit a [`tracing`] event when request processing fails with an error (enabled by default).
 //! - `uuid_v7`: use the UUID v7 implementation inside [`RequestId`] instead of UUID v4 (disabled by default).
 //!
@@ -46,7 +47,7 @@
 //! ```
 //!
 //! Check out [the examples on GitHub](https://github.com/LukeMathWalker/tracing-actix-web/tree/main/examples) to get a taste of how [`TracingLogger`] can be used to observe and monitor your
-//! application.  
+//! application.
 //!
 //! # From zero to hero: a crash course in observability
 //!
@@ -70,12 +71,12 @@
 //!
 //! [`tracing`] empowers us to attach structured properties to a span as a collection of key-value pairs.  
 //! Those properties can then be queried in a variety of tools (e.g. ElasticSearch, Honeycomb, DataDog) to
-//! understand what is happening in your system.  
+//! understand what is happening in your system.
 //!
 //! ## Customisation via [`RootSpanBuilder`]
 //!
 //! Troubleshooting becomes much easier when the root span has a _rich context_ - e.g. you can understand most of what
-//! happened when processing the request just by looking at the properties attached to the corresponding root span.  
+//! happened when processing the request just by looking at the properties attached to the corresponding root span.
 //!
 //! You might have heard of this technique as the [canonical log line pattern](https://stripe.com/blog/canonical-log-lines),
 //! popularised by Stripe. It is more recently discussed in terms of [high-cardinality events](https://www.honeycomb.io/blog/observability-a-manifesto/)
@@ -125,7 +126,7 @@
 //!
 //! There is an issue, though: `client_id` is the _only_ property we are capturing.  
 //! With `DomainRootSpanBuilder`, as it is, we do not get any of that useful HTTP-related information provided by
-//! [`DefaultRootSpanBuilder`].  
+//! [`DefaultRootSpanBuilder`].
 //!
 //! We can do better!
 //!
@@ -153,7 +154,7 @@
 //! ```
 //!
 //! [`root_span!`] is a macro provided by `tracing-actix-web`: it creates a new span by combining all the HTTP properties tracked
-//! by [`DefaultRootSpanBuilder`] with the custom ones you specify when calling it (e.g. `client_id` in our example).  
+//! by [`DefaultRootSpanBuilder`] with the custom ones you specify when calling it (e.g. `client_id` in our example).
 //!
 //! We need to use a macro because `tracing` requires all the properties attached to a span to be declared upfront, when the span is created.  
 //! You cannot add new ones afterwards. This makes it extremely fast, but it pushes us to reach for macros when we need some level of
@@ -303,6 +304,7 @@ mutually_exclusive_features::none_or_one_of!(
     "opentelemetry_0_19",
     "opentelemetry_0_20",
     "opentelemetry_0_21",
+    "opentelemetry_0_22",
 );
 
 #[cfg(any(
@@ -315,5 +317,6 @@ mutually_exclusive_features::none_or_one_of!(
     feature = "opentelemetry_0_19",
     feature = "opentelemetry_0_20",
     feature = "opentelemetry_0_21",
+    feature = "opentelemetry_0_22",
 ))]
 mod otel;

@@ -55,6 +55,7 @@ actix-web = "4"
 - `opentelemetry_0_19`: same as above but using `opentelemetry` 0.19;
 - `opentelemetry_0_20`: same as above but using `opentelemetry` 0.20;
 - `opentelemetry_0_21`: same as above but using `opentelemetry` 0.21;
+- `opentelemetry_0_22`: same as above but using `opentelemetry` 0.22;
 - `emit_event_on_error`: emit a [`tracing`] event when request processing fails with an error (enabled by default).
 - `uuid_v7`: use the UUID v7 implementation inside [`RequestId`] instead of UUID v4 (disabled by default).
 ## Quickstart

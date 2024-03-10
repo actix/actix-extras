@@ -165,6 +165,7 @@ pub mod private {
             feature = "opentelemetry_0_19",
             feature = "opentelemetry_0_20",
             feature = "opentelemetry_0_21",
+            feature = "opentelemetry_0_22",
         ))]
         crate::otel::set_otel_parent(req, span);
     }

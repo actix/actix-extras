@@ -29,6 +29,7 @@ opentelemetry_0_18 = ["opentelemetry_0_18_pkg", "tracing-opentelemetry_0_18_pkg"
 opentelemetry_0_19 = ["opentelemetry_0_19_pkg", "tracing-opentelemetry_0_19_pkg"]
 opentelemetry_0_20 = ["opentelemetry_0_20_pkg", "tracing-opentelemetry_0_21_pkg"]
 opentelemetry_0_21 = ["opentelemetry_0_21_pkg", "tracing-opentelemetry_0_22_pkg"]
+opentelemetry_0_22 = ["opentelemetry_0_22_pkg", "tracing-opentelemetry_0_23_pkg"]
 emit_event_on_error = []
 uuid_v7 = ["uuid/v7"]
 
@@ -47,15 +48,17 @@ opentelemetry_0_18_pkg = { package = "opentelemetry", version = "0.18", optional
 opentelemetry_0_19_pkg = { package = "opentelemetry", version = "0.19", optional = true }
 opentelemetry_0_20_pkg = { package = "opentelemetry", version = "0.20", optional = true }
 opentelemetry_0_21_pkg = { package = "opentelemetry", version = "0.21", optional = true }
-tracing-opentelemetry_0_12_pkg = { package = "tracing-opentelemetry",version = "0.12", optional = true }
+opentelemetry_0_22_pkg = { package = "opentelemetry", version = "0.22", optional = true }
+tracing-opentelemetry_0_12_pkg = { package = "tracing-opentelemetry", version = "0.12", optional = true }
 tracing-opentelemetry_0_13_pkg = { package = "tracing-opentelemetry", version = "0.13", optional = true }
-tracing-opentelemetry_0_14_pkg = { package = "tracing-opentelemetry",version = "0.14", optional = true }
-tracing-opentelemetry_0_16_pkg = { package = "tracing-opentelemetry",version = "0.16", optional = true }
-tracing-opentelemetry_0_17_pkg = { package = "tracing-opentelemetry",version = "0.17", optional = true }
-tracing-opentelemetry_0_18_pkg = { package = "tracing-opentelemetry",version = "0.18", optional = true }
-tracing-opentelemetry_0_19_pkg = { package = "tracing-opentelemetry",version = "0.19", optional = true }
-tracing-opentelemetry_0_21_pkg = { package = "tracing-opentelemetry",version = "0.21", optional = true }
-tracing-opentelemetry_0_22_pkg = { package = "tracing-opentelemetry",version = "0.22", optional = true }
+tracing-opentelemetry_0_14_pkg = { package = "tracing-opentelemetry", version = "0.14", optional = true }
+tracing-opentelemetry_0_16_pkg = { package = "tracing-opentelemetry", version = "0.16", optional = true }
+tracing-opentelemetry_0_17_pkg = { package = "tracing-opentelemetry", version = "0.17", optional = true }
+tracing-opentelemetry_0_18_pkg = { package = "tracing-opentelemetry", version = "0.18", optional = true }
+tracing-opentelemetry_0_19_pkg = { package = "tracing-opentelemetry", version = "0.19", optional = true }
+tracing-opentelemetry_0_21_pkg = { package = "tracing-opentelemetry", version = "0.21", optional = true }
+tracing-opentelemetry_0_22_pkg = { package = "tracing-opentelemetry", version = "0.22", optional = true }
+tracing-opentelemetry_0_23_pkg = { package = "tracing-opentelemetry", version = "0.23", optional = true }
 
 [dev-dependencies]
 actix-web = { version = "4", default-features = false, features = ["macros"] }
