@@ -259,8 +259,6 @@
 //!
 //! Optionally, using the `uuid_v7` feature flag will allow [`RequestId`] to use UUID v7 instead of the currently used UUID v4.
 //!
-//! However, the [`uuid`] crate requires a compile time flag `uuid_unstable` to be passed in `RUSTFLAGS="--cfg uuid_unstable"` in order to compile. You can read more about it [here](https://docs.rs/uuid/latest/uuid/#unstable-features).
-//!
 //! ## Trace Id
 //!
 //! To fulfill a request you often have to perform additional I/O operations - e.g. calls to other REST or gRPC APIs, database queries, etc.

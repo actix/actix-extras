@@ -82,9 +82,6 @@ jobs:
   test_uuid_v7:
     name: Test
     runs-on: ubuntu-latest
-    env:
-      RUSTFLAGS: "--cfg uuid_unstable"
-      RUSTDOCFLAGS: "--cfg uuid_unstable"
     steps:
       - uses: actions/checkout@v2
       - name: Cache dependencies

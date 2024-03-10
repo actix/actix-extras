@@ -27,23 +27,16 @@ use uuid::Uuid;
 /// ```
 ///
 /// Optionally, using the `uuid_v7` feature flag will allow [`RequestId`] to use UUID v7 instead of the currently used UUID v4.
-///
-/// However, the [`uuid`] crate requires a compile time flag `uuid_unstable` to be passed in `RUSTFLAGS="--cfg uuid_unstable"` in order to compile. You can read more about it [here](https://docs.rs/uuid/latest/uuid/#unstable-features).
-///
 #[derive(Clone, Copy, Debug)]
 pub struct RequestId(Uuid);
 
 impl RequestId {
     pub(crate) fn generate() -> Self {
-        // Compiler error for providing context on requirements to enable the `uuid_v7` feature flag
-        #[cfg(all(feature = "uuid_v7", not(uuid_unstable)))]
-        compile_error!("feature \"uuid_v7\" requires \"uuid_unstable\" to be passed as configuration in rustflags");
-
         #[cfg(not(feature = "uuid_v7"))]
         {
             Self(Uuid::new_v4())
         }
-        #[cfg(all(uuid_unstable, feature = "uuid_v7"))]
+        #[cfg(feature = "uuid_v7")]
         {
             Self(Uuid::now_v7())
         }
