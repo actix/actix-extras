@@ -5,7 +5,6 @@ members = [
     "actix-identity",
     "actix-limitation",
     "actix-protobuf",
-    "actix-redis",
     "actix-session",
     "actix-settings",
     "actix-web-httpauth",
@@ -23,7 +22,6 @@ actix-cors = { path = "./actix-cors" }
 actix-identity = { path = "./actix-identity" }
 actix-limitation = { path = "./actix-limitation" }
 actix-protobuf = { path = "./actix-protobuf" }
-actix-redis = { path = "./actix-redis" }
 actix-session = { path = "./actix-session" }
 actix-settings = { path = "./actix-settings" }
 actix-web-httpauth = { path = "./actix-web-httpauth" }

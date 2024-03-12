@@ -100,14 +100,6 @@ By default, `actix-session` does not provide any storage backend to retrieve and
   actix-session = { version = "...", features = ["cookie-session"] }
   ```
 
-- a Redis-based backend via [`actix-redis`](https://docs.rs/actix-redis), [`RedisActorSessionStore`], using the `redis-actor-session` feature flag.
-
-  ```toml
-  [dependencies]
-  # ...
-  actix-session = { version = "...", features = ["redis-actor-session"] }
-  ```
-
 - a Redis-based backend via [`redis-rs`](https://docs.rs/redis-rs), [`RedisSessionStore`], using the `redis-rs-session` feature flag.
 
   ```toml
