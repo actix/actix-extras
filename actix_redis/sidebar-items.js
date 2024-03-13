@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["Error","RespError","RespValue"],"macro":["resp_array"],"struct":["Command","RedisActor"]};

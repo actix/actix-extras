@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["LoadError","SaveError","UpdateError"],"struct":["CookieSessionStore","RedisActorSessionStore","RedisActorSessionStoreBuilder","RedisSessionStore","RedisSessionStoreBuilder","SessionKey"],"trait":["SessionStore"]};
+window.SIDEBAR_ITEMS = {"enum":["LoadError","SaveError","UpdateError"],"struct":["CookieSessionStore","RedisSessionStore","RedisSessionStoreBuilder","SessionKey"],"trait":["SessionStore"]};
