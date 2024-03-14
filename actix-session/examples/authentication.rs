@@ -1,4 +1,4 @@
-use actix_session::{storage::RedisActorSessionStore, Session, SessionMiddleware};
+use actix_session::{storage::RedisSessionStore, Session, SessionMiddleware};
 use actix_web::{
     cookie::{Key, SameSite},
     error::InternalError,
@@ -76,6 +76,9 @@ async fn main() -> std::io::Result<()> {
     // The signing key would usually be read from a configuration file/environment variables.
     let signing_key = Key::generate();
 
+    log::info!("setting up Redis session storage");
+    let storage = RedisSessionStore::new("127.0.0.1:6379").await.unwrap();
+
     log::info!("starting HTTP server at http://localhost:8080");
 
     HttpServer::new(move || {
@@ -84,15 +87,12 @@ async fn main() -> std::io::Result<()> {
             .wrap(middleware::Logger::default())
             // cookie session middleware
             .wrap(
-                SessionMiddleware::builder(
-                    RedisActorSessionStore::new("127.0.0.1:6379"),
-                    signing_key.clone(),
-                )
-                // allow the cookie to be accessed from javascript
-                .cookie_http_only(false)
-                // allow the cookie only from the current domain
-                .cookie_same_site(SameSite::Strict)
-                .build(),
+                SessionMiddleware::builder(storage.clone(), signing_key.clone())
+                    // allow the cookie to be accessed from javascript
+                    .cookie_http_only(false)
+                    // allow the cookie only from the current domain
+                    .cookie_same_site(SameSite::Strict)
+                    .build(),
             )
             .route("/login", web::post().to(login))
             .route("/secret", web::get().to(secret))

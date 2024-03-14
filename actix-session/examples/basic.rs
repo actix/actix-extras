@@ -1,4 +1,4 @@
-use actix_session::{storage::RedisActorSessionStore, Session, SessionMiddleware};
+use actix_session::{storage::RedisSessionStore, Session, SessionMiddleware};
 use actix_web::{cookie::Key, middleware, web, App, Error, HttpRequest, HttpServer, Responder};
 
 /// simple handler
@@ -23,6 +23,9 @@ async fn main() -> std::io::Result<()> {
     // The signing key would usually be read from a configuration file/environment variables.
     let signing_key = Key::generate();
 
+    log::info!("setting up Redis session storage");
+    let storage = RedisSessionStore::new("127.0.0.1:6379").await.unwrap();
+
     log::info!("starting HTTP server at http://localhost:8080");
 
     HttpServer::new(move || {
@@ -30,10 +33,7 @@ async fn main() -> std::io::Result<()> {
             // enable logger
             .wrap(middleware::Logger::default())
             // cookie session middleware
-            .wrap(SessionMiddleware::new(
-                RedisActorSessionStore::new("127.0.0.1:6379"),
-                signing_key.clone(),
-            ))
+            .wrap(SessionMiddleware::new(storage.clone(), signing_key.clone()))
             // register simple route, handle all methods
             .service(web::resource("/").to(index))
     })

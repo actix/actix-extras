@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Remove `redis-actor-session` crate feature (and, therefore, the `actix-redis` based storage backend).
+
 ## 0.9.0
 
 - Remove use of `async-trait` on `SessionStore` trait.
