@@ -57,7 +57,7 @@ async fn main() -> std::io::Result<()> {
         }
     })
     // apply the `Settings` to Actix Web's `HttpServer`
-    .apply_settings(&settings)
+    .try_apply_settings(&settings)?
     .run()
     .await
 }
