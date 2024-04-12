@@ -36,7 +36,7 @@ jobs:
           toolchain: nightly
 
       - name: Install cargo-hack and cargo-ci-cache-clean
-        uses: taiki-e/install-action@v2.27.2
+        uses: taiki-e/install-action@v2.32.9
         with:
           tool: cargo-hack,cargo-ci-cache-clean
 
@@ -77,7 +77,7 @@ jobs:
           toolchain: nightly
 
       - name: Install cargo-hack and cargo-ci-cache-clean
-        uses: taiki-e/install-action@v2.27.2
+        uses: taiki-e/install-action@v2.32.9
         with:
           tool: cargo-hack,cargo-ci-cache-clean
 
@@ -92,7 +92,7 @@ jobs:
 
       - name: tests
         timeout-minutes: 40
-        run: cargo ci-test --exclude=actix-redis --exclude=actix-session --exclude=actix-limitation -- --nocapture
+        run: cargo ci-test --exclude=actix-session --exclude=actix-limitation -- --nocapture
 
       - name: CI cache clean
         run: cargo-ci-cache-clean

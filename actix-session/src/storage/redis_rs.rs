@@ -120,9 +120,7 @@ impl RedisSessionStoreBuilder {
         self
     }
 
-    /// Finalise the builder and return a [`RedisActorSessionStore`] instance.
-    ///
-    /// [`RedisActorSessionStore`]: crate::storage::RedisActorSessionStore
+    /// Finalise the builder and return a [`RedisSessionStore`] instance.
     pub async fn build(self) -> Result<RedisSessionStore, anyhow::Error> {
         let client = ConnectionManager::new(redis::Client::open(self.connection_string)?).await?;
         Ok(RedisSessionStore {

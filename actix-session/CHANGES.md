@@ -2,7 +2,8 @@
 
 ## Unreleased
 
-- Introduce the `redis-rs-tls-session-rustls` feature
+- Added support for using `rustls` in `actix-session` instead of `native-tls`
+- Remove `redis-actor-session` crate feature (and, therefore, the `actix-redis` based storage backend).
 
 ## 0.9.0
 

@@ -30,7 +30,7 @@ jobs:
           components: llvm-tools-preview
 
       - name: Install cargo-llvm-cov
-        uses: taiki-e/install-action@v2.27.2
+        uses: taiki-e/install-action@v2.32.9
         with:
           tool: cargo-llvm-cov
 
@@ -38,7 +38,7 @@ jobs:
         run: cargo llvm-cov --workspace --all-features --codecov --output-path codecov.json
 
       - name: Upload to Codecov
-        uses: codecov/codecov-action@v4.0.1
+        uses: codecov/codecov-action@v4.2.0
         with:
           files: codecov.json
           fail_ci_if_error: true
