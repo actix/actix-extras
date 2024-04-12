@@ -116,7 +116,7 @@ By default, `actix-session` does not provide any storage backend to retrieve and
   actix-session = { version = "...", features = ["redis-rs-session", "redis-rs-tls-session"] }
   ```
 
-  If you instead prefer using `rustls`, use the `redis-rs-tls-session-rustls`
+  If you instead prefer using `rustls`, use the `redis-rs-tls-session-rustls` feature flag:
 
   ```toml
   [dependencies]
