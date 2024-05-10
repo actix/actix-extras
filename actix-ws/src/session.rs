@@ -3,7 +3,7 @@ use std::sync::{
     Arc,
 };
 
-use actix_http::ws::{CloseReason, Message};
+use actix_http::ws::{CloseReason, Item, Message};
 use actix_web::web::Bytes;
 use bytestring::ByteString;
 use tokio::sync::mpsc::Sender;
@@ -117,6 +117,34 @@ impl Session {
         if let Some(inner) = self.inner.as_mut() {
             inner
                 .send(Message::Pong(Bytes::copy_from_slice(msg)))
+                .await
+                .map_err(|_| Closed)
+        } else {
+            Err(Closed)
+        }
+    }
+
+    /// Manually control sending continuations
+    ///
+    /// Be wary of this method. Continuations represent multiple frames that, when combined, are
+    /// presented as a single message. They are useful when the entire contents of a message are
+    /// not avilable all at once. However, continuations MUST NOT be interrupted by other Text or
+    /// Binary messages. Control messages such as Ping, Pong, or Close are allowed to interrupt a
+    /// continuation.
+    ///
+    /// Continuations must be initialized with a First variant, and must be terminated by a Last
+    /// variant, with only Continue variants sent in between.
+    ///
+    /// ```rust,ignore
+    /// session.continuation(Item::FirstText("Hello".into())).await?;
+    /// session.continuation(Item::Continue(b", World".into())).await?;
+    /// session.continuation(Item::Last(b"!".into())).await?;
+    /// ```
+    pub async fn continuation(&mut self, msg: Item) -> Result<(), Closed> {
+        self.pre_check();
+        if let Some(inner) = self.inner.as_mut() {
+            inner
+                .send(Message::Continuation(msg))
                 .await
                 .map_err(|_| Closed)
         } else {
