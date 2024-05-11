@@ -42,6 +42,7 @@ pub struct MessageStream {
 }
 
 /// A Websocket message with continuations aggregated together
+#[derive(Debug, PartialEq, Eq)]
 pub enum AggregatedMessage {
     /// Text message
     Text(ByteString),
