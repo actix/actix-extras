@@ -45,10 +45,13 @@ impl Session {
 
     /// Send text into the websocket
     ///
-    /// ```rust,ignore
+    /// ```rust,no_run
+    /// # use actix_ws::Session;
+    /// # async fn test(mut session: Session) {
     /// if session.text("Some text").await.is_err() {
     ///     // session closed
     /// }
+    /// # }
     /// ```
     pub async fn text(&mut self, msg: impl Into<ByteString>) -> Result<(), Closed> {
         self.pre_check();
@@ -64,10 +67,13 @@ impl Session {
 
     /// Send raw bytes into the websocket
     ///
-    /// ```rust,ignore
-    /// if session.binary(b"some bytes").await.is_err() {
+    /// ```rust,no_run
+    /// # use actix_ws::Session;
+    /// # async fn test(mut session: Session) {
+    /// if session.binary(&b"some bytes"[..]).await.is_err() {
     ///     // session closed
     /// }
+    /// # }
     /// ```
     pub async fn binary(&mut self, msg: impl Into<Bytes>) -> Result<(), Closed> {
         self.pre_check();
@@ -86,10 +92,13 @@ impl Session {
     /// For many applications, it will be important to send regular pings to keep track of if the
     /// client has disconnected
     ///
-    /// ```rust,ignore
+    /// ```rust,no_run
+    /// # use actix_ws::Session;
+    /// # async fn test(mut session: Session) {
     /// if session.ping(b"").await.is_err() {
     ///     // session is closed
     /// }
+    /// # }
     /// ```
     pub async fn ping(&mut self, msg: &[u8]) -> Result<(), Closed> {
         self.pre_check();
@@ -105,13 +114,16 @@ impl Session {
 
     /// Pong the client
     ///
-    /// ```rust,ignore
+    /// ```rust,no_run
+    /// # use actix_ws::{Message, Session};
+    /// # async fn test(mut session: Session, msg: Message) {
     /// match msg {
     ///     Message::Ping(bytes) => {
     ///         let _ = session.pong(&bytes).await;
     ///     }
     ///     _ => (),
     /// }
+    /// # }
     pub async fn pong(&mut self, msg: &[u8]) -> Result<(), Closed> {
         self.pre_check();
         if let Some(inner) = self.inner.as_mut() {
@@ -135,10 +147,14 @@ impl Session {
     /// Continuations must be initialized with a First variant, and must be terminated by a Last
     /// variant, with only Continue variants sent in between.
     ///
-    /// ```rust,ignore
+    /// ```rust,no_run
+    /// # use actix_ws::{Item, Session};
+    /// # async fn test(mut session: Session) -> Result<(), Box<dyn std::error::Error>> {
     /// session.continuation(Item::FirstText("Hello".into())).await?;
-    /// session.continuation(Item::Continue(b", World".into())).await?;
-    /// session.continuation(Item::Last(b"!".into())).await?;
+    /// session.continuation(Item::Continue(b", World"[..].into())).await?;
+    /// session.continuation(Item::Last(b"!"[..].into())).await?;
+    /// # Ok(())
+    /// # }
     /// ```
     pub async fn continuation(&mut self, msg: Item) -> Result<(), Closed> {
         self.pre_check();
@@ -156,8 +172,11 @@ impl Session {
     ///
     /// All clones will return `Err(Closed)` if used after this call
     ///
-    /// ```rust,ignore
+    /// ```rust,no_run
+    /// # use actix_ws::{Closed, Session};
+    /// # async fn test(mut session: Session) -> Result<(), Closed> {
     /// session.close(None).await
+    /// # }
     /// ```
     pub async fn close(mut self, reason: Option<CloseReason>) -> Result<(), Closed> {
         self.pre_check();
