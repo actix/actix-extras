@@ -127,10 +127,13 @@ impl MessageStream {
 
     /// Wait for the next item from the message stream
     ///
-    /// ```rust,ignore
+    /// ```rust,no_run
+    /// # use actix_ws::MessageStream;
+    /// # async fn test(mut stream: MessageStream) {
     /// while let Some(Ok(msg)) = stream.recv().await {
     ///     // handle message
     /// }
+    /// # }
     /// ```
     pub async fn recv(&mut self) -> Option<Result<Message, ProtocolError>> {
         poll_fn(|cx| Pin::new(&mut *self).poll_next(cx)).await
