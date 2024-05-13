@@ -141,12 +141,59 @@
 <a href="#141" id="141">141</a>
 <a href="#142" id="142">142</a>
 <a href="#143" id="143">143</a>
+<a href="#144" id="144">144</a>
+<a href="#145" id="145">145</a>
+<a href="#146" id="146">146</a>
+<a href="#147" id="147">147</a>
+<a href="#148" id="148">148</a>
+<a href="#149" id="149">149</a>
+<a href="#150" id="150">150</a>
+<a href="#151" id="151">151</a>
+<a href="#152" id="152">152</a>
+<a href="#153" id="153">153</a>
+<a href="#154" id="154">154</a>
+<a href="#155" id="155">155</a>
+<a href="#156" id="156">156</a>
+<a href="#157" id="157">157</a>
+<a href="#158" id="158">158</a>
+<a href="#159" id="159">159</a>
+<a href="#160" id="160">160</a>
+<a href="#161" id="161">161</a>
+<a href="#162" id="162">162</a>
+<a href="#163" id="163">163</a>
+<a href="#164" id="164">164</a>
+<a href="#165" id="165">165</a>
+<a href="#166" id="166">166</a>
+<a href="#167" id="167">167</a>
+<a href="#168" id="168">168</a>
+<a href="#169" id="169">169</a>
+<a href="#170" id="170">170</a>
+<a href="#171" id="171">171</a>
+<a href="#172" id="172">172</a>
+<a href="#173" id="173">173</a>
+<a href="#174" id="174">174</a>
+<a href="#175" id="175">175</a>
+<a href="#176" id="176">176</a>
+<a href="#177" id="177">177</a>
+<a href="#178" id="178">178</a>
+<a href="#179" id="179">179</a>
+<a href="#180" id="180">180</a>
+<a href="#181" id="181">181</a>
+<a href="#182" id="182">182</a>
+<a href="#183" id="183">183</a>
+<a href="#184" id="184">184</a>
+<a href="#185" id="185">185</a>
+<a href="#186" id="186">186</a>
+<a href="#187" id="187">187</a>
+<a href="#188" id="188">188</a>
+<a href="#189" id="189">189</a>
+<a href="#190" id="190">190</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::sync::{
     atomic::{AtomicBool, Ordering},
     Arc,
 };
 
-<span class="kw">use </span>actix_http::ws::{CloseReason, Message};
+<span class="kw">use </span>actix_http::ws::{CloseReason, Item, Message};
 <span class="kw">use </span>actix_web::web::Bytes;
 <span class="kw">use </span>bytestring::ByteString;
 <span class="kw">use </span>tokio::sync::mpsc::Sender;
@@ -188,10 +235,13 @@
 
     <span class="doccomment">/// Send text into the websocket
     ///
-    /// ```rust,ignore
+    /// ```rust,no_run
+    /// # use actix_ws::Session;
+    /// # async fn test(mut session: Session) {
     /// if session.text("Some text").await.is_err() {
     ///     // session closed
     /// }
+    /// # }
     /// ```
     </span><span class="kw">pub async fn </span>text(<span class="kw-2">&amp;mut </span><span class="self">self</span>, msg: <span class="kw">impl </span>Into&lt;ByteString&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), Closed&gt; {
         <span class="self">self</span>.pre_check();
@@ -207,10 +257,13 @@
 
     <span class="doccomment">/// Send raw bytes into the websocket
     ///
-    /// ```rust,ignore
-    /// if session.binary(b"some bytes").await.is_err() {
+    /// ```rust,no_run
+    /// # use actix_ws::Session;
+    /// # async fn test(mut session: Session) {
+    /// if session.binary(&amp;b"some bytes"[..]).await.is_err() {
     ///     // session closed
     /// }
+    /// # }
     /// ```
     </span><span class="kw">pub async fn </span>binary(<span class="kw-2">&amp;mut </span><span class="self">self</span>, msg: <span class="kw">impl </span>Into&lt;Bytes&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), Closed&gt; {
         <span class="self">self</span>.pre_check();
@@ -229,10 +282,13 @@
     /// For many applications, it will be important to send regular pings to keep track of if the
     /// client has disconnected
     ///
-    /// ```rust,ignore
+    /// ```rust,no_run
+    /// # use actix_ws::Session;
+    /// # async fn test(mut session: Session) {
     /// if session.ping(b"").await.is_err() {
     ///     // session is closed
     /// }
+    /// # }
     /// ```
     </span><span class="kw">pub async fn </span>ping(<span class="kw-2">&amp;mut </span><span class="self">self</span>, msg: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;(), Closed&gt; {
         <span class="self">self</span>.pre_check();
@@ -248,13 +304,16 @@
 
     <span class="doccomment">/// Pong the client
     ///
-    /// ```rust,ignore
+    /// ```rust,no_run
+    /// # use actix_ws::{Message, Session};
+    /// # async fn test(mut session: Session, msg: Message) {
     /// match msg {
     ///     Message::Ping(bytes) =&gt; {
     ///         let _ = session.pong(&amp;bytes).await;
     ///     }
     ///     _ =&gt; (),
     /// }
+    /// # }
     </span><span class="kw">pub async fn </span>pong(<span class="kw-2">&amp;mut </span><span class="self">self</span>, msg: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;(), Closed&gt; {
         <span class="self">self</span>.pre_check();
         <span class="kw">if let </span><span class="prelude-val">Some</span>(inner) = <span class="self">self</span>.inner.as_mut() {
@@ -267,12 +326,47 @@
         }
     }
 
+    <span class="doccomment">/// Manually control sending continuations
+    ///
+    /// Be wary of this method. Continuations represent multiple frames that, when combined, are
+    /// presented as a single message. They are useful when the entire contents of a message are
+    /// not avilable all at once. However, continuations MUST NOT be interrupted by other Text or
+    /// Binary messages. Control messages such as Ping, Pong, or Close are allowed to interrupt a
+    /// continuation.
+    ///
+    /// Continuations must be initialized with a First variant, and must be terminated by a Last
+    /// variant, with only Continue variants sent in between.
+    ///
+    /// ```rust,no_run
+    /// # use actix_ws::{Item, Session};
+    /// # async fn test(mut session: Session) -&gt; Result&lt;(), Box&lt;dyn std::error::Error&gt;&gt; {
+    /// session.continuation(Item::FirstText("Hello".into())).await?;
+    /// session.continuation(Item::Continue(b", World"[..].into())).await?;
+    /// session.continuation(Item::Last(b"!"[..].into())).await?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    </span><span class="kw">pub async fn </span>continuation(<span class="kw-2">&amp;mut </span><span class="self">self</span>, msg: Item) -&gt; <span class="prelude-ty">Result</span>&lt;(), Closed&gt; {
+        <span class="self">self</span>.pre_check();
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(inner) = <span class="self">self</span>.inner.as_mut() {
+            inner
+                .send(Message::Continuation(msg))
+                .<span class="kw">await
+                </span>.map_err(|<span class="kw">_</span>| Closed)
+        } <span class="kw">else </span>{
+            <span class="prelude-val">Err</span>(Closed)
+        }
+    }
+
     <span class="doccomment">/// Send a close message, and consume the session
     ///
     /// All clones will return `Err(Closed)` if used after this call
     ///
-    /// ```rust,ignore
+    /// ```rust,no_run
+    /// # use actix_ws::{Closed, Session};
+    /// # async fn test(mut session: Session) -&gt; Result&lt;(), Closed&gt; {
     /// session.close(None).await
+    /// # }
     /// ```
     </span><span class="kw">pub async fn </span>close(<span class="kw-2">mut </span><span class="self">self</span>, reason: <span class="prelude-ty">Option</span>&lt;CloseReason&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), Closed&gt; {
         <span class="self">self</span>.pre_check();
