@@ -108,7 +108,7 @@ impl Stream for StreamingBody {
         }
 
         if !this.buf.is_empty() {
-            return Poll::Ready(Some(Ok(this.buf.split().freeze())));
+            return Poll::Ready(Some(Ok(std::mem::take(&mut this.buf).freeze())));
         }
 
         Poll::Pending
