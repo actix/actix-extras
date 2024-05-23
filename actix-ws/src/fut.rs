@@ -76,6 +76,12 @@ impl MessageStream {
     pub async fn recv(&mut self) -> Option<Result<Message, ProtocolError>> {
         poll_fn(|cx| Pin::new(&mut *self).poll_next(cx)).await
     }
+
+    /// Set max frame size. See `actix-http::ws::Codec::max_size`.
+    pub fn max_size(mut self, size: usize) -> Self {
+        self.codec = self.codec.max_size(size);
+        self
+    }
 }
 
 impl Stream for StreamingBody {

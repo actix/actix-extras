@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Allow changing the max frame size, using the newly-added `MessageStream::max_size` method.
 - Remove type parameters from `Session::{text, binary}()` methods, replacing with equivalent `impl Trait` parameters.
 - `Session::text()` now receives an `impl Into<ByteString>`, making broadcasting text messages more efficient.
 - Allow sending continuations via `Session::continuation()`
