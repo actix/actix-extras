@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `actix-ws/src/session.rs`."><title>session.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-dd39b87e5fcfba68.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="actix_ws" data-themes="" data-resource-suffix="" data-rustdoc-version="1.80.0-nightly (032af18af 2024-06-02)" data-channel="nightly" data-search-js="search-d52510db62a78183.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="icon" href="https://actix.rs/favicon.ico"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `actix-ws/src/session.rs`."><title>session.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-dd39b87e5fcfba68.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="actix_ws" data-themes="" data-resource-suffix="" data-rustdoc-version="1.81.0-nightly (f21554f7f 2024-06-08)" data-channel="nightly" data-search-js="search-9d4fa2dd5e5a7e17.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="icon" href="https://actix.rs/favicon.ico"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -235,7 +235,7 @@
 
     <span class="doccomment">/// Send text into the websocket
     ///
-    /// ```rust,no_run
+    /// ```no_run
     /// # use actix_ws::Session;
     /// # async fn test(mut session: Session) {
     /// if session.text("Some text").await.is_err() {
@@ -257,7 +257,7 @@
 
     <span class="doccomment">/// Send raw bytes into the websocket
     ///
-    /// ```rust,no_run
+    /// ```no_run
     /// # use actix_ws::Session;
     /// # async fn test(mut session: Session) {
     /// if session.binary(&amp;b"some bytes"[..]).await.is_err() {
@@ -282,7 +282,7 @@
     /// For many applications, it will be important to send regular pings to keep track of if the
     /// client has disconnected
     ///
-    /// ```rust,no_run
+    /// ```no_run
     /// # use actix_ws::Session;
     /// # async fn test(mut session: Session) {
     /// if session.ping(b"").await.is_err() {
@@ -304,7 +304,7 @@
 
     <span class="doccomment">/// Pong the client
     ///
-    /// ```rust,no_run
+    /// ```no_run
     /// # use actix_ws::{Message, Session};
     /// # async fn test(mut session: Session, msg: Message) {
     /// match msg {
@@ -330,14 +330,14 @@
     ///
     /// Be wary of this method. Continuations represent multiple frames that, when combined, are
     /// presented as a single message. They are useful when the entire contents of a message are
-    /// not avilable all at once. However, continuations MUST NOT be interrupted by other Text or
+    /// not available all at once. However, continuations MUST NOT be interrupted by other Text or
     /// Binary messages. Control messages such as Ping, Pong, or Close are allowed to interrupt a
     /// continuation.
     ///
     /// Continuations must be initialized with a First variant, and must be terminated by a Last
     /// variant, with only Continue variants sent in between.
     ///
-    /// ```rust,no_run
+    /// ```no_run
     /// # use actix_ws::{Item, Session};
     /// # async fn test(mut session: Session) -&gt; Result&lt;(), Box&lt;dyn std::error::Error&gt;&gt; {
     /// session.continuation(Item::FirstText("Hello".into())).await?;
@@ -362,7 +362,7 @@
     ///
     /// All clones will return `Err(Closed)` if used after this call
     ///
-    /// ```rust,no_run
+    /// ```no_run
     /// # use actix_ws::{Closed, Session};
     /// # async fn test(mut session: Session) -&gt; Result&lt;(), Closed&gt; {
     /// session.close(None).await
