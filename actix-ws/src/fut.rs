@@ -65,7 +65,7 @@ impl MessageStream {
 
     /// Wait for the next item from the message stream
     ///
-    /// ```rust,no_run
+    /// ```no_run
     /// # use actix_ws::MessageStream;
     /// # async fn test(mut stream: MessageStream) {
     /// while let Some(Ok(msg)) = stream.recv().await {

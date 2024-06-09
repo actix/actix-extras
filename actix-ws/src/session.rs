@@ -45,7 +45,7 @@ impl Session {
 
     /// Send text into the websocket
     ///
-    /// ```rust,no_run
+    /// ```no_run
     /// # use actix_ws::Session;
     /// # async fn test(mut session: Session) {
     /// if session.text("Some text").await.is_err() {
@@ -67,7 +67,7 @@ impl Session {
 
     /// Send raw bytes into the websocket
     ///
-    /// ```rust,no_run
+    /// ```no_run
     /// # use actix_ws::Session;
     /// # async fn test(mut session: Session) {
     /// if session.binary(&b"some bytes"[..]).await.is_err() {
@@ -92,7 +92,7 @@ impl Session {
     /// For many applications, it will be important to send regular pings to keep track of if the
     /// client has disconnected
     ///
-    /// ```rust,no_run
+    /// ```no_run
     /// # use actix_ws::Session;
     /// # async fn test(mut session: Session) {
     /// if session.ping(b"").await.is_err() {
@@ -114,7 +114,7 @@ impl Session {
 
     /// Pong the client
     ///
-    /// ```rust,no_run
+    /// ```no_run
     /// # use actix_ws::{Message, Session};
     /// # async fn test(mut session: Session, msg: Message) {
     /// match msg {
@@ -140,14 +140,14 @@ impl Session {
     ///
     /// Be wary of this method. Continuations represent multiple frames that, when combined, are
     /// presented as a single message. They are useful when the entire contents of a message are
-    /// not avilable all at once. However, continuations MUST NOT be interrupted by other Text or
+    /// not available all at once. However, continuations MUST NOT be interrupted by other Text or
     /// Binary messages. Control messages such as Ping, Pong, or Close are allowed to interrupt a
     /// continuation.
     ///
     /// Continuations must be initialized with a First variant, and must be terminated by a Last
     /// variant, with only Continue variants sent in between.
     ///
-    /// ```rust,no_run
+    /// ```no_run
     /// # use actix_ws::{Item, Session};
     /// # async fn test(mut session: Session) -> Result<(), Box<dyn std::error::Error>> {
     /// session.continuation(Item::FirstText("Hello".into())).await?;
@@ -172,7 +172,7 @@ impl Session {
     ///
     /// All clones will return `Err(Closed)` if used after this call
     ///
-    /// ```rust,no_run
+    /// ```no_run
     /// # use actix_ws::{Closed, Session};
     /// # async fn test(mut session: Session) -> Result<(), Closed> {
     /// session.close(None).await
