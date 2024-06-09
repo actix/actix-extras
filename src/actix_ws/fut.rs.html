@@ -294,7 +294,7 @@
         }
 
         <span class="kw">if </span>!this.buf.is_empty() {
-            <span class="kw">return </span>Poll::Ready(<span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(this.buf.split().freeze())));
+            <span class="kw">return </span>Poll::Ready(<span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(std::mem::take(<span class="kw-2">&amp;mut </span>this.buf).freeze())));
         }
 
         Poll::Pending
