@@ -20,9 +20,9 @@ all-features = true
 [features]
 default = []
 cookie-session = []
-redis-rs-session = ["redis", "rand"]
-redis-rs-tls-session = ["redis-rs-session", "redis/tokio-native-tls-comp"]
-redis-rs-tls-session-rustls = ["redis-rs-session", "redis/tokio-rustls-comp"]
+redis-session = ["dep:redis", "dep:rand"]
+redis-session-native-tls = ["redis-session", "redis/tokio-native-tls-comp"]
+redis-session-rustls = ["redis-session", "redis/tokio-rustls-comp"]
 
 [dependencies]
 actix-service = "2"
@@ -36,11 +36,11 @@ serde = { version = "1" }
 serde_json = { version = "1" }
 tracing = { version = "0.1.30", default-features = false, features = ["log"] }
 
-# redis-rs-session
+# redis-session
 redis = { version = "0.25", default-features = false, features = ["tokio-comp", "connection-manager"], optional = true }
 
 [dev-dependencies]
-actix-session = { path = ".", features = ["cookie-session", "redis-rs-session"] }
+actix-session = { path = ".", features = ["cookie-session", "redis-session"] }
 actix-test = "0.1.0-beta.10"
 actix-web = { version = "4", default-features = false, features = ["cookies", "secure-cookies", "macros"] }
 tracing-subscriber = {version = "0.3", features = ["env-filter"]}
@@ -48,8 +48,8 @@ tracing = "0.1.30"
 
 [[example]]
 name = "basic"
-required-features = ["redis-rs-session"]
+required-features = ["redis-session"]
 
 [[example]]
 name = "authentication"
-required-features = ["redis-rs-session"]
+required-features = ["redis-session"]
