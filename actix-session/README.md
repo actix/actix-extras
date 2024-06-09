@@ -108,20 +108,20 @@ By default, `actix-session` does not provide any storage backend to retrieve and
   actix-session = { version = "...", features = ["redis-rs-session"] }
   ```
 
-  Add the `redis-rs-tls-session` feature flag if you want to connect to Redis using a secured connection:
+  Add the `redis-rs-tls-session` feature flag if you want to connect to Redis using a secured connection (via the `native-tls` crate):
 
   ```toml
   [dependencies]
   # ...
-  actix-session = { version = "...", features = ["redis-rs-session", "redis-rs-tls-session"] }
+  actix-session = { version = "...", features = ["redis-rs-tls-session"] }
   ```
 
-  If you instead prefer using `rustls`, use the `redis-rs-tls-session-rustls` feature flag:
+  If you instead prefer depending on `rustls`, use the `redis-rs-tls-session-rustls` feature flag:
 
   ```toml
   [dependencies]
   # ...
-  actix-session = { version = "...", features = ["redis-rs-session", "redis-rs-tls-session-rustls"] }
+  actix-session = { version = "...", features = ["redis-rs-tls-session-rustls"] }
   ```
 
 You can implement your own session storage backend using the [`SessionStore`] trait.
