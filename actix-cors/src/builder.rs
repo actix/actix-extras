@@ -214,7 +214,7 @@ impl Cors {
     /// See [`Cors::allowed_methods`] for more info on allowed methods.
     pub fn allow_any_method(mut self) -> Cors {
         if let Some(cors) = cors(&mut self.inner, &self.error) {
-            cors.allowed_methods = ALL_METHODS_SET.clone();
+            ALL_METHODS_SET.clone_into(&mut cors.allowed_methods);
         }
 
         self
