@@ -92,21 +92,21 @@ actix-session = { version = &quot;...&quot;, features = [&quot;cookie-session&qu
 </code></pre></div></li>
 <li>
 <p>a Redis-based backend via <a href="https://docs.rs/redis-rs"><code>redis-rs</code></a>, <a href="storage/struct.RedisSessionStore.html" title="struct actix_session::storage::RedisSessionStore"><code>RedisSessionStore</code></a>, using
-the <code>redis-rs-session</code> feature flag.</p>
+the <code>redis-session</code> feature flag.</p>
 <div class="example-wrap"><pre class="language-toml"><code>[dependencies]
 # ...
-actix-session = { version = &quot;...&quot;, features = [&quot;redis-rs-session&quot;] }
+actix-session = { version = &quot;...&quot;, features = [&quot;redis-session&quot;] }
 </code></pre></div>
-<p>Add the <code>redis-rs-tls-session</code> feature flag if you want to connect to Redis using a secured
+<p>Add the <code>redis-session-native-tls</code> feature flag if you want to connect to Redis using a secured
 connection (via the <code>native-tls</code> crate):</p>
 <div class="example-wrap"><pre class="language-toml"><code>[dependencies]
 # ...
-actix-session = { version = &quot;...&quot;, features = [&quot;redis-rs-tls-session&quot;] }
+actix-session = { version = &quot;...&quot;, features = [&quot;redis-session-native-tls&quot;] }
 </code></pre></div>
-<p>If you instead prefer depending on <code>rustls</code>, use the <code>redis-rs-tls-session-rustls</code> feature flag:</p>
+<p>If you instead prefer depending on <code>rustls</code>, use the <code>redis-session-rustls</code> feature flag:</p>
 <div class="example-wrap"><pre class="language-toml"><code>[dependencies]
 # ...
-actix-session = { version = &quot;...&quot;, features = [&quot;redis-rs-tls-session-rustls&quot;] }
+actix-session = { version = &quot;...&quot;, features = [&quot;redis-session-rustls&quot;] }
 </code></pre></div></li>
 </ul>
 <p>You can implement your own session storage backend using the <a href="storage/trait.SessionStore.html" title="trait actix_session::storage::SessionStore"><code>SessionStore</code></a> trait.</p>
