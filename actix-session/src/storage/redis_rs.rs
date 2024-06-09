@@ -48,7 +48,7 @@ use crate::storage::{
 /// ```
 ///
 /// # TLS support
-/// Add the `redis-rs-tls-session` feature flag to enable TLS support. You can then establish a TLS
+/// Add the `redis-rs-tls-session` or `redis-rs-tls-session-rustls` feature flag to enable TLS support. You can then establish a TLS
 /// connection to Redis using the `rediss://` URL scheme:
 ///
 /// ```no_run

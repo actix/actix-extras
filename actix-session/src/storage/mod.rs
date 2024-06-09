@@ -11,13 +11,13 @@ pub use self::{
 #[cfg(feature = "cookie-session")]
 mod cookie;
 
-#[cfg(any(feature = "redis-rs-session", feature = "redis-dp-session"))]
+#[cfg(any(feature = "redis-session", feature = "redis-dp-session"))]
 mod redis_rs;
 
-#[cfg(any(feature = "redis-rs-session", feature = "redis-dp-session"))]
+#[cfg(feature = "redis-session")]
 mod utils;
 
 #[cfg(feature = "cookie-session")]
 pub use cookie::CookieSessionStore;
-#[cfg(any(feature = "redis-rs-session", feature = "redis-dp-session"))]
+#[cfg(any(feature = "redis-session", feature = "redis-dp-session"))]
 pub use redis_rs::{RedisSessionStore, RedisSessionStoreBuilder};

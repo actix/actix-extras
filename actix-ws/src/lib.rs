@@ -8,7 +8,7 @@
 #![doc(html_favicon_url = "https://actix.rs/favicon.ico")]
 #![cfg_attr(docsrs, feature(doc_auto_cfg))]
 
-pub use actix_http::ws::{CloseCode, CloseReason, Message, ProtocolError};
+pub use actix_http::ws::{CloseCode, CloseReason, Item, Message, ProtocolError};
 use actix_http::{
     body::{BodyStream, MessageBody},
     ws::handshake,
