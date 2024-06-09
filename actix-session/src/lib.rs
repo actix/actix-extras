@@ -116,12 +116,20 @@ attached to your sessions. You can enable:
   ```
 
   Add the `redis-rs-tls-session` feature flag if you want to connect to Redis using a secured
-  connection:
+  connection (via the `native-tls` crate):
 
   ```toml
   [dependencies]
   # ...
-  actix-session = { version = "...", features = ["redis-rs-session", "redis-rs-tls-session"] }
+  actix-session = { version = "...", features = ["redis-rs-tls-session"] }
+  ```
+
+  If you instead prefer depending on `rustls`, use the `redis-rs-tls-session-rustls` feature flag:
+
+  ```toml
+  [dependencies]
+  # ...
+  actix-session = { version = "...", features = ["redis-rs-tls-session-rustls"] }
   ```
 
 You can implement your own session storage backend using the [`SessionStore`] trait.
