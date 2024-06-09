@@ -896,7 +896,7 @@
     /// See [`Cors::allowed_methods`] for more info on allowed methods.
     </span><span class="kw">pub fn </span>allow_any_method(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; Cors {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(cors) = cors(<span class="kw-2">&amp;mut </span><span class="self">self</span>.inner, <span class="kw-2">&amp;</span><span class="self">self</span>.error) {
-            cors.allowed_methods = ALL_METHODS_SET.clone();
+            ALL_METHODS_SET.clone_into(<span class="kw-2">&amp;mut </span>cors.allowed_methods);
         }
 
         <span class="self">self

@@ -318,7 +318,7 @@
         <span class="kw">let </span>key = key.into();
         <span class="kw">let </span>expires = <span class="self">self</span>.period.as_secs();
 
-        <span class="kw">let </span><span class="kw-2">mut </span>connection = <span class="self">self</span>.client.get_tokio_connection().<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>connection = <span class="self">self</span>.client.get_multiplexed_tokio_connection().<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="comment">// The seed of this approach is outlined Atul R in a blog post about rate limiting using
         // NodeJS and Redis. For more details, see https://blog.atulr.com/rate-limiter
