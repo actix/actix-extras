@@ -730,6 +730,14 @@
 <a href="#730" id="730">730</a>
 <a href="#731" id="731">731</a>
 <a href="#732" id="732">732</a>
+<a href="#733" id="733">733</a>
+<a href="#734" id="734">734</a>
+<a href="#735" id="735">735</a>
+<a href="#736" id="736">736</a>
+<a href="#737" id="737">737</a>
+<a href="#738" id="738">738</a>
+<a href="#739" id="739">739</a>
+<a href="#740" id="740">740</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 Session management for Actix Web.
 
@@ -848,12 +856,20 @@ attached to your sessions. You can enable:
   ```
 
   Add the `redis-rs-tls-session` feature flag if you want to connect to Redis using a secured
-  connection:
+  connection (via the `native-tls` crate):
 
   ```toml
   [dependencies]
   # ...
-  actix-session = { version = "...", features = ["redis-rs-session", "redis-rs-tls-session"] }
+  actix-session = { version = "...", features = ["redis-rs-tls-session"] }
+  ```
+
+  If you instead prefer depending on `rustls`, use the `redis-rs-tls-session-rustls` feature flag:
+
+  ```toml
+  [dependencies]
+  # ...
+  actix-session = { version = "...", features = ["redis-rs-tls-session-rustls"] }
   ```
 
 You can implement your own session storage backend using the [`SessionStore`] trait.

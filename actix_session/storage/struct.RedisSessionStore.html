@@ -27,7 +27,7 @@
         .<span class="kw">await
 </span>}</code></pre></div>
 <h2 id="tls-support"><a class="doc-anchor" href="#tls-support">§</a>TLS support</h2>
-<p>Add the <code>redis-rs-tls-session</code> feature flag to enable TLS support. You can then establish a TLS
+<p>Add the <code>redis-rs-tls-session</code> or <code>redis-rs-tls-session-rustls</code> feature flag to enable TLS support. You can then establish a TLS
 connection to Redis using the <code>rediss://</code> URL scheme:</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>actix_session::{storage::RedisSessionStore};
