@@ -1,13 +1,25 @@
 # depends on:
 # - https://crates.io/crates/fd-find
 # - https://crates.io/crates/cargo-check-external-types
+
 _list:
     @just --list
+
+msrv := ```
+    cargo metadata --format-version=1 \
+    | jq -r 'first(.packages[] | select(.source == null and .rust_version)) | .rust_version' \
+    | sed -E 's/^1\.([0-9]{2})$/1\.\1\.0/'
+```
+msrv_rustup := "+" + msrv
+
+# Run Clippy over workspace.
+clippy toolchain="":
+    cargo {{ toolchain }} clippy --workspace --all-targets --all-features
 
 # Format workspace.
 fmt: update-readmes
     cargo +nightly fmt
-    npx -y prettier --write $(fd --hidden --extension=yml --extension=md)
+    fd --hidden --extension=yml --extension=md --exec-batch npx -y prettier --write
 
 # Update READMEs from crate root documentation.
 update-readmes:

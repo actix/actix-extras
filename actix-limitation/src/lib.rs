@@ -138,7 +138,7 @@ impl Limiter {
         let key = key.into();
         let expires = self.period.as_secs();
 
-        let mut connection = self.client.get_tokio_connection().await?;
+        let mut connection = self.client.get_multiplexed_tokio_connection().await?;
 
         // The seed of this approach is outlined Atul R in a blog post about rate limiting using
         // NodeJS and Redis. For more details, see https://blog.atulr.com/rate-limiter

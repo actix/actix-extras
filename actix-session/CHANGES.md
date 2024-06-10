@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add `redis-session-rustls` crate feature that enables `rustls`-secured Redis sessions.
+- Rename `redis-rs-session` crate feature to `redis-session`.
+- Rename `redis-rs-tls-session` crate feature to `redis-session-native-tls`.
 - Remove `redis-actor-session` crate feature (and, therefore, the `actix-redis` based storage backend).
 
 ## 0.9.0
