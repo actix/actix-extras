@@ -14,7 +14,7 @@ mod cookie;
 #[cfg(any(feature = "redis-session", feature = "redis-dp-session"))]
 mod redis_rs;
 
-#[cfg(feature = "redis-session")]
+#[cfg(any(feature = "redis-session", feature = "redis-dp-session"))]
 mod utils;
 
 #[cfg(feature = "cookie-session")]

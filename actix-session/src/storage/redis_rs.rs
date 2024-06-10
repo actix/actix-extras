@@ -2,9 +2,9 @@ use std::sync::Arc;
 
 use actix_web::cookie::time::Duration;
 use anyhow::Error;
-#[cfg(not(feature = "redis-rs-session"))]
+#[cfg(not(feature = "redis-session"))]
 use deadpool_redis::{redis, Pool};
-#[cfg(feature = "redis-rs-session")]
+#[cfg(feature = "redis-session")]
 use redis::aio::ConnectionManager;
 use redis::{AsyncCommands, Cmd, FromRedisValue, RedisResult, Value};
 
@@ -78,9 +78,9 @@ use crate::storage::{
 #[derive(Clone)]
 pub struct RedisSessionStore {
     configuration: CacheConfiguration,
-    #[cfg(feature = "redis-rs-session")]
+    #[cfg(feature = "redis-session")]
     client: ConnectionManager,
-    #[cfg(not(feature = "redis-rs-session"))]
+    #[cfg(not(feature = "redis-session"))]
     pool: Pool,
 }
 
@@ -101,7 +101,7 @@ impl RedisSessionStore {
     /// A fluent API to configure [`RedisSessionStore`].
     /// It takes as input the only required input to create a new instance of [`RedisSessionStore`] - a
     /// connection string for Redis.
-    #[cfg(feature = "redis-rs-session")]
+    #[cfg(feature = "redis-session")]
     pub fn builder<S: Into<String>>(connection_string: S) -> RedisSessionStoreBuilder {
         RedisSessionStoreBuilder {
             configuration: CacheConfiguration::default(),
@@ -112,7 +112,7 @@ impl RedisSessionStore {
     /// A fluent API to configure [`RedisSessionStore`].
     /// It takes as input the only required input to create a new instance of [`RedisSessionStore`] - a
     /// pool object for Redis.
-    #[cfg(not(feature = "redis-rs-session"))]
+    #[cfg(not(feature = "redis-session"))]
     pub fn builder<P: Into<Pool>>(pool: P) -> RedisSessionStoreBuilder {
         RedisSessionStoreBuilder {
             configuration: CacheConfiguration::default(),
@@ -123,7 +123,7 @@ impl RedisSessionStore {
     /// Create a new instance of [`RedisSessionStore`] using the default configuration.
     /// It takes as input the only required input to create a new instance of [`RedisSessionStore`] - a
     /// connection string for Redis.
-    #[cfg(feature = "redis-rs-session")]
+    #[cfg(feature = "redis-session")]
     pub async fn new<S: Into<String>>(connection_string: S) -> Result<RedisSessionStore, Error> {
         Self::builder(connection_string).build().await
     }
@@ -131,7 +131,7 @@ impl RedisSessionStore {
     /// Create a new instance of [`RedisSessionStore`] using the default configuration.
     /// It takes as input the only required input to create a new instance of [`RedisSessionStore`] - a
     /// pool object for Redis.
-    #[cfg(not(feature = "redis-rs-session"))]
+    #[cfg(not(feature = "redis-session"))]
     pub fn new<P: Into<Pool>>(pool: P) -> RedisSessionStore {
         Self::builder(pool).build()
     }
@@ -144,9 +144,9 @@ impl RedisSessionStore {
 #[must_use]
 pub struct RedisSessionStoreBuilder {
     configuration: CacheConfiguration,
-    #[cfg(feature = "redis-rs-session")]
+    #[cfg(feature = "redis-session")]
     connection_string: String,
-    #[cfg(not(feature = "redis-rs-session"))]
+    #[cfg(not(feature = "redis-session"))]
     pool: Pool,
 }
 
@@ -163,7 +163,7 @@ impl RedisSessionStoreBuilder {
     /// Finalise the builder and return a [`RedisSessionStore`] instance.
     ///
     /// [`RedisSessionStore`]: RedisSessionStore
-    #[cfg(feature = "redis-rs-session")]
+    #[cfg(feature = "redis-session")]
     pub async fn build(self) -> Result<RedisSessionStore, Error> {
         let client = ConnectionManager::new(redis::Client::open(self.connection_string)?).await?;
         Ok(RedisSessionStore {
@@ -175,7 +175,7 @@ impl RedisSessionStoreBuilder {
     /// Finalise the builder and return a [`RedisSessionStore`] instance.
     ///
     /// [`RedisSessionStore`]: RedisSessionStore
-    #[cfg(not(feature = "redis-rs-session"))]
+    #[cfg(not(feature = "redis-session"))]
     pub fn build(self) -> RedisSessionStore {
         RedisSessionStore {
             configuration: self.configuration,
@@ -275,13 +275,13 @@ impl SessionStore for RedisSessionStore {
     async fn update_ttl(&self, session_key: &SessionKey, ttl: &Duration) -> Result<(), Error> {
         let cache_key = (self.configuration.cache_keygen)(session_key.as_ref());
 
-        #[cfg(feature = "redis-rs-session")]
+        #[cfg(feature = "redis-session")]
         self.client
             .clone()
             .expire(&cache_key, ttl.whole_seconds())
             .await?;
 
-        #[cfg(not(feature = "redis-rs-session"))]
+        #[cfg(not(feature = "redis-session"))]
         self.pool
             .get()
             .await?
@@ -320,10 +320,10 @@ impl RedisSessionStore {
     async fn execute_command<T: FromRedisValue>(&self, cmd: &mut Cmd) -> RedisResult<T> {
         let mut can_retry = true;
 
-        #[cfg(feature = "redis-rs-session")]
+        #[cfg(feature = "redis-session")]
         let client = &mut self.client.clone();
 
-        #[cfg(not(feature = "redis-rs-session"))]
+        #[cfg(not(feature = "redis-session"))]
         let client = &mut self.pool.get().await.unwrap();
 
         loop {
@@ -353,21 +353,21 @@ mod tests {
     use std::collections::HashMap;
 
     use actix_web::cookie::time;
-    #[cfg(not(feature = "redis-rs-session"))]
+    #[cfg(not(feature = "redis-session"))]
     use deadpool_redis::{Config, Runtime};
 
     use super::*;
     use crate::test_helpers::acceptance_test_suite;
 
     async fn redis_store() -> RedisSessionStore {
-        #[cfg(feature = "redis-rs-session")]
+        #[cfg(feature = "redis-session")]
         {
             RedisSessionStore::new("redis://127.0.0.1:6379")
                 .await
                 .unwrap()
         }
 
-        #[cfg(not(feature = "redis-rs-session"))]
+        #[cfg(not(feature = "redis-session"))]
         {
             let redis_pool = Config::from_url("redis://127.0.0.1:6379")
                 .create_pool(Some(Runtime::Tokio1))
@@ -394,7 +394,7 @@ mod tests {
         let store = redis_store().await;
         let session_key = generate_session_key();
 
-        #[cfg(feature = "redis-rs-session")]
+        #[cfg(feature = "redis-session")]
         store
             .client
             .clone()
@@ -402,7 +402,7 @@ mod tests {
             .await
             .unwrap();
 
-        #[cfg(not(feature = "redis-rs-session"))]
+        #[cfg(not(feature = "redis-session"))]
         store
             .pool
             .get()
