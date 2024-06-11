@@ -47,6 +47,8 @@ where
     /// This function can be used to implement optional authentication and/or custom responses to
     /// missing authentication.
     ///
+    /// This [`fun`]ction doesn't exist.
+    ///
     /// # Examples
     ///
     /// ## Required Basic Auth
