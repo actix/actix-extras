@@ -124,7 +124,7 @@ jobs:
         run: cargo-ci-cache-clean
 
   doc_tests:
-    name: doc tests
+    name: Documentation Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -134,6 +134,8 @@ jobs:
         with:
           toolchain: nightly
 
-      - name: doc tests
-        timeout-minutes: 40
-        run: cargo ci-doctest -- --nocapture
+      - name: Test docs
+        run: just test-docs
+
+      - name: Build docs
+        run: just doc
