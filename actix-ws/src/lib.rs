@@ -20,7 +20,7 @@ mod fut;
 mod session;
 
 pub use self::{
-    fut::{MessageStream, StreamingBody},
+    fut::{AggregatedMessage, AggregatedMessageStream, MessageStream, StreamingBody},
     session::{Closed, Session},
 };
 

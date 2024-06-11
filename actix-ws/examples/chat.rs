@@ -4,7 +4,7 @@ use std::{
 };
 
 use actix_web::{middleware::Logger, web, App, HttpRequest, HttpResponse, HttpServer};
-use actix_ws::{Message, Session};
+use actix_ws::{AggregatedMessage, Session};
 use futures_util::{stream::FuturesUnordered, StreamExt as _};
 use log::info;
 use tokio::sync::Mutex;
@@ -56,7 +56,10 @@ async fn ws(
     body: web::Payload,
     chat: web::Data<Chat>,
 ) -> Result<HttpResponse, actix_web::Error> {
-    let (response, mut session, mut stream) = actix_ws::handle(&req, body)?;
+    let (response, mut session, stream) = actix_ws::handle(&req, body)?;
+
+    // increase the maximum allowed frame size to 128KB and aggregate continuation frames
+    let mut stream = stream.max_frame_size(131_072).aggregate_continuations();
 
     chat.insert(session.clone()).await;
     info!("Inserted session");
@@ -83,27 +86,22 @@ async fn ws(
     actix_rt::spawn(async move {
         while let Some(Ok(msg)) = stream.next().await {
             match msg {
-                Message::Ping(bytes) => {
+                AggregatedMessage::Ping(bytes) => {
                     if session.pong(&bytes).await.is_err() {
                         return;
                     }
                 }
-                Message::Text(s) => {
+                AggregatedMessage::Text(s) => {
                     info!("Relaying text, {}", s);
                     let s: &str = s.as_ref();
                     chat.send(s.into()).await;
                 }
-                Message::Close(reason) => {
+                AggregatedMessage::Close(reason) => {
                     let _ = session.close(reason).await;
                     info!("Got close, bailing");
                     return;
                 }
-                Message::Continuation(_) => {
-                    let _ = session.close(None).await;
-                    info!("Got continuation, bailing");
-                    return;
-                }
-                Message::Pong(_) => {
+                AggregatedMessage::Pong(_) => {
                     *alive.lock().await = Instant::now();
                 }
                 _ => (),
