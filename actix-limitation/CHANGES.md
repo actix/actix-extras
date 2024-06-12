@@ -1,6 +1,8 @@
 # Changes
 
-## Unreleased
+## Unreleased - 2023-xx-xx
+
+- Added optional scopes to the middleware enabling use of multiple Limiters by passing an `HashMap<Limiter>` to the Http server `app_data`
 
 ## 0.5.1
 
