@@ -43,7 +43,7 @@ redis = { version = "0.25", default-features = false, features = ["tokio-comp", 
 actix-session = { path = ".", features = ["cookie-session", "redis-session"] }
 actix-test = "0.1.0-beta.10"
 actix-web = { version = "4", default-features = false, features = ["cookies", "secure-cookies", "macros"] }
-tracing-subscriber = {version = "0.3", features = ["env-filter"]}
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tracing = "0.1.30"
 
 [[example]]

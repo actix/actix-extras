@@ -27,8 +27,8 @@
 //! against the active [`Session`].
 //!
 //! `actix-session` provides some built-in storage backends: ([`CookieSessionStore`],
-//! [`RedisSessionStore`], and [`RedisActorSessionStore`]) - you can create a custom storage backend
-//! by implementing the [`SessionStore`] trait.
+//! [`RedisSessionStore`]) - you can create a custom storage backend by implementing the
+//! [`SessionStore`] trait.
 //!
 //! Further reading on sessions:
 //! - [RFC 6265](https://datatracker.ietf.org/doc/html/rfc6265);
@@ -136,7 +136,6 @@
 //! [`SessionStore`]: storage::SessionStore
 //! [`CookieSessionStore`]: storage::CookieSessionStore
 //! [`RedisSessionStore`]: storage::RedisSessionStore
-//! [`RedisActorSessionStore`]: storage::RedisActorSessionStore
 
 #![forbid(unsafe_code)]
 #![deny(rust_2018_idioms, nonstandard_style)]
