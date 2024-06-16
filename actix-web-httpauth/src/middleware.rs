@@ -43,6 +43,55 @@ where
 {
     /// Construct `HttpAuthentication` middleware with the provided auth extractor `T` and
     /// validation callback `F`.
+    ///
+    /// This function can be used to implement optional authentication and/or custom responses to
+    /// missing authentication.
+    ///
+    /// # Examples
+    ///
+    /// ## Required Basic Auth
+    ///
+    /// ```no_run
+    /// # use actix_web_httpauth::extractors::basic::BasicAuth;
+    /// # use actix_web::dev::ServiceRequest;
+    /// async fn validator(
+    ///     req: ServiceRequest,
+    ///     credentials: BasicAuth,
+    /// ) -> Result<ServiceRequest, (actix_web::Error, ServiceRequest)> {
+    ///     eprintln!("{credentials:?}");
+    ///
+    ///     if credentials.user_id().contains('x') {
+    ///         return Err((actix_web::error::ErrorBadRequest("user ID contains x"), req));
+    ///     }
+    ///
+    ///     Ok(req)
+    /// }
+    /// # actix_web_httpauth::middleware::HttpAuthentication::with_fn(validator);
+    /// ```
+    ///
+    /// ## Optional Bearer Auth
+    ///
+    /// ```no_run
+    /// # use actix_web_httpauth::extractors::bearer::BearerAuth;
+    /// # use actix_web::dev::ServiceRequest;
+    /// async fn validator(
+    ///     req: ServiceRequest,
+    ///     credentials: Option<BearerAuth>,
+    /// ) -> Result<ServiceRequest, (actix_web::Error, ServiceRequest)> {
+    ///     let Some(credentials) = credentials else {
+    ///         return Err((actix_web::error::ErrorBadRequest("no bearer header"), req));
+    ///     };
+    ///
+    ///     eprintln!("{credentials:?}");
+    ///
+    ///     if credentials.token().contains('x') {
+    ///         return Err((actix_web::error::ErrorBadRequest("token contains x"), req));
+    ///     }
+    ///
+    ///     Ok(req)
+    /// }
+    /// # actix_web_httpauth::middleware::HttpAuthentication::with_fn(validator);
+    /// ```
     pub fn with_fn(process_fn: F) -> HttpAuthentication<T, F> {
         HttpAuthentication {
             process_fn: Arc::new(process_fn),
