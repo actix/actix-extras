@@ -14,7 +14,7 @@ rust-version.workspace = true
 rustdoc-args = ["--cfg", "docsrs"]
 
 [features]
-tls = ["openssl", "actix-web/openssl"]
+openssl = ["dep:openssl", "actix-web/openssl"]
 
 [dependencies]
 actix-http = "3"

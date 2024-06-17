@@ -90,7 +90,7 @@ mod error;
 mod parse;
 mod settings;
 
-#[cfg(feature = "tls")]
+#[cfg(feature = "openssl")]
 pub use self::settings::Tls;
 pub use self::{
     error::Error,
@@ -268,7 +268,7 @@ where
 
     fn try_apply_settings(mut self, settings: &ActixSettings) -> AsResult<Self> {
         for Address { host, port } in &settings.hosts {
-            #[cfg(feature = "tls")]
+            #[cfg(feature = "openssl")]
             {
                 if settings.tls.enabled {
                     self = self.bind_openssl(
@@ -280,7 +280,7 @@ where
                 }
             }
 
-            #[cfg(not(feature = "tls"))]
+            #[cfg(not(feature = "openssl"))]
             {
                 self = self.bind(format!("{host}:{port}"))?;
             }
@@ -683,7 +683,7 @@ mod tests {
         assert_eq!(settings.actix.shutdown_timeout, Timeout::Seconds(42));
     }
 
-    #[cfg(feature = "tls")]
+    #[cfg(feature = "openssl")]
     #[test]
     fn override_field_tls_enabled() {
         let mut settings = Settings::from_default_template();
@@ -692,7 +692,7 @@ mod tests {
         assert!(settings.actix.tls.enabled);
     }
 
-    #[cfg(feature = "tls")]
+    #[cfg(feature = "openssl")]
     #[test]
     fn override_field_with_env_var_tls_enabled() {
         let mut settings = Settings::from_default_template();
@@ -706,7 +706,7 @@ mod tests {
         assert!(settings.actix.tls.enabled);
     }
 
-    #[cfg(feature = "tls")]
+    #[cfg(feature = "openssl")]
     #[test]
     fn override_field_tls_certificate() {
         let mut settings = Settings::from_default_template();
@@ -725,7 +725,7 @@ mod tests {
         );
     }
 
-    #[cfg(feature = "tls")]
+    #[cfg(feature = "openssl")]
     #[test]
     fn override_field_with_env_var_tls_certificate() {
         let mut settings = Settings::from_default_template();
@@ -748,7 +748,7 @@ mod tests {
         );
     }
 
-    #[cfg(feature = "tls")]
+    #[cfg(feature = "openssl")]
     #[test]
     fn override_field_tls_private_key() {
         let mut settings = Settings::from_default_template();
@@ -767,7 +767,7 @@ mod tests {
         );
     }
 
-    #[cfg(feature = "tls")]
+    #[cfg(feature = "openssl")]
     #[test]
     fn override_field_with_env_var_tls_private_key() {
         let mut settings = Settings::from_default_template();

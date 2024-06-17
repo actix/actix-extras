@@ -1,7 +1,7 @@
 use std::{env::VarError, io, num::ParseIntError, path::PathBuf, str::ParseBoolError};
 
 use derive_more::{Display, Error};
-#[cfg(feature = "tls")]
+#[cfg(feature = "openssl")]
 use openssl::error::ErrorStack as OpenSSLError;
 use toml::de::Error as TomlError;
 
@@ -32,7 +32,7 @@ pub enum Error {
     IoError(io::Error),
 
     /// OpenSSL Error.
-    #[cfg(feature = "tls")]
+    #[cfg(feature = "openssl")]
     #[display(fmt = "OpenSSL error: {_0}")]
     OpenSSLError(OpenSSLError),
 
@@ -71,7 +71,7 @@ impl From<io::Error> for Error {
     }
 }
 
-#[cfg(feature = "tls")]
+#[cfg(feature = "openssl")]
 impl From<OpenSSLError> for Error {
     fn from(err: OpenSSLError) -> Self {
         Self::OpenSSLError(err)
@@ -115,7 +115,7 @@ impl From<Error> for io::Error {
 
             Error::IoError(io_error) => io_error,
 
-            #[cfg(feature = "tls")]
+            #[cfg(feature = "openssl")]
             Error::OpenSSLError(ossl_error) => io::Error::new(io::ErrorKind::Other, ossl_error),
 
             Error::ParseBoolError(_) => {
