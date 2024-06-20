@@ -35,7 +35,7 @@ jobs:
           tool: cargo-llvm-cov
 
       - name: Generate code coverage
-        run: cargo llvm-cov --workspace --all-features --codecov --output-path codecov.json
+        run: just test-coverage-codecov
 
       - name: Upload to Codecov
         uses: codecov/codecov-action@v4.4.1
