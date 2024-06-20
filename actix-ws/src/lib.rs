@@ -27,14 +27,14 @@ pub use self::{
 /// Begin handling websocket traffic
 ///
 /// ```no_run
-/// use actix_web::{middleware::Logger, web, App, Error, HttpRequest, HttpResponse, HttpServer};
+/// use actix_web::{middleware::Logger, web, App, HttpRequest, HttpServer, Responder};
 /// use actix_ws::Message;
 /// use futures_util::StreamExt as _;
 ///
-/// async fn ws(req: HttpRequest, body: web::Payload) -> Result<HttpResponse, Error> {
+/// async fn ws(req: HttpRequest, body: web::Payload) -> actix_web::Result<impl Responder> {
 ///     let (response, mut session, mut msg_stream) = actix_ws::handle(&req, body)?;
 ///
-///     actix_rt::spawn(async move {
+///     actix_web::rt::spawn(async move {
 ///         while let Some(Ok(msg)) = msg_stream.next().await {
 ///             match msg {
 ///                 Message::Ping(bytes) => {
@@ -42,7 +42,7 @@ pub use self::{
 ///                         return;
 ///                     }
 ///                 }
-///                 Message::Text(s) => println!("Got text, {}", s),
+///                 Message::Text(msg) => println!("Got text: {msg}"),
 ///                 _ => break,
 ///             }
 ///         }
@@ -53,8 +53,8 @@ pub use self::{
 ///     Ok(response)
 /// }
 ///
-/// #[actix_rt::main]
-/// async fn main() -> Result<(), anyhow::Error> {
+/// #[tokio::main(flavor = "current_thread")]
+/// async fn main() -> std::io::Result<()> {
 ///     HttpServer::new(move || {
 ///         App::new()
 ///             .wrap(Logger::default())

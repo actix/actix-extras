@@ -1,4 +1,5 @@
 use std::{
+    io,
     sync::Arc,
     time::{Duration, Instant},
 };
@@ -7,9 +8,11 @@ use actix_web::{
     middleware::Logger, web, web::Html, App, HttpRequest, HttpResponse, HttpServer, Responder,
 };
 use actix_ws::{Message, Session};
+use bytestring::ByteString;
 use futures_util::{stream::FuturesUnordered, StreamExt as _};
-use log::info;
 use tokio::sync::Mutex;
+use tracing::level_filters::LevelFilter;
+use tracing_subscriber::EnvFilter;
 
 #[derive(Clone)]
 struct Chat {
@@ -33,15 +36,19 @@ impl Chat {
         self.inner.lock().await.sessions.push(session);
     }
 
-    async fn send(&self, msg: String) {
+    async fn send(&self, msg: impl Into<ByteString>) {
+        let msg = msg.into();
+
         let mut inner = self.inner.lock().await;
         let mut unordered = FuturesUnordered::new();
 
         for mut session in inner.sessions.drain(..) {
             let msg = msg.clone();
+
             unordered.push(async move {
                 let res = session.text(msg).await;
-                res.map(|_| session).map_err(|_| info!("Dropping session"))
+                res.map(|_| session)
+                    .map_err(|_| tracing::debug!("Dropping session"))
             });
         }
 
@@ -61,14 +68,15 @@ async fn ws(
     let (response, mut session, mut stream) = actix_ws::handle(&req, body)?;
 
     chat.insert(session.clone()).await;
-    info!("Inserted session");
+    tracing::info!("Inserted session");
 
     let alive = Arc::new(Mutex::new(Instant::now()));
 
     let mut session2 = session.clone();
     let alive2 = alive.clone();
-    actix_rt::spawn(async move {
-        let mut interval = actix_rt::time::interval(Duration::from_secs(5));
+    actix_web::rt::spawn(async move {
+        let mut interval = actix_web::rt::time::interval(Duration::from_secs(5));
+
         loop {
             interval.tick().await;
             if session2.ping(b"").await.is_err() {
@@ -82,7 +90,7 @@ async fn ws(
         }
     });
 
-    actix_rt::spawn(async move {
+    actix_web::rt::spawn(async move {
         while let Some(Ok(msg)) = stream.next().await {
             match msg {
                 Message::Ping(bytes) => {
@@ -90,19 +98,18 @@ async fn ws(
                         return;
                     }
                 }
-                Message::Text(s) => {
-                    info!("Relaying text, {}", s);
-                    let s: &str = s.as_ref();
-                    chat.send(s.into()).await;
+                Message::Text(msg) => {
+                    tracing::info!("Relaying msg: {msg}");
+                    chat.send(msg).await;
                 }
                 Message::Close(reason) => {
                     let _ = session.close(reason).await;
-                    info!("Got close, bailing");
+                    tracing::info!("Got close, bailing");
                     return;
                 }
                 Message::Continuation(_) => {
                     let _ = session.close(None).await;
-                    info!("Got continuation, bailing");
+                    tracing::info!("Got continuation, bailing");
                     return;
                 }
                 Message::Pong(_) => {
@@ -113,7 +120,7 @@ async fn ws(
         }
         let _ = session.close(None).await;
     });
-    info!("Spawned");
+    tracing::info!("Spawned");
 
     Ok(response)
 }
@@ -122,10 +129,16 @@ async fn index() -> impl Responder {
     Html::new(include_str!("chat.html").to_owned())
 }
 
-#[actix_rt::main]
-async fn main() -> Result<(), anyhow::Error> {
-    std::env::set_var("RUST_LOG", "info");
-    pretty_env_logger::init();
+#[tokio::main(flavor = "current_thread")]
+async fn main() -> io::Result<()> {
+    tracing_subscriber::fmt()
+        .with_env_filter(
+            EnvFilter::builder()
+                .with_default_directive(LevelFilter::INFO.into())
+                .from_env_lossy(),
+        )
+        .init();
+
     let chat = Chat::new();
 
     HttpServer::new(move || {

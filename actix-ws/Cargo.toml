@@ -22,10 +22,9 @@ futures-core = "0.3.17"
 tokio = { version = "1", features = ["sync"] }
 
 [dev-dependencies]
-actix-rt = "2.6"
 actix-web = "4.8"
-anyhow = "1"
 futures-util = { version = "0.3.17", default-features = false, features = ["std"] }
-log = "0.4"
 pretty_env_logger = "0.5"
-tokio = { version = "1", features = ["sync"] }
+tokio = { version = "1", features = ["sync", "rt", "macros"] }
+tracing = "0.1.30"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }

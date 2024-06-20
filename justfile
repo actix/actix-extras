@@ -33,6 +33,13 @@ update-readmes:
     cd ./actix-identity && cargo rdme --force
     npx -y prettier --write $(fd README.md)
 
+# Test workspace code.
+test:
+    cargo {{ toolchain }} nextest run --workspace --all-features
+
+# Test workspace code and docs.
+test-all: (test) (test-docs)
+
 # Test workspace docs.
 [group("test")]
 [group("docs")]
