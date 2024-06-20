@@ -3,7 +3,9 @@ use std::{
     time::{Duration, Instant},
 };
 
-use actix_web::{middleware::Logger, web, App, HttpRequest, HttpResponse, HttpServer};
+use actix_web::{
+    middleware::Logger, web, web::Html, App, HttpRequest, HttpResponse, HttpServer, Responder,
+};
 use actix_ws::{Message, Session};
 use futures_util::{stream::FuturesUnordered, StreamExt as _};
 use log::info;
@@ -116,75 +118,8 @@ async fn ws(
     Ok(response)
 }
 
-async fn index() -> HttpResponse {
-    let s = r#"
-<html>
-    <head>
-        <meta charset="utf-8" />
-        <title>Chat</title>
-        <script>
-function onLoad() {
-    console.log("BOOTING");
-    const socket = new WebSocket("ws://localhost:8080/ws");
-    const input = document.getElementById("chat-input");
-    const logs = document.getElementById("chat-logs");
-
-    if (!input || !logs) {
-        alert("Couldn't find required elements");
-        console.err("Couldn't find required elements");
-        return;
-    }
-
-    input.addEventListener("keyup", event => {
-        if (event.isComposing) {
-            return;
-        }
-        if (event.key != "Enter") {
-            return;
-        }
-
-        socket.send(input.value);
-        input.value = "";
-    }, false);
-
-    socket.onmessage = event => {
-        const newNode = document.createElement("li");
-        newNode.textContent = event.data;
-
-        let firstChild = null;
-        for (const n of logs.childNodes.values()) {
-            if (n.nodeType == 1) {
-                firstChild = n;
-                break;
-            }
-        }
-
-        if (firstChild) {
-            logs.insertBefore(newNode, firstChild);
-        } else {
-            logs.appendChild(newNode);
-        }
-    };
-
-    window.addEventListener("beforeunload", () => { socket.close() });
-}
-
-if (document.readyState === "complete") {
-    onLoad();
-} else {
-    document.addEventListener("DOMContentLoaded", onLoad, false);
-}
-        </script>
-    </head>
-    <body>
-        <input id="chat-input" type="test" />
-        <ul id="chat-logs">
-        </ul>
-    </body>
-</html>
-    "#;
-
-    HttpResponse::Ok().content_type("text/html").body(s)
+async fn index() -> impl Responder {
+    Html::new(include_str!("chat.html").to_owned())
 }
 
 #[actix_rt::main]
