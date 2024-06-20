@@ -31,13 +31,15 @@ update-readmes:
     cd ./actix-cors && cargo rdme --force
     cd ./actix-session && cargo rdme --force
     cd ./actix-identity && cargo rdme --force
-    npx -y prettier --write $(fd README.md)
+    fd README.md --exec-batch -- npx -y prettier --write
 
 # Test workspace code.
+[group("test")]
 test:
     cargo {{ toolchain }} nextest run --workspace --all-features
 
 # Test workspace code and docs.
+[group("test")]
 test-all: (test) (test-docs)
 
 # Test workspace docs.
