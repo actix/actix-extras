@@ -29,10 +29,10 @@ jobs:
         with:
           components: llvm-tools-preview
 
-      - name: Install cargo-llvm-cov
+      - name: Install just, cargo-llvm-cov
         uses: taiki-e/install-action@v2.38.0
         with:
-          tool: cargo-llvm-cov
+          tool: just,cargo-llvm-cov
 
       - name: Generate code coverage
         run: just test-coverage-codecov
