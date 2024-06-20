@@ -8,12 +8,15 @@ mod max_connections;
 mod mode;
 mod num_workers;
 mod timeout;
+#[cfg(feature = "openssl")]
 mod tls;
 
+#[cfg(feature = "openssl")]
+pub use self::tls::Tls;
 pub use self::{
     address::Address, backlog::Backlog, keep_alive::KeepAlive,
     max_connection_rate::MaxConnectionRate, max_connections::MaxConnections, mode::Mode,
-    num_workers::NumWorkers, timeout::Timeout, tls::Tls,
+    num_workers::NumWorkers, timeout::Timeout,
 };
 
 /// Settings types for Actix Web.
@@ -57,5 +60,6 @@ pub struct ActixSettings {
     pub shutdown_timeout: Timeout,
 
     /// TLS (HTTPS) configuration.
+    #[cfg(feature = "openssl")]
     pub tls: Tls,
 }
