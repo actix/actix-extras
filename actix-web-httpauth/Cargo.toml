@@ -34,3 +34,6 @@ actix-service = "2"
 actix-web = { version = "4.1", default-features = false, features = ["macros"] }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tracing = "0.1.30"
+
+[lints]
+workspace = true

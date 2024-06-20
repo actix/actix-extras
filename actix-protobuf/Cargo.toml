@@ -26,3 +26,6 @@ prost = { version = "0.12", default-features = false }
 [dev-dependencies]
 actix-web = { version = "4", default-features = false, features = ["macros"] }
 prost = { version = "0.12", default-features = false, features = ["prost-derive"] }
+
+[lints]
+workspace = true

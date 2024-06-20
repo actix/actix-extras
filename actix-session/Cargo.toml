@@ -46,6 +46,9 @@ actix-web = { version = "4", default-features = false, features = ["cookies", "s
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tracing = "0.1.30"
 
+[lints]
+workspace = true
+
 [[example]]
 name = "basic"
 required-features = ["redis-session"]

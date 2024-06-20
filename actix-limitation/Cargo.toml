@@ -38,3 +38,6 @@ actix-session = { version = "0.9", optional = true }
 actix-web = "4"
 static_assertions = "1"
 uuid = { version = "1", features = ["v4"] }
+
+[lints]
+workspace = true
