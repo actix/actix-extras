@@ -1,6 +1,6 @@
+use rand::distributions::{Alphanumeric, DistString};
+
 use crate::storage::SessionKey;
-use rand::distributions::Alphanumeric;
-use rand::distributions::DistString;
 
 /// Session key generation routine that follows [OWASP recommendations].
 ///

@@ -6,6 +6,7 @@
 - Rename `redis-rs-session` crate feature to `redis-session`.
 - Rename `redis-rs-tls-session` crate feature to `redis-session-native-tls`.
 - Remove `redis-actor-session` crate feature (and, therefore, the `actix-redis` based storage backend).
+- Make `generate_session_key()` public and change it's implementation to use `DistString::sample_string` method.
 
 ## 0.9.0
 
