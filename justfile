@@ -31,7 +31,30 @@ update-readmes:
     cd ./actix-cors && cargo rdme --force
     cd ./actix-session && cargo rdme --force
     cd ./actix-identity && cargo rdme --force
-    npx -y prettier --write $(fd README.md)
+    fd README.md --exec-batch -- npx -y prettier --write
+
+# Test workspace code.
+[group("test")]
+test:
+    cargo {{ toolchain }} nextest run --workspace --all-features
+
+# Test workspace code and docs.
+[group("test")]
+test-all: test test-docs
+
+# Test workspace and collect coverage info.
+[private]
+test-coverage:
+    cargo {{ toolchain }} llvm-cov nextest --no-report --all-features
+    cargo {{ toolchain }} llvm-cov --doc --no-report --all-features
+
+# Test workspace and generate Codecov report.
+test-coverage-codecov: test-coverage
+    cargo {{ toolchain }} llvm-cov report --doctests --codecov --output-path=codecov.json
+
+# Test workspace and generate LCOV report.
+test-coverage-lcov: test-coverage
+    cargo {{ toolchain }} llvm-cov report --doctests --lcov --output-path=lcov.info
 
 # Test workspace docs.
 [group("test")]

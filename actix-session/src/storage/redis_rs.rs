@@ -213,13 +213,18 @@ impl SessionStore for RedisSessionStore {
         let session_key = generate_session_key();
         let cache_key = (self.configuration.cache_keygen)(session_key.as_ref());
 
-        self.execute_command(redis::cmd("SET").arg(&[
-            &cache_key,
-            &body,
-            "NX", // NX: only set the key if it does not already exist
-            "EX", // EX: set expiry
-            &format!("{}", ttl.whole_seconds()),
-        ]))
+        self.execute_command::<()>(
+            redis::cmd("SET")
+                .arg(&[
+                    &cache_key, // key
+                    &body,      // value
+                    "NX",       // only set the key if it does not already exist
+                    "EX",       // set expiry / TTL
+                ])
+                .arg(
+                    ttl.whole_seconds(), // EXpiry in seconds
+                ),
+        )
         .await
         .map_err(Into::into)
         .map_err(SaveError::Other)?;
@@ -278,7 +283,7 @@ impl SessionStore for RedisSessionStore {
         #[cfg(feature = "redis-session")]
         self.client
             .clone()
-            .expire(&cache_key, ttl.whole_seconds())
+            .expire::<_, ()>(&cache_key, ttl.whole_seconds())
             .await?;
 
         #[cfg(not(feature = "redis-session"))]
@@ -293,7 +298,8 @@ impl SessionStore for RedisSessionStore {
 
     async fn delete(&self, session_key: &SessionKey) -> Result<(), Error> {
         let cache_key = (self.configuration.cache_keygen)(session_key.as_ref());
-        self.execute_command(redis::cmd("DEL").arg(&[&cache_key]))
+
+        self.execute_command::<()>(redis::cmd("DEL").arg(&[&cache_key]))
             .await
             .map_err(Into::into)
             .map_err(UpdateError::Other)?;

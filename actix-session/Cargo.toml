@@ -7,7 +7,7 @@ authors = [
 ]
 description = "Session management for Actix Web"
 keywords = ["http", "web", "framework", "async", "session"]
-repository = "https://github.com/actix/actix-extras/tree/master/actix-session"
+repository.workspace = true
 homepage.workspace = true
 license.workspace = true
 edition.workspace = true
@@ -49,6 +49,9 @@ actix-test = "0.1.0-beta.10"
 actix-web = { version = "4", default-features = false, features = ["cookies", "secure-cookies", "macros"] }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tracing = "0.1.30"
+
+[lints]
+workspace = true
 
 [[example]]
 name = "basic"
