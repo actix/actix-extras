@@ -8,8 +8,8 @@ authors = [
     "svartalf <self@svartalf.info>",
     "Yuki Okushi <huyuumi.dev@gmail.com>",
 ]
-homepage.workspace = true
 repository.workspace = true
+homepage.workspace = true
 license.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -34,3 +34,6 @@ actix-service = "2"
 actix-web = { version = "4.1", default-features = false, features = ["macros"] }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tracing = "0.1.30"
+
+[lints]
+workspace = true

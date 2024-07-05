@@ -7,8 +7,8 @@ authors = [
 ]
 description = "Identity management for Actix Web"
 keywords = ["actix", "auth", "identity", "web", "security"]
-homepage = "https://actix.rs"
-repository = "https://github.com/actix/actix-extras.git"
+repository.workspace = true
+homepage.workspace = true
 license.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -36,3 +36,6 @@ actix-session = { version = "0.9", features = ["redis-session", "cookie-session"
 env_logger = "0.11"
 reqwest = { version = "0.11", default-features = false, features = ["cookies", "json"] }
 uuid = { version = "1", features = ["v4"] }
+
+[lints]
+workspace = true

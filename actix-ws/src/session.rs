@@ -1,6 +1,9 @@
-use std::sync::{
-    atomic::{AtomicBool, Ordering},
-    Arc,
+use std::{
+    fmt,
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc,
+    },
 };
 
 use actix_http::ws::{CloseReason, Item, Message};
@@ -10,7 +13,7 @@ use tokio::sync::mpsc::Sender;
 
 /// A handle into the websocket session.
 ///
-/// This type can be used to send messages into the websocket.
+/// This type can be used to send messages into the WebSocket.
 #[derive(Clone)]
 pub struct Session {
     inner: Option<Sender<Message>>,
@@ -21,9 +24,9 @@ pub struct Session {
 #[derive(Debug)]
 pub struct Closed;
 
-impl std::fmt::Display for Closed {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Session is closed")
+impl fmt::Display for Closed {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str("Session is closed")
     }
 }
 
@@ -43,7 +46,7 @@ impl Session {
         }
     }
 
-    /// Send text into the websocket
+    /// Sends text into the WebSocket.
     ///
     /// ```no_run
     /// # use actix_ws::Session;
@@ -65,7 +68,7 @@ impl Session {
         }
     }
 
-    /// Send raw bytes into the websocket
+    /// Sends raw bytes into the WebSocket.
     ///
     /// ```no_run
     /// # use actix_ws::Session;
@@ -87,7 +90,7 @@ impl Session {
         }
     }
 
-    /// Ping the client
+    /// Pings the client.
     ///
     /// For many applications, it will be important to send regular pings to keep track of if the
     /// client has disconnected
@@ -112,7 +115,7 @@ impl Session {
         }
     }
 
-    /// Pong the client
+    /// Pongs the client.
     ///
     /// ```no_run
     /// # use actix_ws::{Message, Session};
@@ -136,7 +139,7 @@ impl Session {
         }
     }
 
-    /// Manually control sending continuations
+    /// Manually controls sending continuations.
     ///
     /// Be wary of this method. Continuations represent multiple frames that, when combined, are
     /// presented as a single message. They are useful when the entire contents of a message are
@@ -168,9 +171,9 @@ impl Session {
         }
     }
 
-    /// Send a close message, and consume the session
+    /// Sends a close message, and consumes the session.
     ///
-    /// All clones will return `Err(Closed)` if used after this call
+    /// All clones will return `Err(Closed)` if used after this call.
     ///
     /// ```no_run
     /// # use actix_ws::{Closed, Session};
@@ -180,6 +183,7 @@ impl Session {
     /// ```
     pub async fn close(mut self, reason: Option<CloseReason>) -> Result<(), Closed> {
         self.pre_check();
+
         if let Some(inner) = self.inner.take() {
             self.closed.store(true, Ordering::Relaxed);
             inner.send(Message::Close(reason)).await.map_err(|_| Closed)

@@ -6,6 +6,8 @@ authors = [
     "Rob Ede <robjtede@icloud.com>",
 ]
 description = "Easily manage Actix Web's settings from a TOML file and environment variables"
+repository.workspace = true
+homepage.workspace = true
 license.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -30,3 +32,6 @@ toml = "0.8"
 [dev-dependencies]
 actix-web = "4"
 env_logger = "0.11"
+
+[lints]
+workspace = true
