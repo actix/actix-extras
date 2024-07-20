@@ -4,10 +4,10 @@ use std::{
     time::{Duration, Instant},
 };
 
-use actix_ws::{AggregatedMessage, Session};
 use actix_web::{
     middleware::Logger, web, web::Html, App, HttpRequest, HttpResponse, HttpServer, Responder,
 };
+use actix_ws::{AggregatedMessage, Session};
 use bytestring::ByteString;
 use futures_util::{stream::FuturesUnordered, StreamExt as _};
 use tokio::sync::Mutex;
@@ -67,8 +67,8 @@ async fn ws(
 ) -> Result<HttpResponse, actix_web::Error> {
     let (response, mut session, stream) = actix_ws::handle(&req, body)?;
 
-    // increase the maximum allowed frame size to 128KB and aggregate continuation frames
-    let mut stream = stream.max_frame_size(131_072).aggregate_continuations();
+    // increase the maximum allowed frame size to 128KiB and aggregate continuation frames
+    let mut stream = stream.max_frame_size(128 * 1024).aggregate_continuations();
 
     chat.insert(session.clone()).await;
     tracing::info!("Inserted session");
