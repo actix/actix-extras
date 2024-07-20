@@ -31,7 +31,7 @@ update-readmes:
     cd ./actix-cors && cargo rdme --force
     cd ./actix-session && cargo rdme --force
     cd ./actix-identity && cargo rdme --force
-    fd README.md --exec-batch -- npx -y prettier --write
+    fd README.md --exec-batch npx -y prettier --write
 
 # Test workspace code.
 [group("test")]

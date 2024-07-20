@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+## 0.11.0
+
+- Updated `prost` dependency to `0.13`.
 - Minimum supported Rust version (MSRV) is now 1.75.
 
 ## 0.10.0
