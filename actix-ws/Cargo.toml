@@ -1,9 +1,9 @@
 [package]
 name = "actix-ws"
-version = "0.2.0"
+version = "0.3.0"
 description = "WebSockets for Actix Web, without actors"
 categories = ["web-programming::websocket"]
-keywords = ["actix", "web", "websocket", "websockets", "http"]
+keywords = ["actix", "web", "websocket", "websockets", "streaming"]
 authors = [
     "asonix <asonix@asonix.dog>",
     "Rob Ede <robjtede@icloud.com>",

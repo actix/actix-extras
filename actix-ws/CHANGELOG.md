@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.3.0
+
 - Add `AggregatedMessage[Stream]` types.
 - Add `MessageStream::max_frame_size()` setter method.
 - Add `Session::continuation()` method.
