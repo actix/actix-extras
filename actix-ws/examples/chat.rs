@@ -94,26 +94,29 @@ async fn ws(
     });
 
     actix_web::rt::spawn(async move {
-        while let Some(Ok(msg)) = stream.next().await {
+        while let Some(Ok(msg)) = stream.recv().await {
             match msg {
                 AggregatedMessage::Ping(bytes) => {
                     if session.pong(&bytes).await.is_err() {
                         return;
                     }
                 }
-                AggregatedMessage::Text(s) => {
-                    info!("Relaying text, {}", s);
-                    let s: &str = s.as_ref();
-                    chat.send(s.into()).await;
+
+                AggregatedMessage::Text(string) => {
+                    tracing::info!("Relaying text, {string}");
+                    chat.send(string).await;
                 }
+
                 AggregatedMessage::Close(reason) => {
                     let _ = session.close(reason).await;
                     tracing::info!("Got close, bailing");
                     return;
                 }
+
                 AggregatedMessage::Pong(_) => {
                     *alive.lock().await = Instant::now();
                 }
+
                 _ => (),
             };
         }
