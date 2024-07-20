@@ -7,7 +7,7 @@ use derive_more::{Display, From};
 /// Session keys are stored as cookies, therefore they cannot be arbitrary long. Session keys are
 /// required to be smaller than 4064 bytes.
 ///
-/// ```rust
+/// ```
 /// use actix_session::storage::SessionKey;
 ///
 /// let key: String = std::iter::repeat('a').take(4065).collect();

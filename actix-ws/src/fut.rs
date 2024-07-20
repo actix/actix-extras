@@ -1,7 +1,7 @@
 use std::{
     collections::VecDeque,
     future::poll_fn,
-    io,
+    io, mem,
     pin::Pin,
     task::{Context, Poll},
 };
@@ -141,7 +141,7 @@ impl MessageStream {
 
     /// Wait for the next item from the message stream
     ///
-    /// ```rust,no_run
+    /// ```no_run
     /// # use actix_ws::MessageStream;
     /// # async fn test(mut stream: MessageStream) {
     /// while let Some(Ok(msg)) = stream.recv().await {
@@ -211,13 +211,13 @@ impl Stream for StreamingBody {
         }
 
         while let Some(msg) = this.messages.pop_front() {
-            if let Err(e) = this.codec.encode(msg, &mut this.buf) {
-                return Poll::Ready(Some(Err(e.into())));
+            if let Err(err) = this.codec.encode(msg, &mut this.buf) {
+                return Poll::Ready(Some(Err(err.into())));
             }
         }
 
         if !this.buf.is_empty() {
-            return Poll::Ready(Some(Ok(this.buf.split().freeze())));
+            return Poll::Ready(Some(Ok(mem::take(&mut this.buf).freeze())));
         }
 
         Poll::Pending

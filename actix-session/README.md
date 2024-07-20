@@ -25,7 +25,7 @@ We refer to the cookie used for sessions as a **session cookie**. Its content is
 
 `actix-session` provides an easy-to-use framework to manage sessions in applications built on top of Actix Web. [`SessionMiddleware`] is the middleware underpinning the functionality provided by `actix-session`; it takes care of all the session cookie handling and instructs the **storage backend** to create/delete/update the session state based on the operations performed against the active [`Session`].
 
-`actix-session` provides some built-in storage backends: ([`CookieSessionStore`], [`RedisSessionStore`], and [`RedisActorSessionStore`]) - you can create a custom storage backend by implementing the [`SessionStore`] trait.
+`actix-session` provides some built-in storage backends: ([`CookieSessionStore`], [`RedisSessionStore`]) - you can create a custom storage backend by implementing the [`SessionStore`] trait.
 
 Further reading on sessions:
 
@@ -100,20 +100,28 @@ By default, `actix-session` does not provide any storage backend to retrieve and
   actix-session = { version = "...", features = ["cookie-session"] }
   ```
 
-- a Redis-based backend via [`redis-rs`](https://docs.rs/redis-rs), [`RedisSessionStore`], using the `redis-rs-session` feature flag.
+- a Redis-based backend via [`redis-rs`](https://docs.rs/redis-rs), [`RedisSessionStore`], using the `redis-session` feature flag.
 
   ```toml
   [dependencies]
   # ...
-  actix-session = { version = "...", features = ["redis-rs-session"] }
+  actix-session = { version = "...", features = ["redis-session"] }
   ```
 
-  Add the `redis-rs-tls-session` feature flag if you want to connect to Redis using a secured connection:
+  Add the `redis-session-native-tls` feature flag if you want to connect to Redis using a secure connection (via the `native-tls` crate):
 
   ```toml
   [dependencies]
   # ...
-  actix-session = { version = "...", features = ["redis-rs-session", "redis-rs-tls-session"] }
+  actix-session = { version = "...", features = ["redis-session-native-tls"] }
+  ```
+
+  If you, instead, prefer depending on `rustls`, use the `redis-session-rustls` feature flag:
+
+  ```toml
+  [dependencies]
+  # ...
+  actix-session = { version = "...", features = ["redis-session-rustls"] }
   ```
 
 You can implement your own session storage backend using the [`SessionStore`] trait.
@@ -121,6 +129,5 @@ You can implement your own session storage backend using the [`SessionStore`] tr
 [`SessionStore`]: storage::SessionStore
 [`CookieSessionStore`]: storage::CookieSessionStore
 [`RedisSessionStore`]: storage::RedisSessionStore
-[`RedisActorSessionStore`]: storage::RedisActorSessionStore
 
 <!-- cargo-rdme end -->

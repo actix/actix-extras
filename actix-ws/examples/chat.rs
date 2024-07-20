@@ -1,13 +1,18 @@
 use std::{
+    io,
     sync::Arc,
     time::{Duration, Instant},
 };
 
-use actix_web::{middleware::Logger, web, App, HttpRequest, HttpResponse, HttpServer};
 use actix_ws::{AggregatedMessage, Session};
+use actix_web::{
+    middleware::Logger, web, web::Html, App, HttpRequest, HttpResponse, HttpServer, Responder,
+};
+use bytestring::ByteString;
 use futures_util::{stream::FuturesUnordered, StreamExt as _};
-use log::info;
 use tokio::sync::Mutex;
+use tracing::level_filters::LevelFilter;
+use tracing_subscriber::EnvFilter;
 
 #[derive(Clone)]
 struct Chat {
@@ -31,15 +36,19 @@ impl Chat {
         self.inner.lock().await.sessions.push(session);
     }
 
-    async fn send(&self, msg: String) {
+    async fn send(&self, msg: impl Into<ByteString>) {
+        let msg = msg.into();
+
         let mut inner = self.inner.lock().await;
         let mut unordered = FuturesUnordered::new();
 
         for mut session in inner.sessions.drain(..) {
             let msg = msg.clone();
+
             unordered.push(async move {
                 let res = session.text(msg).await;
-                res.map(|_| session).map_err(|_| info!("Dropping session"))
+                res.map(|_| session)
+                    .map_err(|_| tracing::debug!("Dropping session"))
             });
         }
 
@@ -62,14 +71,15 @@ async fn ws(
     let mut stream = stream.max_frame_size(131_072).aggregate_continuations();
 
     chat.insert(session.clone()).await;
-    info!("Inserted session");
+    tracing::info!("Inserted session");
 
     let alive = Arc::new(Mutex::new(Instant::now()));
 
     let mut session2 = session.clone();
     let alive2 = alive.clone();
-    actix_rt::spawn(async move {
-        let mut interval = actix_rt::time::interval(Duration::from_secs(5));
+    actix_web::rt::spawn(async move {
+        let mut interval = actix_web::rt::time::interval(Duration::from_secs(5));
+
         loop {
             interval.tick().await;
             if session2.ping(b"").await.is_err() {
@@ -83,7 +93,7 @@ async fn ws(
         }
     });
 
-    actix_rt::spawn(async move {
+    actix_web::rt::spawn(async move {
         while let Some(Ok(msg)) = stream.next().await {
             match msg {
                 AggregatedMessage::Ping(bytes) => {
@@ -98,7 +108,7 @@ async fn ws(
                 }
                 AggregatedMessage::Close(reason) => {
                     let _ = session.close(reason).await;
-                    info!("Got close, bailing");
+                    tracing::info!("Got close, bailing");
                     return;
                 }
                 AggregatedMessage::Pong(_) => {
@@ -109,86 +119,25 @@ async fn ws(
         }
         let _ = session.close(None).await;
     });
-    info!("Spawned");
+    tracing::info!("Spawned");
 
     Ok(response)
 }
 
-async fn index() -> HttpResponse {
-    let s = r#"
-<html>
-    <head>
-        <meta charset="utf-8" />
-        <title>Chat</title>
-        <script>
-function onLoad() {
-    console.log("BOOTING");
-    const socket = new WebSocket("ws://localhost:8080/ws");
-    const input = document.getElementById("chat-input");
-    const logs = document.getElementById("chat-logs");
-
-    if (!input || !logs) {
-        alert("Couldn't find required elements");
-        console.err("Couldn't find required elements");
-        return;
-    }
-
-    input.addEventListener("keyup", event => {
-        if (event.isComposing) {
-            return;
-        }
-        if (event.key != "Enter") {
-            return;
-        }
-
-        socket.send(input.value);
-        input.value = "";
-    }, false);
-
-    socket.onmessage = event => {
-        const newNode = document.createElement("li");
-        newNode.textContent = event.data;
-
-        let firstChild = null;
-        for (const n of logs.childNodes.values()) {
-            if (n.nodeType == 1) {
-                firstChild = n;
-                break;
-            }
-        }
-
-        if (firstChild) {
-            logs.insertBefore(newNode, firstChild);
-        } else {
-            logs.appendChild(newNode);
-        }
-    };
-
-    window.addEventListener("beforeunload", () => { socket.close() });
+async fn index() -> impl Responder {
+    Html::new(include_str!("chat.html").to_owned())
 }
 
-if (document.readyState === "complete") {
-    onLoad();
-} else {
-    document.addEventListener("DOMContentLoaded", onLoad, false);
-}
-        </script>
-    </head>
-    <body>
-        <input id="chat-input" type="test" />
-        <ul id="chat-logs">
-        </ul>
-    </body>
-</html>
-    "#;
+#[tokio::main(flavor = "current_thread")]
+async fn main() -> io::Result<()> {
+    tracing_subscriber::fmt()
+        .with_env_filter(
+            EnvFilter::builder()
+                .with_default_directive(LevelFilter::INFO.into())
+                .from_env_lossy(),
+        )
+        .init();
 
-    HttpResponse::Ok().content_type("text/html").body(s)
-}
-
-#[actix_rt::main]
-async fn main() -> Result<(), anyhow::Error> {
-    std::env::set_var("RUST_LOG", "info");
-    pretty_env_logger::init();
     let chat = Chat::new();
 
     HttpServer::new(move || {
