@@ -15,10 +15,12 @@ use actix_http::{
 use actix_web::{web, HttpRequest, HttpResponse};
 use tokio::sync::mpsc::channel;
 
+mod aggregated;
 mod fut;
 mod session;
 
 pub use self::{
+    aggregated::{AggregatedMessage, AggregatedMessageStream},
     fut::{MessageStream, StreamingBody},
     session::{Closed, Session},
 };
