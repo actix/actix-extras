@@ -15,24 +15,15 @@ use actix_web::{
     web::{Bytes, BytesMut},
     Error,
 };
+use bytestring::ByteString;
 use futures_core::stream::Stream;
 use tokio::sync::mpsc::Receiver;
+
+use crate::AggregatedMessageStream;
 
 /// A response body for Websocket HTTP Requests
 pub struct StreamingBody {
     session_rx: Receiver<Message>,
-
-    messages: VecDeque<Message>,
-    buf: BytesMut,
-    codec: Codec,
-    closing: bool,
-}
-
-/// A stream of Messages from a websocket client
-///
-/// Messages can be accessed via the stream's `.next()` method
-pub struct MessageStream {
-    payload: Payload,
 
     messages: VecDeque<Message>,
     buf: BytesMut,
@@ -52,6 +43,16 @@ impl StreamingBody {
     }
 }
 
+/// Stream of Messages from a websocket client.
+pub struct MessageStream {
+    payload: Payload,
+
+    messages: VecDeque<Message>,
+    buf: BytesMut,
+    codec: Codec,
+    closing: bool,
+}
+
 impl MessageStream {
     pub(super) fn new(payload: Payload) -> Self {
         MessageStream {
@@ -63,7 +64,40 @@ impl MessageStream {
         }
     }
 
-    /// Wait for the next item from the message stream
+    /// Sets the maximum permitted size for received WebSocket frames, in bytes.
+    ///
+    /// By default, up to 64KiB is allowed.
+    ///
+    /// Any received frames larger than the permitted value will return
+    /// `Err(ProtocolError::Overflow)` instead.
+    ///
+    /// ```no_run
+    /// # use actix_ws::MessageStream;
+    /// # fn test(stream: MessageStream) {
+    /// // increase permitted frame size from 64KB to 1MB
+    /// let stream = stream.max_frame_size(1024 * 1024);
+    /// # }
+    /// ```
+    #[must_use]
+    pub fn max_frame_size(mut self, max_size: usize) -> Self {
+        self.codec = self.codec.max_size(max_size);
+        self
+    }
+
+    /// Returns a stream wrapper that collects continuation frames into their equivalent aggregated
+    /// forms, i.e., binary or text.
+    ///
+    /// By default, continuations will be aggregated up to 1MiB in size (customizable with
+    /// [`AggregatedMessageStream::max_continuation_size()`]). The stream implementation returns an
+    /// error if this size is exceeded.
+    #[must_use]
+    pub fn aggregate_continuations(self) -> AggregatedMessageStream {
+        AggregatedMessageStream::new(self)
+    }
+
+    /// Waits for the next item from the message stream
+    ///
+    /// This is a convenience for calling the [`Stream`](Stream::poll_next()) implementation.
     ///
     /// ```no_run
     /// # use actix_ws::MessageStream;
@@ -73,6 +107,7 @@ impl MessageStream {
     /// }
     /// # }
     /// ```
+    #[must_use]
     pub async fn recv(&mut self) -> Option<Result<Message, ProtocolError>> {
         poll_fn(|cx| Pin::new(&mut *self).poll_next(cx)).await
     }
@@ -135,11 +170,8 @@ impl Stream for MessageStream {
                     Poll::Ready(Some(Ok(bytes))) => {
                         this.buf.extend_from_slice(&bytes);
                     }
-                    Poll::Ready(Some(Err(e))) => {
-                        return Poll::Ready(Some(Err(ProtocolError::Io(io::Error::new(
-                            io::ErrorKind::Other,
-                            e.to_string(),
-                        )))));
+                    Poll::Ready(Some(Err(err))) => {
+                        return Poll::Ready(Some(Err(ProtocolError::Io(io::Error::other(err)))));
                     }
                     Poll::Ready(None) => {
                         this.closing = true;
@@ -154,12 +186,11 @@ impl Stream for MessageStream {
         while let Some(frame) = this.codec.decode(&mut this.buf)? {
             let message = match frame {
                 Frame::Text(bytes) => {
-                    let s = std::str::from_utf8(&bytes)
-                        .map_err(|e| {
-                            ProtocolError::Io(io::Error::new(io::ErrorKind::Other, e.to_string()))
+                    ByteString::try_from(bytes)
+                        .map(Message::Text)
+                        .map_err(|err| {
+                            ProtocolError::Io(io::Error::new(io::ErrorKind::InvalidData, err))
                         })?
-                        .to_string();
-                    Message::Text(s.into())
                 }
                 Frame::Binary(bytes) => Message::Binary(bytes),
                 Frame::Ping(bytes) => Message::Ping(bytes),
