@@ -21,10 +21,9 @@ use tokio::sync::mpsc::Receiver;
 
 use crate::AggregatedMessageStream;
 
-/// A response body for Websocket HTTP Requests
+/// Response body for a WebSocket.
 pub struct StreamingBody {
     session_rx: Receiver<Message>,
-
     messages: VecDeque<Message>,
     buf: BytesMut,
     codec: Codec,
@@ -43,7 +42,7 @@ impl StreamingBody {
     }
 }
 
-/// Stream of Messages from a websocket client.
+/// Stream of messages from a WebSocket client.
 pub struct MessageStream {
     payload: Payload,
 
