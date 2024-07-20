@@ -16,18 +16,19 @@ use actix_web::{web, HttpRequest, HttpResponse};
 use tokio::sync::mpsc::channel;
 
 mod aggregated;
-mod fut;
 mod session;
+mod stream;
 
 pub use self::{
     aggregated::{AggregatedMessage, AggregatedMessageStream},
-    fut::{MessageStream, StreamingBody},
     session::{Closed, Session},
+    stream::{MessageStream, StreamingBody},
 };
 
 /// Begin handling websocket traffic
 ///
 /// ```no_run
+/// use std::io;
 /// use actix_web::{middleware::Logger, web, App, HttpRequest, HttpServer, Responder};
 /// use actix_ws::Message;
 /// use futures_util::StreamExt as _;
@@ -43,6 +44,7 @@ pub use self::{
 ///                         return;
 ///                     }
 ///                 }
+///
 ///                 Message::Text(msg) => println!("Got text: {msg}"),
 ///                 _ => break,
 ///             }
@@ -55,17 +57,15 @@ pub use self::{
 /// }
 ///
 /// #[tokio::main(flavor = "current_thread")]
-/// async fn main() -> std::io::Result<()> {
+/// async fn main() -> io::Result<()> {
 ///     HttpServer::new(move || {
 ///         App::new()
-///             .wrap(Logger::default())
 ///             .route("/ws", web::get().to(ws))
+///             .wrap(Logger::default())
 ///     })
-///     .bind("127.0.0.1:8080")?
+///     .bind(("127.0.0.1", 8080))?
 ///     .run()
-///     .await?;
-///
-///     Ok(())
+///     .await
 /// }
 /// ```
 pub fn handle(
