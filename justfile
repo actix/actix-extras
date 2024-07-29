@@ -67,13 +67,14 @@ test-docs:
 doc *args: && doc-set-workspace-crates
     RUSTDOCFLAGS="--cfg=docsrs -Dwarnings" cargo +nightly doc --workspace --all-features {{ args }}
 
-[private]
 [group("docs")]
+[private]
 doc-set-workspace-crates:
     #!/usr/bin/env bash
     (
         echo "window.ALL_CRATES ="
-        cargo metadata --format-version=1 | jq '[.packages[] | select(.source == null) | .name]'
+        cargo metadata --format-version=1 \
+        | jq '[.packages[] | select(.source == null) | .targets | map(select(.doc) | .name)] | flatten'
         echo ";"
     ) > "$(cargo metadata --format-version=1 | jq -r '.target_directory')/doc/crates.js"
 
