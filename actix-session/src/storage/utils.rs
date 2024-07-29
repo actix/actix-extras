@@ -1,4 +1,4 @@
-use rand::distributions::{Alphanumeric, DistString};
+use rand::distributions::{Alphanumeric, DistString as _};
 
 use crate::storage::SessionKey;
 
