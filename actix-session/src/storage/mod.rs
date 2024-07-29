@@ -1,19 +1,11 @@
 //! Pluggable storage backends for session state.
 
-mod interface;
-mod session_key;
-
-pub use self::{
-    interface::{LoadError, SaveError, SessionStore, UpdateError},
-    session_key::SessionKey,
-};
-
 #[cfg(feature = "cookie-session")]
 mod cookie;
-
+mod interface;
 #[cfg(feature = "redis-session")]
 mod redis_rs;
-
+mod session_key;
 #[cfg(feature = "redis-session")]
 mod utils;
 
@@ -23,3 +15,7 @@ pub use self::cookie::CookieSessionStore;
 pub use self::redis_rs::{RedisSessionStore, RedisSessionStoreBuilder};
 #[cfg(feature = "redis-session")]
 pub use self::utils::generate_session_key;
+pub use self::{
+    interface::{LoadError, SaveError, SessionStore, UpdateError},
+    session_key::SessionKey,
+};
