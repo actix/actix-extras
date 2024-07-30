@@ -7,6 +7,7 @@
 - Rename `redis-rs-tls-session` crate feature to `redis-session-native-tls`.
 - Remove `redis-actor-session` crate feature (and, therefore, the `actix-redis` based storage backend).
 - Expose `storage::generate_session_key()`.
+- Update `redis` dependency to `0.26`.
 
 ## 0.9.0
 
