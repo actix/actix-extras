@@ -49,6 +49,7 @@ impl Tls {
     ///     .await
     /// }
     /// ```
+    #[allow(rustdoc::broken_intra_doc_links)]
     pub fn get_ssl_acceptor_builder(&self) -> AsResult<SslAcceptorBuilder> {
         let mut builder = SslAcceptor::mozilla_intermediate(SslMethod::tls())?;
         builder.set_certificate_chain_file(&self.certificate)?;
