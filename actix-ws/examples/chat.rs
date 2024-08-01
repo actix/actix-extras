@@ -7,7 +7,7 @@ use std::{
 use actix_web::{
     middleware::Logger, web, web::Html, App, HttpRequest, HttpResponse, HttpServer, Responder,
 };
-use actix_ws::{Message, Session};
+use actix_ws::{AggregatedMessage, Session};
 use bytestring::ByteString;
 use futures_util::{stream::FuturesUnordered, StreamExt as _};
 use tokio::sync::Mutex;
@@ -65,7 +65,10 @@ async fn ws(
     body: web::Payload,
     chat: web::Data<Chat>,
 ) -> Result<HttpResponse, actix_web::Error> {
-    let (response, mut session, mut stream) = actix_ws::handle(&req, body)?;
+    let (response, mut session, stream) = actix_ws::handle(&req, body)?;
+
+    // increase the maximum allowed frame size to 128KiB and aggregate continuation frames
+    let mut stream = stream.max_frame_size(128 * 1024).aggregate_continuations();
 
     chat.insert(session.clone()).await;
     tracing::info!("Inserted session");
@@ -91,30 +94,29 @@ async fn ws(
     });
 
     actix_web::rt::spawn(async move {
-        while let Some(Ok(msg)) = stream.next().await {
+        while let Some(Ok(msg)) = stream.recv().await {
             match msg {
-                Message::Ping(bytes) => {
+                AggregatedMessage::Ping(bytes) => {
                     if session.pong(&bytes).await.is_err() {
                         return;
                     }
                 }
-                Message::Text(msg) => {
-                    tracing::info!("Relaying msg: {msg}");
-                    chat.send(msg).await;
+
+                AggregatedMessage::Text(string) => {
+                    tracing::info!("Relaying text, {string}");
+                    chat.send(string).await;
                 }
-                Message::Close(reason) => {
+
+                AggregatedMessage::Close(reason) => {
                     let _ = session.close(reason).await;
                     tracing::info!("Got close, bailing");
                     return;
                 }
-                Message::Continuation(_) => {
-                    let _ = session.close(None).await;
-                    tracing::info!("Got continuation, bailing");
-                    return;
-                }
-                Message::Pong(_) => {
+
+                AggregatedMessage::Pong(_) => {
                     *alive.lock().await = Instant::now();
                 }
+
                 _ => (),
             };
         }

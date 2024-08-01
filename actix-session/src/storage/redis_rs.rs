@@ -269,7 +269,7 @@ impl SessionStore for RedisSessionStore {
                         SaveError::Other(err) => UpdateError::Other(err),
                     })
             }
-            Value::Int(_) | Value::Okay | Value::Status(_) => Ok(session_key),
+            Value::Int(_) | Value::Okay | Value::SimpleString(_) => Ok(session_key),
             val => Err(UpdateError::Other(anyhow::anyhow!(
                 "Failed to update session state. {:?}",
                 val
