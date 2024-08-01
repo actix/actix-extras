@@ -12,7 +12,7 @@ mod utils;
 pub use self::cookie::CookieSessionStore;
 #[cfg(any(feature = "redis-session", feature = "redis-dp-session"))]
 pub use self::redis_rs::{RedisSessionStore, RedisSessionStoreBuilder};
-#[cfg(feature = "redis-session")]
+#[cfg(any(feature = "redis-session", feature = "redis-dp-session"))]
 pub use self::utils::generate_session_key;
 pub use self::{
     interface::{LoadError, SaveError, SessionStore, UpdateError},
