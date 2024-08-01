@@ -1,6 +1,5 @@
 //! Pluggable storage backends for session state.
 
-
 mod interface;
 #[cfg(any(feature = "redis-session", feature = "redis-dp-session"))]
 mod redis_rs;
