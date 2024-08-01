@@ -29,9 +29,9 @@ fmt: update-readmes
 [group("lint")]
 update-readmes:
     cd ./actix-cors && cargo rdme --force
-    cd ./actix-session && cargo rdme --force
     cd ./actix-identity && cargo rdme --force
-    fd README.md --exec-batch -- npx -y prettier --write
+    cd ./actix-session && cargo rdme --force
+    fd README.md --exec-batch npx -y prettier --write
 
 # Test workspace code.
 [group("test")]
@@ -67,13 +67,14 @@ test-docs:
 doc *args: && doc-set-workspace-crates
     RUSTDOCFLAGS="--cfg=docsrs -Dwarnings" cargo +nightly doc --workspace --all-features {{ args }}
 
-[private]
 [group("docs")]
+[private]
 doc-set-workspace-crates:
     #!/usr/bin/env bash
     (
         echo "window.ALL_CRATES ="
-        cargo metadata --format-version=1 | jq '[.packages[] | select(.source == null) | .name]'
+        cargo metadata --format-version=1 \
+        | jq '[.packages[] | select(.source == null) | .targets | map(select(.doc) | .name)] | flatten'
         echo ";"
     ) > "$(cargo metadata --format-version=1 | jq -r '.target_directory')/doc/crates.js"
 
