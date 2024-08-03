@@ -1,6 +1,8 @@
 use std::{env::VarError, io, num::ParseIntError, path::PathBuf, str::ParseBoolError};
 
 use derive_more::{Display, Error};
+#[cfg(feature = "openssl")]
+use openssl::error::ErrorStack as OpenSSLError;
 use toml::de::Error as TomlError;
 
 /// Errors that can be returned from methods in this crate.
@@ -28,6 +30,11 @@ pub enum Error {
     /// I/O error.
     #[display(fmt = "")]
     IoError(io::Error),
+
+    /// OpenSSL Error.
+    #[cfg(feature = "openssl")]
+    #[display(fmt = "OpenSSL error: {_0}")]
+    OpenSSLError(OpenSSLError),
 
     /// Value is not a boolean.
     #[display(fmt = "Failed to parse boolean: {_0}")]
@@ -61,6 +68,13 @@ macro_rules! InvalidValue {
 impl From<io::Error> for Error {
     fn from(err: io::Error) -> Self {
         Self::IoError(err)
+    }
+}
+
+#[cfg(feature = "openssl")]
+impl From<OpenSSLError> for Error {
+    fn from(err: OpenSSLError) -> Self {
+        Self::OpenSSLError(err)
     }
 }
 
@@ -100,6 +114,9 @@ impl From<Error> for io::Error {
             }
 
             Error::IoError(io_error) => io_error,
+
+            #[cfg(feature = "openssl")]
+            Error::OpenSSLError(ossl_error) => io::Error::new(io::ErrorKind::Other, ossl_error),
 
             Error::ParseBoolError(_) => {
                 io::Error::new(io::ErrorKind::InvalidInput, err.to_string())
