@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Add `redis-session-rustls` crate feature that enables `rustls`-secured Redis sessions.
+- Add `redis-pool` crate feature (off-by-default) which enables `RedisSessionStore::{new, builder}_pooled()` consrtuctors.
 - Rename `redis-rs-session` crate feature to `redis-session`.
 - Rename `redis-rs-tls-session` crate feature to `redis-session-native-tls`.
 - Remove `redis-actor-session` crate feature (and, therefore, the `actix-redis` based storage backend).
@@ -12,11 +13,7 @@
 ## 0.9.0
 
 - Remove use of `async-trait` on `SessionStore` trait.
-- Add `deadpool-redis` dependency; Implement `deadpool_redis::Pool` for `RedisSessionStore`. [#381]
-- Update `actix-redis` dependency to `0.13`.
 - Minimum supported Rust version (MSRV) is now 1.75.
-
-[#381]: https://github.com/actix/actix-extras/pull/381
 
 ## 0.8.0
 

@@ -23,7 +23,7 @@ cookie-session = []
 redis-session = ["dep:redis", "dep:rand"]
 redis-session-native-tls = ["redis-session", "redis/tokio-native-tls-comp"]
 redis-session-rustls = ["redis-session", "redis/tokio-rustls-comp"]
-redis-dp-session = ["dep:deadpool-redis", "dep:rand"]
+redis-pool = ["dep:deadpool-redis"]
 
 [dependencies]
 actix-service = "2"
@@ -39,9 +39,7 @@ tracing = { version = "0.1.30", default-features = false, features = ["log"] }
 
 # redis-session
 redis = { version = "0.26", default-features = false, features = ["tokio-comp", "connection-manager"], optional = true }
-
-# redis-dp-session
-deadpool-redis = { version = "0.14", optional = true }
+deadpool-redis = { version = "0.15", optional = true }
 
 [dev-dependencies]
 actix-session = { path = ".", features = ["cookie-session", "redis-session"] }

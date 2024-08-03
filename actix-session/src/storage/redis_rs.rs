@@ -2,11 +2,9 @@ use std::sync::Arc;
 
 use actix_web::cookie::time::Duration;
 use anyhow::Error;
-#[cfg(not(feature = "redis-session"))]
-use deadpool_redis::{redis, Pool};
-#[cfg(feature = "redis-session")]
-use redis::aio::ConnectionManager;
-use redis::{AsyncCommands, Cmd, FromRedisValue, RedisResult, Value};
+use redis::{
+    aio::ConnectionManager, AsyncCommands, Client, Cmd, FromRedisValue, RedisResult, Value,
+};
 
 use super::SessionKey;
 use crate::storage::{
@@ -78,10 +76,17 @@ use crate::storage::{
 #[derive(Clone)]
 pub struct RedisSessionStore {
     configuration: CacheConfiguration,
-    #[cfg(feature = "redis-session")]
-    client: ConnectionManager,
-    #[cfg(not(feature = "redis-session"))]
-    pool: Pool,
+    client: RedisSessionConn,
+}
+
+#[derive(Clone)]
+enum RedisSessionConn {
+    /// Single connection.
+    Single(ConnectionManager),
+
+    /// Connection pool.
+    #[cfg(feature = "redis-pool")]
+    Pool(deadpool_redis::Pool),
 }
 
 #[derive(Clone)]
@@ -98,42 +103,44 @@ impl Default for CacheConfiguration {
 }
 
 impl RedisSessionStore {
-    /// A fluent API to configure [`RedisSessionStore`].
-    /// It takes as input the only required input to create a new instance of [`RedisSessionStore`] - a
-    /// connection string for Redis.
-    #[cfg(feature = "redis-session")]
-    pub fn builder<S: Into<String>>(connection_string: S) -> RedisSessionStoreBuilder {
+    /// Returns a fluent API builder to configure [`RedisSessionStore`].
+    ///
+    /// It takes as input the only required input to create a new instance of [`RedisSessionStore`]
+    /// - a connection string for Redis.
+    pub fn builder(connection_string: impl Into<String>) -> RedisSessionStoreBuilder {
         RedisSessionStoreBuilder {
             configuration: CacheConfiguration::default(),
-            connection_string: connection_string.into(),
+            conn_builder: RedisSessionConnBuilder::Single(connection_string.into()),
         }
     }
 
-    /// A fluent API to configure [`RedisSessionStore`].
-    /// It takes as input the only required input to create a new instance of [`RedisSessionStore`] - a
-    /// pool object for Redis.
-    #[cfg(not(feature = "redis-session"))]
-    pub fn builder<P: Into<Pool>>(pool: P) -> RedisSessionStoreBuilder {
+    /// Returns a fluent API builder to configure [`RedisSessionStore`].
+    ///
+    /// It takes as input the only required input to create a new instance of [`RedisSessionStore`]
+    /// - a pool object for Redis.
+    pub fn builder_pooled(pool: impl Into<deadpool_redis::Pool>) -> RedisSessionStoreBuilder {
         RedisSessionStoreBuilder {
             configuration: CacheConfiguration::default(),
-            pool: pool.into(),
+            conn_builder: RedisSessionConnBuilder::Pool(pool.into()),
         }
     }
 
-    /// Create a new instance of [`RedisSessionStore`] using the default configuration.
-    /// It takes as input the only required input to create a new instance of [`RedisSessionStore`] - a
-    /// connection string for Redis.
-    #[cfg(feature = "redis-session")]
-    pub async fn new<S: Into<String>>(connection_string: S) -> Result<RedisSessionStore, Error> {
+    /// Creates a new instance of [`RedisSessionStore`] using the default configuration.
+    ///
+    /// It takes as input the only required input to create a new instance of [`RedisSessionStore`]
+    /// - a connection string for Redis.
+    pub async fn new(connection_string: impl Into<String>) -> Result<RedisSessionStore, Error> {
         Self::builder(connection_string).build().await
     }
 
-    /// Create a new instance of [`RedisSessionStore`] using the default configuration.
-    /// It takes as input the only required input to create a new instance of [`RedisSessionStore`] - a
-    /// pool object for Redis.
-    #[cfg(not(feature = "redis-session"))]
-    pub fn new<P: Into<Pool>>(pool: P) -> RedisSessionStore {
-        Self::builder(pool).build()
+    /// Creates a new instance of [`RedisSessionStore`] using the default configuration.
+    ///
+    /// It takes as input the only required input to create a new instance of [`RedisSessionStore`]
+    /// - a pool object for Redis.
+    pub async fn new_pooled(
+        pool: impl Into<deadpool_redis::Pool>,
+    ) -> anyhow::Result<RedisSessionStore> {
+        Self::builder_pooled(pool).build().await
     }
 }
 
@@ -144,10 +151,29 @@ impl RedisSessionStore {
 #[must_use]
 pub struct RedisSessionStoreBuilder {
     configuration: CacheConfiguration,
-    #[cfg(feature = "redis-session")]
-    connection_string: String,
-    #[cfg(not(feature = "redis-session"))]
-    pool: Pool,
+    conn_builder: RedisSessionConnBuilder,
+}
+
+enum RedisSessionConnBuilder {
+    /// Single connection string.
+    Single(String),
+
+    /// Pre-built connection pool.
+    #[cfg(feature = "redis-pool")]
+    Pool(deadpool_redis::Pool),
+}
+
+impl RedisSessionConnBuilder {
+    async fn into_client(self) -> anyhow::Result<RedisSessionConn> {
+        Ok(match self {
+            RedisSessionConnBuilder::Single(conn_string) => {
+                RedisSessionConn::Single(ConnectionManager::new(Client::open(conn_string)?).await?)
+            }
+
+            #[cfg(feature = "redis-pool")]
+            RedisSessionConnBuilder::Pool(pool) => RedisSessionConn::Pool(pool),
+        })
+    }
 }
 
 impl RedisSessionStoreBuilder {
@@ -160,27 +186,14 @@ impl RedisSessionStoreBuilder {
         self
     }
 
-    /// Finalise the builder and return a [`RedisSessionStore`] instance.
-    ///
-    /// [`RedisSessionStore`]: RedisSessionStore
-    #[cfg(feature = "redis-session")]
-    pub async fn build(self) -> Result<RedisSessionStore, Error> {
-        let client = ConnectionManager::new(redis::Client::open(self.connection_string)?).await?;
+    /// Finalises builder and returns a [`RedisSessionStore`] instance.
+    pub async fn build(self) -> anyhow::Result<RedisSessionStore> {
+        let client = self.conn_builder.into_client().await?;
+
         Ok(RedisSessionStore {
             configuration: self.configuration,
             client,
         })
-    }
-
-    /// Finalise the builder and return a [`RedisSessionStore`] instance.
-    ///
-    /// [`RedisSessionStore`]: RedisSessionStore
-    #[cfg(not(feature = "redis-session"))]
-    pub fn build(self) -> RedisSessionStore {
-        RedisSessionStore {
-            configuration: self.configuration,
-            pool: self.pool,
-        }
     }
 }
 
@@ -280,18 +293,20 @@ impl SessionStore for RedisSessionStore {
     async fn update_ttl(&self, session_key: &SessionKey, ttl: &Duration) -> Result<(), Error> {
         let cache_key = (self.configuration.cache_keygen)(session_key.as_ref());
 
-        #[cfg(feature = "redis-session")]
-        self.client
-            .clone()
-            .expire::<_, ()>(&cache_key, ttl.whole_seconds())
-            .await?;
+        match self.client {
+            RedisSessionConn::Single(conn) => {
+                conn.expire::<_, ()>(&cache_key, ttl.whole_seconds())
+                    .await?
+            }
 
-        #[cfg(not(feature = "redis-session"))]
-        self.pool
-            .get()
-            .await?
-            .expire(&cache_key, ttl.whole_seconds())
-            .await?;
+            #[cfg(feature = "redis-pool")]
+            RedisSessionConn::Pool(pool) => {
+                pool.get()
+                    .await?
+                    .expire(&cache_key, ttl.whole_seconds())
+                    .await?;
+            }
+        }
 
         Ok(())
     }
