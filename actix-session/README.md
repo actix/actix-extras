@@ -5,9 +5,9 @@
 <!-- prettier-ignore-start -->
 
 [![crates.io](https://img.shields.io/crates/v/actix-session?label=latest)](https://crates.io/crates/actix-session)
-[![Documentation](https://docs.rs/actix-session/badge.svg?version=0.9.0)](https://docs.rs/actix-session/0.9.0)
+[![Documentation](https://docs.rs/actix-session/badge.svg?version=0.10.0)](https://docs.rs/actix-session/0.10.0)
 ![Apache 2.0 or MIT licensed](https://img.shields.io/crates/l/actix-session)
-[![Dependency Status](https://deps.rs/crate/actix-session/0.9.0/status.svg)](https://deps.rs/crate/actix-session/0.9.0)
+[![Dependency Status](https://deps.rs/crate/actix-session/0.10.0/status.svg)](https://deps.rs/crate/actix-session/0.10.0)
 
 <!-- prettier-ignore-end -->
 
@@ -100,7 +100,7 @@ By default, `actix-session` does not provide any storage backend to retrieve and
   actix-session = { version = "...", features = ["cookie-session"] }
   ```
 
-- a Redis-based backend via [`redis-rs`](https://docs.rs/redis-rs), [`RedisSessionStore`], using the `redis-session` feature flag.
+- a Redis-based backend via the [`redis`] crate, [`RedisSessionStore`], using the `redis-session` feature flag.
 
   ```toml
   [dependencies]

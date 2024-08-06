@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.10.0
+
 - Add `redis-session-rustls` crate feature that enables `rustls`-secured Redis sessions.
 - Add `redis-pool` crate feature (off-by-default) which enables `RedisSessionStore::{new, builder}_pooled()` constructors.
 - Rename `redis-rs-session` crate feature to `redis-session`.
