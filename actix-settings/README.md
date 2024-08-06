@@ -23,10 +23,6 @@ There is a way to extend the available settings. This can be used to combine the
 
 Have a look at [the usage example][usage] to see how.
 
-## WIP
-
-Configuration options for TLS set up are not yet implemented.
-
 ## Special Thanks
 
 This crate was made possible by support from Accept B.V and [@jjpe].
