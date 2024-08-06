@@ -34,7 +34,7 @@ actix-web = { version = "4", default-features = false, features = ["macros", "co
 actix-session = { version = "0.9", features = ["redis-session", "cookie-session"] }
 
 env_logger = "0.11"
-reqwest = { version = "0.11", default-features = false, features = ["cookies", "json"] }
+reqwest = { version = "0.12", default-features = false, features = ["cookies", "json"] }
 uuid = { version = "1", features = ["v4"] }
 
 [lints]
