@@ -365,6 +365,7 @@ impl RedisSessionStore {
                 }
             }
 
+            #[cfg(feature = "redis-pool")]
             RedisSessionConn::Pool(ref pool) => {
                 let mut conn = pool.get().await?;
 
