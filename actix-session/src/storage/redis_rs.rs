@@ -56,21 +56,24 @@ use crate::storage::{
 /// # })
 /// ```
 ///
-/// # Deadpool Redis
+/// # Pooled Redis Connections
 ///
-/// ```ignore
+/// When the `redis-pool` crate feature is enabled, a pre-existing pool from [`deadpool_redis`] can
+/// be provided.
+///
+/// ```no_run
 /// use actix_session::storage::RedisSessionStore;
 /// use deadpool_redis::{Config, Runtime};
 ///
 /// let redis_cfg = Config::from_url("redis://127.0.0.1:6379");
 /// let redis_pool = redis_cfg.create_pool(Some(Runtime::Tokio1)).unwrap();
-/// let store = RedisSessionStore::new(redis_pool.clone());
+///
+/// let store = RedisSessionStore::new_pooled(redis_pool);
 /// ```
 ///
 /// # Implementation notes
-/// `RedisSessionStore` leverages [`redis-rs`] as Redis client.
 ///
-/// [`redis-rs`]: https://github.com/mitsuhiko/redis-rs
+/// `RedisSessionStore` leverages the [`redis`] crate as the underlying Redis client.
 #[derive(Clone)]
 pub struct RedisSessionStore {
     configuration: CacheConfiguration,
@@ -446,6 +449,7 @@ mod tests {
                 .await
                 .unwrap(),
 
+            #[cfg(feature = "redis-pool")]
             RedisSessionConn::Pool(ref pool) => {
                 pool.get()
                     .await
