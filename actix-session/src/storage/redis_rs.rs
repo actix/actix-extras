@@ -2,9 +2,7 @@ use std::sync::Arc;
 
 use actix_web::cookie::time::Duration;
 use anyhow::Error;
-use redis::{
-    aio::ConnectionManager, AsyncCommands, Client, Cmd, FromRedisValue, RedisResult, Value,
-};
+use redis::{aio::ConnectionManager, AsyncCommands, Client, Cmd, FromRedisValue, Value};
 
 use super::SessionKey;
 use crate::storage::{
@@ -118,6 +116,7 @@ impl RedisSessionStore {
     ///
     /// It takes as input the only required input to create a new instance of [`RedisSessionStore`]
     /// - a pool object for Redis.
+    #[cfg(feature = "redis-pool")]
     pub fn builder_pooled(pool: impl Into<deadpool_redis::Pool>) -> RedisSessionStoreBuilder {
         RedisSessionStoreBuilder {
             configuration: CacheConfiguration::default(),
@@ -137,6 +136,7 @@ impl RedisSessionStore {
     ///
     /// It takes as input the only required input to create a new instance of [`RedisSessionStore`]
     /// - a pool object for Redis.
+    #[cfg(feature = "redis-pool")]
     pub async fn new_pooled(
         pool: impl Into<deadpool_redis::Pool>,
     ) -> anyhow::Result<RedisSessionStore> {
@@ -146,8 +146,6 @@ impl RedisSessionStore {
 
 /// A fluent builder to construct a [`RedisSessionStore`] instance with custom configuration
 /// parameters.
-///
-/// [`RedisSessionStore`]: RedisSessionStore
 #[must_use]
 pub struct RedisSessionStoreBuilder {
     configuration: CacheConfiguration,
@@ -290,20 +288,21 @@ impl SessionStore for RedisSessionStore {
         }
     }
 
-    async fn update_ttl(&self, session_key: &SessionKey, ttl: &Duration) -> Result<(), Error> {
+    async fn update_ttl(&self, session_key: &SessionKey, ttl: &Duration) -> anyhow::Result<()> {
         let cache_key = (self.configuration.cache_keygen)(session_key.as_ref());
 
         match self.client {
-            RedisSessionConn::Single(conn) => {
-                conn.expire::<_, ()>(&cache_key, ttl.whole_seconds())
-                    .await?
+            RedisSessionConn::Single(ref conn) => {
+                conn.clone()
+                    .expire::<_, ()>(&cache_key, ttl.whole_seconds())
+                    .await?;
             }
 
             #[cfg(feature = "redis-pool")]
-            RedisSessionConn::Pool(pool) => {
+            RedisSessionConn::Pool(ref pool) => {
                 pool.get()
                     .await?
-                    .expire(&cache_key, ttl.whole_seconds())
+                    .expire::<_, ()>(&cache_key, ttl.whole_seconds())
                     .await?;
             }
         }
@@ -338,30 +337,54 @@ impl RedisSessionStore {
     /// retry will be executed on a fresh connection, therefore it is likely to succeed (or fail for
     /// a different more meaningful reason).
     #[allow(clippy::needless_pass_by_ref_mut)]
-    async fn execute_command<T: FromRedisValue>(&self, cmd: &mut Cmd) -> RedisResult<T> {
+    async fn execute_command<T: FromRedisValue>(&self, cmd: &mut Cmd) -> anyhow::Result<T> {
         let mut can_retry = true;
 
-        #[cfg(feature = "redis-session")]
-        let client = &mut self.client.clone();
+        match self.client {
+            RedisSessionConn::Single(ref conn) => {
+                let mut conn = conn.clone();
 
-        #[cfg(not(feature = "redis-session"))]
-        let client = &mut self.pool.get().await.unwrap();
+                loop {
+                    match cmd.query_async(&mut conn).await {
+                        Ok(value) => return Ok(value),
+                        Err(err) => {
+                            if can_retry && err.is_connection_dropped() {
+                                tracing::debug!(
+                                    "Connection dropped while trying to talk to Redis. Retrying."
+                                );
 
-        loop {
-            match cmd.query_async(client).await {
-                Ok(value) => return Ok(value),
-                Err(err) => {
-                    if can_retry && err.is_connection_dropped() {
-                        tracing::debug!(
-                            "Connection dropped while trying to talk to Redis. Retrying."
-                        );
+                                // Retry at most once
+                                can_retry = false;
 
-                        // Retry at most once
-                        can_retry = false;
+                                continue;
+                            } else {
+                                return Err(err.into());
+                            }
+                        }
+                    }
+                }
+            }
 
-                        continue;
-                    } else {
-                        return Err(err);
+            RedisSessionConn::Pool(ref pool) => {
+                let mut conn = pool.get().await?;
+
+                loop {
+                    match cmd.query_async(&mut conn).await {
+                        Ok(value) => return Ok(value),
+                        Err(err) => {
+                            if can_retry && err.is_connection_dropped() {
+                                tracing::debug!(
+                                    "Connection dropped while trying to talk to Redis. Retrying."
+                                );
+
+                                // Retry at most once
+                                can_retry = false;
+
+                                continue;
+                            } else {
+                                return Err(err.into());
+                            }
+                        }
                     }
                 }
             }
@@ -415,23 +438,22 @@ mod tests {
         let store = redis_store().await;
         let session_key = generate_session_key();
 
-        #[cfg(feature = "redis-session")]
-        store
-            .client
-            .clone()
-            .set::<_, _, ()>(session_key.as_ref(), "random-thing-which-is-not-json")
-            .await
-            .unwrap();
+        match store.client {
+            RedisSessionConn::Single(ref conn) => conn
+                .clone()
+                .set::<_, _, ()>(session_key.as_ref(), "random-thing-which-is-not-json")
+                .await
+                .unwrap(),
 
-        #[cfg(not(feature = "redis-session"))]
-        store
-            .pool
-            .get()
-            .await
-            .unwrap()
-            .set::<_, _, ()>(session_key.as_ref(), "random-thing-which-is-not-json")
-            .await
-            .unwrap();
+            RedisSessionConn::Pool(ref pool) => {
+                pool.get()
+                    .await
+                    .unwrap()
+                    .set::<_, _, ()>(session_key.as_ref(), "random-thing-which-is-not-json")
+                    .await
+                    .unwrap();
+            }
+        }
 
         assert!(matches!(
             store.load(&session_key).await.unwrap_err(),
