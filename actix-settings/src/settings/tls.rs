@@ -21,35 +21,31 @@ pub struct Tls {
 }
 
 impl Tls {
-    /// Generates an [`SslAcceptorBuilder`] with its settings. It is often used for the following method
-    /// [`actix_web::server::HttpServer::bind_openssl`].
+    /// Returns an [`SslAcceptorBuilder`] with the configured settings.
+    ///
+    /// The result is often used with [`actix_web::HttpServer::bind_openssl()`].
     ///
     /// # Example
-    /// ```no_run
-    /// use actix_settings::{ApplySettings, Settings};
-    /// use actix_web::{get, App, HttpServer, Responder};
     ///
-    /// #[get("/")]
-    /// async fn index() -> impl Responder {
-    ///     "Hello."
-    /// }
+    /// ```no_run
+    /// use std::io;
+    /// use actix_settings::{ApplySettings as _, Settings};
+    /// use actix_web::{get, web, App, HttpServer, Responder};
     ///
     /// #[actix_web::main]
-    /// async fn main() -> std::io::Result<()> {
+    /// async fn main() -> io::Result<()> {
     ///     let settings = Settings::from_default_template();
     ///
     ///     HttpServer::new(|| {
-    ///         App::new()
-    ///             .service(index)
+    ///         App::new().service(web::to(|| { "Hello, World!" }))
     ///     })
     ///     .try_apply_settings(&settings)?
     ///     .bind(("127.0.0.1", 8080))?
-    ///     .bind_openssl(("127.0.0.1", 8081), settings.actix.tls.get_ssl_acceptor_builder()?)?
+    ///     .bind_openssl(("127.0.0.1", 8443), settings.actix.tls.get_ssl_acceptor_builder()?)?
     ///     .run()
     ///     .await
     /// }
     /// ```
-    #[allow(rustdoc::broken_intra_doc_links)]
     pub fn get_ssl_acceptor_builder(&self) -> AsResult<SslAcceptorBuilder> {
         let mut builder = SslAcceptor::mozilla_intermediate(SslMethod::tls())?;
         builder.set_certificate_chain_file(&self.certificate)?;

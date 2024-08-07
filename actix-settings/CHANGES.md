@@ -2,14 +2,14 @@
 
 ## Unreleased
 
-- Add new feature named `openssl` for TLS settings using `OpenSSL` dependency. [#380]
-- Add new function `settings::tls::Tls::get_ssl_acceptor_builder()` to build `openssl::ssl::SslAcceptorBuilder`. [#380]
-- Implement TLS logic for `ApplySettings<S>::try_apply_settings()`. [#380]
-- Add `openssl` dependency;
-- Minimum supported Rust version (MSRV) is now 1.75.
-- `ApplySettings<S>::apply_settings()` is deprecated; `ApplySettings<S>::try_apply_settings()` should be preferred. [#380]
+## 0.8.0
 
-[#380]: https://github.com/actix/actix-extras/pull/380
+- Add `openssl` crate feature for TLS settings using OpenSSL.
+- Add `ApplySettings::try_apply_settings()`.
+- Implement TLS logic for `ApplySettings::try_apply_settings()`.
+- Add `Tls::get_ssl_acceptor_builder()` function to build `openssl::ssl::SslAcceptorBuilder`.
+- Deprecate `ApplySettings::apply_settings()`.
+- Minimum supported Rust version (MSRV) is now 1.75.
 
 ## 0.7.1
 

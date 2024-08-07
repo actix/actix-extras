@@ -242,11 +242,26 @@ where
 
 /// Extension trait for applying parsed settings to the server object.
 pub trait ApplySettings<S>: Sized {
-    /// Apply some settings object value to `self`.
-    #[deprecated = "Prefer `try_apply_settings`."]
-    fn apply_settings(self, settings: &S) -> Self;
+    /// Applies some settings object value to `self`.
+    ///
+    /// The default implementation calls [`try_apply_settings()`].
+    ///
+    /// # Panics
+    ///
+    /// May panic if settings are invalid or cannot be applied.
+    ///
+    /// [`try_apply_settings()`]: ApplySettings::try_apply_settings().
+    #[deprecated = "Prefer `try_apply_settings()`."]
+    fn apply_settings(self, settings: &S) -> Self {
+        self.try_apply_settings(settings)
+            .expect("Could not apply settings")
+    }
 
-    /// Apply some settings object value to `self`.
+    /// Applies some settings object value to `self`.
+    ///
+    /// # Errors
+    ///
+    /// May return error if settings are invalid or cannot be applied.
     fn try_apply_settings(self, settings: &S) -> AsResult<Self>;
 }
 
