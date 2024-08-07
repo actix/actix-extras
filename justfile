@@ -19,11 +19,17 @@ msrv_rustup := "+" + msrv
 clippy:
     cargo {{ toolchain }} clippy --workspace --all-targets --all-features
 
-# Format workspace.
+# Format project.
 [group("lint")]
 fmt: update-readmes
     cargo +nightly fmt
-    fd --hidden --extension=yml --extension=md --exec-batch npx -y prettier --write
+    fd --type=file --hidden --extension=yml --extension=md --exec-batch npx -y prettier --write
+
+# Check project.
+[group("lint")]
+check:
+    cargo +nightly fmt -- --check
+    fd --type=file --hidden --extension=yml --extension=md --exec-batch npx -y prettier --check
 
 # Update READMEs from crate root documentation.
 [group("lint")]

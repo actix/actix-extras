@@ -94,34 +94,26 @@ By default, `actix-session` does not provide any storage backend to retrieve and
 
 - a purely cookie-based "backend", [`CookieSessionStore`], using the `cookie-session` feature flag.
 
-  ```toml
-  [dependencies]
-  # ...
-  actix-session = { version = "...", features = ["cookie-session"] }
+  ```console
+  cargo add actix-session --features=cookie-session
   ```
 
 - a Redis-based backend via the [`redis`] crate, [`RedisSessionStore`], using the `redis-session` feature flag.
 
-  ```toml
-  [dependencies]
-  # ...
-  actix-session = { version = "...", features = ["redis-session"] }
+  ```console
+  cargo add actix-session --features=redis-session
   ```
 
   Add the `redis-session-native-tls` feature flag if you want to connect to Redis using a secure connection (via the `native-tls` crate):
 
-  ```toml
-  [dependencies]
-  # ...
-  actix-session = { version = "...", features = ["redis-session-native-tls"] }
+  ```console
+  cargo add actix-session --features=redis-session-native-tls
   ```
 
   If you, instead, prefer depending on `rustls`, use the `redis-session-rustls` feature flag:
 
-  ```toml
-  [dependencies]
-  # ...
-  actix-session = { version = "...", features = ["redis-session-rustls"] }
+  ```console
+  cargo add actix-session --features=redis-session-rustls
   ```
 
 You can implement your own session storage backend using the [`SessionStore`] trait.
