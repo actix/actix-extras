@@ -37,7 +37,7 @@ impl Tls {
     ///     let settings = Settings::from_default_template();
     ///
     ///     HttpServer::new(|| {
-    ///         App::new().service(web::to(|| { "Hello, World!" }))
+    ///         App::new().route("/", web::to(|| async { "Hello, World!" }))
     ///     })
     ///     .try_apply_settings(&settings)?
     ///     .bind(("127.0.0.1", 8080))?
