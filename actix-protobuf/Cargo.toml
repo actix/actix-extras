@@ -19,7 +19,7 @@ all-features = true
 
 [dependencies]
 actix-web = { version = "4", default-features = false }
-derive_more = "0.99.7"
+derive_more = "1.0.0"
 futures-util = { version = "0.3.17", default-features = false, features = ["std"] }
 prost = { version = "0.13", default-features = false }
 

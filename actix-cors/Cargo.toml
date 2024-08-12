@@ -24,7 +24,7 @@ draft-private-network-access = []
 actix-utils = "3"
 actix-web = { version = "4", default-features = false }
 
-derive_more = "0.99.7"
+derive_more = "1.0.0"
 futures-util = { version = "0.3.17", default-features = false, features = ["std"] }
 log = "0.4"
 once_cell = "1"
