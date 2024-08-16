@@ -4,6 +4,7 @@
 
 - Update `redis` dependency to `0.26`.
 - Update `actix-session` dependency to `0.9`.
+- Update `derive_more` dependency to `1.0`.
 
 ## 0.5.1
 

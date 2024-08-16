@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Update `actix-session` dependency to `0.10`.
+- Update `derive_more` dependency to `1.0`.
 
 ## 0.7.1
 

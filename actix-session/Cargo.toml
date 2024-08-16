@@ -31,7 +31,7 @@ actix-utils = "3"
 actix-web = { version = "4", default-features = false, features = ["cookies", "secure-cookies"] }
 
 anyhow = "1"
-derive_more = "0.99.7"
+derive_more = { version = "1.0", features = ["full"] }
 rand = { version = "0.8", optional = true }
 serde = { version = "1" }
 serde_json = { version = "1" }
@@ -43,10 +43,10 @@ deadpool-redis = { version = "0.16", optional = true }
 
 [dev-dependencies]
 actix-session = { path = ".", features = ["cookie-session", "redis-session"] }
-actix-test = "0.1.0-beta.10"
+actix-test = "0.1.5"
 actix-web = { version = "4", default-features = false, features = ["cookies", "secure-cookies", "macros"] }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-tracing = "0.1.30"
+tracing = "0.1.40"
 
 [lints]
 workspace = true

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Update `derive_more` dependency to `1.0`.
+
 ## 0.7.0
 
 - `Cors` is now marked `#[must_use]`.
