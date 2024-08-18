@@ -1,7 +1,7 @@
 //! Configuration options to tune the behaviour of [`SessionMiddleware`].
 
 use actix_web::cookie::{time::Duration, Key, SameSite};
-use derive_more::From;
+use derive_more::derive::From;
 
 use crate::{storage::SessionStore, SessionMiddleware};
 

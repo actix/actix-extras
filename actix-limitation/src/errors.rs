@@ -1,9 +1,9 @@
-use derive_more::{Display, Error as DeriveError, From};
+use derive_more::derive::{Display, Error, From};
 
 use crate::status::Status;
 
 /// Failure modes of the rate limiter.
-#[derive(Debug, Display, DeriveError, From)]
+#[derive(Debug, Display, Error, From)]
 pub enum Error {
     /// Redis client failed to connect or run a query.
     #[display("Redis client failed to connect or run a query")]

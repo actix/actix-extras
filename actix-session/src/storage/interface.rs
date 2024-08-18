@@ -1,7 +1,7 @@
 use std::{collections::HashMap, future::Future};
 
 use actix_web::cookie::time::Duration;
-use derive_more::Display;
+use derive_more::derive::Display;
 
 use super::SessionKey;
 

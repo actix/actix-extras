@@ -14,7 +14,7 @@ use actix_web::{
     FromRequest, HttpMessage, HttpRequest, HttpResponse, ResponseError,
 };
 use anyhow::Context;
-use derive_more::{Display, From};
+use derive_more::derive::{Display, From};
 use serde::{de::DeserializeOwned, Serialize};
 
 /// The primary interface to access and modify session state.

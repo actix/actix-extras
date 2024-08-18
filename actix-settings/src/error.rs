@@ -1,12 +1,12 @@
 use std::{env::VarError, io, num::ParseIntError, path::PathBuf, str::ParseBoolError};
 
-use derive_more::{Display, Error as DeriveError};
+use derive_more::derive::{Display, Error};
 #[cfg(feature = "openssl")]
 use openssl::error::ErrorStack as OpenSSLError;
 use toml::de::Error as TomlError;
 
 /// Errors that can be returned from methods in this crate.
-#[derive(Debug, Display, DeriveError)]
+#[derive(Debug, Display, Error)]
 pub enum Error {
     /// Environment variable does not exists or is invalid.
     #[display("Env var error: {_0}")]

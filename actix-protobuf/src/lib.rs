@@ -22,7 +22,7 @@ use actix_web::{
     Error, FromRequest, HttpMessage, HttpRequest, HttpResponse, HttpResponseBuilder, Responder,
     ResponseError,
 };
-use derive_more::Display;
+use derive_more::derive::Display;
 use futures_util::{
     future::{FutureExt as _, LocalBoxFuture},
     stream::StreamExt as _,
@@ -51,6 +51,8 @@ pub enum ProtoBufPayloadError {
     #[display("Error that occur during reading payload: {_0}")]
     Payload(PayloadError),
 }
+
+// TODO: impl error for ProtoBufPayloadError
 
 impl ResponseError for ProtoBufPayloadError {
     fn error_response(&self) -> HttpResponse {

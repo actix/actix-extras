@@ -2,7 +2,7 @@
 
 use actix_session::{SessionGetError, SessionInsertError};
 use actix_web::{cookie::time::error::ComponentRange, http::StatusCode, ResponseError};
-use derive_more::{Display, Error, From};
+use derive_more::derive::{Display, Error, From};
 
 /// Error that can occur during login attempts.
 #[derive(Debug, Display, Error, From)]

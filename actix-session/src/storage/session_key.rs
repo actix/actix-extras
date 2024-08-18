@@ -1,4 +1,4 @@
-use derive_more::{Display, From};
+use derive_more::derive::{Display, From};
 
 /// A session key, the string stored in a client-side cookie to associate a user with its session
 /// state on the backend.
