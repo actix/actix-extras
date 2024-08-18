@@ -2,8 +2,6 @@
 
 ## Unreleased
 
-- Update `derive_more` dependency to `1.0`.
-
 ## 0.10.0
 
 - Add `redis-session-rustls` crate feature that enables `rustls`-secured Redis sessions.

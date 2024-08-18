@@ -2,8 +2,6 @@
 
 ## Unreleased
 
-- Update `derive_more` dependency to `1.0`.
-
 ## 0.11.0
 
 - Updated `prost` dependency to `0.13`.
