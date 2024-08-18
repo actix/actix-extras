@@ -22,7 +22,7 @@ use actix_web::{
     Error, FromRequest, HttpMessage, HttpRequest, HttpResponse, HttpResponseBuilder, Responder,
     ResponseError,
 };
-use derive_more::Display;
+use derive_more::derive::Display;
 use futures_util::{
     future::{FutureExt as _, LocalBoxFuture},
     stream::StreamExt as _,
@@ -32,25 +32,27 @@ use prost::{DecodeError as ProtoBufDecodeError, EncodeError as ProtoBufEncodeErr
 #[derive(Debug, Display)]
 pub enum ProtoBufPayloadError {
     /// Payload size is bigger than 256k
-    #[display(fmt = "Payload size is bigger than 256k")]
+    #[display("Payload size is bigger than 256k")]
     Overflow,
 
     /// Content type error
-    #[display(fmt = "Content type error")]
+    #[display("Content type error")]
     ContentType,
 
     /// Serialize error
-    #[display(fmt = "ProtoBuf serialize error: {_0}")]
+    #[display("ProtoBuf serialize error: {_0}")]
     Serialize(ProtoBufEncodeError),
 
     /// Deserialize error
-    #[display(fmt = "ProtoBuf deserialize error: {_0}")]
+    #[display("ProtoBuf deserialize error: {_0}")]
     Deserialize(ProtoBufDecodeError),
 
     /// Payload error
-    #[display(fmt = "Error that occur during reading payload: {_0}")]
+    #[display("Error that occur during reading payload: {_0}")]
     Payload(PayloadError),
 }
+
+// TODO: impl error for ProtoBufPayloadError
 
 impl ResponseError for ProtoBufPayloadError {
     fn error_response(&self) -> HttpResponse {

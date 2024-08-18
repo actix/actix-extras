@@ -14,7 +14,7 @@ use actix_web::{
     FromRequest, HttpMessage, HttpRequest, HttpResponse, ResponseError,
 };
 use anyhow::Context;
-use derive_more::{Display, From};
+use derive_more::derive::{Display, From};
 use serde::{de::DeserializeOwned, Serialize};
 
 /// The primary interface to access and modify session state.
@@ -288,7 +288,7 @@ impl FromRequest for Session {
 
 /// Error returned by [`Session::get`].
 #[derive(Debug, Display, From)]
-#[display(fmt = "{_0}")]
+#[display("{_0}")]
 pub struct SessionGetError(anyhow::Error);
 
 impl StdError for SessionGetError {
@@ -305,7 +305,7 @@ impl ResponseError for SessionGetError {
 
 /// Error returned by [`Session::insert`].
 #[derive(Debug, Display, From)]
-#[display(fmt = "{_0}")]
+#[display("{_0}")]
 pub struct SessionInsertError(anyhow::Error);
 
 impl StdError for SessionInsertError {

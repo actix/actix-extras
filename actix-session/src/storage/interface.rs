@@ -1,7 +1,7 @@
 use std::{collections::HashMap, future::Future};
 
 use actix_web::cookie::time::Duration;
-use derive_more::Display;
+use derive_more::derive::Display;
 
 use super::SessionKey;
 
@@ -53,11 +53,11 @@ pub trait SessionStore {
 #[derive(Debug, Display)]
 pub enum LoadError {
     /// Failed to deserialize session state.
-    #[display(fmt = "Failed to deserialize session state")]
+    #[display("Failed to deserialize session state")]
     Deserialization(anyhow::Error),
 
     /// Something went wrong when retrieving the session state.
-    #[display(fmt = "Something went wrong when retrieving the session state")]
+    #[display("Something went wrong when retrieving the session state")]
     Other(anyhow::Error),
 }
 
@@ -74,11 +74,11 @@ impl std::error::Error for LoadError {
 #[derive(Debug, Display)]
 pub enum SaveError {
     /// Failed to serialize session state.
-    #[display(fmt = "Failed to serialize session state")]
+    #[display("Failed to serialize session state")]
     Serialization(anyhow::Error),
 
     /// Something went wrong when persisting the session state.
-    #[display(fmt = "Something went wrong when persisting the session state")]
+    #[display("Something went wrong when persisting the session state")]
     Other(anyhow::Error),
 }
 
@@ -95,11 +95,11 @@ impl std::error::Error for SaveError {
 /// Possible failures modes for [`SessionStore::update`].
 pub enum UpdateError {
     /// Failed to serialize session state.
-    #[display(fmt = "Failed to serialize session state")]
+    #[display("Failed to serialize session state")]
     Serialization(anyhow::Error),
 
     /// Something went wrong when updating the session state.
-    #[display(fmt = "Something went wrong when updating the session state.")]
+    #[display("Something went wrong when updating the session state.")]
     Other(anyhow::Error),
 }
 
