@@ -1,7 +1,6 @@
 use actix_web::body::MessageBody;
 use actix_web::dev::{ServiceRequest, ServiceResponse};
 use actix_web::{web, App, Error, HttpServer};
-use once_cell::sync::Lazy;
 use opentelemetry::trace::TracerProvider;
 use opentelemetry::{global, KeyValue};
 use opentelemetry_otlp::WithExportConfig;
@@ -10,6 +9,7 @@ use opentelemetry_sdk::{
 };
 use opentelemetry_semantic_conventions::resource;
 use std::io;
+use std::sync::LazyLock;
 use tracing::Span;
 use tracing_actix_web::{DefaultRootSpanBuilder, RootSpan, RootSpanBuilder, TracingLogger};
 use tracing_bunyan_formatter::{BunyanFormattingLayer, JsonStorageLayer};
@@ -74,8 +74,8 @@ async fn main() -> io::Result<()> {
 
 const APP_NAME: &str = "tracing-actix-web-demo";
 
-static RESOURCE: Lazy<Resource> =
-    Lazy::new(|| Resource::new(vec![KeyValue::new(resource::SERVICE_NAME, APP_NAME)]));
+static RESOURCE: LazyLock<Resource> =
+    LazyLock::new(|| Resource::new(vec![KeyValue::new(resource::SERVICE_NAME, APP_NAME)]));
 
 /// Init a `tracing` subscriber that prints spans to stdout as well as
 /// ships them to Jaeger.
