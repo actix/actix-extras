@@ -2,16 +2,19 @@
 name = "custom-root-span"
 version = "0.1.0"
 authors = ["LukeMathWalker <contact@lpalmieri.com>"]
-edition = "2018"
+edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 actix-web = "4"
-opentelemetry = "0.22"
-opentelemetry-jaeger = { version = "0.21", features = ["rt-tokio-current-thread"] }
-tracing-opentelemetry = { version = "0.23" }
-tracing = "0.1.19"
+once_cell = "1.19"
+opentelemetry = "0.24"
+opentelemetry-otlp = "0.17"
+opentelemetry_sdk = { version = "0.24", features = ["rt-tokio-current-thread"] }
+opentelemetry-semantic-conventions = "0.16"
+tracing-opentelemetry = { version = "0.25" }
+tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["registry", "env-filter"] }
 tracing-bunyan-formatter = "0.3"
-tracing-actix-web = { path = "../.." }
+tracing-actix-web = { path = "../..", features = ["opentelemetry_0_24"] }

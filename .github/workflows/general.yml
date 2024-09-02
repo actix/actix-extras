@@ -59,6 +59,7 @@ jobs:
           - opentelemetry_0_21
           - opentelemetry_0_22
           - opentelemetry_0_23
+          - opentelemetry_0_24
     steps:
       - uses: actions/checkout@v2
       - name: Cache dependencies

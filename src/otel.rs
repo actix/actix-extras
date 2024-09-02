@@ -22,6 +22,8 @@ use opentelemetry_0_21_pkg as opentelemetry;
 use opentelemetry_0_22_pkg as opentelemetry;
 #[cfg(feature = "opentelemetry_0_23")]
 use opentelemetry_0_23_pkg as opentelemetry;
+#[cfg(feature = "opentelemetry_0_24")]
+use opentelemetry_0_24_pkg as opentelemetry;
 
 #[cfg(feature = "opentelemetry_0_13")]
 use tracing_opentelemetry_0_12_pkg as tracing_opentelemetry;
@@ -45,6 +47,8 @@ use tracing_opentelemetry_0_22_pkg as tracing_opentelemetry;
 use tracing_opentelemetry_0_23_pkg as tracing_opentelemetry;
 #[cfg(feature = "opentelemetry_0_23")]
 use tracing_opentelemetry_0_24_pkg as tracing_opentelemetry;
+#[cfg(feature = "opentelemetry_0_24")]
+use tracing_opentelemetry_0_25_pkg as tracing_opentelemetry;
 
 use opentelemetry::propagation::Extractor;
 
@@ -86,6 +90,7 @@ pub(crate) fn set_otel_parent(req: &ServiceRequest, span: &tracing::Span) {
         feature = "opentelemetry_0_21",
         feature = "opentelemetry_0_22",
         feature = "opentelemetry_0_23",
+        feature = "opentelemetry_0_24",
     )))]
     let trace_id = span.context().span().span_context().trace_id().to_hex();
 
@@ -97,6 +102,7 @@ pub(crate) fn set_otel_parent(req: &ServiceRequest, span: &tracing::Span) {
         feature = "opentelemetry_0_21",
         feature = "opentelemetry_0_22",
         feature = "opentelemetry_0_23",
+        feature = "opentelemetry_0_24",
     ))]
     let trace_id = {
         let id = span.context().span().span_context().trace_id();

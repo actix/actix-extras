@@ -1,15 +1,19 @@
 use actix_web::body::MessageBody;
 use actix_web::dev::{ServiceRequest, ServiceResponse};
 use actix_web::{web, App, Error, HttpServer};
-use opentelemetry::{
-    global, runtime::TokioCurrentThread, sdk::propagation::TraceContextPropagator,
+use once_cell::sync::Lazy;
+use opentelemetry::trace::TracerProvider;
+use opentelemetry::{global, KeyValue};
+use opentelemetry_otlp::WithExportConfig;
+use opentelemetry_sdk::{
+    propagation::TraceContextPropagator, runtime::TokioCurrentThread, trace::Config, Resource,
 };
+use opentelemetry_semantic_conventions::resource;
 use std::io;
 use tracing::Span;
 use tracing_actix_web::{DefaultRootSpanBuilder, RootSpan, RootSpanBuilder, TracingLogger};
 use tracing_bunyan_formatter::{BunyanFormattingLayer, JsonStorageLayer};
-use tracing_subscriber::layer::SubscriberExt;
-use tracing_subscriber::{EnvFilter, Registry};
+use tracing_subscriber::{layer::SubscriberExt, EnvFilter, Registry};
 
 /// We will define a custom root span builder to capture additional fields, specific
 /// to our application, on top of the ones provided by `DefaultRootSpanBuilder` out of the box.
@@ -68,22 +72,40 @@ async fn main() -> io::Result<()> {
     Ok(())
 }
 
+const APP_NAME: &str = "tracing-actix-web-demo";
+
+static RESOURCE: Lazy<Resource> =
+    Lazy::new(|| Resource::new(vec![KeyValue::new(resource::SERVICE_NAME, APP_NAME)]));
+
 /// Init a `tracing` subscriber that prints spans to stdout as well as
 /// ships them to Jaeger.
 ///
 /// Check the `opentelemetry` example for more details.
 fn init_telemetry() {
-    let app_name = "tracing-actix-web-demo";
-
+    // Start a new otlp trace pipeline.
+    // Spans are exported in batch - recommended setup for a production application.
     global::set_text_map_propagator(TraceContextPropagator::new());
-    let tracer = opentelemetry_jaeger::new_agent_pipeline()
-        .with_service_name(app_name)
+    let tracer = opentelemetry_otlp::new_pipeline()
+        .tracing()
+        .with_exporter(
+            opentelemetry_otlp::new_exporter()
+                .tonic()
+                .with_endpoint("http://localhost:4317"),
+        )
+        .with_trace_config(Config::default().with_resource(RESOURCE.clone()))
         .install_batch(TokioCurrentThread)
-        .expect("Failed to install OpenTelemetry tracer.");
+        .expect("Failed to install OpenTelemetry tracer.")
+        .tracer_builder(APP_NAME)
+        .build();
 
+    // Filter based on level - trace, debug, info, warn, error
+    // Tunable via `RUST_LOG` env variable
     let env_filter = EnvFilter::try_from_default_env().unwrap_or(EnvFilter::new("info"));
+    // Create a `tracing` layer using the otlp tracer
     let telemetry = tracing_opentelemetry::layer().with_tracer(tracer);
-    let formatting_layer = BunyanFormattingLayer::new(app_name.into(), std::io::stdout);
+    // Create a `tracing` layer to emit spans as structured logs to stdout
+    let formatting_layer = BunyanFormattingLayer::new(APP_NAME.into(), std::io::stdout);
+    // Combined them all together in a `tracing` subscriber
     let subscriber = Registry::default()
         .with(env_filter)
         .with(telemetry)
