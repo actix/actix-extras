@@ -65,8 +65,8 @@ fn handle_error(span: Span, status_code: StatusCode, response_error: &dyn Respon
     // pre-formatting errors is a workaround for https://github.com/tokio-rs/tracing/issues/1565
     let display = format!("{response_error}");
     let debug = format!("{response_error:?}");
-    span.record("exception.message", &tracing::field::display(display));
-    span.record("exception.details", &tracing::field::display(debug));
+    span.record("exception.message", tracing::field::display(display));
+    span.record("exception.details", tracing::field::display(debug));
     let code: i32 = status_code.as_u16().into();
 
     span.record("http.status_code", code);
