@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.10.1
+
+- Expose `storage::generate_session_key()` without needing to enable a crate feature.
+
 ## 0.10.0
 
 - Add `redis-session-rustls` crate feature that enables `rustls`-secured Redis sessions.
