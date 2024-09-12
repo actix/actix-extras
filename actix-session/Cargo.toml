@@ -20,7 +20,7 @@ all-features = true
 [features]
 default = []
 cookie-session = []
-redis-session = ["dep:redis", "dep:rand"]
+redis-session = ["dep:redis"]
 redis-session-native-tls = ["redis-session", "redis/tokio-native-tls-comp"]
 redis-session-rustls = ["redis-session", "redis/tokio-rustls-comp"]
 redis-pool = ["dep:deadpool-redis"]
@@ -32,7 +32,7 @@ actix-web = { version = "4", default-features = false, features = ["cookies", "s
 
 anyhow = "1"
 derive_more = { version = "1", features = ["display", "error", "from"] }
-rand = { version = "0.8", optional = true }
+rand = "0.8"
 serde = { version = "1" }
 serde_json = { version = "1" }
 tracing = { version = "0.1.30", default-features = false, features = ["log"] }
