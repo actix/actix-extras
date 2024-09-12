@@ -6,7 +6,6 @@ mod interface;
 #[cfg(feature = "redis-session")]
 mod redis_rs;
 mod session_key;
-#[cfg(feature = "redis-session")]
 mod utils;
 
 #[cfg(feature = "cookie-session")]
