@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.8.0
+
 - Update `actix-session` dependency to `0.10`.
 
 ## 0.7.1
