@@ -148,6 +148,7 @@ pub use self::{
 };
 
 #[cfg(test)]
+#[allow(missing_docs)]
 pub mod test_helpers {
     use actix_web::cookie::Key;
 
