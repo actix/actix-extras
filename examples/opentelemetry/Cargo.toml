@@ -8,12 +8,12 @@ license = "MIT/Apache-2.0"
 
 [dependencies]
 actix-web = "4"
-opentelemetry = "0.24"
-opentelemetry_sdk = { version = "0.24", features = ["rt-tokio-current-thread"] }
-opentelemetry-otlp = "0.17"
-opentelemetry-semantic-conventions = "0.16"
-tracing-opentelemetry = "0.25"
+opentelemetry = "0.25"
+opentelemetry_sdk = { version = "0.25", features = ["rt-tokio-current-thread"] }
+opentelemetry-otlp = "0.25"
+opentelemetry-semantic-conventions = "0.25"
+tracing-opentelemetry = "0.26"
 tracing-subscriber = { version = "0.3", features = ["registry", "env-filter"] }
 tracing-bunyan-formatter = "0.3"
-tracing-actix-web = { path = "../..", features = ["opentelemetry_0_24"] }
+tracing-actix-web = { path = "../..", features = ["opentelemetry_0_25"] }
 tracing = "0.1.40"

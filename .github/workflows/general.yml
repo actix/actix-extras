@@ -5,7 +5,7 @@ on:
     branches:
       - main
   pull_request:
-    types: [ opened, synchronize, reopened ]
+    types: [opened, synchronize, reopened]
     branches:
       - main
 
@@ -60,6 +60,7 @@ jobs:
           - opentelemetry_0_22
           - opentelemetry_0_23
           - opentelemetry_0_24
+          - opentelemetry_0_25
     steps:
       - uses: actions/checkout@v2
       - name: Cache dependencies
