@@ -20,6 +20,7 @@
 ```rust
 use actix_web::{middleware::Logger, web, App, HttpRequest, HttpServer, Responder};
 use actix_ws::Message;
+use futures_util::StreamExt;
 
 async fn ws(req: HttpRequest, body: web::Payload) -> actix_web::Result<impl Responder> {
     let (response, mut session, mut msg_stream) = actix_ws::handle(&req, body)?;
