@@ -5,3 +5,4 @@ ci-check-min-examples = "hack check --workspace --no-default-features --examples
 ci-check = "check --workspace --tests --examples --bins"
 ci-test = "test --workspace --lib --tests --all-features --examples --bins --no-fail-fast"
 ci-doctest = "test --workspace --doc --all-features --no-fail-fast"
+ci-otel-test = "hack test --package tracing-actix-web --each-feature --exclude-all-features"

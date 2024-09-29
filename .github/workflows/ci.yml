@@ -69,7 +69,10 @@ jobs:
 
       - name: tests
         timeout-minutes: 40
-        run: cargo ci-test
+        run: cargo ci-test --exclude tracing-actix-web
+
+      - name: otel
+        run: cargo ci-otel-test
 
       - name: CI cache clean
         run: cargo-ci-cache-clean
@@ -127,7 +130,10 @@ jobs:
 
       - name: tests
         timeout-minutes: 40
-        run: cargo ci-test --exclude=actix-session --exclude=actix-limitation
+        run: cargo ci-test --exclude=tracing-actix-web --exclude=actix-session --exclude=actix-limitation
+
+      - name: otel
+        run: cargo ci-otel-test
 
       - name: CI cache clean
         run: cargo-ci-cache-clean

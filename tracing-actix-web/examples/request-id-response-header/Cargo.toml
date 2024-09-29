@@ -1,0 +1,9 @@
+[package]
+name = "request-id-response-header"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+actix-web = "4"
+tracing-actix-web = { path = "../.." }
