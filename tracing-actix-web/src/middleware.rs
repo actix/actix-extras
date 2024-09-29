@@ -1,12 +1,18 @@
-use crate::{DefaultRootSpanBuilder, RequestId, RootSpan, RootSpanBuilder};
-use actix_web::body::{BodySize, MessageBody};
-use actix_web::dev::{Service, ServiceRequest, ServiceResponse, Transform};
-use actix_web::web::Bytes;
-use actix_web::{Error, HttpMessage};
-use std::future::{ready, Future, Ready};
-use std::pin::Pin;
-use std::task::{Context, Poll};
+use std::{
+    future::{ready, Future, Ready},
+    pin::Pin,
+    task::{Context, Poll},
+};
+
+use actix_web::{
+    body::{BodySize, MessageBody},
+    dev::{Service, ServiceRequest, ServiceResponse, Transform},
+    web::Bytes,
+    Error, HttpMessage,
+};
 use tracing::Span;
+
+use crate::{DefaultRootSpanBuilder, RequestId, RootSpan, RootSpanBuilder};
 
 /// `TracingLogger` is a middleware to capture structured diagnostic when processing an HTTP request.
 /// Check the crate-level documentation for an in-depth introduction.

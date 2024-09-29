@@ -1,13 +1,12 @@
+use std::{io, sync::LazyLock};
+
 use actix_web::{web, App, HttpServer};
-use opentelemetry::trace::TracerProvider;
-use opentelemetry::{global, KeyValue};
+use opentelemetry::{global, trace::TracerProvider, KeyValue};
 use opentelemetry_otlp::WithExportConfig;
 use opentelemetry_sdk::{
     propagation::TraceContextPropagator, runtime::TokioCurrentThread, trace::Config, Resource,
 };
 use opentelemetry_semantic_conventions::resource;
-use std::io;
-use std::sync::LazyLock;
 use tracing_actix_web::TracingLogger;
 use tracing_bunyan_formatter::{BunyanFormattingLayer, JsonStorageLayer};
 use tracing_subscriber::{layer::SubscriberExt, EnvFilter, Registry};

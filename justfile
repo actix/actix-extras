@@ -66,12 +66,12 @@ test-coverage-lcov: test-coverage
 [group("test")]
 [group("docs")]
 test-docs:
-    cargo {{ toolchain }} test --doc --workspace --all-features --no-fail-fast -- --nocapture
+    cargo {{ toolchain }} test --doc --workspace --all-features --no-fail-fast --exclude tracing-actix-web -- --nocapture
 
 # Document crates in workspace.
 [group("docs")]
 doc *args: && doc-set-workspace-crates
-    RUSTDOCFLAGS="--cfg=docsrs -Dwarnings" cargo +nightly doc --workspace --all-features {{ args }}
+    RUSTDOCFLAGS="--cfg=docsrs -Dwarnings" cargo +nightly doc --workspace --all-features --exclude tracing-actix-web {{ args }}
 
 [group("docs")]
 [private]

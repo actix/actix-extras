@@ -44,7 +44,16 @@ jobs:
           reporter: github-pr-check
           github_token: ${{ secrets.GITHUB_TOKEN }}
           clippy_flags: >-
-            --workspace --all-features --tests --examples --bins --
+            --workspace --all-features --exclude tracing-actix-web --tests --examples --bins --
+            -A unknown_lints -D clippy::todo -D clippy::dbg_macro
+
+      - name: Check OTEL with Clippy
+        uses: giraffate/clippy-action@v1.0.1
+        with:
+          reporter: github-pr-check
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          clippy_flags: >-
+            --package tracing-actix-web --tests --examples --
             -A unknown_lints -D clippy::todo -D clippy::dbg_macro
 
   public-api-diff:
@@ -70,8 +79,8 @@ jobs:
 
       - name: generate API diff
         run: |
-          for f in $(find -mindepth 2 -maxdepth 2 -name Cargo.toml); do
-
+          for f in $(find -mindepth 2 -maxdepth 2 -not \( -path "./tracing-actix-web/Cargo.toml" -prune \) -name Cargo.toml); do
             cargo public-api --manifest-path "$f" --all-features diff ${{ github.event.pull_request.base.sha }}..${{ github.sha }} >> /tmp/diff.txt
           done
+          cargo public-api --manifest-path "tracing-actix-web/Cargo.toml" diff ${{ github.event.pull_request.base.sha }}..${{ github.sha }} >> /tmp/diff.txt
           cat /tmp/diff.txt
