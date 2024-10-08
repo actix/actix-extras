@@ -9,6 +9,10 @@ members = [
     "actix-settings",
     "actix-web-httpauth",
     "actix-ws",
+    "tracing-actix-web",
+    "tracing-actix-web/examples/opentelemetry",
+    "tracing-actix-web/examples/custom-root-span",
+    "tracing-actix-web/examples/request-id-response-header",
 ]
 
 [workspace.package]
