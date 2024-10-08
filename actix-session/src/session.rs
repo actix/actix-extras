@@ -32,6 +32,8 @@ use serde::{de::DeserializeOwned, Serialize};
 ///     } else {
 ///         session.insert("counter", 1)?;
 ///     }
+///     // Or use the shorthand
+///     session.update_or("counter", |count: i32| count + 1, 1);
 ///
 ///     Ok("Welcome!")
 /// }
@@ -97,6 +99,13 @@ impl Session {
         }
     }
 
+    /// Check if a key exists on the session.
+    ///
+    /// It returns true if the session contains a vaue for the specified key.
+    pub fn contains_key(&self, key: &str) -> bool {
+        self.0.borrow().state.contains_key(key)
+    }
+
     /// Get all raw key-value data from the session.
     ///
     /// Note that values are JSON encoded.
@@ -143,6 +152,83 @@ impl Session {
         }
 
         Ok(())
+    }
+
+    /// Updates a key-value pair into the session.
+    ///
+    /// If the key exists then update it to the new value and place it back in.
+    ///
+    /// If the key does not exist it will not be updated.
+    ///
+    /// Any serializable value can be used and will be encoded as JSON in session data, hence why
+    /// only a reference to the value is taken.
+    ///
+    /// It returns an error if it fails to serialize `value` to JSON.
+    pub fn update<T: Serialize + DeserializeOwned, F>(
+        &self,
+        key: impl Into<String>,
+        updater: F,
+    ) -> Result<(), SessionUpdateError>
+    where
+        F: FnOnce(T) -> T,
+    {
+        let mut inner = self.0.borrow_mut();
+        let key_str = key.into();
+
+        if let Some(val_str) = inner.state.get(&key_str) {
+            let value = serde_json::from_str(val_str)
+                .with_context(|| {
+                    format!(
+                        "Failed to deserialize the JSON-encoded session data attached to key \
+                        `{}` as a `{}` type",
+                        key_str,
+                        std::any::type_name::<T>()
+                    )
+                })
+                .map_err(SessionUpdateError)?;
+
+            let val = serde_json::to_string(&updater(value))
+                .with_context(|| {
+                    format!(
+                        "Failed to serialize the provided `{}` type instance as JSON in order to \
+                        attach as session data to the `{}` key",
+                        std::any::type_name::<T>(),
+                        key_str
+                    )
+                })
+                .map_err(SessionUpdateError)?;
+
+            inner.state.insert(key_str, val);
+        }
+
+        Ok(())
+    }
+
+    /// Updates a key-value pair into the session, or inserts a default value.
+    ///
+    /// If the key exists then update it to the new value and place it back in.
+    ///
+    /// If the key does not exist the default value will be inserted instead.
+    ///
+    /// Any serializable value can be used and will be encoded as JSON in session data, hence why
+    /// only a reference to the value is taken.
+    ///
+    /// It returns an error if it fails to serialize `value` to JSON.
+    pub fn update_or<T: Serialize + DeserializeOwned, F>(
+        &self,
+        key: &str,
+        updater: F,
+        default_value: T,
+    ) -> Result<(), SessionUpdateError>
+    where
+        F: FnOnce(T) -> T,
+    {
+        if self.contains_key(key) {
+            self.update(key, updater)
+        } else {
+            self.insert(key, default_value)
+                .map_err(|e| SessionUpdateError(e.into()))
+        }
     }
 
     /// Remove value from the session.
@@ -307,6 +393,11 @@ impl ResponseError for SessionGetError {
 #[derive(Debug, Display, From)]
 #[display("{_0}")]
 pub struct SessionInsertError(anyhow::Error);
+
+/// Error returned by [`Session::update`].
+#[derive(Debug, Display, From)]
+#[display("{_0}")]
+pub struct SessionUpdateError(anyhow::Error);
 
 impl StdError for SessionInsertError {
     fn source(&self) -> Option<&(dyn StdError + 'static)> {

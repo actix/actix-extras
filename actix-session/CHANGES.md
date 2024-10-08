@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Add `session.update(key, updater)`
+- Add `session.update_or(key, updater, default_value)`
+- Add `session.contains_key(key)`
+
 ## 0.10.1
 
 - Expose `storage::generate_session_key()` without needing to enable a crate feature.
