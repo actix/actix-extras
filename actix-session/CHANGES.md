@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Update `redis` dependency to `0.27`.
+
 ## 0.10.1
 
 - Expose `storage::generate_session_key()` without needing to enable a crate feature.
