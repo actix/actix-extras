@@ -49,6 +49,7 @@ These crates are provided by the community.
 | [sentinel-actix]           | ![crates.io](https://img.shields.io/crates/v/sentinel-actix?label=latest) [![dependency status](https://deps.rs/crate/sentinel-actix/latest/status.svg)](https://deps.rs/crate/sentinel-actix)                                                           | General and flexible protection for Actix Web                                                     |
 | [actix-telepathy]          | ![crates.io](https://img.shields.io/crates/v/actix-telepathy?label=latest) [![dependency status](https://deps.rs/crate/actix-telepathy/latest/status.svg)](https://deps.rs/crate/actix-telepathy)                                                        | Build distributed applications with `RemoteActors` and `RemoteMessages`.                          |
 | [apistos]                  | ![crates.io](https://img.shields.io/crates/v/apistos?label=latest) [![dependency status](https://deps.rs/crate/apistos/latest/status.svg)](https://deps.rs/crate/apistos)                                                                                | Automatic OpenAPI v3 documentation for Actix Web                                                  |
+| [actix-web-validation]                  | ![crates.io](https://img.shields.io/crates/v/actix-web-validation?label=latest) [![dependency status](https://deps.rs/crate/actix-web-validation/latest/status.svg)](https://deps.rs/crate/actix-web-validation)                                                                                | Request validation for Actix Web                                                  |
 
 To add a crate to this list, submit a pull request.
 
@@ -82,3 +83,4 @@ To add a crate to this list, submit a pull request.
 [sentinel-actix]: https://crates.io/crates/sentinel-actix
 [actix-telepathy]: https://github.com/wenig/actix-telepathy
 [apistos]: https://github.com/netwo-io/apistos
+[actix-web-validation]: https://github.com/ranger-ross/actix-web-validation
