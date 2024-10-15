@@ -33,7 +33,6 @@ These crates are provided by the community.
 | Crate                      |                                                                                                                                                                                                                                                          |                                                                                                   |
 | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
 | [actix-web-lab]            | [![crates.io](https://img.shields.io/crates/v/actix-web-lab?label=latest)][actix-web-lab] [![dependency status](https://deps.rs/crate/actix-web-lab/latest/status.svg)](https://deps.rs/crate/actix-web-lab)                                             | Experimental extractors, middleware, and other extras for possible inclusion in Actix Web.        |
-| [actix-multipart-extract]  | [![crates.io](https://img.shields.io/crates/v/actix-multipart-extract?label=latest)][actix-multipart-extract] [![dependency status](https://deps.rs/crate/actix-multipart-extract/latest/status.svg)](https://deps.rs/crate/actix-multipart-extract)     | Better multipart form support for Actix Web.                                                      |
 | [actix-form-data]          | [![crates.io](https://img.shields.io/crates/v/actix-form-data?label=latest)][actix-form-data] [![dependency status](https://deps.rs/crate/actix-form-data/latest/status.svg)](https://deps.rs/crate/actix-form-data)                                     | Multipart form data from actix multipart streams                                                  |
 | [actix-governor]           | [![crates.io](https://img.shields.io/crates/v/actix-governor?label=latest)][actix-governor] [![dependency status](https://deps.rs/crate/actix-governor/latest/status.svg)](https://deps.rs/crate/actix-governor)                                         | Rate-limiting backed by governor.                                                                 |
 | [actix-casbin]             | [![crates.io](https://img.shields.io/crates/v/actix-casbin?label=latest)][actix-casbin] [![dependency status](https://deps.rs/crate/actix-casbin/latest/status.svg)](https://deps.rs/crate/actix-casbin)                                                 | Authorization library that supports access control models like ACL, RBAC & ABAC.                  |
@@ -49,7 +48,7 @@ These crates are provided by the community.
 | [sentinel-actix]           | ![crates.io](https://img.shields.io/crates/v/sentinel-actix?label=latest) [![dependency status](https://deps.rs/crate/sentinel-actix/latest/status.svg)](https://deps.rs/crate/sentinel-actix)                                                           | General and flexible protection for Actix Web                                                     |
 | [actix-telepathy]          | ![crates.io](https://img.shields.io/crates/v/actix-telepathy?label=latest) [![dependency status](https://deps.rs/crate/actix-telepathy/latest/status.svg)](https://deps.rs/crate/actix-telepathy)                                                        | Build distributed applications with `RemoteActors` and `RemoteMessages`.                          |
 | [apistos]                  | ![crates.io](https://img.shields.io/crates/v/apistos?label=latest) [![dependency status](https://deps.rs/crate/apistos/latest/status.svg)](https://deps.rs/crate/apistos)                                                                                | Automatic OpenAPI v3 documentation for Actix Web                                                  |
-| [actix-web-validation]                  | ![crates.io](https://img.shields.io/crates/v/actix-web-validation?label=latest) [![dependency status](https://deps.rs/crate/actix-web-validation/latest/status.svg)](https://deps.rs/crate/actix-web-validation)                                                                                | Request validation for Actix Web                                                  |
+| [actix-web-validation]     | ![crates.io](https://img.shields.io/crates/v/actix-web-validation?label=latest) [![dependency status](https://deps.rs/crate/actix-web-validation/latest/status.svg)](https://deps.rs/crate/actix-web-validation)                                         | Request validation for Actix Web                                                                  |
 
 To add a crate to this list, submit a pull request.
 
@@ -81,6 +80,7 @@ To add a crate to this list, submit a pull request.
 [actix-hash]: https://crates.io/crates/actix-hash
 [actix-bincode]: https://crates.io/crates/actix-bincode
 [sentinel-actix]: https://crates.io/crates/sentinel-actix
-[actix-telepathy]: https://github.com/wenig/actix-telepathy
-[apistos]: https://github.com/netwo-io/apistos
-[actix-web-validation]: https://github.com/ranger-ross/actix-web-validation
+[actix-telepathy]: https://crates.io/crates/actix-telepathy
+[actix-web-validation]: https://crates.io/crates/actix-web-validation
+[actix-telepathy]: https://crates.io/crates/actix-telepathy
+[apistos]: https://crates.io/crates/apistos
