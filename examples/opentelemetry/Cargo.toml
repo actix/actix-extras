@@ -15,5 +15,5 @@ opentelemetry-semantic-conventions = "0.25"
 tracing-opentelemetry = "0.26"
 tracing-subscriber = { version = "0.3", features = ["registry", "env-filter"] }
 tracing-bunyan-formatter = "0.3"
-tracing-actix-web = { path = "../..", features = ["opentelemetry_0_25"] }
+tracing-actix-web = { path = "../..", features = ["opentelemetry_0_26"] }
 tracing = "0.1.40"
