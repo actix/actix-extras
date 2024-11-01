@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Ensure TCP connection is properly shut down when session is dropped
 
 ## 0.3.0
 
