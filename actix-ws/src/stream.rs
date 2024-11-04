@@ -140,6 +140,10 @@ impl Stream for StreamingBody {
             return Poll::Ready(None);
         }
 
+        // When we have a moment (pending) allow the BigBytes to release memory
+        // arbitrary 8KB (page size)
+        this.buf.clear(1024 * 8);
+
         Poll::Pending
     }
 }
