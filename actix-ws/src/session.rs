@@ -98,7 +98,7 @@ impl Session {
     /// ```no_run
     /// # use actix_ws::Session;
     /// # async fn test(mut session: Session) {
-    /// if session.ping(b"").await.is_err() {
+    /// if session.ping(&b""[..]).await.is_err() {
     ///     // session is closed
     /// }
     /// # }
@@ -122,7 +122,7 @@ impl Session {
     /// # async fn test(mut session: Session, msg: Message) {
     /// match msg {
     ///     Message::Ping(bytes) => {
-    ///         let _ = session.pong(&bytes).await;
+    ///         let _ = session.pong(bytes).await;
     ///     }
     ///     _ => (),
     /// }
