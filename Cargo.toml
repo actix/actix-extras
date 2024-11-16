@@ -8,7 +8,7 @@ members = [
 
 [package]
 name = "tracing-actix-web"
-version = "0.7.14"
+version = "0.7.15"
 authors = ["Luca Palmieri <rust@lpalmieri.com>"]
 edition = "2018"
 
