@@ -49,7 +49,8 @@ These crates are provided by the community.
 | [sentinel-actix]           | ![crates.io](https://img.shields.io/crates/v/sentinel-actix?label=latest) [![dependency status](https://deps.rs/crate/sentinel-actix/latest/status.svg)](https://deps.rs/crate/sentinel-actix)                                                           | General and flexible protection for Actix Web                                                     |
 | [actix-telepathy]          | ![crates.io](https://img.shields.io/crates/v/actix-telepathy?label=latest) [![dependency status](https://deps.rs/crate/actix-telepathy/latest/status.svg)](https://deps.rs/crate/actix-telepathy)                                                        | Build distributed applications with `RemoteActors` and `RemoteMessages`.                          |
 | [apistos]                  | ![crates.io](https://img.shields.io/crates/v/apistos?label=latest) [![dependency status](https://deps.rs/crate/apistos/latest/status.svg)](https://deps.rs/crate/apistos)                                                                                | Automatic OpenAPI v3 documentation for Actix Web                                                  |
-| [actix-web-validation]                  | ![crates.io](https://img.shields.io/crates/v/actix-web-validation?label=latest) [![dependency status](https://deps.rs/crate/actix-web-validation/latest/status.svg)](https://deps.rs/crate/actix-web-validation)                                                                                | Request validation for Actix Web                                                  |
+| [actix-web-validation]                  | ![crates.io](https://img.shields.io/crates/v/actix-web-validation?label=latest) [![dependency status](https://deps.rs/crate/actix-web-validation/latest/status.svg)](https://deps.rs/crate/actix-web-validation)                                                                                | Request validation for Actix Web            
+| [actix-jwt-cookies]                  | ![crates.io](https://img.shields.io/crates/v/actix-jwt-cookies?label=latest) [![dependency status](https://deps.rs/repo/github/Necoo33/actix-jwt-cookies/status.svg)](https://deps.rs/repo/github/Necoo33/actix-jwt-cookies?path=%2F)                                                                                | Store your data in encrypted cookies and get it elegantly in actix-web framework.                                          |
 
 To add a crate to this list, submit a pull request.
 
@@ -84,3 +85,4 @@ To add a crate to this list, submit a pull request.
 [actix-telepathy]: https://github.com/wenig/actix-telepathy
 [apistos]: https://github.com/netwo-io/apistos
 [actix-web-validation]: https://github.com/ranger-ross/actix-web-validation
+[actix-jwt-cookies]: https://github.com/Necoo33/actix-jwt-cookies
