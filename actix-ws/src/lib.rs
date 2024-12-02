@@ -40,7 +40,7 @@ pub use self::{
 ///         while let Some(Ok(msg)) = msg_stream.next().await {
 ///             match msg {
 ///                 Message::Ping(bytes) => {
-///                     if session.pong(&bytes).await.is_err() {
+///                     if session.pong(bytes).await.is_err() {
 ///                         return;
 ///                     }
 ///                 }

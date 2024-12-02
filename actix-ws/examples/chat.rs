@@ -82,7 +82,7 @@ async fn ws(
 
         loop {
             interval.tick().await;
-            if session2.ping(b"").await.is_err() {
+            if session2.ping(&b""[..]).await.is_err() {
                 break;
             }
 
@@ -97,7 +97,7 @@ async fn ws(
         while let Some(Ok(msg)) = stream.recv().await {
             match msg {
                 AggregatedMessage::Ping(bytes) => {
-                    if session.pong(&bytes).await.is_err() {
+                    if session.pong(bytes).await.is_err() {
                         return;
                     }
                 }
