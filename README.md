@@ -49,6 +49,8 @@ These crates are provided by the community.
 | [actix-telepathy]          | ![crates.io](https://img.shields.io/crates/v/actix-telepathy?label=latest) [![dependency status](https://deps.rs/crate/actix-telepathy/latest/status.svg)](https://deps.rs/crate/actix-telepathy)                                                        | Build distributed applications with `RemoteActors` and `RemoteMessages`.                          |
 | [apistos]                  | ![crates.io](https://img.shields.io/crates/v/apistos?label=latest) [![dependency status](https://deps.rs/crate/apistos/latest/status.svg)](https://deps.rs/crate/apistos)                                                                                | Automatic OpenAPI v3 documentation for Actix Web                                                  |
 | [actix-web-validation]     | ![crates.io](https://img.shields.io/crates/v/actix-web-validation?label=latest) [![dependency status](https://deps.rs/crate/actix-web-validation/latest/status.svg)](https://deps.rs/crate/actix-web-validation)                                         | Request validation for Actix Web                                                                  |
+| [actix-jwt-cookies]        | ![crates.io](https://img.shields.io/crates/v/actix-jwt-cookies?label=latest) [![dependency status](https://deps.rs/repo/github/Necoo33/actix-jwt-cookies/status.svg)](https://deps.rs/repo/github/Necoo33/actix-jwt-cookies?path=%2F)                    | Store your data in encrypted cookies and get it elegantly.                                        |
+| [actix-ws-broadcaster]     | ![crates.io](https://img.shields.io/crates/v/actix-ws-broadcaster?label=latest) [![dependency status](https://deps.rs/repo/github/Necoo33/actix-ws-broadcaster/status.svg?path=%2F)](https://deps.rs/repo/github/Necoo33/actix-ws-broadcaster?path=%2F)  | A broadcaster liblary for actix-ws that includes grouping and conditional broadcasting.           |
 
 To add a crate to this list, submit a pull request.
 
@@ -84,3 +86,5 @@ To add a crate to this list, submit a pull request.
 [actix-web-validation]: https://crates.io/crates/actix-web-validation
 [actix-telepathy]: https://crates.io/crates/actix-telepathy
 [apistos]: https://crates.io/crates/apistos
+[actix-jwt-cookies]: https://crates.io/crates/actix-jwt-cookies
+[actix-ws-broadcaster]: https://crates.io/crates/actix-ws-broadcaster
