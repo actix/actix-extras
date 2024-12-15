@@ -695,8 +695,8 @@ mod test {
 
     #[test]
     fn impl_eq() {
-        assert_ne!(Cors::default(), Cors::default());
-        assert_eq!(Cors::default().send_wildcard(), Cors::default());
+        assert_eq!(Cors::default(), Cors::default());
+        assert_ne!(Cors::default().send_wildcard(), Cors::default());
         assert_ne!(Cors::default(), Cors::permissive());
     }
 }
