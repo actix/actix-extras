@@ -692,7 +692,7 @@ mod test {
 
         Cors::default().new_transform(srv).await.unwrap();
     }
-    
+
     #[test]
     fn impl_eq() {
         assert_eq!(Cors::default().send_wildcard(), Cors::default());
