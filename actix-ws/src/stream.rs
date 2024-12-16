@@ -145,6 +145,10 @@ impl Stream for StreamingBody {
             return Poll::Ready(Some(Ok(mem::take(&mut this.buf).freeze())));
         }
 
+        if this.closing {
+            return Poll::Ready(None);
+        }
+
         Poll::Pending
     }
 }
