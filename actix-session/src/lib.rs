@@ -136,11 +136,12 @@
 #![cfg_attr(docsrs, feature(doc_auto_cfg))]
 
 pub mod config;
+#[cfg(feature = "context")]
+pub mod context;
 mod middleware;
 mod session;
 mod session_ext;
 pub mod storage;
-
 pub use self::{
     middleware::SessionMiddleware,
     session::{Session, SessionGetError, SessionInsertError, SessionStatus},
