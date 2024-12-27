@@ -137,6 +137,7 @@
 
 pub mod config;
 #[cfg(feature = "context")]
+/// Using the Session as a context for other crates
 pub mod context;
 mod middleware;
 mod session;
