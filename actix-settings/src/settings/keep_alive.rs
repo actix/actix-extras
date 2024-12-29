@@ -68,7 +68,7 @@ impl<'de> de::Deserialize<'de> for KeepAlive {
     {
         struct KeepAliveVisitor;
 
-        impl<'de> de::Visitor<'de> for KeepAliveVisitor {
+        impl de::Visitor<'_> for KeepAliveVisitor {
             type Value = KeepAlive;
 
             fn expecting(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
