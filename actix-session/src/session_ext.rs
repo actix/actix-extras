@@ -31,7 +31,7 @@ impl SessionExt for ServiceResponse {
     }
 }
 
-impl<'a> SessionExt for GuardContext<'a> {
+impl SessionExt for GuardContext<'_> {
     fn get_session(&self) -> Session {
         Session::get_session(&mut self.req_data_mut())
     }

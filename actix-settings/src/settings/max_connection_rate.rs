@@ -40,7 +40,7 @@ impl<'de> de::Deserialize<'de> for MaxConnectionRate {
     {
         struct MaxConnectionRateVisitor;
 
-        impl<'de> de::Visitor<'de> for MaxConnectionRateVisitor {
+        impl de::Visitor<'_> for MaxConnectionRateVisitor {
             type Value = MaxConnectionRate;
 
             fn expecting(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
