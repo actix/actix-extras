@@ -35,5 +35,9 @@ actix-web-httpauth = { path = "./actix-web-httpauth" }
 # uncomment to quickly test against local actix-web repo
 # actix-http = { path = "../actix-web/actix-http" }
 # actix-router = { path = "../actix-web/actix-router" }
-# actix-web = { path = "../actix-web" }
+# actix-web = { path = "../actix-web/actix-web" }
 # awc = { path = "../actix-web/awc" }
+actix-http = { git = "https://github.com/asonix/actix-web", branch = "asonix/play-with-h1-encoding" }
+actix-router = { git = "https://github.com/asonix/actix-web", branch = "asonix/play-with-h1-encoding" }
+actix-web = { git = "https://github.com/asonix/actix-web", branch = "asonix/play-with-h1-encoding" }
+awc = { git = "https://github.com/asonix/actix-web", branch = "asonix/play-with-h1-encoding" }

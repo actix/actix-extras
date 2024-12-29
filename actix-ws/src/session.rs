@@ -98,16 +98,16 @@ impl Session {
     /// ```no_run
     /// # use actix_ws::Session;
     /// # async fn test(mut session: Session) {
-    /// if session.ping(b"").await.is_err() {
+    /// if session.ping(&b""[..]).await.is_err() {
     ///     // session is closed
     /// }
     /// # }
     /// ```
-    pub async fn ping(&mut self, msg: &[u8]) -> Result<(), Closed> {
+    pub async fn ping(&mut self, msg: impl Into<Bytes>) -> Result<(), Closed> {
         self.pre_check();
         if let Some(inner) = self.inner.as_mut() {
             inner
-                .send(Message::Ping(Bytes::copy_from_slice(msg)))
+                .send(Message::Ping(msg.into()))
                 .await
                 .map_err(|_| Closed)
         } else {
@@ -122,16 +122,16 @@ impl Session {
     /// # async fn test(mut session: Session, msg: Message) {
     /// match msg {
     ///     Message::Ping(bytes) => {
-    ///         let _ = session.pong(&bytes).await;
+    ///         let _ = session.pong(bytes).await;
     ///     }
     ///     _ => (),
     /// }
     /// # }
-    pub async fn pong(&mut self, msg: &[u8]) -> Result<(), Closed> {
+    pub async fn pong(&mut self, msg: impl Into<Bytes>) -> Result<(), Closed> {
         self.pre_check();
         if let Some(inner) = self.inner.as_mut() {
             inner
-                .send(Message::Pong(Bytes::copy_from_slice(msg)))
+                .send(Message::Pong(msg.into()))
                 .await
                 .map_err(|_| Closed)
         } else {
