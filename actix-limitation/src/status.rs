@@ -16,7 +16,7 @@ impl Status {
     /// Constructs status limit status from parts.
     #[must_use]
     pub(crate) fn new(count: usize, limit: usize, reset_epoch_utc: usize) -> Self {
-        let remaining = if count >= limit { 0 } else { limit - count };
+        let remaining = limit.saturating_sub(count);
 
         Status {
             limit,
