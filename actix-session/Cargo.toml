@@ -25,6 +25,10 @@ redis-session-native-tls = ["redis-session", "redis/tokio-native-tls-comp"]
 redis-session-rustls = ["redis-session", "redis/tokio-rustls-comp"]
 redis-pool = ["dep:deadpool-redis"]
 
+context = []
+juniper = ["context"]
+
+
 [dependencies]
 actix-service = "2"
 actix-utils = "3"
@@ -40,6 +44,10 @@ tracing = { version = "0.1.30", default-features = false, features = ["log"] }
 # redis-session
 redis = { version = "0.27", default-features = false, features = ["tokio-comp", "connection-manager"], optional = true }
 deadpool-redis = { version = "0.18", optional = true }
+
+# Context
+juniper = { version = "0.16.1", default-features = false }
+
 
 [dev-dependencies]
 actix-session = { path = ".", features = ["cookie-session", "redis-session"] }
