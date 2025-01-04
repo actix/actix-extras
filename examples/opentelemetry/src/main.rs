@@ -25,18 +25,16 @@ fn init_telemetry() {
     // Start a new otlp trace pipeline.
     // Spans are exported in batch - recommended setup for a production application.
     global::set_text_map_propagator(TraceContextPropagator::new());
-    let tracer = opentelemetry_otlp::new_pipeline()
-        .tracing()
-        .with_exporter(
-            opentelemetry_otlp::new_exporter()
-                .tonic()
-                .with_endpoint("http://localhost:4317"),
-        )
-        .with_trace_config(Config::default().with_resource(RESOURCE.clone()))
-        .install_batch(TokioCurrentThread)
-        .expect("Failed to install OpenTelemetry tracer.")
-        .tracer_builder(APP_NAME)
+    let otlp_exporter = opentelemetry_otlp::SpanExporter::builder()
+        .with_tonic()
+        .with_endpoint("http://localhost:4317")
+        .build()
+        .expect("Failed to build the span exporter");
+    let provider = opentelemetry_sdk::trace::TracerProvider::builder()
+        .with_batch_exporter(otlp_exporter, TokioCurrentThread)
+        .with_config(Config::default().with_resource(RESOURCE.clone()))
         .build();
+    let tracer = provider.tracer(APP_NAME);
 
     // Filter based on level - trace, debug, info, warn, error
     // Tunable via `RUST_LOG` env variable

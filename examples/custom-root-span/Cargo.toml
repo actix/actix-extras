@@ -12,8 +12,8 @@ opentelemetry = "0.27"
 opentelemetry-otlp = "0.27"
 opentelemetry_sdk = { version = "0.27", features = ["rt-tokio-current-thread"] }
 opentelemetry-semantic-conventions = "0.27"
-tracing-opentelemetry = { version = "0.28" }
+tracing-opentelemetry = "0.28"
 tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["registry", "env-filter"] }
-tracing-bunyan-formatter = "0.3"
 tracing-actix-web = { path = "../..", features = ["opentelemetry_0_27"] }
+tracing-bunyan-formatter = "0.3"
+tracing-subscriber = { version = "0.3", features = ["registry", "env-filter"] }
