@@ -43,7 +43,7 @@ impl<'de> de::Deserialize<'de> for Backlog {
     {
         struct BacklogVisitor;
 
-        impl<'de> de::Visitor<'de> for BacklogVisitor {
+        impl de::Visitor<'_> for BacklogVisitor {
             type Value = Backlog;
 
             fn expecting(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

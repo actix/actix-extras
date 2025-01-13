@@ -72,6 +72,7 @@ test-docs:
 # Document crates in workspace.
 [group("docs")]
 doc *args: && doc-set-workspace-crates
+    rm -f "$(cargo metadata --format-version=1 | jq -r '.target_directory')/doc/crates.js"
     RUSTDOCFLAGS="--cfg=docsrs -Dwarnings" cargo +nightly doc --workspace --all-features {{ args }}
 
 [group("docs")]
@@ -79,7 +80,7 @@ doc *args: && doc-set-workspace-crates
 doc-set-workspace-crates:
     #!/usr/bin/env bash
     (
-        echo "window.ALL_CRATES ="
+        echo "window.ALL_CRATES = "
         cargo metadata --format-version=1 \
         | jq '[.packages[] | select(.source == null) | .targets | map(select(.doc) | .name)] | flatten'
         echo ";"

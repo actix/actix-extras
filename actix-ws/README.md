@@ -25,7 +25,7 @@ async fn ws(req: HttpRequest, body: web::Payload) -> actix_web::Result<impl Resp
     let (response, mut session, mut msg_stream) = actix_ws::handle(&req, body)?;
 
     actix_web::rt::spawn(async move {
-        while let Some(Ok(msg)) = msg_stream.next().await {
+        while let Some(Ok(msg)) = msg_stream.recv().await {
             match msg {
                 Message::Ping(bytes) => {
                     if session.pong(&bytes).await.is_err() {

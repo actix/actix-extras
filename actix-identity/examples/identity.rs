@@ -13,10 +13,10 @@
 //! http -v --session=identity GET localhost:8080/
 //! ```
 
-use std::io;
+use std::{io, time::Duration};
 
 use actix_identity::{Identity, IdentityMiddleware};
-use actix_session::{storage::CookieSessionStore, SessionMiddleware};
+use actix_session::{config::PersistentSession, storage::CookieSessionStore, SessionMiddleware};
 use actix_web::{
     cookie::Key, get, middleware::Logger, post, App, HttpMessage, HttpRequest, HttpResponse,
     HttpServer, Responder,
@@ -28,16 +28,25 @@ async fn main() -> io::Result<()> {
 
     let secret_key = Key::generate();
 
+    let expiration = Duration::from_secs(24 * 60 * 60);
+
     HttpServer::new(move || {
         let session_mw =
             SessionMiddleware::builder(CookieSessionStore::default(), secret_key.clone())
                 // disable secure cookie for local testing
                 .cookie_secure(false)
+                // Set a ttl for the cookie if the identity should live longer than the user session
+                .session_lifecycle(
+                    PersistentSession::default().session_ttl(expiration.try_into().unwrap()),
+                )
                 .build();
+        let identity_mw = IdentityMiddleware::builder()
+            .visit_deadline(Some(expiration))
+            .build();
 
         App::new()
             // Install the identity framework first.
-            .wrap(IdentityMiddleware::default())
+            .wrap(identity_mw)
             // The identity system is built on top of sessions. You must install the session
             // middleware to leverage `actix-identity`. The session middleware must be mounted
             // AFTER the identity middleware: `actix-web` invokes middleware in the OPPOSITE

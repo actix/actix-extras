@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Implement `PartialEq` for `Cors` allowing for better testing. [#486]
+
 ## 0.7.0
 
 - `Cors` is now marked `#[must_use]`.

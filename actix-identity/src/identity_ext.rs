@@ -20,7 +20,7 @@ impl IdentityExt for ServiceRequest {
     }
 }
 
-impl<'a> IdentityExt for GuardContext<'a> {
+impl IdentityExt for GuardContext<'_> {
     fn get_identity(&self) -> Result<Identity, GetIdentityError> {
         Identity::extract(&self.req_data())
     }
