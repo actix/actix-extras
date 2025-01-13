@@ -608,6 +608,19 @@ where
         .unwrap()
 }
 
+impl PartialEq for Cors {
+    fn eq(&self, other: &Self) -> bool {
+        self.inner == other.inner
+        // Because of the cors-function, checking if the content is equal implies that the errors are equal
+        //
+        // Proof by contradiction:
+        // Lets assume that the inner values are equal, but the error values are not.
+        // This means there had been an error, which has been fixed.
+        // This cannot happen as the first call to set the invalid value means that further usages of the cors-function will reject other input.
+        // => inner has to be in a different state
+    }
+}
+
 #[cfg(test)]
 mod test {
     use std::convert::Infallible;
@@ -678,5 +691,12 @@ mod test {
         });
 
         Cors::default().new_transform(srv).await.unwrap();
+    }
+
+    #[test]
+    fn impl_eq() {
+        assert_eq!(Cors::default(), Cors::default());
+        assert_ne!(Cors::default().send_wildcard(), Cors::default());
+        assert_ne!(Cors::default(), Cors::permissive());
     }
 }

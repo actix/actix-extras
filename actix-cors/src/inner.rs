@@ -27,6 +27,12 @@ impl Default for OriginFn {
     }
 }
 
+impl PartialEq for OriginFn {
+    fn eq(&self, other: &Self) -> bool {
+        Rc::ptr_eq(&self.boxed_fn, &other.boxed_fn)
+    }
+}
+
 impl fmt::Debug for OriginFn {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str("origin_fn")
@@ -40,7 +46,7 @@ pub(crate) fn header_value_try_into_method(hdr: &HeaderValue) -> Option<Method> 
         .and_then(|meth| Method::try_from(meth).ok())
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub(crate) struct Inner {
     pub(crate) allowed_origins: AllOrSome<HashSet<HeaderValue>>,
     pub(crate) allowed_origins_fns: SmallVec<[OriginFn; 4]>,
