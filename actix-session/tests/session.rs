@@ -114,11 +114,11 @@ async fn update_session() {
 async fn update_or_session() {
     let session = test::TestRequest::default().to_srv_request().get_session();
 
-    session.update_or("test_val", |c: u32| c + 1, 1).unwrap();
+    session.update_or("test_val", 1, |c: u32| c + 1).unwrap();
     assert_eq!(session.status(), SessionStatus::Changed);
     assert_eq!(session.get("test_val").unwrap(), Some(1));
 
-    session.update_or("test_val", |c: u32| c + 1, 1).unwrap();
+    session.update_or("test_val", 1, |c: u32| c + 1).unwrap();
     assert_eq!(session.get("test_val").unwrap(), Some(2));
 }
 

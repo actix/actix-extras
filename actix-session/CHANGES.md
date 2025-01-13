@@ -2,9 +2,8 @@
 
 ## Unreleased
 
-- Add `session.update(key, updater)`
-- Add `session.update_or(key, updater, default_value)`
-- Add `session.contains_key(key)`
+- Add `Session::contains_key` method.
+- Add `Session::update[_or]()` methods.
 
 ## 0.10.1
 

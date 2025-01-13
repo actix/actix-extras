@@ -99,9 +99,7 @@ impl Session {
         }
     }
 
-    /// Check if a key exists on the session.
-    ///
-    /// It returns true if the session contains a vaue for the specified key.
+    /// Returns `true` if the session contains a value for the specified `key`.
     pub fn contains_key(&self, key: &str) -> bool {
         self.0.borrow().state.contains_key(key)
     }
@@ -141,9 +139,8 @@ impl Session {
                 .with_context(|| {
                     format!(
                         "Failed to serialize the provided `{}` type instance as JSON in order to \
-                        attach as session data to the `{}` key",
+                        attach as session data to the `{key}` key",
                         std::any::type_name::<T>(),
-                        &key
                     )
                 })
                 .map_err(SessionInsertError)?;
@@ -156,14 +153,15 @@ impl Session {
 
     /// Updates a key-value pair into the session.
     ///
-    /// If the key exists then update it to the new value and place it back in.
+    /// If the key exists then update it to the new value and place it back in. If the key does not
+    /// exist it will not be updated.
     ///
-    /// If the key does not exist it will not be updated.
+    /// Any serializable value can be used and will be encoded as JSON in the session data, hence
+    /// why only a reference to the value is taken.
     ///
-    /// Any serializable value can be used and will be encoded as JSON in session data, hence why
-    /// only a reference to the value is taken.
+    /// # Errors
     ///
-    /// It returns an error if it fails to serialize `value` to JSON.
+    /// Returns an error if serialization of `value` to JSON fails.
     pub fn update<T: Serialize + DeserializeOwned, F>(
         &self,
         key: impl Into<String>,
@@ -180,8 +178,7 @@ impl Session {
                 .with_context(|| {
                     format!(
                         "Failed to deserialize the JSON-encoded session data attached to key \
-                        `{}` as a `{}` type",
-                        key_str,
+                        `{key_str}` as a `{}` type",
                         std::any::type_name::<T>()
                     )
                 })
@@ -191,9 +188,8 @@ impl Session {
                 .with_context(|| {
                     format!(
                         "Failed to serialize the provided `{}` type instance as JSON in order to \
-                        attach as session data to the `{}` key",
+                        attach as session data to the `{key_str}` key",
                         std::any::type_name::<T>(),
-                        key_str
                     )
                 })
                 .map_err(SessionUpdateError)?;
@@ -206,19 +202,20 @@ impl Session {
 
     /// Updates a key-value pair into the session, or inserts a default value.
     ///
-    /// If the key exists then update it to the new value and place it back in.
-    ///
-    /// If the key does not exist the default value will be inserted instead.
+    /// If the key exists then update it to the new value and place it back in. If the key does not
+    /// exist the default value will be inserted instead.
     ///
     /// Any serializable value can be used and will be encoded as JSON in session data, hence why
     /// only a reference to the value is taken.
     ///
-    /// It returns an error if it fails to serialize `value` to JSON.
+    /// # Errors
+    ///
+    /// Returns error if serialization of `value` to JSON fails.
     pub fn update_or<T: Serialize + DeserializeOwned, F>(
         &self,
         key: &str,
-        updater: F,
         default_value: T,
+        updater: F,
     ) -> Result<(), SessionUpdateError>
     where
         F: FnOnce(T) -> T,
@@ -227,7 +224,7 @@ impl Session {
             self.update(key, updater)
         } else {
             self.insert(key, default_value)
-                .map_err(|e| SessionUpdateError(e.into()))
+                .map_err(|err| SessionUpdateError(err.into()))
         }
     }
 
@@ -394,11 +391,6 @@ impl ResponseError for SessionGetError {
 #[display("{_0}")]
 pub struct SessionInsertError(anyhow::Error);
 
-/// Error returned by [`Session::update`].
-#[derive(Debug, Display, From)]
-#[display("{_0}")]
-pub struct SessionUpdateError(anyhow::Error);
-
 impl StdError for SessionInsertError {
     fn source(&self) -> Option<&(dyn StdError + 'static)> {
         Some(self.0.as_ref())
@@ -406,6 +398,23 @@ impl StdError for SessionInsertError {
 }
 
 impl ResponseError for SessionInsertError {
+    fn error_response(&self) -> HttpResponse<BoxBody> {
+        HttpResponse::new(self.status_code())
+    }
+}
+
+/// Error returned by [`Session::update`].
+#[derive(Debug, Display, From)]
+#[display("{_0}")]
+pub struct SessionUpdateError(anyhow::Error);
+
+impl StdError for SessionUpdateError {
+    fn source(&self) -> Option<&(dyn StdError + 'static)> {
+        Some(self.0.as_ref())
+    }
+}
+
+impl ResponseError for SessionUpdateError {
     fn error_response(&self) -> HttpResponse<BoxBody> {
         HttpResponse::new(self.status_code())
     }
