@@ -32,8 +32,9 @@ use serde::{de::DeserializeOwned, Serialize};
 ///     } else {
 ///         session.insert("counter", 1)?;
 ///     }
-///     // Or use the shorthand
-///     session.update_or("counter", |count: i32| count + 1, 1);
+///
+///     // or use the shorthand
+///     session.update_or("counter", 1, |count: i32| count + 1);
 ///
 ///     Ok("Welcome!")
 /// }

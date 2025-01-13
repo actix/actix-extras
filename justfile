@@ -43,6 +43,7 @@ update-readmes:
 [group("test")]
 test:
     cargo {{ toolchain }} nextest run --workspace --all-features
+    cargo {{ toolchain }} test --doc --workspace --all-features
 
 # Test workspace code and docs.
 [group("test")]
