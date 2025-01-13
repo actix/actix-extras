@@ -121,7 +121,9 @@ impl Session {
     /// Any serializable value can be used and will be encoded as JSON in session data, hence why
     /// only a reference to the value is taken.
     ///
-    /// It returns an error if it fails to serialize `value` to JSON.
+    /// # Errors
+    ///
+    /// Returns an error if JSON serialization of `value` fails.
     pub fn insert<T: Serialize>(
         &self,
         key: impl Into<String>,
@@ -161,7 +163,7 @@ impl Session {
     ///
     /// # Errors
     ///
-    /// Returns an error if serialization of `value` to JSON fails.
+    /// Returns an error if JSON serialization of the value fails.
     pub fn update<T: Serialize + DeserializeOwned, F>(
         &self,
         key: impl Into<String>,
@@ -210,7 +212,7 @@ impl Session {
     ///
     /// # Errors
     ///
-    /// Returns error if serialization of `value` to JSON fails.
+    /// Returns error if JSON serialization of a value fails.
     pub fn update_or<T: Serialize + DeserializeOwned, F>(
         &self,
         key: &str,
