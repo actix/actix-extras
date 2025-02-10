@@ -31,7 +31,7 @@ actix-utils = "3"
 actix-web = { version = "4", default-features = false, features = ["cookies", "secure-cookies"] }
 
 anyhow = "1"
-derive_more = { version = "1", features = ["display", "error", "from"] }
+derive_more = { version = "2", features = ["display", "error", "from"] }
 rand = "0.8"
 serde = { version = "1" }
 serde_json = { version = "1" }
