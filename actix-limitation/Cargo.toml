@@ -26,7 +26,7 @@ actix-utils = "3"
 actix-web = { version = "4", default-features = false, features = ["cookies"] }
 
 chrono = "0.4"
-derive_more = { version = "1", features = ["display", "error", "from"] }
+derive_more = { version = "2", features = ["display", "error", "from"] }
 log = "0.4"
 redis = { version = "0.27", default-features = false, features = ["tokio-comp"] }
 time = "0.3"
