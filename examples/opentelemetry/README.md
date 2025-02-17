@@ -6,7 +6,7 @@ To execute this example you need a running Jaeger instance.
 You can launch one using Docker:
 
 ```bash
-docker run -d -p6831:6831/udp -p6832:6832/udp -p16686:16686 jaegertracing/all-in-one:latest
+docker run -d -p6831:6831/udp -p6832:6832/udp -p16686:16686 -p4317:4317 jaegertracing/all-in-one:latest
 ```
 
 ## Running
