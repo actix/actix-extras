@@ -2,9 +2,7 @@ use actix_web::{web, App, HttpServer};
 use opentelemetry::trace::TracerProvider;
 use opentelemetry::{global, KeyValue};
 use opentelemetry_otlp::WithExportConfig;
-use opentelemetry_sdk::{
-    propagation::TraceContextPropagator, runtime::TokioCurrentThread, trace::Config, Resource,
-};
+use opentelemetry_sdk::{propagation::TraceContextPropagator, Resource};
 use opentelemetry_semantic_conventions::resource;
 use std::io;
 use std::sync::LazyLock;
@@ -14,14 +12,17 @@ use tracing_subscriber::{layer::SubscriberExt, EnvFilter, Registry};
 
 const APP_NAME: &str = "tracing-actix-web-demo";
 
-static RESOURCE: LazyLock<Resource> =
-    LazyLock::new(|| Resource::new(vec![KeyValue::new(resource::SERVICE_NAME, APP_NAME)]));
+static RESOURCE: LazyLock<Resource> = LazyLock::new(|| {
+    Resource::builder()
+        .with_attribute(KeyValue::new(resource::SERVICE_NAME, APP_NAME))
+        .build()
+});
 
 async fn hello() -> &'static str {
     "Hello world!"
 }
 
-fn init_telemetry() {
+fn init_telemetry() -> opentelemetry_sdk::trace::SdkTracerProvider {
     // Start a new otlp trace pipeline.
     // Spans are exported in batch - recommended setup for a production application.
     global::set_text_map_propagator(TraceContextPropagator::new());
@@ -30,9 +31,9 @@ fn init_telemetry() {
         .with_endpoint("http://localhost:4317")
         .build()
         .expect("Failed to build the span exporter");
-    let provider = opentelemetry_sdk::trace::TracerProvider::builder()
-        .with_batch_exporter(otlp_exporter, TokioCurrentThread)
-        .with_config(Config::default().with_resource(RESOURCE.clone()))
+    let provider = opentelemetry_sdk::trace::SdkTracerProvider::builder()
+        .with_batch_exporter(otlp_exporter)
+        .with_resource(RESOURCE.clone())
         .build();
     let tracer = provider.tracer(APP_NAME);
 
@@ -49,13 +50,16 @@ fn init_telemetry() {
         .with(telemetry)
         .with(JsonStorageLayer)
         .with(formatting_layer);
+
     tracing::subscriber::set_global_default(subscriber)
-        .expect("Failed to install `tracing` subscriber.")
+        .expect("Failed to install `tracing` subscriber.");
+
+    provider
 }
 
 #[actix_web::main]
 async fn main() -> io::Result<()> {
-    init_telemetry();
+    let provider = init_telemetry();
 
     HttpServer::new(move || {
         App::new()
@@ -67,7 +71,9 @@ async fn main() -> io::Result<()> {
     .await?;
 
     // Ensure all spans have been shipped to Jaeger.
-    opentelemetry::global::shutdown_tracer_provider();
+    provider
+        .shutdown()
+        .expect("Failed to close tracer provider");
 
     Ok(())
 }
