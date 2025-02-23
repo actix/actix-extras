@@ -45,6 +45,15 @@ test:
     cargo {{ toolchain }} nextest run --workspace --all-features
     cargo {{ toolchain }} test --doc --workspace --all-features
 
+# Downgrade dev-dependencies necessary to run MSRV checks/tests.
+[private]
+downgrade-for-msrv:
+    cargo update -p=native-tls --precise=0.2.13
+
+# Test workspace using MSRV.
+[group("test")]
+test-msrv: downgrade-for-msrv (test msrv_rustup)
+
 # Test workspace code and docs.
 [group("test")]
 test-all: test test-docs
