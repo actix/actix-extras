@@ -52,7 +52,9 @@ downgrade-for-msrv:
 
 # Test workspace using MSRV.
 [group("test")]
-test-msrv: downgrade-for-msrv (test msrv_rustup)
+test-msrv:
+    @just downgrade-for-msrv
+    @just toolchain={{ msrv_rustup }} test
 
 # Test workspace code and docs.
 [group("test")]
