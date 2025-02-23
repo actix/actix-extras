@@ -32,7 +32,7 @@ actix-web = { version = "4", default-features = false, features = ["cookies", "s
 
 anyhow = "1"
 derive_more = { version = "2", features = ["display", "error", "from"] }
-rand = "0.8"
+rand = "0.9"
 serde = { version = "1" }
 serde_json = { version = "1" }
 tracing = { version = "0.1.30", default-features = false, features = ["log"] }
