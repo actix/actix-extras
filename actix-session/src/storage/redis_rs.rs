@@ -205,7 +205,6 @@ impl SessionStore for RedisSessionStore {
         let value: Option<String> = self
             .execute_command(redis::cmd("GET").arg(&[&cache_key]))
             .await
-            .map_err(Into::into)
             .map_err(LoadError::Other)?;
 
         match value {
@@ -240,7 +239,6 @@ impl SessionStore for RedisSessionStore {
                 ),
         )
         .await
-        .map_err(Into::into)
         .map_err(SaveError::Other)?;
 
         Ok(session_key)
@@ -267,7 +265,6 @@ impl SessionStore for RedisSessionStore {
                 &format!("{}", ttl.whole_seconds()),
             ]))
             .await
-            .map_err(Into::into)
             .map_err(UpdateError::Other)?;
 
         match v {
@@ -318,7 +315,6 @@ impl SessionStore for RedisSessionStore {
 
         self.execute_command::<()>(redis::cmd("DEL").arg(&[&cache_key]))
             .await
-            .map_err(Into::into)
             .map_err(UpdateError::Other)?;
 
         Ok(())
