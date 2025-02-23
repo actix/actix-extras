@@ -48,15 +48,14 @@ jobs:
         with:
           toolchain: ${{ matrix.version.version }}
 
-      - name: Install cargo-hack and cargo-ci-cache-clean
+      - name: Install cargo-hack and cargo-ci-cache-clean, just
         uses: taiki-e/install-action@v2.47.32
         with:
-          tool: cargo-hack,cargo-ci-cache-clean
+          tool: cargo-hack,cargo-ci-cache-clean,just
 
-      # - name: workaround MSRV issues
-      #   if: matrix.version.name == 'msrv'
-      #   run: |
-      #     cargo update -p=time:0.3.20 --precise=0.3.16
+      - name: workaround MSRV issues
+        if: matrix.version.name == 'msrv'
+        run: just downgrade-for-msrv
 
       - name: check minimal
         run: cargo ci-min
@@ -106,15 +105,14 @@ jobs:
         with:
           toolchain: ${{ matrix.version.version }}
 
-      - name: Install cargo-hack, cargo-ci-cache-clean
+      - name: Install cargo-hack, cargo-ci-cache-clean, just
         uses: taiki-e/install-action@v2.47.32
         with:
-          tool: cargo-hack,cargo-ci-cache-clean
+          tool: cargo-hack,cargo-ci-cache-clean,just
 
-      # - name: workaround MSRV issues
-      #   if: matrix.version.name == 'msrv'
-      #   run: |
-      #     cargo update -p=time:0.3.20 --precise=0.3.16
+      - name: workaround MSRV issues
+        if: matrix.version.name == 'msrv'
+        run: just downgrade-for-msrv
 
       - name: check minimal
         run: cargo ci-min
