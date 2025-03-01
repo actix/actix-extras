@@ -49,6 +49,8 @@ test:
 [private]
 downgrade-for-msrv:
     cargo update -p=native-tls --precise=0.2.13
+    cargo update -p=litemap --precise=0.7.4
+    cargo update -p=zerofrom --precise=0.1.5
 
 # Test workspace using MSRV.
 [group("test")]
