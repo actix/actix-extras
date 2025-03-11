@@ -2,7 +2,9 @@
 
 ## Unreleased
 
-- Implement `PartialEq` for `Cors` allowing for better testing. [#486]
+## 0.7.1
+
+- Implement `PartialEq` for `Cors` allowing for better testing.
 
 ## 0.7.0
 
