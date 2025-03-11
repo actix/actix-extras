@@ -4,7 +4,7 @@
 
 - Add `Session::contains_key` method.
 - Add `Session::update[_or]()` methods.
-- Update `redis` dependency to `0.28`.
+- Update `redis` dependency to `0.29`.
 
 ## 0.10.1
 
