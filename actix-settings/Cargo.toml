@@ -23,7 +23,7 @@ actix-http = "3"
 actix-service = "2"
 actix-web = { version = "4", default-features = false }
 derive_more = { version = "2", features = ["display", "error"] }
-once_cell = "1.13"
+once_cell = "1.21"
 openssl = { version = "0.10", features = ["v110"], optional = true }
 regex = "1.5"
 serde = { version = "1", features = ["derive"] }
