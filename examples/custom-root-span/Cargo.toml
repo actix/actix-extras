@@ -8,12 +8,12 @@ edition = "2021"
 
 [dependencies]
 actix-web = "4"
-opentelemetry = "0.28"
-opentelemetry-otlp = { version = "0.28", features = ["grpc-tonic"] }
-opentelemetry_sdk = { version = "0.28", features = ["rt-tokio-current-thread"] }
-opentelemetry-semantic-conventions = "0.28"
-tracing-opentelemetry = "0.29"
+opentelemetry = "0.29"
+opentelemetry-otlp = { version = "0.29", features = ["grpc-tonic"] }
+opentelemetry_sdk = { version = "0.29", features = ["rt-tokio-current-thread"] }
+opentelemetry-semantic-conventions = "0.29"
+tracing-opentelemetry = "0.30"
 tracing = "0.1"
-tracing-actix-web = { path = "../..", features = ["opentelemetry_0_28"] }
+tracing-actix-web = { path = "../..", features = ["opentelemetry_0_29"] }
 tracing-bunyan-formatter = "0.3"
 tracing-subscriber = { version = "0.3", features = ["registry", "env-filter"] }
