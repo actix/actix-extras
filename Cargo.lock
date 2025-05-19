@@ -127,7 +127,7 @@ dependencies = [
  "chrono",
  "derive_more",
  "log",
- "redis",
+ "redis 0.29.5",
  "static_assertions",
  "time",
  "uuid",
@@ -219,7 +219,7 @@ dependencies = [
  "deadpool-redis",
  "derive_more",
  "rand 0.9.0",
- "redis",
+ "redis 0.29.5",
  "serde",
  "serde_json",
  "tracing",
@@ -852,12 +852,12 @@ dependencies = [
 
 [[package]]
 name = "deadpool-redis"
-version = "0.20.0"
+version = "0.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c136f185b3ca9d1f4e4e19c11570e1002f4bfdd592d589053e225716d613851f"
+checksum = "b46e5b9e5b5e7d563ac3dfbf100d30139514961dc022fc44efbfbf7a8ee7dfce"
 dependencies = [
  "deadpool",
- "redis",
+ "redis 0.31.0",
 ]
 
 [[package]]
@@ -2019,6 +2019,27 @@ dependencies = [
  "tokio",
  "tokio-native-tls",
  "tokio-rustls",
+ "tokio-util",
+ "url",
+]
+
+[[package]]
+name = "redis"
+version = "0.31.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0bc1ea653e0b2e097db3ebb5b7f678be339620b8041f66b30a308c1d45d36a7f"
+dependencies = [
+ "bytes",
+ "cfg-if",
+ "combine",
+ "futures-util",
+ "itoa",
+ "num-bigint",
+ "percent-encoding",
+ "pin-project-lite",
+ "ryu",
+ "socket2",
+ "tokio",
  "tokio-util",
  "url",
 ]
