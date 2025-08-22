@@ -6,7 +6,7 @@
 
 [![crates.io](https://img.shields.io/crates/v/actix-ws?label=latest)](https://crates.io/crates/actix-ws)
 [![Documentation](https://docs.rs/actix-ws/badge.svg?version=0.3.0)](https://docs.rs/actix-ws/0.3.0)
-![Version](https://img.shields.io/badge/rustc-1.75+-ab6000.svg)
+![Version](https://img.shields.io/badge/rustc-1.80+-ab6000.svg)
 ![MIT or Apache 2.0 licensed](https://img.shields.io/crates/l/actix-ws.svg)
 <br />
 [![Dependency Status](https://deps.rs/crate/actix-ws/0.3.0/status.svg)](https://deps.rs/crate/actix-ws/0.3.0)
@@ -62,7 +62,7 @@ async fn main() -> std::io::Result<()> {
 
 - [API Documentation](https://docs.rs/actix-ws)
 - [Example Chat Project](https://github.com/actix/examples/tree/master/websockets/chat-actorless)
-- Minimum Supported Rust Version (MSRV): 1.75
+- Minimum Supported Rust Version (MSRV): 1.80
 
 ## License
 

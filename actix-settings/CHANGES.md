@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Minimum supported Rust version (MSRV) is now 1.80.
+
 ## 0.8.0
 
 - Add `openssl` crate feature for TLS settings using OpenSSL.

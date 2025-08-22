@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Update `redis` dependency to `0.29`.
+- Update `redis` dependency to `0.32`.
 - Update `actix-session` dependency to `0.9`.
 
 ## 0.5.1

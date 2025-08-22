@@ -4,7 +4,8 @@
 
 - Add `Session::contains_key` method.
 - Add `Session::update[_or]()` methods.
-- Update `redis` dependency to `0.29`.
+- Update `redis` dependency to `0.32`.
+- Minimum supported Rust version (MSRV) is now 1.80.
 
 ## 0.10.1
 
