@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Minimum supported Rust version (MSRV) is now 1.80.
+
 ## 0.7.1
 
 - Implement `PartialEq` for `Cors` allowing for better testing.
