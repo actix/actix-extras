@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.9.0
+
 - Fix spelling of `config::LogoutBehavior` type.
 - Fix spelling of `config::IdentityMiddlewareBuilder::logout_behavior()` method.
 - Update `actix-session` dependency to `0.11`.
