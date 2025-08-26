@@ -1,4 +1,4 @@
-//! Configuration options to tune the behaviour of [`IdentityMiddleware`].
+//! Configuration options to tune the behavior of [`IdentityMiddleware`].
 
 use std::time::Duration;
 
@@ -6,7 +6,7 @@ use crate::IdentityMiddleware;
 
 #[derive(Debug, Clone)]
 pub(crate) struct Configuration {
-    pub(crate) on_logout: LogoutBehaviour,
+    pub(crate) on_logout: LogoutBehavior,
     pub(crate) login_deadline: Option<Duration>,
     pub(crate) visit_deadline: Option<Duration>,
     pub(crate) id_key: &'static str,
@@ -17,7 +17,7 @@ pub(crate) struct Configuration {
 impl Default for Configuration {
     fn default() -> Self {
         Self {
-            on_logout: LogoutBehaviour::PurgeSession,
+            on_logout: LogoutBehavior::PurgeSession,
             login_deadline: None,
             visit_deadline: None,
             id_key: "actix_identity.user_id",
@@ -27,23 +27,22 @@ impl Default for Configuration {
     }
 }
 
-/// `LogoutBehaviour` controls what actions are going to be performed when [`Identity::logout`] is
-/// invoked.
+/// Controls what actions are going to be performed when [`Identity::logout`] is invoked.
 ///
 /// [`Identity::logout`]: crate::Identity::logout
 #[derive(Debug, Clone)]
 #[non_exhaustive]
-pub enum LogoutBehaviour {
+pub enum LogoutBehavior {
     /// When [`Identity::logout`](crate::Identity::logout) is called, purge the current session.
     ///
-    /// This behaviour might be desirable when you have stored additional information in the
-    /// session state that are tied to the user's identity and should not be retained after logout.
+    /// This behavior might be desirable when you have stored additional information in the session
+    /// state that are tied to the user's identity and should not be retained after logout.
     PurgeSession,
 
     /// When [`Identity::logout`](crate::Identity::logout) is called, remove the identity
     /// information from the current session state. The session itself is not destroyed.
     ///
-    /// This behaviour might be desirable when you have stored information in the session state that
+    /// This behavior might be desirable when you have stored information in the session state that
     /// is not tied to the user's identity and should be retained after logout.
     DeleteIdentityKeys,
 }
@@ -84,9 +83,9 @@ impl IdentityMiddlewareBuilder {
 
     /// Determines how [`Identity::logout`](crate::Identity::logout) affects the current session.
     ///
-    /// By default, the current session is purged ([`LogoutBehaviour::PurgeSession`]).
-    pub fn logout_behaviour(mut self, logout_behaviour: LogoutBehaviour) -> Self {
-        self.configuration.on_logout = logout_behaviour;
+    /// By default, the current session is purged ([`LogoutBehavior::PurgeSession`]).
+    pub fn logout_behavior(mut self, logout_behavior: LogoutBehavior) -> Self {
+        self.configuration.on_logout = logout_behavior;
         self
     }
 

@@ -468,7 +468,7 @@ impl Cors {
         self
     }
 
-    /// Configures whether requests should be pre-emptively blocked on mismatched origin.
+    /// Configures whether requests should be preemptively blocked on mismatched origin.
     ///
     /// If `true`, a 400 Bad Request is returned immediately when a request fails origin validation.
     ///

@@ -429,7 +429,7 @@ mod tests {
         .await;
 
         let req = actix_web::test::TestRequest::with_uri("/")
-            .append_header(("Authorization", "Basic DontCare"))
+            .append_header(("Authorization", "Basic DoNotCare"))
             .to_request();
 
         let resp = srv.call(req).await.unwrap();

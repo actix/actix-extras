@@ -111,7 +111,7 @@ where
         Box::pin(async move {
             let identity_inner = IdentityInner {
                 session: req.get_session(),
-                logout_behaviour: configuration.on_logout.clone(),
+                logout_behavior: configuration.on_logout.clone(),
                 is_login_deadline_enabled: configuration.login_deadline.is_some(),
                 is_visit_deadline_enabled: configuration.visit_deadline.is_some(),
                 id_key: configuration.id_key,

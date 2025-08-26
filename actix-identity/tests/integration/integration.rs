@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use actix_identity::{config::LogoutBehaviour, IdentityMiddleware};
+use actix_identity::{config::LogoutBehavior, IdentityMiddleware};
 use reqwest::StatusCode;
 
 use crate::{fixtures::user_id, test_app::TestApp};
@@ -112,7 +112,7 @@ async fn logout_works() {
 #[actix_web::test]
 async fn logout_can_avoid_destroying_the_whole_session() {
     let app = TestApp::spawn_with_config(
-        IdentityMiddleware::builder().logout_behaviour(LogoutBehaviour::DeleteIdentityKeys),
+        IdentityMiddleware::builder().logout_behavior(LogoutBehavior::DeleteIdentityKeys),
     );
     let user_id = user_id();
 

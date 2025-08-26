@@ -1,3 +1,33 @@
-version: 0.2
+version: "0.2"
 words:
   - actix
+  - addrs
+  - bytestring
+  - chrono
+  - clippy
+  - codegen
+  - cooldown
+  - deadpool
+  - deque
+  - docsrs
+  - doctests
+  - httpauth
+  - keygen
+  - MSRV
+  - nextest
+  - nocapture
+  - peekable
+  - pipefail
+  - println
+  - prost
+  - rdme
+  - repr
+  - reqwest
+  - RUSTDOCFLAGS
+  - rustls
+  - rustup
+  - serde
+  - smallvec
+  - splitn
+  - subsecs
+  - tinyvec

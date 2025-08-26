@@ -93,7 +93,7 @@ async fn logout(user: Option<Identity>) -> impl Responder {
 
 ## Advanced configuration
 
-By default, `actix-identity` does not automatically log out users. You can change this behaviour by customising the configuration for [`IdentityMiddleware`] via [`IdentityMiddleware::builder`].
+By default, `actix-identity` does not automatically log out users. You can change this behavior by customizing the configuration for [`IdentityMiddleware`] via [`IdentityMiddleware::builder`].
 
 In particular, you can automatically log out users who:
 

@@ -8,7 +8,7 @@ use actix_web::{
 };
 
 use crate::{
-    config::LogoutBehaviour,
+    config::LogoutBehavior,
     error::{
         GetIdentityError, LoginError, LostIdentityError, MissingIdentityError, SessionExpiryError,
     },
@@ -49,11 +49,11 @@ use crate::{
 /// }
 /// ```
 ///
-/// # Extractor Behaviour
+/// # Extractor Behavior
 /// What happens if you try to extract an `Identity` out of a request that does not have a valid
 /// identity attached? The API will return a `401 UNAUTHORIZED` to the caller.
 ///
-/// If you want to customise this behaviour, consider extracting `Option<Identity>` or
+/// If you want to customize this behavior, consider extracting `Option<Identity>` or
 /// `Result<Identity, actix_web::Error>` instead of a bare `Identity`: you will then be fully in
 /// control of the error path.
 ///
@@ -79,7 +79,7 @@ pub struct Identity(IdentityInner);
 #[derive(Clone)]
 pub(crate) struct IdentityInner {
     pub(crate) session: Session,
-    pub(crate) logout_behaviour: LogoutBehaviour,
+    pub(crate) logout_behavior: LogoutBehavior,
     pub(crate) is_login_deadline_enabled: bool,
     pub(crate) is_visit_deadline_enabled: bool,
     pub(crate) id_key: &'static str,
@@ -171,7 +171,7 @@ impl Identity {
     /// After `logout` has been called, the user will no longer be able to access routes that
     /// require a valid [`Identity`].
     ///
-    /// The behaviour on logout is determined by [`IdentityMiddlewareBuilder::logout_behaviour`].
+    /// The behavior on logout is determined by [`IdentityMiddlewareBuilder::logout_behavior`].
     ///
     /// # Examples
     /// ```
@@ -185,13 +185,13 @@ impl Identity {
     /// }
     /// ```
     ///
-    /// [`IdentityMiddlewareBuilder::logout_behaviour`]: crate::config::IdentityMiddlewareBuilder::logout_behaviour
+    /// [`IdentityMiddlewareBuilder::logout_behavior`]: crate::config::IdentityMiddlewareBuilder::logout_behavior
     pub fn logout(self) {
-        match self.0.logout_behaviour {
-            LogoutBehaviour::PurgeSession => {
+        match self.0.logout_behavior {
+            LogoutBehavior::PurgeSession => {
                 self.0.session.purge();
             }
-            LogoutBehaviour::DeleteIdentityKeys => {
+            LogoutBehavior::DeleteIdentityKeys => {
                 self.0.session.remove(self.0.id_key);
                 if self.0.is_login_deadline_enabled {
                     self.0.session.remove(self.0.login_unix_timestamp_key);

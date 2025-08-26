@@ -13,3 +13,7 @@ guide/build/
 .DS_Store
 
 Server.toml
+
+# code coverage
+/lcov.info
+/codecov.json

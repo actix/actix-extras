@@ -1,4 +1,4 @@
-//! Configuration options to tune the behaviour of [`SessionMiddleware`].
+//! Configuration options to tune the behavior of [`SessionMiddleware`].
 
 use actix_web::cookie::{time::Duration, Key, SameSite};
 use derive_more::derive::From;
@@ -344,7 +344,7 @@ impl<Store: SessionStore> SessionMiddlewareBuilder<Store> {
         self
     }
 
-    /// Finalise the builder and return a [`SessionMiddleware`] instance.
+    /// Finalize the builder and return a [`SessionMiddleware`] instance.
     #[must_use]
     pub fn build(self) -> SessionMiddleware<Store> {
         SessionMiddleware::from_parts(self.storage_backend, self.configuration)

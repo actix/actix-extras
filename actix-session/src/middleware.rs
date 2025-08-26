@@ -76,7 +76,7 @@ use crate::{
 /// }
 /// ```
 ///
-/// If you want to customise use [`builder`](Self::builder) instead of [`new`](Self::new):
+/// If you want to customize use [`builder`](Self::builder) instead of [`new`](Self::new):
 ///
 /// ```no_run
 /// use actix_web::{App, cookie::{Key, time}, Error, HttpResponse, HttpServer, web};
@@ -96,7 +96,7 @@ use crate::{
 ///
 ///     HttpServer::new(move || {
 ///         App::new()
-///             // Customise session length!
+///             // Customize session length!
 ///             .wrap(
 ///                 SessionMiddleware::builder(storage.clone(), secret_key.clone())
 ///                     .session_lifecycle(
