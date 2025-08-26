@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Update `actix-session` dependency to `0.11`.
 - Minimum supported Rust version (MSRV) is now 1.80.
 
 ## 0.8.0

@@ -13,7 +13,7 @@ edition.workspace = true
 rust-version.workspace = true
 
 [package.metadata.docs.rs]
-rustdoc-args = ["--cfg", "docsrs"]
+all-features = true
 
 [features]
 openssl = ["dep:openssl", "actix-web/openssl"]

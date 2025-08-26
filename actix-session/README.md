@@ -5,9 +5,9 @@
 <!-- prettier-ignore-start -->
 
 [![crates.io](https://img.shields.io/crates/v/actix-session?label=latest)](https://crates.io/crates/actix-session)
-[![Documentation](https://docs.rs/actix-session/badge.svg?version=0.10.1)](https://docs.rs/actix-session/0.10.1)
+[![Documentation](https://docs.rs/actix-session/badge.svg?version=0.11.1)](https://docs.rs/actix-session/0.11.1)
 ![Apache 2.0 or MIT licensed](https://img.shields.io/crates/l/actix-session)
-[![Dependency Status](https://deps.rs/crate/actix-session/0.10.1/status.svg)](https://deps.rs/crate/actix-session/0.10.1)
+[![Dependency Status](https://deps.rs/crate/actix-session/0.11.1/status.svg)](https://deps.rs/crate/actix-session/0.11.1)
 
 <!-- prettier-ignore-end -->
 
