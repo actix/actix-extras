@@ -87,8 +87,8 @@ where
                             HttpResponse::new(StatusCode::TOO_MANY_REQUESTS).map_into_right_body(),
                         ))
                     }
-                    LimitationError::Client(e) => {
-                        log::error!("Client request failed, redis error: {}", e);
+                    LimitationError::Client(err) => {
+                        log::error!("Client request failed, redis error: {err}");
 
                         Ok(req.into_response(
                             HttpResponse::new(StatusCode::INTERNAL_SERVER_ERROR)

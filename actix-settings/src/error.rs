@@ -116,7 +116,7 @@ impl From<Error> for io::Error {
             Error::IoError(io_error) => io_error,
 
             #[cfg(feature = "openssl")]
-            Error::OpenSSLError(ossl_error) => io::Error::new(io::ErrorKind::Other, ossl_error),
+            Error::OpenSSLError(ossl_error) => io::Error::other(ossl_error),
 
             Error::ParseBoolError(_) => {
                 io::Error::new(io::ErrorKind::InvalidInput, err.to_string())

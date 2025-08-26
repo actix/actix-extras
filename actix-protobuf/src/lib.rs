@@ -143,8 +143,8 @@ where
         ProtoBufMessage::new(req, payload)
             .limit(limit)
             .map(move |res| match res {
-                Err(e) => Err(e.into()),
                 Ok(item) => Ok(ProtoBuf(item)),
+                Err(err) => Err(err.into()),
             })
             .boxed_local()
     }
