@@ -22,7 +22,7 @@ jobs:
         options: --entrypoint redis-server
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1.13.0
