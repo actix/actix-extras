@@ -17,7 +17,7 @@ use actix_web::{
     body::BoxBody,
     dev::Payload,
     error::PayloadError,
-    http::header::{CONTENT_LENGTH, CONTENT_TYPE},
+    http::header::{HeaderMap, CONTENT_LENGTH, CONTENT_TYPE},
     web::BytesMut,
     Error, FromRequest, HttpMessage, HttpRequest, HttpResponse, HttpResponseBuilder, Responder,
     ResponseError,
@@ -75,7 +75,7 @@ impl From<ProtoBufDecodeError> for ProtoBufPayloadError {
     }
 }
 
-pub struct ProtoBuf<T: Message>(pub T);
+pub struct ProtoBuf<T: Message>(pub T, pub HeaderMap);
 
 impl<T: Message> Deref for ProtoBuf<T> {
     type Target = T;
@@ -140,10 +140,12 @@ where
             .app_data::<ProtoBufConfig>()
             .map(|c| c.limit)
             .unwrap_or(262_144);
+        // TODO: Remove clone
+        let headers = req.headers().clone();
         ProtoBufMessage::new(req, payload)
             .limit(limit)
             .map(move |res| match res {
-                Ok(item) => Ok(ProtoBuf(item)),
+                Ok(item) => Ok(ProtoBuf(item, headers)),
                 Err(err) => Err(err.into()),
             })
             .boxed_local()
@@ -304,10 +306,14 @@ mod tests {
 
     #[actix_web::test]
     async fn test_protobuf() {
-        let protobuf = ProtoBuf(MyObject {
-            number: 9,
-            name: "test".to_owned(),
-        });
+        let headers = HeaderMap::new();
+        let protobuf = ProtoBuf(
+            MyObject {
+                number: 9,
+                name: "test".to_owned(),
+            },
+            headers,
+        );
         let req = TestRequest::default().to_http_request();
         let resp = protobuf.respond_to(&req);
         let ct = resp.headers().get(header::CONTENT_TYPE).unwrap();
