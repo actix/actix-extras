@@ -1,6 +1,7 @@
 use std::{
     cell::{Ref, RefCell},
     collections::HashMap,
+    convert::Infallible,
     error::Error as StdError,
     mem,
     rc::Rc,
@@ -10,7 +11,6 @@ use actix_utils::future::{ready, Ready};
 use actix_web::{
     body::BoxBody,
     dev::{Extensions, Payload, ServiceRequest, ServiceResponse},
-    error::Error,
     FromRequest, HttpMessage, HttpRequest, HttpResponse, ResponseError,
 };
 use anyhow::Context;
@@ -363,8 +363,8 @@ impl Session {
 /// }
 /// ```
 impl FromRequest for Session {
-    type Error = Error;
-    type Future = Ready<Result<Session, Error>>;
+    type Error = Infallible;
+    type Future = Ready<Result<Session, Self::Error>>;
 
     #[inline]
     fn from_request(req: &HttpRequest, _: &mut Payload) -> Self::Future {

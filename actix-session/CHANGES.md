@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- `Session` implementation of `FromRequest` now errors with `Infallible` rather than `actix_web::error::Error`.
+
 ## 0.11.0
 
 - Add `Session::contains_key` method.
