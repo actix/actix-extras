@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Minimum supported Rust version (MSRV) is now 1.82.
+
 ## 0.9.0
 
 - Fix spelling of `config::LogoutBehavior` type.

@@ -3,6 +3,7 @@
 ## Unreleased
 
 - `Session` implementation of `FromRequest` now errors with `Infallible` rather than `actix_web::error::Error`.
+- Minimum supported Rust version (MSRV) is now 1.82.
 
 ## 0.11.0
 
