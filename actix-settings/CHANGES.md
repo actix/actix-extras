@@ -5,7 +5,7 @@
 ## 0.9.0
 
 - Update `toml` dependency to `0.9`.
-- Minimum supported Rust version (MSRV) is now 1.80.
+- Minimum supported Rust version (MSRV) is now 1.82.
 
 ## 0.8.0
 

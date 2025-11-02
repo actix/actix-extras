@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Minimum supported Rust version (MSRV) is now 1.80.
+- Minimum supported Rust version (MSRV) is now 1.82.
 
 ## 0.11.0
 
