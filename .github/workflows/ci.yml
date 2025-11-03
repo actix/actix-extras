@@ -57,6 +57,10 @@ jobs:
         if: matrix.version.name == 'msrv'
         run: just downgrade-for-msrv
 
+      - name: deny check
+        if: matrix.version.name == 'stable' && matrix.target.os == 'ubuntu-latest'
+        uses: EmbarkStudios/cargo-deny-action@f2ba7abc2abebaf185c833c3961145a3c275caad # v2.0.13
+
       - name: check minimal
         run: cargo ci-min
 
