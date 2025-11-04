@@ -61,7 +61,7 @@ async fn main() -> std::io::Result<()> {
 ## Resources
 
 - [API Documentation](https://docs.rs/actix-ws)
-- [Example Chat Project](https://github.com/actix/examples/tree/master/websockets/chat-actorless)
+- [Example Chat Project](https://github.com/actix/examples/tree/main/websockets/chat-actorless)
 - Minimum Supported Rust Version (MSRV): 1.82
 
 ## License

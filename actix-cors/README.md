@@ -68,5 +68,5 @@ async fn main() -> std::io::Result<()> {
 ## Documentation & Resources
 
 - [API Documentation](https://docs.rs/actix-cors)
-- [Example Project](https://github.com/actix/examples/tree/master/cors)
+- [Example Project](https://github.com/actix/examples/tree/main/cors)
 - Minimum Supported Rust Version (MSRV): 1.82
