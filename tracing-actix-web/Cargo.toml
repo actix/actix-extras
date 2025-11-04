@@ -10,18 +10,17 @@ members = [
 name = "tracing-actix-web"
 version = "0.7.19"
 authors = ["Luca Palmieri <rust@lpalmieri.com>"]
-edition = "2018"
-
-license = "MIT/Apache-2.0"
-
-repository = "https://github.com/LukeMathWalker/tracing-actix-web"
 documentation = "https://docs.rs/tracing-actix-web/"
 readme = "README.md"
-
 description = "Structured logging middleware for actix-web."
-
 keywords = ["http", "actix-web", "tracing", "logging"]
 categories = ["asynchronous", "web-programming"]
+
+repository.workspace = true
+homepage.workspace = true
+license.workspace = true
+edition.workspace = true
+rust-version.workspace = true
 
 [features]
 default = ["emit_event_on_error"]
