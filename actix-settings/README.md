@@ -27,5 +27,5 @@ Have a look at [the usage example][usage] to see how.
 
 This crate was made possible by support from Accept B.V and [@jjpe].
 
-[usage]: https://github.com/actix/actix-extras/blob/master/actix-settings/examples/actix.rs
+[usage]: https://github.com/actix/actix-extras/blob/main/actix-settings/examples/actix.rs
 [@jjpe]: https://github.com/jjpe

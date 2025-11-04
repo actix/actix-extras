@@ -14,7 +14,7 @@
 ## Documentation & Resources
 
 - [API Documentation](https://docs.rs/actix-protobuf)
-- [Example Project](https://github.com/actix/examples/tree/master/protobuf)
+- [Example Project](https://github.com/actix/examples/tree/main/protobuf)
 - Minimum Supported Rust Version (MSRV): 1.57
 
 ## Example
@@ -38,7 +38,7 @@ async fn index(msg: ProtoBuf<MyObj>) -> Result<HttpResponse> {
 }
 ```
 
-See [here](https://github.com/actix/examples/tree/master/protobuf) for the complete example.
+See [here](https://github.com/actix/examples/tree/main/protobuf) for the complete example.
 
 ## License
 
