@@ -7,9 +7,8 @@ use std::{
 use actix_web::{
     body::{BodySize, MessageBody},
     dev::{Service, ServiceRequest, ServiceResponse, Transform},
-    http::StatusCode,
     web::Bytes,
-    Error, HttpMessage, ResponseError,
+    Error, HttpMessage,
 };
 use tracing::Span;
 
@@ -22,7 +21,7 @@ use crate::{DefaultRootSpanBuilder, RequestId, RootSpan, RootSpanBuilder};
 ///
 /// # Usage
 ///
-/// Register `TracingLogger` as a middleware for your application using `.wrap` on `App`.  
+/// Register `TracingLogger` as a middleware for your application using `.wrap` on `App`.
 /// In this example we add a [`tracing::Subscriber`] to output structured logs to the console.
 ///
 /// ```rust
@@ -241,6 +240,7 @@ where
     }
 }
 
+#[cfg(feature = "emit_event_on_error")]
 fn emit_event_on_error<B: 'static>(outcome: &Result<ServiceResponse<B>, actix_web::Error>) {
     match outcome {
         Ok(response) => {
@@ -256,7 +256,11 @@ fn emit_event_on_error<B: 'static>(outcome: &Result<ServiceResponse<B>, actix_we
     }
 }
 
-fn emit_error_event(response_error: &dyn ResponseError, status_code: StatusCode) {
+#[cfg(feature = "emit_event_on_error")]
+fn emit_error_event(
+    response_error: &dyn actix_web::ResponseError,
+    status_code: actix_web::http::StatusCode,
+) {
     let error_msg_prefix = "Error encountered while processing the incoming HTTP request";
     if status_code.is_client_error() {
         tracing::warn!("{}: {:?}", error_msg_prefix, response_error);
