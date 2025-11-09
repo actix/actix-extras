@@ -47,6 +47,7 @@ jobs:
           - opentelemetry_0_28
           - opentelemetry_0_29
           - opentelemetry_0_30
+          - opentelemetry_0_31
     steps:
       - uses: actions/checkout@v4
       - name: Install Rust
