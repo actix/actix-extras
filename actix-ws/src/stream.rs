@@ -221,7 +221,7 @@ impl Stream for MessageStream {
 
 #[cfg(test)]
 mod tests {
-    use std::future::Future;
+    use std::{future::Future, task::Poll};
 
     use actix_web::web::Bytes;
     use futures_core::Stream;
@@ -268,7 +268,7 @@ mod tests {
                         "Stream should be pending after processing messages"
                     );
 
-                    std::task::Poll::Ready(())
+                    Poll::Ready(())
                 })
                 .await;
             })
@@ -310,7 +310,34 @@ mod tests {
                         "Stream should have only been ready once"
                     );
 
-                    std::task::Poll::Ready(())
+                    Poll::Ready(())
+                })
+                .await;
+            })
+    }
+
+    #[test]
+    fn stream_closes() {
+        tokio::runtime::Builder::new_current_thread()
+            .build()
+            .unwrap()
+            .block_on(async move {
+                std::future::poll_fn(move |cx| {
+                    let (tx, rx) = tokio::sync::mpsc::channel(3);
+
+                    drop(tx);
+                    let stream = StreamingBody::new(rx);
+
+                    let mut stream = std::pin::pin!(stream);
+
+                    let poll = stream.as_mut().poll_next(cx);
+
+                    assert!(
+                        matches!(poll, Poll::Ready(None)),
+                        "stream should close after dropped tx"
+                    );
+
+                    Poll::Ready(())
                 })
                 .await;
             })
