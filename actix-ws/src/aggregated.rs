@@ -332,7 +332,7 @@ mod tests {
             .block_on(async move {
                 std::future::poll_fn(move |cx| {
                     let (tx, rx) = payload_pair(8);
-                drop(tx);
+                    drop(tx);
                     let message_stream = MessageStream::new(rx).aggregate_continuations();
                     let mut stream = std::pin::pin!(message_stream);
 
@@ -343,8 +343,8 @@ mod tests {
                     );
 
                     Poll::Ready(())
-            })
-                    .await
+                })
+                .await
             })
     }
 }
