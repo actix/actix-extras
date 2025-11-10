@@ -214,3 +214,137 @@ fn collect(continuations: &mut Vec<Bytes>) -> Bytes {
 
     buf.freeze()
 }
+
+#[cfg(test)]
+mod tests {
+    use std::{future::Future, task::Poll};
+
+    use futures_core::Stream;
+
+    use super::{Bytes, Item, Message, MessageStream};
+    use crate::stream::tests::payload_pair;
+
+    #[test]
+    fn aggregates_continuations() {
+        tokio::runtime::Builder::new_current_thread()
+            .build()
+            .unwrap()
+            .block_on(async move {
+                std::future::poll_fn(move |cx| {
+                    let (mut tx, rx) = payload_pair(8);
+                    let message_stream = MessageStream::new(rx).aggregate_continuations();
+                    let mut stream = std::pin::pin!(message_stream);
+
+                    let messages = [
+                        Message::Continuation(Item::FirstText(Bytes::from(b"first".to_vec()))),
+                        Message::Continuation(Item::Continue(Bytes::from(b"second".to_vec()))),
+                        Message::Continuation(Item::Last(Bytes::from(b"third".to_vec()))),
+                    ];
+
+                    let len = messages.len();
+
+                    for (idx, msg) in messages.into_iter().enumerate() {
+                        let poll = stream.as_mut().poll_next(cx);
+                        assert!(
+                            poll.is_pending(),
+                            "Stream should be pending when no messages are present {poll:?}"
+                        );
+
+                        let fut = tx.send(msg);
+                        let fut = std::pin::pin!(fut);
+
+                        assert!(fut.poll(cx).is_ready(), "Sending should not yield");
+
+                        if idx == len - 1 {
+                            assert!(
+                                stream.as_mut().poll_next(cx).is_ready(),
+                                "Stream should be ready"
+                            );
+                        } else {
+                            assert!(
+                                stream.as_mut().poll_next(cx).is_pending(),
+                                "Stream shouldn't be ready until continuations complete"
+                            );
+                        }
+                    }
+
+                    assert!(
+                        stream.as_mut().poll_next(cx).is_pending(),
+                        "Stream should be pending after processing messages"
+                    );
+
+                    Poll::Ready(())
+                })
+                .await
+            })
+    }
+
+    #[test]
+    #[ignore]
+    fn aggregates_consecutive_continuations() {
+        tokio::runtime::Builder::new_current_thread()
+            .build()
+            .unwrap()
+            .block_on(async move {
+                std::future::poll_fn(move |cx| {
+                    let (mut tx, rx) = payload_pair(8);
+                    let message_stream = MessageStream::new(rx).aggregate_continuations();
+                    let mut stream = std::pin::pin!(message_stream);
+
+                    let messages = vec![
+                        Message::Continuation(Item::FirstText(Bytes::from(b"first".to_vec()))),
+                        Message::Continuation(Item::Continue(Bytes::from(b"second".to_vec()))),
+                        Message::Continuation(Item::Last(Bytes::from(b"third".to_vec()))),
+                    ];
+
+                    let poll = stream.as_mut().poll_next(cx);
+                    assert!(
+                        poll.is_pending(),
+                        "Stream should be pending when no messages are present {poll:?}"
+                    );
+
+                    let fut = tx.send_many(messages);
+                    let fut = std::pin::pin!(fut);
+
+                    assert!(fut.poll(cx).is_ready(), "Sending should not yield");
+
+                    assert!(
+                        stream.as_mut().poll_next(cx).is_ready(),
+                        "Stream should be ready when all continuations have been sent"
+                    );
+
+                    assert!(
+                        stream.as_mut().poll_next(cx).is_pending(),
+                        "Stream should be pending after processing messages"
+                    );
+
+                    Poll::Ready(())
+                })
+                .await
+            })
+    }
+
+    #[test]
+    fn stream_closes() {
+        tokio::runtime::Builder::new_current_thread()
+            .build()
+            .unwrap()
+            .block_on(async move {
+                std::future::poll_fn(move |cx| {
+                    let (tx, rx) = payload_pair(8);
+                drop(tx);
+                    let message_stream = MessageStream::new(rx).aggregate_continuations();
+                    let mut stream = std::pin::pin!(message_stream);
+
+                    let poll = stream.as_mut().poll_next(cx);
+                    assert!(
+                        matches!(poll, Poll::Ready(None)),
+                        "Stream should be ready when all continuations have been sent"
+                    );
+
+                    Poll::Ready(())
+            })
+                    .await
+            })
+    }
+}
