@@ -220,126 +220,255 @@ impl Stream for MessageStream {
 }
 
 #[cfg(test)]
-mod tests {
-    use std::{future::Future, task::Poll};
+pub(crate) mod tests {
+    use std::{
+        future::Future,
+        pin::Pin,
+        task::{ready, Context, Poll},
+    };
 
-    use actix_web::web::Bytes;
+    use actix_http::error::PayloadError;
     use futures_core::Stream;
+    use tokio::sync::mpsc::{Receiver, Sender};
 
-    use super::{Message, StreamingBody};
+    use super::{Bytes, BytesMut, Codec, Encoder, Message, MessageStream, Payload, StreamingBody};
 
-    #[test]
-    fn stream_produces_bytes_from_messages() {
-        tokio::runtime::Builder::new_current_thread()
-            .build()
-            .unwrap()
-            .block_on(async move {
-                std::future::poll_fn(move |cx| {
-                    let (tx, rx) = tokio::sync::mpsc::channel(1);
+    pub(crate) struct PayloadReceiver {
+        rx: Receiver<Bytes>,
+    }
+    pub(crate) struct PayloadSender {
+        codec: Codec,
+        tx: Sender<Bytes>,
+    }
+    impl PayloadSender {
+        pub(crate) async fn send(&mut self, message: Message) {
+            self.send_many(vec![message]).await
+        }
+        pub(crate) async fn send_many(&mut self, messages: Vec<Message>) {
+            let mut buf = BytesMut::new();
 
-                    let stream = StreamingBody::new(rx);
+            for message in messages {
+                self.codec.encode(message, &mut buf).unwrap();
+            }
 
-                    let messages = [
-                        Message::Binary(Bytes::from(vec![0, 1, 2, 3])),
-                        Message::Ping(Bytes::from(vec![3, 2, 1, 0])),
-                        Message::Close(None),
-                    ];
+            self.tx.send(buf.freeze()).await.unwrap()
+        }
+    }
+    impl Stream for PayloadReceiver {
+        type Item = Result<Bytes, PayloadError>;
 
-                    let mut stream = std::pin::pin!(stream);
+        fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
+            let opt = ready!(self.get_mut().rx.poll_recv(cx));
 
-                    for msg in messages {
-                        assert!(
-                            stream.as_mut().poll_next(cx).is_pending(),
-                            "Stream should be pending when no messages are present"
-                        );
+            Poll::Ready(opt.map(Ok))
+        }
+    }
+    pub(crate) fn payload_pair(capacity: usize) -> (PayloadSender, Payload) {
+        let (tx, rx) = tokio::sync::mpsc::channel(capacity);
 
-                        let fut = tx.send(msg);
-                        let fut = std::pin::pin!(fut);
-
-                        assert!(fut.poll(cx).is_ready(), "Sending should not yield");
-                        assert!(
-                            stream.as_mut().poll_next(cx).is_ready(),
-                            "Stream should be ready"
-                        );
-                    }
-
-                    assert!(
-                        stream.as_mut().poll_next(cx).is_pending(),
-                        "Stream should be pending after processing messages"
-                    );
-
-                    Poll::Ready(())
-                })
-                .await;
-            })
+        (
+            PayloadSender {
+                codec: Codec::new().client_mode(),
+                tx,
+            },
+            Payload::Stream {
+                payload: Box::pin(PayloadReceiver { rx }),
+            },
+        )
     }
 
-    #[test]
-    fn stream_processes_many_consecutive_messages() {
-        tokio::runtime::Builder::new_current_thread()
-            .build()
-            .unwrap()
-            .block_on(async move {
-                std::future::poll_fn(move |cx| {
-                    let (tx, rx) = tokio::sync::mpsc::channel(3);
+    #[tokio::test]
+    async fn message_stream_yields_messages() {
+        std::future::poll_fn(move |cx| {
+            let (mut tx, rx) = payload_pair(8);
+            let message_stream = MessageStream::new(rx);
+            let mut stream = std::pin::pin!(message_stream);
 
-                    let stream = StreamingBody::new(rx);
+            let messages = [
+                Message::Binary(Bytes::from(vec![0, 1, 2, 3])),
+                Message::Ping(Bytes::from(vec![3, 2, 1, 0])),
+                Message::Close(None),
+            ];
 
-                    let messages = [
-                        Message::Binary(Bytes::from(vec![0, 1, 2, 3])),
-                        Message::Ping(Bytes::from(vec![3, 2, 1, 0])),
-                        Message::Close(None),
-                    ];
+            for msg in messages {
+                let poll = stream.as_mut().poll_next(cx);
+                assert!(
+                    poll.is_pending(),
+                    "Stream should be pending when no messages are present {poll:?}"
+                );
 
-                    let mut stream = std::pin::pin!(stream);
+                let fut = tx.send(msg);
+                let fut = std::pin::pin!(fut);
 
-                    assert!(stream.as_mut().poll_next(cx).is_pending());
+                assert!(fut.poll(cx).is_ready(), "Sending should not yield");
+                assert!(
+                    stream.as_mut().poll_next(cx).is_ready(),
+                    "Stream should be ready"
+                );
+            }
 
-                    for msg in messages {
-                        let fut = tx.send(msg);
-                        let fut = std::pin::pin!(fut);
-                        assert!(fut.poll(cx).is_ready(), "Sending should not yield");
-                    }
+            assert!(
+                stream.as_mut().poll_next(cx).is_pending(),
+                "Stream should be pending after processing messages"
+            );
 
-                    assert!(
-                        stream.as_mut().poll_next(cx).is_ready(),
-                        "Stream should be ready"
-                    );
-                    assert!(
-                        stream.as_mut().poll_next(cx).is_pending(),
-                        "Stream should have only been ready once"
-                    );
-
-                    Poll::Ready(())
-                })
-                .await;
-            })
+            Poll::Ready(())
+        })
+        .await
     }
 
-    #[test]
-    fn stream_closes() {
-        tokio::runtime::Builder::new_current_thread()
-            .build()
-            .unwrap()
-            .block_on(async move {
-                std::future::poll_fn(move |cx| {
-                    let (tx, rx) = tokio::sync::mpsc::channel(3);
+    #[tokio::test]
+    async fn message_stream_yields_consecutive_messages() {
+        std::future::poll_fn(move |cx| {
+            let (mut tx, rx) = payload_pair(8);
+            let message_stream = MessageStream::new(rx);
+            let mut stream = std::pin::pin!(message_stream);
 
-                    drop(tx);
-                    let stream = StreamingBody::new(rx);
+            let messages = vec![
+                Message::Binary(Bytes::from(vec![0, 1, 2, 3])),
+                Message::Ping(Bytes::from(vec![3, 2, 1, 0])),
+                Message::Close(None),
+            ];
 
-                    let mut stream = std::pin::pin!(stream);
+            let size = messages.len();
 
-                    let poll = stream.as_mut().poll_next(cx);
+            let fut = tx.send_many(messages);
+            let fut = std::pin::pin!(fut);
+            assert!(fut.poll(cx).is_ready(), "Sending should not yield");
 
-                    assert!(
-                        matches!(poll, Poll::Ready(None)),
-                        "stream should close after dropped tx"
-                    );
+            for _ in 0..size {
+                assert!(
+                    stream.as_mut().poll_next(cx).is_ready(),
+                    "Stream should be ready"
+                );
+            }
 
-                    Poll::Ready(())
-                })
-                .await;
-            })
+            assert!(
+                stream.as_mut().poll_next(cx).is_pending(),
+                "Stream should be pending after processing messages"
+            );
+
+            Poll::Ready(())
+        })
+        .await
+    }
+
+    #[tokio::test]
+    async fn message_stream_closes() {
+        std::future::poll_fn(move |cx| {
+            let (tx, rx) = payload_pair(8);
+            drop(tx);
+            let message_stream = MessageStream::new(rx);
+            let mut stream = std::pin::pin!(message_stream);
+
+            let poll = stream.as_mut().poll_next(cx);
+            assert!(
+                matches!(poll, Poll::Ready(None)),
+                "Stream should be ready when closing {poll:?}"
+            );
+
+            Poll::Ready(())
+        })
+        .await
+    }
+
+    #[tokio::test]
+    async fn stream_produces_bytes_from_messages() {
+        std::future::poll_fn(move |cx| {
+            let (tx, rx) = tokio::sync::mpsc::channel(1);
+
+            let stream = StreamingBody::new(rx);
+
+            let messages = [
+                Message::Binary(Bytes::from(vec![0, 1, 2, 3])),
+                Message::Ping(Bytes::from(vec![3, 2, 1, 0])),
+                Message::Close(None),
+            ];
+
+            let mut stream = std::pin::pin!(stream);
+
+            for msg in messages {
+                assert!(
+                    stream.as_mut().poll_next(cx).is_pending(),
+                    "Stream should be pending when no messages are present"
+                );
+
+                let fut = tx.send(msg);
+                let fut = std::pin::pin!(fut);
+
+                assert!(fut.poll(cx).is_ready(), "Sending should not yield");
+                assert!(
+                    stream.as_mut().poll_next(cx).is_ready(),
+                    "Stream should be ready"
+                );
+            }
+
+            assert!(
+                stream.as_mut().poll_next(cx).is_pending(),
+                "Stream should be pending after processing messages"
+            );
+
+            Poll::Ready(())
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn stream_processes_many_consecutive_messages() {
+        std::future::poll_fn(move |cx| {
+            let (tx, rx) = tokio::sync::mpsc::channel(3);
+
+            let stream = StreamingBody::new(rx);
+
+            let messages = [
+                Message::Binary(Bytes::from(vec![0, 1, 2, 3])),
+                Message::Ping(Bytes::from(vec![3, 2, 1, 0])),
+                Message::Close(None),
+            ];
+
+            let mut stream = std::pin::pin!(stream);
+
+            assert!(stream.as_mut().poll_next(cx).is_pending());
+
+            for msg in messages {
+                let fut = tx.send(msg);
+                let fut = std::pin::pin!(fut);
+                assert!(fut.poll(cx).is_ready(), "Sending should not yield");
+            }
+
+            assert!(
+                stream.as_mut().poll_next(cx).is_ready(),
+                "Stream should be ready"
+            );
+            assert!(
+                stream.as_mut().poll_next(cx).is_pending(),
+                "Stream should have only been ready once"
+            );
+
+            Poll::Ready(())
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn stream_closes() {
+        std::future::poll_fn(move |cx| {
+            let (tx, rx) = tokio::sync::mpsc::channel(3);
+
+            drop(tx);
+            let stream = StreamingBody::new(rx);
+
+            let mut stream = std::pin::pin!(stream);
+
+            let poll = stream.as_mut().poll_next(cx);
+
+            assert!(
+                matches!(poll, Poll::Ready(None)),
+                "stream should close after dropped tx"
+            );
+
+            Poll::Ready(())
+        })
+        .await;
     }
 }
