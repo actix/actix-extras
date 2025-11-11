@@ -1,5 +1,5 @@
 use actix_web::dev::ServiceRequest;
-
+use opentelemetry::propagation::Extractor;
 #[cfg(feature = "opentelemetry_0_13")]
 use opentelemetry_0_13_pkg as opentelemetry;
 #[cfg(feature = "opentelemetry_0_14")]
@@ -36,7 +36,8 @@ use opentelemetry_0_28_pkg as opentelemetry;
 use opentelemetry_0_29_pkg as opentelemetry;
 #[cfg(feature = "opentelemetry_0_30")]
 use opentelemetry_0_30_pkg as opentelemetry;
-
+#[cfg(feature = "opentelemetry_0_31")]
+use opentelemetry_0_31_pkg as opentelemetry;
 #[cfg(feature = "opentelemetry_0_13")]
 use tracing_opentelemetry_0_12_pkg as tracing_opentelemetry;
 #[cfg(feature = "opentelemetry_0_14")]
@@ -73,8 +74,8 @@ use tracing_opentelemetry_0_29_pkg as tracing_opentelemetry;
 use tracing_opentelemetry_0_30_pkg as tracing_opentelemetry;
 #[cfg(feature = "opentelemetry_0_30")]
 use tracing_opentelemetry_0_31_pkg as tracing_opentelemetry;
-
-use opentelemetry::propagation::Extractor;
+#[cfg(feature = "opentelemetry_0_31")]
+use tracing_opentelemetry_0_32_pkg as tracing_opentelemetry;
 
 pub(crate) struct RequestHeaderCarrier<'a> {
     headers: &'a actix_web::http::header::HeaderMap,
@@ -103,7 +104,7 @@ pub(crate) fn set_otel_parent(req: &ServiceRequest, span: &tracing::Span) {
     let parent_context = opentelemetry::global::get_text_map_propagator(|propagator| {
         propagator.extract(&RequestHeaderCarrier::new(req.headers()))
     });
-    span.set_parent(parent_context);
+    let _ = span.set_parent(parent_context);
     // If we have a remote parent span, this will be the parent's trace identifier.
     // If not, it will be the newly generated trace identifier with this request as root span.
     #[cfg(not(any(
@@ -121,6 +122,7 @@ pub(crate) fn set_otel_parent(req: &ServiceRequest, span: &tracing::Span) {
         feature = "opentelemetry_0_28",
         feature = "opentelemetry_0_29",
         feature = "opentelemetry_0_30",
+        feature = "opentelemetry_0_31",
     )))]
     let trace_id = span.context().span().span_context().trace_id().to_hex();
 
@@ -139,6 +141,7 @@ pub(crate) fn set_otel_parent(req: &ServiceRequest, span: &tracing::Span) {
         feature = "opentelemetry_0_28",
         feature = "opentelemetry_0_29",
         feature = "opentelemetry_0_30",
+        feature = "opentelemetry_0_31",
     ))]
     let trace_id = {
         let id = span.context().span().span_context().trace_id();

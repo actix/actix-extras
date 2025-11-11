@@ -1,9 +1,10 @@
+use std::io;
+
 use actix_web::{
     dev::Service,
     http::header::{HeaderName, HeaderValue},
     web, App, HttpMessage, HttpServer,
 };
-use std::io;
 use tracing_actix_web::{RequestId, TracingLogger};
 
 async fn hello() -> &'static str {
