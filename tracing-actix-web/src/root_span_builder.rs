@@ -1,9 +1,12 @@
-use crate::root_span;
-use actix_web::body::MessageBody;
-use actix_web::dev::{ServiceRequest, ServiceResponse};
-use actix_web::http::StatusCode;
-use actix_web::{Error, ResponseError};
+use actix_web::{
+    body::MessageBody,
+    dev::{ServiceRequest, ServiceResponse},
+    http::StatusCode,
+    Error, ResponseError,
+};
 use tracing::Span;
+
+use crate::root_span;
 
 /// `RootSpanBuilder` allows you to customise the root span attached by
 /// [`TracingLogger`] to incoming requests.

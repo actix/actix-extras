@@ -1,5 +1,5 @@
 use actix_web::dev::ServiceRequest;
-
+use opentelemetry::propagation::Extractor;
 #[cfg(feature = "opentelemetry_0_13")]
 use opentelemetry_0_13_pkg as opentelemetry;
 #[cfg(feature = "opentelemetry_0_14")]
@@ -36,7 +36,6 @@ use opentelemetry_0_28_pkg as opentelemetry;
 use opentelemetry_0_29_pkg as opentelemetry;
 #[cfg(feature = "opentelemetry_0_30")]
 use opentelemetry_0_30_pkg as opentelemetry;
-
 #[cfg(feature = "opentelemetry_0_13")]
 use tracing_opentelemetry_0_12_pkg as tracing_opentelemetry;
 #[cfg(feature = "opentelemetry_0_14")]
@@ -73,8 +72,6 @@ use tracing_opentelemetry_0_29_pkg as tracing_opentelemetry;
 use tracing_opentelemetry_0_30_pkg as tracing_opentelemetry;
 #[cfg(feature = "opentelemetry_0_30")]
 use tracing_opentelemetry_0_31_pkg as tracing_opentelemetry;
-
-use opentelemetry::propagation::Extractor;
 
 pub(crate) struct RequestHeaderCarrier<'a> {
     headers: &'a actix_web::http::header::HeaderMap,

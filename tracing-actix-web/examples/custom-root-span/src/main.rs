@@ -1,13 +1,14 @@
-use actix_web::body::MessageBody;
-use actix_web::dev::{ServiceRequest, ServiceResponse};
-use actix_web::{web, App, Error, HttpServer};
-use opentelemetry::trace::TracerProvider;
-use opentelemetry::{global, KeyValue};
+use std::{io, sync::LazyLock};
+
+use actix_web::{
+    body::MessageBody,
+    dev::{ServiceRequest, ServiceResponse},
+    web, App, Error, HttpServer,
+};
+use opentelemetry::{global, trace::TracerProvider, KeyValue};
 use opentelemetry_otlp::WithExportConfig;
 use opentelemetry_sdk::{propagation::TraceContextPropagator, Resource};
 use opentelemetry_semantic_conventions::resource;
-use std::io;
-use std::sync::LazyLock;
 use tracing::Span;
 use tracing_actix_web::{DefaultRootSpanBuilder, RootSpan, RootSpanBuilder, TracingLogger};
 use tracing_bunyan_formatter::{BunyanFormattingLayer, JsonStorageLayer};

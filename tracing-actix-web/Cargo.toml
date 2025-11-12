@@ -1,11 +1,3 @@
-[workspace]
-members = [
-    ".",
-    "examples/opentelemetry",
-    "examples/custom-root-span",
-    "examples/request-id-response-header",
-]
-
 [package]
 name = "tracing-actix-web"
 version = "0.7.19"
