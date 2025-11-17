@@ -23,7 +23,7 @@ futures-core = "0.3.17"
 tokio = { version = "1.48", features = ["sync"] }
 
 [dev-dependencies]
-actix-web = "4.8"
+actix-web = "4.12"
 futures-util = { version = "0.3.17", default-features = false, features = ["std"] }
 tokio = { version = "1.48", features = ["sync", "rt", "macros"] }
 tracing = "0.1.30"
