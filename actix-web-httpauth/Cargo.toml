@@ -19,7 +19,7 @@ all-features = true
 
 [dependencies]
 actix-utils = "3"
-actix-web = { version = "4.1", default-features = false }
+actix-web = { version = "4.122", default-features = false }
 
 base64 = "0.22"
 futures-core = "0.3.17"
