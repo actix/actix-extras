@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Ensure TCP connection is properly shut down when session is dropped.
+- Fix `AggregatedMessageStream` not polling continuation frames properly causing them to be delayed or stuck.
 
 ## 0.3.0
 
