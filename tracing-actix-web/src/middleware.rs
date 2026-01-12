@@ -1,13 +1,18 @@
-use crate::{DefaultRootSpanBuilder, RequestId, RootSpan, RootSpanBuilder};
-use actix_web::body::{BodySize, MessageBody};
-use actix_web::dev::{Service, ServiceRequest, ServiceResponse, Transform};
-use actix_web::http::StatusCode;
-use actix_web::web::Bytes;
-use actix_web::{Error, HttpMessage, ResponseError};
-use std::future::{ready, Future, Ready};
-use std::pin::Pin;
-use std::task::{Context, Poll};
+use std::{
+    future::{ready, Future, Ready},
+    pin::Pin,
+    task::{Context, Poll},
+};
+
+use actix_web::{
+    body::{BodySize, MessageBody},
+    dev::{Service, ServiceRequest, ServiceResponse, Transform},
+    web::Bytes,
+    Error, HttpMessage,
+};
 use tracing::Span;
+
+use crate::{DefaultRootSpanBuilder, RequestId, RootSpan, RootSpanBuilder};
 
 /// `TracingLogger` is a middleware to capture structured diagnostic when processing an HTTP request.
 /// Check the crate-level documentation for an in-depth introduction.
@@ -16,7 +21,7 @@ use tracing::Span;
 ///
 /// # Usage
 ///
-/// Register `TracingLogger` as a middleware for your application using `.wrap` on `App`.  
+/// Register `TracingLogger` as a middleware for your application using `.wrap` on `App`.
 /// In this example we add a [`tracing::Subscriber`] to output structured logs to the console.
 ///
 /// ```rust
@@ -235,6 +240,7 @@ where
     }
 }
 
+#[cfg(feature = "emit_event_on_error")]
 fn emit_event_on_error<B: 'static>(outcome: &Result<ServiceResponse<B>, actix_web::Error>) {
     match outcome {
         Ok(response) => {
@@ -250,7 +256,11 @@ fn emit_event_on_error<B: 'static>(outcome: &Result<ServiceResponse<B>, actix_we
     }
 }
 
-fn emit_error_event(response_error: &dyn ResponseError, status_code: StatusCode) {
+#[cfg(feature = "emit_event_on_error")]
+fn emit_error_event(
+    response_error: &dyn actix_web::ResponseError,
+    status_code: actix_web::http::StatusCode,
+) {
     let error_msg_prefix = "Error encountered while processing the incoming HTTP request";
     if status_code.is_client_error() {
         tracing::warn!("{}: {:?}", error_msg_prefix, response_error);
