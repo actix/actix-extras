@@ -86,7 +86,7 @@ test-docs:
 [group("docs")]
 doc *args: && doc-set-workspace-crates
     rm -f "$(cargo metadata --format-version=1 | jq -r '.target_directory')/doc/crates.js"
-    RUSTDOCFLAGS="--cfg=docsrs -D warnings" cargo +nightly doc --workspace --all-features {{ args }}
+    RUSTDOCFLAGS="--cfg=docsrs -D warnings" cargo +nightly doc --workspace --no-deps --all-features {{ args }}
 
 [group("docs")]
 [private]
