@@ -25,7 +25,7 @@ actix-web = { version = "4", default-features = false, features = ["cookies", "s
 derive_more = { version = "2", features = ["display", "error", "from"] }
 futures-core = "0.3.17"
 serde = { version = "1", features = ["derive"] }
-tracing = { version = "0.1.30", default-features = false, features = ["log"] }
+tracing = { version = "0.1.43", default-features = false, features = ["log"] }
 
 [dev-dependencies]
 actix-http = "3"

@@ -37,6 +37,7 @@
 //! - `opentelemetry_0_28`: same as above but using `opentelemetry` 0.28;
 //! - `opentelemetry_0_29`: same as above but using `opentelemetry` 0.29;
 //! - `opentelemetry_0_30`: same as above but using `opentelemetry` 0.30;
+//! - `opentelemetry_0_31`: same as above but using `opentelemetry` 0.31;
 //! - `emit_event_on_error`: emit a [`tracing`] event when request processing fails with an error (enabled by default).
 //! - `uuid_v7`: use the UUID v7 implementation inside [`RequestId`] instead of UUID v4 (disabled by default).
 //!
@@ -64,20 +65,20 @@
 //! [`TracingLogger`] is built on top of [`tracing`], a modern instrumentation framework with
 //! [a vibrant ecosystem](https://github.com/tokio-rs/tracing#related-crates).
 //!
-//! `tracing-actix-web`'s documentation provides a crash course in how to use [`tracing`] to instrument an `actix-web` application.  
+//! `tracing-actix-web`'s documentation provides a crash course in how to use [`tracing`] to instrument an `actix-web` application.
 //! If you want to learn more check out ["Are we observable yet?"](https://www.lpalmieri.com/posts/2020-09-27-zero-to-production-4-are-we-observable-yet/) -
 //! it provides an in-depth introduction to the crate and the problems it solves within the bigger picture of [observability](https://docs.honeycomb.io/learning-about-observability/).
 //!
 //! ## The root span
 //!
-//! [`tracing::Span`] is the key abstraction in [`tracing`]: it represents a unit of work in your system.  
+//! [`tracing::Span`] is the key abstraction in [`tracing`]: it represents a unit of work in your system.
 //! A [`tracing::Span`] has a beginning and an end. It can include one or more **child spans** to represent sub-unit
 //! of works within a larger task.
 //!
-//! When your application receives a request, [`TracingLogger`] creates a new span - we call it the **[root span]**.  
+//! When your application receives a request, [`TracingLogger`] creates a new span - we call it the **[root span]**.
 //! All the spans created _while_ processing the request will be children of the root span.
 //!
-//! [`tracing`] empowers us to attach structured properties to a span as a collection of key-value pairs.  
+//! [`tracing`] empowers us to attach structured properties to a span as a collection of key-value pairs.
 //! Those properties can then be queried in a variety of tools (e.g. ElasticSearch, Honeycomb, DataDog) to
 //! understand what is happening in your system.
 //!
@@ -103,11 +104,11 @@
 //! let another_way = TracingLogger::<DefaultRootSpanBuilder>::new();
 //! ```
 //!
-//! We are delegating the construction of the root span to [`DefaultRootSpanBuilder`].  
+//! We are delegating the construction of the root span to [`DefaultRootSpanBuilder`].
 //! [`DefaultRootSpanBuilder`] captures, out of the box, several dimensions that are usually relevant when looking at an HTTP
 //! API: method, version, route, etc. - check out its documentation for an extensive list.
 //!
-//! You can customise the root span by providing your own implementation of the [`RootSpanBuilder`] trait.  
+//! You can customise the root span by providing your own implementation of the [`RootSpanBuilder`] trait.
 //! Let's imagine, for example, that our system cares about a client identifier embedded inside an authorization header.
 //! We could add a `client_id` property to the root span using a custom builder, `DomainRootSpanBuilder`:
 //!
@@ -132,7 +133,7 @@
 //! let custom_middleware = TracingLogger::<DomainRootSpanBuilder>::new();
 //! ```
 //!
-//! There is an issue, though: `client_id` is the _only_ property we are capturing.  
+//! There is an issue, though: `client_id` is the _only_ property we are capturing.
 //! With `DomainRootSpanBuilder`, as it is, we do not get any of that useful HTTP-related information provided by
 //! [`DefaultRootSpanBuilder`].
 //!
@@ -164,7 +165,7 @@
 //! [`root_span!`] is a macro provided by `tracing-actix-web`: it creates a new span by combining all the HTTP properties tracked
 //! by [`DefaultRootSpanBuilder`] with the custom ones you specify when calling it (e.g. `client_id` in our example).
 //!
-//! We need to use a macro because `tracing` requires all the properties attached to a span to be declared upfront, when the span is created.  
+//! We need to use a macro because `tracing` requires all the properties attached to a span to be declared upfront, when the span is created.
 //! You cannot add new ones afterwards. This makes it extremely fast, but it pushes us to reach for macros when we need some level of
 //! composition.
 //!
@@ -200,7 +201,7 @@
 //!
 //! ## The [`RootSpan`] extractor
 //!
-//! It often happens that not all information about a task is known upfront, encoded in the incoming request.  
+//! It often happens that not all information about a task is known upfront, encoded in the incoming request.
 //! You can use the [`RootSpan`] extractor to grab the root span in your handlers and attach more information
 //! to your root span as it becomes available:
 //!
@@ -272,10 +273,10 @@
 //! To fulfill a request you often have to perform additional I/O operations - e.g. calls to other REST or gRPC APIs, database queries, etc.
 //! **Distributed tracing** is the standard approach to **trace** a single request across the entirety of your stack.
 //!
-//! `tracing-actix-web` provides support for distributed tracing by supporting the [OpenTelemetry standard](https://opentelemetry.io/).  
+//! `tracing-actix-web` provides support for distributed tracing by supporting the [OpenTelemetry standard](https://opentelemetry.io/).
 //! `tracing-actix-web` follows [OpenTelemetry's semantic convention](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/overview.md#spancontext)
 //! for field names.
-//! Furthermore, it provides an `opentelemetry_0_17` feature flag to automatically performs trace propagation: it tries to extract the OpenTelemetry context out of the headers of incoming requests and, when it finds one, it sets it as the remote context for the current root span. The context is then propagated to your downstream dependencies if your HTTP or gRPC clients are OpenTelemetry-aware - e.g. using [`reqwest-middleware` and `reqwest-tracing`](https://github.com/TrueLayer/reqwest-middleware) if you are using `reqwest` as your HTTP client.  
+//! Furthermore, it provides an `opentelemetry_0_17` feature flag to automatically performs trace propagation: it tries to extract the OpenTelemetry context out of the headers of incoming requests and, when it finds one, it sets it as the remote context for the current root span. The context is then propagated to your downstream dependencies if your HTTP or gRPC clients are OpenTelemetry-aware - e.g. using [`reqwest-middleware` and `reqwest-tracing`](https://github.com/TrueLayer/reqwest-middleware) if you are using `reqwest` as your HTTP client.
 //! You can then find all logs for the same request across all the services it touched by looking for the `trace_id`, automatically logged by `tracing-actix-web`.
 //!
 //! If you add [`tracing-opentelemetry::OpenTelemetryLayer`](https://docs.rs/tracing-opentelemetry/0.17.0/tracing_opentelemetry/struct.OpenTelemetryLayer.html)
@@ -319,6 +320,7 @@ mutually_exclusive_features::none_or_one_of!(
     "opentelemetry_0_28",
     "opentelemetry_0_29",
     "opentelemetry_0_30",
+    "opentelemetry_0_31",
 );
 
 #[cfg(any(
@@ -340,5 +342,6 @@ mutually_exclusive_features::none_or_one_of!(
     feature = "opentelemetry_0_28",
     feature = "opentelemetry_0_29",
     feature = "opentelemetry_0_30",
+    feature = "opentelemetry_0_31",
 ))]
 mod otel;
