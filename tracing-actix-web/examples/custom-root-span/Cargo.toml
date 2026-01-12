@@ -3,8 +3,7 @@ name = "custom-root-span"
 version = "0.1.0"
 authors = ["LukeMathWalker <contact@lpalmieri.com>"]
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+license = "MIT OR Apache-2.0"
 
 [dependencies]
 actix-web = "4"
