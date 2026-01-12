@@ -41,7 +41,7 @@ jobs:
           --entrypoint redis-server
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Install Rust (${{ matrix.version.name }})
         uses: actions-rust-lang/setup-rust-toolchain@v1.15.2
@@ -49,7 +49,7 @@ jobs:
           toolchain: ${{ matrix.version.version }}
 
       - name: Install cargo-hack and cargo-ci-cache-clean, just
-        uses: taiki-e/install-action@v2.62.46
+        uses: taiki-e/install-action@v2.66.1
         with:
           tool: cargo-hack,cargo-ci-cache-clean,just
 
@@ -59,7 +59,7 @@ jobs:
 
       - name: deny check
         if: matrix.version.name == 'stable' && matrix.target.os == 'ubuntu-latest'
-        uses: EmbarkStudios/cargo-deny-action@f2ba7abc2abebaf185c833c3961145a3c275caad # v2.0.13
+        uses: EmbarkStudios/cargo-deny-action@76cd80eb775d7bbbd2d80292136d74d39e1b4918 # v2.0.14
 
       - name: check minimal
         run: cargo ci-min
@@ -93,7 +93,7 @@ jobs:
     runs-on: ${{ matrix.target.os }}
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Install OpenSSL
         if: matrix.target.os == 'windows-latest'
@@ -110,7 +110,7 @@ jobs:
           toolchain: ${{ matrix.version.version }}
 
       - name: Install cargo-hack, cargo-ci-cache-clean, just
-        uses: taiki-e/install-action@v2.62.46
+        uses: taiki-e/install-action@v2.66.1
         with:
           tool: cargo-hack,cargo-ci-cache-clean,just
 
@@ -138,7 +138,7 @@ jobs:
     name: Documentation Tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Install Rust (nightly)
         uses: actions-rust-lang/setup-rust-toolchain@v1.15.2
@@ -146,7 +146,7 @@ jobs:
           toolchain: nightly
 
       - name: Install just
-        uses: taiki-e/install-action@v2.62.46
+        uses: taiki-e/install-action@v2.66.1
         with:
           tool: just
 
