@@ -80,13 +80,48 @@ test-coverage-lcov: test-coverage
 [group("test")]
 [group("docs")]
 test-docs:
-    cargo {{ toolchain }} test --doc --workspace --all-features --no-fail-fast -- --nocapture
+    # `tracing-actix-web` has mutually exclusive `opentelemetry_*` features (it supports multiple
+    # OpenTelemetry versions for backward-compatibility), therefore `--all-features` cannot be used
+    # for the entire workspace.
+    cargo {{ toolchain }} test --doc --workspace --all-features --exclude tracing-actix-web --no-fail-fast -- --nocapture
+    cargo {{ toolchain }} test --doc -p tracing-actix-web --no-fail-fast -- --nocapture
+    cargo {{ toolchain }} test --doc -p tracing-actix-web --features uuid_v7 --no-fail-fast -- --nocapture
+    cargo {{ toolchain }} check -p tracing-actix-web --all-targets --features opentelemetry_0_13
+    cargo {{ toolchain }} check -p tracing-actix-web --all-targets --features opentelemetry_0_14
+    cargo {{ toolchain }} check -p tracing-actix-web --all-targets --features opentelemetry_0_15
+    cargo {{ toolchain }} check -p tracing-actix-web --all-targets --features opentelemetry_0_16
+    cargo {{ toolchain }} check -p tracing-actix-web --all-targets --features opentelemetry_0_17
+    cargo {{ toolchain }} check -p tracing-actix-web --all-targets --features opentelemetry_0_18
+    cargo {{ toolchain }} check -p tracing-actix-web --all-targets --features opentelemetry_0_19
+    cargo {{ toolchain }} check -p tracing-actix-web --all-targets --features opentelemetry_0_20
+    cargo {{ toolchain }} check -p tracing-actix-web --all-targets --features opentelemetry_0_21
+    cargo {{ toolchain }} check -p tracing-actix-web --all-targets --features opentelemetry_0_22
+    cargo {{ toolchain }} check -p tracing-actix-web --all-targets --features opentelemetry_0_23
+    cargo {{ toolchain }} check -p tracing-actix-web --all-targets --features opentelemetry_0_24
+    cargo {{ toolchain }} check -p tracing-actix-web --all-targets --features opentelemetry_0_25
+    cargo {{ toolchain }} check -p tracing-actix-web --all-targets --features opentelemetry_0_26
+    cargo {{ toolchain }} check -p tracing-actix-web --all-targets --features opentelemetry_0_27
+    cargo {{ toolchain }} check -p tracing-actix-web --all-targets --features opentelemetry_0_28
+    cargo {{ toolchain }} check -p tracing-actix-web --all-targets --features opentelemetry_0_29
+    cargo {{ toolchain }} check -p tracing-actix-web --all-targets --features opentelemetry_0_30
+    cargo {{ toolchain }} check -p tracing-actix-web --all-targets --features opentelemetry_0_31
+
+# CI: test `tracing-actix-web` with feature sets that cannot be covered by `--all-features`.
+[group("test")]
+ci-test-tracing-actix-web:
+    cargo {{ toolchain }} test -p tracing-actix-web --lib --tests --examples --bins --no-fail-fast
+    cargo {{ toolchain }} test -p tracing-actix-web --lib --tests --examples --bins --no-fail-fast --features uuid_v7
+    cargo {{ toolchain }} test -p tracing-actix-web --lib --tests --examples --bins --no-fail-fast --features opentelemetry_0_13
+    cargo {{ toolchain }} test -p tracing-actix-web --lib --tests --examples --bins --no-fail-fast --features opentelemetry_0_31
 
 # Document crates in workspace.
 [group("docs")]
 doc *args: && doc-set-workspace-crates
     rm -f "$(cargo metadata --format-version=1 | jq -r '.target_directory')/doc/crates.js"
-    RUSTDOCFLAGS="--cfg=docsrs -D warnings" cargo +nightly doc --workspace --no-deps --all-features {{ args }}
+    # `tracing-actix-web` has mutually exclusive `opentelemetry_*` features, therefore `--all-features`
+    # cannot be used for the entire workspace.
+    RUSTDOCFLAGS="--cfg=docsrs -D warnings" cargo +nightly doc --workspace --no-deps --all-features --exclude tracing-actix-web {{ args }}
+    RUSTDOCFLAGS="--cfg=docsrs -D warnings" cargo +nightly doc -p tracing-actix-web --no-deps --features "uuid_v7 opentelemetry_0_31" {{ args }}
 
 [group("docs")]
 [private]
