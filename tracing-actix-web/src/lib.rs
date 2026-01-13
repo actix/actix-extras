@@ -55,7 +55,7 @@
 //! });
 //! ```
 //!
-//! Check out [the examples on GitHub](https://github.com/actix/tracing-actix-web/tree/main/examples) to get a taste of how [`TracingLogger`] can be used to observe and monitor your
+//! Check out [the examples on GitHub](https://github.com/actix/actix-extras/tree/main/tracing-actix-web/examples) to get a taste of how [`TracingLogger`] can be used to observe and monitor your
 //! application.
 //!
 //! # From zero to hero: a crash course in observability
@@ -282,7 +282,7 @@
 //! If you add [`tracing-opentelemetry::OpenTelemetryLayer`](https://docs.rs/tracing-opentelemetry/0.17.0/tracing_opentelemetry/struct.OpenTelemetryLayer.html)
 //! in your `tracing::Subscriber` you will be able to export the root span (and all its children) as OpenTelemetry spans.
 //!
-//! Check out the [relevant example in the GitHub repository](https://github.com/actix/tracing-actix-web/tree/main/examples/opentelemetry) for reference.
+//! Check out the [relevant example in the GitHub repository](https://github.com/actix/actix-extras/tree/main/tracing-actix-web/examples/opentelemetry) for reference.
 //!
 //! [root span]: crate::RootSpan
 //! [`actix-web`]: https://docs.rs/actix-web/4.0.0-beta.13/actix_web/index.html

@@ -3637,7 +3637,7 @@ dependencies = [
 
 [[package]]
 name = "tracing-actix-web"
-version = "0.7.19"
+version = "0.7.21"
 dependencies = [
  "actix-web",
  "mutually_exclusive_features",
