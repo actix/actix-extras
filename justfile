@@ -48,10 +48,6 @@ test:
 # Downgrade dev-dependencies necessary to run MSRV checks/tests.
 [private]
 downgrade-for-msrv:
-    cargo {{ toolchain }} update -p=idna_adapter --precise=1.2.0 # next ver: 1.82.0
-    cargo {{ toolchain }} update -p=litemap --precise=0.7.4 # next ver: 1.81.0
-    cargo {{ toolchain }} update -p=zerofrom --precise=0.1.5 # next ver: 1.81.0
-    cargo {{ toolchain }} update -p=time --precise=0.3.41 # next ver: 1.81.0
 
 # Test workspace using MSRV.
 [group("test")]
