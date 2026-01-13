@@ -17,7 +17,7 @@ rust-version.workspace = true
 [dependencies]
 actix-codec = "0.5"
 actix-http = { version = "3", default-features = false, features = ["ws"] }
-actix-web = { version = "4", default-features = false }
+actix-web = { version = "4", default-features = false, features = ["ws"] }
 bytestring = "1"
 futures-core = "0.3.17"
 tokio = { version = "1.48", features = ["sync"] }
