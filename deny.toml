@@ -15,3 +15,10 @@ multiple-versions = "allow"
 
 [bans.build]
 executables = "deny"
+
+[advisories]
+# TODO: When dropping support of old OTel crate versions, this can be cleaned up.
+ignore = [
+    "RUSTSEC-2025-0055", # For backward-compatibility
+    "RUSTSEC-2024-0387", # For backward-compatibility
+]

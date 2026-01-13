@@ -22,7 +22,7 @@ jobs:
         options: --entrypoint redis-server
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Install Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1.15.2
@@ -31,7 +31,7 @@ jobs:
           components: llvm-tools-preview
 
       - name: Install just, cargo-llvm-cov, cargo-nextest
-        uses: taiki-e/install-action@v2.62.46
+        uses: taiki-e/install-action@v2.66.1
         with:
           tool: just,cargo-llvm-cov,cargo-nextest
 
@@ -39,7 +39,7 @@ jobs:
         run: just test-coverage-codecov
 
       - name: Upload to Codecov
-        uses: codecov/codecov-action@v5.5.1
+        uses: codecov/codecov-action@v5.5.2
         with:
           files: codecov.json
           fail_ci_if_error: true
