@@ -1,6 +1,6 @@
-use actix_web::{dev::Payload, HttpMessage};
-use actix_web::{FromRequest, HttpRequest, ResponseError};
 use std::future::{ready, Ready};
+
+use actix_web::{dev::Payload, FromRequest, HttpMessage, HttpRequest, ResponseError};
 use uuid::Uuid;
 
 /// A unique identifier generated for each incoming request.

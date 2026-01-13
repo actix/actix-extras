@@ -34,7 +34,7 @@ derive_more = { version = "2", features = ["display", "error", "from"] }
 rand = "0.9"
 serde = { version = "1" }
 serde_json = { version = "1" }
-tracing = { version = "0.1.30", default-features = false, features = ["log"] }
+tracing = { version = "0.1.44", default-features = false, features = ["log"] }
 
 # redis-session
 redis = { version = "0.32", default-features = false, features = ["tokio-comp", "connection-manager"], optional = true }
@@ -45,7 +45,7 @@ actix-session = { path = ".", features = ["cookie-session", "redis-session"] }
 actix-test = "0.1"
 actix-web = { version = "4", default-features = false, features = ["cookies", "secure-cookies", "macros"] }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-tracing = "0.1.30"
+tracing = "0.1.44"
 
 [lints]
 workspace = true
