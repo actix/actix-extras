@@ -3,8 +3,7 @@ name = "otel"
 version = "0.1.0"
 authors = ["Luca Palmieri <rust@lpalmieri.com>"]
 edition = "2021"
-
-license = "MIT/Apache-2.0"
+license = "MIT OR Apache-2.0"
 
 [dependencies]
 actix-web = "4"
