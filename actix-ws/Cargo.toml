@@ -26,7 +26,7 @@ tokio = { version = "1.48", features = ["sync"] }
 actix-web = "4.12"
 futures-util = { version = "0.3.17", default-features = false, features = ["std"] }
 tokio = { version = "1.48", features = ["sync", "rt", "macros"] }
-tracing = "0.1.43"
+tracing = "0.1.44"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 [lints]
