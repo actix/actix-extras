@@ -1,6 +1,6 @@
 [package]
 name = "tracing-actix-web"
-version = "0.7.19"
+version = "0.7.21"
 authors = ["Luca Palmieri <rust@lpalmieri.com>"]
 documentation = "https://docs.rs/tracing-actix-web/"
 readme = "README.md"

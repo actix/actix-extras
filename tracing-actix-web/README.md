@@ -85,7 +85,7 @@ fn main() {
 }
 ```
 
-Check out [the examples on GitHub](https://github.com/actix/tracing-actix-web/tree/main/examples) to get a taste of how [`TracingLogger`] can be used to observe and monitor your
+Check out [the examples on GitHub](https://github.com/actix/actix-extras/tree/main/tracing-actix-web/examples) to get a taste of how [`TracingLogger`] can be used to observe and monitor your
 application.  
 
 # From zero to hero: a crash course in observability
@@ -112,16 +112,16 @@ All the spans created _while_ processing the request will be children of the roo
 Those properties can then be queried in a variety of tools (e.g. ElasticSearch, Honeycomb, DataDog) to
 understand what is happening in your system.  
 
-## Customisation via [`RootSpanBuilder`]
+## Customization via [`RootSpanBuilder`]
 
 Troubleshooting becomes much easier when the root span has a _rich context_ - e.g. you can understand most of what
 happened when processing the request just by looking at the properties attached to the corresponding root span.  
 
 You might have heard of this technique as the [canonical log line pattern](https://stripe.com/blog/canonical-log-lines),
-popularised by Stripe. It is more recently discussed in terms of [high-cardinality events](https://www.honeycomb.io/blog/observability-a-manifesto/)
+popularized by Stripe. It is more recently discussed in terms of [high-cardinality events](https://www.honeycomb.io/blog/observability-a-manifesto/)
 by Honeycomb and other vendors in the observability space.
 
-[`TracingLogger`] gives you a chance to use the very same pattern: you can customise the properties attached
+[`TracingLogger`] gives you a chance to use the very same pattern: you can customize the properties attached
 to the root span in order to capture the context relevant to your specific domain.
 
 [`TracingLogger::default`] is equivalent to:
@@ -129,7 +129,7 @@ to the root span in order to capture the context relevant to your specific domai
 ```rust
 use tracing_actix_web::{TracingLogger, DefaultRootSpanBuilder};
 
-// Two ways to initialise TracingLogger with the default root span builder
+// Two ways to initialize TracingLogger with the default root span builder
 let default = TracingLogger::default();
 let another_way = TracingLogger::<DefaultRootSpanBuilder>::new();
 ```
@@ -138,7 +138,7 @@ We are delegating the construction of the root span to [`DefaultRootSpanBuilder`
 [`DefaultRootSpanBuilder`] captures, out of the box, several dimensions that are usually relevant when looking at an HTTP
 API: method, version, route, etc. - check out its documentation for an extensive list.
 
-You can customise the root span by providing your own implementation of the [`RootSpanBuilder`] trait.  
+You can customize the root span by providing your own implementation of the [`RootSpanBuilder`] trait.  
 Let's imagine, for example, that our system cares about a client identifier embedded inside an authorization header.
 We could add a `client_id` property to the root span using a custom builder, `DomainRootSpanBuilder`:
 
@@ -199,7 +199,7 @@ We need to use a macro because `tracing` requires all the properties attached to
 You cannot add new ones afterwards. This makes it extremely fast, but it pushes us to reach for macros when we need some level of
 composition.
 
-[`root_span!`] exposes more or less the same knob you can find on `tracing`'s `span!` macro. You can, for example, customise
+[`root_span!`] exposes more or less the same knob you can find on `tracing`'s `span!` macro. You can, for example, customize
 the span level:
 
 ```rust
@@ -313,7 +313,7 @@ You can then find all logs for the same request across all the services it touch
 If you add [`tracing-opentelemetry::OpenTelemetryLayer`](https://docs.rs/tracing-opentelemetry/0.17.0/tracing_opentelemetry/struct.OpenTelemetryLayer.html)
 in your `tracing::Subscriber` you will be able to export the root span (and all its children) as OpenTelemetry spans.
 
-Check out the [relevant example in the GitHub repository](https://github.com/actix/tracing-actix-web/tree/main/examples/opentelemetry) for reference.
+Check out the [relevant example in the GitHub repository](https://github.com/actix/actix-extras/tree/main/tracing-actix-web/examples/opentelemetry) for reference.
 
 # License
 
