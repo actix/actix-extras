@@ -280,7 +280,6 @@ mod tests {
         .await
     }
 
-    #[ignore]
     #[tokio::test]
     async fn aggregates_consecutive_continuations() {
         std::future::poll_fn(move |cx| {
