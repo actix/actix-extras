@@ -11,7 +11,7 @@ repository = "https://github.com/actix/actix-extras"
 homepage = "https://actix.rs"
 license = "MIT OR Apache-2.0"
 edition = "2021"
-rust-version = "1.82"
+rust-version = "1.85"
 
 [features]
 default = ["emit_event_on_error"]
