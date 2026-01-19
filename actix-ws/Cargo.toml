@@ -20,12 +20,12 @@ actix-http = { version = "3", default-features = false, features = ["ws"] }
 actix-web = { version = "4", default-features = false, features = ["ws"] }
 bytestring = "1"
 futures-core = "0.3.17"
-tokio = { version = "1.48", features = ["sync"] }
+tokio = { version = "1.49", features = ["sync"] }
 
 [dev-dependencies]
 actix-web = "4.12"
 futures-util = { version = "0.3.17", default-features = false, features = ["std"] }
-tokio = { version = "1.48", features = ["sync", "rt", "macros"] }
+tokio = { version = "1.49", features = ["sync", "rt", "macros"] }
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
