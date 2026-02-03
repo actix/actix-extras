@@ -171,7 +171,7 @@ impl Stream for AggregatedMessageStream {
                         }
 
                         this.continuations.push(bytes);
-                        let bytes = collect(&mut this.continuations);
+                        let bytes = collect(&mut this.continuations, this.current_size);
 
                         this.current_size = 0;
 
@@ -208,14 +208,12 @@ impl Stream for AggregatedMessageStream {
     }
 }
 
-fn collect(continuations: &mut Vec<Bytes>) -> Bytes {
+fn collect(continuations: &mut Vec<Bytes>, total_len: usize) -> Bytes {
     let continuations = mem::take(continuations);
-    let total_len = continuations.iter().map(|b| b.len()).sum();
-
     let mut buf = BytesMut::with_capacity(total_len);
 
     for chunk in continuations {
-        buf.extend(chunk);
+        buf.extend_from_slice(&chunk);
     }
 
     buf.freeze()
