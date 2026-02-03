@@ -1,7 +1,7 @@
 use std::{
     collections::VecDeque,
     future::poll_fn,
-    io, mem,
+    io,
     pin::Pin,
     task::{Context, Poll},
 };
@@ -142,7 +142,7 @@ impl Stream for StreamingBody {
         }
 
         if !this.buf.is_empty() {
-            return Poll::Ready(Some(Ok(mem::take(&mut this.buf).freeze())));
+            return Poll::Ready(Some(Ok(this.buf.split().freeze())));
         }
 
         if this.closing {
@@ -171,7 +171,12 @@ impl Stream for MessageStream {
             loop {
                 match Pin::new(&mut this.payload).poll_next(cx) {
                     Poll::Ready(Some(Ok(bytes))) => {
-                        this.buf.extend_from_slice(&bytes);
+                        if this.buf.is_empty() {
+                            // Avoid a copy when there is no buffered data.
+                            this.buf = BytesMut::from(bytes);
+                        } else {
+                            this.buf.extend_from_slice(&bytes);
+                        }
                     }
                     Poll::Ready(Some(Err(err))) => {
                         return Poll::Ready(Some(Err(ProtocolError::Io(io::Error::other(err)))));
