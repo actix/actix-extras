@@ -21,8 +21,12 @@ use crate::extractors::{basic, bearer};
 
 /// Middleware for checking HTTP authentication.
 ///
-/// If there is no `Authorization` header in the request, this middleware returns an error
-/// immediately, without calling the `F` callback.
+/// By default, if the extractor `T` fails (for example because the `Authorization` header is
+/// missing), this middleware returns an error immediately, without calling the `F` callback.
+///
+/// To make authentication optional (or to implement multiple auth methods), wrap the extractor
+/// in `Option<T>` or `Result<T, T::Error>`. In those cases, extraction never fails, so the
+/// validator always runs and can decide how to proceed.
 ///
 /// Otherwise, it will pass both the request and the parsed credentials into it. In case of
 /// successful validation `F` callback is required to return the `ServiceRequest` back.
@@ -69,7 +73,7 @@ where
     /// # actix_web_httpauth::middleware::HttpAuthentication::with_fn(validator);
     /// ```
     ///
-    /// ## Optional Bearer Auth
+    /// ## Optional Bearer Auth (fallback to other auth methods)
     ///
     /// ```no_run
     /// # use actix_web_httpauth::extractors::bearer::BearerAuth;
@@ -79,7 +83,8 @@ where
     ///     credentials: Option<BearerAuth>,
     /// ) -> Result<ServiceRequest, (actix_web::Error, ServiceRequest)> {
     ///     let Some(credentials) = credentials else {
-    ///         return Err((actix_web::error::ErrorBadRequest("no bearer header"), req));
+    ///         // No Authorization header; allow other auth methods (eg cookies/sessions) to proceed.
+    ///         return Ok(req);
     ///     };
     ///
     ///     eprintln!("{credentials:?}");
