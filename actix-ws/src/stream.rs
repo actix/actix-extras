@@ -1,7 +1,7 @@
 use std::{
     collections::VecDeque,
     future::poll_fn,
-    io,
+    io, mem,
     pin::Pin,
     task::{Context, Poll},
 };
@@ -142,7 +142,9 @@ impl Stream for StreamingBody {
         }
 
         if !this.buf.is_empty() {
-            return Poll::Ready(Some(Ok(this.buf.split().freeze())));
+            // Avoid retaining an ever-growing buffer after large payloads:
+            // https://github.com/actix/actix-extras/commit/81954844158c27de3aa034d1b727d1c13753f325
+            return Poll::Ready(Some(Ok(mem::take(&mut this.buf).freeze())));
         }
 
         if this.closing {
