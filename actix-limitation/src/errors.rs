@@ -1,4 +1,4 @@
-use derive_more::{Display, Error, From};
+use derive_more::derive::{Display, Error, From};
 
 use crate::status::Status;
 
@@ -6,20 +6,20 @@ use crate::status::Status;
 #[derive(Debug, Display, Error, From)]
 pub enum Error {
     /// Redis client failed to connect or run a query.
-    #[display(fmt = "Redis client failed to connect or run a query")]
+    #[display("Redis client failed to connect or run a query")]
     Client(redis::RedisError),
 
     /// Limit is exceeded for a key.
-    #[display(fmt = "Limit is exceeded for a key")]
+    #[display("Limit is exceeded for a key")]
     #[from(ignore)]
     LimitExceeded(#[error(not(source))] Status),
 
     /// Time conversion failed.
-    #[display(fmt = "Time conversion failed")]
+    #[display("Time conversion failed")]
     Time(time::error::ComponentRange),
 
     /// Generic error.
-    #[display(fmt = "Generic error")]
+    #[display("Generic error")]
     #[from(ignore)]
     Other(#[error(not(source))] String),
 }

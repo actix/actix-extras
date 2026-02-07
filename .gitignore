@@ -1,6 +1,5 @@
 /target
 **/*.rs.bk
-Cargo.lock
 
 guide/build/
 /gh-pages
@@ -16,3 +15,7 @@ guide/build/
 Server.toml
 
 .idea
+
+# code coverage
+/lcov.info
+/codecov.json

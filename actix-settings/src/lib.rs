@@ -54,18 +54,17 @@
 //!         }
 //!     })
 //!     // apply the `Settings` to Actix Web's `HttpServer`
-//!     .apply_settings(&settings)
+//!     .try_apply_settings(&settings)?
 //!     .run()
 //!     .await
 //! }
 //! ```
 
 #![forbid(unsafe_code)]
-#![deny(rust_2018_idioms, nonstandard_style)]
-#![warn(future_incompatible, missing_docs, missing_debug_implementations)]
+#![warn(missing_docs, missing_debug_implementations)]
 #![doc(html_logo_url = "https://actix.rs/img/logo.png")]
 #![doc(html_favicon_url = "https://actix.rs/favicon.ico")]
-#![cfg_attr(docsrs, feature(doc_auto_cfg))]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 
 use std::{
     env, fmt,
@@ -90,12 +89,14 @@ mod error;
 mod parse;
 mod settings;
 
+#[cfg(feature = "openssl")]
+pub use self::settings::Tls;
 pub use self::{
     error::Error,
     parse::Parse,
     settings::{
         ActixSettings, Address, Backlog, KeepAlive, MaxConnectionRate, MaxConnections, Mode,
-        NumWorkers, Timeout, Tls,
+        NumWorkers, Timeout,
     },
 };
 
@@ -240,10 +241,28 @@ where
 }
 
 /// Extension trait for applying parsed settings to the server object.
-pub trait ApplySettings<S> {
-    /// Apply some settings object value to `self`.
-    #[must_use]
-    fn apply_settings(self, settings: &S) -> Self;
+pub trait ApplySettings<S>: Sized {
+    /// Applies some settings object value to `self`.
+    ///
+    /// The default implementation calls [`try_apply_settings()`].
+    ///
+    /// # Panics
+    ///
+    /// May panic if settings are invalid or cannot be applied.
+    ///
+    /// [`try_apply_settings()`]: ApplySettings::try_apply_settings().
+    #[deprecated = "Prefer `try_apply_settings()`."]
+    fn apply_settings(self, settings: &S) -> Self {
+        self.try_apply_settings(settings)
+            .expect("Could not apply settings")
+    }
+
+    /// Applies some settings object value to `self`.
+    ///
+    /// # Errors
+    ///
+    /// May return error if settings are invalid or cannot be applied.
+    fn try_apply_settings(self, settings: &S) -> AsResult<Self>;
 }
 
 impl<F, I, S, B> ApplySettings<ActixSettings> for HttpServer<F, I, S, B>
@@ -257,17 +276,27 @@ where
     S::Future: 'static,
     B: MessageBody + 'static,
 {
-    fn apply_settings(mut self, settings: &ActixSettings) -> Self {
-        if settings.tls.enabled {
-            // for Address { host, port } in &settings.actix.hosts {
-            //     self = self.bind(format!("{}:{}", host, port))
-            //         .unwrap(/*TODO*/);
-            // }
-            unimplemented!("[ApplySettings] TLS support has not been implemented yet.");
-        } else {
-            for Address { host, port } in &settings.hosts {
-                self = self.bind(format!("{host}:{port}"))
-                    .unwrap(/*TODO*/);
+    fn apply_settings(self, settings: &ActixSettings) -> Self {
+        self.try_apply_settings(settings).unwrap()
+    }
+
+    fn try_apply_settings(mut self, settings: &ActixSettings) -> AsResult<Self> {
+        for Address { host, port } in &settings.hosts {
+            #[cfg(feature = "openssl")]
+            {
+                if settings.tls.enabled {
+                    self = self.bind_openssl(
+                        format!("{}:{}", host, port),
+                        settings.tls.get_ssl_acceptor_builder()?,
+                    )?;
+                } else {
+                    self = self.bind(format!("{host}:{port}"))?;
+                }
+            }
+
+            #[cfg(not(feature = "openssl"))]
+            {
+                self = self.bind(format!("{host}:{port}"))?;
             }
         }
 
@@ -320,7 +349,7 @@ where
             Timeout::Seconds(n) => self.shutdown_timeout(n as u64),
         };
 
-        self
+        Ok(self)
     }
 }
 
@@ -337,7 +366,11 @@ where
     A: de::DeserializeOwned,
 {
     fn apply_settings(self, settings: &BasicSettings<A>) -> Self {
-        self.apply_settings(&settings.actix)
+        self.try_apply_settings(&settings.actix).unwrap()
+    }
+
+    fn try_apply_settings(self, settings: &BasicSettings<A>) -> AsResult<Self> {
+        self.try_apply_settings(&settings.actix)
     }
 }
 
@@ -350,7 +383,8 @@ mod tests {
     #[test]
     fn apply_settings() {
         let settings = Settings::parse_toml("Server.toml").unwrap();
-        let _ = HttpServer::new(App::new).apply_settings(&settings);
+        let server = HttpServer::new(App::new).try_apply_settings(&settings);
+        assert!(server.is_ok());
     }
 
     #[test]
@@ -663,6 +697,7 @@ mod tests {
         assert_eq!(settings.actix.shutdown_timeout, Timeout::Seconds(42));
     }
 
+    #[cfg(feature = "openssl")]
     #[test]
     fn override_field_tls_enabled() {
         let mut settings = Settings::from_default_template();
@@ -671,6 +706,7 @@ mod tests {
         assert!(settings.actix.tls.enabled);
     }
 
+    #[cfg(feature = "openssl")]
     #[test]
     fn override_field_with_env_var_tls_enabled() {
         let mut settings = Settings::from_default_template();
@@ -684,6 +720,7 @@ mod tests {
         assert!(settings.actix.tls.enabled);
     }
 
+    #[cfg(feature = "openssl")]
     #[test]
     fn override_field_tls_certificate() {
         let mut settings = Settings::from_default_template();
@@ -702,6 +739,7 @@ mod tests {
         );
     }
 
+    #[cfg(feature = "openssl")]
     #[test]
     fn override_field_with_env_var_tls_certificate() {
         let mut settings = Settings::from_default_template();
@@ -724,6 +762,7 @@ mod tests {
         );
     }
 
+    #[cfg(feature = "openssl")]
     #[test]
     fn override_field_tls_private_key() {
         let mut settings = Settings::from_default_template();
@@ -742,6 +781,7 @@ mod tests {
         );
     }
 
+    #[cfg(feature = "openssl")]
     #[test]
     fn override_field_with_env_var_tls_private_key() {
         let mut settings = Settings::from_default_template();

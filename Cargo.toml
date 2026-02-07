@@ -5,24 +5,33 @@ members = [
     "actix-identity",
     "actix-limitation",
     "actix-protobuf",
-    "actix-redis",
     "actix-session",
     "actix-settings",
     "actix-web-httpauth",
     "actix-ws",
+    "tracing-actix-web",
+    "tracing-actix-web/examples/opentelemetry",
+    "tracing-actix-web/examples/custom-root-span",
+    "tracing-actix-web/examples/request-id-response-header",
 ]
 
 [workspace.package]
+repository = "https://github.com/actix/actix-extras"
+homepage = "https://actix.rs"
 license = "MIT OR Apache-2.0"
 edition = "2021"
-rust-version = "1.68"
+rust-version = "1.88"
+
+[workspace.lints.rust]
+rust-2018-idioms = { level = "deny" }
+nonstandard-style = { level = "deny" }
+future-incompatible = { level = "deny" }
 
 [patch.crates-io]
 actix-cors = { path = "./actix-cors" }
 actix-identity = { path = "./actix-identity" }
 actix-limitation = { path = "./actix-limitation" }
 actix-protobuf = { path = "./actix-protobuf" }
-actix-redis = { path = "./actix-redis" }
 actix-session = { path = "./actix-session" }
 actix-settings = { path = "./actix-settings" }
 actix-web-httpauth = { path = "./actix-web-httpauth" }

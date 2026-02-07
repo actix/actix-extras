@@ -3,10 +3,9 @@ use actix_web::{
     cookie::{time::Duration, Key},
     test, web, App, Responder,
 };
-use serde_json::Value;
 
 async fn login(session: Session) -> impl Responder {
-    session.insert("user_id", Value::from("id"));
+    session.insert("user_id", "id").unwrap();
     "Logged in"
 }
 

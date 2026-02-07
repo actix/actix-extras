@@ -1,7 +1,7 @@
 use std::time::Duration;
 
-use actix_identity::{config::LogoutBehaviour, IdentityMiddleware};
-use actix_web::http::StatusCode;
+use actix_identity::{config::LogoutBehavior, IdentityMiddleware};
+use reqwest::StatusCode;
 
 use crate::{fixtures::user_id, test_app::TestApp};
 
@@ -26,6 +26,33 @@ async fn login_works() {
     // Access identity-restricted route successfully
     let response = app.get_identity_required().await;
     assert!(response.status().is_success());
+}
+
+#[actix_web::test]
+async fn custom_keys_work_as_expected() {
+    let custom_id_key = "custom.user_id";
+    let custom_last_visited_key = "custom.last_visited_at";
+    let custom_logged_in_key = "custom.logged_in_at";
+
+    let app = TestApp::spawn_with_config(
+        IdentityMiddleware::builder()
+            .id_key(custom_id_key)
+            .last_visit_unix_timestamp_key(custom_last_visited_key)
+            .login_unix_timestamp_key(custom_logged_in_key),
+    );
+    let user_id = user_id();
+
+    let body = app.post_login(user_id.clone()).await;
+    assert_eq!(body.user_id, Some(user_id.clone()));
+
+    let response = app.get_identity_required().await;
+    assert!(response.status().is_success());
+
+    let response = app.post_logout().await;
+    assert!(response.status().is_success());
+
+    let response = app.get_identity_required().await;
+    assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
 }
 
 #[actix_web::test]
@@ -85,7 +112,7 @@ async fn logout_works() {
 #[actix_web::test]
 async fn logout_can_avoid_destroying_the_whole_session() {
     let app = TestApp::spawn_with_config(
-        IdentityMiddleware::builder().logout_behaviour(LogoutBehaviour::DeleteIdentityKeys),
+        IdentityMiddleware::builder().logout_behavior(LogoutBehavior::DeleteIdentityKeys),
     );
     let user_id = user_id();
 

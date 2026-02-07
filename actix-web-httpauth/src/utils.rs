@@ -12,8 +12,8 @@ struct Quoted<'a> {
     state: State,
 }
 
-impl<'a> Quoted<'a> {
-    pub fn new(s: &'a str) -> Quoted<'_> {
+impl Quoted<'_> {
+    pub fn new(s: &str) -> Quoted<'_> {
         Quoted {
             inner: s.split('"').peekable(),
             state: State::YieldStr,

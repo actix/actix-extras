@@ -1,5 +1,3 @@
-use std::convert::TryInto;
-
 use actix_session::{
     storage::{LoadError, SaveError, SessionKey, SessionStore, UpdateError},
     Session, SessionMiddleware,
@@ -45,7 +43,6 @@ async fn errors_are_opaque() {
 
 struct MockStore;
 
-#[async_trait::async_trait(?Send)]
 impl SessionStore for MockStore {
     async fn load(
         &self,
@@ -86,7 +83,7 @@ impl SessionStore for MockStore {
 }
 
 async fn create_session(session: Session) -> impl Responder {
-    session.insert("user_id", Value::from("id"));
+    session.insert("user_id", "id").unwrap();
     "Created"
 }
 

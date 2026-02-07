@@ -27,11 +27,11 @@
 //! against the active [`Session`].
 //!
 //! `actix-session` provides some built-in storage backends: ([`CookieSessionStore`],
-//! [`RedisSessionStore`], and [`RedisActorSessionStore`]) - you can create a custom storage backend
-//! by implementing the [`SessionStore`] trait.
+//! [`RedisSessionStore`]) - you can create a custom storage backend by implementing the
+//! [`SessionStore`] trait.
 //!
 //! Further reading on sessions:
-//! - [RFC6265](https://datatracker.ietf.org/doc/html/rfc6265);
+//! - [RFC 6265](https://datatracker.ietf.org/doc/html/rfc6265);
 //! - [OWASP's session management cheat-sheet](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html).
 //!
 //! # Getting started
@@ -40,21 +40,27 @@
 //!
 //! ```no_run
 //! use actix_web::{web, App, HttpServer, HttpResponse, Error};
-//! use actix_session::{Session, SessionMiddleware, storage::RedisActorSessionStore};
+//! use actix_session::{Session, SessionMiddleware, storage::RedisSessionStore};
 //! use actix_web::cookie::Key;
 //!
 //! #[actix_web::main]
 //! async fn main() -> std::io::Result<()> {
-//!     // The secret key would usually be read from a configuration file/environment variables.
+//!     // When using `Key::generate()` it is important to initialize outside of the
+//!     // `HttpServer::new` closure. When deployed the secret key should be read from a
+//!     // configuration file or environment variables.
 //!     let secret_key = Key::generate();
-//!     let redis_connection_string = "127.0.0.1:6379";
+//!
+//!     let redis_store = RedisSessionStore::new("redis://127.0.0.1:6379")
+//!         .await
+//!         .unwrap();
+//!
 //!     HttpServer::new(move ||
 //!             App::new()
 //!             // Add session management to your application using Redis for session state storage
 //!             .wrap(
 //!                 SessionMiddleware::new(
-//!                     RedisActorSessionStore::new(redis_connection_string),
-//!                     secret_key.clone()
+//!                     redis_store.clone(),
+//!                     secret_key.clone(),
 //!                 )
 //!             )
 //!             .default_service(web::to(|| HttpResponse::Ok())))
@@ -69,7 +75,6 @@
 //!
 //! ```no_run
 //! use actix_web::Error;
-//! use serde_json::Value;
 //! use actix_session::Session;
 //!
 //! fn index(session: Session) -> Result<&'static str, Error> {
@@ -77,9 +82,9 @@
 //!     if let Some(count) = session.get::<i32>("counter")? {
 //!         println!("SESSION value: {}", count);
 //!         // modify the session state
-//!         session.insert("counter", Value::from(count + 1));
+//!         session.insert("counter", count + 1)?;
 //!     } else {
-//!         session.insert("counter", Value::from(1));
+//!         session.insert("counter", 1)?;
 //!     }
 //!
 //!     Ok("Welcome!")
@@ -94,37 +99,28 @@
 //! - a purely cookie-based "backend", [`CookieSessionStore`], using the `cookie-session` feature
 //!   flag.
 //!
-//!   ```toml
-//!   [dependencies]
-//!   # ...
-//!   actix-session = { version = "...", features = ["cookie-session"] }
+//!   ```console
+//!   cargo add actix-session --features=cookie-session
 //!   ```
 //!
-//! - a Redis-based backend via [`actix-redis`](https://docs.rs/actix-redis),
-//!   [`RedisActorSessionStore`], using the `redis-actor-session` feature flag.
+//! - a Redis-based backend via the [`redis`] crate, [`RedisSessionStore`], using the
+//!   `redis-session` feature flag.
 //!
-//!   ```toml
-//!   [dependencies]
-//!   # ...
-//!   actix-session = { version = "...", features = ["redis-actor-session"] }
+//!   ```console
+//!   cargo add actix-session --features=redis-session
 //!   ```
 //!
-//! - a Redis-based backend via [`redis-rs`](https://docs.rs/redis-rs), [`RedisSessionStore`], using
-//!   the `redis-rs-session` feature flag.
+//!   Add the `redis-session-native-tls` feature flag if you want to connect to Redis using a secure
+//!   connection (via the `native-tls` crate):
 //!
-//!   ```toml
-//!   [dependencies]
-//!   # ...
-//!   actix-session = { version = "...", features = ["redis-rs-session"] }
+//!   ```console
+//!   cargo add actix-session --features=redis-session-native-tls
 //!   ```
 //!
-//!   Add the `redis-rs-tls-session` feature flag if you want to connect to Redis using a secured
-//!   connection:
+//!   If you, instead, prefer depending on `rustls`, use the `redis-session-rustls` feature flag:
 //!
-//!   ```toml
-//!   [dependencies]
-//!   # ...
-//!   actix-session = { version = "...", features = ["redis-rs-session", "redis-rs-tls-session"] }
+//!   ```console
+//!   cargo add actix-session --features=redis-session-rustls
 //!   ```
 //!
 //! You can implement your own session storage backend using the [`SessionStore`] trait.
@@ -132,14 +128,12 @@
 //! [`SessionStore`]: storage::SessionStore
 //! [`CookieSessionStore`]: storage::CookieSessionStore
 //! [`RedisSessionStore`]: storage::RedisSessionStore
-//! [`RedisActorSessionStore`]: storage::RedisActorSessionStore
 
 #![forbid(unsafe_code)]
-#![deny(rust_2018_idioms, nonstandard_style)]
-#![warn(future_incompatible, missing_docs)]
+#![warn(missing_docs)]
 #![doc(html_logo_url = "https://actix.rs/img/logo.png")]
 #![doc(html_favicon_url = "https://actix.rs/favicon.ico")]
-#![cfg_attr(docsrs, feature(doc_auto_cfg))]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 
 pub mod config;
 mod middleware;
@@ -154,6 +148,7 @@ pub use self::{
 };
 
 #[cfg(test)]
+#[allow(missing_docs)]
 pub mod test_helpers {
     use actix_web::cookie::Key;
 
@@ -208,7 +203,7 @@ pub mod test_helpers {
             App, HttpResponse, Result,
         };
         use serde::{Deserialize, Serialize};
-        use serde_json::{json, Value};
+        use serde_json::json;
 
         use crate::{
             config::{CookieContentSecurity, PersistentSession, TtlExtensionPolicy},
@@ -239,7 +234,7 @@ pub mod test_helpers {
                             .build(),
                     )
                     .service(web::resource("/").to(|ses: Session| async move {
-                        ses.insert("counter", Value::from(100));
+                        ses.insert("counter", 100).unwrap();
                         "test"
                     }))
                     .service(web::resource("/test/").to(|ses: Session| async move {
@@ -287,7 +282,7 @@ pub mod test_helpers {
                             .build(),
                     )
                     .service(web::resource("/").to(|ses: Session| async move {
-                        ses.insert("counter", Value::from(100));
+                        ses.insert("counter", 100).unwrap();
                         "test"
                     }))
                     .service(web::resource("/test/").to(|| async move { "no-changes-in-session" })),
@@ -329,7 +324,7 @@ pub mod test_helpers {
                             .build(),
                     )
                     .service(web::resource("/").to(|ses: Session| async move {
-                        ses.insert("counter", Value::from(100));
+                        ses.insert("counter", 100).unwrap();
                         "test"
                     }))
                     .service(web::resource("/test/").to(|| async move { "no-changes-in-session" })),
@@ -675,7 +670,7 @@ pub mod test_helpers {
                 .get::<i32>("counter")
                 .unwrap_or(Some(0))
                 .map_or(1, |inner| inner + 1);
-            session.insert("counter", Value::from(counter));
+            session.insert("counter", counter)?;
 
             Ok(HttpResponse::Ok().json(&IndexResponse { user_id, counter }))
         }
@@ -694,7 +689,7 @@ pub mod test_helpers {
 
         async fn login(user_id: web::Json<Identity>, session: Session) -> Result<HttpResponse> {
             let id = user_id.into_inner().user_id;
-            session.insert("user_id", Value::from(id.clone()));
+            session.insert("user_id", id.clone())?;
             session.renew();
 
             let counter: i32 = session

@@ -2,9 +2,35 @@
 
 ## Unreleased
 
-- Replace the usages of `HashMap` with `serde::Map`.
-- Fix double serialization when inserting values into the session.
+- Session state is now stored as JSON values rather than JSON strings, avoiding double serialization in storage backends.
+- `Session` implementation of `FromRequest` now errors with `Infallible` rather than `actix_web::error::Error`.
+- Minimum supported Rust version (MSRV) is now 1.88.
 
+## 0.11.0
+
+- Add `Session::contains_key` method.
+- Add `Session::update[_or]()` methods.
+- Update `redis` dependency to `0.32`.
+- Minimum supported Rust version (MSRV) is now 1.80.
+
+## 0.10.1
+
+- Expose `storage::generate_session_key()` without needing to enable a crate feature.
+
+## 0.10.0
+
+- Add `redis-session-rustls` crate feature that enables `rustls`-secured Redis sessions.
+- Add `redis-pool` crate feature (off-by-default) which enables `RedisSessionStore::{new, builder}_pooled()` constructors.
+- Rename `redis-rs-session` crate feature to `redis-session`.
+- Rename `redis-rs-tls-session` crate feature to `redis-session-native-tls`.
+- Remove `redis-actor-session` crate feature (and, therefore, the `actix-redis` based storage backend).
+- Expose `storage::generate_session_key()`.
+- Update `redis` dependency to `0.26`.
+
+## 0.9.0
+
+- Remove use of `async-trait` on `SessionStore` trait.
+- Minimum supported Rust version (MSRV) is now 1.75.
 ## 0.8.0
 
 - Set secure attribute when adding a session removal cookie.
@@ -175,10 +201,7 @@
 
 ## 0.2.0 - 2019-07-08
 
-- Enhanced `actix-session` to facilitate state changes. Use `Session.renew()`
-  at successful login to cycle a session (new key/cookie but keeps state).
-  Use `Session.purge()` at logout to invalid a session cookie (and remove
-  from redis cache, if applicable).
+- Enhanced `actix-session` to facilitate state changes. Use `Session.renew()` at successful login to cycle a session (new key/cookie but keeps state). Use `Session.purge()` at logout to invalid a session cookie (and remove from redis cache, if applicable).
 
 ## 0.1.1 - 2019-06-03
 

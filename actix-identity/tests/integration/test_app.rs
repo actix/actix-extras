@@ -4,7 +4,6 @@ use actix_identity::{config::IdentityMiddlewareBuilder, Identity, IdentityMiddle
 use actix_session::{Session, SessionStatus};
 use actix_web::{web, App, HttpMessage, HttpRequest, HttpResponse, HttpServer};
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 
 use crate::fixtures::session_middleware;
 
@@ -137,7 +136,7 @@ async fn increment(session: Session, user: Option<Identity>) -> HttpResponse {
         .get::<i32>("counter")
         .unwrap_or(Some(0))
         .map_or(1, |inner| inner + 1);
-    session.insert("counter", Value::from(counter));
+    session.insert("counter", counter).unwrap();
 
     HttpResponse::Ok().json(&EndpointResponse {
         user_id,

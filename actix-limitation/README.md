@@ -3,10 +3,14 @@
 > Rate limiter using a fixed window counter for arbitrary keys, backed by Redis for Actix Web.  
 > Originally based on <https://github.com/fnichol/limitation>.
 
+<!-- prettier-ignore-start -->
+
 [![crates.io](https://img.shields.io/crates/v/actix-limitation?label=latest)](https://crates.io/crates/actix-limitation)
 [![Documentation](https://docs.rs/actix-limitation/badge.svg?version=0.5.1)](https://docs.rs/actix-limitation/0.5.1)
 ![Apache 2.0 or MIT licensed](https://img.shields.io/crates/l/actix-limitation)
 [![Dependency Status](https://deps.rs/crate/actix-limitation/0.5.1/status.svg)](https://deps.rs/crate/actix-limitation/0.5.1)
+
+<!-- prettier-ignore-end -->
 
 ## Examples
 

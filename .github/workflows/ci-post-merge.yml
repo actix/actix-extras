@@ -1,7 +1,7 @@
 name: CI (post-merge)
 
 on:
-  push: { branches: [master] }
+  push: { branches: [main] }
 
 permissions: { contents: read }
 
@@ -28,16 +28,17 @@ jobs:
         options: --entrypoint redis-server
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install Rust (nightly)
-        uses: actions-rust-lang/setup-rust-toolchain@v1.5.0
+        uses: actions-rust-lang/setup-rust-toolchain@v1.15.2
         with:
           toolchain: nightly
 
-      - uses: taiki-e/install-action@v2.21.17
+      - name: Install cargo-hack, cargo-ci-cache-clean
+        uses: taiki-e/install-action@v2.67.18
         with:
-          tool: cargo-hack
+          tool: cargo-hack,cargo-ci-cache-clean
 
       - name: check minimal
         run: cargo ci-min
@@ -52,10 +53,8 @@ jobs:
         timeout-minutes: 40
         run: cargo ci-test
 
-      - name: Clear the cargo caches
-        run: |
-          cargo install cargo-cache --version 0.6.2 --no-default-features --features ci-autoclean
-          cargo-cache
+      - name: CI cache clean
+        run: cargo-ci-cache-clean
 
   build_and_test_other_nightly:
     strategy:
@@ -70,16 +69,26 @@ jobs:
     runs-on: ${{ matrix.target.os }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
+
+      - name: Install OpenSSL
+        if: matrix.target.os == 'windows-latest'
+        shell: bash
+        run: |
+          set -e
+          choco install openssl --version=1.1.1.2100 -y --no-progress
+          echo 'OPENSSL_DIR=C:\Program Files\OpenSSL' >> $GITHUB_ENV
+          echo "RUSTFLAGS=-C target-feature=+crt-static" >> $GITHUB_ENV
 
       - name: Install Rust (nightly)
-        uses: actions-rust-lang/setup-rust-toolchain@v1.5.0
+        uses: actions-rust-lang/setup-rust-toolchain@v1.15.2
         with:
           toolchain: nightly
 
-      - uses: taiki-e/install-action@v2.21.17
+      - name: Install cargo-hack and cargo-ci-cache-clean
+        uses: taiki-e/install-action@v2.67.18
         with:
-          tool: cargo-hack
+          tool: cargo-hack,cargo-ci-cache-clean
 
       - name: check minimal
         run: cargo ci-min
@@ -92,9 +101,7 @@ jobs:
 
       - name: tests
         timeout-minutes: 40
-        run: cargo ci-test --exclude=actix-redis --exclude=actix-session --exclude=actix-limitation -- --nocapture
+        run: cargo ci-test --exclude=actix-session --exclude=actix-limitation -- --nocapture
 
-      - name: Clear the cargo caches
-        run: |
-          cargo install cargo-cache --version 0.6.2 --no-default-features --features ci-autoclean
-          cargo-cache
+      - name: CI cache clean
+        run: cargo-ci-cache-clean

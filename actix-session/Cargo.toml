@@ -1,28 +1,28 @@
 [package]
 name = "actix-session"
-version = "0.8.0"
+version = "0.11.0"
 authors = [
   "Nikolay Kim <fafhrd91@gmail.com>",
   "Luca Palmieri <rust@lpalmieri.com>",
 ]
 description = "Session management for Actix Web"
 keywords = ["http", "web", "framework", "async", "session"]
-homepage = "https://actix.rs"
-repository = "https://github.com/actix/actix-extras.git"
+repository.workspace = true
+homepage.workspace = true
 license.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 
 [package.metadata.docs.rs]
-rustdoc-args = ["--cfg", "docsrs"]
 all-features = true
 
 [features]
 default = []
 cookie-session = []
-redis-actor-session = ["actix-redis", "actix", "futures-core", "rand"]
-redis-rs-session = ["redis", "rand"]
-redis-rs-tls-session = ["redis-rs-session", "redis/tokio-native-tls-comp"]
+redis-session = ["dep:redis"]
+redis-session-native-tls = ["redis-session", "redis/tokio-native-tls-comp"]
+redis-session-rustls = ["redis-session", "redis/tokio-rustls-comp"]
+redis-pool = ["dep:deadpool-redis"]
 
 [dependencies]
 actix-service = "2"
@@ -30,32 +30,30 @@ actix-utils = "3"
 actix-web = { version = "4", default-features = false, features = ["cookies", "secure-cookies"] }
 
 anyhow = "1"
-async-trait = "0.1"
-derive_more = "0.99.7"
-rand = { version = "0.8", optional = true }
+derive_more = { version = "2", features = ["display", "error", "from"] }
+rand = "0.9"
 serde = { version = "1" }
 serde_json = { version = "1" }
-tracing = { version = "0.1.30", default-features = false, features = ["log"] }
+tracing = { version = "0.1.44", default-features = false, features = ["log"] }
 
-# redis-actor-session
-actix = { version = "0.13", default-features = false, optional = true }
-actix-redis = { version = "0.12", optional = true }
-futures-core = { version = "0.3.7", default-features = false, optional = true }
-
-# redis-rs-session
-redis = { version = "0.23", default-features = false, features = ["tokio-comp", "connection-manager"], optional = true }
+# redis-session
+redis = { version = "0.32", default-features = false, features = ["tokio-comp", "connection-manager"], optional = true }
+deadpool-redis = { version = "0.22", optional = true }
 
 [dev-dependencies]
-actix-session = { path = ".", features = ["cookie-session", "redis-actor-session", "redis-rs-session"] }
-actix-test = "0.1.0-beta.10"
+actix-session = { path = ".", features = ["cookie-session", "redis-session"] }
+actix-test = "0.1"
 actix-web = { version = "4", default-features = false, features = ["cookies", "secure-cookies", "macros"] }
-env_logger = "0.10"
-log = "0.4"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing = "0.1.44"
+
+[lints]
+workspace = true
 
 [[example]]
 name = "basic"
-required-features = ["redis-actor-session"]
+required-features = ["redis-session"]
 
 [[example]]
 name = "authentication"
-required-features = ["redis-actor-session"]
+required-features = ["redis-session"]
