@@ -395,10 +395,10 @@ impl RedisSessionStore {
 #[cfg(test)]
 mod tests {
     use actix_web::cookie::time;
-    use redis::AsyncCommands;
-    use serde_json::Map;
     #[cfg(not(feature = "redis-session"))]
     use deadpool_redis::{Config, Runtime};
+    use redis::AsyncCommands;
+    use serde_json::Map;
 
     use super::*;
     use crate::test_helpers::acceptance_test_suite;
