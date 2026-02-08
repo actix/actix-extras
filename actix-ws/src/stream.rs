@@ -118,26 +118,40 @@ impl Stream for StreamingBody {
     fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         let this = self.get_mut();
 
-        if this.closing {
+        // If close has been initiated and there is no pending buffered data, end the stream.
+        if this.closing && this.buf.is_empty() {
             return Poll::Ready(None);
         }
 
-        loop {
-            match Pin::new(&mut this.session_rx).poll_recv(cx) {
-                Poll::Ready(Some(msg)) => {
-                    this.messages.push_back(msg);
+        if !this.closing {
+            loop {
+                match Pin::new(&mut this.session_rx).poll_recv(cx) {
+                    Poll::Ready(Some(msg)) => {
+                        this.messages.push_back(msg);
+                    }
+                    Poll::Ready(None) => {
+                        this.closing = true;
+                        break;
+                    }
+                    Poll::Pending => break,
                 }
-                Poll::Ready(None) => {
-                    this.closing = true;
-                    break;
-                }
-                Poll::Pending => break,
             }
         }
 
         while let Some(msg) = this.messages.pop_front() {
+            let is_close = matches!(msg, Message::Close(_));
+
             if let Err(err) = this.codec.encode(msg, &mut this.buf) {
                 return Poll::Ready(Some(Err(err.into())));
+            }
+
+            if is_close {
+                // A WebSocket Close frame is terminal. End the response body after flushing this
+                // frame, even if there are still `Session` clones holding the sender.
+                this.closing = true;
+                this.session_rx.close();
+                this.messages.clear();
+                break;
             }
         }
 
@@ -411,8 +425,8 @@ pub(crate) mod tests {
             }
 
             assert!(
-                stream.as_mut().poll_next(cx).is_pending(),
-                "Stream should be pending after processing messages"
+                matches!(stream.as_mut().poll_next(cx), Poll::Ready(None)),
+                "stream should close after processing close message"
             );
 
             Poll::Ready(())
@@ -448,8 +462,44 @@ pub(crate) mod tests {
                 "Stream should be ready"
             );
             assert!(
+                matches!(stream.as_mut().poll_next(cx), Poll::Ready(None)),
+                "stream should close after processing close message"
+            );
+
+            Poll::Ready(())
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn stream_closes_after_close_message_even_if_sender_alive() {
+        std::future::poll_fn(move |cx| {
+            let (tx, rx) = tokio::sync::mpsc::channel(1);
+
+            let stream = StreamingBody::new(rx);
+            let mut stream = std::pin::pin!(stream);
+
+            assert!(
                 stream.as_mut().poll_next(cx).is_pending(),
-                "Stream should have only been ready once"
+                "stream should start pending"
+            );
+
+            // Send a Close frame but keep the sender alive (e.g. a `Session` clone held elsewhere).
+            {
+                let fut = tx.send(Message::Close(None));
+                let fut = std::pin::pin!(fut);
+                assert!(fut.poll(cx).is_ready(), "Sending should not yield");
+            }
+
+            assert!(
+                stream.as_mut().poll_next(cx).is_ready(),
+                "stream should yield close frame bytes"
+            );
+
+            let poll = stream.as_mut().poll_next(cx);
+            assert!(
+                matches!(poll, Poll::Ready(None)),
+                "stream should close after close frame even if sender is still alive"
             );
 
             Poll::Ready(())
