@@ -1,11 +1,12 @@
-use std::{collections::HashMap, future::Future};
+use std::future::Future;
 
 use actix_web::cookie::time::Duration;
 use derive_more::derive::Display;
+use serde_json::{Map, Value};
 
 use super::SessionKey;
 
-pub(crate) type SessionState = HashMap<String, String>;
+pub(crate) type SessionState = Map<String, Value>;
 
 /// The interface to retrieve and save the current session data from/to the chosen storage backend.
 ///

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Session state is now stored as JSON values rather than JSON strings, avoiding double serialization in storage backends.
+  The stored session-state format is versioned and older sessions are automatically migrated when loaded.
 - `Session` implementation of `FromRequest` now errors with `Infallible` rather than `actix_web::error::Error`.
 - Minimum supported Rust version (MSRV) is now 1.88.
 

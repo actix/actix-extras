@@ -6,6 +6,7 @@ use redis::{aio::ConnectionManager, AsyncCommands, Client, Cmd, FromRedisValue, 
 
 use super::SessionKey;
 use crate::storage::{
+    format::{deserialize_session_state, serialize_session_state},
     interface::{LoadError, SaveError, SessionState, UpdateError},
     utils::generate_session_key,
     SessionStore,
@@ -209,9 +210,9 @@ impl SessionStore for RedisSessionStore {
 
         match value {
             None => Ok(None),
-            Some(value) => Ok(serde_json::from_str(&value)
-                .map_err(Into::into)
-                .map_err(LoadError::Deserialization)?),
+            Some(value) => Ok(Some(
+                deserialize_session_state(&value).map_err(LoadError::Deserialization)?,
+            )),
         }
     }
 
@@ -220,9 +221,7 @@ impl SessionStore for RedisSessionStore {
         session_state: SessionState,
         ttl: &Duration,
     ) -> Result<SessionKey, SaveError> {
-        let body = serde_json::to_string(&session_state)
-            .map_err(Into::into)
-            .map_err(SaveError::Serialization)?;
+        let body = serialize_session_state(&session_state).map_err(SaveError::Serialization)?;
         let session_key = generate_session_key();
         let cache_key = (self.configuration.cache_keygen)(session_key.as_ref());
 
@@ -250,9 +249,7 @@ impl SessionStore for RedisSessionStore {
         session_state: SessionState,
         ttl: &Duration,
     ) -> Result<SessionKey, UpdateError> {
-        let body = serde_json::to_string(&session_state)
-            .map_err(Into::into)
-            .map_err(UpdateError::Serialization)?;
+        let body = serialize_session_state(&session_state).map_err(UpdateError::Serialization)?;
 
         let cache_key = (self.configuration.cache_keygen)(session_key.as_ref());
 
@@ -394,11 +391,11 @@ impl RedisSessionStore {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::HashMap;
-
     use actix_web::cookie::time;
     #[cfg(not(feature = "redis-session"))]
     use deadpool_redis::{Config, Runtime};
+    use redis::AsyncCommands;
+    use serde_json::Map;
 
     use super::*;
     use crate::test_helpers::acceptance_test_suite;
@@ -468,7 +465,7 @@ mod tests {
         let session_key = generate_session_key();
         let initial_session_key = session_key.as_ref().to_owned();
         let updated_session_key = store
-            .update(session_key, HashMap::new(), &time::Duration::seconds(1))
+            .update(session_key, Map::new(), &time::Duration::seconds(1))
             .await
             .unwrap();
         assert_ne!(initial_session_key, updated_session_key.as_ref());

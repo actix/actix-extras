@@ -1,5 +1,6 @@
 use actix_session::{SessionExt, SessionStatus};
 use actix_web::{test, HttpResponse};
+use serde_json::Value;
 
 #[actix_web::test]
 async fn session() {
@@ -16,7 +17,7 @@ async fn session() {
     let state: Vec<_> = res.get_session().entries().clone().into_iter().collect();
     assert_eq!(
         state.as_slice(),
-        [("key2".to_string(), "\"value2\"".to_string())]
+        [("key2".to_string(), Value::from("value2"))]
     );
 }
 

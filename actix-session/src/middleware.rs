@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fmt, future::Future, pin::Pin, rc::Rc};
+use std::{fmt, future::Future, pin::Pin, rc::Rc};
 
 use actix_utils::future::{ready, Ready};
 use actix_web::{
@@ -9,6 +9,7 @@ use actix_web::{
     HttpResponse,
 };
 use anyhow::Context;
+use serde_json::{Map, Value};
 
 use crate::{
     config::{
@@ -358,7 +359,7 @@ fn extract_session_key(req: &ServiceRequest, config: &CookieConfiguration) -> Op
 async fn load_session_state<Store: SessionStore>(
     session_key: Option<SessionKey>,
     storage_backend: &Store,
-) -> Result<(Option<SessionKey>, HashMap<String, String>), actix_web::Error> {
+) -> Result<(Option<SessionKey>, Map<String, Value>), actix_web::Error> {
     if let Some(session_key) = session_key {
         match storage_backend.load(&session_key).await {
             Ok(state) => {
@@ -376,7 +377,7 @@ async fn load_session_state<Store: SessionStore>(
                         empty session."
                     );
 
-                    Ok((None, HashMap::new()))
+                    Ok((None, Map::new()))
                 }
             }
 
@@ -388,14 +389,14 @@ async fn load_session_state<Store: SessionStore>(
                         "Invalid session state, creating a new empty session."
                     );
 
-                    Ok((Some(session_key), HashMap::new()))
+                    Ok((Some(session_key), Map::new()))
                 }
 
                 LoadError::Other(err) => Err(e500(err)),
             },
         }
     } else {
-        Ok((None, HashMap::new()))
+        Ok((None, Map::new()))
     }
 }
 

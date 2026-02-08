@@ -234,7 +234,7 @@ pub mod test_helpers {
                             .build(),
                     )
                     .service(web::resource("/").to(|ses: Session| async move {
-                        let _ = ses.insert("counter", 100);
+                        ses.insert("counter", 100).unwrap();
                         "test"
                     }))
                     .service(web::resource("/test/").to(|ses: Session| async move {
@@ -282,7 +282,7 @@ pub mod test_helpers {
                             .build(),
                     )
                     .service(web::resource("/").to(|ses: Session| async move {
-                        let _ = ses.insert("counter", 100);
+                        ses.insert("counter", 100).unwrap();
                         "test"
                     }))
                     .service(web::resource("/test/").to(|| async move { "no-changes-in-session" })),
@@ -324,7 +324,7 @@ pub mod test_helpers {
                             .build(),
                     )
                     .service(web::resource("/").to(|ses: Session| async move {
-                        let _ = ses.insert("counter", 100);
+                        ses.insert("counter", 100).unwrap();
                         "test"
                     }))
                     .service(web::resource("/test/").to(|| async move { "no-changes-in-session" })),
@@ -689,7 +689,7 @@ pub mod test_helpers {
 
         async fn login(user_id: web::Json<Identity>, session: Session) -> Result<HttpResponse> {
             let id = user_id.into_inner().user_id;
-            session.insert("user_id", &id)?;
+            session.insert("user_id", id.clone())?;
             session.renew();
 
             let counter: i32 = session
