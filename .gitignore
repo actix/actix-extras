@@ -14,8 +14,6 @@ guide/build/
 
 Server.toml
 
-.idea
-
 # code coverage
 /lcov.info
 /codecov.json
