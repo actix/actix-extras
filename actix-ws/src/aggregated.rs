@@ -126,7 +126,10 @@ impl Stream for AggregatedMessageStream {
                             return size_error();
                         }
 
-                        this.continuations.push(bytes);
+                        // Avoid unbounded growth when receiving unlimited empty continuation frames.
+                        if !bytes.is_empty() {
+                            this.continuations.push(bytes);
+                        }
 
                         continue;
                     }
@@ -140,7 +143,10 @@ impl Stream for AggregatedMessageStream {
                             return size_error();
                         }
 
-                        this.continuations.push(bytes);
+                        // Avoid unbounded growth when receiving unlimited empty continuation frames.
+                        if !bytes.is_empty() {
+                            this.continuations.push(bytes);
+                        }
 
                         continue;
                     }
@@ -153,7 +159,10 @@ impl Stream for AggregatedMessageStream {
                             return size_error();
                         }
 
-                        this.continuations.push(bytes);
+                        // Avoid unbounded growth when receiving unlimited empty continuation frames.
+                        if !bytes.is_empty() {
+                            this.continuations.push(bytes);
+                        }
 
                         continue;
                     }
@@ -170,7 +179,10 @@ impl Stream for AggregatedMessageStream {
                             return size_error();
                         }
 
-                        this.continuations.push(bytes);
+                        // Avoid unbounded growth when receiving unlimited empty continuation frames.
+                        if !bytes.is_empty() {
+                            this.continuations.push(bytes);
+                        }
                         let bytes = collect(&mut this.continuations, this.current_size);
 
                         this.current_size = 0;
@@ -225,7 +237,7 @@ mod tests {
 
     use futures_core::Stream;
 
-    use super::{Bytes, Item, Message, MessageStream};
+    use super::{AggregatedMessage, Bytes, Item, Message, MessageStream};
     use crate::stream::tests::payload_pair;
 
     #[tokio::test]
@@ -311,6 +323,56 @@ mod tests {
                 stream.as_mut().poll_next(cx).is_pending(),
                 "Stream should be pending after processing messages"
             );
+
+            Poll::Ready(())
+        })
+        .await
+    }
+
+    #[tokio::test]
+    async fn ignores_empty_continuation_chunks() {
+        std::future::poll_fn(move |cx| {
+            let (mut tx, rx) = payload_pair(8);
+            let message_stream = MessageStream::new(rx).aggregate_continuations();
+            let mut stream = std::pin::pin!(message_stream);
+
+            let poll = stream.as_mut().poll_next(cx);
+            assert!(
+                poll.is_pending(),
+                "Stream should be pending when no messages are present {poll:?}"
+            );
+
+            // start continuation with empty chunk, then send a bunch of empty continuation chunks;
+            // they should not be buffered (would otherwise cause unbounded `Vec` growth).
+            let messages = std::iter::once(Message::Continuation(Item::FirstText(Bytes::new())))
+                .chain((0..128).map(|_| Message::Continuation(Item::Continue(Bytes::new()))))
+                .collect::<Vec<_>>();
+
+            {
+                let fut = tx.send_many(messages);
+                let fut = std::pin::pin!(fut);
+                assert!(fut.poll(cx).is_ready(), "Sending should not yield");
+            }
+
+            assert!(
+                stream.as_mut().poll_next(cx).is_pending(),
+                "Stream shouldn't be ready until continuations complete"
+            );
+            assert_eq!(stream.as_mut().get_mut().continuations.len(), 0);
+
+            // end continuation; this should yield an empty text message.
+            {
+                let fut = tx.send(Message::Continuation(Item::Last(Bytes::new())));
+                let fut = std::pin::pin!(fut);
+                assert!(fut.poll(cx).is_ready(), "Sending should not yield");
+            }
+
+            match stream.as_mut().poll_next(cx) {
+                Poll::Ready(Some(Ok(AggregatedMessage::Text(text)))) => assert!(text.is_empty()),
+                poll => panic!("expected empty text message; got {poll:?}"),
+            }
+
+            assert_eq!(stream.as_mut().get_mut().continuations.len(), 0);
 
             Poll::Ready(())
         })

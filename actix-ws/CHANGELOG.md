@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- fix: Ignore empty continuation chunks [#660]
+
+[#660]: https://github.com/actix/actix-extras/pull/660
+
 ## 0.3.1
 
 - enable actix-web's `ws` feature explicitly.
