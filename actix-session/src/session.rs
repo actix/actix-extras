@@ -107,7 +107,7 @@ impl Session {
 
     /// Get all raw key-value data from the session.
     ///
-    /// Note that values are JSON encoded.
+    /// Note that values are JSON values.
     pub fn entries(&self) -> Ref<'_, Map<String, Value>> {
         Ref::map(self.0.borrow(), |inner| &inner.state)
     }
@@ -187,7 +187,7 @@ impl Session {
                 })
                 .map_err(SessionUpdateError)?;
 
-            let val = serde_json::to_value(&updater(value))
+            let val = serde_json::to_value(updater(value))
                 .with_context(|| {
                     format!(
                         "Failed to serialize the provided `{}` type instance as JSON in order to \
@@ -298,7 +298,7 @@ impl Session {
     /// Adds the given key-value pairs to the session on the request.
     ///
     /// Values that match keys already existing on the session will be overwritten. Values should
-    /// already be JSON serialized.
+    /// already be JSON values.
     #[allow(clippy::needless_pass_by_ref_mut)]
     pub(crate) fn set_session(
         req: &mut ServiceRequest,

@@ -2,6 +2,8 @@
 
 #[cfg(feature = "cookie-session")]
 mod cookie;
+#[cfg(any(feature = "cookie-session", feature = "redis-session", test))]
+mod format;
 mod interface;
 #[cfg(feature = "redis-session")]
 mod redis_rs;
