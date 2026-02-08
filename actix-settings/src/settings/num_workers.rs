@@ -39,7 +39,7 @@ impl<'de> de::Deserialize<'de> for NumWorkers {
     {
         struct NumWorkersVisitor;
 
-        impl<'de> de::Visitor<'de> for NumWorkersVisitor {
+        impl de::Visitor<'_> for NumWorkersVisitor {
             type Value = NumWorkers;
 
             fn expecting(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

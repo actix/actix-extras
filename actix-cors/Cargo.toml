@@ -1,20 +1,19 @@
 [package]
 name = "actix-cors"
-version = "0.6.4"
+version = "0.7.1"
 authors = [
     "Nikolay Kim <fafhrd91@gmail.com>",
     "Rob Ede <robjtede@icloud.com>",
 ]
 description = "Cross-Origin Resource Sharing (CORS) controls for Actix Web"
 keywords = ["actix", "cors", "web", "security", "crossorigin"]
-homepage = "https://actix.rs"
-repository = "https://github.com/actix/actix-extras.git"
+repository.workspace = true
+homepage.workspace = true
 license.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 
 [package.metadata.docs.rs]
-rustdoc-args = ["--cfg", "docsrs"]
 all-features = true
 
 [features]
@@ -24,7 +23,7 @@ draft-private-network-access = []
 actix-utils = "3"
 actix-web = { version = "4", default-features = false }
 
-derive_more = "0.99.7"
+derive_more = { version = "2", features = ["display", "error"] }
 futures-util = { version = "0.3.17", default-features = false, features = ["std"] }
 log = "0.4"
 once_cell = "1"
@@ -32,5 +31,8 @@ smallvec = "1"
 
 [dev-dependencies]
 actix-web = { version = "4", default-features = false, features = ["macros"] }
-env_logger = "0.10"
-regex = "1.4"
+env_logger = "0.11"
+regex = "1.12"
+
+[lints]
+workspace = true

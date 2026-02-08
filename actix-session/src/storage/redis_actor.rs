@@ -118,7 +118,6 @@ impl RedisActorSessionStoreBuilder {
     }
 }
 
-#[async_trait::async_trait(?Send)]
 impl SessionStore for RedisActorSessionStore {
     async fn load(&self, session_key: &SessionKey) -> Result<Option<SessionState>, LoadError> {
         let cache_key = (self.configuration.cache_keygen)(session_key.as_ref());
@@ -276,10 +275,8 @@ impl SessionStore for RedisActorSessionStore {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::HashMap;
-
     use actix_web::cookie::time::Duration;
-
+    use serde_json::Map;
     use super::*;
     use crate::test_helpers::acceptance_test_suite;
 
@@ -305,7 +302,7 @@ mod tests {
         let session_key = generate_session_key();
         let initial_session_key = session_key.as_ref().to_owned();
         let updated_session_key = store
-            .update(session_key, HashMap::new(), &Duration::seconds(1))
+            .update(session_key, Map::new(), &Duration::seconds(1))
             .await
             .unwrap();
         assert_ne!(initial_session_key, updated_session_key.as_ref());

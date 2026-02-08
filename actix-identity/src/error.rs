@@ -2,11 +2,11 @@
 
 use actix_session::{SessionGetError, SessionInsertError};
 use actix_web::{cookie::time::error::ComponentRange, http::StatusCode, ResponseError};
-use derive_more::{Display, Error, From};
+use derive_more::derive::{Display, Error, From};
 
 /// Error that can occur during login attempts.
 #[derive(Debug, Display, Error, From)]
-#[display(fmt = "{_0}")]
+#[display("{_0}")]
 pub struct LoginError(SessionInsertError);
 
 impl ResponseError for LoginError {
@@ -17,7 +17,7 @@ impl ResponseError for LoginError {
 
 /// Error encountered when working with a session that has expired.
 #[derive(Debug, Display, Error)]
-#[display(fmt = "The given session has expired and is no longer valid")]
+#[display("The given session has expired and is no longer valid")]
 pub struct SessionExpiryError(#[error(not(source))] pub(crate) ComponentRange);
 
 /// The identity information has been lost.
@@ -25,7 +25,7 @@ pub struct SessionExpiryError(#[error(not(source))] pub(crate) ComponentRange);
 /// Seeing this error in user code indicates a bug in actix-identity.
 #[derive(Debug, Display, Error)]
 #[display(
-    fmt = "The identity information in the current session has disappeared after having been \
+    "The identity information in the current session has disappeared after having been \
            successfully validated. This is likely to be a bug."
 )]
 #[non_exhaustive]
@@ -33,7 +33,7 @@ pub struct LostIdentityError;
 
 /// There is no identity information attached to the current session.
 #[derive(Debug, Display, Error)]
-#[display(fmt = "There is no identity information attached to the current session")]
+#[display("There is no identity information attached to the current session")]
 #[non_exhaustive]
 pub struct MissingIdentityError;
 
@@ -42,21 +42,21 @@ pub struct MissingIdentityError;
 #[non_exhaustive]
 pub enum GetIdentityError {
     /// The session has expired.
-    #[display(fmt = "{_0}")]
+    #[display("{_0}")]
     SessionExpiryError(SessionExpiryError),
 
     /// No identity is found in a session.
-    #[display(fmt = "{_0}")]
+    #[display("{_0}")]
     MissingIdentityError(MissingIdentityError),
 
     /// Failed to accessing the session store.
-    #[display(fmt = "{_0}")]
+    #[display("{_0}")]
     SessionGetError(SessionGetError),
 
     /// Identity info was lost after being validated.
     ///
     /// Seeing this error indicates a bug in actix-identity.
-    #[display(fmt = "{_0}")]
+    #[display("{_0}")]
     LostIdentityError(LostIdentityError),
 }
 

@@ -1,9 +1,4 @@
-use std::{
-    collections::HashSet,
-    convert::{TryFrom, TryInto},
-    fmt,
-    rc::Rc,
-};
+use std::{collections::HashSet, fmt, rc::Rc};
 
 use actix_web::{
     dev::RequestHead,
@@ -32,6 +27,12 @@ impl Default for OriginFn {
     }
 }
 
+impl PartialEq for OriginFn {
+    fn eq(&self, other: &Self) -> bool {
+        Rc::ptr_eq(&self.boxed_fn, &other.boxed_fn)
+    }
+}
+
 impl fmt::Debug for OriginFn {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str("origin_fn")
@@ -45,7 +46,7 @@ pub(crate) fn header_value_try_into_method(hdr: &HeaderValue) -> Option<Method> 
         .and_then(|meth| Method::try_from(meth).ok())
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub(crate) struct Inner {
     pub(crate) allowed_origins: AllOrSome<HashSet<HeaderValue>>,
     pub(crate) allowed_origins_fns: SmallVec<[OriginFn; 4]>,
@@ -223,7 +224,7 @@ pub(crate) fn add_vary_header(headers: &mut HeaderMap) {
             val.extend(b", Origin, Access-Control-Request-Method, Access-Control-Request-Headers");
 
             #[cfg(feature = "draft-private-network-access")]
-            val.extend(b", Access-Control-Allow-Private-Network");
+            val.extend(b", Access-Control-Request-Private-Network");
 
             val.try_into().unwrap()
         }
@@ -231,7 +232,7 @@ pub(crate) fn add_vary_header(headers: &mut HeaderMap) {
         #[cfg(feature = "draft-private-network-access")]
         None => HeaderValue::from_static(
             "Origin, Access-Control-Request-Method, Access-Control-Request-Headers, \
-            Access-Control-Allow-Private-Network",
+            Access-Control-Request-Private-Network",
         ),
 
         #[cfg(not(feature = "draft-private-network-access"))]
@@ -266,6 +267,7 @@ mod test {
     async fn test_validate_not_allowed_origin() {
         let cors = Cors::default()
             .allowed_origin("https://www.example.com")
+            .block_on_origin_mismatch(true)
             .new_transform(test::ok_service())
             .await
             .unwrap();

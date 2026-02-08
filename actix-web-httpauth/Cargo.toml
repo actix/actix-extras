@@ -1,6 +1,6 @@
 [package]
 name = "actix-web-httpauth"
-version = "0.8.1"
+version = "0.8.2"
 description = "HTTP authentication schemes for Actix Web"
 categories = ["web-programming"]
 keywords = ["http", "web", "framework", "authentication", "security"]
@@ -8,27 +8,31 @@ authors = [
     "svartalf <self@svartalf.info>",
     "Yuki Okushi <huyuumi.dev@gmail.com>",
 ]
-homepage = "https://actix.rs"
-repository = "https://github.com/actix/actix-extras"
+repository.workspace = true
+homepage.workspace = true
 license.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 
 [package.metadata.docs.rs]
-rustdoc-args = ["--cfg", "docsrs"]
 all-features = true
 
 [dependencies]
 actix-utils = "3"
-actix-web = { version = "4.1", default-features = false }
+actix-web = { version = "4.12.1", default-features = false }
 
-base64 = "0.21"
-futures-core = "0.3.7"
+base64 = "0.22"
+futures-core = "0.3.17"
 futures-util = { version = "0.3.17", default-features = false, features = ["std"] }
 log = "0.4"
 pin-project-lite = "0.2.7"
 
 [dev-dependencies]
-actix-cors = "0.6"
+actix-cors = "0.7"
 actix-service = "2"
 actix-web = { version = "4.1", default-features = false, features = ["macros"] }
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing = "0.1.44"
+
+[lints]
+workspace = true

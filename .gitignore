@@ -1,6 +1,5 @@
 /target
 **/*.rs.bk
-Cargo.lock
 
 guide/build/
 /gh-pages
@@ -14,3 +13,7 @@ guide/build/
 .DS_Store
 
 Server.toml
+
+# code coverage
+/lcov.info
+/codecov.json

@@ -2,6 +2,28 @@
 
 ## Unreleased
 
+- Minimum supported Rust version (MSRV) is now 1.88.
+
+## 0.9.0
+
+- Fix spelling of `config::LogoutBehavior` type.
+- Fix spelling of `config::IdentityMiddlewareBuilder::logout_behavior()` method.
+- Update `actix-session` dependency to `0.11`.
+- Minimum supported Rust version (MSRV) is now 1.80.
+
+## 0.8.0
+
+- Update `actix-session` dependency to `0.10`.
+
+## 0.7.1
+
+- Add `IdentityMiddlewareBuilder::{id_key, last_visit_unix_timestamp_key, login_unix_timestamp_key}()` methods for customizing keys used in session. Defaults remain the same as before.
+
+## 0.7.0
+
+- Update `actix-session` dependency to `0.9`.
+- Minimum supported Rust version (MSRV) is now 1.75.
+
 ## 0.6.0
 
 - Add `error` module.

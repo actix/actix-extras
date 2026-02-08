@@ -4,6 +4,10 @@
 
 - Added optional scopes to the middleware enabling use of multiple Limiters by passing an `HashMap<Limiter>` to the Http server `app_data`
 
+- Update `redis` dependency to `0.32`.
+- Update `actix-session` dependency to `0.11`.
+- Minimum supported Rust version (MSRV) is now 1.88.
+
 ## 0.5.1
 
 - No significant changes since `0.5.0`.

@@ -1,4 +1,4 @@
-use std::{collections::HashMap, convert::TryInto, fmt, future::Future, pin::Pin, rc::Rc};
+use std::{fmt, future::Future, pin::Pin, rc::Rc};
 
 use actix_utils::future::{ready, Ready};
 use actix_web::{
@@ -9,6 +9,7 @@ use actix_web::{
     HttpResponse,
 };
 use anyhow::Context;
+use serde_json::{Map, Value};
 
 use crate::{
     config::{
@@ -47,7 +48,7 @@ use crate::{
 /// # Examples
 /// ```no_run
 /// use actix_web::{web, App, HttpServer, HttpResponse, Error};
-/// use actix_session::{Session, SessionMiddleware, storage::RedisActorSessionStore};
+/// use actix_session::{Session, SessionMiddleware, storage::RedisSessionStore};
 /// use actix_web::cookie::Key;
 ///
 /// // The secret key would usually be read from a configuration file/environment variables.
@@ -59,28 +60,28 @@ use crate::{
 /// #[actix_web::main]
 /// async fn main() -> std::io::Result<()> {
 ///     let secret_key = get_secret_key();
-///     let redis_connection_string = "127.0.0.1:6379";
-///     HttpServer::new(move ||
-///             App::new()
-///             // Add session management to your application using Redis for session state storage
-///             .wrap(
-///                 SessionMiddleware::new(
-///                     RedisActorSessionStore::new(redis_connection_string),
-///                     secret_key.clone()
-///                 )
-///             )
-///             .default_service(web::to(|| HttpResponse::Ok())))
-///         .bind(("127.0.0.1", 8080))?
-///         .run()
-///         .await
+///     let storage = RedisSessionStore::new("127.0.0.1:6379").await.unwrap();
+///
+///     HttpServer::new(move || {
+///         App::new()
+///             // Add session management to your application using Redis as storage
+///             .wrap(SessionMiddleware::new(
+///                 storage.clone(),
+///                 secret_key.clone(),
+///             ))
+///             .default_service(web::to(|| HttpResponse::Ok()))
+///     })
+///     .bind(("127.0.0.1", 8080))?
+///     .run()
+///     .await
 /// }
 /// ```
 ///
-/// If you want to customise use [`builder`](Self::builder) instead of [`new`](Self::new):
+/// If you want to customize use [`builder`](Self::builder) instead of [`new`](Self::new):
 ///
 /// ```no_run
 /// use actix_web::{App, cookie::{Key, time}, Error, HttpResponse, HttpServer, web};
-/// use actix_session::{Session, SessionMiddleware, storage::RedisActorSessionStore};
+/// use actix_session::{Session, SessionMiddleware, storage::RedisSessionStore};
 /// use actix_session::config::PersistentSession;
 ///
 /// // The secret key would usually be read from a configuration file/environment variables.
@@ -92,25 +93,23 @@ use crate::{
 /// #[actix_web::main]
 /// async fn main() -> std::io::Result<()> {
 ///     let secret_key = get_secret_key();
-///     let redis_connection_string = "127.0.0.1:6379";
-///     HttpServer::new(move ||
-///             App::new()
-///             // Customise session length!
+///     let storage = RedisSessionStore::new("127.0.0.1:6379").await.unwrap();
+///
+///     HttpServer::new(move || {
+///         App::new()
+///             // Customize session length!
 ///             .wrap(
-///                 SessionMiddleware::builder(
-///                     RedisActorSessionStore::new(redis_connection_string),
-///                     secret_key.clone()
-///                 )
-///                 .session_lifecycle(
-///                     PersistentSession::default()
-///                         .session_ttl(time::Duration::days(5))
-///                 )
-///                 .build(),
+///                 SessionMiddleware::builder(storage.clone(), secret_key.clone())
+///                     .session_lifecycle(
+///                         PersistentSession::default().session_ttl(time::Duration::days(5)),
+///                     )
+///                     .build(),
 ///             )
-///             .default_service(web::to(|| HttpResponse::Ok())))
-///         .bind(("127.0.0.1", 8080))?
-///         .run()
-///         .await
+///             .default_service(web::to(|| HttpResponse::Ok()))
+///     })
+///     .bind(("127.0.0.1", 8080))?
+///     .run()
+///     .await
 /// }
 /// ```
 #[derive(Clone)]
@@ -360,7 +359,7 @@ fn extract_session_key(req: &ServiceRequest, config: &CookieConfiguration) -> Op
 async fn load_session_state<Store: SessionStore>(
     session_key: Option<SessionKey>,
     storage_backend: &Store,
-) -> Result<(Option<SessionKey>, HashMap<String, String>), actix_web::Error> {
+) -> Result<(Option<SessionKey>, Map<String, Value>), actix_web::Error> {
     if let Some(session_key) = session_key {
         match storage_backend.load(&session_key).await {
             Ok(state) => {
@@ -378,7 +377,7 @@ async fn load_session_state<Store: SessionStore>(
                         empty session."
                     );
 
-                    Ok((None, HashMap::new()))
+                    Ok((None, Map::new()))
                 }
             }
 
@@ -390,14 +389,14 @@ async fn load_session_state<Store: SessionStore>(
                         "Invalid session state, creating a new empty session."
                     );
 
-                    Ok((Some(session_key), HashMap::new()))
+                    Ok((Some(session_key), Map::new()))
                 }
 
                 LoadError::Other(err) => Err(e500(err)),
             },
         }
     } else {
-        Ok((None, HashMap::new()))
+        Ok((None, Map::new()))
     }
 }
 

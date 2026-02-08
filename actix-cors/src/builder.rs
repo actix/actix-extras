@@ -1,4 +1,4 @@
-use std::{collections::HashSet, convert::TryInto, iter::FromIterator, rc::Rc};
+use std::{collections::HashSet, rc::Rc};
 
 use actix_utils::future::{self, Ready};
 use actix_web::{
@@ -82,6 +82,7 @@ static ALL_METHODS_SET: Lazy<HashSet<Method>> = Lazy::new(|| {
 ///
 /// [Fetch Standard CORS protocol]: https://fetch.spec.whatwg.org/#http-cors-protocol
 #[derive(Debug)]
+#[must_use]
 pub struct Cors {
     inner: Rc<Inner>,
     error: Option<Either<HttpError, CorsError>>,
@@ -114,7 +115,7 @@ impl Cors {
             #[cfg(feature = "draft-private-network-access")]
             allow_private_network_access: false,
             vary_header: true,
-            block_on_origin_mismatch: true,
+            block_on_origin_mismatch: false,
         };
 
         Cors {
@@ -213,7 +214,7 @@ impl Cors {
     /// See [`Cors::allowed_methods`] for more info on allowed methods.
     pub fn allow_any_method(mut self) -> Cors {
         if let Some(cors) = cors(&mut self.inner, &self.error) {
-            cors.allowed_methods = ALL_METHODS_SET.clone();
+            ALL_METHODS_SET.clone_into(&mut cors.allowed_methods);
         }
 
         self
@@ -467,7 +468,7 @@ impl Cors {
         self
     }
 
-    /// Configures whether requests should be pre-emptively blocked on mismatched origin.
+    /// Configures whether requests should be preemptively blocked on mismatched origin.
     ///
     /// If `true`, a 400 Bad Request is returned immediately when a request fails origin validation.
     ///
@@ -476,7 +477,7 @@ impl Cors {
     /// and block requests based on pre-flight requests. Use this setting to allow cURL and other
     /// non-browser HTTP clients to function as normal, no matter what `Origin` the request has.
     ///
-    /// Defaults to true.
+    /// Defaults to false.
     pub fn block_on_origin_mismatch(mut self, block: bool) -> Cors {
         if let Some(cors) = cors(&mut self.inner, &self.error) {
             cors.block_on_origin_mismatch = block;
@@ -512,7 +513,7 @@ impl Default for Cors {
             #[cfg(feature = "draft-private-network-access")]
             allow_private_network_access: false,
             vary_header: true,
-            block_on_origin_mismatch: true,
+            block_on_origin_mismatch: false,
         };
 
         Cors {
@@ -607,14 +608,27 @@ where
         .unwrap()
 }
 
+impl PartialEq for Cors {
+    fn eq(&self, other: &Self) -> bool {
+        self.inner == other.inner
+        // Because of the cors-function, checking if the content is equal implies that the errors are equal
+        //
+        // Proof by contradiction:
+        // Lets assume that the inner values are equal, but the error values are not.
+        // This means there had been an error, which has been fixed.
+        // This cannot happen as the first call to set the invalid value means that further usages of the cors-function will reject other input.
+        // => inner has to be in a different state
+    }
+}
+
 #[cfg(test)]
 mod test {
-    use std::convert::{Infallible, TryInto};
+    use std::convert::Infallible;
 
     use actix_web::{
         body,
-        dev::{fn_service, Transform},
-        http::{header::HeaderName, StatusCode},
+        dev::fn_service,
+        http::StatusCode,
         test::{self, TestRequest},
         HttpResponse,
     };
@@ -645,8 +659,9 @@ mod test {
             .insert_header(("Origin", "https://www.example.com"))
             .to_srv_request();
 
-        let resp = test::call_service(&cors, req).await;
-        assert_eq!(resp.status(), StatusCode::BAD_REQUEST);
+        let res = test::call_service(&cors, req).await;
+        assert_eq!(res.status(), StatusCode::OK);
+        assert!(!res.headers().contains_key("Access-Control-Allow-Origin"));
     }
 
     #[actix_web::test]
@@ -676,5 +691,12 @@ mod test {
         });
 
         Cors::default().new_transform(srv).await.unwrap();
+    }
+
+    #[test]
+    fn impl_eq() {
+        assert_eq!(Cors::default(), Cors::default());
+        assert_ne!(Cors::default().send_wildcard(), Cors::default());
+        assert_ne!(Cors::default(), Cors::permissive());
     }
 }

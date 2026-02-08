@@ -1,10 +1,12 @@
-use actix_session::{storage::RedisActorSessionStore, Session, SessionMiddleware};
+use actix_session::{storage::RedisSessionStore, Session, SessionMiddleware};
 use actix_web::{
     cookie::{Key, SameSite},
     error::InternalError,
     middleware, web, App, Error, HttpResponse, HttpServer, Responder,
 };
 use serde::{Deserialize, Serialize};
+use tracing::level_filters::LevelFilter;
+use tracing_subscriber::EnvFilter;
 
 #[derive(Deserialize)]
 struct Credentials {
@@ -71,12 +73,21 @@ async fn secret(session: Session) -> Result<impl Responder, Error> {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
+    tracing_subscriber::fmt()
+        .with_env_filter(
+            EnvFilter::builder()
+                .with_default_directive(LevelFilter::INFO.into())
+                .from_env_lossy(),
+        )
+        .init();
 
     // The signing key would usually be read from a configuration file/environment variables.
     let signing_key = Key::generate();
 
-    log::info!("starting HTTP server at http://localhost:8080");
+    tracing::info!("setting up Redis session storage");
+    let storage = RedisSessionStore::new("127.0.0.1:6379").await.unwrap();
+
+    tracing::info!("starting HTTP server at http://localhost:8080");
 
     HttpServer::new(move || {
         App::new()
@@ -84,15 +95,12 @@ async fn main() -> std::io::Result<()> {
             .wrap(middleware::Logger::default())
             // cookie session middleware
             .wrap(
-                SessionMiddleware::builder(
-                    RedisActorSessionStore::new("127.0.0.1:6379"),
-                    signing_key.clone(),
-                )
-                // allow the cookie to be accessed from javascript
-                .cookie_http_only(false)
-                // allow the cookie only from the current domain
-                .cookie_same_site(SameSite::Strict)
-                .build(),
+                SessionMiddleware::builder(storage.clone(), signing_key.clone())
+                    // allow the cookie to be accessed from javascript
+                    .cookie_http_only(false)
+                    // allow the cookie only from the current domain
+                    .cookie_same_site(SameSite::Strict)
+                    .build(),
             )
             .route("/login", web::post().to(login))
             .route("/secret", web::get().to(secret))

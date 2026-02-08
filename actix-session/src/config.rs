@@ -1,7 +1,7 @@
-//! Configuration options to tune the behaviour of [`SessionMiddleware`].
+//! Configuration options to tune the behavior of [`SessionMiddleware`].
 
 use actix_web::cookie::{time::Duration, Key, SameSite};
-use derive_more::From;
+use derive_more::derive::From;
 
 use crate::{storage::SessionStore, SessionMiddleware};
 
@@ -131,6 +131,7 @@ impl PersistentSession {
     ///
     /// A persistent session can live more than the specified TTL if the TTL is extended.
     /// See [`session_ttl_extension_policy`](Self::session_ttl_extension_policy) for more details.
+    #[doc(alias = "max_age", alias = "max age", alias = "expires")]
     pub fn session_ttl(mut self, session_ttl: Duration) -> Self {
         self.session_ttl = session_ttl;
         self
@@ -343,7 +344,7 @@ impl<Store: SessionStore> SessionMiddlewareBuilder<Store> {
         self
     }
 
-    /// Finalise the builder and return a [`SessionMiddleware`] instance.
+    /// Finalize the builder and return a [`SessionMiddleware`] instance.
     #[must_use]
     pub fn build(self) -> SessionMiddleware<Store> {
         SessionMiddleware::from_parts(self.storage_backend, self.configuration)

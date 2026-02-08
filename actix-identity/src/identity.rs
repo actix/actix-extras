@@ -8,7 +8,7 @@ use actix_web::{
 };
 
 use crate::{
-    config::LogoutBehaviour,
+    config::LogoutBehavior,
     error::{
         GetIdentityError, LoginError, LostIdentityError, MissingIdentityError, SessionExpiryError,
     },
@@ -49,11 +49,11 @@ use crate::{
 /// }
 /// ```
 ///
-/// # Extractor Behaviour
+/// # Extractor Behavior
 /// What happens if you try to extract an `Identity` out of a request that does not have a valid
 /// identity attached? The API will return a `401 UNAUTHORIZED` to the caller.
 ///
-/// If you want to customise this behaviour, consider extracting `Option<Identity>` or
+/// If you want to customize this behavior, consider extracting `Option<Identity>` or
 /// `Result<Identity, actix_web::Error>` instead of a bare `Identity`: you will then be fully in
 /// control of the error path.
 ///
@@ -79,9 +79,12 @@ pub struct Identity(IdentityInner);
 #[derive(Clone)]
 pub(crate) struct IdentityInner {
     pub(crate) session: Session,
-    pub(crate) logout_behaviour: LogoutBehaviour,
+    pub(crate) logout_behavior: LogoutBehavior,
     pub(crate) is_login_deadline_enabled: bool,
     pub(crate) is_visit_deadline_enabled: bool,
+    pub(crate) id_key: &'static str,
+    pub(crate) last_visit_unix_timestamp_key: &'static str,
+    pub(crate) login_unix_timestamp_key: &'static str,
 }
 
 impl IdentityInner {
@@ -101,14 +104,10 @@ impl IdentityInner {
     /// Retrieve the user id attached to the current session.
     fn get_identity(&self) -> Result<String, GetIdentityError> {
         self.session
-            .get::<String>(ID_KEY)?
+            .get::<String>(self.id_key)?
             .ok_or_else(|| MissingIdentityError.into())
     }
 }
-
-pub(crate) const ID_KEY: &str = "actix_identity.user_id";
-pub(crate) const LAST_VISIT_UNIX_TIMESTAMP_KEY: &str = "actix_identity.last_visited_at";
-pub(crate) const LOGIN_UNIX_TIMESTAMP_KEY: &str = "actix_identity.logged_in_at";
 
 impl Identity {
     /// Return the user id associated to the current session.
@@ -130,7 +129,7 @@ impl Identity {
     pub fn id(&self) -> Result<String, GetIdentityError> {
         self.0
             .session
-            .get(ID_KEY)?
+            .get(self.0.id_key)?
             .ok_or_else(|| LostIdentityError.into())
     }
 
@@ -153,13 +152,15 @@ impl Identity {
     /// ```
     pub fn login(ext: &Extensions, id: String) -> Result<Self, LoginError> {
         let inner = IdentityInner::extract(ext);
-        inner.session.insert(ID_KEY, id)?;
+        inner.session.insert(inner.id_key, id)?;
         let now = OffsetDateTime::now_utc().unix_timestamp();
         if inner.is_login_deadline_enabled {
-            inner.session.insert(LOGIN_UNIX_TIMESTAMP_KEY, now)?;
+            inner.session.insert(inner.login_unix_timestamp_key, now)?;
         }
         if inner.is_visit_deadline_enabled {
-            inner.session.insert(LAST_VISIT_UNIX_TIMESTAMP_KEY, now)?;
+            inner
+                .session
+                .insert(inner.last_visit_unix_timestamp_key, now)?;
         }
         inner.session.renew();
         Ok(Self(inner))
@@ -170,7 +171,7 @@ impl Identity {
     /// After `logout` has been called, the user will no longer be able to access routes that
     /// require a valid [`Identity`].
     ///
-    /// The behaviour on logout is determined by [`IdentityMiddlewareBuilder::logout_behaviour`].
+    /// The behavior on logout is determined by [`IdentityMiddlewareBuilder::logout_behavior`].
     ///
     /// # Examples
     /// ```
@@ -184,19 +185,19 @@ impl Identity {
     /// }
     /// ```
     ///
-    /// [`IdentityMiddlewareBuilder::logout_behaviour`]: crate::config::IdentityMiddlewareBuilder::logout_behaviour
+    /// [`IdentityMiddlewareBuilder::logout_behavior`]: crate::config::IdentityMiddlewareBuilder::logout_behavior
     pub fn logout(self) {
-        match self.0.logout_behaviour {
-            LogoutBehaviour::PurgeSession => {
+        match self.0.logout_behavior {
+            LogoutBehavior::PurgeSession => {
                 self.0.session.purge();
             }
-            LogoutBehaviour::DeleteIdentityKeys => {
-                self.0.session.remove(ID_KEY);
+            LogoutBehavior::DeleteIdentityKeys => {
+                self.0.session.remove(self.0.id_key);
                 if self.0.is_login_deadline_enabled {
-                    self.0.session.remove(LOGIN_UNIX_TIMESTAMP_KEY);
+                    self.0.session.remove(self.0.login_unix_timestamp_key);
                 }
                 if self.0.is_visit_deadline_enabled {
-                    self.0.session.remove(LAST_VISIT_UNIX_TIMESTAMP_KEY);
+                    self.0.session.remove(self.0.last_visit_unix_timestamp_key);
                 }
             }
         }
@@ -212,7 +213,7 @@ impl Identity {
         Ok(self
             .0
             .session
-            .get(LOGIN_UNIX_TIMESTAMP_KEY)?
+            .get(self.0.login_unix_timestamp_key)?
             .map(OffsetDateTime::from_unix_timestamp)
             .transpose()
             .map_err(SessionExpiryError)?)
@@ -222,7 +223,7 @@ impl Identity {
         Ok(self
             .0
             .session
-            .get(LAST_VISIT_UNIX_TIMESTAMP_KEY)?
+            .get(self.0.last_visit_unix_timestamp_key)?
             .map(OffsetDateTime::from_unix_timestamp)
             .transpose()
             .map_err(SessionExpiryError)?)
@@ -230,7 +231,9 @@ impl Identity {
 
     pub(crate) fn set_last_visited_at(&self) -> Result<(), LoginError> {
         let now = OffsetDateTime::now_utc().unix_timestamp();
-        self.0.session.insert(LAST_VISIT_UNIX_TIMESTAMP_KEY, now)?;
+        self.0
+            .session
+            .insert(self.0.last_visit_unix_timestamp_key, now)?;
         Ok(())
     }
 }

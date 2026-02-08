@@ -6,7 +6,7 @@ on:
   merge_group:
     types: [checks_requested]
   push:
-    branches: [master]
+    branches: [main]
 
 permissions: { contents: read }
 
@@ -22,7 +22,7 @@ jobs:
         target:
           - { name: Linux, os: ubuntu-latest, triple: x86_64-unknown-linux-gnu }
         version:
-          - { name: msrv, version: 1.68.0 }
+          - { name: msrv, version: 1.88.0 }
           - { name: stable, version: stable }
 
     name: ${{ matrix.target.name }} / ${{ matrix.version.name }}
@@ -41,22 +41,25 @@ jobs:
           --entrypoint redis-server
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install Rust (${{ matrix.version.name }})
-        uses: actions-rust-lang/setup-rust-toolchain@v1.5.0
+        uses: actions-rust-lang/setup-rust-toolchain@v1.15.2
         with:
           toolchain: ${{ matrix.version.version }}
 
-      - name: Install cargo-hack
-        uses: taiki-e/install-action@v2.21.7
+      - name: Install cargo-hack and cargo-ci-cache-clean, just
+        uses: taiki-e/install-action@v2.67.18
         with:
-          tool: cargo-hack
+          tool: cargo-hack,cargo-ci-cache-clean,just
 
-      # - name: workaround MSRV issues
-      #   if: matrix.version.name == 'msrv'
-      #   run: |
-      #     cargo update -p=time:0.3.20 --precise=0.3.16
+      - name: workaround MSRV issues
+        if: matrix.version.name == 'msrv'
+        run: just downgrade-for-msrv
+
+      - name: deny check
+        if: matrix.version.name == 'stable' && matrix.target.os == 'ubuntu-latest'
+        uses: EmbarkStudios/cargo-deny-action@3fd3802e88374d3fe9159b834c7714ec57d6c979 # v2.0.15
 
       - name: check minimal
         run: cargo ci-min
@@ -71,10 +74,12 @@ jobs:
         timeout-minutes: 40
         run: cargo ci-test
 
-      - name: Clear the cargo caches
-        run: |
-          cargo install cargo-cache --version 0.6.2 --no-default-features --features ci-autoclean
-          cargo-cache
+      - name: tests (tracing-actix-web)
+        timeout-minutes: 40
+        run: just ci-test-tracing-actix-web
+
+      - name: CI cache clean
+        run: cargo-ci-cache-clean
 
   build_and_test_other:
     strategy:
@@ -85,29 +90,37 @@ jobs:
           - { name: macOS, os: macos-latest, triple: x86_64-apple-darwin }
           - { name: Windows, os: windows-latest, triple: x86_64-pc-windows-msvc }
         version:
-          - { name: msrv, version: 1.68.0 }
+          - { name: msrv, version: 1.88.0 }
           - { name: stable, version: stable }
 
     name: ${{ matrix.target.name }} / ${{ matrix.version.name }}
     runs-on: ${{ matrix.target.os }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
+
+      - name: Install OpenSSL
+        if: matrix.target.os == 'windows-latest'
+        shell: bash
+        run: |
+          set -e
+          choco install openssl --version=1.1.1.2100 -y --no-progress
+          echo 'OPENSSL_DIR=C:\Program Files\OpenSSL' >> $GITHUB_ENV
+          echo "RUSTFLAGS=-C target-feature=+crt-static" >> $GITHUB_ENV
 
       - name: Install Rust (${{ matrix.version.name }})
-        uses: actions-rust-lang/setup-rust-toolchain@v1.5.0
+        uses: actions-rust-lang/setup-rust-toolchain@v1.15.2
         with:
           toolchain: ${{ matrix.version.version }}
 
-      - name: Install cargo-hack
-        uses: taiki-e/install-action@v2.21.7
+      - name: Install cargo-hack, cargo-ci-cache-clean, just
+        uses: taiki-e/install-action@v2.67.18
         with:
-          tool: cargo-hack
+          tool: cargo-hack,cargo-ci-cache-clean,just
 
-      # - name: workaround MSRV issues
-      #   if: matrix.version.name == 'msrv'
-      #   run: |
-      #     cargo update -p=time:0.3.20 --precise=0.3.16
+      - name: workaround MSRV issues
+        if: matrix.version.name == 'msrv'
+        run: just downgrade-for-msrv
 
       - name: check minimal
         run: cargo ci-min
@@ -120,24 +133,33 @@ jobs:
 
       - name: tests
         timeout-minutes: 40
-        run: cargo ci-test --exclude=actix-redis --exclude=actix-session --exclude=actix-limitation
+        run: cargo ci-test --exclude=actix-session --exclude=actix-limitation
 
-      - name: Clear the cargo caches
-        run: |
-          cargo install cargo-cache --version 0.6.2 --no-default-features --features ci-autoclean
-          cargo-cache
+      - name: tests (tracing-actix-web)
+        timeout-minutes: 40
+        run: just ci-test-tracing-actix-web
+
+      - name: CI cache clean
+        run: cargo-ci-cache-clean
 
   doc_tests:
-    name: doc tests
+    name: Documentation Tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install Rust (nightly)
-        uses: actions-rust-lang/setup-rust-toolchain@v1.5.0
+        uses: actions-rust-lang/setup-rust-toolchain@v1.15.2
         with:
           toolchain: nightly
 
-      - name: doc tests
-        timeout-minutes: 40
-        run: cargo ci-doctest -- --nocapture
+      - name: Install just
+        uses: taiki-e/install-action@v2.67.18
+        with:
+          tool: just
+
+      - name: Test docs
+        run: just test-docs
+
+      - name: Build docs
+        run: just doc

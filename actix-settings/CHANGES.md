@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+## 0.9.0
+
+- Update `toml` dependency to `0.9`.
+- Minimum supported Rust version (MSRV) is now 1.88.
+
+## 0.8.0
+
+- Add `openssl` crate feature for TLS settings using OpenSSL.
+- Add `ApplySettings::try_apply_settings()`.
+- Implement TLS logic for `ApplySettings::try_apply_settings()`.
+- Add `Tls::get_ssl_acceptor_builder()` function to build `openssl::ssl::SslAcceptorBuilder`.
+- Deprecate `ApplySettings::apply_settings()`.
+- Minimum supported Rust version (MSRV) is now 1.75.
+
 ## 0.7.1
 
 - Fix doc examples.

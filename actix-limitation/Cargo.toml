@@ -8,13 +8,12 @@ authors = [
 description = "Rate limiter using a fixed window counter for arbitrary keys, backed by Redis for Actix Web"
 keywords = ["actix-web", "rate-api", "rate-limit", "limitation"]
 categories = ["asynchronous", "web-programming"]
-repository = "https://github.com/actix/actix-extras.git"
+repository = "https://github.com/actix/actix-extras"
 license.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 
 [package.metadata.docs.rs]
-rustdoc-args = ["--cfg", "docsrs"]
 all-features = true
 
 [features]
@@ -26,16 +25,22 @@ actix-utils = "3"
 actix-web = { version = "4", default-features = false, features = ["cookies"] }
 
 chrono = "0.4"
-derive_more = "0.99.7"
+derive_more = { version = "2", features = ["display", "error", "from"] }
 log = "0.4"
-redis = { version = "0.23", default-features = false, features = ["tokio-comp"] }
+redis = { version = "0.32", default-features = false, features = ["tokio-comp"] }
 time = "0.3"
 
 # session
-actix-session = { version = "0.8", optional = true }
+actix-session = { version = "0.11", optional = true }
 
 [dev-dependencies]
 actix-web = "4"
 static_assertions = "1"
 uuid = { version = "1", features = ["v4"] }
+<<<<<<< master
 pretty_env_logger = "0.5"
+=======
+
+[lints]
+workspace = true
+>>>>>>> main

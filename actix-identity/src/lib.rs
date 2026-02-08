@@ -15,7 +15,11 @@
 //!
 //! #[actix_web::main]
 //! async fn main() {
+//!     // When using `Key::generate()` it is important to initialize outside of the
+//!     // `HttpServer::new` closure. When deployed the secret key should be read from a
+//!     // configuration file or environment variables.
 //!     let secret_key = Key::generate();
+//!
 //!     let redis_store = RedisSessionStore::new("redis://127.0.0.1:6379")
 //!         .await
 //!         .unwrap();
@@ -30,7 +34,7 @@
 //!             // order of registration when it receives an incoming request.
 //!             .wrap(SessionMiddleware::new(
 //!                  redis_store.clone(),
-//!                  secret_key.clone()
+//!                  secret_key.clone(),
 //!             ))
 //!             // Your request handlers [...]
 //!             # .default_service(web::to(|| HttpResponse::Ok()))
@@ -69,29 +73,30 @@
 //! }
 //!
 //! #[post("/logout")]
-//! async fn logout(user: Identity) -> impl Responder {
-//!     user.logout();
+//! async fn logout(user: Option<Identity>) -> impl Responder {
+//!     if let Some(user) = user {
+//!         user.logout();
+//!     }
 //!     HttpResponse::Ok()
 //! }
 //! ```
 //!
 //! # Advanced configuration
-//! By default, `actix-identity` does not automatically log out users. You can change this behaviour
-//! by customising the configuration for [`IdentityMiddleware`] via [`IdentityMiddleware::builder`].
+//! By default, `actix-identity` does not automatically log out users. You can change this behavior
+//! by customizing the configuration for [`IdentityMiddleware`] via [`IdentityMiddleware::builder`].
 //!
 //! In particular, you can automatically log out users who:
-//! - have been inactive for a while (see [`IdentityMiddlewareBuilder::visit_deadline`];
+//! - have been inactive for a while (see [`IdentityMiddlewareBuilder::visit_deadline`]);
 //! - logged in too long ago (see [`IdentityMiddlewareBuilder::login_deadline`]).
 //!
 //! [`IdentityMiddlewareBuilder::visit_deadline`]: config::IdentityMiddlewareBuilder::visit_deadline
 //! [`IdentityMiddlewareBuilder::login_deadline`]: config::IdentityMiddlewareBuilder::login_deadline
 
 #![forbid(unsafe_code)]
-#![deny(rust_2018_idioms, nonstandard_style, missing_docs)]
-#![warn(future_incompatible)]
+#![deny(missing_docs)]
 #![doc(html_logo_url = "https://actix.rs/img/logo.png")]
 #![doc(html_favicon_url = "https://actix.rs/favicon.ico")]
-#![cfg_attr(docsrs, feature(doc_auto_cfg))]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 
 pub mod config;
 pub mod error;

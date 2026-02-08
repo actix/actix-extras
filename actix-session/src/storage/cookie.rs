@@ -1,10 +1,9 @@
-use std::convert::TryInto;
-
 use actix_web::cookie::time::Duration;
 use anyhow::Error;
 
 use super::SessionKey;
 use crate::storage::{
+    format::{deserialize_session_state, serialize_session_state},
     interface::{LoadError, SaveError, SessionState, UpdateError},
     SessionStore,
 };
@@ -51,12 +50,10 @@ use crate::storage::{
 #[non_exhaustive]
 pub struct CookieSessionStore;
 
-#[async_trait::async_trait(?Send)]
 impl SessionStore for CookieSessionStore {
     async fn load(&self, session_key: &SessionKey) -> Result<Option<SessionState>, LoadError> {
-        serde_json::from_str(session_key.as_ref())
+        deserialize_session_state(session_key.as_ref())
             .map(Some)
-            .map_err(anyhow::Error::new)
             .map_err(LoadError::Deserialization)
     }
 
@@ -65,14 +62,13 @@ impl SessionStore for CookieSessionStore {
         session_state: SessionState,
         _ttl: &Duration,
     ) -> Result<SessionKey, SaveError> {
-        let session_key = serde_json::to_string(&session_state)
-            .map_err(anyhow::Error::new)
-            .map_err(SaveError::Serialization)?;
+        let session_key =
+            serialize_session_state(&session_state).map_err(SaveError::Serialization)?;
 
-        Ok(session_key
+        session_key
             .try_into()
             .map_err(Into::into)
-            .map_err(SaveError::Other)?)
+            .map_err(SaveError::Other)
     }
 
     async fn update(
@@ -100,6 +96,8 @@ impl SessionStore for CookieSessionStore {
 
 #[cfg(test)]
 mod tests {
+    use serde_json::{Map, Value};
+
     use super::*;
     use crate::{storage::utils::generate_session_key, test_helpers::acceptance_test_suite};
 
@@ -116,5 +114,44 @@ mod tests {
             store.load(&session_key).await.unwrap_err(),
             LoadError::Deserialization(_),
         ));
+    }
+
+    #[actix_web::test]
+    async fn saving_state_is_versioned_and_does_not_double_serialize_strings() {
+        let store = CookieSessionStore::default();
+        let mut state = Map::new();
+        state.insert("k".into(), Value::from("value"));
+        state.insert("n".into(), Value::from(1));
+
+        let session_key = store.save(state, &Duration::seconds(60)).await.unwrap();
+
+        // Stored cookie value should contain "value", not "\"value\"".
+        let raw = session_key.as_ref();
+        assert!(
+            !raw.contains("\\\"value\\\""),
+            "unexpected double-quoting: {raw}"
+        );
+
+        let decoded: Value = serde_json::from_str(raw).unwrap();
+        assert_eq!(decoded["v"], Value::from(1));
+        assert_eq!(decoded["state"]["k"], Value::from("value"));
+        assert_eq!(decoded["state"]["n"], Value::from(1));
+    }
+
+    #[actix_web::test]
+    async fn legacy_state_format_is_migrated_on_load() {
+        let store = CookieSessionStore::default();
+        let legacy = serde_json::json!({
+            "k": "\"value\"",
+            "n": "1",
+            "obj": "{\"a\": 1}"
+        })
+        .to_string();
+        let legacy_key: SessionKey = legacy.try_into().unwrap();
+
+        let state = store.load(&legacy_key).await.unwrap().unwrap();
+        assert_eq!(state.get("k"), Some(&Value::from("value")));
+        assert_eq!(state.get("n"), Some(&Value::from(1)));
+        assert_eq!(state.get("obj"), Some(&serde_json::json!({"a": 1})));
     }
 }

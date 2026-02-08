@@ -1,6 +1,4 @@
-use std::convert::TryFrom;
-
-use derive_more::{Display, From};
+use derive_more::derive::{Display, From};
 
 /// A session key, the string stored in a client-side cookie to associate a user with its session
 /// state on the backend.
@@ -9,8 +7,7 @@ use derive_more::{Display, From};
 /// Session keys are stored as cookies, therefore they cannot be arbitrary long. Session keys are
 /// required to be smaller than 4064 bytes.
 ///
-/// ```rust
-/// # use std::convert::TryInto;
+/// ```
 /// use actix_session::storage::SessionKey;
 ///
 /// let key: String = std::iter::repeat('a').take(4065).collect();
@@ -48,7 +45,7 @@ impl From<SessionKey> for String {
 }
 
 #[derive(Debug, Display, From)]
-#[display(fmt = "The provided string is not a valid session key")]
+#[display("The provided string is not a valid session key")]
 pub struct InvalidSessionKeyError(anyhow::Error);
 
 impl std::error::Error for InvalidSessionKeyError {

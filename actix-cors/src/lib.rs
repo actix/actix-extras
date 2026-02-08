@@ -25,14 +25,14 @@
 //! async fn main() -> std::io::Result<()> {
 //!     HttpServer::new(|| {
 //!         let cors = Cors::default()
-//!               .allowed_origin("https://www.rust-lang.org")
-//!               .allowed_origin_fn(|origin, _req_head| {
-//!                   origin.as_bytes().ends_with(b".rust-lang.org")
-//!               })
-//!               .allowed_methods(vec!["GET", "POST"])
-//!               .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
-//!               .allowed_header(http::header::CONTENT_TYPE)
-//!               .max_age(3600);
+//!             .allowed_origin("https://www.rust-lang.org")
+//!             .allowed_origin_fn(|origin, _req_head| {
+//!                 origin.as_bytes().ends_with(b".rust-lang.org")
+//!             })
+//!             .allowed_methods(vec!["GET", "POST"])
+//!             .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
+//!             .allowed_header(http::header::CONTENT_TYPE)
+//!             .max_age(3600);
 //!
 //!         App::new()
 //!             .wrap(cors)
@@ -49,11 +49,10 @@
 //! [Private Network Access]: https://wicg.github.io/private-network-access
 
 #![forbid(unsafe_code)]
-#![deny(rust_2018_idioms, nonstandard_style)]
 #![warn(future_incompatible, missing_docs, missing_debug_implementations)]
 #![doc(html_logo_url = "https://actix.rs/img/logo.png")]
 #![doc(html_favicon_url = "https://actix.rs/favicon.ico")]
-#![cfg_attr(docsrs, feature(doc_auto_cfg))]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 
 mod all_or_some;
 mod builder;
@@ -61,8 +60,8 @@ mod error;
 mod inner;
 mod middleware;
 
-use all_or_some::AllOrSome;
-pub use builder::Cors;
-pub use error::CorsError;
-use inner::{Inner, OriginFn};
-pub use middleware::CorsMiddleware;
+use crate::{
+    all_or_some::AllOrSome,
+    inner::{Inner, OriginFn},
+};
+pub use crate::{builder::Cors, error::CorsError, middleware::CorsMiddleware};

@@ -2,13 +2,12 @@
 //!
 //! For usage, see documentation on [`handle()`].
 
-#![deny(rust_2018_idioms, nonstandard_style, future_incompatible)]
 #![warn(missing_docs)]
 #![doc(html_logo_url = "https://actix.rs/img/logo.png")]
 #![doc(html_favicon_url = "https://actix.rs/favicon.ico")]
-#![cfg_attr(docsrs, feature(doc_auto_cfg))]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 
-pub use actix_http::ws::{CloseCode, CloseReason, Message, ProtocolError};
+pub use actix_http::ws::{CloseCode, CloseReason, Item, Message, ProtocolError};
 use actix_http::{
     body::{BodyStream, MessageBody},
     ws::handshake,
@@ -16,25 +15,28 @@ use actix_http::{
 use actix_web::{web, HttpRequest, HttpResponse};
 use tokio::sync::mpsc::channel;
 
-mod fut;
+mod aggregated;
 mod session;
+mod stream;
 
 pub use self::{
-    fut::{MessageStream, StreamingBody},
+    aggregated::{AggregatedMessage, AggregatedMessageStream},
     session::{Closed, Session},
+    stream::{MessageStream, StreamingBody},
 };
 
 /// Begin handling websocket traffic
 ///
 /// ```no_run
-/// use actix_web::{middleware::Logger, web, App, Error, HttpRequest, HttpResponse, HttpServer};
+/// use std::io;
+/// use actix_web::{middleware::Logger, web, App, HttpRequest, HttpServer, Responder};
 /// use actix_ws::Message;
-/// use futures::stream::StreamExt as _;
+/// use futures_util::StreamExt as _;
 ///
-/// async fn ws(req: HttpRequest, body: web::Payload) -> Result<HttpResponse, Error> {
+/// async fn ws(req: HttpRequest, body: web::Payload) -> actix_web::Result<impl Responder> {
 ///     let (response, mut session, mut msg_stream) = actix_ws::handle(&req, body)?;
 ///
-///     actix_rt::spawn(async move {
+///     actix_web::rt::spawn(async move {
 ///         while let Some(Ok(msg)) = msg_stream.next().await {
 ///             match msg {
 ///                 Message::Ping(bytes) => {
@@ -42,7 +44,8 @@ pub use self::{
 ///                         return;
 ///                     }
 ///                 }
-///                 Message::Text(s) => println!("Got text, {}", s),
+///
+///                 Message::Text(msg) => println!("Got text: {msg}"),
 ///                 _ => break,
 ///             }
 ///         }
@@ -53,18 +56,16 @@ pub use self::{
 ///     Ok(response)
 /// }
 ///
-/// #[actix_rt::main]
-/// async fn main() -> Result<(), anyhow::Error> {
+/// #[tokio::main(flavor = "current_thread")]
+/// async fn main() -> io::Result<()> {
 ///     HttpServer::new(move || {
 ///         App::new()
-///             .wrap(Logger::default())
 ///             .route("/ws", web::get().to(ws))
+///             .wrap(Logger::default())
 ///     })
-///     .bind("127.0.0.1:8080")?
+///     .bind(("127.0.0.1", 8080))?
 ///     .run()
-///     .await?;
-///
-///     Ok(())
+///     .await
 /// }
 /// ```
 pub fn handle(

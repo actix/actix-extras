@@ -1,14 +1,15 @@
 [package]
 name = "actix-ws"
-version = "0.2.0"
+version = "0.3.1"
 description = "WebSockets for Actix Web, without actors"
 categories = ["web-programming::websocket"]
-keywords = ["actix", "web", "websocket", "websockets", "http"]
+keywords = ["actix", "web", "websocket", "websockets", "streaming"]
 authors = [
     "asonix <asonix@asonix.dog>",
     "Rob Ede <robjtede@icloud.com>",
 ]
-repository = "https://github.com/actix/actix-extras"
+repository.workspace = true
+homepage.workspace = true
 license.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -16,16 +17,17 @@ rust-version.workspace = true
 [dependencies]
 actix-codec = "0.5"
 actix-http = { version = "3", default-features = false, features = ["ws"] }
-actix-web = { version = "4", default-features = false }
+actix-web = { version = "4", default-features = false, features = ["ws"] }
 bytestring = "1"
 futures-core = "0.3.17"
-tokio = { version = "1", features = ["sync"] }
+tokio = { version = "1.49", features = ["sync"] }
 
 [dev-dependencies]
-actix-rt = "2.6"
-actix-web = "4.0.1"
-anyhow = "1.0"
-futures = "0.3"
-log = "0.4"
-pretty_env_logger = "0.5"
-tokio = { version = "1", features = ["sync"] }
+actix-web = "4.12"
+futures-util = { version = "0.3.17", default-features = false, features = ["std"] }
+tokio = { version = "1.49", features = ["sync", "rt", "macros"] }
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[lints]
+workspace = true
