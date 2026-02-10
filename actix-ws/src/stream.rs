@@ -21,6 +21,11 @@ use tokio::sync::mpsc::Receiver;
 
 use crate::AggregatedMessageStream;
 
+// RFC 6455: Control frames MUST have payload length <= 125 bytes.
+// Close payload is: 2-byte close code + optional UTF-8 reason, therefore the reason is <= 123 bytes.
+const MAX_CONTROL_PAYLOAD_BYTES: usize = 125;
+const MAX_CLOSE_REASON_BYTES: usize = MAX_CONTROL_PAYLOAD_BYTES - 2;
+
 /// Response body for a WebSocket.
 pub struct StreamingBody {
     session_rx: Receiver<Message>,
@@ -138,8 +143,31 @@ impl Stream for StreamingBody {
             }
         }
 
-        while let Some(msg) = this.messages.pop_front() {
+        while let Some(mut msg) = this.messages.pop_front() {
             let is_close = matches!(msg, Message::Close(_));
+
+            // Avoid emitting invalid control frames. Some clients (e.g., Chromium-based browsers)
+            // are strict about RFC 6455 requirements and will treat oversized control frames as
+            // malformed.
+            match &mut msg {
+                Message::Close(Some(reason)) => {
+                    if let Some(desc) = reason.description.as_mut() {
+                        if desc.len() > MAX_CLOSE_REASON_BYTES {
+                            let mut end = MAX_CLOSE_REASON_BYTES;
+                            while end > 0 && !desc.is_char_boundary(end) {
+                                end -= 1;
+                            }
+                            desc.truncate(end);
+                        }
+                    }
+                }
+                Message::Ping(bytes) | Message::Pong(bytes) => {
+                    if bytes.len() > MAX_CONTROL_PAYLOAD_BYTES {
+                        *bytes = bytes.slice(..MAX_CONTROL_PAYLOAD_BYTES);
+                    }
+                }
+                _ => {}
+            }
 
             if let Err(err) = this.codec.encode(msg, &mut this.buf) {
                 return Poll::Ready(Some(Err(err.into())));
@@ -252,7 +280,9 @@ pub(crate) mod tests {
     use futures_core::Stream;
     use tokio::sync::mpsc::{Receiver, Sender};
 
-    use super::{Bytes, BytesMut, Codec, Encoder, Message, MessageStream, Payload, StreamingBody};
+    use super::{
+        Bytes, BytesMut, Codec, Decoder, Encoder, Message, MessageStream, Payload, StreamingBody,
+    };
 
     pub(crate) struct PayloadReceiver {
         rx: Receiver<Bytes>,
@@ -527,5 +557,165 @@ pub(crate) mod tests {
             Poll::Ready(())
         })
         .await;
+    }
+
+    #[tokio::test]
+    async fn stream_truncates_oversized_close_reason() {
+        use actix_http::ws::{CloseCode, CloseReason, Frame};
+        use futures_util::StreamExt as _;
+
+        let (tx, rx) = tokio::sync::mpsc::channel(1);
+        let mut stream = StreamingBody::new(rx);
+
+        let reason = CloseReason {
+            code: CloseCode::Normal,
+            description: Some("a".repeat(200)),
+        };
+
+        tx.send(Message::Close(Some(reason))).await.unwrap();
+
+        let bytes = stream.next().await.unwrap().unwrap();
+
+        assert_eq!(bytes[0], 0x88, "FIN + Close opcode");
+        assert_eq!(bytes[1] & 0x80, 0, "server frames must not be masked");
+        assert_eq!(
+            (bytes[1] & 0x7F) as usize,
+            2 + super::MAX_CLOSE_REASON_BYTES,
+            "Close payload must be limited to 125 bytes (2-byte code + 123-byte reason)"
+        );
+
+        let mut buf = BytesMut::from(&bytes[..]);
+        let mut codec = Codec::new().client_mode();
+
+        let frame = codec.decode(&mut buf).unwrap().unwrap();
+        match frame {
+            Frame::Close(Some(reason)) => {
+                assert_eq!(reason.code, CloseCode::Normal);
+                let desc = reason.description.unwrap();
+                assert_eq!(desc.len(), super::MAX_CLOSE_REASON_BYTES);
+                assert_eq!(desc, "a".repeat(super::MAX_CLOSE_REASON_BYTES));
+            }
+            other => panic!("expected Close frame, got: {other:?}"),
+        }
+
+        assert!(buf.is_empty(), "should decode entire buffer");
+    }
+
+    #[tokio::test]
+    async fn stream_truncates_close_reason_at_utf8_boundary() {
+        use actix_http::ws::{CloseCode, CloseReason, Frame};
+        use futures_util::StreamExt as _;
+
+        let (tx, rx) = tokio::sync::mpsc::channel(1);
+        let mut stream = StreamingBody::new(rx);
+
+        // Create a reason where truncating at 123 bytes would split a multi-byte UTF-8 character.
+        let description = format!("{}{}b", "a".repeat(122), "\u{00E9}");
+        assert!(description.len() > super::MAX_CLOSE_REASON_BYTES);
+
+        let reason = CloseReason {
+            code: CloseCode::Normal,
+            description: Some(description),
+        };
+
+        tx.send(Message::Close(Some(reason))).await.unwrap();
+
+        let bytes = stream.next().await.unwrap().unwrap();
+
+        assert_eq!(bytes[0], 0x88, "FIN + Close opcode");
+        assert_eq!(bytes[1] & 0x80, 0, "server frames must not be masked");
+        assert!(
+            (bytes[1] & 0x7F) <= 125,
+            "control frames must have payload length <= 125"
+        );
+
+        let mut buf = BytesMut::from(&bytes[..]);
+        let mut codec = Codec::new().client_mode();
+
+        let frame = codec.decode(&mut buf).unwrap().unwrap();
+        match frame {
+            Frame::Close(Some(reason)) => {
+                assert_eq!(reason.code, CloseCode::Normal);
+                let desc = reason.description.unwrap();
+                assert_eq!(desc, "a".repeat(122));
+            }
+            other => panic!("expected Close frame, got: {other:?}"),
+        }
+
+        assert!(buf.is_empty(), "should decode entire buffer");
+    }
+
+    #[tokio::test]
+    async fn stream_truncates_oversized_ping_payload() {
+        use actix_http::ws::Frame;
+        use futures_util::StreamExt as _;
+
+        let (tx, rx) = tokio::sync::mpsc::channel(1);
+        let mut stream = StreamingBody::new(rx);
+
+        let payload = Bytes::from(vec![0xAA; 200]);
+        let expected = payload.slice(..super::MAX_CONTROL_PAYLOAD_BYTES);
+
+        tx.send(Message::Ping(payload)).await.unwrap();
+
+        let bytes = stream.next().await.unwrap().unwrap();
+
+        assert_eq!(bytes[0], 0x89, "FIN + Ping opcode");
+        assert_eq!(bytes[1] & 0x80, 0, "server frames must not be masked");
+        assert_eq!(
+            (bytes[1] & 0x7F) as usize,
+            super::MAX_CONTROL_PAYLOAD_BYTES,
+            "Ping payload must be <= 125 bytes"
+        );
+
+        let mut buf = BytesMut::from(&bytes[..]);
+        let mut codec = Codec::new().client_mode();
+
+        let frame = codec.decode(&mut buf).unwrap().unwrap();
+        match frame {
+            Frame::Ping(pl) => {
+                assert_eq!(pl, expected);
+            }
+            other => panic!("expected Ping frame, got: {other:?}"),
+        }
+
+        assert!(buf.is_empty(), "should decode entire buffer");
+    }
+
+    #[tokio::test]
+    async fn stream_truncates_oversized_pong_payload() {
+        use actix_http::ws::Frame;
+        use futures_util::StreamExt as _;
+
+        let (tx, rx) = tokio::sync::mpsc::channel(1);
+        let mut stream = StreamingBody::new(rx);
+
+        let payload = Bytes::from(vec![0xBB; 200]);
+        let expected = payload.slice(..super::MAX_CONTROL_PAYLOAD_BYTES);
+
+        tx.send(Message::Pong(payload)).await.unwrap();
+
+        let bytes = stream.next().await.unwrap().unwrap();
+
+        assert_eq!(bytes[0], 0x8A, "FIN + Pong opcode");
+        assert_eq!(bytes[1] & 0x80, 0, "server frames must not be masked");
+        assert_eq!(
+            (bytes[1] & 0x7F) as usize,
+            super::MAX_CONTROL_PAYLOAD_BYTES,
+            "Pong payload must be <= 125 bytes"
+        );
+
+        let mut buf = BytesMut::from(&bytes[..]);
+        let mut codec = Codec::new().client_mode();
+
+        let frame = codec.decode(&mut buf).unwrap().unwrap();
+        match frame {
+            Frame::Pong(pl) => {
+                assert_eq!(pl, expected);
+            }
+            other => panic!("expected Pong frame, got: {other:?}"),
+        }
+
+        assert!(buf.is_empty(), "should decode entire buffer");
     }
 }

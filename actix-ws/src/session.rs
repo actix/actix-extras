@@ -11,6 +11,12 @@ use actix_web::web::Bytes;
 use bytestring::ByteString;
 use tokio::sync::mpsc::Sender;
 
+// RFC 6455: Control frames MUST have payload length <= 125 bytes.
+// Close payload is: 2-byte close code + optional UTF-8 reason, therefore the reason is <= 123 bytes.
+// ref. https://www.rfc-editor.org/rfc/rfc6455.html#section-5.5
+const MAX_CONTROL_PAYLOAD_BYTES: usize = 125;
+const MAX_CLOSE_REASON_BYTES: usize = MAX_CONTROL_PAYLOAD_BYTES - 2;
+
 /// A handle into the websocket session.
 ///
 /// This type can be used to send messages into the WebSocket.
@@ -95,6 +101,9 @@ impl Session {
     /// For many applications, it will be important to send regular pings to keep track of if the
     /// client has disconnected
     ///
+    /// Ping payloads longer than 125 bytes are truncated to comply with RFC 6455 control frame
+    /// size limits.
+    ///
     /// ```no_run
     /// # use actix_ws::Session;
     /// # async fn test(mut session: Session) {
@@ -105,6 +114,11 @@ impl Session {
     /// ```
     pub async fn ping(&mut self, msg: &[u8]) -> Result<(), Closed> {
         self.pre_check();
+        let msg = if msg.len() > MAX_CONTROL_PAYLOAD_BYTES {
+            &msg[..MAX_CONTROL_PAYLOAD_BYTES]
+        } else {
+            msg
+        };
         if let Some(inner) = self.inner.as_mut() {
             inner
                 .send(Message::Ping(Bytes::copy_from_slice(msg)))
@@ -116,6 +130,9 @@ impl Session {
     }
 
     /// Pongs the client.
+    ///
+    /// Pong payloads longer than 125 bytes are truncated to comply with RFC 6455 control frame
+    /// size limits.
     ///
     /// ```no_run
     /// # use actix_ws::{Message, Session};
@@ -129,6 +146,11 @@ impl Session {
     /// # }
     pub async fn pong(&mut self, msg: &[u8]) -> Result<(), Closed> {
         self.pre_check();
+        let msg = if msg.len() > MAX_CONTROL_PAYLOAD_BYTES {
+            &msg[..MAX_CONTROL_PAYLOAD_BYTES]
+        } else {
+            msg
+        };
         if let Some(inner) = self.inner.as_mut() {
             inner
                 .send(Message::Pong(Bytes::copy_from_slice(msg)))
@@ -175,6 +197,9 @@ impl Session {
     ///
     /// All clones will return `Err(Closed)` if used after this call.
     ///
+    /// Close reason descriptions longer than 123 bytes are truncated to comply with RFC 6455
+    /// control frame size limits.
+    ///
     /// ```no_run
     /// # use actix_ws::{Closed, Session};
     /// # async fn test(mut session: Session) -> Result<(), Closed> {
@@ -183,6 +208,20 @@ impl Session {
     /// ```
     pub async fn close(mut self, reason: Option<CloseReason>) -> Result<(), Closed> {
         self.pre_check();
+
+        let mut reason = reason;
+
+        if let Some(reason) = reason.as_mut() {
+            if let Some(desc) = reason.description.as_mut() {
+                if desc.len() > MAX_CLOSE_REASON_BYTES {
+                    let mut end = MAX_CLOSE_REASON_BYTES;
+                    while end > 0 && !desc.is_char_boundary(end) {
+                        end -= 1;
+                    }
+                    desc.truncate(end);
+                }
+            }
+        }
 
         if let Some(inner) = self.inner.take() {
             self.closed.store(true, Ordering::Relaxed);
