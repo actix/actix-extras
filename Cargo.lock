@@ -378,10 +378,12 @@ dependencies = [
  "actix-web",
  "bytestring",
  "futures-core",
+ "futures-sink",
  "futures-util",
  "serde",
  "serde_json",
  "tokio",
+ "tokio-util",
  "tracing",
  "tracing-subscriber 0.3.22",
 ]
@@ -3545,6 +3547,7 @@ dependencies = [
  "bytes",
  "futures-core",
  "futures-sink",
+ "futures-util",
  "pin-project-lite",
  "tokio",
 ]
