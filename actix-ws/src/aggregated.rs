@@ -45,6 +45,7 @@ pub struct AggregatedMessageStream {
     max_size: usize,
     continuations: Vec<Bytes>,
     continuation_kind: ContinuationKind,
+    overflowed: bool,
 }
 
 impl AggregatedMessageStream {
@@ -56,6 +57,7 @@ impl AggregatedMessageStream {
             max_size: 1024 * 1024,
             continuations: Vec::new(),
             continuation_kind: ContinuationKind::Binary,
+            overflowed: false,
         }
     }
 
@@ -118,11 +120,17 @@ impl Stream for AggregatedMessageStream {
             match msg {
                 Message::Continuation(item) => match item {
                     Item::FirstText(bytes) => {
+                        if this.overflowed {
+                            continue;
+                        }
+
                         this.continuation_kind = ContinuationKind::Text;
                         this.current_size += bytes.len();
 
                         if this.current_size > this.max_size {
+                            this.current_size = 0;
                             this.continuations.clear();
+                            this.overflowed = true;
                             return size_error();
                         }
 
@@ -135,11 +143,17 @@ impl Stream for AggregatedMessageStream {
                     }
 
                     Item::FirstBinary(bytes) => {
+                        if this.overflowed {
+                            continue;
+                        }
+
                         this.continuation_kind = ContinuationKind::Binary;
                         this.current_size += bytes.len();
 
                         if this.current_size > this.max_size {
+                            this.current_size = 0;
                             this.continuations.clear();
+                            this.overflowed = true;
                             return size_error();
                         }
 
@@ -152,10 +166,16 @@ impl Stream for AggregatedMessageStream {
                     }
 
                     Item::Continue(bytes) => {
+                        if this.overflowed {
+                            continue;
+                        }
+
                         this.current_size += bytes.len();
 
                         if this.current_size > this.max_size {
+                            this.current_size = 0;
                             this.continuations.clear();
+                            this.overflowed = true;
                             return size_error();
                         }
 
@@ -168,6 +188,13 @@ impl Stream for AggregatedMessageStream {
                     }
 
                     Item::Last(bytes) => {
+                        if this.overflowed {
+                            this.current_size = 0;
+                            this.continuations.clear();
+                            this.overflowed = false;
+                            continue;
+                        }
+
                         this.current_size += bytes.len();
 
                         if this.current_size > this.max_size {
@@ -391,6 +418,66 @@ mod tests {
             assert!(
                 matches!(poll, Poll::Ready(None)),
                 "Stream should be ready when all continuations have been sent"
+            );
+
+            Poll::Ready(())
+        })
+        .await
+    }
+
+    #[tokio::test]
+    async fn continuation_overflow_errors_once_and_recovers() {
+        std::future::poll_fn(move |cx| {
+            let (mut tx, rx) = payload_pair(8);
+            let message_stream = MessageStream::new(rx)
+                .aggregate_continuations()
+                .max_continuation_size(4);
+            let mut stream = std::pin::pin!(message_stream);
+
+            let poll = stream.as_mut().poll_next(cx);
+            assert!(
+                poll.is_pending(),
+                "Stream should be pending when no messages are present {poll:?}"
+            );
+
+            let messages = vec![
+                Message::Continuation(Item::FirstText(Bytes::from(b"1234".to_vec()))),
+                Message::Continuation(Item::Continue(Bytes::from(b"5".to_vec()))),
+                Message::Ping(Bytes::from(b"p".to_vec())),
+                Message::Continuation(Item::Last(Bytes::from(b"6".to_vec()))),
+                Message::Text("ok".into()),
+            ];
+
+            {
+                let fut = tx.send_many(messages);
+                let fut = std::pin::pin!(fut);
+                assert!(fut.poll(cx).is_ready(), "Sending should not yield");
+            }
+
+            assert!(
+                matches!(stream.as_mut().poll_next(cx), Poll::Ready(Some(Err(_)))),
+                "expected one overflow error"
+            );
+
+            assert!(
+                matches!(
+                    stream.as_mut().poll_next(cx),
+                    Poll::Ready(Some(Ok(AggregatedMessage::Ping(_))))
+                ),
+                "expected ping frame after overflow"
+            );
+
+            assert!(
+                matches!(
+                    stream.as_mut().poll_next(cx),
+                    Poll::Ready(Some(Ok(AggregatedMessage::Text(text)))) if &text[..] == "ok"
+                ),
+                "expected text message after overflow continuation is terminated"
+            );
+
+            assert!(
+                stream.as_mut().poll_next(cx).is_pending(),
+                "Stream should be pending after processing messages"
             );
 
             Poll::Ready(())
