@@ -14,12 +14,21 @@ license.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 
+[package.metadata.docs.rs]
+all-features = true
+
+[features]
+serde = ["dep:serde"]
+serde-json = ["serde", "dep:serde_json"]
+
 [dependencies]
 actix-codec = "0.5"
 actix-http = { version = "3", default-features = false, features = ["ws"] }
 actix-web = { version = "4", default-features = false, features = ["ws"] }
 bytestring = "1"
 futures-core = "0.3.17"
+serde = { version = "1", features = ["derive"], optional = true }
+serde_json = { version = "1", optional = true }
 tokio = { version = "1.49", features = ["sync"] }
 
 [dev-dependencies]
@@ -28,6 +37,10 @@ futures-util = { version = "0.3.17", default-features = false, features = ["std"
 tokio = { version = "1.49", features = ["sync", "rt", "macros"] }
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[[example]]
+name = "json"
+required-features = ["serde-json"]
 
 [lints]
 workspace = true

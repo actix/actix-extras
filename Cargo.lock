@@ -379,6 +379,8 @@ dependencies = [
  "bytestring",
  "futures-core",
  "futures-util",
+ "serde",
+ "serde_json",
  "tokio",
  "tracing",
  "tracing-subscriber 0.3.22",

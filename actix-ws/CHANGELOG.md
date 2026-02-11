@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- feat: Add optional typed message codecs with serde_json support.
 - fix: Ignore empty continuation chunks [#660]
 - fix: Truncate oversized control-frame payloads to avoid emitting invalid frames [#508]
 

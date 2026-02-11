@@ -16,6 +16,7 @@ use actix_web::{web, HttpRequest, HttpResponse};
 use tokio::sync::mpsc::channel;
 
 mod aggregated;
+pub mod codec;
 mod session;
 mod stream;
 

@@ -58,6 +58,16 @@ async fn main() -> std::io::Result<()> {
 }
 ```
 
+## Typed Messages (Optional)
+
+Enable the `serde-json` feature to send/receive typed messages using `serde_json`.
+
+See `examples/json.rs` and run it with:
+
+```sh
+cargo run -p actix-ws --features serde-json --example json
+```
+
 ## Resources
 
 - [API Documentation](https://docs.rs/actix-ws)
