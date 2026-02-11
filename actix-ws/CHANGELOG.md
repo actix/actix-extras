@@ -6,6 +6,7 @@
 - feat: Implement `Sink<Message>` for `Session`
 - fix: Ignore empty continuation chunks [#660]
 - fix: Truncate oversized control-frame payloads to avoid emitting invalid frames [#508]
+- fix: Fix continuation overflow handling
 
 [#660]: https://github.com/actix/actix-extras/pull/660
 [#508]: https://github.com/actix/actix-extras/issues/508
