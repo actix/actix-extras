@@ -35,7 +35,7 @@ tokio-util = { version = "0.7", features = ["rt"] }
 
 [dev-dependencies]
 actix-web = "4.12"
-futures-util = { version = "0.3.17", default-features = false, features = ["std", "sink"] }
+futures-util = { version = "0.3.32", default-features = false, features = ["std", "sink"] }
 tokio = { version = "1.49", features = ["sync", "rt", "macros"] }
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
