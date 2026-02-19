@@ -68,6 +68,22 @@ See `examples/json.rs` and run it with:
 cargo run -p actix-ws --features serde-json --example json
 ```
 
+## WebSocket Sub-Protocols
+
+Use `handle_with_protocols` when your server supports one or more
+`Sec-WebSocket-Protocol` values.
+
+```rust
+let (response, session, msg_stream) = actix_ws::handle_with_protocols(
+    &req,
+    body,
+    &["graphql-transport-ws", "graphql-ws"],
+)?;
+```
+
+When there is an overlap, the first protocol offered by the client that the server supports is
+returned in the handshake response.
+
 ## Resources
 
 - [API Documentation](https://docs.rs/actix-ws)
