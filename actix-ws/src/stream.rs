@@ -1,6 +1,6 @@
 use std::{
     collections::VecDeque,
-    future::poll_fn,
+    future::{poll_fn, Future},
     io, mem,
     pin::Pin,
     task::{Context, Poll},
@@ -17,7 +17,7 @@ use actix_web::{
 };
 use bytestring::ByteString;
 use futures_core::stream::Stream;
-use tokio::sync::mpsc::Receiver;
+use tokio::sync::{mpsc::Receiver, oneshot};
 
 use crate::AggregatedMessageStream;
 
@@ -29,6 +29,7 @@ const MAX_CLOSE_REASON_BYTES: usize = MAX_CONTROL_PAYLOAD_BYTES - 2;
 /// Response body for a WebSocket.
 pub struct StreamingBody {
     session_rx: Receiver<Message>,
+    connection_closed: Option<oneshot::Sender<()>>,
     messages: VecDeque<Message>,
     buf: BytesMut,
     codec: Codec,
@@ -39,17 +40,27 @@ impl StreamingBody {
     pub(super) fn new(session_rx: Receiver<Message>) -> Self {
         StreamingBody {
             session_rx,
+            connection_closed: None,
             messages: VecDeque::new(),
             buf: BytesMut::new(),
             codec: Codec::new(),
             closing: false,
         }
     }
+
+    pub(super) fn with_connection_close_signal(
+        mut self,
+        connection_closed: oneshot::Sender<()>,
+    ) -> Self {
+        self.connection_closed = Some(connection_closed);
+        self
+    }
 }
 
 /// Stream of messages from a WebSocket client.
 pub struct MessageStream {
     payload: Payload,
+    connection_closed: Option<oneshot::Receiver<()>>,
 
     messages: VecDeque<Message>,
     buf: BytesMut,
@@ -61,11 +72,20 @@ impl MessageStream {
     pub(super) fn new(payload: Payload) -> Self {
         MessageStream {
             payload,
+            connection_closed: None,
             messages: VecDeque::new(),
             buf: BytesMut::new(),
             codec: Codec::new(),
             closing: false,
         }
+    }
+
+    pub(super) fn with_connection_close_signal(
+        mut self,
+        connection_closed: oneshot::Receiver<()>,
+    ) -> Self {
+        self.connection_closed = Some(connection_closed);
+        self
     }
 
     /// Sets the maximum permitted size for received WebSocket frames, in bytes.
@@ -197,6 +217,14 @@ impl Stream for StreamingBody {
     }
 }
 
+impl Drop for StreamingBody {
+    fn drop(&mut self) {
+        if let Some(connection_closed) = self.connection_closed.take() {
+            let _ = connection_closed.send(());
+        }
+    }
+}
+
 impl Stream for MessageStream {
     type Item = Result<Message, ProtocolError>;
 
@@ -211,6 +239,16 @@ impl Stream for MessageStream {
         }
 
         if !this.closing {
+            let connection_closed = this
+                .connection_closed
+                .as_mut()
+                .is_some_and(|connection_closed| Pin::new(connection_closed).poll(cx).is_ready());
+
+            if connection_closed {
+                this.closing = true;
+                this.connection_closed = None;
+            }
+
             // Read in bytes until there's nothing left to read
             loop {
                 match Pin::new(&mut this.payload).poll_next(cx) {
@@ -223,6 +261,7 @@ impl Stream for MessageStream {
                         }
                     }
                     Poll::Ready(Some(Err(err))) => {
+                        this.closing = true;
                         return Poll::Ready(Some(Err(ProtocolError::Io(io::Error::other(err)))));
                     }
                     Poll::Ready(None) => {
@@ -272,13 +311,17 @@ impl Stream for MessageStream {
 pub(crate) mod tests {
     use std::{
         future::Future,
+        io,
         pin::Pin,
         task::{ready, Context, Poll},
     };
 
-    use actix_http::error::PayloadError;
+    use actix_http::{error::PayloadError, ws::ProtocolError};
     use futures_core::Stream;
-    use tokio::sync::mpsc::{Receiver, Sender};
+    use tokio::sync::{
+        mpsc::{Receiver, Sender},
+        oneshot,
+    };
 
     use super::{
         Bytes, BytesMut, Codec, Decoder, Encoder, Message, MessageStream, Payload, StreamingBody,
@@ -416,6 +459,104 @@ pub(crate) mod tests {
             assert!(
                 matches!(poll, Poll::Ready(None)),
                 "Stream should be ready when closing {poll:?}"
+            );
+
+            Poll::Ready(())
+        })
+        .await
+    }
+
+    #[tokio::test]
+    async fn message_stream_closes_after_payload_error() {
+        struct ErrorPayload {
+            yielded_error: bool,
+        }
+
+        impl Stream for ErrorPayload {
+            type Item = Result<Bytes, PayloadError>;
+
+            fn poll_next(self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
+                let this = self.get_mut();
+
+                if this.yielded_error {
+                    Poll::Ready(None)
+                } else {
+                    this.yielded_error = true;
+
+                    Poll::Ready(Some(Err(PayloadError::Io(io::Error::new(
+                        io::ErrorKind::UnexpectedEof,
+                        "simulated abrupt disconnect",
+                    )))))
+                }
+            }
+        }
+
+        std::future::poll_fn(move |cx| {
+            let payload = Payload::Stream {
+                payload: Box::pin(ErrorPayload {
+                    yielded_error: false,
+                })
+                    as Pin<Box<dyn Stream<Item = Result<Bytes, PayloadError>>>>,
+            };
+            let message_stream = MessageStream::new(payload);
+            let mut stream = std::pin::pin!(message_stream);
+
+            let poll = stream.as_mut().poll_next(cx);
+            assert!(
+                matches!(poll, Poll::Ready(Some(Err(ProtocolError::Io(_))))),
+                "stream should surface payload error: {poll:?}"
+            );
+
+            let poll = stream.as_mut().poll_next(cx);
+            assert!(
+                matches!(poll, Poll::Ready(None)),
+                "stream should terminate after payload error: {poll:?}"
+            );
+
+            Poll::Ready(())
+        })
+        .await
+    }
+
+    #[tokio::test]
+    async fn message_stream_closes_when_response_body_drops() {
+        struct PendingPayload;
+
+        impl Stream for PendingPayload {
+            type Item = Result<Bytes, PayloadError>;
+
+            fn poll_next(self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
+                Poll::Pending
+            }
+        }
+
+        std::future::poll_fn(move |cx| {
+            let (_tx, rx) = tokio::sync::mpsc::channel(1);
+            let (connection_closed_tx, connection_closed_rx) = oneshot::channel();
+
+            let response_body =
+                StreamingBody::new(rx).with_connection_close_signal(connection_closed_tx);
+
+            let payload = Payload::Stream {
+                payload: Box::pin(PendingPayload)
+                    as Pin<Box<dyn Stream<Item = Result<Bytes, PayloadError>>>>,
+            };
+            let message_stream =
+                MessageStream::new(payload).with_connection_close_signal(connection_closed_rx);
+            let mut stream = std::pin::pin!(message_stream);
+
+            let poll = stream.as_mut().poll_next(cx);
+            assert!(
+                poll.is_pending(),
+                "stream should be pending before close signal: {poll:?}"
+            );
+
+            drop(response_body);
+
+            let poll = stream.as_mut().poll_next(cx);
+            assert!(
+                matches!(poll, Poll::Ready(None)),
+                "stream should terminate when response body drops: {poll:?}"
             );
 
             Poll::Ready(())
