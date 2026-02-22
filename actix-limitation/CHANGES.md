@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Update `redis` dependency to `0.32`.
+- Update `redis` dependency to `1`.
 - Update `actix-session` dependency to `0.11`.
 - Minimum supported Rust version (MSRV) is now 1.88.
 

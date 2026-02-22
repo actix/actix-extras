@@ -53,7 +53,7 @@
 use std::{borrow::Cow, fmt, sync::Arc, time::Duration};
 
 use actix_web::dev::ServiceRequest;
-use redis::Client;
+use redis::{AsyncConnectionConfig, Client};
 
 mod builder;
 mod errors;
@@ -105,7 +105,7 @@ pub struct Limiter {
 impl Limiter {
     /// Construct rate limiter builder with defaults.
     ///
-    /// See [`redis-rs` docs](https://docs.rs/redis/0.21/redis/#connection-parameters) on connection
+    /// See [`redis-rs` docs](https://docs.rs/redis/1.0.4/redis/#connection-parameters) on connection
     /// parameters for how to set the Redis URL.
     #[must_use]
     pub fn builder(redis_url: impl Into<String>) -> Builder {
@@ -137,7 +137,14 @@ impl Limiter {
         let key = key.into();
         let expires = self.period.as_secs();
 
-        let mut connection = self.client.get_multiplexed_tokio_connection().await?;
+        // Keep pre-redis@1 behavior by opting out of default async connection/response timeouts.
+        let connection_config = AsyncConnectionConfig::new()
+            .set_connection_timeout(None)
+            .set_response_timeout(None);
+        let mut connection = self
+            .client
+            .get_multiplexed_async_connection_with_config(&connection_config)
+            .await?;
 
         // The seed of this approach is outlined Atul R in a blog post about rate limiting using
         // NodeJS and Redis. For more details, see https://blog.atulr.com/rate-limiter

@@ -2,7 +2,10 @@ use std::sync::Arc;
 
 use actix_web::cookie::time::Duration;
 use anyhow::Error;
-use redis::{aio::ConnectionManager, AsyncCommands, Client, Cmd, FromRedisValue, Value};
+use redis::{
+    aio::{ConnectionManager, ConnectionManagerConfig},
+    AsyncCommands, Client, Cmd, FromRedisValue, Value,
+};
 
 use super::SessionKey;
 use crate::storage::{
@@ -169,7 +172,14 @@ impl RedisSessionConnBuilder {
     async fn into_client(self) -> anyhow::Result<RedisSessionConn> {
         Ok(match self {
             RedisSessionConnBuilder::Single(conn_string) => {
-                RedisSessionConn::Single(ConnectionManager::new(Client::open(conn_string)?).await?)
+                // Keep pre-redis@1 behavior for actix-session by opting out of the new default
+                // async connection and response timeouts.
+                let config = ConnectionManagerConfig::new()
+                    .set_connection_timeout(None)
+                    .set_response_timeout(None);
+                let conn =
+                    ConnectionManager::new_with_config(Client::open(conn_string)?, config).await?;
+                RedisSessionConn::Single(conn)
             }
 
             #[cfg(feature = "redis-pool")]
