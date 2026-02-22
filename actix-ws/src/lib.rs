@@ -13,7 +13,7 @@ use actix_http::{
     ws::handshake,
 };
 use actix_web::{http::header, web, HttpRequest, HttpResponse};
-use tokio::sync::mpsc::channel;
+use tokio::sync::{mpsc::channel, oneshot};
 
 mod aggregated;
 pub mod codec;
@@ -90,13 +90,19 @@ pub fn handle_with_protocols(
 ) -> Result<(HttpResponse, Session, MessageStream), actix_web::Error> {
     let mut response = handshake_with_protocols(req, protocols)?;
     let (tx, rx) = channel(32);
+    let (connection_closed_tx, connection_closed_rx) = oneshot::channel();
 
     Ok((
         response
-            .message_body(BodyStream::new(StreamingBody::new(rx)).boxed())?
+            .message_body(
+                BodyStream::new(
+                    StreamingBody::new(rx).with_connection_close_signal(connection_closed_tx),
+                )
+                .boxed(),
+            )?
             .into(),
         Session::new(tx),
-        MessageStream::new(body.into_inner()),
+        MessageStream::new(body.into_inner()).with_connection_close_signal(connection_closed_rx),
     ))
 }
 
