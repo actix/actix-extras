@@ -37,8 +37,8 @@ serde_json = { version = "1" }
 tracing = { version = "0.1.44", default-features = false, features = ["log"] }
 
 # redis-session
-redis = { version = "0.32", default-features = false, features = ["tokio-comp", "connection-manager"], optional = true }
-deadpool-redis = { version = "0.22", optional = true }
+redis = { version = "1", default-features = false, features = ["tokio-comp", "connection-manager"], optional = true }
+deadpool-redis = { version = "0.23", optional = true }
 
 [dev-dependencies]
 actix-session = { path = ".", features = ["cookie-session", "redis-session"] }
