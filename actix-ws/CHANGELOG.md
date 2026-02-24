@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.4.0
+
 - feat: Add `handle_with_protocols()` for `Sec-WebSocket-Protocol` negotiation [#479]
 - feat: Add optional typed message codecs with serde_json support.
 - feat: Implement `Sink<Message>` for `Session`
