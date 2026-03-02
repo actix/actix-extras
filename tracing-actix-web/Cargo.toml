@@ -96,7 +96,7 @@ uuid_v7 = ["uuid/v7"]
 
 [dependencies]
 actix-web = { version = "4", default-features = false }
-pin-project = "1.0.0"
+pin-project = "1.1.11"
 tracing = "0.1.44"
 uuid = { version = "1.6", features = ["v4"] }
 mutually_exclusive_features = "0.1"
