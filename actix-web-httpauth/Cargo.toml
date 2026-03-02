@@ -25,7 +25,7 @@ base64 = "0.22"
 futures-core = "0.3.17"
 futures-util = { version = "0.3.17", default-features = false, features = ["std"] }
 log = "0.4"
-pin-project-lite = "0.2.7"
+pin-project-lite = "0.2.17"
 
 [dev-dependencies]
 actix-cors = "0.7"
