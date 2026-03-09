@@ -53,6 +53,7 @@ These crates are provided by the community.
 | [actix-ws-broadcaster]     | ![crates.io](https://img.shields.io/crates/v/actix-ws-broadcaster?label=latest) [![dependency status](https://deps.rs/repo/github/Necoo33/actix-ws-broadcaster/status.svg?path=%2F)](https://deps.rs/repo/github/Necoo33/actix-ws-broadcaster?path=%2F)  | A broadcaster library for actix-ws that includes grouping and conditional broadcasting.           |
 | [actix-web-metrics]        | ![crates.io](https://img.shields.io/crates/v/actix-web-metrics?label=latest) [![dependency status](https://deps.rs/crate/actix-web-metrics/latest/status.svg)](https://deps.rs/crate/actix-web-metrics)                                                  | Metrics.rs integration for Actix Web.                                                             |
 | [actix-htmx]               | ![crates.io](https://img.shields.io/crates/v/actix-htmx?label=latest) [![dependency status](https://deps.rs/crate/actix-htmx/latest/status.svg)](https://deps.rs/crate/actix-htmx)                                                                       | Htmx integration for Actix Web.                                                                   |
+| [actix-web-helmet]         | ![crates.io](https://img.shields.io/crates/v/actix-web-helmet?label=latest) [![dependency status](https://deps.rs/crate/actix-web-helmet/latest/status.svg)](https://deps.rs/crate/actix-web-helmet)                                                      | A security middleware library for popular Rust web frameworks, with first-class `actix` support.   |
 
 To add a crate to this list, submit a pull request.
 
@@ -92,3 +93,4 @@ To add a crate to this list, submit a pull request.
 [actix-ws-broadcaster]: https://crates.io/crates/actix-ws-broadcaster
 [actix-web-metrics]: https://crates.io/crates/actix-web-metrics
 [actix-htmx]: https://crates.io/crates/actix-htmx
+[actix-web-helmet]: https://crates.io/crates/actix-web-helmet
