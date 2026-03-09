@@ -98,7 +98,7 @@ uuid_v7 = ["uuid/v7"]
 actix-web = { version = "4", default-features = false }
 pin-project = "1.1.11"
 tracing = "0.1.44"
-uuid = { version = "1.6", features = ["v4"] }
+uuid = { version = "1.22", features = ["v4"] }
 mutually_exclusive_features = "0.1"
 opentelemetry_0_13_pkg = { package = "opentelemetry", version = "0.13", optional = true }
 opentelemetry_0_14_pkg = { package = "opentelemetry", version = "0.14", optional = true }
