@@ -223,7 +223,7 @@ dependencies = [
  "serde",
  "serde_json",
  "tracing",
- "tracing-subscriber 0.3.22",
+ "tracing-subscriber 0.3.23",
 ]
 
 [[package]]
@@ -366,7 +366,7 @@ dependencies = [
  "log",
  "pin-project-lite",
  "tracing",
- "tracing-subscriber 0.3.22",
+ "tracing-subscriber 0.3.23",
 ]
 
 [[package]]
@@ -385,7 +385,7 @@ dependencies = [
  "tokio",
  "tokio-util",
  "tracing",
- "tracing-subscriber 0.3.22",
+ "tracing-subscriber 0.3.23",
 ]
 
 [[package]]
@@ -899,7 +899,7 @@ dependencies = [
  "tracing-actix-web",
  "tracing-bunyan-formatter",
  "tracing-opentelemetry 0.32.1",
- "tracing-subscriber 0.3.22",
+ "tracing-subscriber 0.3.23",
 ]
 
 [[package]]
@@ -2635,7 +2635,7 @@ dependencies = [
  "tracing-actix-web",
  "tracing-bunyan-formatter",
  "tracing-opentelemetry 0.32.1",
- "tracing-subscriber 0.3.22",
+ "tracing-subscriber 0.3.23",
 ]
 
 [[package]]
@@ -3784,7 +3784,7 @@ dependencies = [
  "tracing-opentelemetry 0.30.0",
  "tracing-opentelemetry 0.31.0",
  "tracing-opentelemetry 0.32.1",
- "tracing-subscriber 0.3.22",
+ "tracing-subscriber 0.3.23",
  "uuid",
 ]
 
@@ -3814,7 +3814,7 @@ dependencies = [
  "tracing",
  "tracing-core",
  "tracing-log 0.1.4",
- "tracing-subscriber 0.3.22",
+ "tracing-subscriber 0.3.23",
 ]
 
 [[package]]
@@ -3898,7 +3898,7 @@ dependencies = [
  "tracing",
  "tracing-core",
  "tracing-log 0.1.4",
- "tracing-subscriber 0.3.22",
+ "tracing-subscriber 0.3.23",
 ]
 
 [[package]]
@@ -3912,7 +3912,7 @@ dependencies = [
  "tracing",
  "tracing-core",
  "tracing-log 0.1.4",
- "tracing-subscriber 0.3.22",
+ "tracing-subscriber 0.3.23",
 ]
 
 [[package]]
@@ -3926,7 +3926,7 @@ dependencies = [
  "tracing",
  "tracing-core",
  "tracing-log 0.1.4",
- "tracing-subscriber 0.3.22",
+ "tracing-subscriber 0.3.23",
 ]
 
 [[package]]
@@ -3940,7 +3940,7 @@ dependencies = [
  "tracing",
  "tracing-core",
  "tracing-log 0.1.4",
- "tracing-subscriber 0.3.22",
+ "tracing-subscriber 0.3.23",
 ]
 
 [[package]]
@@ -3956,7 +3956,7 @@ dependencies = [
  "tracing",
  "tracing-core",
  "tracing-log 0.1.4",
- "tracing-subscriber 0.3.22",
+ "tracing-subscriber 0.3.23",
 ]
 
 [[package]]
@@ -3973,7 +3973,7 @@ dependencies = [
  "tracing",
  "tracing-core",
  "tracing-log 0.2.0",
- "tracing-subscriber 0.3.22",
+ "tracing-subscriber 0.3.23",
  "web-time 0.2.4",
 ]
 
@@ -3991,7 +3991,7 @@ dependencies = [
  "tracing",
  "tracing-core",
  "tracing-log 0.2.0",
- "tracing-subscriber 0.3.22",
+ "tracing-subscriber 0.3.23",
  "web-time 1.1.0",
 ]
 
@@ -4009,7 +4009,7 @@ dependencies = [
  "tracing",
  "tracing-core",
  "tracing-log 0.2.0",
- "tracing-subscriber 0.3.22",
+ "tracing-subscriber 0.3.23",
  "web-time 1.1.0",
 ]
 
@@ -4027,7 +4027,7 @@ dependencies = [
  "tracing",
  "tracing-core",
  "tracing-log 0.2.0",
- "tracing-subscriber 0.3.22",
+ "tracing-subscriber 0.3.23",
  "web-time 1.1.0",
 ]
 
@@ -4045,7 +4045,7 @@ dependencies = [
  "tracing",
  "tracing-core",
  "tracing-log 0.2.0",
- "tracing-subscriber 0.3.22",
+ "tracing-subscriber 0.3.23",
  "web-time 1.1.0",
 ]
 
@@ -4063,7 +4063,7 @@ dependencies = [
  "tracing",
  "tracing-core",
  "tracing-log 0.2.0",
- "tracing-subscriber 0.3.22",
+ "tracing-subscriber 0.3.23",
  "web-time 1.1.0",
 ]
 
@@ -4081,7 +4081,7 @@ dependencies = [
  "tracing",
  "tracing-core",
  "tracing-log 0.2.0",
- "tracing-subscriber 0.3.22",
+ "tracing-subscriber 0.3.23",
  "web-time 1.1.0",
 ]
 
@@ -4099,7 +4099,7 @@ dependencies = [
  "tracing",
  "tracing-core",
  "tracing-log 0.2.0",
- "tracing-subscriber 0.3.22",
+ "tracing-subscriber 0.3.23",
  "web-time 1.1.0",
 ]
 
@@ -4117,7 +4117,7 @@ dependencies = [
  "tracing",
  "tracing-core",
  "tracing-log 0.2.0",
- "tracing-subscriber 0.3.22",
+ "tracing-subscriber 0.3.23",
  "web-time 1.1.0",
 ]
 
@@ -4135,7 +4135,7 @@ dependencies = [
  "tracing",
  "tracing-core",
  "tracing-log 0.2.0",
- "tracing-subscriber 0.3.22",
+ "tracing-subscriber 0.3.23",
  "web-time 1.1.0",
 ]
 
@@ -4151,7 +4151,7 @@ dependencies = [
  "tracing",
  "tracing-core",
  "tracing-log 0.2.0",
- "tracing-subscriber 0.3.22",
+ "tracing-subscriber 0.3.23",
  "web-time 1.1.0",
 ]
 
@@ -4168,9 +4168,9 @@ dependencies = [
 
 [[package]]
 name = "tracing-subscriber"
-version = "0.3.22"
+version = "0.3.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2f30143827ddab0d256fd843b7a66d164e9f271cfa0dde49142c5ca0ca291f1e"
+checksum = "cb7f578e5945fb242538965c2d0b04418d38ec25c79d160cd279bf0731c8d319"
 dependencies = [
  "matchers",
  "nu-ansi-term",
