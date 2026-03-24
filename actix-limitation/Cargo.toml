@@ -19,6 +19,8 @@ all-features = true
 [features]
 default = ["session"]
 session = ["actix-session"]
+redis-native-tls = ["redis/tokio-native-tls-comp"]
+redis-rustls = ["redis/tokio-rustls-comp"]
 
 [dependencies]
 actix-utils = "3"
