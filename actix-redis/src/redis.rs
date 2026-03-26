@@ -11,14 +11,14 @@ use log::{error, info, warn};
 use redis_async::error::Error as RespError;
 use redis_async::resp::{RespCodec, RespValue};
 use tokio::io::{split, WriteHalf};
-use tokio::sync::oneshot;
-use tokio_util::codec::FramedRead;
+use tokio::sync::{mpsc, oneshot};
+use tokio_util::codec::{FramedRead, FramedWrite};
 
 use crate::Error;
 
 use crate::command::RedisCommand;
 use actix_service::Service;
-use futures::FutureExt;
+use futures::{FutureExt, SinkExt};
 
 /// Command for send data to Redis
 #[derive(Debug)]
@@ -28,12 +28,19 @@ impl Message for Command {
     type Result = Result<RespValue, Error>;
 }
 
+#[derive(Debug)]
+struct WriterError(io::Error);
+
+impl Message for WriterError {
+    type Result = ();
+}
+
 /// Redis communication actor
 pub struct RedisActor {
     addr: String,
     connector: BoxService<ConnectInfo<String>, Connection<String, TcpStream>, ConnectError>,
     backoff: ExponentialBackoff,
-    cell: Option<actix::io::FramedWrite<RespValue, WriteHalf<TcpStream>, RespCodec>>,
+    cell: Option<mpsc::UnboundedSender<RespValue>>,
     queue: VecDeque<oneshot::Sender<Result<RespValue, Error>>>,
 }
 
@@ -71,13 +78,13 @@ impl Actor for RedisActor {
                     info!("Connected to redis server: {}", act.addr);
 
                     let (r, w) = split(stream);
+                    let (tx, rx) = mpsc::unbounded_channel();
 
-                    // configure write side of the connection
-                    let framed = actix::io::FramedWrite::new(w, RespCodec, ctx);
-                    act.cell = Some(framed);
+                    act.cell = Some(tx);
 
                     // read side of the connection
                     ctx.add_stream(FramedRead::new(r, RespCodec));
+                    spawn_writer(ctx.address(), w, rx);
 
                     act.backoff.reset();
                 }
@@ -103,10 +110,13 @@ impl Supervised for RedisActor {
     }
 }
 
-impl actix::io::WriteHandler<io::Error> for RedisActor {
-    fn error(&mut self, err: io::Error, _: &mut Self::Context) -> Running {
-        warn!("Redis connection dropped: {} error: {}", self.addr, err);
-        Running::Stop
+impl Handler<WriterError> for RedisActor {
+    type Result = ();
+
+    fn handle(&mut self, msg: WriterError, ctx: &mut Self::Context) {
+        self.cell.take();
+        warn!("Redis connection dropped: {} error: {}", self.addr, msg.0);
+        ctx.stop();
     }
 }
 
@@ -134,8 +144,12 @@ impl Handler<Command> for RedisActor {
     fn handle(&mut self, msg: Command, _: &mut Self::Context) -> Self::Result {
         let (tx, rx) = oneshot::channel();
         if let Some(ref mut cell) = self.cell {
-            self.queue.push_back(tx);
-            cell.write(msg.0);
+            if cell.send(msg.0).is_ok() {
+                self.queue.push_back(tx);
+            } else {
+                self.cell.take();
+                let _ = tx.send(Err(Error::Disconnected));
+            }
         } else {
             let _ = tx.send(Err(Error::NotConnected));
         }
@@ -154,9 +168,13 @@ where
     fn handle(&mut self, msg: T, _: &mut Self::Context) -> Self::Result {
         let (tx, rx) = oneshot::channel();
         if let Some(ref mut cell) = self.cell {
-            self.queue.push_back(tx);
             let msg = msg.serialize();
-            cell.write(msg);
+            if cell.send(msg).is_ok() {
+                self.queue.push_back(tx);
+            } else {
+                self.cell.take();
+                let _ = tx.send(Err(Error::Disconnected));
+            }
         } else {
             let _ = tx.send(Err(Error::NotConnected));
         }
@@ -170,4 +188,21 @@ where
             Err(_) => Err(Error::Disconnected),
         }))
     }
+}
+
+fn spawn_writer(
+    addr: Addr<RedisActor>,
+    writer: WriteHalf<TcpStream>,
+    mut rx: mpsc::UnboundedReceiver<RespValue>,
+) {
+    actix_rt::spawn(async move {
+        let mut framed = FramedWrite::new(writer, RespCodec);
+
+        while let Some(msg) = rx.recv().await {
+            if let Err(err) = framed.send(msg).await {
+                addr.do_send(WriterError(err));
+                return;
+            }
+        }
+    });
 }
