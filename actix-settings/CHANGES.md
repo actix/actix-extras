@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add optional `rustls-0_23` TLS support to `actix-settings`.
+
 ## 0.9.0
 
 - Update `toml` dependency to `0.9`.

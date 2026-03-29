@@ -89,7 +89,10 @@ mod error;
 mod parse;
 mod settings;
 
-#[cfg(feature = "openssl")]
+#[cfg(all(feature = "openssl", feature = "rustls-0_23", not(docsrs)))]
+compile_error!("`actix-settings` supports only one TLS backend feature at a time");
+
+#[cfg(any(feature = "openssl", feature = "rustls-0_23"))]
 pub use self::settings::Tls;
 pub use self::{
     error::Error,
@@ -286,7 +289,7 @@ where
             {
                 if settings.tls.enabled {
                     self = self.bind_openssl(
-                        format!("{}:{}", host, port),
+                        format!("{host}:{port}"),
                         settings.tls.get_ssl_acceptor_builder()?,
                     )?;
                 } else {
@@ -294,7 +297,19 @@ where
                 }
             }
 
-            #[cfg(not(feature = "openssl"))]
+            #[cfg(feature = "rustls-0_23")]
+            {
+                if settings.tls.enabled {
+                    self = self.bind_rustls_0_23(
+                        format!("{host}:{port}"),
+                        settings.tls.get_rustls_0_23_server_config()?,
+                    )?;
+                } else {
+                    self = self.bind(format!("{host}:{port}"))?;
+                }
+            }
+
+            #[cfg(not(any(feature = "openssl", feature = "rustls-0_23")))]
             {
                 self = self.bind(format!("{host}:{port}"))?;
             }
@@ -697,7 +712,7 @@ mod tests {
         assert_eq!(settings.actix.shutdown_timeout, Timeout::Seconds(42));
     }
 
-    #[cfg(feature = "openssl")]
+    #[cfg(any(feature = "openssl", feature = "rustls-0_23"))]
     #[test]
     fn override_field_tls_enabled() {
         let mut settings = Settings::from_default_template();
@@ -706,7 +721,7 @@ mod tests {
         assert!(settings.actix.tls.enabled);
     }
 
-    #[cfg(feature = "openssl")]
+    #[cfg(any(feature = "openssl", feature = "rustls-0_23"))]
     #[test]
     fn override_field_with_env_var_tls_enabled() {
         let mut settings = Settings::from_default_template();
@@ -720,7 +735,7 @@ mod tests {
         assert!(settings.actix.tls.enabled);
     }
 
-    #[cfg(feature = "openssl")]
+    #[cfg(any(feature = "openssl", feature = "rustls-0_23"))]
     #[test]
     fn override_field_tls_certificate() {
         let mut settings = Settings::from_default_template();
@@ -739,7 +754,7 @@ mod tests {
         );
     }
 
-    #[cfg(feature = "openssl")]
+    #[cfg(any(feature = "openssl", feature = "rustls-0_23"))]
     #[test]
     fn override_field_with_env_var_tls_certificate() {
         let mut settings = Settings::from_default_template();
@@ -762,7 +777,7 @@ mod tests {
         );
     }
 
-    #[cfg(feature = "openssl")]
+    #[cfg(any(feature = "openssl", feature = "rustls-0_23"))]
     #[test]
     fn override_field_tls_private_key() {
         let mut settings = Settings::from_default_template();
@@ -781,7 +796,7 @@ mod tests {
         );
     }
 
-    #[cfg(feature = "openssl")]
+    #[cfg(any(feature = "openssl", feature = "rustls-0_23"))]
     #[test]
     fn override_field_with_env_var_tls_private_key() {
         let mut settings = Settings::from_default_template();

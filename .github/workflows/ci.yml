@@ -74,6 +74,10 @@ jobs:
         timeout-minutes: 40
         run: cargo ci-test
 
+      - name: tests (actix-settings)
+        timeout-minutes: 40
+        run: just ci-test-actix-settings
+
       - name: tests (tracing-actix-web)
         timeout-minutes: 40
         run: just ci-test-tracing-actix-web
@@ -134,6 +138,10 @@ jobs:
       - name: tests
         timeout-minutes: 40
         run: cargo ci-test --exclude=actix-session --exclude=actix-limitation
+
+      - name: tests (actix-settings)
+        timeout-minutes: 40
+        run: just ci-test-actix-settings
 
       - name: tests (tracing-actix-web)
         timeout-minutes: 40

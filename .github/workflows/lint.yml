@@ -44,5 +44,11 @@ jobs:
           reporter: github-pr-check
           github_token: ${{ secrets.GITHUB_TOKEN }}
           clippy_flags: >-
-            --workspace --all-features --tests --examples --bins --
+            --workspace --all-features --exclude actix-settings --tests --examples --bins --
             -A unknown_lints -D clippy::todo -D clippy::dbg_macro
+
+      - name: Check actix-settings with Clippy
+        run: |
+          cargo clippy -p actix-settings --tests --examples --bins -- -A unknown_lints -D clippy::todo -D clippy::dbg_macro
+          cargo clippy -p actix-settings --all-targets --features openssl -- -A unknown_lints -D clippy::todo -D clippy::dbg_macro
+          cargo clippy -p actix-settings --all-targets --features rustls-0_23 -- -A unknown_lints -D clippy::todo -D clippy::dbg_macro
