@@ -8,10 +8,10 @@ mod max_connections;
 mod mode;
 mod num_workers;
 mod timeout;
-#[cfg(feature = "openssl")]
+#[cfg(any(feature = "openssl", feature = "rustls-0_23"))]
 mod tls;
 
-#[cfg(feature = "openssl")]
+#[cfg(any(feature = "openssl", feature = "rustls-0_23"))]
 pub use self::tls::Tls;
 pub use self::{
     address::Address, backlog::Backlog, keep_alive::KeepAlive,
@@ -60,6 +60,6 @@ pub struct ActixSettings {
     pub shutdown_timeout: Timeout,
 
     /// TLS (HTTPS) configuration.
-    #[cfg(feature = "openssl")]
+    #[cfg(any(feature = "openssl", feature = "rustls-0_23"))]
     pub tls: Tls,
 }

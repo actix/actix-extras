@@ -3,6 +3,8 @@ use std::{env::VarError, io, num::ParseIntError, path::PathBuf, str::ParseBoolEr
 use derive_more::derive::{Display, Error};
 #[cfg(feature = "openssl")]
 use openssl::error::ErrorStack as OpenSSLError;
+#[cfg(feature = "rustls-0_23")]
+use rustls_0_23::Error as Rustls023Error;
 use toml::de::Error as TomlError;
 
 /// Errors that can be returned from methods in this crate.
@@ -35,6 +37,11 @@ pub enum Error {
     #[cfg(feature = "openssl")]
     #[display("OpenSSL error: {_0}")]
     OpenSSLError(OpenSSLError),
+
+    /// Rustls error.
+    #[cfg(feature = "rustls-0_23")]
+    #[display("Rustls error: {_0}")]
+    RustlsError(#[error(not(source))] String),
 
     /// Value is not a boolean.
     #[display("Failed to parse boolean: {_0}")]
@@ -78,6 +85,13 @@ impl From<OpenSSLError> for Error {
     }
 }
 
+#[cfg(feature = "rustls-0_23")]
+impl From<Rustls023Error> for Error {
+    fn from(err: Rustls023Error) -> Self {
+        Self::RustlsError(err.to_string())
+    }
+}
+
 impl From<ParseBoolError> for Error {
     fn from(err: ParseBoolError) -> Self {
         Self::ParseBoolError(err)
@@ -117,6 +131,9 @@ impl From<Error> for io::Error {
 
             #[cfg(feature = "openssl")]
             Error::OpenSSLError(ossl_error) => io::Error::other(ossl_error),
+
+            #[cfg(feature = "rustls-0_23")]
+            Error::RustlsError(_) => io::Error::new(io::ErrorKind::InvalidData, err.to_string()),
 
             Error::ParseBoolError(_) => {
                 io::Error::new(io::ErrorKind::InvalidInput, err.to_string())

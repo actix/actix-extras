@@ -53,6 +53,10 @@ jobs:
         timeout-minutes: 40
         run: cargo ci-test
 
+      - name: tests (actix-settings)
+        timeout-minutes: 40
+        run: just ci-test-actix-settings
+
       - name: CI cache clean
         run: cargo-ci-cache-clean
 
@@ -102,6 +106,10 @@ jobs:
       - name: tests
         timeout-minutes: 40
         run: cargo ci-test --exclude=actix-session --exclude=actix-limitation -- --nocapture
+
+      - name: tests (actix-settings)
+        timeout-minutes: 40
+        run: just ci-test-actix-settings
 
       - name: CI cache clean
         run: cargo-ci-cache-clean
