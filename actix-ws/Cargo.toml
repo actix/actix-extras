@@ -30,13 +30,13 @@ futures-core = "0.3.17"
 futures-sink = "0.3.17"
 serde = { version = "1", features = ["derive"], optional = true }
 serde_json = { version = "1", optional = true }
-tokio = { version = "1.50", features = ["sync"] }
+tokio = { version = "1.51", features = ["sync"] }
 tokio-util = { version = "0.7", features = ["rt"] }
 
 [dev-dependencies]
 actix-web = "4.12"
 futures-util = { version = "0.3.17", default-features = false, features = ["std", "sink"] }
-tokio = { version = "1.50", features = ["sync", "rt", "macros"] }
+tokio = { version = "1.51", features = ["sync", "rt", "macros"] }
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
