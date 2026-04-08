@@ -27,35 +27,7 @@
 
 ---
 
-## Community Crates
-
-These crates are provided by the community.
-
-| Crate                      |                                                                                                                                                                                                                                                          |                                                                                                   |
-| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| [actix-web-lab]            | [![crates.io](https://img.shields.io/crates/v/actix-web-lab?label=latest)][actix-web-lab] [![dependency status](https://deps.rs/crate/actix-web-lab/latest/status.svg)](https://deps.rs/crate/actix-web-lab)                                             | Experimental extractors, middleware, and other extras for possible inclusion in Actix Web.        |
-| [actix-form-data]          | [![crates.io](https://img.shields.io/crates/v/actix-form-data?label=latest)][actix-form-data] [![dependency status](https://deps.rs/crate/actix-form-data/latest/status.svg)](https://deps.rs/crate/actix-form-data)                                     | Multipart form data from actix multipart streams.                                                 |
-| [actix-governor]           | [![crates.io](https://img.shields.io/crates/v/actix-governor?label=latest)][actix-governor] [![dependency status](https://deps.rs/crate/actix-governor/latest/status.svg)](https://deps.rs/crate/actix-governor)                                         | Rate-limiting backed by governor.                                                                 |
-| [actix-casbin]             | [![crates.io](https://img.shields.io/crates/v/actix-casbin?label=latest)][actix-casbin] [![dependency status](https://deps.rs/crate/actix-casbin/latest/status.svg)](https://deps.rs/crate/actix-casbin)                                                 | Authorization library that supports access control models like ACL, RBAC & ABAC.                  |
-| [actix-ip-filter]          | [![crates.io](https://img.shields.io/crates/v/actix-ip-filter?label=latest)][actix-ip-filter] [![dependency status](https://deps.rs/crate/actix-ip-filter/latest/status.svg)](https://deps.rs/crate/actix-ip-filter)                                     | IP address filter. Supports glob patterns.                                                        |
-| [actix-web-static-files]   | [![crates.io](https://img.shields.io/crates/v/actix-web-static-files?label=latest)][actix-web-static-files] [![dependency status](https://deps.rs/crate/actix-web-static-files/latest/status.svg)](https://deps.rs/crate/actix-web-static-files)         | Static files as embedded resources.                                                               |
-| [actix-web-grants]         | [![crates.io](https://img.shields.io/crates/v/actix-web-grants?label=latest)][actix-web-grants] [![dependency status](https://deps.rs/crate/actix-web-grants/latest/status.svg)](https://deps.rs/crate/actix-web-grants)                                 | Extension for validating user authorities.                                                        |
-| [aliri_actix]              | [![crates.io](https://img.shields.io/crates/v/aliri_actix?label=latest)][aliri_actix] [![dependency status](https://deps.rs/crate/aliri_actix/latest/status.svg)](https://deps.rs/crate/aliri_actix)                                                     | Endpoint authorization and authentication using scoped OAuth2 JWT tokens.                         |
-| [actix-web-flash-messages] | [![crates.io](https://img.shields.io/crates/v/actix-web-flash-messages?label=latest)][actix-web-flash-messages] [![dependency status](https://deps.rs/crate/actix-web-flash-messages/latest/status.svg)](https://deps.rs/crate/actix-web-flash-messages) | Support for flash messages/one-time notifications in `actix-web`.                                 |
-| [awmp]                     | [![crates.io](https://img.shields.io/crates/v/awmp?label=latest)][awmp] [![dependency status](https://deps.rs/crate/awmp/latest/status.svg)](https://deps.rs/crate/awmp)                                                                                 | An easy to use wrapper around multipart fields for Actix Web.                                     |
-| [actix-hash]               | [![crates.io](https://img.shields.io/crates/v/actix-hash?label=latest)][actix-hash] [![dependency status](https://deps.rs/crate/actix-hash/latest/status.svg)](https://deps.rs/crate/actix-hash)                                                         | Hashing utilities for Actix Web.                                                                  |
-| [actix-bincode]            | ![crates.io](https://img.shields.io/crates/v/actix-bincode?label=latest) [![dependency status](https://deps.rs/crate/actix-bincode/latest/status.svg)](https://deps.rs/crate/actix-bincode)                                                              | Bincode payload extractor for Actix Web.                                                          |
-| [sentinel-actix]           | ![crates.io](https://img.shields.io/crates/v/sentinel-actix?label=latest) [![dependency status](https://deps.rs/crate/sentinel-actix/latest/status.svg)](https://deps.rs/crate/sentinel-actix)                                                           | General and flexible protection for Actix Web.                                                    |
-| [actix-telepathy]          | ![crates.io](https://img.shields.io/crates/v/actix-telepathy?label=latest) [![dependency status](https://deps.rs/crate/actix-telepathy/latest/status.svg)](https://deps.rs/crate/actix-telepathy)                                                        | Build distributed applications with `RemoteActors` and `RemoteMessages`.                          |
-| [apistos]                  | ![crates.io](https://img.shields.io/crates/v/apistos?label=latest) [![dependency status](https://deps.rs/crate/apistos/latest/status.svg)](https://deps.rs/crate/apistos)                                                                                | Automatic OpenAPI v3 documentation for Actix Web.                                                 |
-| [actix-web-validation]     | ![crates.io](https://img.shields.io/crates/v/actix-web-validation?label=latest) [![dependency status](https://deps.rs/crate/actix-web-validation/latest/status.svg)](https://deps.rs/crate/actix-web-validation)                                         | Request validation for Actix Web.                                                                 |
-| [actix-jwt-cookies]        | ![crates.io](https://img.shields.io/crates/v/actix-jwt-cookies?label=latest) [![dependency status](https://deps.rs/repo/github/Necoo33/actix-jwt-cookies/status.svg)](https://deps.rs/repo/github/Necoo33/actix-jwt-cookies?path=%2F)                    | Store your data in encrypted cookies and get it elegantly.                                        |
-| [actix-ws-broadcaster]     | ![crates.io](https://img.shields.io/crates/v/actix-ws-broadcaster?label=latest) [![dependency status](https://deps.rs/repo/github/Necoo33/actix-ws-broadcaster/status.svg?path=%2F)](https://deps.rs/repo/github/Necoo33/actix-ws-broadcaster?path=%2F)  | A broadcaster library for actix-ws that includes grouping and conditional broadcasting.           |
-| [actix-web-metrics]        | ![crates.io](https://img.shields.io/crates/v/actix-web-metrics?label=latest) [![dependency status](https://deps.rs/crate/actix-web-metrics/latest/status.svg)](https://deps.rs/crate/actix-web-metrics)                                                  | Metrics.rs integration for Actix Web.                                                             |
-| [actix-htmx]               | ![crates.io](https://img.shields.io/crates/v/actix-htmx?label=latest) [![dependency status](https://deps.rs/crate/actix-htmx/latest/status.svg)](https://deps.rs/crate/actix-htmx)                                                                       | Htmx integration for Actix Web.                                                                   |
-| [actix-web-helmet]         | ![crates.io](https://img.shields.io/crates/v/actix-web-helmet?label=latest) [![dependency status](https://deps.rs/crate/actix-web-helmet/latest/status.svg)](https://deps.rs/crate/actix-web-helmet)                                                      | A security middleware library for popular Rust web frameworks, with first-class `actix` support.   |
-
-To add a crate to this list, submit a pull request.
+Community crates are listed at <https://actix.rs/community/crates>.
 
 <!-- REFERENCES -->
 
@@ -69,28 +41,5 @@ To add a crate to this list, submit a pull request.
 [actix-session]: ./actix-session
 [actix-settings]: ./actix-settings
 [actix-web-httpauth]: ./actix-web-httpauth
-[actix-web-lab]: https://crates.io/crates/actix-web-lab
-[actix-multipart-extract]: https://crates.io/crates/actix-multipart-extract
-[actix-form-data]: https://crates.io/crates/actix-form-data
-[actix-casbin]: https://crates.io/crates/actix-casbin
-[actix-ip-filter]: https://crates.io/crates/actix-ip-filter
-[actix-web-static-files]: https://crates.io/crates/actix-web-static-files
-[actix-web-grants]: https://crates.io/crates/actix-web-grants
-[actix-web-flash-messages]: https://crates.io/crates/actix-web-flash-messages
-[actix-governor]: https://crates.io/crates/actix-governor
-[aliri_actix]: https://crates.io/crates/aliri_actix
-[awmp]: https://crates.io/crates/awmp
 [tracing-actix-web]: https://crates.io/crates/tracing-actix-web
 [actix-ws]: https://crates.io/crates/actix-ws
-[actix-hash]: https://crates.io/crates/actix-hash
-[actix-bincode]: https://crates.io/crates/actix-bincode
-[sentinel-actix]: https://crates.io/crates/sentinel-actix
-[actix-telepathy]: https://crates.io/crates/actix-telepathy
-[actix-web-validation]: https://crates.io/crates/actix-web-validation
-[actix-telepathy]: https://crates.io/crates/actix-telepathy
-[apistos]: https://crates.io/crates/apistos
-[actix-jwt-cookies]: https://crates.io/crates/actix-jwt-cookies
-[actix-ws-broadcaster]: https://crates.io/crates/actix-ws-broadcaster
-[actix-web-metrics]: https://crates.io/crates/actix-web-metrics
-[actix-htmx]: https://crates.io/crates/actix-htmx
-[actix-web-helmet]: https://crates.io/crates/actix-web-helmet
