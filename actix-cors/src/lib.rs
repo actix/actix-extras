@@ -46,6 +46,8 @@
 //! }
 //! ```
 //!
+//! Additional guidance and examples are available in <https://actix.rs/docs/cors>.
+//!
 //! [Private Network Access]: https://wicg.github.io/private-network-access
 
 #![forbid(unsafe_code)]
