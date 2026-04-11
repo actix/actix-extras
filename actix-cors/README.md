@@ -61,6 +61,8 @@ async fn main() -> std::io::Result<()> {
 }
 ```
 
+Additional guidance and examples are available in <https://actix.rs/docs/cors>.
+
 [Private Network Access]: https://wicg.github.io/private-network-access
 
 <!-- cargo-rdme end -->
