@@ -44,6 +44,9 @@ use serde_json::{Map, Value};
 /// You can also retrieve a [`Session`] object from an `HttpRequest` or a `ServiceRequest` using
 /// [`SessionExt`].
 ///
+/// For tests outside of request handling, use [`Session::new`] to create a standalone empty
+/// session.
+///
 /// [`SessionExt`]: crate::SessionExt
 #[derive(Clone)]
 pub struct Session(Rc<RefCell<SessionInner>>);
@@ -78,6 +81,17 @@ struct SessionInner {
 }
 
 impl Session {
+    /// Creates a standalone empty [`Session`].
+    ///
+    /// This is useful for testing code that accepts a [`Session`] directly. Sessions created using
+    /// this constructor are not attached to an Actix Web request, so their state will not be
+    /// persisted by [`SessionMiddleware`].
+    ///
+    /// [`SessionMiddleware`]: crate::SessionMiddleware
+    pub fn new() -> Self {
+        Self::default()
+    }
+
     /// Get a `value` from the session.
     ///
     /// It returns an error if it fails to deserialize as `T` the JSON value associated with `key`.
@@ -335,10 +349,16 @@ impl Session {
             return Session(Rc::clone(s_impl));
         }
 
-        let inner = Rc::new(RefCell::new(SessionInner::default()));
-        extensions.insert(inner.clone());
+        let session = Session::default();
+        extensions.insert(Rc::clone(&session.0));
 
-        Session(inner)
+        session
+    }
+}
+
+impl Default for Session {
+    fn default() -> Self {
+        Self(Rc::new(RefCell::new(SessionInner::default())))
     }
 }
 

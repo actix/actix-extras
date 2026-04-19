@@ -1,6 +1,30 @@
-use actix_session::{SessionExt, SessionStatus};
+use actix_session::{Session, SessionExt, SessionStatus};
 use actix_web::{test, HttpResponse};
 use serde_json::Value;
+
+#[actix_web::test]
+async fn standalone_session() {
+    let session = Session::new();
+
+    assert_eq!(session.status(), SessionStatus::Unchanged);
+    assert!(session.entries().is_empty());
+
+    session.insert("key", "value").unwrap();
+
+    assert_eq!(session.status(), SessionStatus::Changed);
+    assert_eq!(
+        session.get::<String>("key").unwrap().as_deref(),
+        Some("value")
+    );
+}
+
+#[actix_web::test]
+async fn default_session() {
+    let session = Session::default();
+
+    assert_eq!(session.status(), SessionStatus::Unchanged);
+    assert!(session.entries().is_empty());
+}
 
 #[actix_web::test]
 async fn session() {
