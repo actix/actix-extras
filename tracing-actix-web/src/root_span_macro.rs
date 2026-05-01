@@ -89,7 +89,37 @@ macro_rules! root_span {
             let connection_info = $request.connection_info();
             let request_id = $crate::root_span_macro::private::get_request_id($request);
 
+            // Extract trace_id from incoming request headers (e.g. traceparent)
+            // BEFORE creating the span, so it is available in on_new_span.
+            let __otel_trace_id = $crate::root_span_macro::private::extract_otel_trace_id(&$request);
+
+            // Two inner_span arms: one pre-populates trace_id when a remote parent
+            // is found in the request headers; the other leaves it Empty for later.
             macro_rules! inner_span {
+                ($level:expr, trace_id = $tid:expr) => {
+                    $crate::root_span_macro::private::tracing::span!(
+                        $level,
+                        "HTTP request",
+                        http.method = %http_method,
+                        http.route = %http_route,
+                        http.flavor = %$crate::root_span_macro::private::http_flavor($request.version()),
+                        http.scheme = %$crate::root_span_macro::private::http_scheme(connection_info.scheme()),
+                        http.host = %connection_info.host(),
+                        http.client_ip = %$request.connection_info().realip_remote_addr().unwrap_or(""),
+                        http.user_agent = %user_agent,
+                        http.target = %$request.uri().path_and_query().map(|p| p.as_str()).unwrap_or(""),
+                        http.status_code = $crate::root_span_macro::private::tracing::field::Empty,
+                        otel.name = %format!("{} {}", http_method, http_route),
+                        otel.kind = "server",
+                        otel.status_code = $crate::root_span_macro::private::tracing::field::Empty,
+                        trace_id = %$tid,
+                        request_id = %request_id,
+                        exception.message = $crate::root_span_macro::private::tracing::field::Empty,
+                        // Not proper OpenTelemetry, but their terminology is fairly exception-centric
+                        exception.details = $crate::root_span_macro::private::tracing::field::Empty,
+                        $($field)*
+                    )
+                };
                 ($level:expr) => {
                     $crate::root_span_macro::private::tracing::span!(
                         $level,
@@ -115,13 +145,30 @@ macro_rules! root_span {
                     )
                 };
             }
-            let span = match $lvl {
-                $crate::Level::TRACE => inner_span!($crate::Level::TRACE),
-                $crate::Level::DEBUG => inner_span!($crate::Level::DEBUG),
-                $crate::Level::INFO => inner_span!($crate::Level::INFO),
-                $crate::Level::WARN => inner_span!($crate::Level::WARN),
-                $crate::Level::ERROR => inner_span!($crate::Level::ERROR),
-            };
+
+            macro_rules! make_span {
+                ($lvl_value:expr, $trace_id:expr) => {
+                    if let Some(ref __tid) = $trace_id {
+                        match $lvl_value {
+                            $crate::Level::TRACE => inner_span!($crate::Level::TRACE, trace_id = __tid),
+                            $crate::Level::DEBUG => inner_span!($crate::Level::DEBUG, trace_id = __tid),
+                            $crate::Level::INFO => inner_span!($crate::Level::INFO, trace_id = __tid),
+                            $crate::Level::WARN => inner_span!($crate::Level::WARN, trace_id = __tid),
+                            $crate::Level::ERROR => inner_span!($crate::Level::ERROR, trace_id = __tid),
+                        }
+                    } else {
+                        match $lvl_value {
+                            $crate::Level::TRACE => inner_span!($crate::Level::TRACE),
+                            $crate::Level::DEBUG => inner_span!($crate::Level::DEBUG),
+                            $crate::Level::INFO => inner_span!($crate::Level::INFO),
+                            $crate::Level::WARN => inner_span!($crate::Level::WARN),
+                            $crate::Level::ERROR => inner_span!($crate::Level::ERROR),
+                        }
+                    }
+                };
+            }
+
+            let span = make_span!($lvl, __otel_trace_id);
             std::mem::drop(connection_info);
 
             // Previously, this line was instrumented with an opentelemetry-specific feature
@@ -151,6 +198,59 @@ pub mod private {
     pub use tracing;
 
     use crate::RequestId;
+
+    #[doc(hidden)]
+    #[allow(unused_variables)]
+    pub fn extract_otel_trace_id(req: &ServiceRequest) -> Option<String> {
+        #[cfg(any(
+            feature = "opentelemetry_0_13",
+            feature = "opentelemetry_0_14",
+            feature = "opentelemetry_0_15",
+            feature = "opentelemetry_0_16",
+            feature = "opentelemetry_0_17",
+            feature = "opentelemetry_0_18",
+            feature = "opentelemetry_0_19",
+            feature = "opentelemetry_0_20",
+            feature = "opentelemetry_0_21",
+            feature = "opentelemetry_0_22",
+            feature = "opentelemetry_0_23",
+            feature = "opentelemetry_0_24",
+            feature = "opentelemetry_0_25",
+            feature = "opentelemetry_0_26",
+            feature = "opentelemetry_0_27",
+            feature = "opentelemetry_0_28",
+            feature = "opentelemetry_0_29",
+            feature = "opentelemetry_0_30",
+            feature = "opentelemetry_0_31",
+        ))]
+        {
+            crate::otel::extract_trace_id(req)
+        }
+        #[cfg(not(any(
+            feature = "opentelemetry_0_13",
+            feature = "opentelemetry_0_14",
+            feature = "opentelemetry_0_15",
+            feature = "opentelemetry_0_16",
+            feature = "opentelemetry_0_17",
+            feature = "opentelemetry_0_18",
+            feature = "opentelemetry_0_19",
+            feature = "opentelemetry_0_20",
+            feature = "opentelemetry_0_21",
+            feature = "opentelemetry_0_22",
+            feature = "opentelemetry_0_23",
+            feature = "opentelemetry_0_24",
+            feature = "opentelemetry_0_25",
+            feature = "opentelemetry_0_26",
+            feature = "opentelemetry_0_27",
+            feature = "opentelemetry_0_28",
+            feature = "opentelemetry_0_29",
+            feature = "opentelemetry_0_30",
+            feature = "opentelemetry_0_31",
+        )))]
+        {
+            None
+        }
+    }
 
     #[doc(hidden)]
     // We need to allow unused variables because the function

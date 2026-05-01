@@ -97,6 +97,63 @@ impl Extractor for RequestHeaderCarrier<'_> {
     }
 }
 
+/// Extract trace_id from the incoming request headers using the global propagator.
+/// Returns `Some(trace_id)` if a valid remote parent span context is found,
+/// `None` otherwise (trace_id will be generated later by OpenTelemetry).
+pub(crate) fn extract_trace_id(req: &ServiceRequest) -> Option<String> {
+    use opentelemetry::trace::TraceContextExt as _;
+
+    let parent_context = opentelemetry::global::get_text_map_propagator(|propagator| {
+        propagator.extract(&RequestHeaderCarrier::new(req.headers()))
+    });
+    let span_context = parent_context.span().span_context().clone();
+    if !span_context.is_valid() {
+        return None;
+    }
+
+    // opentelemetry 0.13–0.16 expose `TraceId::to_hex()`;
+    // 0.17+ removed it, so we format manually instead.
+    #[cfg(not(any(
+        feature = "opentelemetry_0_17",
+        feature = "opentelemetry_0_18",
+        feature = "opentelemetry_0_19",
+        feature = "opentelemetry_0_20",
+        feature = "opentelemetry_0_21",
+        feature = "opentelemetry_0_22",
+        feature = "opentelemetry_0_23",
+        feature = "opentelemetry_0_24",
+        feature = "opentelemetry_0_25",
+        feature = "opentelemetry_0_26",
+        feature = "opentelemetry_0_27",
+        feature = "opentelemetry_0_28",
+        feature = "opentelemetry_0_29",
+        feature = "opentelemetry_0_30",
+        feature = "opentelemetry_0_31",
+    )))]
+    let trace_id = span_context.trace_id().to_hex();
+
+    #[cfg(any(
+        feature = "opentelemetry_0_17",
+        feature = "opentelemetry_0_18",
+        feature = "opentelemetry_0_19",
+        feature = "opentelemetry_0_20",
+        feature = "opentelemetry_0_21",
+        feature = "opentelemetry_0_22",
+        feature = "opentelemetry_0_23",
+        feature = "opentelemetry_0_24",
+        feature = "opentelemetry_0_25",
+        feature = "opentelemetry_0_26",
+        feature = "opentelemetry_0_27",
+        feature = "opentelemetry_0_28",
+        feature = "opentelemetry_0_29",
+        feature = "opentelemetry_0_30",
+        feature = "opentelemetry_0_31",
+    ))]
+    let trace_id = format!("{:032x}", span_context.trace_id());
+
+    Some(trace_id)
+}
+
 pub(crate) fn set_otel_parent(req: &ServiceRequest, span: &tracing::Span) {
     use opentelemetry::trace::TraceContextExt as _;
     use tracing_opentelemetry::OpenTelemetrySpanExt as _;
