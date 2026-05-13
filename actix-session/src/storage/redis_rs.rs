@@ -97,12 +97,14 @@ enum RedisSessionConn {
 #[derive(Clone)]
 struct CacheConfiguration {
     cache_keygen: Arc<dyn Fn(&str) -> String + Send + Sync>,
+    session_key_generator: Arc<dyn Fn() -> SessionKey + Send + Sync>,
 }
 
 impl Default for CacheConfiguration {
     fn default() -> Self {
         Self {
             cache_keygen: Arc::new(str::to_owned),
+            session_key_generator: Arc::new(generate_session_key),
         }
     }
 }
@@ -198,6 +200,21 @@ impl RedisSessionStoreBuilder {
         self
     }
 
+    /// Set a custom session key generator, used when persisting new sessions.
+    ///
+    /// The default generator follows the [OWASP recommendations] and produces 64-character
+    /// alphanumeric strings. Use this method to plug in a stricter, shorter, or otherwise
+    /// application-specific generator.
+    ///
+    /// [OWASP recommendations]: https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html#session-id-entropy
+    pub fn session_key_generator<F>(mut self, generator: F) -> Self
+    where
+        F: Fn() -> SessionKey + 'static + Send + Sync,
+    {
+        self.configuration.session_key_generator = Arc::new(generator);
+        self
+    }
+
     /// Finalises builder and returns a [`RedisSessionStore`] instance.
     pub async fn build(self) -> anyhow::Result<RedisSessionStore> {
         let client = self.conn_builder.into_client().await?;
@@ -232,7 +249,7 @@ impl SessionStore for RedisSessionStore {
         ttl: &Duration,
     ) -> Result<SessionKey, SaveError> {
         let body = serialize_session_state(&session_state).map_err(SaveError::Serialization)?;
-        let session_key = generate_session_key();
+        let session_key = (self.configuration.session_key_generator)();
         let cache_key = (self.configuration.cache_keygen)(session_key.as_ref());
 
         self.execute_command::<()>(
@@ -479,5 +496,42 @@ mod tests {
             .await
             .unwrap();
         assert_ne!(initial_session_key, updated_session_key.as_ref());
+    }
+
+    #[cfg(feature = "redis-session")]
+    #[actix_web::test]
+    async fn custom_session_key_generator_is_used_on_save() {
+        use std::sync::atomic::{AtomicUsize, Ordering};
+
+        static COUNTER: AtomicUsize = AtomicUsize::new(0);
+
+        let store = RedisSessionStore::builder("redis://127.0.0.1:6379")
+            .session_key_generator(|| {
+                let n = COUNTER.fetch_add(1, Ordering::SeqCst);
+                format!("custom-key-{n:0>59}").try_into().unwrap()
+            })
+            .build()
+            .await
+            .unwrap();
+
+        let session_key = store
+            .save(Map::new(), &time::Duration::seconds(60))
+            .await
+            .unwrap();
+        assert!(session_key.as_ref().starts_with("custom-key-"));
+    }
+
+    #[actix_web::test]
+    async fn default_session_key_generator_preserves_existing_behavior() {
+        let store = redis_store().await;
+        let session_key = store
+            .save(Map::new(), &time::Duration::seconds(60))
+            .await
+            .unwrap();
+        assert_eq!(session_key.as_ref().len(), 64);
+        assert!(session_key
+            .as_ref()
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric()));
     }
 }

@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Add `RedisSessionStoreBuilder::session_key_generator` to plug in a custom session key generator for the Redis storage backend.
 - Session state is now stored as JSON values rather than JSON strings, avoiding double serialization in storage backends.
   The stored session-state format is versioned and older sessions are automatically migrated when loaded.
 - Add `Session::new()` and `Default` implementation for creating standalone empty sessions in tests.
