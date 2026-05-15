@@ -10,7 +10,7 @@ actix-web = "4"
 opentelemetry = "0.31"
 opentelemetry-otlp = { version = "0.31", features = ["grpc-tonic"] }
 opentelemetry_sdk = { version = "0.31", features = ["rt-tokio-current-thread"] }
-opentelemetry-semantic-conventions = "0.31"
+opentelemetry-semantic-conventions = "0.32"
 tracing-opentelemetry = "0.32"
 tracing = "0.1"
 tracing-actix-web = { path = "../..", features = ["opentelemetry_0_31"] }
