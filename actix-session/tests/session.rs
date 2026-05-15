@@ -56,6 +56,18 @@ async fn get_session() {
 }
 
 #[actix_web::test]
+async fn get_session_preserves_stored_value_after_failed_deserialization() {
+    let session = Session::new();
+    session.insert("key", "value").unwrap();
+
+    assert!(session.get::<u64>("key").is_err());
+    assert_eq!(
+        session.get::<String>("key").unwrap().as_deref(),
+        Some("value")
+    );
+}
+
+#[actix_web::test]
 async fn get_session_from_request_head() {
     let req = test::TestRequest::default().to_srv_request();
 
@@ -136,6 +148,18 @@ async fn update_session() {
 }
 
 #[actix_web::test]
+async fn update_session_preserves_stored_value_after_failed_deserialization() {
+    let session = Session::new();
+    session.insert("key", "value").unwrap();
+
+    assert!(session.update("key", |value: u64| value + 1).is_err());
+    assert_eq!(
+        session.get::<String>("key").unwrap().as_deref(),
+        Some("value")
+    );
+}
+
+#[actix_web::test]
 async fn update_or_session() {
     let session = test::TestRequest::default().to_srv_request().get_session();
 
@@ -159,6 +183,17 @@ async fn remove_session_after_renew() {
     session.insert("test_val", "val").unwrap();
     session.remove("test_val").unwrap();
     assert_eq!(session.status(), SessionStatus::Renewed);
+}
+
+#[actix_web::test]
+async fn remove_as_returns_original_value_after_failed_deserialization() {
+    let session = Session::new();
+    session.insert("key", "value").unwrap();
+
+    let value = session.remove_as::<u64>("key").unwrap().unwrap_err();
+
+    assert_eq!(value, Value::from("value"));
+    assert!(!session.contains_key("key"));
 }
 
 #[actix_web::test]
