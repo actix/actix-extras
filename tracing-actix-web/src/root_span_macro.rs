@@ -222,6 +222,7 @@ pub mod private {
             feature = "opentelemetry_0_29",
             feature = "opentelemetry_0_30",
             feature = "opentelemetry_0_31",
+            feature = "opentelemetry_0_32",
         ))]
         {
             crate::otel::extract_trace_id(req)
@@ -246,6 +247,7 @@ pub mod private {
             feature = "opentelemetry_0_29",
             feature = "opentelemetry_0_30",
             feature = "opentelemetry_0_31",
+            feature = "opentelemetry_0_32",
         )))]
         {
             None
@@ -278,6 +280,7 @@ pub mod private {
             feature = "opentelemetry_0_29",
             feature = "opentelemetry_0_30",
             feature = "opentelemetry_0_31",
+            feature = "opentelemetry_0_32",
         ))]
         crate::otel::set_otel_parent(req, span);
     }
