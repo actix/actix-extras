@@ -167,6 +167,9 @@ pub(crate) fn set_otel_parent(req: &ServiceRequest, span: &tracing::Span) {
     let parent_context = opentelemetry::global::get_text_map_propagator(|propagator| {
         propagator.extract(&RequestHeaderCarrier::new(req.headers()))
     });
+    #[cfg(not(any(feature = "opentelemetry_0_31", feature = "opentelemetry_0_32")))]
+    span.set_parent(parent_context);
+    #[cfg(any(feature = "opentelemetry_0_31", feature = "opentelemetry_0_32"))]
     let _ = span.set_parent(parent_context);
     // If we have a remote parent span, this will be the parent's trace identifier.
     // If not, it will be the newly generated trace identifier with this request as root span.

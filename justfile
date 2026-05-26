@@ -17,7 +17,16 @@ msrv_rustup := "+" + msrv
 # Run Clippy over workspace.
 [group("lint")]
 clippy:
-    cargo {{ toolchain }} clippy --workspace --all-targets --all-features
+    # `tracing-actix-web` and `actix-settings` have mutually exclusive feature sets, therefore
+    # `--all-features` cannot be used for the entire workspace.
+    cargo {{ toolchain }} clippy --workspace --all-targets --all-features --exclude tracing-actix-web --exclude actix-settings
+    cargo {{ toolchain }} clippy -p tracing-actix-web --lib --tests --examples --bins
+    cargo {{ toolchain }} clippy -p tracing-actix-web --lib --tests --examples --bins --features uuid_v7
+    cargo {{ toolchain }} clippy -p tracing-actix-web --lib --tests --examples --bins --features opentelemetry_0_13
+    cargo {{ toolchain }} clippy -p tracing-actix-web --lib --tests --examples --bins --features opentelemetry_0_32
+    cargo {{ toolchain }} clippy -p actix-settings --tests --examples --bins
+    cargo {{ toolchain }} clippy -p actix-settings --all-targets --features openssl
+    cargo {{ toolchain }} clippy -p actix-settings --all-targets --features rustls-0_23
 
 # Format project.
 [group("lint")]

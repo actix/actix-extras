@@ -130,10 +130,7 @@ fn select_protocol<'a>(req: &'a HttpRequest, protocols: &[&str]) -> Option<&'a s
                 continue;
             }
 
-            if protocols
-                .iter()
-                .any(|supported_protocol| *supported_protocol == requested_protocol)
-            {
+            if protocols.contains(&requested_protocol) {
                 return Some(requested_protocol);
             }
         }

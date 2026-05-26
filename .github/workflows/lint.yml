@@ -66,8 +66,16 @@ jobs:
           reporter: github-pr-check
           github_token: ${{ secrets.GITHUB_TOKEN }}
           clippy_flags: >-
-            --workspace --all-features --exclude actix-settings --tests --examples --bins --
+            --workspace --all-features --exclude actix-settings --exclude tracing-actix-web
+            --tests --examples --bins --
             -A unknown_lints -D clippy::todo -D clippy::dbg_macro
+
+      - name: Check tracing-actix-web with Clippy
+        run: |
+          cargo clippy -p tracing-actix-web --lib --tests --examples --bins -- -A unknown_lints -D clippy::todo -D clippy::dbg_macro
+          cargo clippy -p tracing-actix-web --lib --tests --examples --bins --features uuid_v7 -- -A unknown_lints -D clippy::todo -D clippy::dbg_macro
+          cargo clippy -p tracing-actix-web --lib --tests --examples --bins --features opentelemetry_0_13 -- -A unknown_lints -D clippy::todo -D clippy::dbg_macro
+          cargo clippy -p tracing-actix-web --lib --tests --examples --bins --features opentelemetry_0_32 -- -A unknown_lints -D clippy::todo -D clippy::dbg_macro
 
       - name: Check actix-settings with Clippy
         run: |
