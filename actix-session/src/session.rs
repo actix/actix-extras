@@ -98,7 +98,7 @@ impl Session {
     pub fn get<T: DeserializeOwned>(&self, key: &str) -> Result<Option<T>, SessionGetError> {
         if let Some(value) = self.0.borrow().state.get(key) {
             Ok(Some(
-                serde_json::from_value::<T>(value.clone())
+                T::deserialize(value)
                     .with_context(|| {
                         format!(
                             "Failed to deserialize the JSON-encoded session data attached to key \
@@ -266,19 +266,18 @@ impl Session {
     /// Returns `None` if key was not present in session. Returns `T` if deserialization succeeds,
     /// otherwise returns the raw JSON value.
     pub fn remove_as<T: DeserializeOwned>(&self, key: &str) -> Option<Result<T, Value>> {
-        self.remove(key)
-            .map(|value| match serde_json::from_value::<T>(value.clone()) {
-                Ok(val) => Ok(val),
-                Err(_err) => {
-                    tracing::debug!(
-                        "Removed value (key: {}) could not be deserialized as {}",
-                        key,
-                        std::any::type_name::<T>()
-                    );
+        self.remove(key).map(|value| match T::deserialize(&value) {
+            Ok(val) => Ok(val),
+            Err(_err) => {
+                tracing::debug!(
+                    "Removed value (key: {}) could not be deserialized as {}",
+                    key,
+                    std::any::type_name::<T>()
+                );
 
-                    Err(value)
-                }
-            })
+                Err(value)
+            }
+        })
     }
 
     /// Clear the session.
@@ -337,8 +336,9 @@ impl Session {
             .extensions()
             .get::<Rc<RefCell<SessionInner>>>()
         {
-            let state = mem::take(&mut s_impl.borrow_mut().state);
-            (s_impl.borrow().status.clone(), state)
+            let mut inner = s_impl.borrow_mut();
+            let state = mem::take(&mut inner.state);
+            (inner.status.clone(), state)
         } else {
             (SessionStatus::Unchanged, Map::new())
         }

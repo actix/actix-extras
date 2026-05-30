@@ -66,6 +66,8 @@ use crate::storage::{
 /// be provided.
 ///
 /// ```no_run
+/// # #[cfg(feature = "redis-pool")]
+/// # {
 /// use actix_session::storage::RedisSessionStore;
 /// use deadpool_redis::{Config, Runtime};
 ///
@@ -73,6 +75,7 @@ use crate::storage::{
 /// let redis_pool = redis_cfg.create_pool(Some(Runtime::Tokio1)).unwrap();
 ///
 /// let store = RedisSessionStore::new_pooled(redis_pool);
+/// # }
 /// ```
 ///
 /// # Implementation notes

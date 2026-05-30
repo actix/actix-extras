@@ -125,4 +125,43 @@ mod tests {
         assert_eq!(decoded.get("obj"), Some(&serde_json::json!({"a": 1})));
         assert_eq!(decoded.get("arr"), Some(&serde_json::json!([1, 2, 3])));
     }
+
+    #[test]
+    fn unsupported_version_is_rejected() {
+        let unsupported = serde_json::json!({
+            "v": 2,
+            "state": {
+                "key": "value"
+            }
+        })
+        .to_string();
+
+        let err = deserialize_session_state(&unsupported).unwrap_err();
+
+        assert_eq!(
+            err.to_string(),
+            "Unsupported session state format version: 2"
+        );
+    }
+
+    #[test]
+    fn non_numeric_version_with_state_object_is_treated_as_unversioned_state() {
+        let unversioned = serde_json::json!({
+            "v": "1",
+            "state": {
+                "key": "value"
+            }
+        })
+        .to_string();
+
+        let decoded = deserialize_session_state(&unversioned).unwrap();
+
+        assert_eq!(decoded.get("v"), Some(&Value::from("1")));
+        assert_eq!(
+            decoded.get("state"),
+            Some(&serde_json::json!({
+                "key": "value"
+            }))
+        );
+    }
 }
