@@ -1,0 +1,25 @@
+[package]
+name = "tracing-actix-web-opentelemetry"
+version = "0.32.0"
+authors = ["Luca Palmieri <rust@lpalmieri.com>", "Yuki Okushi <jtitor@2k36.org>"]
+documentation = "https://docs.rs/tracing-actix-web-opentelemetry/"
+readme = "README.md"
+description = "OpenTelemetry adapter for tracing-actix-web."
+keywords = ["http", "actix-web", "tracing", "opentelemetry"]
+categories = ["asynchronous", "web-programming"]
+repository.workspace = true
+homepage.workspace = true
+license.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+actix-web = { version = "4", default-features = false }
+opentelemetry = { version = "0.32", features = ["trace"] }
+tracing = "0.1.44"
+tracing-actix-web = { version = "0.8.0", path = "../tracing-actix-web" }
+tracing-opentelemetry = "0.33"
+
+[dev-dependencies]
+opentelemetry_sdk = "0.32"
+tracing-subscriber = "0.3"
