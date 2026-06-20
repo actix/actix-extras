@@ -6,6 +6,7 @@ use opentelemetry_otlp::WithExportConfig;
 use opentelemetry_sdk::{propagation::TraceContextPropagator, Resource};
 use opentelemetry_semantic_conventions::resource;
 use tracing_actix_web::TracingLogger;
+use tracing_actix_web_opentelemetry::OpenTelemetryTraceContext;
 use tracing_bunyan_formatter::{BunyanFormattingLayer, JsonStorageLayer};
 use tracing_subscriber::{layer::SubscriberExt, EnvFilter, Registry};
 
@@ -62,7 +63,7 @@ async fn main() -> io::Result<()> {
 
     HttpServer::new(move || {
         App::new()
-            .wrap(TracingLogger::default())
+            .wrap(TracingLogger::default().with_trace_context(OpenTelemetryTraceContext::new()))
             .service(web::resource("/hello").to(hello))
     })
     .bind("127.0.0.1:8080")?

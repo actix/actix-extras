@@ -11,6 +11,7 @@ use opentelemetry_sdk::{propagation::TraceContextPropagator, Resource};
 use opentelemetry_semantic_conventions::resource;
 use tracing::Span;
 use tracing_actix_web::{DefaultRootSpanBuilder, RootSpan, RootSpanBuilder, TracingLogger};
+use tracing_actix_web_opentelemetry::OpenTelemetryTraceContext;
 use tracing_bunyan_formatter::{BunyanFormattingLayer, JsonStorageLayer};
 use tracing_subscriber::{layer::SubscriberExt, EnvFilter, Registry};
 
@@ -57,7 +58,10 @@ async fn main() -> io::Result<()> {
 
     HttpServer::new(move || {
         App::new()
-            .wrap(TracingLogger::<CustomRootSpanBuilder>::new())
+            .wrap(
+                TracingLogger::<CustomRootSpanBuilder>::new()
+                    .with_trace_context(OpenTelemetryTraceContext::new()),
+            )
             .service(web::resource("/hello").to(hello))
             .service(web::resource("/hello/{name}").to(personal_hello))
     })
