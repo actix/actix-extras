@@ -12,7 +12,10 @@ use actix_web::{
 };
 use tracing::Span;
 
-use crate::{DefaultRootSpanBuilder, RequestId, RootSpan, RootSpanBuilder};
+use crate::{
+    trace_context, DefaultRootSpanBuilder, NoopTraceContext, RequestId, RootSpan, RootSpanBuilder,
+    TraceContext,
+};
 
 /// `TracingLogger` is a middleware to capture structured diagnostic when processing an HTTP request.
 /// Check the crate-level documentation for an in-depth introduction.
@@ -84,13 +87,21 @@ use crate::{DefaultRootSpanBuilder, RequestId, RootSpan, RootSpanBuilder};
 /// [`Logger`]: https://docs.rs/actix-web/4.0.0-beta.13/actix_web/middleware/struct.Logger.html
 /// [`Compat`]: https://docs.rs/actix-web/4.0.0-beta.13/actix_web/middleware/struct.Compat.html
 /// [`tracing`]: https://docs.rs/tracing
-pub struct TracingLogger<RootSpan: RootSpanBuilder> {
+pub struct TracingLogger<RootSpan: RootSpanBuilder, TraceCtx: TraceContext = NoopTraceContext> {
     root_span_builder: std::marker::PhantomData<RootSpan>,
+    trace_context: TraceCtx,
 }
 
-impl<RootSpan: RootSpanBuilder> Clone for TracingLogger<RootSpan> {
+impl<RootSpan, TraceCtx> Clone for TracingLogger<RootSpan, TraceCtx>
+where
+    RootSpan: RootSpanBuilder,
+    TraceCtx: TraceContext,
+{
     fn clone(&self) -> Self {
-        Self::new()
+        Self {
+            root_span_builder: self.root_span_builder,
+            trace_context: self.trace_context.clone(),
+        }
     }
 }
 
@@ -104,20 +115,43 @@ impl<RootSpan: RootSpanBuilder> TracingLogger<RootSpan> {
     pub fn new() -> TracingLogger<RootSpan> {
         TracingLogger {
             root_span_builder: Default::default(),
+            trace_context: NoopTraceContext,
         }
     }
 }
 
-impl<S, B, RootSpan> Transform<S, ServiceRequest> for TracingLogger<RootSpan>
+impl<RootSpan, TraceCtx> TracingLogger<RootSpan, TraceCtx>
+where
+    RootSpan: RootSpanBuilder,
+    TraceCtx: TraceContext,
+{
+    /// Configures a trace context adapter used to extract and attach
+    /// distributed tracing context for each request.
+    pub fn with_trace_context<NewTraceCtx>(
+        self,
+        trace_context: NewTraceCtx,
+    ) -> TracingLogger<RootSpan, NewTraceCtx>
+    where
+        NewTraceCtx: TraceContext,
+    {
+        TracingLogger {
+            root_span_builder: self.root_span_builder,
+            trace_context,
+        }
+    }
+}
+
+impl<S, B, RootSpan, TraceCtx> Transform<S, ServiceRequest> for TracingLogger<RootSpan, TraceCtx>
 where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
     S::Future: 'static,
     B: MessageBody + 'static,
     RootSpan: RootSpanBuilder,
+    TraceCtx: TraceContext,
 {
     type Response = ServiceResponse<StreamSpan<B>>;
     type Error = Error;
-    type Transform = TracingLoggerMiddleware<S, RootSpan>;
+    type Transform = TracingLoggerMiddleware<S, RootSpan, TraceCtx>;
     type InitError = ();
     type Future = Ready<Result<Self::Transform, Self::InitError>>;
 
@@ -125,23 +159,27 @@ where
         ready(Ok(TracingLoggerMiddleware {
             service,
             root_span_builder: std::marker::PhantomData,
+            trace_context: self.trace_context.clone(),
         }))
     }
 }
 
 #[doc(hidden)]
-pub struct TracingLoggerMiddleware<S, RootSpanBuilder> {
+pub struct TracingLoggerMiddleware<S, RootSpanBuilder, TraceCtx> {
     service: S,
     root_span_builder: std::marker::PhantomData<RootSpanBuilder>,
+    trace_context: TraceCtx,
 }
 
 #[allow(clippy::type_complexity)]
-impl<S, B, RootSpanType> Service<ServiceRequest> for TracingLoggerMiddleware<S, RootSpanType>
+impl<S, B, RootSpanType, TraceCtx> Service<ServiceRequest>
+    for TracingLoggerMiddleware<S, RootSpanType, TraceCtx>
 where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
     S::Future: 'static,
     B: MessageBody + 'static,
     RootSpanType: RootSpanBuilder,
+    TraceCtx: TraceContext,
 {
     type Response = ServiceResponse<StreamSpan<B>>;
     type Error = Error;
@@ -150,8 +188,14 @@ where
     actix_web::dev::forward_ready!(service);
 
     fn call(&self, req: ServiceRequest) -> Self::Future {
+        let mut req = req;
         req.extensions_mut().insert(RequestId::generate());
+        let extracted_trace_context = self.trace_context.extract(&req);
+        trace_context::insert_trace_id(&mut req, extracted_trace_context.trace_id);
+
         let root_span = RootSpanType::on_request_start(&req);
+        self.trace_context
+            .attach(extracted_trace_context.parent, &root_span);
 
         let root_span_wrapper = RootSpan::new(root_span.clone());
         req.extensions_mut().insert(root_span_wrapper);

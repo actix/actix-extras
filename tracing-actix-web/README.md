@@ -39,35 +39,16 @@ Add `tracing-actix-web` to your dependencies:
 ```toml
 [dependencies]
 # ...
-tracing-actix-web = "0.7"
+tracing-actix-web = "0.8"
 tracing = "0.1"
 actix-web = "4"
 ```
 
 `tracing-actix-web` exposes these feature flags:
 
-- `opentelemetry_0_13`: attach [OpenTelemetry](https://github.com/open-telemetry/opentelemetry-rust)'s context to the root span using `opentelemetry` 0.13;
-- `opentelemetry_0_14`: same as above but using `opentelemetry` 0.14;
-- `opentelemetry_0_15`: same as above but using `opentelemetry` 0.15;
-- `opentelemetry_0_16`: same as above but using `opentelemetry` 0.16;
-- `opentelemetry_0_17`: same as above but using `opentelemetry` 0.17;
-- `opentelemetry_0_18`: same as above but using `opentelemetry` 0.18;
-- `opentelemetry_0_19`: same as above but using `opentelemetry` 0.19;
-- `opentelemetry_0_20`: same as above but using `opentelemetry` 0.20;
-- `opentelemetry_0_21`: same as above but using `opentelemetry` 0.21;
-- `opentelemetry_0_22`: same as above but using `opentelemetry` 0.22;
-- `opentelemetry_0_23`: same as above but using `opentelemetry` 0.23;
-- `opentelemetry_0_24`: same as above but using `opentelemetry` 0.24;
-- `opentelemetry_0_25`: same as above but using `opentelemetry` 0.25;
-- `opentelemetry_0_26`: same as above but using `opentelemetry` 0.26;
-- `opentelemetry_0_27`: same as above but using `opentelemetry` 0.27;
-- `opentelemetry_0_28`: same as above but using `opentelemetry` 0.28;
-- `opentelemetry_0_29`: same as above but using `opentelemetry` 0.29;
-- `opentelemetry_0_30`: same as above but using `opentelemetry` 0.30;
-- `opentelemetry_0_31`: same as above but using `opentelemetry` 0.31;
-- `opentelemetry_0_32`: same as above but using `opentelemetry` 0.32;
 - `emit_event_on_error`: emit a [`tracing`] event when request processing fails with an error (enabled by default).
 - `uuid_v7`: use the UUID v7 implementation inside [`RequestId`] instead of UUID v4 (disabled by default).
+
 ## Quickstart
 
 ```rust,compile_fail
@@ -308,11 +289,11 @@ To fulfill a request you often have to perform additional I/O operations - e.g. 
 `tracing-actix-web` provides support for distributed tracing by supporting the [OpenTelemetry standard](https://opentelemetry.io/).  
 `tracing-actix-web` follows [OpenTelemetry's semantic convention](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/overview.md#spancontext)
 for field names.  
-Furthermore, it provides an `opentelemetry_0_17` feature flag to automatically performs trace propagation: it tries to extract the OpenTelemetry context out of the headers of incoming requests and, when it finds one, it sets it as the remote context for the current root span. The context is then propagated to your downstream dependencies if your HTTP or gRPC clients are OpenTelemetry-aware - e.g. using [`reqwest-middleware` and `reqwest-tracing`](https://github.com/TrueLayer/reqwest-middleware) if you are using `reqwest` as your HTTP client.  
+Furthermore, it provides a [`TraceContext`] hook to automatically perform trace propagation: it tries to extract a distributed tracing context out of the headers of incoming requests and, when it finds one, it sets it as the remote context for the current root span. The context is then propagated to your downstream dependencies if your HTTP or gRPC clients are aware of the same tracing backend.
 You can then find all logs for the same request across all the services it touched by looking for the `trace_id`, automatically logged by `tracing-actix-web`.
 
-If you add [`tracing-opentelemetry::OpenTelemetryLayer`](https://docs.rs/tracing-opentelemetry/0.17.0/tracing_opentelemetry/struct.OpenTelemetryLayer.html)
-in your `tracing::Subscriber` you will be able to export the root span (and all its children) as OpenTelemetry spans.
+For OpenTelemetry support, use the `tracing-actix-web-opentelemetry` adapter crate and add [`tracing-opentelemetry::OpenTelemetryLayer`](https://docs.rs/tracing-opentelemetry/latest/tracing_opentelemetry/struct.OpenTelemetryLayer.html)
+to your `tracing::Subscriber` to export the root span (and all its children) as OpenTelemetry spans.
 
 Check out the [relevant example in the GitHub repository](https://github.com/actix/actix-extras/tree/main/tracing-actix-web/examples/opentelemetry) for reference.
 
@@ -327,6 +308,7 @@ dual licensed as above, without any additional terms or conditions.
 [`RequestId`]: https://docs.rs/tracing-actix-web/4.0.0-beta.1/tracing_actix_web/struct.RequestId.html
 [`RootSpan`]: https://docs.rs/tracing-actix-web/4.0.0-beta.1/tracing_actix_web/struct.RootSpan.html
 [`RootSpanBuilder`]: https://docs.rs/tracing-actix-web/4.0.0-beta.1/tracing_actix_web/trait.RootSpanBuilder.html
+[`TraceContext`]: https://docs.rs/tracing-actix-web/latest/tracing_actix_web/trait.TraceContext.html
 [`DefaultRootSpanBuilder`]: https://docs.rs/tracing-actix-web/4.0.0-beta.1/tracing_actix_web/struct.DefaultRootSpanBuilder.html
 [`DefaultRootSpanBuilder::default`]: https://docs.rs/tracing-actix-web/4.0.0-beta.1/tracing_actix_web/struct.DefaultRootSpanBuilder.html#method.default
 [`tracing`]: https://docs.rs/tracing
