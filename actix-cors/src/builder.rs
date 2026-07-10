@@ -92,7 +92,7 @@ impl Cors {
     /// Constructs a very permissive set of defaults for quick development. (Not recommended for
     /// production use.)
     ///
-    /// *All* origins, methods, request headers and exposed headers allowed. Credentials supported.
+    /// *All* origins, request headers, exposed headers and methods recognized by [`actix_web::http::Method`] allowed. Credentials supported.
     /// Max age 1 hour. Does not send wildcard.
     pub fn permissive() -> Self {
         let inner = Inner {
