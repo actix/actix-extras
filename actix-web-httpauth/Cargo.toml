@@ -21,7 +21,7 @@ all-features = true
 actix-utils = "3"
 actix-web = { version = "4.12.1", default-features = false }
 
-base64 = "0.22"
+base64 = "0.23"
 futures-core = "0.3.17"
 futures-util = { version = "0.3.17", default-features = false, features = ["std"] }
 log = "0.4"
