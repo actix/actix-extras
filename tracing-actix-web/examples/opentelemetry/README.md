@@ -11,7 +11,7 @@ docker run -d -p6831:6831/udp -p6832:6832/udp -p16686:16686 -p4317:4317 jaegertr
 
 ## Running
 
-You can launch this example with 
+You can launch this example with
 
 ```bash
 cargo run
@@ -23,6 +23,7 @@ You can fire requests to it with:
 ```bash
 curl -v http://localhost:8080/hello
 ```
+
 ```text
 Hello world!
 ```

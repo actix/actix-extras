@@ -10,12 +10,12 @@ You can launch this example with
 cargo run
 ```
 
-An `actix-web` application will be listening on port `8080`.
-You can fire requests to it with:
+An `actix-web` application will be listening on port `8080`. You can fire requests to it with:
 
 ```bash
 curl -v http://localhost:8080/hello
 ```
+
 ```text
 ...
 < HTTP/1.1 200 OK

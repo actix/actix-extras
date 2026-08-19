@@ -30,7 +30,7 @@
 
 > `tracing-actix-web` was initially developed for the telemetry chapter of [Zero to Production In Rust](https://zero2prod.com), a hands-on introduction to backend development using the Rust programming language.
 
-# Getting started 
+# Getting started
 
 ## How to install
 
@@ -68,6 +68,7 @@ actix-web = "4"
 - `opentelemetry_0_32`: same as above but using `opentelemetry` 0.32;
 - `emit_event_on_error`: emit a [`tracing`] event when request processing fails with an error (enabled by default).
 - `uuid_v7`: use the UUID v7 implementation inside [`RequestId`] instead of UUID v4 (disabled by default).
+
 ## Quickstart
 
 ```rust,compile_fail
@@ -86,44 +87,35 @@ fn main() {
 }
 ```
 
-Check out [the examples on GitHub](https://github.com/actix/actix-extras/tree/main/tracing-actix-web/examples) to get a taste of how [`TracingLogger`] can be used to observe and monitor your
-application.  
+Check out [the examples on GitHub](https://github.com/actix/actix-extras/tree/main/tracing-actix-web/examples) to get a taste of how [`TracingLogger`] can be used to observe and monitor your application.
 
 # From zero to hero: a crash course in observability
 
 ## `tracing`: who art thou?
 
-[`TracingLogger`] is built on top of [`tracing`], a modern instrumentation framework with
-[a vibrant ecosystem](https://github.com/tokio-rs/tracing#related-crates).
+[`TracingLogger`] is built on top of [`tracing`], a modern instrumentation framework with [a vibrant ecosystem](https://github.com/tokio-rs/tracing#related-crates).
 
 `tracing-actix-web`'s documentation provides a crash course in how to use [`tracing`] to instrument an `actix-web` application.  
-If you want to learn more check out ["Are we observable yet?"](https://www.lpalmieri.com/posts/2020-09-27-zero-to-production-4-are-we-observable-yet/) -
-it provides an in-depth introduction to the crate and the problems it solves within the bigger picture of [observability](https://docs.honeycomb.io/learning-about-observability/).
+If you want to learn more check out ["Are we observable yet?"](https://www.lpalmieri.com/posts/2020-09-27-zero-to-production-4-are-we-observable-yet/) - it provides an in-depth introduction to the crate and the problems it solves within the bigger picture of [observability](https://docs.honeycomb.io/learning-about-observability/).
 
 ## The root span
 
 [`tracing::Span`] is the key abstraction in [`tracing`]: it represents a unit of work in your system.  
-A [`tracing::Span`] has a beginning and an end. It can include one or more **child spans** to represent sub-unit
-of works within a larger task.
+A [`tracing::Span`] has a beginning and an end. It can include one or more **child spans** to represent sub-unit of works within a larger task.
 
 When your application receives a request, [`TracingLogger`] creates a new span - we call it the **[root span]**.  
 All the spans created _while_ processing the request will be children of the root span.
 
 [`tracing`] empowers us to attach structured properties to a span as a collection of key-value pairs.  
-Those properties can then be queried in a variety of tools (e.g. ElasticSearch, Honeycomb, DataDog) to
-understand what is happening in your system.  
+Those properties can then be queried in a variety of tools (e.g. ElasticSearch, Honeycomb, DataDog) to understand what is happening in your system.
 
 ## Customization via [`RootSpanBuilder`]
 
-Troubleshooting becomes much easier when the root span has a _rich context_ - e.g. you can understand most of what
-happened when processing the request just by looking at the properties attached to the corresponding root span.  
+Troubleshooting becomes much easier when the root span has a _rich context_ - e.g. you can understand most of what happened when processing the request just by looking at the properties attached to the corresponding root span.
 
-You might have heard of this technique as the [canonical log line pattern](https://stripe.com/blog/canonical-log-lines),
-popularized by Stripe. It is more recently discussed in terms of [high-cardinality events](https://www.honeycomb.io/blog/observability-a-manifesto/)
-by Honeycomb and other vendors in the observability space.
+You might have heard of this technique as the [canonical log line pattern](https://stripe.com/blog/canonical-log-lines), popularized by Stripe. It is more recently discussed in terms of [high-cardinality events](https://www.honeycomb.io/blog/observability-a-manifesto/) by Honeycomb and other vendors in the observability space.
 
-[`TracingLogger`] gives you a chance to use the very same pattern: you can customize the properties attached
-to the root span in order to capture the context relevant to your specific domain.
+[`TracingLogger`] gives you a chance to use the very same pattern: you can customize the properties attached to the root span in order to capture the context relevant to your specific domain.
 
 [`TracingLogger::default`] is equivalent to:
 
@@ -136,12 +128,10 @@ let another_way = TracingLogger::<DefaultRootSpanBuilder>::new();
 ```
 
 We are delegating the construction of the root span to [`DefaultRootSpanBuilder`].  
-[`DefaultRootSpanBuilder`] captures, out of the box, several dimensions that are usually relevant when looking at an HTTP
-API: method, version, route, etc. - check out its documentation for an extensive list.
+[`DefaultRootSpanBuilder`] captures, out of the box, several dimensions that are usually relevant when looking at an HTTP API: method, version, route, etc. - check out its documentation for an extensive list.
 
 You can customize the root span by providing your own implementation of the [`RootSpanBuilder`] trait.  
-Let's imagine, for example, that our system cares about a client identifier embedded inside an authorization header.
-We could add a `client_id` property to the root span using a custom builder, `DomainRootSpanBuilder`:
+Let's imagine, for example, that our system cares about a client identifier embedded inside an authorization header. We could add a `client_id` property to the root span using a custom builder, `DomainRootSpanBuilder`:
 
 ```rust
 use actix_web::body::MessageBody;
@@ -165,8 +155,7 @@ let custom_middleware = TracingLogger::<DomainRootSpanBuilder>::new();
 ```
 
 There is an issue, though: `client_id` is the _only_ property we are capturing.  
-With `DomainRootSpanBuilder`, as it is, we do not get any of that useful HTTP-related information provided by
-[`DefaultRootSpanBuilder`].  
+With `DomainRootSpanBuilder`, as it is, we do not get any of that useful HTTP-related information provided by [`DefaultRootSpanBuilder`].
 
 We can do better!
 
@@ -193,15 +182,12 @@ impl RootSpanBuilder for DomainRootSpanBuilder {
 let custom_middleware = TracingLogger::<DomainRootSpanBuilder>::new();
 ```
 
-[`root_span!`] is a macro provided by `tracing-actix-web`: it creates a new span by combining all the HTTP properties tracked
-by [`DefaultRootSpanBuilder`] with the custom ones you specify when calling it (e.g. `client_id` in our example).  
+[`root_span!`] is a macro provided by `tracing-actix-web`: it creates a new span by combining all the HTTP properties tracked by [`DefaultRootSpanBuilder`] with the custom ones you specify when calling it (e.g. `client_id` in our example).
 
 We need to use a macro because `tracing` requires all the properties attached to a span to be declared upfront, when the span is created.  
-You cannot add new ones afterwards. This makes it extremely fast, but it pushes us to reach for macros when we need some level of
-composition.
+You cannot add new ones afterwards. This makes it extremely fast, but it pushes us to reach for macros when we need some level of composition.
 
-[`root_span!`] exposes more or less the same knob you can find on `tracing`'s `span!` macro. You can, for example, customize
-the span level:
+[`root_span!`] exposes more or less the same knob you can find on `tracing`'s `span!` macro. You can, for example, customize the span level:
 
 ```rust
 use actix_web::body::MessageBody;
@@ -233,8 +219,7 @@ let custom_middleware = TracingLogger::<CustomLevelRootSpanBuilder>::new();
 ## The [`RootSpan`] extractor
 
 It often happens that not all information about a task is known upfront, encoded in the incoming request.  
-You can use the [`RootSpan`] extractor to grab the root span in your handlers and attach more information
-to your root span as it becomes available:
+You can use the [`RootSpan`] extractor to grab the root span in your handlers and attach more information to your root span as it becomes available:
 
 ```rust
 use actix_web::body::MessageBody;
@@ -279,7 +264,7 @@ impl RootSpanBuilder for DomainRootSpanBuilder {
 
 ## Request Id
 
-`tracing-actix-web` generates a unique identifier for each incoming request, the **request id**.  
+`tracing-actix-web` generates a unique identifier for each incoming request, the **request id**.
 
 You can extract the request id using the [`RequestId`] extractor:
 
@@ -297,7 +282,6 @@ async fn index(request_id: RequestId) -> String {
 The request id is meant to identify all operations related to a particular request **within the boundary of your API**.  
 If you need to **trace** a request across multiple services (e.g. in a microservice architecture), you want to look at the `trace_id` field - see the next section on OpenTelemetry for more details.
 
-
 Optionally, using the `uuid_v7` feature flag will allow [`RequestId`] to use UUID v7 instead of the currently used UUID v4.
 
 ## Trace Id
@@ -306,13 +290,11 @@ To fulfill a request you often have to perform additional I/O operations - e.g. 
 **Distributed tracing** is the standard approach to **trace** a single request across the entirety of your stack.
 
 `tracing-actix-web` provides support for distributed tracing by supporting the [OpenTelemetry standard](https://opentelemetry.io/).  
-`tracing-actix-web` follows [OpenTelemetry's semantic convention](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/overview.md#spancontext)
-for field names.  
+`tracing-actix-web` follows [OpenTelemetry's semantic convention](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/overview.md#spancontext) for field names.  
 Furthermore, it provides an `opentelemetry_0_17` feature flag to automatically performs trace propagation: it tries to extract the OpenTelemetry context out of the headers of incoming requests and, when it finds one, it sets it as the remote context for the current root span. The context is then propagated to your downstream dependencies if your HTTP or gRPC clients are OpenTelemetry-aware - e.g. using [`reqwest-middleware` and `reqwest-tracing`](https://github.com/TrueLayer/reqwest-middleware) if you are using `reqwest` as your HTTP client.  
 You can then find all logs for the same request across all the services it touched by looking for the `trace_id`, automatically logged by `tracing-actix-web`.
 
-If you add [`tracing-opentelemetry::OpenTelemetryLayer`](https://docs.rs/tracing-opentelemetry/0.17.0/tracing_opentelemetry/struct.OpenTelemetryLayer.html)
-in your `tracing::Subscriber` you will be able to export the root span (and all its children) as OpenTelemetry spans.
+If you add [`tracing-opentelemetry::OpenTelemetryLayer`](https://docs.rs/tracing-opentelemetry/0.17.0/tracing_opentelemetry/struct.OpenTelemetryLayer.html) in your `tracing::Subscriber` you will be able to export the root span (and all its children) as OpenTelemetry spans.
 
 Check out the [relevant example in the GitHub repository](https://github.com/actix/actix-extras/tree/main/tracing-actix-web/examples/opentelemetry) for reference.
 
@@ -320,8 +302,7 @@ Check out the [relevant example in the GitHub repository](https://github.com/act
 
 Licensed under either of <a href="LICENSE-APACHE">Apache License, Version 2.0</a> or <a href="LICENSE-MIT">MIT license</a> at your option.
 
-Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in `tracing-actix-web` by you, as defined in the Apache-2.0 license, shall be
-dual licensed as above, without any additional terms or conditions.
+Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in `tracing-actix-web` by you, as defined in the Apache-2.0 license, shall be dual licensed as above, without any additional terms or conditions.
 
 [`TracingLogger`]: https://docs.rs/tracing-actix-web/4.0.0-beta.1/tracing_actix_web/struct.TracingLogger.html
 [`RequestId`]: https://docs.rs/tracing-actix-web/4.0.0-beta.1/tracing_actix_web/struct.RequestId.html
