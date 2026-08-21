@@ -5,7 +5,7 @@ use actix_web::{
     body::{EitherBody, MessageBody},
     dev::{forward_ready, Service, ServiceRequest, ServiceResponse},
     http::{
-        header::{self, HeaderValue},
+        header::{self, HeaderMap, HeaderValue},
         Method,
     },
     Error, HttpResponse, Result,
@@ -125,72 +125,60 @@ impl<S> CorsMiddleware<S> {
         req.into_response(res)
     }
 
-    fn augment_response<B>(
+    fn augment_response_headers(
         inner: &Inner,
-        origin_allowed: bool,
-        mut res: ServiceResponse<B>,
-    ) -> ServiceResponse<B> {
-        if origin_allowed {
-            if let Some(origin) = inner.access_control_allow_origin(res.request().head()) {
-                res.headers_mut()
-                    .insert(header::ACCESS_CONTROL_ALLOW_ORIGIN, origin);
-            };
+        allow_origin: Option<HeaderValue>,
+        _private_network_access_requested: bool,
+        headers: &mut HeaderMap,
+    ) {
+        if let Some(origin) = allow_origin {
+            headers.insert(header::ACCESS_CONTROL_ALLOW_ORIGIN, origin);
         }
 
         if let Some(ref expose) = inner.expose_headers_baked {
             log::trace!("exposing selected headers: {:?}", expose);
 
-            res.headers_mut()
-                .insert(header::ACCESS_CONTROL_EXPOSE_HEADERS, expose.clone());
+            headers.insert(header::ACCESS_CONTROL_EXPOSE_HEADERS, expose.clone());
         } else if matches!(inner.expose_headers, AllOrSome::All) {
             // intersperse_header_values requires that argument is non-empty
-            if !res.headers().is_empty() {
-                // extract header names from request
-                let expose_all_request_headers = res
-                    .headers()
+            if !headers.is_empty() {
+                // extract header names from response
+                let expose_all_response_headers = headers
                     .keys()
                     .map(|name| name.as_str())
                     .collect::<HashSet<_>>();
 
                 // create comma separated string of header names
-                let expose_headers_value = intersperse_header_values(&expose_all_request_headers);
+                let expose_headers_value = intersperse_header_values(&expose_all_response_headers);
 
                 log::trace!(
-                    "exposing all headers from request: {:?}",
+                    "exposing all headers from response: {:?}",
                     expose_headers_value
                 );
 
                 // add header names to expose response header
-                res.headers_mut()
-                    .insert(header::ACCESS_CONTROL_EXPOSE_HEADERS, expose_headers_value);
+                headers.insert(header::ACCESS_CONTROL_EXPOSE_HEADERS, expose_headers_value);
             }
         }
 
         if inner.supports_credentials {
-            res.headers_mut().insert(
+            headers.insert(
                 header::ACCESS_CONTROL_ALLOW_CREDENTIALS,
                 HeaderValue::from_static("true"),
             );
         }
 
         #[cfg(feature = "draft-private-network-access")]
-        if inner.allow_private_network_access
-            && res
-                .request()
-                .headers()
-                .contains_key("access-control-request-private-network")
-        {
-            res.headers_mut().insert(
+        if inner.allow_private_network_access && _private_network_access_requested {
+            headers.insert(
                 header::HeaderName::from_static("access-control-allow-private-network"),
                 HeaderValue::from_static("true"),
             );
         }
 
         if inner.vary_header {
-            add_vary_header(res.headers_mut());
+            add_vary_header(headers);
         }
-
-        res
     }
 }
 
@@ -208,23 +196,25 @@ where
     forward_ready!(service);
 
     fn call(&self, req: ServiceRequest) -> Self::Future {
+        let inner = Rc::clone(&self.inner);
+
         let origin = req.headers().get(header::ORIGIN);
 
         // handle preflight requests
-        if self.inner.preflight && Self::is_request_preflight(&req) {
+        if inner.preflight && Self::is_request_preflight(&req) {
             let res = self.handle_preflight(req);
             return ok(res.map_into_right_body()).boxed_local();
         }
 
         // only check actual requests with a origin header
-        let origin_allowed = match (origin, self.inner.validate_origin(req.head())) {
-            (None, _) => false,
-            (_, Ok(origin_allowed)) => origin_allowed,
+        let allow_origin = match (origin, inner.validate_origin(req.head())) {
+            (None, _) | (_, Ok(false)) => None,
+            (_, Ok(true)) => inner.access_control_allow_origin(req.head()),
             (_, Err(err)) => {
                 debug!("origin validation failed; inner service is not called");
                 let mut res = req.error_response(err);
 
-                if self.inner.vary_header {
+                if inner.vary_header {
                     add_vary_header(res.headers_mut());
                 }
 
@@ -232,12 +222,41 @@ where
             }
         };
 
-        let inner = Rc::clone(&self.inner);
+        #[cfg(feature = "draft-private-network-access")]
+        let private_network_access_requested = req
+            .headers()
+            .contains_key("access-control-request-private-network");
+        #[cfg(not(feature = "draft-private-network-access"))]
+        let private_network_access_requested = false;
+
         let fut = self.service.call(req);
 
         Box::pin(async move {
-            let res = fut.await;
-            Ok(Self::augment_response(&inner, origin_allowed, res?).map_into_left_body())
+            match fut.await {
+                Ok(mut res) => {
+                    Self::augment_response_headers(
+                        &inner,
+                        allow_origin.clone(),
+                        private_network_access_requested,
+                        res.headers_mut(),
+                    );
+
+                    Ok(res.map_into_left_body())
+                }
+                Err(mut err) => {
+                    err.add_response_mapper(move |mut res| {
+                        Self::augment_response_headers(
+                            &inner,
+                            allow_origin.clone(),
+                            private_network_access_requested,
+                            res.headers_mut(),
+                        );
+                        res
+                    });
+
+                    Err(err)
+                }
+            }
         })
     }
 }

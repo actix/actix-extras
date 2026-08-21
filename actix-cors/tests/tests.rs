@@ -1,7 +1,7 @@
 use actix_cors::Cors;
 use actix_utils::future::ok;
 use actix_web::{
-    dev::{fn_service, ServiceRequest, Transform},
+    dev::{fn_service, Service, ServiceRequest, ServiceResponse, Transform},
     http::{
         header::{self, HeaderValue},
         Method, StatusCode,
@@ -443,6 +443,48 @@ async fn test_no_origin_response() {
         resp.headers()
             .get(header::ACCESS_CONTROL_ALLOW_ORIGIN)
             .map(HeaderValue::as_bytes)
+    );
+}
+
+#[actix_web::test]
+async fn cors_headers_are_added_to_error_responses() {
+    let cors = Cors::permissive()
+        .disable_preflight()
+        .new_transform(fn_service(|_req: ServiceRequest| async {
+            Err::<ServiceResponse, _>(actix_web::error::ErrorBadRequest("error"))
+        }))
+        .await
+        .unwrap();
+
+    let req = TestRequest::get()
+        .insert_header((header::ORIGIN, "https://www.example.com"))
+        .to_srv_request();
+    let err = cors.call(req).await.unwrap_err();
+    let resp = err.error_response();
+
+    assert_eq!(resp.status(), StatusCode::BAD_REQUEST);
+    assert_eq!(
+        resp.headers().get(header::ACCESS_CONTROL_ALLOW_ORIGIN),
+        Some(&HeaderValue::from_static("https://www.example.com")),
+    );
+    assert_eq!(
+        resp.headers().get(header::ACCESS_CONTROL_ALLOW_CREDENTIALS),
+        Some(&HeaderValue::from_static("true")),
+    );
+    #[cfg(not(feature = "draft-private-network-access"))]
+    assert_eq!(
+        resp.headers().get(header::VARY),
+        Some(&HeaderValue::from_static(
+            "Origin, Access-Control-Request-Method, Access-Control-Request-Headers",
+        )),
+    );
+    #[cfg(feature = "draft-private-network-access")]
+    assert_eq!(
+        resp.headers().get(header::VARY),
+        Some(&HeaderValue::from_static(
+            "Origin, Access-Control-Request-Method, Access-Control-Request-Headers, \
+            Access-Control-Request-Private-Network",
+        )),
     );
 }
 
