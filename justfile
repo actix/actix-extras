@@ -72,11 +72,11 @@ test-all: test test-docs
 # Test workspace and collect coverage info.
 [private]
 test-coverage:
-    cargo {{ toolchain }} llvm-cov nextest --no-report --all-features --exclude actix-settings
+    cargo {{ toolchain }} llvm-cov nextest --workspace --no-report --all-features --exclude actix-settings --exclude tracing-actix-web
     cargo {{ toolchain }} llvm-cov nextest --no-report -p actix-settings
     cargo {{ toolchain }} llvm-cov nextest --no-report -p actix-settings --features openssl
     cargo {{ toolchain }} llvm-cov nextest --no-report -p actix-settings --features rustls-0_23
-    cargo {{ toolchain }} llvm-cov --doc --no-report --all-features --exclude actix-settings
+    cargo {{ toolchain }} llvm-cov --doc --no-report --workspace --all-features --exclude actix-settings --exclude tracing-actix-web
     cargo {{ toolchain }} llvm-cov --doc --no-report -p actix-settings
     cargo {{ toolchain }} llvm-cov --doc --no-report -p actix-settings --features openssl
     cargo {{ toolchain }} llvm-cov --doc --no-report -p actix-settings --features rustls-0_23
