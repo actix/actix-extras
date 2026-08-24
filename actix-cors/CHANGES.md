@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.7.2
+
 - Add configured CORS response headers to error responses.
 - Minimum supported Rust version (MSRV) is now 1.88.
 
