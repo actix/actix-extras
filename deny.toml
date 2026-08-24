@@ -22,4 +22,5 @@ executables = "deny"
 ignore = [
     "RUSTSEC-2025-0055", # For backward-compatibility
     "RUSTSEC-2024-0387", # For backward-compatibility
+    "RUSTSEC-2026-0258", # DoS risk on empty DATA frames is not yet backported to v0.3
 ]
