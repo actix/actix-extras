@@ -2,10 +2,12 @@
 
 ## Unreleased
 
+## 0.6.0
+
 - Update `redis` dependency to `1`.
 - Update `actix-session` dependency to `0.11`.
-- Minimum supported Rust version (MSRV) is now 1.88.
 - Add `redis` TLS features to `actix-limitation`.
+- Minimum supported Rust version (MSRV) is now 1.88.
 
 ## 0.5.1
 
