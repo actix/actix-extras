@@ -181,10 +181,10 @@ impl Stream for StreamingBody {
                         }
                     }
                 }
-                Message::Ping(bytes) | Message::Pong(bytes) => {
-                    if bytes.len() > MAX_CONTROL_PAYLOAD_BYTES {
-                        *bytes = bytes.slice(..MAX_CONTROL_PAYLOAD_BYTES);
-                    }
+                Message::Ping(bytes) | Message::Pong(bytes)
+                    if bytes.len() > MAX_CONTROL_PAYLOAD_BYTES =>
+                {
+                    *bytes = bytes.slice(..MAX_CONTROL_PAYLOAD_BYTES);
                 }
                 _ => {}
             }

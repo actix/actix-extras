@@ -57,7 +57,7 @@ impl TestApp {
 
     pub async fn get_identity_required(&self) -> reqwest::Response {
         self.api_client
-            .get(format!("{}/identity_required", &self.url()))
+            .get(format!("{}/identity_required", self.url()))
             .send()
             .await
             .unwrap()
@@ -65,7 +65,7 @@ impl TestApp {
 
     pub async fn get_current(&self) -> EndpointResponse {
         self.api_client
-            .get(format!("{}/current", &self.url()))
+            .get(format!("{}/current", self.url()))
             .send()
             .await
             .unwrap()
@@ -77,7 +77,7 @@ impl TestApp {
     pub async fn post_increment(&self) -> EndpointResponse {
         let response = self
             .api_client
-            .post(format!("{}/increment", &self.url()))
+            .post(format!("{}/increment", self.url()))
             .send()
             .await
             .unwrap();
@@ -87,7 +87,7 @@ impl TestApp {
     pub async fn post_login(&self, user_id: String) -> EndpointResponse {
         let response = self
             .api_client
-            .post(format!("{}/login", &self.url()))
+            .post(format!("{}/login", self.url()))
             .json(&LoginRequest { user_id })
             .send()
             .await
@@ -97,7 +97,7 @@ impl TestApp {
 
     pub async fn post_logout(&self) -> reqwest::Response {
         self.api_client
-            .post(format!("{}/logout", &self.url()))
+            .post(format!("{}/logout", self.url()))
             .send()
             .await
             .unwrap()
