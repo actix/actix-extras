@@ -121,11 +121,13 @@ dependencies = [
 name = "actix-limitation"
 version = "0.6.0"
 dependencies = [
+ "actix-limitation",
  "actix-session",
  "actix-utils",
  "actix-web",
  "chrono",
  "derive_more",
+ "env_logger",
  "log",
  "redis",
  "static_assertions",
