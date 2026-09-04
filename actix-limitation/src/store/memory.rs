@@ -69,13 +69,9 @@ const DEFAULT_SWEEP_INTERVAL: Duration = Duration::from_secs(60);
 /// Configure the store with [`MemoryStore::builder()`]:
 ///
 /// ```
-/// use std::time::Duration;
 /// use actix_limitation::MemoryStore;
 ///
-/// let store = MemoryStore::builder()
-///     .max_keys(10_000)
-///     .sweep_interval(Duration::from_secs(30))
-///     .build();
+/// let store = MemoryStore::builder().max_keys(10_000).build();
 /// ```
 ///
 /// # Differences From The Redis Backend
@@ -101,9 +97,9 @@ const DEFAULT_SWEEP_INTERVAL: Duration = Duration::from_secs(60);
 /// `HttpServer::new(…)` closure gives each worker thread its own counters. Build it once, outside,
 /// and clone the [`web::Data`] handle in — see the example above.
 ///
-/// Expired counters are removed lazily, by a sweep that runs on a write at most once per
-/// [`sweep_interval`](MemoryStoreBuilder::sweep_interval); there is no background task. Memory use
-/// is therefore proportional to the number of distinct keys seen within a sweep interval, and is
+/// Expired counters are removed lazily, by a sweep that runs on a write at most once a minute;
+/// there is no background task. Memory use is therefore proportional to the number of distinct
+/// keys seen within a sweep interval, and is
 /// unbounded unless [`max_keys`](MemoryStoreBuilder::max_keys) is set — which trades that bound for
 /// failing open, as above.
 ///
@@ -165,27 +161,6 @@ impl MemoryStore {
         MemoryStoreBuilder {
             max_keys: None,
             sweep_interval: DEFAULT_SWEEP_INTERVAL,
-        }
-    }
-
-    /// The single construction path, so the development-only warning is emitted exactly once per
-    /// constructed store.
-    fn from_parts(max_keys: Option<NonZeroUsize>, sweep_interval: Duration) -> Self {
-        log::warn!(
-            "actix-limitation: using the in-memory store; rate limit counters are process-local \
-             and are not shared between instances or preserved across restarts"
-        );
-
-        MemoryStore {
-            inner: Arc::new(Inner {
-                max_keys,
-                sweep_interval,
-                state: Mutex::new(State {
-                    counters: HashMap::new(),
-                    next_sweep: Instant::now() + sweep_interval,
-                    capacity_warned_at: None,
-                }),
-            }),
         }
     }
 
@@ -311,20 +286,33 @@ impl MemoryStoreBuilder {
         self
     }
 
-    /// Sets the minimum interval between sweeps of expired counters. Defaults to 60 seconds.
-    ///
-    /// There is no background task: sweeps run lazily, on a write, at most this often. A zero
-    /// interval therefore sweeps on every write.
-    #[must_use]
-    pub fn sweep_interval(mut self, every: Duration) -> Self {
+    /// Shortens the otherwise fixed [`DEFAULT_SWEEP_INTERVAL`], so sweeping is observable in a
+    /// test without sleeping for a minute.
+    #[cfg(test)]
+    fn sweep_interval(mut self, every: Duration) -> Self {
         self.sweep_interval = every;
         self
     }
 
-    /// Constructs the configured [`MemoryStore`].
+    /// Constructs the configured [`MemoryStore`], warning once that its counters are process-local.
     #[must_use]
     pub fn build(self) -> MemoryStore {
-        MemoryStore::from_parts(self.max_keys, self.sweep_interval)
+        log::warn!(
+            "actix-limitation: using the in-memory store; rate limit counters are process-local \
+             and are not shared between instances or preserved across restarts"
+        );
+
+        MemoryStore {
+            inner: Arc::new(Inner {
+                max_keys: self.max_keys,
+                sweep_interval: self.sweep_interval,
+                state: Mutex::new(State {
+                    counters: HashMap::new(),
+                    next_sweep: Instant::now() + self.sweep_interval,
+                    capacity_warned_at: None,
+                }),
+            }),
+        }
     }
 }
 
