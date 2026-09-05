@@ -5,12 +5,25 @@ use actix_session::SessionExt as _;
 use actix_web::dev::ServiceRequest;
 use redis::Client;
 
-use crate::{errors::Error, GetArcBoxKeyFn, Limiter};
+#[cfg(feature = "memory-store")]
+use crate::store::MemoryStore;
+use crate::{errors::Error, store::Backend, GetArcBoxKeyFn, Limiter};
+
+/// The backend a [`Builder`] will construct, before it is resolved into a [`Backend`].
+#[derive(Debug, Clone)]
+pub(crate) enum BackendSpec {
+    /// A Redis connection URL, parsed into a client by [`Builder::build`].
+    RedisUrl(String),
+
+    /// An already-constructed in-memory store.
+    #[cfg(feature = "memory-store")]
+    Memory(MemoryStore),
+}
 
 /// Rate limiter builder.
 #[derive(Debug)]
 pub struct Builder {
-    pub(crate) redis_url: String,
+    pub(crate) backend: BackendSpec,
     pub(crate) limit: usize,
     pub(crate) period: Duration,
     pub(crate) get_key_fn: Option<GetArcBoxKeyFn>,
@@ -70,8 +83,8 @@ impl Builder {
 
     /// Finalizes and returns a `Limiter`.
     ///
-    /// Note that this method will connect to the Redis server to test its connection which is a
-    /// **synchronous** operation.
+    /// For the Redis backend, the URL is parsed here; no connection is established until the first
+    /// request is counted. An invalid URL is therefore reported as an error by this method.
     pub fn build(&mut self) -> Result<Limiter, Error> {
         let get_key = if let Some(resolver) = self.get_key_fn.clone() {
             resolver
@@ -96,8 +109,15 @@ impl Builder {
             closure
         };
 
+        let backend = match &self.backend {
+            BackendSpec::RedisUrl(url) => Backend::Redis(Client::open(url.as_str())?),
+
+            #[cfg(feature = "memory-store")]
+            BackendSpec::Memory(store) => Backend::Memory(store.clone()),
+        };
+
         Ok(Limiter {
-            client: Client::open(self.redis_url.as_str())?,
+            backend,
             limit: self.limit,
             period: self.period,
             get_key_fn: get_key,
@@ -114,7 +134,7 @@ mod tests {
         let redis_url = "redis://127.0.0.1";
         let period = Duration::from_secs(10);
         let builder = Builder {
-            redis_url: redis_url.to_owned(),
+            backend: BackendSpec::RedisUrl(redis_url.to_owned()),
             limit: 100,
             period,
             get_key_fn: Some(Arc::new(|_| None)),
@@ -123,7 +143,12 @@ mod tests {
             session_key: Cow::Owned("rate-api".to_string()),
         };
 
-        assert_eq!(builder.redis_url, redis_url);
+        match &builder.backend {
+            BackendSpec::RedisUrl(url) => assert_eq!(url, redis_url),
+
+            #[cfg(feature = "memory-store")]
+            BackendSpec::Memory(_) => panic!("expected a Redis backend"),
+        }
         assert_eq!(builder.limit, 100);
         assert_eq!(builder.period, period);
         #[cfg(feature = "session")]
@@ -136,7 +161,7 @@ mod tests {
         let redis_url = "redis://127.0.0.1";
         let period = Duration::from_secs(20);
         let mut builder = Builder {
-            redis_url: redis_url.to_owned(),
+            backend: BackendSpec::RedisUrl(redis_url.to_owned()),
             limit: 100,
             period: Duration::from_secs(10),
             get_key_fn: Some(Arc::new(|_| None)),
@@ -157,7 +182,7 @@ mod tests {
         let redis_url = "127.0.0.1";
         let period = Duration::from_secs(20);
         let mut builder = Builder {
-            redis_url: redis_url.to_owned(),
+            backend: BackendSpec::RedisUrl(redis_url.to_owned()),
             limit: 100,
             period: Duration::from_secs(10),
             get_key_fn: Some(Arc::new(|_| None)),
