@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Remove built-in `opentelemetry_0_*` feature flags and OpenTelemetry dependencies from `tracing-actix-web`.
+  - Please use `tracing-actix-web-opentelemetry` as the OpenTelemetry adapter crate instead.
+- Add a backend-neutral `TraceContext` hook to attach distributed tracing context to root spans.
+
 ## 0.7.22
 
 - Minimum supported Rust version (MSRV) is now 1.88.
