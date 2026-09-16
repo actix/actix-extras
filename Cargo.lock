@@ -226,7 +226,7 @@ dependencies = [
 
 [[package]]
 name = "actix-settings"
-version = "0.9.0"
+version = "0.10.0"
 dependencies = [
  "actix-http",
  "actix-service",
@@ -1630,7 +1630,7 @@ dependencies = [
  "libc",
  "percent-encoding",
  "pin-project-lite",
- "socket2 0.6.4",
+ "socket2 0.5.10",
  "tokio",
  "tower-service",
  "tracing",
