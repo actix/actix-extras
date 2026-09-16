@@ -355,7 +355,7 @@ dependencies = [
 
 [[package]]
 name = "actix-web-httpauth"
-version = "0.8.2"
+version = "0.8.3"
 dependencies = [
  "actix-cors",
  "actix-service",

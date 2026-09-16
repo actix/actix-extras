@@ -1,6 +1,6 @@
 [package]
 name = "actix-web-httpauth"
-version = "0.8.2"
+version = "0.8.3"
 description = "HTTP authentication schemes for Actix Web"
 categories = ["web-programming"]
 keywords = ["http", "web", "framework", "authentication", "security"]
