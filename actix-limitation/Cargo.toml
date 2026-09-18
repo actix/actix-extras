@@ -5,8 +5,8 @@ authors = [
     "0xmad <0xmad@users.noreply.github.com>",
     "Rob Ede <robjtede@icloud.com>",
 ]
-description = "Rate limiter using a fixed window counter for arbitrary keys, backed by Redis for Actix Web"
-keywords = ["actix-web", "rate-api", "rate-limit", "limitation"]
+description = "Rate limiter using a fixed window counter for arbitrary keys, backed by Redis or an in-memory store, for Actix Web"
+keywords = ["actix-web", "rate-api", "rate-limit", "limitation", "in-memory"]
 categories = ["asynchronous", "web-programming"]
 repository = "https://github.com/actix/actix-extras"
 license.workspace = true
@@ -19,6 +19,7 @@ all-features = true
 [features]
 default = ["session"]
 session = ["actix-session"]
+memory-store = []
 redis-native-tls = ["redis/tokio-native-tls-comp"]
 redis-rustls = ["redis/tokio-rustls-comp"]
 
@@ -36,9 +37,15 @@ time = "0.3"
 actix-session = { version = "0.11", optional = true }
 
 [dev-dependencies]
+actix-limitation = { path = ".", features = ["memory-store"] }
 actix-web = "4"
+env_logger = "0.11"
 static_assertions = "1"
 uuid = { version = "1", features = ["v4"] }
 
 [lints]
 workspace = true
+
+[[example]]
+name = "memory"
+required-features = ["memory-store"]

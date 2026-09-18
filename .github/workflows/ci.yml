@@ -139,6 +139,13 @@ jobs:
         timeout-minutes: 40
         run: cargo ci-test --exclude=actix-session --exclude=actix-limitation
 
+      # actix-limitation is excluded above because its Redis-backed tests need a
+      # service container, which is not available on macOS/Windows runners. The
+      # in-memory store needs no external service, so those tests can run here.
+      - name: tests (actix-limitation, memory store)
+        timeout-minutes: 10
+        run: cargo test -p actix-limitation --features memory-store --test memory
+
       - name: tests (actix-settings)
         timeout-minutes: 40
         run: just ci-test-actix-settings
