@@ -19,6 +19,7 @@ all-features = true
 [features]
 default = []
 cookie-session = []
+sled-session = ["dep:sled"]
 redis-session = ["dep:redis"]
 redis-session-native-tls = ["redis-session", "redis/tokio-native-tls-comp"]
 redis-session-rustls = ["redis-session", "redis/tokio-rustls-comp"]
@@ -40,12 +41,16 @@ tracing = { version = "0.1.44", default-features = false, features = ["log"] }
 redis = { version = "1", default-features = false, features = ["tokio-comp", "connection-manager"], optional = true }
 deadpool-redis = { version = "0.23", optional = true }
 
+# sled-session
+sled = { version = "0.34", optional = true }
+
 [dev-dependencies]
 actix-session = { path = ".", features = ["cookie-session", "redis-session"] }
 actix-test = "0.1"
 actix-web = { version = "4", default-features = false, features = ["cookies", "secure-cookies", "macros"] }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tracing = "0.1.44"
+tempfile = "3"
 
 [lints]
 workspace = true
