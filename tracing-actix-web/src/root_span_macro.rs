@@ -89,9 +89,8 @@ macro_rules! root_span {
             let connection_info = $request.connection_info();
             let request_id = $crate::root_span_macro::private::get_request_id($request);
 
-            // Extract trace_id from incoming request headers (e.g. traceparent)
-            // BEFORE creating the span, so it is available in on_new_span.
-            let __otel_trace_id = $crate::root_span_macro::private::extract_otel_trace_id(&$request);
+            // Read trace_id before creating the span, so it is available in on_new_span.
+            let __trace_id = $crate::root_span_macro::private::extract_trace_id(&$request);
 
             // Two inner_span arms: one pre-populates trace_id when a remote parent
             // is found in the request headers; the other leaves it Empty for later.
@@ -168,15 +167,8 @@ macro_rules! root_span {
                 };
             }
 
-            let span = make_span!($lvl, __otel_trace_id);
+            let span = make_span!($lvl, __trace_id);
             std::mem::drop(connection_info);
-
-            // Previously, this line was instrumented with an opentelemetry-specific feature
-            // flag check. However, this resulted in the feature flags being resolved in the crate
-            // which called `root_span!` as opposed to being resolved by this crate as expected.
-            // Therefore, this function simply wraps an internal function with the feature flags
-            // to ensure that the flags are resolved against this crate.
-            $crate::root_span_macro::private::set_otel_parent(&$request, &span);
 
             span
         }
@@ -200,89 +192,8 @@ pub mod private {
     use crate::RequestId;
 
     #[doc(hidden)]
-    #[allow(unused_variables)]
-    pub fn extract_otel_trace_id(req: &ServiceRequest) -> Option<String> {
-        #[cfg(any(
-            feature = "opentelemetry_0_13",
-            feature = "opentelemetry_0_14",
-            feature = "opentelemetry_0_15",
-            feature = "opentelemetry_0_16",
-            feature = "opentelemetry_0_17",
-            feature = "opentelemetry_0_18",
-            feature = "opentelemetry_0_19",
-            feature = "opentelemetry_0_20",
-            feature = "opentelemetry_0_21",
-            feature = "opentelemetry_0_22",
-            feature = "opentelemetry_0_23",
-            feature = "opentelemetry_0_24",
-            feature = "opentelemetry_0_25",
-            feature = "opentelemetry_0_26",
-            feature = "opentelemetry_0_27",
-            feature = "opentelemetry_0_28",
-            feature = "opentelemetry_0_29",
-            feature = "opentelemetry_0_30",
-            feature = "opentelemetry_0_31",
-            feature = "opentelemetry_0_32",
-        ))]
-        {
-            crate::otel::extract_trace_id(req)
-        }
-        #[cfg(not(any(
-            feature = "opentelemetry_0_13",
-            feature = "opentelemetry_0_14",
-            feature = "opentelemetry_0_15",
-            feature = "opentelemetry_0_16",
-            feature = "opentelemetry_0_17",
-            feature = "opentelemetry_0_18",
-            feature = "opentelemetry_0_19",
-            feature = "opentelemetry_0_20",
-            feature = "opentelemetry_0_21",
-            feature = "opentelemetry_0_22",
-            feature = "opentelemetry_0_23",
-            feature = "opentelemetry_0_24",
-            feature = "opentelemetry_0_25",
-            feature = "opentelemetry_0_26",
-            feature = "opentelemetry_0_27",
-            feature = "opentelemetry_0_28",
-            feature = "opentelemetry_0_29",
-            feature = "opentelemetry_0_30",
-            feature = "opentelemetry_0_31",
-            feature = "opentelemetry_0_32",
-        )))]
-        {
-            None
-        }
-    }
-
-    #[doc(hidden)]
-    // We need to allow unused variables because the function
-    // body is empty if the user of the library chose not to activate
-    // any OTEL feature.
-    #[allow(unused_variables)]
-    pub fn set_otel_parent(req: &ServiceRequest, span: &tracing::Span) {
-        #[cfg(any(
-            feature = "opentelemetry_0_13",
-            feature = "opentelemetry_0_14",
-            feature = "opentelemetry_0_15",
-            feature = "opentelemetry_0_16",
-            feature = "opentelemetry_0_17",
-            feature = "opentelemetry_0_18",
-            feature = "opentelemetry_0_19",
-            feature = "opentelemetry_0_20",
-            feature = "opentelemetry_0_21",
-            feature = "opentelemetry_0_22",
-            feature = "opentelemetry_0_23",
-            feature = "opentelemetry_0_24",
-            feature = "opentelemetry_0_25",
-            feature = "opentelemetry_0_26",
-            feature = "opentelemetry_0_27",
-            feature = "opentelemetry_0_28",
-            feature = "opentelemetry_0_29",
-            feature = "opentelemetry_0_30",
-            feature = "opentelemetry_0_31",
-            feature = "opentelemetry_0_32",
-        ))]
-        crate::otel::set_otel_parent(req, span);
+    pub fn extract_trace_id(req: &ServiceRequest) -> Option<String> {
+        crate::trace_context::extract_trace_id(req)
     }
 
     #[doc(hidden)]
