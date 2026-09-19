@@ -1,5 +1,6 @@
+use std::future::ready;
+
 use actix_cors::Cors;
-use actix_utils::future::ok;
 use actix_web::{
     dev::{fn_service, Service, ServiceRequest, ServiceResponse, Transform},
     http::{
@@ -303,11 +304,11 @@ async fn test_response() {
         .expose_headers(exposed_headers.clone())
         .allowed_header(header::CONTENT_TYPE)
         .new_transform(fn_service(|req: ServiceRequest| {
-            ok(req.into_response({
+            ready(Ok(req.into_response({
                 HttpResponse::Ok()
                     .insert_header((header::VARY, "Accept"))
                     .finish()
-            }))
+            })))
         }))
         .await
         .unwrap();

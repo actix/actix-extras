@@ -23,7 +23,6 @@ dependencies = [
 name = "actix-cors"
 version = "0.7.2"
 dependencies = [
- "actix-utils",
  "actix-web",
  "derive_more",
  "env_logger",
@@ -105,7 +104,6 @@ dependencies = [
  "actix-http",
  "actix-service",
  "actix-session",
- "actix-utils",
  "actix-web",
  "derive_more",
  "env_logger",
@@ -121,7 +119,6 @@ name = "actix-limitation"
 version = "0.6.0"
 dependencies = [
  "actix-session",
- "actix-utils",
  "actix-web",
  "chrono",
  "derive_more",
@@ -211,7 +208,6 @@ dependencies = [
  "actix-service",
  "actix-session",
  "actix-test",
- "actix-utils",
  "actix-web",
  "anyhow",
  "deadpool-redis",
@@ -289,9 +285,9 @@ dependencies = [
 
 [[package]]
 name = "actix-utils"
-version = "3.0.1"
+version = "3.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "88a1dcdff1466e3c2488e1cb5c36a71822750ad43839937f85d2f4d9f8b705d8"
+checksum = "0128396dd7313f697ad05b21b1a7be7d4cbb81888704f55996e4a27db196bb4d"
 dependencies = [
  "local-waker",
  "pin-project-lite",
@@ -359,7 +355,6 @@ version = "0.8.3"
 dependencies = [
  "actix-cors",
  "actix-service",
- "actix-utils",
  "actix-web",
  "base64 0.23.1",
  "futures-core",

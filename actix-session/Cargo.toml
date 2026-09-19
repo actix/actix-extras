@@ -26,7 +26,6 @@ redis-pool = ["dep:deadpool-redis"]
 
 [dependencies]
 actix-service = "2"
-actix-utils = "3"
 actix-web = { version = "4", default-features = false, features = ["cookies", "secure-cookies"] }
 
 anyhow = "1"
