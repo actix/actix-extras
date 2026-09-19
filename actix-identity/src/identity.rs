@@ -1,5 +1,6 @@
+use std::future::{ready, Ready};
+
 use actix_session::Session;
-use actix_utils::future::{ready, Ready};
 use actix_web::{
     cookie::time::OffsetDateTime,
     dev::{Extensions, Payload},

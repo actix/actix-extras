@@ -2,11 +2,11 @@ use std::{
     cell::{Ref, RefCell},
     convert::Infallible,
     error::Error as StdError,
+    future::{ready, Ready},
     mem,
     rc::Rc,
 };
 
-use actix_utils::future::{ready, Ready};
 use actix_web::{
     body::BoxBody,
     dev::{Extensions, Payload, ServiceRequest, ServiceResponse},

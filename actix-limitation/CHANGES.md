@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Use `std::future::{ready, Ready}` instead of `actix-utils` types.
+
 ## 0.6.0
 
 - Update `redis` dependency to `1`.
