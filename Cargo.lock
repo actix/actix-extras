@@ -356,6 +356,7 @@ dependencies = [
  "actix-cors",
  "actix-service",
  "actix-web",
+ "awc",
  "base64 0.23.1",
  "futures-core",
  "futures-util",

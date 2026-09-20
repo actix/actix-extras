@@ -35,3 +35,13 @@ All supported schemas can be used in both middleware and request handlers.
 [WWW-Authenticate]: https://docs.rs/actix-web-httpauth/*/actix_web_httpauth/headers/www_authenticate/index.html
 [Extractors]: https://actix.rs/docs/extractors/
 [Middleware]: https://docs.rs/actix-web-httpauth/*/actix_web_httpauth/middleware/index.html
+
+## Client Example
+
+Use `awc`, the Actix HTTP client, to send typed `Authorization` headers with `ClientRequest::insert_header`. The [client example](examples/client.rs) sends both Basic and Bearer credentials to a local server and checks the responses:
+
+```sh
+cargo run -p actix-web-httpauth --example client
+```
+
+The example starts and stops its own server. `awc` replaces the old `actix_web::client` module.
