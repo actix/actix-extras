@@ -27,6 +27,7 @@ log = "0.4"
 pin-project-lite = "0.2.17"
 
 [dev-dependencies]
+awc = { version = "3", default-features = false }
 actix-cors = "0.7"
 actix-service = "2"
 actix-web = { version = "4.1", default-features = false, features = ["macros"] }
