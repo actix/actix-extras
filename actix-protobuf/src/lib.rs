@@ -1,4 +1,13 @@
 //! Protobuf payload extractor for Actix Web.
+//!
+//! # Client requests
+//!
+//! Encode messages with [`prost::Message::encode_to_vec()`], send the bytes with
+//! `awc::ClientRequest::send_body`, and set `Content-Type: application/protobuf`.
+//! Decode response bytes with [`prost::Message::decode()`].
+//!
+//! See the [runnable client example](https://github.com/actix/actix-extras/blob/main/actix-protobuf/examples/client.rs)
+//! for a complete request and response using a local server.
 
 #![forbid(unsafe_code)]
 #![doc(html_logo_url = "https://actix.rs/img/logo.png")]

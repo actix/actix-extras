@@ -144,6 +144,7 @@ name = "actix-protobuf"
 version = "0.12.0"
 dependencies = [
  "actix-web",
+ "awc",
  "derive_more",
  "futures-util",
  "prost",
