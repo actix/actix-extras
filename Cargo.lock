@@ -3886,7 +3886,7 @@ dependencies = [
  "opentelemetry 0.30.0",
  "opentelemetry 0.31.0",
  "opentelemetry 0.32.0",
- "pin-project",
+ "pin-project-lite",
  "tracing",
  "tracing-bunyan-formatter",
  "tracing-log 0.2.0",
