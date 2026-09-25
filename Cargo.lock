@@ -977,7 +977,7 @@ name = "custom-root-span"
 version = "0.1.0"
 dependencies = [
  "actix-web",
- "opentelemetry 0.32.0",
+ "opentelemetry 0.33.0",
  "opentelemetry-otlp",
  "opentelemetry-semantic-conventions",
  "opentelemetry_sdk 0.32.1",
@@ -2375,6 +2375,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "opentelemetry"
+version = "0.33.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6cdb0b1b267eb9db3331b434ed9ddab10d50e280a9adf9d13e5233e2002b61b5"
+dependencies = [
+ "futures-core",
+ "futures-sink",
+ "js-sys",
+ "pin-project-lite",
+ "thiserror 2.0.18",
+ "tracing",
+]
+
+[[package]]
 name = "opentelemetry-http"
 version = "0.32.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2753,7 +2767,7 @@ name = "otel"
 version = "0.1.0"
 dependencies = [
  "actix-web",
- "opentelemetry 0.32.0",
+ "opentelemetry 0.33.0",
  "opentelemetry-otlp",
  "opentelemetry-semantic-conventions",
  "opentelemetry_sdk 0.32.1",
