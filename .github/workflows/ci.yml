@@ -104,7 +104,7 @@ jobs:
           persist-credentials: false
 
       - name: Install OpenSSL
-        if: matrix.target.os == 'windows-latest'
+        if: matrix.target.name == 'Windows'
         shell: bash
         run: |
           set -e
