@@ -150,3 +150,6 @@ actix-web = { version = "4", default-features = false, features = ["macros"] }
 tracing-subscriber = { version = "0.3", features = ["registry", "env-filter"] }
 tracing-bunyan-formatter = "0.3.0"
 tracing-log = "0.2"
+
+[lints]
+workspace = true
