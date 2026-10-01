@@ -25,7 +25,7 @@ We refer to the cookie used for sessions as a **session cookie**. Its content is
 
 `actix-session` provides an easy-to-use framework to manage sessions in applications built on top of Actix Web. [`SessionMiddleware`] is the middleware underpinning the functionality provided by `actix-session`; it takes care of all the session cookie handling and instructs the **storage backend** to create/delete/update the session state based on the operations performed against the active [`Session`].
 
-`actix-session` provides some built-in storage backends: ([`CookieSessionStore`], [`RedisSessionStore`]) - you can create a custom storage backend by implementing the [`SessionStore`] trait.
+`actix-session` provides some built-in storage backends: ([`CookieSessionStore`], [`RedisSessionStore`], [`SledSessionStore`]) - you can create a custom storage backend by implementing the [`SessionStore`] trait.
 
 Further reading on sessions:
 
@@ -116,10 +116,18 @@ By default, `actix-session` does not provide any storage backend to retrieve and
   cargo add actix-session --features=redis-session-rustls
   ```
 
+- a local, persistent backend, [`SledSessionStore`], using the `sled-session` feature flag. This backend does not require a separate database server. It is intended for applications running in a single process. Schedule [`SledSessionStore::purge_expired`] to remove expired sessions that are no longer accessed.
+
+  ```console
+  cargo add actix-session --features=sled-session
+  ```
+
 You can implement your own session storage backend using the [`SessionStore`] trait.
 
 [`SessionStore`]: storage::SessionStore
 [`CookieSessionStore`]: storage::CookieSessionStore
 [`RedisSessionStore`]: storage::RedisSessionStore
+[`SledSessionStore`]: storage::SledSessionStore
+[`SledSessionStore::purge_expired`]: storage::SledSessionStore::purge_expired
 
 <!-- cargo-rdme end -->

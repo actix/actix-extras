@@ -48,6 +48,16 @@ update-readmes:
     cd ./actix-session && cargo rdme --force
     fd README.md --exec-batch npx -y prettier --write
 
+# Check the sled session feature without dev-dependency feature unification.
+[group("lint")]
+check-session-sled:
+    cargo {{ toolchain }} hack check -p actix-session --no-dev-deps --no-default-features --features sled-session
+
+# Test the sled session backend without a Redis server.
+[group("test")]
+test-session-sled:
+    cargo {{ toolchain }} test -p actix-session --features sled-session --lib storage::sled
+
 # Test workspace code.
 [group("test")]
 test:

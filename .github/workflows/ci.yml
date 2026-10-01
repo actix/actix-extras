@@ -68,6 +68,9 @@ jobs:
       - name: check default
         run: cargo ci-check
 
+      - name: check sled session backend
+        run: just check-session-sled
+
       - name: tests
         timeout-minutes: 40
         run: cargo ci-test
@@ -138,6 +141,9 @@ jobs:
       - name: tests
         timeout-minutes: 40
         run: cargo ci-test --exclude=actix-session --exclude=actix-limitation
+
+      - name: tests (sled session backend)
+        run: just test-session-sled
 
       - name: tests (actix-settings)
         timeout-minutes: 40
