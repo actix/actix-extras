@@ -20,9 +20,9 @@ edition = "2021"
 rust-version = "1.88"
 
 [workspace.lints.rust]
-rust-2018-idioms = { level = "deny" }
-nonstandard-style = { level = "deny" }
-future-incompatible = { level = "deny" }
+rust_2018_idioms = { level = "deny" }
+nonstandard_style = { level = "deny" }
+future_incompatible = { level = "deny" }
 
 [patch.crates-io]
 actix-cors = { path = "./actix-cors" }
