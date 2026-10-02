@@ -95,6 +95,10 @@ opentelemetry_0_32 = [
     "opentelemetry_0_32_pkg",
     "tracing-opentelemetry_0_33_pkg",
 ]
+opentelemetry_0_33 = [
+    "opentelemetry_0_33_pkg",
+    "tracing-opentelemetry_0_34_pkg",
+]
 emit_event_on_error = []
 uuid_v7 = ["uuid/v7"]
 
@@ -124,6 +128,7 @@ opentelemetry_0_29_pkg = { package = "opentelemetry", version = "0.29", optional
 opentelemetry_0_30_pkg = { package = "opentelemetry", version = "0.30", optional = true }
 opentelemetry_0_31_pkg = { package = "opentelemetry", version = "0.31", optional = true }
 opentelemetry_0_32_pkg = { package = "opentelemetry", version = "0.32", optional = true }
+opentelemetry_0_33_pkg = { package = "opentelemetry", version = "0.33", optional = true }
 tracing-opentelemetry_0_12_pkg = { package = "tracing-opentelemetry", version = "0.12", optional = true }
 tracing-opentelemetry_0_13_pkg = { package = "tracing-opentelemetry", version = "0.13", optional = true }
 tracing-opentelemetry_0_14_pkg = { package = "tracing-opentelemetry", version = "0.14", optional = true }
@@ -144,6 +149,7 @@ tracing-opentelemetry_0_30_pkg = { package = "tracing-opentelemetry", version = 
 tracing-opentelemetry_0_31_pkg = { package = "tracing-opentelemetry", version = "0.31", optional = true }
 tracing-opentelemetry_0_32_pkg = { package = "tracing-opentelemetry", version = "0.32", optional = true }
 tracing-opentelemetry_0_33_pkg = { package = "tracing-opentelemetry", version = "0.33", optional = true }
+tracing-opentelemetry_0_34_pkg = { package = "tracing-opentelemetry", version = "0.34", optional = true }
 
 [dev-dependencies]
 actix-web = { version = "4", default-features = false, features = ["macros"] }

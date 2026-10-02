@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Support OpenTelemetry 0.33.
+
 ## 0.7.25
 
 - Migrate `pin-project` to `pin-project-lite`.

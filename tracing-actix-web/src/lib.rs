@@ -39,6 +39,7 @@
 //! - `opentelemetry_0_30`: same as above but using `opentelemetry` 0.30;
 //! - `opentelemetry_0_31`: same as above but using `opentelemetry` 0.31;
 //! - `opentelemetry_0_32`: same as above but using `opentelemetry` 0.32;
+//! - `opentelemetry_0_33`: same as above but using `opentelemetry` 0.33;
 //! - `emit_event_on_error`: emit a [`tracing`] event when request processing fails with an error (enabled by default).
 //! - `uuid_v7`: use the UUID v7 implementation inside [`RequestId`] instead of UUID v4 (disabled by default).
 //!
@@ -323,6 +324,7 @@ mutually_exclusive_features::none_or_one_of!(
     "opentelemetry_0_30",
     "opentelemetry_0_31",
     "opentelemetry_0_32",
+    "opentelemetry_0_33",
 );
 
 #[cfg(any(
@@ -346,5 +348,6 @@ mutually_exclusive_features::none_or_one_of!(
     feature = "opentelemetry_0_30",
     feature = "opentelemetry_0_31",
     feature = "opentelemetry_0_32",
+    feature = "opentelemetry_0_33",
 ))]
 mod otel;
