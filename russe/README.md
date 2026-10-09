@@ -59,11 +59,12 @@ assert_eq!(msg.data, "Hello World!\nHow are you, today?");
 
 ## Client integrations
 
-Each integration provides an extension trait to stream events from a response and a `Manager` to receive events through a channel.
+Each integration provides an extension trait to read events from a response. The async clients also provide a `Manager` to receive events through a channel.
 
 - `awc-3` for `awc` v3 extension trait and connection manager.
 - `reqwest-0_12` for `reqwest` v0.12 extension trait and connection manager.
 - `reqwest-0_13` for `reqwest` v0.13 extension trait and connection manager.
+- `ureq-3` for `ureq` v3 blocking iterator.
 
 <!-- cargo-rdme end -->
 

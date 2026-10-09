@@ -21,6 +21,7 @@ awc-3 = ["dep:awc-3", "dep:err-report", "dep:futures-util", "tokio-util/io"]
 mime = ["dep:mime"]
 reqwest-0_12 = ["dep:reqwest-0_12", "dep:futures-util"]
 reqwest-0_13 = ["dep:reqwest-0_13", "dep:futures-util"]
+ureq-3 = ["dep:ureq-3"]
 
 [dependencies]
 awc-3 = { package = "awc", version = "3", optional = true, default-features = false }
@@ -41,6 +42,7 @@ reqwest-0_13 = { package = "reqwest", version = "0.13", optional = true, default
 tokio = { version = "1", features = ["sync"] }
 tokio-util = { version = "0.7", features = ["codec"] }
 tracing = "0.1.41"
+ureq-3 = { package = "ureq", version = "3", optional = true, default-features = false }
 
 [dev-dependencies]
 actix-http = "3"
@@ -68,6 +70,10 @@ required-features = ["reqwest-0_12"]
 [[example]]
 name = "manager-awc"
 required-features = ["awc-3"]
+
+[[example]]
+name = "ureq"
+required-features = ["ureq-3"]
 
 [[bench]]
 name = "decoder"
