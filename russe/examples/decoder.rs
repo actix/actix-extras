@@ -7,7 +7,7 @@ use futures_util::{Stream, StreamExt as _};
 use russe::Decoder as SseDecoder;
 use tokio_util::{codec::FramedRead, io::StreamReader};
 
-#[tokio::main(flavor = "current_thread")]
+#[tokio::main(flavor = "local")]
 async fn main() {
     let body_reader = StreamReader::new(chunk_stream());
 
@@ -26,9 +26,9 @@ fn chunk_stream() -> impl Stream<Item = io::Result<Bytes>> {
             event: add
             data: foo
             id: 1
-            
+
             : keep-alive
-            
+
             event: remove
             data: bar
             id: 2
