@@ -8,7 +8,7 @@
 - Update `redis` dependency to `1`.
 - Update optional `deadpool-redis` dependency to `0.23`.
 - Use `std::future::{ready, Ready}` instead of `actix-utils` types.
-- Minimum supported Rust version (MSRV) is now 1.88.
+- Minimum supported Rust version (MSRV) is now 1.89.
 
 ## 0.11.0
 
