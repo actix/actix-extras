@@ -104,3 +104,9 @@ In particular, you can automatically log out users who:
 [`IdentityMiddlewareBuilder::login_deadline`]: config::IdentityMiddlewareBuilder::login_deadline
 
 <!-- cargo-rdme end -->
+
+## Sponsors
+
+<a href="https://www.blacksmith.sh/">
+  <img src="https://raw.githubusercontent.com/actix/actix-extras/main/.github/sponsors/blacksmith.png" alt="CI powered by Blacksmith" width="280" />
+</a>
