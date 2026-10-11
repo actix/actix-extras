@@ -96,3 +96,9 @@ This project is licensed under either of
 - MIT license (LICENSE-MIT or http://opensource.org/licenses/MIT)
 
 at your option.
+
+## Sponsors
+
+<a href="https://www.blacksmith.sh/">
+  <img src="https://raw.githubusercontent.com/actix/actix-extras/main/.github/sponsors/blacksmith.png" alt="CI powered by Blacksmith" width="280" />
+</a>
