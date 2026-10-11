@@ -72,3 +72,9 @@ Additional guidance and examples are available in <https://actix.rs/docs/cors>.
 - [API Documentation](https://docs.rs/actix-cors)
 - [Example Project](https://github.com/actix/examples/tree/main/cors)
 - Minimum Supported Rust Version (MSRV): 1.88
+
+## Sponsors
+
+<a href="https://www.blacksmith.sh/">
+  <img src="https://raw.githubusercontent.com/actix/actix-extras/main/.github/sponsors/blacksmith.png" alt="CI powered by Blacksmith" width="280" />
+</a>

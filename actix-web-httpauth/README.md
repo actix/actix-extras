@@ -29,13 +29,6 @@ All supported schemas can be used in both middleware and request handlers.
 - [HTTP Basic](https://tools.ietf.org/html/rfc7617)
 - [OAuth Bearer](https://tools.ietf.org/html/rfc6750)
 
-<!-- LINKS -->
-
-[Authorization]: https://docs.rs/actix-web-httpauth/*/actix_web_httpauth/headers/authorization/index.html
-[WWW-Authenticate]: https://docs.rs/actix-web-httpauth/*/actix_web_httpauth/headers/www_authenticate/index.html
-[Extractors]: https://actix.rs/docs/extractors/
-[Middleware]: https://docs.rs/actix-web-httpauth/*/actix_web_httpauth/middleware/index.html
-
 ## Client Example
 
 Use `awc`, the Actix HTTP client, to send typed `Authorization` headers with `ClientRequest::insert_header`. The [client example](examples/client.rs) sends both Basic and Bearer credentials to a local server and checks the responses:
@@ -45,3 +38,16 @@ cargo run -p actix-web-httpauth --example client
 ```
 
 The example starts and stops its own server. `awc` replaces the old `actix_web::client` module.
+
+## Sponsors
+
+<a href="https://www.blacksmith.sh/">
+  <img src="https://raw.githubusercontent.com/actix/actix-extras/main/.github/sponsors/blacksmith.png" alt="CI powered by Blacksmith" width="280" />
+</a>
+
+<!-- LINKS -->
+
+[Authorization]: https://docs.rs/actix-web-httpauth/*/actix_web_httpauth/headers/authorization/index.html
+[WWW-Authenticate]: https://docs.rs/actix-web-httpauth/*/actix_web_httpauth/headers/www_authenticate/index.html
+[Extractors]: https://actix.rs/docs/extractors/
+[Middleware]: https://docs.rs/actix-web-httpauth/*/actix_web_httpauth/middleware/index.html

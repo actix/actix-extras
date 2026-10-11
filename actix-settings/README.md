@@ -27,5 +27,11 @@ Have a look at [the usage example][usage] to see how.
 
 This crate was made possible by support from Accept B.V and [@jjpe].
 
+## Sponsors
+
+<a href="https://www.blacksmith.sh/">
+  <img src="https://raw.githubusercontent.com/actix/actix-extras/main/.github/sponsors/blacksmith.png" alt="CI powered by Blacksmith" width="280" />
+</a>
+
 [usage]: https://github.com/actix/actix-extras/blob/main/actix-settings/examples/actix.rs
 [@jjpe]: https://github.com/jjpe

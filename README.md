@@ -29,6 +29,12 @@
 
 Community crates are listed at <https://actix.rs/community/crates>.
 
+## Sponsors
+
+<a href="https://www.blacksmith.sh/">
+  <img src=".github/sponsors/blacksmith.png" alt="CI powered by Blacksmith" width="280" />
+</a>
+
 <!-- REFERENCES -->
 
 [actix]: https://github.com/actix/actix
