@@ -15,7 +15,7 @@
 
 - [API Documentation](https://docs.rs/actix-settings)
 - [Usage Example][usage]
-- Minimum Supported Rust Version (MSRV): 1.57
+- Minimum Supported Rust Version (MSRV): 1.89
 
 ### Custom Settings
 

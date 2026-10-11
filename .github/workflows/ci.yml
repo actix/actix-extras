@@ -22,7 +22,7 @@ jobs:
         target:
           - { name: Linux, os: blacksmith-2vcpu-ubuntu-2404, triple: x86_64-unknown-linux-gnu }
         version:
-          - { name: msrv, version: 1.88.0 }
+          - { name: msrv, version: 1.89.0 }
           - { name: stable, version: stable }
 
     name: ${{ matrix.target.name }} / ${{ matrix.version.name }}
@@ -92,7 +92,7 @@ jobs:
           - { name: macOS, os: blacksmith-6vcpu-macos-latest, triple: x86_64-apple-darwin }
           - { name: Windows, os: blacksmith-2vcpu-windows-2025, triple: x86_64-pc-windows-msvc }
         version:
-          - { name: msrv, version: 1.88.0 }
+          - { name: msrv, version: 1.89.0 }
           - { name: stable, version: stable }
 
     name: ${{ matrix.target.name }} / ${{ matrix.version.name }}
