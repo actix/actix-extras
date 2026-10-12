@@ -13,7 +13,13 @@ pub mod reqwest_0_12;
 #[cfg(feature = "reqwest-0_13")]
 pub mod reqwest_0_13;
 
-pub use self::{decoder::Decoder, encoder::Encoder, error::Error, event::Event, message::Message};
+pub use self::{
+    decoder::Decoder,
+    encoder::Encoder,
+    error::Error,
+    event::{Event, EventRef},
+    message::Message,
+};
 
 /// A specialized `Result` type for `russe` operations.
 pub type Result<T> = std::result::Result<T, Error>;

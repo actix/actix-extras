@@ -15,7 +15,7 @@ rustdoc-args = ["--cfg", "docsrs"]
 all-features = true
 
 [package.metadata.cargo_check_external_types]
-allowed_external_types = ["bytestring::*", "tokio_util::*"]
+allowed_external_types = ["bytes::bytes_mut::BytesMut", "bytestring::*", "tokio_util::*"]
 
 [features]
 awc-3 = []
@@ -59,6 +59,10 @@ wiremock = "0.6"
 [[example]]
 name = "manager"
 required-features = ["reqwest-0_12"]
+
+[[bench]]
+name = "borrowed_encoder"
+harness = false
 
 [[bench]]
 name = "decoder"

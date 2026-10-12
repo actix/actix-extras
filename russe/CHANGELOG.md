@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add `EventRef` and `Encoder::encode_borrowed` to encode borrowed event fields.
+
 ## 0.3.2
 
 - Improve decoding performance by ~2x.

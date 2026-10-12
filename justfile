@@ -56,6 +56,11 @@ test:
     just toolchain={{ toolchain }} ci-test-actix-settings
     just toolchain={{ toolchain }} test-docs-actix-settings
 
+# Validate russe benchmark outputs without collecting timings.
+[group("test")]
+bench-test:
+    cargo {{ toolchain }} bench -p russe --bench borrowed_encoder --bench decoder --bench encoder --all-features --locked -- --test
+
 # Downgrade dev-dependencies necessary to run MSRV checks/tests.
 [private]
 downgrade-for-msrv:

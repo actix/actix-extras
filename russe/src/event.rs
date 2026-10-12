@@ -18,6 +18,71 @@ pub enum Event {
     Retry(Duration),
 }
 
+/// An SSE event that borrows its field text.
+///
+/// Use this type to encode text without allocating or cloning [`ByteString`] inputs.
+///
+/// # Examples
+///
+/// ```
+/// use bytes::BytesMut;
+/// use russe::{Encoder, EventRef};
+///
+/// let text = String::from("first\nsecond");
+/// let event = EventRef::Message {
+///     data: &text,
+///     event: Some("update"),
+///     retry: None,
+///     id: Some("42"),
+/// };
+/// let mut output = BytesMut::new();
+///
+/// Encoder::default().encode_borrowed(event, &mut output)?;
+/// assert_eq!(
+///     output,
+///     "id: 42\nevent: update\ndata: first\ndata: second\n\n"
+/// );
+/// # Ok::<_, russe::Error>(())
+/// ```
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum EventRef<'a> {
+    /// Message event.
+    Message {
+        /// Message data.
+        data: &'a str,
+
+        /// Name of event.
+        event: Option<&'a str>,
+
+        /// Recommended retry delay.
+        retry: Option<Duration>,
+
+        /// Event identifier.
+        id: Option<&'a str>,
+    },
+
+    /// Comment event.
+    Comment(&'a str),
+
+    /// Retry recommendation event.
+    Retry(Duration),
+}
+
+impl<'a> From<&'a Event> for EventRef<'a> {
+    fn from(event: &'a Event) -> Self {
+        match event {
+            Event::Message(message) => Self::Message {
+                data: &message.data,
+                event: message.event.as_deref(),
+                retry: message.retry,
+                id: message.id.as_deref(),
+            },
+            Event::Comment(comment) => Self::Comment(comment),
+            Event::Retry(retry) => Self::Retry(*retry),
+        }
+    }
+}
+
 impl Event {
     /// Encodes the event into a UTF-8 string, including the final blank line.
     ///
@@ -114,6 +179,111 @@ impl Event {
 
         Ok(())
     }
+}
+
+impl EventRef<'_> {
+    /// Encodes the event into a UTF-8 string, including the final blank line.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if a field is invalid. See [`crate::Encoder`] for field requirements.
+    pub fn into_bytestring(self) -> crate::Result<ByteString> {
+        let mut dst = String::new();
+
+        self.encode_into(&mut dst)?;
+
+        Ok(dst.into())
+    }
+
+    pub(crate) fn encode_into(self, dst: &mut impl EncodeBuffer) -> crate::Result<()> {
+        match self {
+            Self::Message {
+                data,
+                event,
+                retry,
+                id,
+            } => return encode_borrowed_message(dst, data, event, retry, id),
+            Self::Comment(comment) => encode_comment(dst, comment),
+            Self::Retry(retry) => encode_retry_event(dst, retry),
+        }
+
+        Ok(())
+    }
+}
+
+fn encode_borrowed_message(
+    dst: &mut impl EncodeBuffer,
+    data: &str,
+    event: Option<&str>,
+    retry: Option<Duration>,
+    id: Option<&str>,
+) -> crate::Result<()> {
+    if let Some(id) = id
+        && let Some(offset) = memchr::memchr3(b'\0', b'\r', b'\n', id.as_bytes())
+    {
+        return Err(Error::invalid_field_value("id", id, offset));
+    }
+
+    if let Some(event) = event
+        && let Some(offset) = memchr::memchr2(b'\r', b'\n', event.as_bytes())
+    {
+        return Err(Error::invalid_field_value("event", event, offset));
+    }
+
+    // Start with the known payload and field lengths.
+    let capacity = data.len()
+        + 8
+        + id.map_or(0, |id| id.len() + 5)
+        + event.map_or(0, |event| event.len() + 8)
+        + retry.map_or(0, |_| RETRY_CAPACITY);
+
+    // For data larger than 1 KiB, sample 128 bytes for short lines.
+    // Round the reservation so added prefixes use power-of-two growth.
+    let capacity = if data.len() > 1024
+        && dst.spare_capacity() < capacity
+        && memchr::memchr2(b'\r', b'\n', &data.as_bytes()[..128]).is_some()
+    {
+        capacity.checked_next_power_of_two().unwrap_or(capacity)
+    } else {
+        capacity
+    };
+
+    dst.reserve(capacity);
+
+    if let Some(id) = id {
+        let _ = dst.write_str("id: ");
+        let _ = dst.write_str(id);
+        let _ = dst.write_char('\n');
+    }
+
+    if let Some(event) = event {
+        let _ = dst.write_str("event: ");
+        let _ = dst.write_str(event);
+        let _ = dst.write_char('\n');
+    }
+
+    if let Some(retry) = retry {
+        encode_retry(dst, retry);
+    }
+
+    encode_lines(dst, "data: ", data);
+    let _ = dst.write_char('\n');
+
+    Ok(())
+}
+
+fn encode_comment(dst: &mut impl EncodeBuffer, comment: &str) {
+    dst.reserve(comment.len() + 4);
+
+    encode_lines(dst, ": ", comment);
+    let _ = dst.write_char('\n');
+}
+
+fn encode_retry_event(dst: &mut impl EncodeBuffer, retry: Duration) {
+    dst.reserve(RETRY_CAPACITY);
+
+    encode_retry(dst, retry);
+    let _ = dst.write_char('\n');
 }
 
 // Start with 16 bytes for common retry values; larger values can grow the buffer.
