@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Minimum supported Rust version (MSRV) is now 1.89.
+
 ## 0.7.25
 
 - Migrate `pin-project` to `pin-project-lite`.

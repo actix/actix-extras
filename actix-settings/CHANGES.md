@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Minimum supported Rust version (MSRV) is now 1.89.
+
 ## 0.10.0
 
 - Add optional `rustls-0_23` TLS support to `actix-settings`.
