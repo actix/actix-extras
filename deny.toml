@@ -20,5 +20,7 @@ executables = "deny"
 [advisories]
 # TODO: When dropping support of old OTel crate versions, this can be cleaned up.
 ignore = [
+    { id = "RUSTSEC-2025-0055", reason = "Legacy OpenTelemetry requires tracing-subscriber 0.2; its fmt feature is disabled." },
+    { id = "RUSTSEC-2024-0387", reason = "OpenTelemetry 0.18-0.20 requires the unmaintained opentelemetry_api crate." },
     "RUSTSEC-2026-0258", # DoS risk on empty DATA frames is not yet backported to v0.3
 ]
