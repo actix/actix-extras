@@ -1,8 +1,10 @@
 //! Extractor for the "Basic" HTTP Authentication Scheme.
 
-use std::borrow::Cow;
+use std::{
+    borrow::Cow,
+    future::{ready, Ready},
+};
 
-use actix_utils::future::{ready, Ready};
 use actix_web::{dev::Payload, http::header::Header, FromRequest, HttpRequest};
 
 use super::{config::AuthExtractorConfig, errors::AuthenticationError};

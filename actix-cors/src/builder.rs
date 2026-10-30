@@ -1,6 +1,9 @@
-use std::{collections::HashSet, rc::Rc};
+use std::{
+    collections::HashSet,
+    future::{ready, Ready},
+    rc::Rc,
+};
 
-use actix_utils::future::{self, Ready};
 use actix_web::{
     body::{EitherBody, MessageBody},
     dev::{RequestHead, Service, ServiceRequest, ServiceResponse, Transform},
@@ -543,7 +546,7 @@ where
                 Either::Right(err) => error!("{}", err),
             }
 
-            return future::err(());
+            return ready(Err(()));
         }
 
         let mut inner = Rc::clone(&self.inner);
@@ -553,7 +556,7 @@ where
                 "Illegal combination of CORS options: credentials can not be supported when all \
                     origins are allowed and `send_wildcard` is enabled."
             );
-            return future::err(());
+            return ready(Err(()));
         }
 
         // bake allowed headers value if Some and not empty
@@ -580,7 +583,7 @@ where
             _ => {}
         }
 
-        future::ok(CorsMiddleware { service, inner })
+        ready(Ok(CorsMiddleware { service, inner }))
     }
 }
 

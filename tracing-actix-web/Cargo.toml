@@ -1,6 +1,6 @@
 [package]
 name = "tracing-actix-web"
-version = "0.7.22"
+version = "0.7.25"
 authors = ["Luca Palmieri <rust@lpalmieri.com>"]
 documentation = "https://docs.rs/tracing-actix-web/"
 readme = "README.md"
@@ -100,7 +100,7 @@ uuid_v7 = ["uuid/v7"]
 
 [dependencies]
 actix-web = { version = "4", default-features = false }
-pin-project = "1.1.13"
+pin-project-lite = "0.2"
 tracing = "0.1.44"
 uuid = { version = "1.23", features = ["v4"] }
 mutually_exclusive_features = "0.1"
@@ -150,3 +150,6 @@ actix-web = { version = "4", default-features = false, features = ["macros"] }
 tracing-subscriber = { version = "0.3", features = ["registry", "env-filter"] }
 tracing-bunyan-formatter = "0.3.0"
 tracing-log = "0.2"
+
+[lints]
+workspace = true

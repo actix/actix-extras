@@ -87,7 +87,7 @@ fn main() {
 }
 ```
 
-Check out [the examples on GitHub](https://github.com/actix/actix-extras/tree/main/tracing-actix-web/examples) to get a taste of how [`TracingLogger`] can be used to observe and monitor your application.
+Check out [the examples on GitHub](https://github.com/actix/examples/tree/main/tracing) to get a taste of how [`TracingLogger`] can be used to observe and monitor your application.
 
 # From zero to hero: a crash course in observability
 
@@ -296,13 +296,19 @@ You can then find all logs for the same request across all the services it touch
 
 If you add [`tracing-opentelemetry::OpenTelemetryLayer`](https://docs.rs/tracing-opentelemetry/0.17.0/tracing_opentelemetry/struct.OpenTelemetryLayer.html) in your `tracing::Subscriber` you will be able to export the root span (and all its children) as OpenTelemetry spans.
 
-Check out the [relevant example in the GitHub repository](https://github.com/actix/actix-extras/tree/main/tracing-actix-web/examples/opentelemetry) for reference.
+Check out the [relevant example in the GitHub repository](https://github.com/actix/examples/tree/main/tracing/opentelemetry) for reference.
 
 # License
 
 Licensed under either of <a href="LICENSE-APACHE">Apache License, Version 2.0</a> or <a href="LICENSE-MIT">MIT license</a> at your option.
 
 Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in `tracing-actix-web` by you, as defined in the Apache-2.0 license, shall be dual licensed as above, without any additional terms or conditions.
+
+## Sponsors
+
+<a href="https://www.blacksmith.sh/">
+  <img src="https://raw.githubusercontent.com/actix/actix-extras/main/.github/sponsors/blacksmith.png" alt="CI powered by Blacksmith" width="280" />
+</a>
 
 [`TracingLogger`]: https://docs.rs/tracing-actix-web/4.0.0-beta.1/tracing_actix_web/struct.TracingLogger.html
 [`RequestId`]: https://docs.rs/tracing-actix-web/4.0.0-beta.1/tracing_actix_web/struct.RequestId.html

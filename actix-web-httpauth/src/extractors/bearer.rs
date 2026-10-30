@@ -1,8 +1,11 @@
 //! Extractor for the "Bearer" HTTP Authentication Scheme.
 
-use std::{borrow::Cow, default::Default};
+use std::{
+    borrow::Cow,
+    default::Default,
+    future::{ready, Ready},
+};
 
-use actix_utils::future::{ready, Ready};
 use actix_web::{dev::Payload, http::header::Header, FromRequest, HttpRequest};
 
 use super::{config::AuthExtractorConfig, errors::AuthenticationError};

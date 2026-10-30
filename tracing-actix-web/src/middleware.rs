@@ -166,21 +166,23 @@ where
     }
 }
 
-#[doc(hidden)]
-#[pin_project::pin_project]
-pub struct TracingResponse<F, RootSpanType> {
-    #[pin]
-    fut: F,
-    span: Span,
-    _root_span_type: std::marker::PhantomData<RootSpanType>,
+pin_project_lite::pin_project! {
+    #[doc(hidden)]
+    pub struct TracingResponse<F, RootSpanType> {
+        #[pin]
+        fut: F,
+        span: Span,
+        _root_span_type: std::marker::PhantomData<RootSpanType>,
+    }
 }
 
-#[doc(hidden)]
-#[pin_project::pin_project]
-pub struct StreamSpan<B> {
-    #[pin]
-    body: B,
-    span: Span,
+pin_project_lite::pin_project! {
+    #[doc(hidden)]
+    pub struct StreamSpan<B> {
+        #[pin]
+        body: B,
+        span: Span,
+    }
 }
 
 impl<F, B, RootSpanType> Future for TracingResponse<F, RootSpanType>

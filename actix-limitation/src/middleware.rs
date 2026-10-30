@@ -1,6 +1,9 @@
-use std::{future::Future, pin::Pin, rc::Rc};
+use std::{
+    future::{ready, Future, Ready},
+    pin::Pin,
+    rc::Rc,
+};
 
-use actix_utils::future::{ok, Ready};
 use actix_web::{
     body::EitherBody,
     dev::{forward_ready, Service, ServiceRequest, ServiceResponse, Transform},
@@ -28,9 +31,9 @@ where
     type Future = Ready<Result<Self::Transform, Self::InitError>>;
 
     fn new_transform(&self, service: S) -> Self::Future {
-        ok(RateLimiterMiddleware {
+        ready(Ok(RateLimiterMiddleware {
             service: Rc::new(service),
-        })
+        }))
     }
 }
 

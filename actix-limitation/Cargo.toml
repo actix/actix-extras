@@ -23,7 +23,6 @@ redis-native-tls = ["redis/tokio-native-tls-comp"]
 redis-rustls = ["redis/tokio-rustls-comp"]
 
 [dependencies]
-actix-utils = "3"
 actix-web = { version = "4", default-features = false, features = ["cookies"] }
 
 chrono = "0.4"
