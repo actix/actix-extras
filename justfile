@@ -180,6 +180,10 @@ doc-watch:
     @just doc --open
     cargo watch -- just doc
 
+# Check security advisories.
+check-advisories:
+    cargo deny --log-level warn --workspace --all-features check advisories
+
 # Check for unintentional external type exposure on all crates in workspace.
 [group("lint")]
 check-external-types-all:
