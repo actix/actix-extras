@@ -23,4 +23,6 @@ ignore = [
     { id = "RUSTSEC-2025-0055", reason = "Legacy OpenTelemetry requires tracing-subscriber 0.2; its fmt feature is disabled." },
     { id = "RUSTSEC-2024-0387", reason = "OpenTelemetry 0.18-0.20 requires the unmaintained opentelemetry_api crate." },
     "RUSTSEC-2026-0258", # DoS risk on empty DATA frames is not yet backported to v0.3
+    { id = "RUSTSEC-2025-0057", reason = "sled 0.34 requires fxhash 0.2; no maintained compatible release is available" },
+    { id = "RUSTSEC-2024-0384", reason = "sled 0.34 requires parking_lot 0.11, which requires instant; no maintained compatible release is available" },
 ]
