@@ -1,6 +1,10 @@
 //! WebSockets for Actix Web, without actors.
 //!
 //! For usage, see documentation on [`handle()`] and [`handle_with_protocols()`].
+//!
+//! Sessions use an unbounded local channel. Keep each session on its connection's worker thread
+//! and use [`actix_web::rt::spawn`] for background tasks. Sending queues a message without waiting
+//! for network writes. Applications must limit message production for slow clients.
 
 #![warn(missing_docs)]
 #![doc(html_logo_url = "https://actix.rs/img/logo.png")]
@@ -13,7 +17,8 @@ use actix_http::{
     ws::handshake,
 };
 use actix_web::{http::header, web, HttpRequest, HttpResponse};
-use tokio::sync::{mpsc::channel, oneshot};
+use local_channel::mpsc::channel;
+use tokio::sync::oneshot;
 
 mod aggregated;
 pub mod codec;
@@ -89,7 +94,7 @@ pub fn handle_with_protocols(
     protocols: &[&str],
 ) -> Result<(HttpResponse, Session, MessageStream), actix_web::Error> {
     let mut response = handshake_with_protocols(req, protocols)?;
-    let (tx, rx) = channel(32);
+    let (tx, rx) = channel();
     let (connection_closed_tx, connection_closed_rx) = oneshot::channel();
 
     Ok((

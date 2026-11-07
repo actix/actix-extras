@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Replace the bounded Tokio session channel with `local-channel`.
+  **Breaking:** `Session` and `StreamingBody` are no longer `Send` or `Sync`.
+  Sending no longer waits for queue capacity. Applications must limit queued messages for slow clients.
+- Fix sink closure to wake the response stream even when session clones remain alive.
 - Minimum supported Rust version (MSRV) is now 1.89.
 
 ## 0.4.0

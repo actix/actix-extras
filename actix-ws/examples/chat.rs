@@ -1,5 +1,6 @@
 use std::{
     io,
+    rc::Rc,
     sync::Arc,
     time::{Duration, Instant},
 };
@@ -16,7 +17,7 @@ use tracing_subscriber::EnvFilter;
 
 #[derive(Clone)]
 struct Chat {
-    inner: Arc<Mutex<ChatInner>>,
+    inner: Rc<Mutex<ChatInner>>,
 }
 
 struct ChatInner {
@@ -26,7 +27,7 @@ struct ChatInner {
 impl Chat {
     fn new() -> Self {
         Chat {
-            inner: Arc::new(Mutex::new(ChatInner {
+            inner: Rc::new(Mutex::new(ChatInner {
                 sessions: Vec::new(),
             })),
         }
@@ -141,15 +142,15 @@ async fn main() -> io::Result<()> {
         )
         .init();
 
-    let chat = Chat::new();
-
     HttpServer::new(move || {
         App::new()
             .wrap(Logger::default())
-            .app_data(web::Data::new(chat.clone()))
+            .app_data(web::Data::new(Chat::new()))
             .route("/", web::get().to(index))
             .route("/ws", web::get().to(ws))
     })
+    // Sessions stay on their worker. Use one worker for this example's shared chat room.
+    .workers(1)
     .bind("127.0.0.1:8080")?
     .run()
     .await?;
