@@ -17,7 +17,8 @@ use actix_web::{
 };
 use bytestring::ByteString;
 use futures_core::stream::Stream;
-use tokio::sync::{mpsc::Receiver, oneshot};
+use local_channel::mpsc::Receiver;
+use tokio::sync::oneshot;
 
 use crate::AggregatedMessageStream;
 
@@ -150,7 +151,7 @@ impl Stream for StreamingBody {
 
         if !this.closing {
             loop {
-                match Pin::new(&mut this.session_rx).poll_recv(cx) {
+                match Pin::new(&mut this.session_rx).poll_next(cx) {
                     Poll::Ready(Some(msg)) => {
                         this.messages.push_back(msg);
                     }
@@ -197,7 +198,7 @@ impl Stream for StreamingBody {
                 // A WebSocket Close frame is terminal. End the response body after flushing this
                 // frame, even if there are still `Session` clones holding the sender.
                 this.closing = true;
-                this.session_rx.close();
+                this.session_rx.sender().close();
                 this.messages.clear();
                 break;
             }
@@ -531,7 +532,7 @@ pub(crate) mod tests {
         }
 
         std::future::poll_fn(move |cx| {
-            let (_tx, rx) = tokio::sync::mpsc::channel(1);
+            let (_tx, rx) = local_channel::mpsc::channel();
             let (connection_closed_tx, connection_closed_rx) = oneshot::channel();
 
             let response_body =
@@ -567,7 +568,7 @@ pub(crate) mod tests {
     #[tokio::test]
     async fn stream_produces_bytes_from_messages() {
         std::future::poll_fn(move |cx| {
-            let (tx, rx) = tokio::sync::mpsc::channel(1);
+            let (tx, rx) = local_channel::mpsc::channel();
 
             let stream = StreamingBody::new(rx);
 
@@ -585,10 +586,7 @@ pub(crate) mod tests {
                     "Stream should be pending when no messages are present"
                 );
 
-                let fut = tx.send(msg);
-                let fut = std::pin::pin!(fut);
-
-                assert!(fut.poll(cx).is_ready(), "Sending should not yield");
+                tx.send(msg).unwrap();
                 assert!(
                     stream.as_mut().poll_next(cx).is_ready(),
                     "Stream should be ready"
@@ -608,7 +606,7 @@ pub(crate) mod tests {
     #[tokio::test]
     async fn stream_processes_many_consecutive_messages() {
         std::future::poll_fn(move |cx| {
-            let (tx, rx) = tokio::sync::mpsc::channel(3);
+            let (tx, rx) = local_channel::mpsc::channel();
 
             let stream = StreamingBody::new(rx);
 
@@ -623,9 +621,7 @@ pub(crate) mod tests {
             assert!(stream.as_mut().poll_next(cx).is_pending());
 
             for msg in messages {
-                let fut = tx.send(msg);
-                let fut = std::pin::pin!(fut);
-                assert!(fut.poll(cx).is_ready(), "Sending should not yield");
+                tx.send(msg).unwrap();
             }
 
             assert!(
@@ -645,7 +641,7 @@ pub(crate) mod tests {
     #[tokio::test]
     async fn stream_closes_after_close_message_even_if_sender_alive() {
         std::future::poll_fn(move |cx| {
-            let (tx, rx) = tokio::sync::mpsc::channel(1);
+            let (tx, rx) = local_channel::mpsc::channel();
 
             let stream = StreamingBody::new(rx);
             let mut stream = std::pin::pin!(stream);
@@ -657,9 +653,7 @@ pub(crate) mod tests {
 
             // Send a Close frame but keep the sender alive (e.g. a `Session` clone held elsewhere).
             {
-                let fut = tx.send(Message::Close(None));
-                let fut = std::pin::pin!(fut);
-                assert!(fut.poll(cx).is_ready(), "Sending should not yield");
+                tx.send(Message::Close(None)).unwrap();
             }
 
             assert!(
@@ -681,7 +675,7 @@ pub(crate) mod tests {
     #[tokio::test]
     async fn stream_closes() {
         std::future::poll_fn(move |cx| {
-            let (tx, rx) = tokio::sync::mpsc::channel(3);
+            let (tx, rx) = local_channel::mpsc::channel();
 
             drop(tx);
             let stream = StreamingBody::new(rx);
@@ -705,7 +699,7 @@ pub(crate) mod tests {
         use actix_http::ws::{CloseCode, CloseReason, Frame};
         use futures_util::StreamExt as _;
 
-        let (tx, rx) = tokio::sync::mpsc::channel(1);
+        let (tx, rx) = local_channel::mpsc::channel();
         let mut stream = StreamingBody::new(rx);
 
         let reason = CloseReason {
@@ -713,7 +707,7 @@ pub(crate) mod tests {
             description: Some("a".repeat(200)),
         };
 
-        tx.send(Message::Close(Some(reason))).await.unwrap();
+        tx.send(Message::Close(Some(reason))).unwrap();
 
         let bytes = stream.next().await.unwrap().unwrap();
 
@@ -747,7 +741,7 @@ pub(crate) mod tests {
         use actix_http::ws::{CloseCode, CloseReason, Frame};
         use futures_util::StreamExt as _;
 
-        let (tx, rx) = tokio::sync::mpsc::channel(1);
+        let (tx, rx) = local_channel::mpsc::channel();
         let mut stream = StreamingBody::new(rx);
 
         // Create a reason where truncating at 123 bytes would split a multi-byte UTF-8 character.
@@ -759,7 +753,7 @@ pub(crate) mod tests {
             description: Some(description),
         };
 
-        tx.send(Message::Close(Some(reason))).await.unwrap();
+        tx.send(Message::Close(Some(reason))).unwrap();
 
         let bytes = stream.next().await.unwrap().unwrap();
 
@@ -791,13 +785,13 @@ pub(crate) mod tests {
         use actix_http::ws::Frame;
         use futures_util::StreamExt as _;
 
-        let (tx, rx) = tokio::sync::mpsc::channel(1);
+        let (tx, rx) = local_channel::mpsc::channel();
         let mut stream = StreamingBody::new(rx);
 
         let payload = Bytes::from(vec![0xAA; 200]);
         let expected = payload.slice(..super::MAX_CONTROL_PAYLOAD_BYTES);
 
-        tx.send(Message::Ping(payload)).await.unwrap();
+        tx.send(Message::Ping(payload)).unwrap();
 
         let bytes = stream.next().await.unwrap().unwrap();
 
@@ -828,13 +822,13 @@ pub(crate) mod tests {
         use actix_http::ws::Frame;
         use futures_util::StreamExt as _;
 
-        let (tx, rx) = tokio::sync::mpsc::channel(1);
+        let (tx, rx) = local_channel::mpsc::channel();
         let mut stream = StreamingBody::new(rx);
 
         let payload = Bytes::from(vec![0xBB; 200]);
         let expected = payload.slice(..super::MAX_CONTROL_PAYLOAD_BYTES);
 
-        tx.send(Message::Pong(payload)).await.unwrap();
+        tx.send(Message::Pong(payload)).unwrap();
 
         let bytes = stream.next().await.unwrap().unwrap();
 

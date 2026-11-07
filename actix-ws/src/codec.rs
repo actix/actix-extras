@@ -330,7 +330,7 @@ mod tests {
 
     #[tokio::test]
     async fn json_session_encodes_text_frames_by_default() {
-        let (tx, mut rx) = tokio::sync::mpsc::channel(1);
+        let (tx, mut rx) = local_channel::mpsc::channel();
         let session = Session::new(tx);
 
         let mut session = session.with_codec::<TestMsg, _>(crate::codec::JsonCodec::default());
@@ -347,7 +347,7 @@ mod tests {
 
     #[tokio::test]
     async fn json_session_can_encode_binary_frames() {
-        let (tx, mut rx) = tokio::sync::mpsc::channel(1);
+        let (tx, mut rx) = local_channel::mpsc::channel();
         let session = Session::new(tx);
 
         let mut session =

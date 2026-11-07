@@ -1,11 +1,8 @@
 use std::{
+    cell::RefCell,
     fmt,
-    future::poll_fn,
     pin::Pin,
-    sync::{
-        atomic::{AtomicBool, Ordering},
-        Arc,
-    },
+    rc::Rc,
     task::{Context, Poll},
 };
 
@@ -13,8 +10,7 @@ use actix_http::ws::{CloseReason, Item, Message};
 use actix_web::web::Bytes;
 use bytestring::ByteString;
 use futures_sink::Sink;
-use tokio::sync::mpsc::Sender;
-use tokio_util::sync::PollSender;
+use local_channel::mpsc::Sender;
 
 // RFC 6455: Control frames MUST have payload length <= 125 bytes.
 // Close payload is: 2-byte close code + optional UTF-8 reason, therefore the reason is <= 123 bytes.
@@ -26,10 +22,16 @@ const MAX_CLOSE_REASON_BYTES: usize = MAX_CONTROL_PAYLOAD_BYTES - 2;
 ///
 /// This type can be used to send messages into the WebSocket.
 /// It also implements [`Sink<Message>`](futures_sink::Sink) for integration with sink-based APIs.
+///
+/// Sessions and their clones must stay on the thread that handles the connection. They are
+/// neither `Send` nor `Sync`. Use [`actix_web::rt::spawn`] to run a task on that thread.
+///
+/// Sending queues a message in an unbounded channel. It does not wait for the client to read
+/// the message. Limit production for slow clients to prevent unbounded memory use. Sink readiness
+/// and flush operations do not wait for network writes.
 #[derive(Clone)]
 pub struct Session {
-    inner: Option<PollSender<Message>>,
-    closed: Arc<AtomicBool>,
+    inner: Rc<RefCell<Option<Sender<Message>>>>,
 }
 
 /// The error representing a closed websocket session
@@ -47,34 +49,17 @@ impl std::error::Error for Closed {}
 impl Session {
     pub(super) fn new(inner: Sender<Message>) -> Self {
         Session {
-            inner: Some(PollSender::new(inner)),
-            closed: Arc::new(AtomicBool::new(false)),
-        }
-    }
-
-    fn pre_check(&mut self) {
-        if self.closed.load(Ordering::Relaxed) {
-            self.inner.take();
-        }
-    }
-
-    async fn send_message_inner(&mut self, msg: Message) -> Result<(), Closed> {
-        if let Some(inner) = self.inner.as_mut() {
-            poll_fn(|cx| Pin::new(&mut *inner).poll_ready(cx))
-                .await
-                .map_err(|_| Closed)?;
-            Pin::new(&mut *inner).start_send(msg).map_err(|_| Closed)?;
-            poll_fn(|cx| Pin::new(&mut *inner).poll_flush(cx))
-                .await
-                .map_err(|_| Closed)
-        } else {
-            Err(Closed)
+            inner: Rc::new(RefCell::new(Some(inner))),
         }
     }
 
     async fn send_message(&mut self, msg: Message) -> Result<(), Closed> {
-        self.pre_check();
-        self.send_message_inner(msg).await
+        self.inner
+            .borrow()
+            .as_ref()
+            .ok_or(Closed)?
+            .send(msg)
+            .map_err(|_| Closed)
     }
 
     /// Sends text into the WebSocket.
@@ -194,8 +179,6 @@ impl Session {
     /// # }
     /// ```
     pub async fn close(mut self, reason: Option<CloseReason>) -> Result<(), Closed> {
-        self.pre_check();
-
         let mut reason = reason;
 
         if let Some(reason) = reason.as_mut() {
@@ -210,64 +193,40 @@ impl Session {
             }
         }
 
-        if self.inner.is_some() {
-            self.closed.store(true, Ordering::Relaxed);
-            self.send_message_inner(Message::Close(reason)).await
-        } else {
-            Err(Closed)
-        }
+        self.send_message(Message::Close(reason)).await?;
+        self.inner.borrow_mut().take();
+        Ok(())
     }
 }
 
 impl Sink<Message> for Session {
     type Error = Closed;
 
-    fn poll_ready(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        self.pre_check();
-        if let Some(inner) = self.inner.as_mut() {
-            match Pin::new(inner).poll_ready(cx) {
-                Poll::Ready(Ok(())) => Poll::Ready(Ok(())),
-                Poll::Ready(Err(_)) => Poll::Ready(Err(Closed)),
-                Poll::Pending => Poll::Pending,
-            }
-        } else {
-            Poll::Ready(Err(Closed))
-        }
-    }
-
-    fn start_send(mut self: Pin<&mut Self>, item: Message) -> Result<(), Self::Error> {
-        self.pre_check();
-        if let Some(inner) = self.inner.as_mut() {
-            Pin::new(inner).start_send(item).map_err(|_| Closed)
+    fn poll_ready(self: Pin<&mut Self>, _: &mut Context<'_>) -> Poll<Result<(), Closed>> {
+        Poll::Ready(if self.inner.borrow().is_some() {
+            Ok(())
         } else {
             Err(Closed)
-        }
+        })
     }
 
-    fn poll_flush(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        self.pre_check();
-        if let Some(inner) = self.inner.as_mut() {
-            match Pin::new(inner).poll_flush(cx) {
-                Poll::Ready(Ok(())) => Poll::Ready(Ok(())),
-                Poll::Ready(Err(_)) => Poll::Ready(Err(Closed)),
-                Poll::Pending => Poll::Pending,
-            }
-        } else {
-            Poll::Ready(Err(Closed))
-        }
+    fn start_send(self: Pin<&mut Self>, item: Message) -> Result<(), Closed> {
+        self.inner
+            .borrow()
+            .as_ref()
+            .ok_or(Closed)?
+            .send(item)
+            .map_err(|_| Closed)
     }
 
-    fn poll_close(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        self.closed.store(true, Ordering::Relaxed);
-        if let Some(inner) = self.inner.as_mut() {
-            match Pin::new(inner).poll_close(cx) {
-                Poll::Ready(Ok(())) => Poll::Ready(Ok(())),
-                Poll::Ready(Err(_)) => Poll::Ready(Err(Closed)),
-                Poll::Pending => Poll::Pending,
-            }
-        } else {
-            Poll::Ready(Ok(()))
-        }
+    fn poll_flush(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Closed>> {
+        self.poll_ready(cx)
+    }
+
+    fn poll_close(self: Pin<&mut Self>, _: &mut Context<'_>) -> Poll<Result<(), Closed>> {
+        // Drop the only channel sender so a pending receiver wakes and drains the queue.
+        self.inner.borrow_mut().take();
+        Poll::Ready(Ok(()))
     }
 }
 
@@ -280,7 +239,7 @@ mod tests {
 
     #[tokio::test]
     async fn session_implements_sink() {
-        let (tx, mut rx) = tokio::sync::mpsc::channel(8);
+        let (tx, mut rx) = local_channel::mpsc::channel();
         let mut session = Session::new(tx);
 
         session
@@ -298,8 +257,38 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn sends_more_than_the_old_capacity_without_a_receiver_poll() {
+        let (tx, mut rx) = local_channel::mpsc::channel();
+        let mut session = Session::new(tx);
+
+        for value in 0..64 {
+            let send = session.text(value.to_string());
+            let mut send = std::pin::pin!(send);
+
+            assert!(matches!(
+                std::future::Future::poll(
+                    send.as_mut(),
+                    &mut std::task::Context::from_waker(std::task::Waker::noop())
+                ),
+                std::task::Poll::Ready(Ok(()))
+            ));
+        }
+
+        drop(session);
+
+        for value in 0..64 {
+            match rx.recv().await {
+                Some(Message::Text(text)) => assert_eq!(text, value.to_string()),
+                other => panic!("expected text frame, got: {other:?}"),
+            }
+        }
+
+        assert!(rx.recv().await.is_none());
+    }
+
+    #[tokio::test]
     async fn sink_close_closes_all_clones() {
-        let (tx, mut rx) = tokio::sync::mpsc::channel(8);
+        let (tx, mut rx) = local_channel::mpsc::channel();
         let mut session = Session::new(tx);
         let mut clone = session.clone();
 
@@ -310,8 +299,76 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn sink_close_drains_queued_messages_with_a_clone_alive() {
+        let (tx, mut rx) = local_channel::mpsc::channel();
+        let mut session = Session::new(tx);
+        let mut clone = session.clone();
+
+        session.text("first").await.unwrap();
+        clone.text("second").await.unwrap();
+        SinkExt::close(&mut session).await.unwrap();
+
+        for expected in ["first", "second"] {
+            match rx.recv().await {
+                Some(Message::Text(text)) => assert_eq!(text, expected),
+                other => panic!("expected text frame, got: {other:?}"),
+            }
+        }
+
+        assert!(rx.recv().await.is_none());
+        assert!(clone.text("closed").await.is_err());
+    }
+
+    #[tokio::test]
+    async fn sends_fail_after_receiver_drop() {
+        let (tx, rx) = local_channel::mpsc::channel();
+        let mut session = Session::new(tx);
+        let mut clone = session.clone();
+
+        drop(rx);
+
+        assert!(session.text("closed").await.is_err());
+        assert!(clone.send(Message::Ping(Default::default())).await.is_err());
+    }
+
+    #[tokio::test]
+    async fn sink_close_wakes_receiver_with_a_clone_alive() {
+        use std::{
+            sync::Arc,
+            task::{Context, Poll, Wake, Waker},
+        };
+
+        struct WakeFlag(std::sync::atomic::AtomicBool);
+
+        impl Wake for WakeFlag {
+            fn wake(self: Arc<Self>) {
+                self.0.store(true, std::sync::atomic::Ordering::Relaxed);
+            }
+        }
+
+        let (tx, mut rx) = local_channel::mpsc::channel();
+        let mut session = Session::new(tx);
+        let mut clone = session.clone();
+        let flag = Arc::new(WakeFlag(std::sync::atomic::AtomicBool::new(false)));
+        let waker = Waker::from(flag.clone());
+        let mut cx = Context::from_waker(&waker);
+        let mut receive = std::pin::pin!(rx.recv());
+
+        assert!(std::future::Future::poll(receive.as_mut(), &mut cx).is_pending());
+
+        SinkExt::close(&mut session).await.unwrap();
+
+        assert!(flag.0.load(std::sync::atomic::Ordering::Relaxed));
+        assert!(matches!(
+            std::future::Future::poll(receive.as_mut(), &mut cx),
+            Poll::Ready(None)
+        ));
+        assert!(clone.text("closed").await.is_err());
+    }
+
+    #[tokio::test]
     async fn close_sends_close_frame_and_closes_all_clones() {
-        let (tx, mut rx) = tokio::sync::mpsc::channel(8);
+        let (tx, mut rx) = local_channel::mpsc::channel();
         let session = Session::new(tx);
         let mut clone = session.clone();
 

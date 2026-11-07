@@ -2,6 +2,10 @@
 
 > WebSockets for Actix Web, without actors.
 
+Sessions use an unbounded local channel and must stay on their connection's worker thread.
+Use `actix_web::rt::spawn` for background tasks. Sending queues messages without waiting for
+network writes. Applications must limit message production for slow clients.
+
 <!-- prettier-ignore-start -->
 
 [![crates.io](https://img.shields.io/crates/v/actix-ws?label=latest)](https://crates.io/crates/actix-ws)
