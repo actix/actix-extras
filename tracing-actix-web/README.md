@@ -1,38 +1,27 @@
-<h1 align="center">tracing-actix-web</h1>
-<div align="center">
- <strong>
-   Structured diagnostics for actix-web applications.
- </strong>
-</div>
+# `tracing-actix-web`
 
+> Structured diagnostics for Actix Web applications.
+
+<!-- prettier-ignore-start -->
+
+[![crates.io](https://img.shields.io/crates/v/tracing-actix-web?label=latest)](https://crates.io/crates/tracing-actix-web)
+[![Documentation](https://docs.rs/tracing-actix-web/badge.svg?version=0.7.26)](https://docs.rs/tracing-actix-web/0.7.26)
+![Version](https://img.shields.io/badge/rustc-1.89+-ab6000.svg)
+![MIT or Apache 2.0 licensed](https://img.shields.io/crates/l/tracing-actix-web.svg)
 <br />
+[![Dependency Status](https://deps.rs/crate/tracing-actix-web/0.7.26/status.svg)](https://deps.rs/crate/tracing-actix-web/0.7.26)
+[![Download](https://img.shields.io/crates/d/tracing-actix-web.svg)](https://crates.io/crates/tracing-actix-web)
+[![Chat on Discord](https://img.shields.io/discord/771444961383153695?label=chat&logo=discord)](https://discord.gg/NWpN5mmg3x)
 
-<div align="center">
-  <!-- Crates version -->
-  <a href="https://crates.io/crates/tracing-actix-web">
-    <img src="https://img.shields.io/crates/v/tracing-actix-web.svg?style=flat-square"
-    alt="Crates.io version" />
-  </a>
-  <!-- Downloads -->
-  <a href="https://crates.io/crates/tracing-actix-web">
-    <img src="https://img.shields.io/crates/d/tracing-actix-web.svg?style=flat-square"
-      alt="Download" />
-  </a>
-  <!-- docs.rs docs -->
-  <a href="https://docs.rs/tracing-actix-web">
-    <img src="https://img.shields.io/badge/docs-latest-blue.svg?style=flat-square"
-      alt="docs.rs docs" />
-  </a>
-</div>
-<br/>
+<!-- prettier-ignore-end -->
 
 `tracing-actix-web` provides [`TracingLogger`], a middleware to collect telemetry data from applications built on top of the [`actix-web`] framework.
 
 > `tracing-actix-web` was initially developed for the telemetry chapter of [Zero to Production In Rust](https://zero2prod.com), a hands-on introduction to backend development using the Rust programming language.
 
-# Getting started
+## Getting started
 
-## How to install
+### How to install
 
 Add `tracing-actix-web` to your dependencies:
 
@@ -70,7 +59,7 @@ actix-web = "4"
 - `emit_event_on_error`: emit a [`tracing`] event when request processing fails with an error (enabled by default).
 - `uuid_v7`: use the UUID v7 implementation inside [`RequestId`] instead of UUID v4 (disabled by default).
 
-## Quickstart
+### Quickstart
 
 ```rust,compile_fail
 use actix_web::{App, web, HttpServer};
@@ -90,16 +79,16 @@ fn main() {
 
 Check out [the examples on GitHub](https://github.com/actix/examples/tree/main/tracing) to get a taste of how [`TracingLogger`] can be used to observe and monitor your application.
 
-# From zero to hero: a crash course in observability
+## From zero to hero: a crash course in observability
 
-## `tracing`: who art thou?
+### `tracing`: who art thou?
 
 [`TracingLogger`] is built on top of [`tracing`], a modern instrumentation framework with [a vibrant ecosystem](https://github.com/tokio-rs/tracing#related-crates).
 
 `tracing-actix-web`'s documentation provides a crash course in how to use [`tracing`] to instrument an `actix-web` application.  
 If you want to learn more check out ["Are we observable yet?"](https://www.lpalmieri.com/posts/2020-09-27-zero-to-production-4-are-we-observable-yet/) - it provides an in-depth introduction to the crate and the problems it solves within the bigger picture of [observability](https://docs.honeycomb.io/learning-about-observability/).
 
-## The root span
+### The root span
 
 [`tracing::Span`] is the key abstraction in [`tracing`]: it represents a unit of work in your system.  
 A [`tracing::Span`] has a beginning and an end. It can include one or more **child spans** to represent sub-unit of works within a larger task.
@@ -110,7 +99,7 @@ All the spans created _while_ processing the request will be children of the roo
 [`tracing`] empowers us to attach structured properties to a span as a collection of key-value pairs.  
 Those properties can then be queried in a variety of tools (e.g. ElasticSearch, Honeycomb, DataDog) to understand what is happening in your system.
 
-## Customization via [`RootSpanBuilder`]
+### Customization via [`RootSpanBuilder`]
 
 Troubleshooting becomes much easier when the root span has a _rich context_ - e.g. you can understand most of what happened when processing the request just by looking at the properties attached to the corresponding root span.
 
@@ -217,7 +206,7 @@ impl RootSpanBuilder for CustomLevelRootSpanBuilder {
 let custom_middleware = TracingLogger::<CustomLevelRootSpanBuilder>::new();
 ```
 
-## The [`RootSpan`] extractor
+### The [`RootSpan`] extractor
 
 It often happens that not all information about a task is known upfront, encoded in the incoming request.  
 You can use the [`RootSpan`] extractor to grab the root span in your handlers and attach more information to your root span as it becomes available:
@@ -261,9 +250,9 @@ impl RootSpanBuilder for DomainRootSpanBuilder {
 }
 ```
 
-# Unique identifiers
+## Unique identifiers
 
-## Request Id
+### Request Id
 
 `tracing-actix-web` generates a unique identifier for each incoming request, the **request id**.
 
@@ -285,7 +274,7 @@ If you need to **trace** a request across multiple services (e.g. in a microserv
 
 Optionally, using the `uuid_v7` feature flag will allow [`RequestId`] to use UUID v7 instead of the currently used UUID v4.
 
-## Trace Id
+### Trace Id
 
 To fulfill a request you often have to perform additional I/O operations - e.g. calls to other REST or gRPC APIs, database queries, etc.  
 **Distributed tracing** is the standard approach to **trace** a single request across the entirety of your stack.
@@ -299,9 +288,20 @@ If you add [`tracing-opentelemetry::OpenTelemetryLayer`](https://docs.rs/tracing
 
 Check out the [relevant example in the GitHub repository](https://github.com/actix/examples/tree/main/tracing/opentelemetry) for reference.
 
-# License
+## Resources
 
-Licensed under either of <a href="LICENSE-APACHE">Apache License, Version 2.0</a> or <a href="LICENSE-MIT">MIT license</a> at your option.
+- [API Documentation](https://docs.rs/tracing-actix-web)
+- [Examples](https://github.com/actix/examples/tree/main/tracing)
+- Minimum Supported Rust Version (MSRV): 1.89
+
+## License
+
+This project is licensed under either of
+
+- Apache License, Version 2.0, (LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0)
+- MIT license (LICENSE-MIT or http://opensource.org/licenses/MIT)
+
+at your option.
 
 Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in `tracing-actix-web` by you, as defined in the Apache-2.0 license, shall be dual licensed as above, without any additional terms or conditions.
 
@@ -311,15 +311,16 @@ Unless you explicitly state otherwise, any contribution intentionally submitted 
   <img src="https://raw.githubusercontent.com/actix/actix-extras/main/.github/sponsors/blacksmith.png" alt="CI powered by Blacksmith" width="280" />
 </a>
 
-[`TracingLogger`]: https://docs.rs/tracing-actix-web/4.0.0-beta.1/tracing_actix_web/struct.TracingLogger.html
-[`RequestId`]: https://docs.rs/tracing-actix-web/4.0.0-beta.1/tracing_actix_web/struct.RequestId.html
-[`RootSpan`]: https://docs.rs/tracing-actix-web/4.0.0-beta.1/tracing_actix_web/struct.RootSpan.html
-[`RootSpanBuilder`]: https://docs.rs/tracing-actix-web/4.0.0-beta.1/tracing_actix_web/trait.RootSpanBuilder.html
-[`DefaultRootSpanBuilder`]: https://docs.rs/tracing-actix-web/4.0.0-beta.1/tracing_actix_web/struct.DefaultRootSpanBuilder.html
-[`DefaultRootSpanBuilder::default`]: https://docs.rs/tracing-actix-web/4.0.0-beta.1/tracing_actix_web/struct.DefaultRootSpanBuilder.html#method.default
+[`TracingLogger::default`]: https://docs.rs/tracing-actix-web/latest/tracing_actix_web/struct.TracingLogger.html#method.default
+[`TracingLogger`]: https://docs.rs/tracing-actix-web/latest/tracing_actix_web/struct.TracingLogger.html
+[`RequestId`]: https://docs.rs/tracing-actix-web/latest/tracing_actix_web/struct.RequestId.html
+[`RootSpan`]: https://docs.rs/tracing-actix-web/latest/tracing_actix_web/struct.RootSpan.html
+[`RootSpanBuilder`]: https://docs.rs/tracing-actix-web/latest/tracing_actix_web/trait.RootSpanBuilder.html
+[`DefaultRootSpanBuilder`]: https://docs.rs/tracing-actix-web/latest/tracing_actix_web/struct.DefaultRootSpanBuilder.html
+[`DefaultRootSpanBuilder::default`]: https://docs.rs/tracing-actix-web/latest/tracing_actix_web/struct.DefaultRootSpanBuilder.html#method.default
 [`tracing`]: https://docs.rs/tracing
 [`tracing::Span`]: https://docs.rs/tracing/latest/tracing/struct.Span.html
-[`root_span!`]: https://docs.rs/tracing-actix-web/4.0.0-beta.1/tracing_actix_web/macro.root_span.html
-[root span]: https://docs.rs/tracing-actix-web/4.0.0-beta.1/tracing_actix_web/struct.RootSpan.html
-[`actix-web`]: https://docs.rs/actix-web/4.0.0-beta.6/actix_web/index.html
+[`root_span!`]: https://docs.rs/tracing-actix-web/latest/tracing_actix_web/macro.root_span.html
+[root span]: https://docs.rs/tracing-actix-web/latest/tracing_actix_web/struct.RootSpan.html
+[`actix-web`]: https://docs.rs/actix-web/latest/actix_web/
 [`uuid`]: https://docs.rs/uuid
