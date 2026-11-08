@@ -5,16 +5,16 @@ version: 'v0.0.3'
 workflows:
     '.github/workflows/ci-post-merge.yml':
         - 'actions-rust-lang/setup-rust-toolchain@v2.0.0'
-        - 'taiki-e/install-action@v2.88.0'
+        - 'taiki-e/install-action@v2.90.1'
         - 'useblacksmith/checkout@v1.8.1'
     '.github/workflows/ci.yml':
         - 'actions-rust-lang/setup-rust-toolchain@v2.0.0'
-        - 'taiki-e/install-action@v2.88.0'
+        - 'taiki-e/install-action@v2.90.1'
         - 'useblacksmith/checkout@v1.8.1'
     '.github/workflows/coverage.yml':
         - 'actions-rust-lang/setup-rust-toolchain@v2.0.0'
         - 'codecov/codecov-action@v7.1.1'
-        - 'taiki-e/install-action@v2.88.0'
+        - 'taiki-e/install-action@v2.90.1'
         - 'useblacksmith/checkout@v1.8.1'
     '.github/workflows/labeler.yml':
         - 'actions/checkout@v7.0.1'
@@ -75,9 +75,9 @@ dependencies:
         commit: 'sha1-6323deb102c322ba6fcbdcafc7e3dddab59af2b6'
         owner_id: 580492
         repo_id: 298565987
-    'taiki-e/install-action@v2.88.0':
-        ref: 'v2.88.0'
-        commit: 'sha1-86f7a0ffb25f40114606501a311ebcfaf882ea32'
+    'taiki-e/install-action@v2.90.1':
+        ref: 'v2.90.1'
+        commit: 'sha1-c509219cf42fba86913069efd0ade2458c59337b'
         owner_id: 43724913
         repo_id: 442947557
     'useblacksmith/checkout@v1.8.1':
