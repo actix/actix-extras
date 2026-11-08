@@ -3662,7 +3662,7 @@ dependencies = [
 
 [[package]]
 name = "tracing-actix-web"
-version = "0.7.25"
+version = "0.7.26"
 dependencies = [
  "actix-web",
  "mutually_exclusive_features",
