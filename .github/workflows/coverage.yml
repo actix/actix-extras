@@ -22,7 +22,7 @@ jobs:
         options: --entrypoint redis-server
 
     steps:
-      - uses: useblacksmith/checkout@v1.8.1
+      - uses: useblacksmith/checkout@v1.8.2
         with:
           persist-credentials: false
 
