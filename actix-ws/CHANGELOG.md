@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.4.1
+
 - Add `WebSocket` extractor.
 - Minimum supported Rust version (MSRV) is now 1.89.
 
