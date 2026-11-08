@@ -87,7 +87,7 @@ jobs:
           cargo clippy -p tracing-actix-web --lib --tests --examples --bins -- -A unknown_lints -D clippy::todo -D clippy::dbg_macro
           cargo clippy -p tracing-actix-web --lib --tests --examples --bins --features uuid_v7 -- -A unknown_lints -D clippy::todo -D clippy::dbg_macro
           cargo clippy -p tracing-actix-web --lib --tests --examples --bins --features opentelemetry_0_13 -- -A unknown_lints -D clippy::todo -D clippy::dbg_macro
-          cargo clippy -p tracing-actix-web --lib --tests --examples --bins --features opentelemetry_0_32 -- -A unknown_lints -D clippy::todo -D clippy::dbg_macro
+          cargo clippy -p tracing-actix-web --lib --tests --examples --bins --features opentelemetry_0_33 -- -A unknown_lints -D clippy::todo -D clippy::dbg_macro
 
       - name: Check actix-settings with Clippy
         run: |

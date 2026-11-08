@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+## 0.7.26
+
+- Support OpenTelemetry 0.33.
 - Minimum supported Rust version (MSRV) is now 1.89.
 
 ## 0.7.25
