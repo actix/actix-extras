@@ -5,11 +5,11 @@
 <!-- prettier-ignore-start -->
 
 [![crates.io](https://img.shields.io/crates/v/actix-ws?label=latest)](https://crates.io/crates/actix-ws)
-[![Documentation](https://docs.rs/actix-ws/badge.svg?version=0.4.0)](https://docs.rs/actix-ws/0.4.0)
-![Version](https://img.shields.io/badge/rustc-1.88+-ab6000.svg)
+[![Documentation](https://docs.rs/actix-ws/badge.svg?version=0.4.1)](https://docs.rs/actix-ws/0.4.1)
+![Version](https://img.shields.io/badge/rustc-1.89+-ab6000.svg)
 ![MIT or Apache 2.0 licensed](https://img.shields.io/crates/l/actix-ws.svg)
 <br />
-[![Dependency Status](https://deps.rs/crate/actix-ws/0.4.0/status.svg)](https://deps.rs/crate/actix-ws/0.4.0)
+[![Dependency Status](https://deps.rs/crate/actix-ws/0.4.1/status.svg)](https://deps.rs/crate/actix-ws/0.4.1)
 [![Download](https://img.shields.io/crates/d/actix-ws.svg)](https://crates.io/crates/actix-ws)
 [![Chat on Discord](https://img.shields.io/discord/771444961383153695?label=chat&logo=discord)](https://discord.gg/NWpN5mmg3x)
 
@@ -86,7 +86,7 @@ When there is an overlap, the first protocol offered by the client that the serv
 
 - [API Documentation](https://docs.rs/actix-ws)
 - [Example Chat Project](https://github.com/actix/examples/tree/main/websockets/chat-actorless)
-- Minimum Supported Rust Version (MSRV): 1.88
+- Minimum Supported Rust Version (MSRV): 1.89
 
 ## License
 
@@ -96,3 +96,9 @@ This project is licensed under either of
 - MIT license (LICENSE-MIT or http://opensource.org/licenses/MIT)
 
 at your option.
+
+## Sponsors
+
+<a href="https://www.blacksmith.sh/">
+  <img src="https://raw.githubusercontent.com/actix/actix-extras/main/.github/sponsors/blacksmith.png" alt="CI powered by Blacksmith" width="280" />
+</a>

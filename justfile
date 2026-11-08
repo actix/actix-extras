@@ -171,6 +171,20 @@ doc-watch:
     @just doc --open
     cargo watch -- just doc
 
+# Check security advisories.
+check-advisories:
+    cargo deny --log-level warn --workspace --all-features check advisories
+
+# Update the GitHub Actions lockfile.
+[group("maintenance")]
+actions-lock:
+    gh actions-lock --no-interactive
+
+# Verify the GitHub Actions lockfile without changes.
+[group("lint")]
+check-actions-lock:
+    gh actions-lock --verify --no-interactive
+
 # Check for unintentional external type exposure on all crates in workspace.
 [group("lint")]
 check-external-types-all:

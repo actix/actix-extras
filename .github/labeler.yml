@@ -1,0 +1,35 @@
+A-cors:
+  - changed-files:
+      - any-glob-to-any-file: actix-cors/**
+
+A-identity:
+  - changed-files:
+      - any-glob-to-any-file: actix-identity/**
+
+A-limitation:
+  - changed-files:
+      - any-glob-to-any-file: actix-limitation/**
+
+A-protobuf:
+  - changed-files:
+      - any-glob-to-any-file: actix-protobuf/**
+
+A-session:
+  - changed-files:
+      - any-glob-to-any-file: actix-session/**
+
+A-settings:
+  - changed-files:
+      - any-glob-to-any-file: actix-settings/**
+
+A-httpauth:
+  - changed-files:
+      - any-glob-to-any-file: actix-web-httpauth/**
+
+A-ws:
+  - changed-files:
+      - any-glob-to-any-file: actix-ws/**
+
+A-tracing:
+  - changed-files:
+      - any-glob-to-any-file: tracing-actix-web/**

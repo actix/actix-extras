@@ -15,7 +15,7 @@
 
 - [API Documentation](https://docs.rs/actix-protobuf)
 - [Example Project](https://github.com/actix/examples/tree/main/protobuf)
-- Minimum Supported Rust Version (MSRV): 1.57
+- Minimum Supported Rust Version (MSRV): 1.89
 
 ## Example
 
@@ -58,3 +58,9 @@ This project is licensed under either of
 - MIT license ([LICENSE-MIT](LICENSE-MIT) or [https://opensource.org/licenses/MIT](https://opensource.org/licenses/MIT))
 
 at your option.
+
+## Sponsors
+
+<a href="https://www.blacksmith.sh/">
+  <img src="https://raw.githubusercontent.com/actix/actix-extras/main/.github/sponsors/blacksmith.png" alt="CI powered by Blacksmith" width="280" />
+</a>

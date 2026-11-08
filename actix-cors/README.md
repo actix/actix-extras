@@ -4,7 +4,7 @@
 
 [![crates.io](https://img.shields.io/crates/v/actix-cors?label=latest)](https://crates.io/crates/actix-cors)
 [![Documentation](https://docs.rs/actix-cors/badge.svg?version=0.7.2)](https://docs.rs/actix-cors/0.7.2)
-![Version](https://img.shields.io/badge/rustc-1.88+-ab6000.svg)
+![Version](https://img.shields.io/badge/rustc-1.89+-ab6000.svg)
 ![MIT or Apache 2.0 licensed](https://img.shields.io/crates/l/actix-cors.svg)
 <br />
 [![Dependency Status](https://deps.rs/crate/actix-cors/0.7.2/status.svg)](https://deps.rs/crate/actix-cors/0.7.2)
@@ -71,4 +71,10 @@ Additional guidance and examples are available in <https://actix.rs/docs/cors>.
 
 - [API Documentation](https://docs.rs/actix-cors)
 - [Example Project](https://github.com/actix/examples/tree/main/cors)
-- Minimum Supported Rust Version (MSRV): 1.88
+- Minimum Supported Rust Version (MSRV): 1.89
+
+## Sponsors
+
+<a href="https://www.blacksmith.sh/">
+  <img src="https://raw.githubusercontent.com/actix/actix-extras/main/.github/sponsors/blacksmith.png" alt="CI powered by Blacksmith" width="280" />
+</a>

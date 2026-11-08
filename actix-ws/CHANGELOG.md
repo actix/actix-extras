@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.4.1
+
+- Add `WebSocket` extractor.
+- Minimum supported Rust version (MSRV) is now 1.89.
+
 ## 0.4.0
 
 - feat: Add `handle_with_protocols()` for `Sec-WebSocket-Protocol` negotiation [#479]
