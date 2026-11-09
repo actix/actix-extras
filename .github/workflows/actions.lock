@@ -4,15 +4,15 @@
 version: 'v0.0.3'
 workflows:
     '.github/workflows/ci-post-merge.yml':
-        - 'actions-rust-lang/setup-rust-toolchain@v2.0.0'
+        - 'actions-rust-lang/setup-rust-toolchain@v2.0.1'
         - 'taiki-e/install-action@v2.90.1'
         - 'useblacksmith/checkout@v1.8.1'
     '.github/workflows/ci.yml':
-        - 'actions-rust-lang/setup-rust-toolchain@v2.0.0'
+        - 'actions-rust-lang/setup-rust-toolchain@v2.0.1'
         - 'taiki-e/install-action@v2.90.1'
         - 'useblacksmith/checkout@v1.8.1'
     '.github/workflows/coverage.yml':
-        - 'actions-rust-lang/setup-rust-toolchain@v2.0.0'
+        - 'actions-rust-lang/setup-rust-toolchain@v2.0.1'
         - 'codecov/codecov-action@v7.1.1'
         - 'taiki-e/install-action@v2.90.1'
         - 'useblacksmith/checkout@v1.8.1'
@@ -20,19 +20,19 @@ workflows:
         - 'actions/checkout@v7.0.1'
         - 'actions/labeler@v7.0.0'
     '.github/workflows/lint.yml':
-        - 'actions-rust-lang/setup-rust-toolchain@v2.0.0'
+        - 'actions-rust-lang/setup-rust-toolchain@v2.0.1'
         - 'embarkstudios/cargo-deny-action@v2.1.1'
         - 'giraffate/clippy-action@v1.0.1'
         - 'useblacksmith/checkout@v1.8.1'
         - 'zizmorcore/zizmor-action@v0.8.1'
 dependencies:
-    'actions-rust-lang/setup-rust-toolchain@v2.0.0':
-        ref: 'v2.0.0'
-        commit: 'sha1-ecabd13d1c56bd1345c230e542e9144811ad706f'
+    'actions-rust-lang/setup-rust-toolchain@v2.0.1':
+        ref: 'v2.0.1'
+        commit: 'sha1-a188e68d0fd2bd36ad51dccb2b07ba6e75105f30'
         owner_id: 103899579
         repo_id: 482610590
         uses:
-            - 'swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6'
+            - 'swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0'
     'actions/checkout@v7.0.1':
         ref: 'v7.0.1'
         commit: 'sha1-3d3c42e5aac5ba805825da76410c181273ba90b1'
@@ -70,9 +70,9 @@ dependencies:
         commit: 'sha1-9b3254085494b55a0f7c4c2b3d2d52cc712ce370'
         owner_id: 9919
         repo_id: 259445878
-    'swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6':
-        ref: 'v2.9.2'
-        commit: 'sha1-6323deb102c322ba6fcbdcafc7e3dddab59af2b6'
+    'swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0':
+        ref: 'v2.9.3'
+        commit: 'sha1-d1527c8f67ef9af357290475d4af4b0fab8f12e0'
         owner_id: 580492
         repo_id: 298565987
     'taiki-e/install-action@v2.90.1':
