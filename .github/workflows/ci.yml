@@ -41,7 +41,7 @@ jobs:
           --entrypoint redis-server
 
     steps:
-      - uses: useblacksmith/checkout@v1.8.1
+      - uses: useblacksmith/checkout@v1.8.2
         with:
           persist-credentials: false
 
@@ -99,7 +99,7 @@ jobs:
     runs-on: ${{ matrix.target.os }}
 
     steps:
-      - uses: useblacksmith/checkout@v1.8.1
+      - uses: useblacksmith/checkout@v1.8.2
         with:
           persist-credentials: false
 
@@ -154,7 +154,7 @@ jobs:
     name: Documentation Tests
     runs-on: blacksmith-2vcpu-ubuntu-2404
     steps:
-      - uses: useblacksmith/checkout@v1.8.1
+      - uses: useblacksmith/checkout@v1.8.2
         with:
           persist-credentials: false
 
