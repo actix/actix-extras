@@ -9,6 +9,7 @@ members = [
     "actix-settings",
     "actix-web-httpauth",
     "actix-ws",
+    "russe",
     "tracing-actix-web",
 ]
 
@@ -32,6 +33,7 @@ actix-protobuf = { path = "./actix-protobuf" }
 actix-session = { path = "./actix-session" }
 actix-settings = { path = "./actix-settings" }
 actix-web-httpauth = { path = "./actix-web-httpauth" }
+russe = { path = "./russe" }
 
 # uncomment to quickly test against local actix-web repo
 # actix-http = { path = "../actix-web/actix-http" }

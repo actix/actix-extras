@@ -1,0 +1,73 @@
+[package]
+name = "russe"
+version = "0.3.1"
+authors = ["Rob Ede <robjtede@icloud.com>"]
+description = "Server-Sent Events (SSE) encoder and decoder"
+categories = ["web-programming", "encoding"]
+keywords = ["sse", "server", "sent", "events"]
+repository.workspace = true
+license.workspace = true
+edition = "2024"
+rust-version = "1.88"
+
+[package.metadata.docs.rs]
+rustdoc-args = ["--cfg", "docsrs"]
+all-features = true
+
+[package.metadata.cargo_check_external_types]
+allowed_external_types = ["bytestring::*", "tokio_util::*"]
+
+[features]
+awc-3 = []
+mime = ["dep:mime"]
+reqwest-0_12 = ["dep:reqwest-0_12", "dep:futures-util"]
+reqwest-0_13 = ["dep:reqwest-0_13", "dep:futures-util"]
+
+[dependencies]
+aho-corasick = "1"
+bytes = "1"
+bytestring = "1.4"
+futures-util = { version = "0.3.18", optional = true }
+impl-more = "0.3.8"
+itoa = "1"
+memchr = "2"
+mime = { version = "0.3.17", optional = true }
+reqwest-0_12 = { package = "reqwest", version = "0.12", optional = true, default-features = false, features = [
+  "stream",
+] }
+reqwest-0_13 = { package = "reqwest", version = "0.13", optional = true, default-features = false, features = [
+  "stream",
+] }
+tokio = { version = "1", features = ["sync"] }
+tokio-util = { version = "0.7", features = ["codec"] }
+tracing = "0.1.41"
+
+[dev-dependencies]
+color-eyre = "0.6"
+divan = { package = "codspeed-divan-compat", version = "4" }
+eyre = "0.6"
+futures-test = "0.3"
+futures-util = { version = "0.3.18", features = ["sink"] }
+indoc = "2"
+quickcheck = { version = "1", default-features = false }
+quickcheck_macros = "1"
+tokio = { version = "1.38.2", features = ["io-util", "macros", "net", "rt", "time"] }
+tokio-stream = "0.1"
+tokio-test = "0.4"
+tokio-util = { version = "0.7", features = ["codec", "io", "rt"] }
+wiremock = "0.6"
+
+[[example]]
+name = "manager"
+required-features = ["reqwest-0_12"]
+
+[[bench]]
+name = "decoder"
+harness = false
+
+[[bench]]
+name = "encoder"
+harness = false
+
+[lints]
+workspace = true
