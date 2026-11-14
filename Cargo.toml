@@ -7,6 +7,7 @@ members = [
     "actix-protobuf",
     "actix-session",
     "actix-settings",
+    "actix-sse",
     "actix-web-httpauth",
     "actix-ws",
     "russe",
@@ -32,6 +33,7 @@ actix-limitation = { path = "./actix-limitation" }
 actix-protobuf = { path = "./actix-protobuf" }
 actix-session = { path = "./actix-session" }
 actix-settings = { path = "./actix-settings" }
+actix-sse = { path = "./actix-sse" }
 actix-web-httpauth = { path = "./actix-web-httpauth" }
 russe = { path = "./russe" }
 

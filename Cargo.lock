@@ -240,6 +240,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "actix-sse"
+version = "0.1.1"
+dependencies = [
+ "actix-web",
+ "bytes",
+ "bytestring",
+ "futures-core",
+ "futures-util",
+ "mime",
+ "pin-project-lite",
+ "serde",
+ "tokio",
+ "tokio-stream",
+]
+
+[[package]]
 name = "actix-test"
 version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"

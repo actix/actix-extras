@@ -21,10 +21,11 @@
 | [actix-protobuf]     | [![crates.io](https://img.shields.io/crates/v/actix-protobuf?label=latest)](https://crates.io/crates/actix-protobuf) [![dependency status](https://deps.rs/crate/actix-protobuf/latest/status.svg)](https://deps.rs/crate/actix-protobuf)                 | Protobuf payload extractor.                                                     |
 | [actix-session]      | [![crates.io](https://img.shields.io/crates/v/actix-session?label=latest)](https://crates.io/crates/actix-session) [![dependency status](https://deps.rs/crate/actix-session/latest/status.svg)](https://deps.rs/crate/actix-session)                     | Session management.                                                             |
 | [actix-settings]     | [![crates.io](https://img.shields.io/crates/v/actix-settings?label=latest)](https://crates.io/crates/actix-settings) [![dependency status](https://deps.rs/crate/actix-settings/latest/status.svg)](https://deps.rs/crate/actix-settings)                 | Easily manage Actix Web's settings from a TOML file and environment variables.  |
+| [actix-sse]          | [![crates.io](https://img.shields.io/crates/v/actix-sse?label=latest)](https://crates.io/crates/actix-sse) [![dependency status](https://deps.rs/crate/actix-sse/latest/status.svg)](https://deps.rs/crate/actix-sse)                                     | Server-Sent Events (SSE) responses for Actix Web.                               |
 | [actix-web-httpauth] | [![crates.io](https://img.shields.io/crates/v/actix-web-httpauth?label=latest)](https://crates.io/crates/actix-web-httpauth) [![dependency status](https://deps.rs/crate/actix-web-httpauth/latest/status.svg)](https://deps.rs/crate/actix-web-httpauth) | HTTP authentication schemes.                                                    |
 | [actix-ws]           | [![crates.io](https://img.shields.io/crates/v/actix-ws?label=latest)][actix-ws] [![dependency status](https://deps.rs/crate/actix-ws/latest/status.svg)](https://deps.rs/crate/actix-ws)                                                                  | WebSockets for Actix Web, without actors.                                       |
 | [tracing-actix-web]  | [![crates.io](https://img.shields.io/crates/v/tracing-actix-web?label=latest)][tracing-actix-web] [![dependency status](https://deps.rs/crate/tracing-actix-web/latest/status.svg)](https://deps.rs/crate/tracing-actix-web)                              | Structured logging middleware for actix-web.                                    |
-| [russe]             | [![crates.io](https://img.shields.io/crates/v/russe?label=latest)](https://crates.io/crates/russe) | Server-Sent Events (SSE) encoder and decoder. |
+| [russe]              | [![crates.io](https://img.shields.io/crates/v/russe?label=latest)](https://crates.io/crates/russe)                                                                                                                                                        | Server-Sent Events (SSE) encoder and decoder.                                   |
 
 ---
 
@@ -47,6 +48,7 @@ Community crates are listed at <https://actix.rs/community/crates>.
 [actix-protobuf]: ./actix-protobuf
 [actix-session]: ./actix-session
 [actix-settings]: ./actix-settings
+[actix-sse]: ./actix-sse
 [actix-web-httpauth]: ./actix-web-httpauth
 [tracing-actix-web]: https://crates.io/crates/tracing-actix-web
 [actix-ws]: https://crates.io/crates/actix-ws

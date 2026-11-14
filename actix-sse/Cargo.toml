@@ -1,0 +1,31 @@
+[package]
+name = "actix-sse"
+version = "0.1.1"
+authors = ["Rob Ede <robjtede@icloud.com>", "Caido Labs Inc. <dev@caido.io>"]
+description = "Actix-web SSE implementation"
+repository.workspace = true
+license = "MIT"
+edition = "2024"
+rust-version.workspace = true
+
+[lib]
+name = "actix_sse"
+path = "src/lib.rs"
+
+[dependencies]
+actix-web = { version = "4", default-features = false }
+bytes = "1"
+bytestring = "1"
+futures-core = "0.3"
+mime = "0.3"
+pin-project-lite = "0.2"
+serde = "1"
+tokio = "1"
+
+[dev-dependencies]
+actix-web = { version = "4", default-features = false, features = ["macros"] }
+futures-util = "0.3"
+tokio-stream = "0.1"
+
+[lints]
+workspace = true
