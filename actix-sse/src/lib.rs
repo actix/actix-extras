@@ -34,7 +34,11 @@
 //! }
 //! ```
 
+mod data;
+mod event;
 mod sse;
 mod stream;
 
-pub use self::sse::{Data, Event, Sse};
+pub use self::{data::Data, event::Event, sse::Sse};
+
+type BoxError = Box<dyn std::error::Error>;
