@@ -25,6 +25,12 @@ workflows:
         - 'giraffate/clippy-action@v1.0.1'
         - 'useblacksmith/checkout@v1.8.2'
         - 'zizmorcore/zizmor-action@v0.8.1'
+    '.github/workflows/release.yml':
+        - 'actions-rust-lang/setup-rust-toolchain@v2.0.1'
+        - 'actions/checkout@v7.0.1'
+        - 'nicknovitski/nix-develop@v1.2.1'
+        - 'nixbuild/nix-quick-install-action@v35'
+        - 'release-plz/action@v0.5.148'
 dependencies:
     'actions-rust-lang/setup-rust-toolchain@v2.0.1':
         ref: 'v2.0.1'
@@ -48,6 +54,11 @@ dependencies:
         commit: 'sha1-bf12e9b00b37c5c0ca2b87b79b2daf7891dbda13'
         owner_id: 44036562
         repo_id: 177139928
+    'cargo-bins/cargo-binstall@851112458b5f28a29e5bc14a690c3f283d9dcc6f':
+        ref: 'v1.26.2'
+        commit: 'sha1-851112458b5f28a29e5bc14a690c3f283d9dcc6f'
+        owner_id: 110581826
+        repo_id: 321270638
     'codecov/codecov-action@v7.1.1':
         ref: 'v7.1.1'
         commit: 'sha1-303a32d7a59b442fa8d48b6a1cc6825c09c847a5'
@@ -70,11 +81,40 @@ dependencies:
         commit: 'sha1-9b3254085494b55a0f7c4c2b3d2d52cc712ce370'
         owner_id: 9919
         repo_id: 259445878
+    'nicknovitski/nix-develop@v1.2.1':
+        ref: 'v1.2.1'
+        commit: 'sha1-9be7cfb4b10451d3390a75dc18ad0465bed4932a'
+        owner_id: 151337
+        repo_id: 706956179
+    'nixbuild/nix-quick-install-action@v35':
+        ref: 'v35'
+        commit: 'sha1-9f63be77f412a248c9d9a65a4c82cf066cdf8f0c'
+        owner_id: 60610456
+        repo_id: 296639338
+    'release-plz/action@v0.5.148':
+        ref: 'v0.5.148'
+        commit: 'sha1-66b324fd6c72d05d2a08568492ecdd62bfb8a62b'
+        owner_id: 188756284
+        repo_id: 476470908
+        uses:
+            - 'cargo-bins/cargo-binstall@851112458b5f28a29e5bc14a690c3f283d9dcc6f'
+            - 'release-plz/git-config@59144859caf016f8b817a2ac9b051578729173c4'
+            - 'taiki-e/install-action@1919c4a95903d2c33e4a221102edca87309fc14b'
+    'release-plz/git-config@59144859caf016f8b817a2ac9b051578729173c4':
+        ref: 'v0.1.2'
+        commit: 'sha1-59144859caf016f8b817a2ac9b051578729173c4'
+        owner_id: 188756284
+        repo_id: 735058483
     'swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0':
         ref: 'v2.9.3'
         commit: 'sha1-d1527c8f67ef9af357290475d4af4b0fab8f12e0'
         owner_id: 580492
         repo_id: 298565987
+    'taiki-e/install-action@1919c4a95903d2c33e4a221102edca87309fc14b':
+        ref: 'v2.89.0'
+        commit: 'sha1-1919c4a95903d2c33e4a221102edca87309fc14b'
+        owner_id: 43724913
+        repo_id: 442947557
     'taiki-e/install-action@v2.90.1':
         ref: 'v2.90.1'
         commit: 'sha1-c509219cf42fba86913069efd0ade2458c59337b'

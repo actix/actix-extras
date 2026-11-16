@@ -1,0 +1,17 @@
+[workspace]
+changelog_update = false
+dependencies_update = false
+publish_all_features = true
+release_always = true
+git_release_draft = true
+git_release_name = "{{ package }}: v{{ version }}"
+git_tag_name = "{{ package }}-v{{ version }}"
+
+# These packages have mutually exclusive features.
+[[package]]
+name = "actix-settings"
+publish_all_features = false
+
+[[package]]
+name = "tracing-actix-web"
+publish_all_features = false
