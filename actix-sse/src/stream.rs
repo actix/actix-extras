@@ -4,7 +4,7 @@ use std::{
     task::{Context, Poll, ready},
 };
 
-use futures_core::Stream;
+use futures_util::Stream;
 
 pin_project_lite::pin_project! {
     /// Converts stream with item `T` into `Result<T, Infallible>`.
@@ -15,6 +15,7 @@ pin_project_lite::pin_project! {
 }
 
 impl<S> InfallibleStream<S> {
+    /// Constructs new `InfallibleStream` stream.
     pub fn new(stream: S) -> Self {
         Self { stream }
     }
