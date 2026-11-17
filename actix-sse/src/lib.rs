@@ -37,7 +37,6 @@
 mod data;
 mod event;
 mod sse;
-mod stream;
 
 pub use self::{data::Data, event::Event, sse::Sse};
 

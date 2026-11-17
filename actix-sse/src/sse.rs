@@ -6,7 +6,7 @@ use std::{
 
 use actix_web::{
     HttpRequest, HttpResponse, Responder,
-    body::{BodySize, BoxBody, MessageBody},
+    body::{BodySize, BoxBody, InfallibleStream, MessageBody},
     http::header::{CacheControl, CacheDirective, ContentEncoding},
 };
 use bytes::Bytes;
@@ -19,7 +19,7 @@ use tokio::{
 };
 use tokio_stream::wrappers::ReceiverStream;
 
-use crate::{BoxError, Event, stream::InfallibleStream};
+use crate::{BoxError, Event};
 
 pin_project! {
     /// Server-sent events (`text/event-stream`) responder.
