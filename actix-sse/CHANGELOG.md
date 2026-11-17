@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.3.0
+
 - Stream type created by `Sse::from_infallible_stream()` constructor now uses `actix_web::body::InfallibleStream`.
 
 ## 0.2.0

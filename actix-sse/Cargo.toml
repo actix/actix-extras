@@ -1,6 +1,6 @@
 [package]
 name = "actix-sse"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Rob Ede <robjtede@icloud.com>"]
 description = "Server-Sent Events (SSE) streaming responses for Actix Web"
 repository.workspace = true
