@@ -43,6 +43,11 @@ fn find_delimiter(src: &[u8], multiple_lines: &mut bool) -> Option<usize> {
     })
 }
 
+fn share_payload(src: &BytesMut, size: usize) -> bool {
+    // Share large payloads that fill at least half the buffer capacity.
+    size >= 1024 && size >= src.capacity().div_ceil(2)
+}
+
 fn append_line<'a>(lines: &mut Option<Cow<'a, [u8]>>, line: &'a [u8]) {
     match lines {
         None => *lines = Some(Cow::Borrowed(line)),
@@ -113,24 +118,33 @@ impl tokio_util::codec::Decoder for Decoder {
             }
 
             let frame = &src[..delimiter];
-            let event = if single_line && let Some(value) = frame.strip_prefix(b"data:") {
+            if single_line && let Some(value) = frame.strip_prefix(b"data:") {
                 // The frame delimiter can start at the LF of a CRLF ending.
-                let value = value.strip_suffix(&[CR]).unwrap_or(value);
-                let value = value.strip_prefix(b" ").unwrap_or(value);
+                let value_line = value.strip_suffix(&[CR]).unwrap_or(value);
+                let value = value_line.strip_prefix(b" ").unwrap_or(value_line);
+                let size = value.len();
 
-                ByteString::try_from(value)
-                    .map(|data| {
-                        Some(Event::Message(Message {
-                            data,
-                            event: None,
-                            retry: None,
-                            id: None,
-                        }))
-                    })
-                    .map_err(Error::from)
-            } else {
-                self.parse_frame(frame)
-            };
+                let data = if share_payload(src, size) {
+                    let offset = b"data:".len() + value_line.len() - size;
+                    let mut payload = src.split_to(consumed);
+                    payload.advance(offset);
+                    payload.truncate(size);
+                    ByteString::try_from(payload)
+                } else {
+                    let data = ByteString::try_from(value);
+                    src.advance(consumed);
+                    data
+                };
+
+                return Ok(Some(Event::Message(Message {
+                    data: data?,
+                    event: None,
+                    retry: None,
+                    id: None,
+                })));
+            }
+
+            let event = self.parse_frame(frame);
 
             // Consume the entire frame even when parsing fails.
             src.advance(consumed);
@@ -501,6 +515,30 @@ mod tests {
                 Some(Event::Message(Message::data("next"))),
             );
         }
+    }
+
+    #[test]
+    fn shares_large_single_line_data_and_retains_it_when_input_grows() {
+        let data = "café".repeat(256);
+        let frame = format!("data: {data}\r\n\r\n");
+        let mut input = BytesMut::from(frame.as_str());
+        let payload = input[b"data: ".len()..].as_ptr();
+        let mut decoder = Decoder::default();
+
+        let Some(Event::Message(first)) = decoder.decode(&mut input).unwrap() else {
+            panic!("expected a message");
+        };
+
+        assert_eq!(first.data.as_ptr(), payload);
+
+        input.extend_from_slice(frame.as_bytes());
+
+        assert_eq!(
+            decoder.decode(&mut input).unwrap(),
+            Some(Event::Message(Message::data(data.as_str()))),
+        );
+        assert_eq!(&*first.data, data);
+        assert!(input.is_empty());
     }
 
     #[test]
