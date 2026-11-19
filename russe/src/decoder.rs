@@ -19,14 +19,19 @@ pub struct Decoder {
 }
 
 fn find_delimiter(src: &[u8]) -> Option<usize> {
-    // Only scan positions that have a following byte.
+    // Use an empty search slice for input shorter than two bytes.
     let end = src.len().saturating_sub(1);
 
     memchr2_iter(CR, LF, &src[..end]).find(|&pos| {
+        // Each match has a following byte in src.
         let next = src[pos + 1];
 
-        // CR followed by LF is one line ending.
-        next == CR || (next == LF && src[pos] == LF)
+        // CRCR, LFCR, and LFLF end the frame. CRLF is one line ending.
+        match next {
+            CR => true,
+            LF => src[pos] == LF,
+            _ => false,
+        }
     })
 }
 
