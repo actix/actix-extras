@@ -11,10 +11,13 @@ use crate::{CR, Error, LF, event::Event, message::Message};
 /// Comment lines within a frame are combined into one [`Event::Comment`] and emitted
 /// before its message or retry event, regardless of their position. Decoding and
 /// re-encoding can therefore produce different bytes.
+///
+/// If you call the codec directly, keep unread bytes in the buffer and append new bytes to them.
 #[derive(Debug, Clone, Default)]
 #[non_exhaustive]
 pub struct Decoder {
     pending_event: Option<Event>,
+    scan_from: usize,
     skip_lf: bool,
 }
 
@@ -54,12 +57,21 @@ impl tokio_util::codec::Decoder for Decoder {
                 }
             }
 
-            // Find a blank line, or wait for more data.
-            let Some(delimiter) = find_delimiter(src) else {
+            let start = if self.scan_from < src.len() {
+                self.scan_from
+            } else {
+                0
+            };
+
+            let Some(offset) = find_delimiter(&src[start..]) else {
+                // Recheck the last byte if the delimiter spans two reads.
+                self.scan_from = src.len().saturating_sub(1);
                 tracing::trace!(buffered_bytes = src.len(), "Not enough data in buffer");
                 return Ok(None);
             };
 
+            self.scan_from = 0;
+            let delimiter = start + offset;
             let ends_with_cr = src[delimiter + 1] == CR;
             let buf = src.split_to(delimiter);
             src.advance(2);
@@ -403,6 +415,28 @@ mod tests {
             assert_eq!(events, expected, "chunk size {chunk_size}");
             assert!(buffer.is_empty(), "chunk size {chunk_size}");
         }
+    }
+
+    #[test]
+    fn invalid_fragmented_frame_leaves_following_frames_in_buffer() {
+        let mut decoder = Decoder::default();
+        let mut buffer = BytesMut::from(&b"data: invalid UTF-8 \xff"[..]);
+
+        assert_none!(decoder.decode(&mut buffer).unwrap());
+
+        let following = b"data: next\n\ndata: another message\n\n";
+        buffer.extend_from_slice(b"\n\n");
+        buffer.extend_from_slice(following);
+
+        assert!(matches!(
+            decoder.decode(&mut buffer),
+            Err(Error::InvalidUtf8 { .. })
+        ));
+        assert_eq!(&buffer[..], following);
+        assert_eq!(
+            decoder.decode(&mut buffer).unwrap(),
+            Some(Event::Message(Message::data("next"))),
+        );
     }
 
     #[test]
