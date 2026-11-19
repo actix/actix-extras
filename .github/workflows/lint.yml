@@ -38,7 +38,7 @@ jobs:
           persist-credentials: false
 
       - name: deny check
-        uses: EmbarkStudios/cargo-deny-action@v2.1.1
+        uses: EmbarkStudios/cargo-deny-action@v2.1.2
 
   fmt:
     runs-on: ubuntu-slim
