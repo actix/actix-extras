@@ -1,4 +1,4 @@
-use std::{borrow::Cow, str, time::Duration};
+use std::{borrow::Cow, iter, str, time::Duration};
 
 use bytes::{Buf as _, BytesMut};
 use bytestring::ByteString;
@@ -107,12 +107,6 @@ impl tokio_util::codec::Decoder for Decoder {
                 self.skip_lf = false;
             }
 
-            // Frame boundaries are already consumed. Skip empty segments from CRLF.
-            let lines = buf
-                .as_ref()
-                .split(|&byte| matches!(byte, CR | LF))
-                .filter(|line| !line.is_empty());
-
             let mut message = Message {
                 retry: None,
                 event: None,
@@ -128,7 +122,19 @@ impl tokio_util::codec::Decoder for Decoder {
             // https://html.spec.whatwg.org/multipage/server-sent-events.html#event-stream-interpretation
             let mut message_event = false;
 
-            for line in lines {
+            // The frame delimiter also ends the final line.
+            let line_ends = memchr2_iter(CR, LF, &buf).chain(iter::once(buf.len()));
+            let mut line_start = 0;
+
+            for line_end in line_ends {
+                let line = &buf[line_start..line_end];
+                line_start = line_end + 1;
+
+                // Skip empty segments from CRLF.
+                if line.is_empty() {
+                    continue;
+                }
+
                 let (field, value): (&[u8], &[u8]) = match memchr::memchr(b':', line) {
                     Some(colon) => {
                         let value = &line[colon + 1..];
