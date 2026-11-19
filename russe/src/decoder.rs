@@ -1,10 +1,15 @@
-use std::{borrow::Cow, iter, mem, ops::Range, str, time::Duration};
+use std::{borrow::Cow, iter, mem, ops::Range, str};
 
 use bytes::{Buf as _, BytesMut};
 use bytestring::ByteString;
 use memchr::{memchr2, memchr2_iter};
 
-use crate::{CR, Error, LF, event::Event, message::Message};
+use crate::{
+    CR, Error, LF,
+    event::Event,
+    fields::{data_event, field_value, parse_retry, strip_space},
+    message::Message,
+};
 
 /// SSE decoder.
 ///
@@ -130,32 +135,6 @@ impl DataLines {
     }
 }
 
-/// Builds a data-only message event.
-fn data_event(data: ByteString) -> Event {
-    Event::Message(Message {
-        data,
-        event: None,
-        retry: None,
-        id: None,
-    })
-}
-
-/// Removes at most one leading ASCII space from an SSE field value.
-fn strip_space(value: &[u8]) -> &[u8] {
-    value.strip_prefix(b" ").unwrap_or(value)
-}
-
-/// Returns the field value slice if `line` has the given `field` name.
-///
-/// Accepts both bare `field` (empty value) and `field:value`.
-fn field_value<'a>(line: &'a [u8], field: &[u8]) -> Option<&'a [u8]> {
-    match line.strip_prefix(field)? {
-        [] => Some(&[]),
-        [b':', value @ ..] => Some(strip_space(value)),
-        _ => None,
-    }
-}
-
 const MIN_SHARED_PAYLOAD_SIZE: usize = 1024;
 
 /// Returns true when `size` is large enough to share `src`'s backing buffer.
@@ -237,12 +216,14 @@ impl tokio_util::codec::Decoder for Decoder {
                 }
 
                 FrameKind::SingleLine => {
-                    if let Some(value) = src[..delimiter].strip_prefix(b"data:") {
-                        // The frame delimiter can start at the LF of a CRLF ending.
-                        let value_line = value.strip_suffix(&[CR]).unwrap_or(value);
-                        let (offset, value) = match value_line.strip_prefix(b" ") {
+                    let frame = &src[..delimiter];
+                    // The frame delimiter can start at the LF of a CRLF ending.
+                    let line = frame.strip_suffix(&[CR]).unwrap_or(frame);
+
+                    if let Some(value) = line.strip_prefix(b"data:") {
+                        let (offset, value) = match value.strip_prefix(b" ") {
                             Some(value) => (b"data: ".len(), value),
-                            None => (b"data:".len(), value_line),
+                            None => (b"data:".len(), value),
                         };
                         let size = value.len();
 
@@ -258,6 +239,13 @@ impl tokio_util::codec::Decoder for Decoder {
                         };
 
                         return Ok(Some(data_event(data?)));
+                    }
+
+                    if let Some(value) = line.strip_prefix(b":") {
+                        let comment = ByteString::try_from(strip_space(value));
+                        src.advance(consumed);
+
+                        return Ok(Some(Event::Comment(comment?)));
                     }
                 }
 
@@ -330,20 +318,11 @@ impl Decoder {
 
     /// Parses a complete frame slice with the general SSE field parser.
     fn parse_frame(&mut self, frame: &[u8]) -> Result<Option<Event>, Error> {
-        let mut message = Message {
-            retry: None,
-            event: None,
-            data: ByteString::new(),
-            id: None,
-        };
-
         let mut data = None;
         let mut comments = None;
-
-        // SSE requires unknown fields to be ignored. Track recognized message
-        // fields so empty or unknown-only frames do not emit a message.
-        // https://html.spec.whatwg.org/multipage/server-sent-events.html#event-stream-interpretation
-        let mut message_event = false;
+        let mut id = None;
+        let mut event = None;
+        let mut retry = None;
 
         // The frame delimiter also ends the final line.
         let line_ends = memchr2_iter(CR, LF, frame).chain(iter::once(frame.len()));
@@ -358,81 +337,51 @@ impl Decoder {
                 continue;
             }
 
-            let (field, value): (&[u8], &[u8]) = match memchr::memchr(b':', line) {
-                Some(colon) => {
-                    let value = &line[colon + 1..];
-                    (&line[..colon], value.strip_prefix(b" ").unwrap_or(value))
-                }
-                // A field without a colon has an empty value.
-                None => (line, &[]),
-            };
-
-            match field {
-                b"data" => {
-                    append_line(&mut data, value);
-
-                    message_event = true;
-                }
-
-                b"id" => {
-                    let id = ByteString::try_from(value)?;
-
-                    message.id = Some(id);
-                    message_event = true;
-                }
-
-                b"event" => {
-                    let event = ByteString::try_from(value)?;
-
-                    message.event = Some(event);
-                    message_event = true;
-                }
-
-                b"retry" => {
-                    // SSE accepts only nonempty ASCII digit sequences for retry.
-                    if value.is_empty() || !value.iter().all(u8::is_ascii_digit) {
-                        continue;
-                    }
-
-                    let value = str::from_utf8(value)?;
-
-                    // Duration can hold more than u64::MAX milliseconds.
-                    // Reject only values that exceed its seconds range.
-                    if let Ok(millis) = value.parse::<u128>()
-                        && let Ok(seconds) = u64::try_from(millis / 1_000)
-                    {
-                        let nanos = (millis % 1_000) as u32 * 1_000_000;
-
-                        message.retry = Some(Duration::new(seconds, nanos));
+            match line {
+                [b'd', ..] => {
+                    if let Some(value) = field_value(line, b"data") {
+                        append_line(&mut data, value);
                     }
                 }
-
-                b"" => append_line(&mut comments, value),
-
+                [b':', value @ ..] => append_line(&mut comments, strip_space(value)),
+                [b'i', ..] => {
+                    if let Some(value) = field_value(line, b"id") {
+                        id = Some(ByteString::try_from(value)?);
+                    }
+                }
+                [b'e', ..] => {
+                    if let Some(value) = field_value(line, b"event") {
+                        event = Some(ByteString::try_from(value)?);
+                    }
+                }
+                [b'r', ..] => {
+                    if let Some(delay) = field_value(line, b"retry").and_then(parse_retry) {
+                        retry = Some(delay);
+                    }
+                }
                 _ => {}
             }
         }
 
-        if let Some(data) = data {
-            message.data = finish_lines(data)?;
-        }
+        let data = data.map(finish_lines).transpose()?;
+        let comment = comments.map(finish_lines).transpose()?;
 
-        if let Some(comments) = comments {
-            let comment = finish_lines(comments)?;
-
-            self.pending_event = if message_event {
-                Some(Event::Message(message))
-            } else {
-                message.retry.map(Event::Retry)
-            };
-
-            return Ok(Some(Event::Comment(comment)));
-        }
-
-        if message_event {
-            Ok(Some(Event::Message(message)))
+        let event = if data.is_some() || id.is_some() || event.is_some() {
+            Some(Event::Message(Message {
+                data: data.unwrap_or_default(),
+                event,
+                retry,
+                id,
+            }))
         } else {
-            Ok(message.retry.map(Event::Retry))
+            retry.map(Event::Retry)
+        };
+
+        if let Some(comment) = comment {
+            self.pending_event = event;
+            Ok(Some(Event::Comment(comment)))
+        } else {
+            Ok(event)
         }
     }
 }
@@ -894,6 +843,14 @@ mod tests {
     #[test]
     fn ignores_unknown_fields() {
         for input in [
+            indoc! {"
+                database: ignored
+                identifier: ignored
+                eventual: ignored
+                retrying: 9000
+                data: hello
+
+            "},
             indoc! {"
                 extension: ignored
                 data: hello
