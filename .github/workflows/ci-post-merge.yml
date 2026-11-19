@@ -38,7 +38,7 @@ jobs:
           toolchain: nightly
 
       - name: Install cargo-hack,cargo-ci-cache-clean,just
-        uses: taiki-e/install-action@v2.90.1
+        uses: taiki-e/install-action@v2.90.5
         with:
           tool: cargo-hack,cargo-ci-cache-clean,just
 
@@ -94,7 +94,7 @@ jobs:
           toolchain: nightly
 
       - name: Install cargo-hack,cargo-ci-cache-clean,just
-        uses: taiki-e/install-action@v2.90.1
+        uses: taiki-e/install-action@v2.90.5
         with:
           tool: cargo-hack,cargo-ci-cache-clean,just
 
