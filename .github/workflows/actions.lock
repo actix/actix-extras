@@ -6,16 +6,16 @@ workflows:
     '.github/workflows/ci-post-merge.yml':
         - 'actions-rust-lang/setup-rust-toolchain@v2.0.1'
         - 'taiki-e/install-action@v2.90.5'
-        - 'useblacksmith/checkout@v1.8.2'
+        - 'useblacksmith/checkout@v1.8.3'
     '.github/workflows/ci.yml':
         - 'actions-rust-lang/setup-rust-toolchain@v2.0.1'
         - 'taiki-e/install-action@v2.90.5'
-        - 'useblacksmith/checkout@v1.8.2'
+        - 'useblacksmith/checkout@v1.8.3'
     '.github/workflows/coverage.yml':
         - 'actions-rust-lang/setup-rust-toolchain@v2.0.1'
         - 'codecov/codecov-action@v7.1.1'
         - 'taiki-e/install-action@v2.90.5'
-        - 'useblacksmith/checkout@v1.8.2'
+        - 'useblacksmith/checkout@v1.8.3'
     '.github/workflows/labeler.yml':
         - 'actions/checkout@v7.0.1'
         - 'actions/labeler@v7.0.0'
@@ -23,7 +23,7 @@ workflows:
         - 'actions-rust-lang/setup-rust-toolchain@v2.0.1'
         - 'embarkstudios/cargo-deny-action@v2.1.2'
         - 'giraffate/clippy-action@v1.0.1'
-        - 'useblacksmith/checkout@v1.8.2'
+        - 'useblacksmith/checkout@v1.8.3'
         - 'zizmorcore/zizmor-action@v0.8.1'
     '.github/workflows/release.yml':
         - 'actions-rust-lang/setup-rust-toolchain@v2.0.1'
@@ -120,9 +120,9 @@ dependencies:
         commit: 'sha1-ab49d3c64680143e184118bed66a46419fc15519'
         owner_id: 43724913
         repo_id: 442947557
-    'useblacksmith/checkout@v1.8.2':
-        ref: 'v1.8.2'
-        commit: 'sha1-2b9fe87d796feea153b455ec2f3125b471a7b0e7'
+    'useblacksmith/checkout@v1.8.3':
+        ref: 'v1.8.3'
+        commit: 'sha1-75c49b6ed30ce59336e9252425796cfcfac155f8'
         owner_id: 156274793
         repo_id: 1107788336
     'zizmorcore/zizmor-action@v0.8.1':
