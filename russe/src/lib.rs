@@ -3,6 +3,8 @@
 #![forbid(unsafe_code)]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
+#[cfg(any(feature = "reqwest-0_12", feature = "reqwest-0_13"))]
+mod body;
 mod decoder;
 mod encoder;
 mod error;
