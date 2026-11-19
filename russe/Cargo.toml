@@ -1,6 +1,6 @@
 [package]
 name = "russe"
-version = "0.3.1"
+version = "0.3.2"
 authors = ["Rob Ede <robjtede@icloud.com>"]
 description = "Server-Sent Events (SSE) encoder and decoder"
 categories = ["web-programming", "encoding"]
