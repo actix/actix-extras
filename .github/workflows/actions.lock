@@ -21,7 +21,7 @@ workflows:
         - 'actions/labeler@v7.0.0'
     '.github/workflows/lint.yml':
         - 'actions-rust-lang/setup-rust-toolchain@v2.0.1'
-        - 'embarkstudios/cargo-deny-action@v2.1.1'
+        - 'embarkstudios/cargo-deny-action@v2.1.2'
         - 'giraffate/clippy-action@v1.0.1'
         - 'useblacksmith/checkout@v1.8.2'
         - 'zizmorcore/zizmor-action@v0.8.1'
@@ -66,9 +66,9 @@ dependencies:
         repo_id: 200299178
         uses:
             - 'actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd'
-    'embarkstudios/cargo-deny-action@v2.1.1':
-        ref: 'v2.1.1'
-        commit: 'sha1-3c6349835b2b7b196a839186cb8b78e02f7b5f25'
+    'embarkstudios/cargo-deny-action@v2.1.2':
+        ref: 'v2.1.2'
+        commit: 'sha1-70f81531115945ba6eb6b941ec9d39d063438eb9'
         owner_id: 44887257
         repo_id: 228054692
     'giraffate/clippy-action@v1.0.1':
