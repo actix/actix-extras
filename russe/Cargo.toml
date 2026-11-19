@@ -24,7 +24,7 @@ reqwest-0_12 = ["dep:reqwest-0_12", "dep:futures-util"]
 reqwest-0_13 = ["dep:reqwest-0_13", "dep:futures-util"]
 
 [dependencies]
-bytes = "1"
+bytes = "1.7"
 bytestring = "1.4"
 futures-util = { version = "0.3.18", optional = true }
 impl-more = "0.3.8"
