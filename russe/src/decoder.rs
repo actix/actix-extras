@@ -19,6 +19,7 @@ pub struct Decoder {
 }
 
 fn find_delimiter(src: &[u8]) -> Option<usize> {
+    // Only scan positions that have a following byte.
     let end = src.len().saturating_sub(1);
 
     memchr2_iter(CR, LF, &src[..end]).find(|&pos| {
