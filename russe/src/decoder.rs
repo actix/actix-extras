@@ -579,6 +579,21 @@ mod tests {
         }
     }
 
+    #[test]
+    fn preserves_extra_space_and_colons_in_field_values() {
+        let mut input = BytesMut::from("data:  left:right\nid:  café:42\n\n");
+
+        let event = Decoder::default().decode(&mut input).unwrap();
+
+        assert_eq!(
+            event,
+            Some(Event::Message(Message {
+                id: Some(" café:42".into()),
+                ..Message::data(" left:right")
+            })),
+        );
+    }
+
     #[quickcheck_macros::quickcheck]
     fn arbitrary_retry_values_do_not_panic(mut value: Vec<u8>) {
         for byte in &mut value {
