@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Use `time` instead of `chrono` to calculate rate limit reset timestamps.
 - Use `std::future::{ready, Ready}` instead of `actix-utils` types.
 - Minimum supported Rust version (MSRV) is now 1.89.
 
