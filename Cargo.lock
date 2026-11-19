@@ -3470,7 +3470,6 @@ dependencies = [
 name = "russe"
 version = "0.3.1"
 dependencies = [
- "aho-corasick",
  "bytes",
  "bytestring",
  "codspeed-divan-compat",

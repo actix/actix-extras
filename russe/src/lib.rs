@@ -19,7 +19,6 @@ pub use self::{decoder::Decoder, encoder::Encoder, error::Error, event::Event, m
 pub type Result<T> = std::result::Result<T, Error>;
 
 pub(crate) const NEWLINE: u8 = b'\n';
-pub(crate) const SSE_DELIMITER: &[u8] = b"\n\n";
 
 /// Media (MIME) type for SSE (`text/event-stream`).
 #[cfg(feature = "mime")]

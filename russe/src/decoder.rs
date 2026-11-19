@@ -1,32 +1,32 @@
 use std::{str, time::Duration};
 
-use aho_corasick::AhoCorasick;
 use bytes::{Buf as _, Bytes, BytesMut};
 use bytestring::ByteString;
+use memchr::memchr2_iter;
 
-use crate::{Error, NEWLINE, SSE_DELIMITER, event::Event, message::Message};
+use crate::{Error, NEWLINE, event::Event, message::Message};
 
 /// SSE decoder.
 ///
 /// Comment lines within a frame are combined into one [`Event::Comment`] and emitted
 /// before its message or retry event, regardless of their position. Decoding and
 /// re-encoding can therefore produce different bytes.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 #[non_exhaustive]
 pub struct Decoder {
-    event_finder: AhoCorasick,
     pending_event: Option<Event>,
     skip_lf: bool,
 }
 
-impl Default for Decoder {
-    fn default() -> Self {
-        Self {
-            event_finder: AhoCorasick::new([SSE_DELIMITER, b"\n\r", b"\r\r"]).unwrap(),
-            pending_event: None,
-            skip_lf: false,
-        }
-    }
+fn find_delimiter(src: &[u8]) -> Option<usize> {
+    let end = src.len().saturating_sub(1);
+
+    memchr2_iter(b'\r', NEWLINE, &src[..end]).find(|&pos| {
+        let next = src[pos + 1];
+
+        // CR followed by LF is one line ending.
+        next == b'\r' || (next == NEWLINE && src[pos] == NEWLINE)
+    })
 }
 
 impl tokio_util::codec::Decoder for Decoder {
@@ -49,17 +49,14 @@ impl tokio_util::codec::Decoder for Decoder {
             }
 
             // Find a blank line, or wait for more data.
-            let Some(delimiter) = self.event_finder.find(&*src) else {
+            let Some(delimiter) = find_delimiter(src) else {
                 tracing::trace!(buffered_bytes = src.len(), "Not enough data in buffer");
                 return Ok(None);
             };
 
-            // full message received; remove from src buffer
-            let ends_with_cr = src[delimiter.end() - 1] == b'\r';
-            let buf = src.split_to(delimiter.start());
-
-            // remove the delimiter from the buffer too
-            drop(src.split_to(delimiter.len()));
+            let ends_with_cr = src[delimiter + 1] == b'\r';
+            let buf = src.split_to(delimiter);
+            src.advance(2);
 
             self.skip_lf = ends_with_cr;
 
@@ -207,6 +204,8 @@ mod tests {
 
     use super::*;
     use crate::assert_none;
+
+    const SSE_DELIMITER: &[u8] = b"\n\n";
 
     #[test]
     fn preserves_leading_empty_data_lines() {

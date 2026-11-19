@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Use `memchr` to find SSE frame delimiters and remove the `aho-corasick` dependency.
+
 ## 0.3.1
 
 - Improve encoding performance by 2-3x.
