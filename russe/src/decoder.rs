@@ -1,6 +1,6 @@
 use std::{str, time::Duration};
 
-use bytes::{Buf as _, Bytes, BytesMut};
+use bytes::{Buf as _, BytesMut};
 use bytestring::ByteString;
 use memchr::memchr2_iter;
 
@@ -106,39 +106,32 @@ impl tokio_util::codec::Decoder for Decoder {
             let mut message_event = false;
 
             for line in lines {
-                let mut line = Bytes::copy_from_slice(line);
-
-                let input = if let Some(colon) = memchr::memchr(b':', &line) {
-                    let mut input = line.split_off(colon + 1);
-                    line.truncate(colon);
-
-                    if input.first() == Some(&b' ') {
-                        input.advance(1);
+                let (field, value): (&[u8], &[u8]) = match memchr::memchr(b':', line) {
+                    Some(colon) => {
+                        let value = &line[colon + 1..];
+                        (&line[..colon], value.strip_prefix(b" ").unwrap_or(value))
                     }
-
-                    input
-                } else {
                     // A field without a colon has an empty value.
-                    Bytes::new()
+                    None => (line, &[]),
                 };
 
-                match line.as_ref() {
+                match field {
                     b"data" => {
-                        data_buf.extend_from_slice(&input);
+                        data_buf.extend_from_slice(value);
                         data_buf.extend_from_slice(&[LF]);
 
                         message_event = true;
                     }
 
                     b"id" => {
-                        let id = ByteString::try_from(input)?;
+                        let id = ByteString::try_from(value)?;
 
                         message.id = Some(id);
                         message_event = true;
                     }
 
                     b"event" => {
-                        let event = ByteString::try_from(input)?;
+                        let event = ByteString::try_from(value)?;
 
                         message.event = Some(event);
                         message_event = true;
@@ -146,15 +139,15 @@ impl tokio_util::codec::Decoder for Decoder {
 
                     b"retry" => {
                         // SSE accepts only nonempty ASCII digit sequences for retry.
-                        if input.is_empty() || !input.iter().all(u8::is_ascii_digit) {
+                        if value.is_empty() || !value.iter().all(u8::is_ascii_digit) {
                             continue;
                         }
 
-                        let input = str::from_utf8(&input)?;
+                        let value = str::from_utf8(value)?;
 
                         // Duration can hold more than u64::MAX milliseconds.
                         // Reject only values that exceed its seconds range.
-                        if let Ok(millis) = input.parse::<u128>()
+                        if let Ok(millis) = value.parse::<u128>()
                             && let Ok(seconds) = u64::try_from(millis / 1_000)
                         {
                             let nanos = (millis % 1_000) as u32 * 1_000_000;
@@ -165,7 +158,7 @@ impl tokio_util::codec::Decoder for Decoder {
 
                     // comment
                     b"" => {
-                        comment_buf.extend_from_slice(&input);
+                        comment_buf.extend_from_slice(value);
                         comment_buf.extend_from_slice(&[LF]);
                     }
 
