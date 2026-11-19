@@ -9,9 +9,8 @@ use tokio::{
     sync::mpsc::{UnboundedReceiver, UnboundedSender, unbounded_channel},
     task::JoinHandle,
 };
-use tokio_util::{codec::FramedRead, io::StreamReader};
 
-use crate::{Decoder, Error, Event};
+use crate::{Error, Event, body::decode_body};
 
 mod sealed {
     use super::*;
@@ -46,11 +45,7 @@ pub trait ReqwestExt: sealed::Sealed {
 impl ReqwestExt for Response {
     fn sse_stream(self) -> BoxStream<'static, Result<Event, Error>> {
         let body_stream = self.bytes_stream().map_err(io::Error::other);
-        let body_reader = StreamReader::new(body_stream);
-
-        let frame_reader = FramedRead::new(body_reader, Decoder::default());
-
-        Box::pin(frame_reader)
+        Box::pin(decode_body(body_stream))
     }
 }
 
