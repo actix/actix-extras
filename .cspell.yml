@@ -29,5 +29,4 @@ words:
   - serde
   - smallvec
   - splitn
-  - subsecs
   - tinyvec

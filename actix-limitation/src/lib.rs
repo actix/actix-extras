@@ -54,6 +54,7 @@ use std::{borrow::Cow, fmt, sync::Arc, time::Duration};
 
 use actix_web::dev::ServiceRequest;
 use redis::{AsyncConnectionConfig, Client};
+use time::OffsetDateTime;
 
 mod builder;
 mod errors;
@@ -163,7 +164,7 @@ impl Limiter {
             .arg(&key);
 
         let (count, ttl) = pipe.query_async(&mut connection).await?;
-        let reset = Status::epoch_utc_plus(Duration::from_secs(ttl))?;
+        let reset = Status::epoch_utc_plus(OffsetDateTime::now_utc(), Duration::from_secs(ttl))?;
 
         Ok((count, reset))
     }
