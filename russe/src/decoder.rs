@@ -4,7 +4,7 @@ use bytes::{Buf as _, Bytes, BytesMut};
 use bytestring::ByteString;
 use memchr::memchr2_iter;
 
-use crate::{Error, NEWLINE, event::Event, message::Message};
+use crate::{CR, Error, LF, event::Event, message::Message};
 
 /// SSE decoder.
 ///
@@ -21,11 +21,11 @@ pub struct Decoder {
 fn find_delimiter(src: &[u8]) -> Option<usize> {
     let end = src.len().saturating_sub(1);
 
-    memchr2_iter(b'\r', NEWLINE, &src[..end]).find(|&pos| {
+    memchr2_iter(CR, LF, &src[..end]).find(|&pos| {
         let next = src[pos + 1];
 
         // CR followed by LF is one line ending.
-        next == b'\r' || (next == NEWLINE && src[pos] == NEWLINE)
+        next == CR || (next == LF && src[pos] == LF)
     })
 }
 
@@ -43,7 +43,7 @@ impl tokio_util::codec::Decoder for Decoder {
             if self.skip_lf && !src.is_empty() {
                 self.skip_lf = false;
 
-                if src[0] == NEWLINE {
+                if src[0] == LF {
                     src.advance(1);
                 }
             }
@@ -54,13 +54,13 @@ impl tokio_util::codec::Decoder for Decoder {
                 return Ok(None);
             };
 
-            let ends_with_cr = src[delimiter + 1] == b'\r';
+            let ends_with_cr = src[delimiter + 1] == CR;
             let buf = src.split_to(delimiter);
             src.advance(2);
 
             self.skip_lf = ends_with_cr;
 
-            if self.skip_lf && src.first() == Some(&NEWLINE) {
+            if self.skip_lf && src.first() == Some(&LF) {
                 src.advance(1);
                 self.skip_lf = false;
             }
@@ -68,7 +68,7 @@ impl tokio_util::codec::Decoder for Decoder {
             // Frame boundaries are already consumed. Skip empty segments from CRLF.
             let lines = buf
                 .as_ref()
-                .split(|&byte| matches!(byte, b'\r' | b'\n'))
+                .split(|&byte| matches!(byte, CR | LF))
                 .filter(|line| !line.is_empty());
 
             let mut message = Message {
@@ -107,7 +107,7 @@ impl tokio_util::codec::Decoder for Decoder {
                 match line.as_ref() {
                     b"data" => {
                         data_buf.extend_from_slice(&input);
-                        data_buf.extend_from_slice(&[NEWLINE]);
+                        data_buf.extend_from_slice(&[LF]);
 
                         message_event = true;
                     }
@@ -148,7 +148,7 @@ impl tokio_util::codec::Decoder for Decoder {
                     // comment
                     b"" => {
                         comment_buf.extend_from_slice(&input);
-                        comment_buf.extend_from_slice(&[NEWLINE]);
+                        comment_buf.extend_from_slice(&[LF]);
                     }
 
                     _ => {}
