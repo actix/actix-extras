@@ -373,6 +373,34 @@ mod tests {
     }
 
     #[test]
+    fn decodes_frames_across_chunk_boundaries() {
+        let input = "data: café\r\ndata: 世界\r\r\n: keepalive\n\r\ndata: last\n\n";
+        let input = input.as_bytes();
+        let expected = [
+            Event::Message(Message::data("café\n世界")),
+            Event::Comment("keepalive".into()),
+            Event::Message(Message::data("last")),
+        ];
+
+        for chunk_size in 1..=input.len() {
+            let mut decoder = Decoder::default();
+            let mut buffer = BytesMut::new();
+            let mut events = Vec::new();
+
+            for chunk in input.chunks(chunk_size) {
+                buffer.extend_from_slice(chunk);
+
+                while let Some(event) = decoder.decode(&mut buffer).unwrap() {
+                    events.push(event);
+                }
+            }
+
+            assert_eq!(events, expected, "chunk size {chunk_size}");
+            assert!(buffer.is_empty(), "chunk size {chunk_size}");
+        }
+    }
+
+    #[test]
     fn decodes_cr_line_endings() {
         for (input, expected) in [
             (
