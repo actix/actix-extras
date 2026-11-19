@@ -7,6 +7,7 @@ mod decoder;
 mod encoder;
 mod error;
 mod event;
+mod fields;
 mod message;
 #[cfg(feature = "reqwest-0_12")]
 pub mod reqwest_0_12;
