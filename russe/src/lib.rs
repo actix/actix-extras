@@ -18,8 +18,8 @@ pub use self::{decoder::Decoder, encoder::Encoder, error::Error, event::Event, m
 /// A specialized `Result` type for `russe` operations.
 pub type Result<T> = std::result::Result<T, Error>;
 
-pub(crate) const NEWLINE: u8 = b'\n';
-pub(crate) const SSE_DELIMITER: &[u8] = b"\n\n";
+pub(crate) const LF: u8 = b'\n';
+pub(crate) const CR: u8 = b'\r';
 
 /// Media (MIME) type for SSE (`text/event-stream`).
 #[cfg(feature = "mime")]
