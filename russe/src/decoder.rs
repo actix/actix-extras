@@ -1,4 +1,4 @@
-use std::{str, time::Duration};
+use std::{borrow::Cow, str, time::Duration};
 
 use bytes::{Buf as _, BytesMut};
 use bytestring::ByteString;
@@ -36,6 +36,30 @@ fn find_delimiter(src: &[u8]) -> Option<usize> {
             _ => false,
         }
     })
+}
+
+fn append_line<'a>(lines: &mut Option<Cow<'a, [u8]>>, line: &'a [u8]) {
+    match lines {
+        None => *lines = Some(Cow::Borrowed(line)),
+        Some(Cow::Borrowed(first)) => {
+            let mut joined = Vec::with_capacity(first.len() + 1 + line.len());
+            joined.extend_from_slice(first);
+            joined.push(LF);
+            joined.extend_from_slice(line);
+            *lines = Some(Cow::Owned(joined));
+        }
+        Some(Cow::Owned(joined)) => {
+            joined.push(LF);
+            joined.extend_from_slice(line);
+        }
+    }
+}
+
+fn finish_lines(lines: Cow<'_, [u8]>) -> Result<ByteString, str::Utf8Error> {
+    match lines {
+        Cow::Borrowed(line) => ByteString::try_from(line),
+        Cow::Owned(joined) => ByteString::try_from(joined),
+    }
 }
 
 impl tokio_util::codec::Decoder for Decoder {
@@ -96,9 +120,8 @@ impl tokio_util::codec::Decoder for Decoder {
                 id: None,
             };
 
-            // TODO: if optimistic buffering is desired then remove this
-            let mut data_buf = BytesMut::with_capacity(64);
-            let mut comment_buf = BytesMut::new();
+            let mut data = None;
+            let mut comments = None;
 
             // SSE requires unknown fields to be ignored. Track recognized message
             // fields so empty or unknown-only frames do not emit a message.
@@ -117,8 +140,7 @@ impl tokio_util::codec::Decoder for Decoder {
 
                 match field {
                     b"data" => {
-                        data_buf.extend_from_slice(value);
-                        data_buf.extend_from_slice(&[LF]);
+                        append_line(&mut data, value);
 
                         message_event = true;
                     }
@@ -156,28 +178,18 @@ impl tokio_util::codec::Decoder for Decoder {
                         }
                     }
 
-                    // comment
-                    b"" => {
-                        comment_buf.extend_from_slice(value);
-                        comment_buf.extend_from_slice(&[LF]);
-                    }
+                    b"" => append_line(&mut comments, value),
 
                     _ => {}
                 }
             }
 
-            if !data_buf.is_empty() {
-                data_buf.truncate(data_buf.len() - 1);
-
-                let data = ByteString::try_from(data_buf)?;
-
-                message.data = data;
+            if let Some(data) = data {
+                message.data = finish_lines(data)?;
             }
 
-            if !comment_buf.is_empty() {
-                comment_buf.truncate(comment_buf.len() - 1);
-
-                let comment = ByteString::try_from(comment_buf)?;
+            if let Some(comments) = comments {
+                let comment = finish_lines(comments)?;
 
                 self.pending_event = if message_event {
                     Some(Event::Message(message))
@@ -258,6 +270,21 @@ mod tests {
         }
 
         assert_eq!(comments.join("\n"), "first\nsecond");
+    }
+
+    #[test]
+    fn preserves_empty_comment_lines() {
+        for (input, expected) in [
+            (":\n\n", ""),
+            (":\n: second\n\n", "\nsecond"),
+            (": first\n:\n\n", "first\n"),
+        ] {
+            let mut input = BytesMut::from(input);
+
+            let event = Decoder::default().decode(&mut input).unwrap();
+
+            assert_eq!(event, Some(Event::Comment(expected.into())));
+        }
     }
 
     #[test]
