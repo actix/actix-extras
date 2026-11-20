@@ -1,4 +1,4 @@
-use std::{borrow::Cow, iter, str, time::Duration};
+use std::{borrow::Cow, iter, mem, str, time::Duration};
 
 use bytes::{Buf as _, BytesMut};
 use bytestring::ByteString;
@@ -18,10 +18,11 @@ use crate::{CR, Error, LF, event::Event, message::Message};
 pub struct Decoder {
     pending_event: Option<Event>,
     scan_from: usize,
+    multiple_lines: bool,
     skip_lf: bool,
 }
 
-fn find_delimiter(src: &[u8]) -> Option<usize> {
+fn find_delimiter(src: &[u8], multiple_lines: &mut bool) -> Option<usize> {
     // Use an empty search slice for input shorter than two bytes.
     let end = src.len().saturating_sub(1);
 
@@ -33,7 +34,11 @@ fn find_delimiter(src: &[u8]) -> Option<usize> {
         match next {
             CR => true,
             LF => src[pos] == LF,
-            _ => false,
+            _ => {
+                // A non-ending byte after a line ending starts another line.
+                *multiple_lines = true;
+                false
+            }
         }
     })
 }
@@ -84,10 +89,11 @@ impl tokio_util::codec::Decoder for Decoder {
             let start = if self.scan_from < src.len() {
                 self.scan_from
             } else {
+                self.multiple_lines = false;
                 0
             };
 
-            let Some(offset) = find_delimiter(&src[start..]) else {
+            let Some(offset) = find_delimiter(&src[start..], &mut self.multiple_lines) else {
                 // Recheck the last byte if the delimiter spans two reads.
                 self.scan_from = src.len().saturating_sub(1);
                 tracing::trace!(buffered_bytes = src.len(), "Not enough data in buffer");
@@ -95,6 +101,7 @@ impl tokio_util::codec::Decoder for Decoder {
             };
 
             self.scan_from = 0;
+            let single_line = !mem::take(&mut self.multiple_lines);
             let delimiter = start + offset;
             let mut consumed = delimiter + 2;
 
@@ -105,7 +112,25 @@ impl tokio_util::codec::Decoder for Decoder {
                 self.skip_lf = false;
             }
 
-            let event = self.parse_frame(&src[..delimiter]);
+            let frame = &src[..delimiter];
+            let event = if single_line && let Some(value) = frame.strip_prefix(b"data:") {
+                // The frame delimiter can start at the LF of a CRLF ending.
+                let value = value.strip_suffix(&[CR]).unwrap_or(value);
+                let value = value.strip_prefix(b" ").unwrap_or(value);
+
+                ByteString::try_from(value)
+                    .map(|data| {
+                        Some(Event::Message(Message {
+                            data,
+                            event: None,
+                            retry: None,
+                            id: None,
+                        }))
+                    })
+                    .map_err(Error::from)
+            } else {
+                self.parse_frame(frame)
+            };
 
             // Consume the entire frame even when parsing fails.
             src.advance(consumed);
@@ -413,14 +438,17 @@ mod tests {
 
     #[test]
     fn decodes_crlf_line_endings() {
-        let mut input = BytesMut::from(concat! {
-            "data: hello\r\n",
-            "\r\n",
-        });
+        for (input, expected) in [
+            ("data: hello\r\n\r\n", "hello"),
+            ("data:  left:right\r\n\r\n", " left:right"),
+            ("data:\r\n\r\n", ""),
+        ] {
+            let mut input = BytesMut::from(input);
 
-        let event = Decoder::default().decode(&mut input).unwrap();
+            let event = Decoder::default().decode(&mut input).unwrap();
 
-        assert_eq!(event, Some(Event::Message(Message::data("hello"))));
+            assert_eq!(event, Some(Event::Message(Message::data(expected))));
+        }
     }
 
     #[test]
