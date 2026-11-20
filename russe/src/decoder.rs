@@ -115,6 +115,36 @@ impl DataLines {
     }
 }
 
+fn find_line_end(bytes: &[u8]) -> Option<usize> {
+    match bytes {
+        [] => None,
+        [byte] => matches!(*byte, CR | LF).then_some(0),
+        _ if (8..=16).contains(&bytes.len()) => {
+            // The first and last eight bytes cover the entire slice.
+            let head = u64::from_ne_bytes(*bytes.first_chunk().unwrap());
+            let tail = u64::from_ne_bytes(*bytes.last_chunk().unwrap());
+
+            if has_line_end(head) || has_line_end(tail) {
+                memchr2(CR, LF, bytes)
+            } else {
+                None
+            }
+        }
+        _ => memchr2(CR, LF, bytes),
+    }
+}
+
+fn has_line_end(word: u64) -> bool {
+    const LOW_BITS: u64 = u64::from_ne_bytes([1; 8]);
+    const HIGH_BITS: u64 = u64::from_ne_bytes([128; 8]);
+
+    let cr = word ^ u64::from_ne_bytes([CR; 8]);
+    let lf = word ^ u64::from_ne_bytes([LF; 8]);
+
+    // A zero byte in either word marks a line ending.
+    ((cr.wrapping_sub(LOW_BITS) & !cr) | (lf.wrapping_sub(LOW_BITS) & !lf)) & HIGH_BITS != 0
+}
+
 fn share_payload(src: &BytesMut, size: usize) -> bool {
     // Share large payloads that fill at least half the buffer capacity.
     size >= 1024 && size >= src.capacity().div_ceil(2)
@@ -244,7 +274,7 @@ impl Decoder {
             0
         };
 
-        while let Some(pos) = memchr2(CR, LF, &src[start..end]) {
+        while let Some(pos) = find_line_end(&src[start..end]) {
             let pos = start + pos;
             start = pos + 1;
 
@@ -682,6 +712,25 @@ mod tests {
             Some(Event::Message(Message::data("next"))),
         );
         assert!(input.is_empty());
+    }
+
+    #[test]
+    fn finds_line_endings_at_each_offset_in_short_chunks() {
+        for len in 8..=16 {
+            let mut chunk = [b'x'; 16];
+            let chunk = &mut chunk[..len];
+
+            assert_eq!(find_line_end(chunk), None);
+
+            for pos in 0..len {
+                for line_end in [CR, LF] {
+                    chunk[pos] = line_end;
+                    assert_eq!(find_line_end(chunk), Some(pos));
+                }
+
+                chunk[pos] = b'x';
+            }
+        }
     }
 
     #[test]
