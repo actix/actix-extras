@@ -96,124 +96,132 @@ impl tokio_util::codec::Decoder for Decoder {
 
             self.scan_from = 0;
             let delimiter = start + offset;
-            let ends_with_cr = src[delimiter + 1] == CR;
-            let buf = src.split_to(delimiter);
-            src.advance(2);
+            let mut consumed = delimiter + 2;
 
-            self.skip_lf = ends_with_cr;
+            self.skip_lf = src[delimiter + 1] == CR;
 
-            if self.skip_lf && src.first() == Some(&LF) {
-                src.advance(1);
+            if self.skip_lf && src.get(consumed) == Some(&LF) {
+                consumed += 1;
                 self.skip_lf = false;
             }
 
-            let mut message = Message {
-                retry: None,
-                event: None,
-                data: ByteString::new(),
-                id: None,
+            let event = self.parse_frame(&src[..delimiter]);
+
+            // Consume the entire frame even when parsing fails.
+            src.advance(consumed);
+
+            if let Some(event) = event? {
+                return Ok(Some(event));
+            }
+        }
+    }
+}
+
+impl Decoder {
+    fn parse_frame(&mut self, frame: &[u8]) -> Result<Option<Event>, Error> {
+        let mut message = Message {
+            retry: None,
+            event: None,
+            data: ByteString::new(),
+            id: None,
+        };
+
+        let mut data = None;
+        let mut comments = None;
+
+        // SSE requires unknown fields to be ignored. Track recognized message
+        // fields so empty or unknown-only frames do not emit a message.
+        // https://html.spec.whatwg.org/multipage/server-sent-events.html#event-stream-interpretation
+        let mut message_event = false;
+
+        // The frame delimiter also ends the final line.
+        let line_ends = memchr2_iter(CR, LF, frame).chain(iter::once(frame.len()));
+        let mut line_start = 0;
+
+        for line_end in line_ends {
+            let line = &frame[line_start..line_end];
+            line_start = line_end + 1;
+
+            // Skip empty segments from CRLF.
+            if line.is_empty() {
+                continue;
+            }
+
+            let (field, value): (&[u8], &[u8]) = match memchr::memchr(b':', line) {
+                Some(colon) => {
+                    let value = &line[colon + 1..];
+                    (&line[..colon], value.strip_prefix(b" ").unwrap_or(value))
+                }
+                // A field without a colon has an empty value.
+                None => (line, &[]),
             };
 
-            let mut data = None;
-            let mut comments = None;
+            match field {
+                b"data" => {
+                    append_line(&mut data, value);
 
-            // SSE requires unknown fields to be ignored. Track recognized message
-            // fields so empty or unknown-only frames do not emit a message.
-            // https://html.spec.whatwg.org/multipage/server-sent-events.html#event-stream-interpretation
-            let mut message_event = false;
-
-            // The frame delimiter also ends the final line.
-            let line_ends = memchr2_iter(CR, LF, &buf).chain(iter::once(buf.len()));
-            let mut line_start = 0;
-
-            for line_end in line_ends {
-                let line = &buf[line_start..line_end];
-                line_start = line_end + 1;
-
-                // Skip empty segments from CRLF.
-                if line.is_empty() {
-                    continue;
+                    message_event = true;
                 }
 
-                let (field, value): (&[u8], &[u8]) = match memchr::memchr(b':', line) {
-                    Some(colon) => {
-                        let value = &line[colon + 1..];
-                        (&line[..colon], value.strip_prefix(b" ").unwrap_or(value))
-                    }
-                    // A field without a colon has an empty value.
-                    None => (line, &[]),
-                };
+                b"id" => {
+                    let id = ByteString::try_from(value)?;
 
-                match field {
-                    b"data" => {
-                        append_line(&mut data, value);
-
-                        message_event = true;
-                    }
-
-                    b"id" => {
-                        let id = ByteString::try_from(value)?;
-
-                        message.id = Some(id);
-                        message_event = true;
-                    }
-
-                    b"event" => {
-                        let event = ByteString::try_from(value)?;
-
-                        message.event = Some(event);
-                        message_event = true;
-                    }
-
-                    b"retry" => {
-                        // SSE accepts only nonempty ASCII digit sequences for retry.
-                        if value.is_empty() || !value.iter().all(u8::is_ascii_digit) {
-                            continue;
-                        }
-
-                        let value = str::from_utf8(value)?;
-
-                        // Duration can hold more than u64::MAX milliseconds.
-                        // Reject only values that exceed its seconds range.
-                        if let Ok(millis) = value.parse::<u128>()
-                            && let Ok(seconds) = u64::try_from(millis / 1_000)
-                        {
-                            let nanos = (millis % 1_000) as u32 * 1_000_000;
-
-                            message.retry = Some(Duration::new(seconds, nanos));
-                        }
-                    }
-
-                    b"" => append_line(&mut comments, value),
-
-                    _ => {}
+                    message.id = Some(id);
+                    message_event = true;
                 }
-            }
 
-            if let Some(data) = data {
-                message.data = finish_lines(data)?;
-            }
+                b"event" => {
+                    let event = ByteString::try_from(value)?;
 
-            if let Some(comments) = comments {
-                let comment = finish_lines(comments)?;
+                    message.event = Some(event);
+                    message_event = true;
+                }
 
-                self.pending_event = if message_event {
-                    Some(Event::Message(message))
-                } else {
-                    message.retry.map(Event::Retry)
-                };
+                b"retry" => {
+                    // SSE accepts only nonempty ASCII digit sequences for retry.
+                    if value.is_empty() || !value.iter().all(u8::is_ascii_digit) {
+                        continue;
+                    }
 
-                return Ok(Some(Event::Comment(comment)));
-            }
+                    let value = str::from_utf8(value)?;
 
-            match message.retry {
-                Some(retry) if !message_event => return Ok(Some(Event::Retry(retry))),
+                    // Duration can hold more than u64::MAX milliseconds.
+                    // Reject only values that exceed its seconds range.
+                    if let Ok(millis) = value.parse::<u128>()
+                        && let Ok(seconds) = u64::try_from(millis / 1_000)
+                    {
+                        let nanos = (millis % 1_000) as u32 * 1_000_000;
+
+                        message.retry = Some(Duration::new(seconds, nanos));
+                    }
+                }
+
+                b"" => append_line(&mut comments, value),
+
                 _ => {}
             }
+        }
 
-            if message_event {
-                return Ok(Some(Event::Message(message)));
-            }
+        if let Some(data) = data {
+            message.data = finish_lines(data)?;
+        }
+
+        if let Some(comments) = comments {
+            let comment = finish_lines(comments)?;
+
+            self.pending_event = if message_event {
+                Some(Event::Message(message))
+            } else {
+                message.retry.map(Event::Retry)
+            };
+
+            return Ok(Some(Event::Comment(comment)));
+        }
+
+        if message_event {
+            Ok(Some(Event::Message(message)))
+        } else {
+            Ok(message.retry.map(Event::Retry))
         }
     }
 }
@@ -445,24 +453,26 @@ mod tests {
 
     #[test]
     fn invalid_fragmented_frame_leaves_following_frames_in_buffer() {
-        let mut decoder = Decoder::default();
-        let mut buffer = BytesMut::from(&b"data: invalid UTF-8 \xff"[..]);
+        for delimiter in [b"\n\n".as_slice(), b"\r\n\r\n"] {
+            let mut decoder = Decoder::default();
+            let mut buffer = BytesMut::from(&b"data: invalid UTF-8 \xff"[..]);
 
-        assert_none!(decoder.decode(&mut buffer).unwrap());
+            assert_none!(decoder.decode(&mut buffer).unwrap());
 
-        let following = b"data: next\n\ndata: another message\n\n";
-        buffer.extend_from_slice(b"\n\n");
-        buffer.extend_from_slice(following);
+            let following = b"data: next\n\ndata: another message\n\n";
+            buffer.extend_from_slice(delimiter);
+            buffer.extend_from_slice(following);
 
-        assert!(matches!(
-            decoder.decode(&mut buffer),
-            Err(Error::InvalidUtf8 { .. })
-        ));
-        assert_eq!(&buffer[..], following);
-        assert_eq!(
-            decoder.decode(&mut buffer).unwrap(),
-            Some(Event::Message(Message::data("next"))),
-        );
+            assert!(matches!(
+                decoder.decode(&mut buffer),
+                Err(Error::InvalidUtf8 { .. })
+            ));
+            assert_eq!(&buffer[..], following);
+            assert_eq!(
+                decoder.decode(&mut buffer).unwrap(),
+                Some(Event::Message(Message::data("next"))),
+            );
+        }
     }
 
     #[test]
