@@ -25,6 +25,7 @@ pub struct Decoder {
     scan_from: usize,
     frame_kind: FrameKind,
     data_lines: DataLines,
+    reclaim_pending: bool,
     skip_lf: bool,
 }
 
@@ -183,6 +184,11 @@ impl tokio_util::codec::Decoder for Decoder {
             return Ok(Some(event));
         }
 
+        if mem::take(&mut self.reclaim_pending) {
+            // Reclaim space while there are few unread bytes to move.
+            let _ = src.try_reclaim(src.capacity().saturating_add(1));
+        }
+
         // Skip empty or unknown-only frames without waiting for more input.
         loop {
             if self.skip_lf && !src.is_empty() {
@@ -211,6 +217,7 @@ impl tokio_util::codec::Decoder for Decoder {
             if matches!(kind, FrameKind::DataLines) {
                 if self.data_lines.record(src, delimiter) {
                     let share = share_payload(src, self.data_lines.len);
+                    self.reclaim_pending = share;
                     let data = self.data_lines.finish(src, consumed, share)?;
 
                     return Ok(Some(data_event(data)));
@@ -229,6 +236,7 @@ impl tokio_util::codec::Decoder for Decoder {
                     let size = value.len();
 
                     let data = if share_payload(src, size) {
+                        self.reclaim_pending = true;
                         let offset = line.len() - size;
                         let mut payload = src.split_to(consumed);
                         payload.advance(offset);
@@ -645,6 +653,22 @@ mod tests {
         );
         assert_eq!(&*first.data, data);
         assert!(input.is_empty());
+    }
+
+    #[test]
+    fn reclaims_the_receive_buffer_after_a_shared_event_is_dropped() {
+        let frame = format!("data: {}\n\n", "x".repeat(4096));
+        let mut input = BytesMut::from(frame.as_str());
+        let capacity = input.capacity();
+        let mut decoder = Decoder::default();
+
+        let event = decoder.decode(&mut input).unwrap().unwrap();
+        assert!(input.capacity() < capacity);
+
+        drop(event);
+
+        assert_none!(decoder.decode(&mut input).unwrap());
+        assert_eq!(input.capacity(), capacity);
     }
 
     #[test]
