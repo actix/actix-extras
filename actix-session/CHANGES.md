@@ -2,12 +2,14 @@
 
 ## Unreleased
 
+## 0.12.0
+
 - Session state is now stored as JSON values rather than JSON strings, avoiding double serialization in storage backends. The stored session-state format is versioned and older sessions are automatically migrated when loaded.
 - Add `Session::new()` and `Default` implementation for creating standalone empty sessions in tests.
-- `Session` implementation of `FromRequest` now errors with `Infallible` rather than `actix_web::error::Error`.
+- The `Session` implementation of `FromRequest` now errors with `Infallible` rather than `actix_web::error::Error`.
+- Use `std::future::{ready, Ready}` instead of `actix-utils` types.
 - Update `redis` dependency to `1`.
 - Update optional `deadpool-redis` dependency to `0.23`.
-- Use `std::future::{ready, Ready}` instead of `actix-utils` types.
 - Minimum supported Rust version (MSRV) is now 1.89.
 
 ## 0.11.0

@@ -31,7 +31,7 @@ redis = { version = "1", default-features = false, features = ["tokio-comp"] }
 time = "0.3"
 
 # session
-actix-session = { version = "0.11", optional = true }
+actix-session = { version = "0.12", optional = true }
 
 [dev-dependencies]
 actix-web = "4"
