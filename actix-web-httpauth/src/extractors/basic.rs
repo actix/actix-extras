@@ -23,7 +23,7 @@ impl Config {
     /// Set challenge `realm` attribute.
     ///
     /// The "realm" attribute indicates the scope of protection in the manner described in HTTP/1.1
-    /// [RFC 2617 §1.2](https://tools.ietf.org/html/rfc2617#section-1.2).
+    /// [RFC 2617 §1.2](https://www.rfc-editor.org/info/rfc2617/#section-1.2).
     pub fn realm<T>(mut self, value: T) -> Config
     where
         T: Into<Cow<'static, str>>,

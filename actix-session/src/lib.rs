@@ -31,7 +31,7 @@
 //! [`SessionStore`] trait.
 //!
 //! Further reading on sessions:
-//! - [RFC 6265](https://datatracker.ietf.org/doc/html/rfc6265);
+//! - [RFC 6265](https://www.rfc-editor.org/info/rfc6265);
 //! - [OWASP's session management cheat-sheet](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html).
 //!
 //! # Getting started

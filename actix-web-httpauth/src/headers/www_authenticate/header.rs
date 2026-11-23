@@ -11,7 +11,7 @@ use super::Challenge;
 /// This header is generic over the [`Challenge`] trait, see [`Basic`](super::basic::Basic) and
 /// [`Bearer`](super::bearer::Bearer) challenges for details.
 ///
-/// [RFC 7235]: https://tools.ietf.org/html/rfc7235#section-4.1
+/// [RFC 7235]: https://www.rfc-editor.org/info/rfc7235/#section-4.1
 #[derive(Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct WwwAuthenticate<C: Challenge>(pub C);
 

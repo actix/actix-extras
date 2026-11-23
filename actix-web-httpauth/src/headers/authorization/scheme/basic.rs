@@ -8,7 +8,7 @@ use base64::{prelude::BASE64_STANDARD, Engine};
 
 use crate::headers::authorization::{errors::ParseError, Scheme};
 
-/// Credentials for `Basic` authentication scheme, defined in [RFC 7617](https://tools.ietf.org/html/rfc7617)
+/// Credentials for `Basic` authentication scheme, defined in [RFC 7617](https://www.rfc-editor.org/info/rfc7617)
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Basic {
     user_id: Cow<'static, str>,

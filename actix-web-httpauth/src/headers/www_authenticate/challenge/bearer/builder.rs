@@ -12,7 +12,7 @@ pub struct BearerBuilder(Bearer);
 impl BearerBuilder {
     /// Provides the `scope` attribute, as defined in [RFC 6749 §3.3].
     ///
-    /// [RFC 6749 §3.3]: https://tools.ietf.org/html/rfc6749#section-3.3
+    /// [RFC 6749 §3.3]: https://www.rfc-editor.org/info/rfc6749/#section-3.3
     pub fn scope<T>(mut self, value: T) -> Self
     where
         T: Into<Cow<'static, str>>,
@@ -23,7 +23,7 @@ impl BearerBuilder {
 
     /// Provides the `realm` attribute, as defined in [RFC 2617].
     ///
-    /// [RFC 2617]: https://tools.ietf.org/html/rfc2617
+    /// [RFC 2617]: https://www.rfc-editor.org/info/rfc2617
     pub fn realm<T>(mut self, value: T) -> Self
     where
         T: Into<Cow<'static, str>>,
@@ -34,7 +34,7 @@ impl BearerBuilder {
 
     /// Provides the `error` attribute, as defined in [RFC 6750, Section 3.1].
     ///
-    /// [RFC 6750 §3.1]: https://tools.ietf.org/html/rfc6750#section-3.1
+    /// [RFC 6750 §3.1]: https://www.rfc-editor.org/info/rfc6750/#section-3.1
     pub fn error(mut self, value: Error) -> Self {
         self.0.error = Some(value);
         self
@@ -42,7 +42,7 @@ impl BearerBuilder {
 
     /// Provides the `error_description` attribute, as defined in [RFC 6750, Section 3].
     ///
-    /// [RFC 6750 §3]: https://tools.ietf.org/html/rfc6750#section-3
+    /// [RFC 6750 §3]: https://www.rfc-editor.org/info/rfc6750/#section-3
     pub fn error_description<T>(mut self, value: T) -> Self
     where
         T: Into<Cow<'static, str>>,
@@ -55,7 +55,7 @@ impl BearerBuilder {
     ///
     /// It is up to implementor to provide properly-formed absolute URI.
     ///
-    /// [RFC 6750 §3](https://tools.ietf.org/html/rfc6750#section-3)
+    /// [RFC 6750 §3](https://www.rfc-editor.org/info/rfc6750/#section-3)
     pub fn error_uri<T>(mut self, value: T) -> Self
     where
         T: Into<Cow<'static, str>>,
