@@ -11,7 +11,7 @@ use super::Challenge;
 use crate::utils;
 
 /// Challenge for [`WWW-Authenticate`] header with HTTP Basic auth scheme,
-/// described in [RFC 7617](https://tools.ietf.org/html/rfc7617)
+/// described in [RFC 7617](https://www.rfc-editor.org/info/rfc7617)
 ///
 /// # Examples
 /// ```
@@ -31,7 +31,7 @@ use crate::utils;
 /// [`WWW-Authenticate`]: ../struct.WwwAuthenticate.html
 #[derive(Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default, Clone)]
 pub struct Basic {
-    // "realm" parameter is optional now: https://tools.ietf.org/html/rfc7235#appendix-A
+    // "realm" parameter is optional now: https://www.rfc-editor.org/info/rfc7235/#appendix-A
     pub(crate) realm: Option<Cow<'static, str>>,
 }
 

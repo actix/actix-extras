@@ -6,8 +6,8 @@
 //! - [Middleware] for easier authorization checking
 //!
 //! ## Supported schemes
-//! - `Bearer` as defined in [RFC 6750](https://tools.ietf.org/html/rfc6750).
-//! - `Basic` as defined in [RFC 7617](https://tools.ietf.org/html/rfc7617).
+//! - `Bearer` as defined in [RFC 6750](https://www.rfc-editor.org/info/rfc6750).
+//! - `Basic` as defined in [RFC 7617](https://www.rfc-editor.org/info/rfc7617).
 //!
 //! ## Client requests
 //!

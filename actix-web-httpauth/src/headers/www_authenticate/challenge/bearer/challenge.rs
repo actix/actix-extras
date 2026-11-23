@@ -34,7 +34,7 @@ use crate::utils;
 /// ```
 ///
 /// [`WWW-Authenticate`]: crate::headers::www_authenticate::WwwAuthenticate
-/// [RFC 6750]: https://tools.ietf.org/html/rfc6750#section-3
+/// [RFC 6750]: https://www.rfc-editor.org/info/rfc6750/#section-3
 #[derive(Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Bearer {
     pub(crate) scope: Option<Cow<'static, str>>,

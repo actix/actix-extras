@@ -8,7 +8,7 @@ use actix_web::{
 
 use crate::headers::authorization::scheme::Scheme;
 
-/// `Authorization` header, defined in [RFC 7235](https://tools.ietf.org/html/rfc7235#section-4.2)
+/// `Authorization` header, defined in [RFC 7235](https://www.rfc-editor.org/info/rfc7235/#section-4.2)
 ///
 /// The "Authorization" header field allows a user agent to authenticate itself with an origin
 /// server—usually, but not necessarily, after receiving a 401 (Unauthorized) response. Its value

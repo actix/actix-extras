@@ -26,8 +26,8 @@ All supported schemas can be used in both middleware and request handlers.
 
 ## Supported Schemes
 
-- [HTTP Basic](https://tools.ietf.org/html/rfc7617)
-- [OAuth Bearer](https://tools.ietf.org/html/rfc6750)
+- [HTTP Basic](https://www.rfc-editor.org/info/rfc7617)
+- [OAuth Bearer](https://www.rfc-editor.org/info/rfc6750)
 
 ## Client Example
 
