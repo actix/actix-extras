@@ -1,0 +1,47 @@
+name: Benchmark
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  benchmarks:
+    name: Run benchmarks
+    runs-on: codspeed-macro-arm64-graviton-ubuntu-22-04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v2.0.1
+        with:
+          toolchain: nightly
+
+      - name: Install cargo-codspeed
+        uses: taiki-e/install-action@v2.90.5
+        with:
+          tool: cargo-codspeed
+
+      - name: Build benchmarks
+        run: cargo codspeed build -p russe --all-features --locked --measurement-mode walltime --measurement-mode memory
+
+      - name: Run benchmarks
+        uses: CodSpeedHQ/action@v5.6.3
+        env:
+          DIVAN_MIN_TIME: "1"
+          DIVAN_MAX_TIME: "1"
+        with:
+          mode: walltime,memory
+          run: cargo codspeed run
