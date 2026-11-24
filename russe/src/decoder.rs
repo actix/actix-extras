@@ -194,11 +194,12 @@ impl tokio_util::codec::Decoder for Decoder {
 
             let mut consumed = delimiter + 2;
 
-            self.skip_lf = src[delimiter + 1] == CR;
-
-            if self.skip_lf && src.get(consumed) == Some(&LF) {
-                consumed += 1;
-                self.skip_lf = false;
+            if src[delimiter + 1] == CR {
+                match src.get(consumed) {
+                    Some(&LF) => consumed += 1,
+                    Some(_) => {}
+                    None => self.skip_lf = true,
+                }
             }
 
             let kind = mem::take(&mut self.frame_kind);
@@ -351,14 +352,24 @@ impl Decoder {
         };
 
         while let Some(pos) = memchr2(CR, LF, &src[start..end]) {
-            let pos = start + pos;
-            let next = src[pos + 1];
+            let mut pos = start + pos;
+            let mut next = src[pos + 1];
+
+            // CRLF is one line ending; advance to its LF and inspect the next byte directly.
+            if src[pos] == CR && next == LF {
+                pos += 1;
+
+                if pos == end {
+                    self.scan_from = end;
+                    return None;
+                }
+
+                next = src[pos + 1];
+            }
+
             start = pos + 1;
 
             match next {
-                // CRLF is one line ending; inspect its LF on the next iteration.
-                LF if src[pos] == CR => continue,
-
                 // CRCR, LFCR, and LFLF end the frame.
                 CR | LF => {
                     self.scan_from = 0;
@@ -645,12 +656,129 @@ mod tests {
             ("data: hello\r\n\r\n", "hello"),
             ("data:  left:right\r\n\r\n", " left:right"),
             ("data:\r\n\r\n", ""),
+            (
+                "data: first\r\ndata: second\r\ndata: third\r\n\r\n",
+                "first\nsecond\nthird",
+            ),
+            ("data: \r\ndata: second\r\n\r\n", "\nsecond"),
         ] {
             let mut input = BytesMut::from(input);
+            let mut decoder = Decoder::default();
 
-            let event = Decoder::default().decode(&mut input).unwrap();
+            let event = decoder.decode(&mut input).unwrap();
 
             assert_eq!(event, Some(Event::Message(Message::data(expected))));
+            assert!(input.is_empty());
+            assert!(!decoder.skip_lf);
+        }
+    }
+
+    #[test]
+    fn decodes_crlf_split_across_chunk_boundaries() {
+        // Chunk ending right after `\r` in both line and frame endings.
+        for chunks in [
+            &["data: first\r", "\ndata: second\r", "\n\r", "\n"][..],
+            &["data: first\r\n", "data: second\r\n", "\r\n"][..],
+            &["data: first\r\ndata: second\r\n\r", "\n"][..],
+        ] {
+            let mut decoder = Decoder::default();
+            let mut buffer = BytesMut::new();
+            let mut events = Vec::new();
+
+            for chunk in chunks {
+                buffer.extend_from_slice(chunk.as_bytes());
+
+                while let Some(event) = decoder.decode(&mut buffer).unwrap() {
+                    events.push(event);
+                }
+            }
+
+            assert_eq!(
+                events,
+                [Event::Message(Message::data("first\nsecond"))],
+                "chunks: {chunks:?}",
+            );
+            assert!(buffer.is_empty(), "chunks: {chunks:?}");
+            assert!(!decoder.skip_lf, "chunks: {chunks:?}");
+        }
+
+        // Chunk ending right after `\r\n\r` sets `skip_lf` and consumes the trailing `\n`.
+        let mut decoder = Decoder::default();
+        let mut buffer = BytesMut::from("data: first\r\n\r");
+
+        assert_eq!(
+            decoder.decode(&mut buffer).unwrap(),
+            Some(Event::Message(Message::data("first"))),
+        );
+        assert!(buffer.is_empty());
+        assert!(decoder.skip_lf);
+
+        buffer.extend_from_slice(b"\ndata: second\r\n\r\n");
+
+        assert_eq!(
+            decoder.decode(&mut buffer).unwrap(),
+            Some(Event::Message(Message::data("second"))),
+        );
+        assert!(buffer.is_empty());
+        assert!(!decoder.skip_lf);
+    }
+
+    #[test]
+    fn decodes_empty_crlf_and_mixed_cr_delimiters() {
+        // Standalone empty CRLF frame.
+        let mut decoder = Decoder::default();
+        let mut buffer = BytesMut::from("\r\n\r\n");
+
+        assert_none!(decoder.decode(&mut buffer).unwrap());
+        assert!(buffer.is_empty());
+        assert!(!decoder.skip_lf);
+
+        // Empty CRLF frame followed by a message.
+        let mut decoder = Decoder::default();
+        let mut buffer = BytesMut::from("\r\n\r\ndata: after\r\n\r\n");
+
+        assert_eq!(
+            decoder.decode(&mut buffer).unwrap(),
+            Some(Event::Message(Message::data("after"))),
+        );
+        assert!(buffer.is_empty());
+        assert!(!decoder.skip_lf);
+
+        // `\r\r\n` delimiter after a line and after an empty frame.
+        let mut decoder = Decoder::default();
+        let mut buffer = BytesMut::from("\r\r\ndata: hello\r\r\ndata: next\r\n\r\n");
+
+        assert_eq!(
+            decoder.decode(&mut buffer).unwrap(),
+            Some(Event::Message(Message::data("hello"))),
+        );
+        assert!(!decoder.skip_lf);
+        assert_eq!(
+            decoder.decode(&mut buffer).unwrap(),
+            Some(Event::Message(Message::data("next"))),
+        );
+        assert!(buffer.is_empty());
+        assert!(!decoder.skip_lf);
+
+        // CR delimiter followed immediately by a non-LF byte clears `skip_lf` eagerly.
+        for input in [
+            "data: first\r\rdata: second\r\r",
+            "data: first\r\n\rdata: second\r\n\r\n",
+        ] {
+            let mut decoder = Decoder::default();
+            let mut buffer = BytesMut::from(input);
+
+            assert_eq!(
+                decoder.decode(&mut buffer).unwrap(),
+                Some(Event::Message(Message::data("first"))),
+            );
+            assert!(!decoder.skip_lf, "input: {input:?}");
+
+            assert_eq!(
+                decoder.decode(&mut buffer).unwrap(),
+                Some(Event::Message(Message::data("second"))),
+            );
+            assert!(buffer.is_empty(), "input: {input:?}");
         }
     }
 

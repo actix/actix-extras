@@ -184,6 +184,28 @@ fn decode_line_endings(b: Bencher<'_, '_>, name: &str) {
     bench_decode(b, &input, &expected, 7);
 }
 
+#[divan::bench(args = ["lf", "crlf"], sample_size = 16)]
+fn decode_multiline_line_endings(b: Bencher<'_, '_>, name: &str) {
+    let ending = match name {
+        "lf" => "\n",
+        "crlf" => "\r\n",
+        _ => unreachable!(),
+    };
+    let line_count = 64;
+    let input = format!(
+        "{}{ending}",
+        format!("data: payload line{ending}").repeat(line_count),
+    );
+    let expected = vec!["payload line"; line_count].join("\n");
+
+    bench_decode(
+        b,
+        &input,
+        &[Event::Message(data_message(expected))],
+        input.len(),
+    );
+}
+
 #[divan::bench(args = [1, 16, 128], sample_size = 32)]
 fn decode_message_batch(b: Bencher<'_, '_>, count: usize) {
     let input = "data: payload\n\n".repeat(count);
