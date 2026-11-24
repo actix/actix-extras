@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{str, time::Duration};
 
 use bytestring::ByteString;
 
@@ -28,6 +28,15 @@ pub(crate) fn field_value<'a>(line: &'a [u8], field: &[u8]) -> Option<&'a [u8]> 
         [b':', value @ ..] => Some(strip_space(value)),
         _ => None,
     }
+}
+
+/// Parses an SSE `id` line, ignoring valid UTF-8 values that contain NUL.
+pub(crate) fn parse_id(line: &[u8]) -> Result<Option<ByteString>, str::Utf8Error> {
+    let id = field_value(line, b"id")
+        .map(ByteString::try_from)
+        .transpose()?;
+
+    Ok(id.filter(|id| !id.as_bytes().contains(&0)))
 }
 
 /// Parses an SSE `retry` field value in milliseconds into a `Duration`.

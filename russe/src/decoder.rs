@@ -7,7 +7,7 @@ use memchr::{memchr2, memchr2_iter};
 use crate::{
     CR, Error, LF,
     event::Event,
-    fields::{data_event, field_value, parse_retry, strip_space},
+    fields::{data_event, field_value, parse_id, parse_retry, strip_space},
     message::Message,
 };
 
@@ -235,8 +235,8 @@ impl ParsedFrame {
                 );
             }
             [b'i', ..] => {
-                if let Some(value) = field_value(line, b"id") {
-                    self.id = Some(ByteString::try_from(value)?);
+                if let Some(id) = parse_id(line)? {
+                    self.id = Some(id);
                 }
             }
             [b'e', ..] => {
@@ -367,19 +367,18 @@ impl tokio_util::codec::Decoder for Decoder {
                         }
 
                         [b'i', ..] => {
-                            if let Some(value) = field_value(line, b"id") {
-                                let id = ByteString::try_from(value);
-                                src.advance(consumed);
+                            let id = parse_id(line);
+                            src.advance(consumed);
 
+                            if let Some(id) = id? {
                                 return Ok(Some(Event::Message(Message {
                                     data: ByteString::new(),
                                     event: None,
                                     retry: None,
-                                    id: Some(id?),
+                                    id: Some(id),
                                 })));
                             }
 
-                            src.advance(consumed);
                             continue;
                         }
 
@@ -504,6 +503,7 @@ impl Decoder {
             Some(FieldLines::Single(range)) if share_payload(src, range.len()) => {
                 let mut payload = src.split_to(consumed);
                 let comment = parsed.comments.map(|lines| finish_lines(&payload, lines));
+
                 payload.advance(range.start);
                 payload.truncate(range.len());
 
@@ -512,16 +512,19 @@ impl Decoder {
 
                 (data, comment)
             }
+
             data => {
                 let frame = &src[..delimiter];
                 let data = data.map(|lines| finish_lines(frame, lines)).transpose();
+
                 let comment = match &data {
+                    Err(_) => Ok(None),
                     Ok(_) => parsed
                         .comments
                         .map(|lines| finish_lines(frame, lines))
                         .transpose(),
-                    Err(_) => Ok(None),
                 };
+
                 src.advance(consumed);
 
                 (data?, comment?)
@@ -585,6 +588,29 @@ mod tests {
         let mut input = BytesMut::from("\0\n\n");
 
         let _ = Decoder::default().decode(&mut input);
+    }
+
+    #[test]
+    fn ignores_single_line_id_containing_nul() {
+        let mut input = BytesMut::from("id: a\0b\n\ndata: next\n\n");
+
+        assert_eq!(
+            Decoder::default().decode(&mut input).unwrap(),
+            Some(Event::Message(Message::data("next"))),
+        );
+    }
+
+    #[test]
+    fn ignores_id_containing_nul_between_data_lines() {
+        let mut input = BytesMut::from("id: keep\ndata: first\nid: a\0b\ndata: last\n\n");
+
+        assert_eq!(
+            Decoder::default().decode(&mut input).unwrap(),
+            Some(Event::Message(Message {
+                id: Some("keep".into()),
+                ..Message::data("first\nlast")
+            })),
+        );
     }
 
     #[test]
@@ -962,6 +988,7 @@ mod tests {
             Some(Event::Message(Message::data("after clear"))),
         );
         assert!(buffer.is_empty());
+
         // Repeat with a multi-field partial frame so last_line_start also resets.
         let mut buffer = BytesMut::from("event: first\ndata: second");
 
@@ -1084,6 +1111,7 @@ mod tests {
     #[test]
     fn invalid_utf8_in_multi_field_frames_consumes_frame_and_preserves_precedence() {
         let large_prefix = "a".repeat(2048);
+
         let mut large_bad_data = Vec::from(b"event: update\ndata: ".as_slice());
         large_bad_data.extend_from_slice(large_prefix.as_bytes());
         large_bad_data.push(0xff);
@@ -1109,6 +1137,7 @@ mod tests {
             for &(frame, expected_valid_up_to) in cases {
                 let mut decoder = Decoder::default();
                 let mut buffer = BytesMut::from(frame);
+
                 let following = b"data: next\n\n";
                 buffer.extend_from_slice(delimiter);
                 buffer.extend_from_slice(following);
