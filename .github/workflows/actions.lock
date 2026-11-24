@@ -3,6 +3,11 @@
 # Docs: https://gh.io/actions-lockfile
 version: 'v0.0.3'
 workflows:
+    '.github/workflows/benchmark.yml':
+        - 'actions-rust-lang/setup-rust-toolchain@v2.0.1'
+        - 'actions/checkout@v7.0.1'
+        - 'codspeedhq/action@v5.6.3'
+        - 'taiki-e/install-action@v2.90.5'
     '.github/workflows/ci-post-merge.yml':
         - 'actions-rust-lang/setup-rust-toolchain@v2.0.1'
         - 'taiki-e/install-action@v2.90.5'
@@ -39,6 +44,11 @@ dependencies:
         repo_id: 482610590
         uses:
             - 'swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0'
+    'actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7':
+        ref: 'v5.0.4'
+        commit: 'sha1-668228422ae6a00e4ad889ee87cd7109ec5666a7'
+        owner_id: 44036562
+        repo_id: 215566462
     'actions/checkout@v7.0.1':
         ref: 'v7.0.1'
         commit: 'sha1-3d3c42e5aac5ba805825da76410c181273ba90b1'
@@ -65,6 +75,14 @@ dependencies:
         owner_id: 8226205
         repo_id: 200299178
         uses:
+            - 'actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd'
+    'codspeedhq/action@v5.6.3':
+        ref: 'v5.6.3'
+        commit: 'sha1-af75f77f17a054769abefaa42fe8dc2975469b5f'
+        owner_id: 116658140
+        repo_id: 561699778
+        uses:
+            - 'actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7'
             - 'actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd'
     'embarkstudios/cargo-deny-action@v2.1.2':
         ref: 'v2.1.2'
