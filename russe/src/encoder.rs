@@ -1,10 +1,11 @@
 use bytes::BytesMut;
 
-use crate::{Error, Event};
+use crate::{Error, Event, EventRef};
 
 /// SSE encoder for use with [`tokio_util::codec::FramedWrite`].
 ///
 /// Implements [`tokio_util::codec::Encoder<Event>`]. Each event ends with a blank line.
+/// Use [`Encoder::encode_borrowed`] to write borrowed field text directly.
 /// CRLF and bare CR in message data and comments are converted to LF. Empty lines are preserved.
 /// Retry delays are written in whole milliseconds. Fractions of a millisecond are discarded.
 ///
@@ -32,6 +33,18 @@ impl tokio_util::codec::Encoder<Event> for Encoder {
     type Error = Error;
 
     fn encode(&mut self, item: Event, dst: &mut BytesMut) -> Result<(), Self::Error> {
+        item.encode_into(dst)
+    }
+}
+
+impl Encoder {
+    /// Encodes an event without taking ownership of its field text.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error::InvalidFieldValue`] if an ID or event name is invalid.
+    /// Field validation occurs before any bytes are added to the output buffer.
+    pub fn encode_borrowed(&mut self, item: EventRef<'_>, dst: &mut BytesMut) -> Result<(), Error> {
         item.encode_into(dst)
     }
 }
@@ -79,6 +92,70 @@ mod tests {
             .unwrap();
 
         assert_eq!(output, "data: héllo\n\n");
+    }
+
+    #[test]
+    fn encodes_borrowed_events() {
+        for (event, expected) in [
+            (
+                EventRef::Message {
+                    data: "é\r\n世界\r🦀\n",
+                    event: Some("update\0name"),
+                    retry: Some(Duration::from_micros(1_999)),
+                    id: Some("42"),
+                },
+                "id: 42\nevent: update\0name\nretry: 1\ndata: é\ndata: 世界\ndata: 🦀\ndata: \n\n",
+            ),
+            (EventRef::Comment("é\r\n世界\r"), ": é\n: 世界\n: \n\n"),
+            (
+                EventRef::Retry(Duration::MAX),
+                "retry: 18446744073709551615999\n\n",
+            ),
+        ] {
+            let mut output = BytesMut::from("data: previous\n\n");
+
+            Encoder::default()
+                .encode_borrowed(event, &mut output)
+                .unwrap();
+
+            assert_eq!(&output[..16], b"data: previous\n\n");
+            assert_eq!(&output[16..], expected.as_bytes());
+            assert_eq!(event.into_bytestring().unwrap(), expected);
+        }
+    }
+
+    #[test]
+    fn rejects_invalid_borrowed_fields_without_changing_output() {
+        for (id, event, field, character, offset) in [
+            ("é\r\0id", "update", "id", '\r', 2),
+            ("é\0\rid", "update", "id", '\0', 2),
+            ("42", "世界\nevent", "event", '\n', 6),
+        ] {
+            let event = EventRef::Message {
+                data: "payload",
+                event: Some(event),
+                retry: None,
+                id: Some(id),
+            };
+            let mut output = BytesMut::from("data: previous\n\n");
+
+            let Error::InvalidFieldValue {
+                field: actual_field,
+                character: actual_character,
+                offset: actual_offset,
+            } = Encoder::default()
+                .encode_borrowed(event, &mut output)
+                .unwrap_err()
+            else {
+                panic!("Expected an invalid field error");
+            };
+
+            assert_eq!(
+                (actual_field, actual_character, actual_offset),
+                (field, character, offset)
+            );
+            assert_eq!(output, "data: previous\n\n");
+        }
     }
 
     #[test]
