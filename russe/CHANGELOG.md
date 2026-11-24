@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.3.3
+
+- Improve decoding performance in many cases by ~3-6x.
+- Reduce allocations in many cases by ~80-90%.
+
 ## 0.3.2
 
 - Improve decoding performance by ~2x.
