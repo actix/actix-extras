@@ -690,6 +690,53 @@ mod tests {
     }
 
     #[test]
+    fn resets_scan_state_when_input_is_replaced_or_truncated() {
+        let mut decoder = Decoder::default();
+        let mut partial = BytesMut::from("data: first\ndata: second");
+
+        assert_none!(decoder.decode(&mut partial).unwrap());
+
+        // Replace with a shorter single-line frame so scan_from exceeds the new buffer length.
+        let mut replaced = BytesMut::from("data: ok\n\n");
+
+        assert_eq!(
+            decoder.decode(&mut replaced).unwrap(),
+            Some(Event::Message(Message::data("ok"))),
+        );
+        assert!(replaced.is_empty());
+
+        // Repeat with an in-place clear and a shorter multiline frame.
+        let mut buffer = BytesMut::from("data: first\ndata: second\ndata: third");
+
+        assert_none!(decoder.decode(&mut buffer).unwrap());
+
+        buffer.clear();
+        buffer.extend_from_slice(b"data: a\ndata: b\n\n");
+
+        assert_eq!(
+            decoder.decode(&mut buffer).unwrap(),
+            Some(Event::Message(Message::data("a\nb"))),
+        );
+        assert!(buffer.is_empty());
+
+        // Repeat when the buffer is cleared to empty before the next read arrives.
+        let mut buffer = BytesMut::from("data: first\ndata: second");
+
+        assert_none!(decoder.decode(&mut buffer).unwrap());
+
+        buffer.clear();
+        assert_none!(decoder.decode(&mut buffer).unwrap());
+
+        buffer.extend_from_slice(b"data: after clear\n\n");
+
+        assert_eq!(
+            decoder.decode(&mut buffer).unwrap(),
+            Some(Event::Message(Message::data("after clear"))),
+        );
+        assert!(buffer.is_empty());
+    }
+
+    #[test]
     fn shares_large_single_line_data_and_retains_it_when_input_grows() {
         let data = "café".repeat(256);
         let frame = format!("data: {data}\r\n\r\n");
