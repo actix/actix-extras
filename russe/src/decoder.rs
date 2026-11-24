@@ -1,4 +1,4 @@
-use std::{borrow::Cow, iter, mem, ops::Range, str};
+use std::{mem, ops::Range, str, time::Duration};
 
 use bytes::{Buf as _, BytesMut};
 use bytestring::ByteString;
@@ -7,7 +7,7 @@ use memchr::{memchr2, memchr2_iter};
 use crate::{
     CR, Error, LF,
     event::Event,
-    fields::{data_event, field_value, parse_retry, strip_space},
+    fields::{data_event, field_value, parse_id, parse_retry, strip_space},
     message::Message,
 };
 
@@ -23,6 +23,7 @@ use crate::{
 pub struct Decoder {
     pending_event: Option<Event>,
     scan_from: usize,
+    last_line_start: usize,
     frame_kind: FrameKind,
     data_lines: DataLines,
     skip_lf: bool,
@@ -142,29 +143,116 @@ fn share_payload(src: &BytesMut, size: usize) -> bool {
     size >= MIN_SHARED_PAYLOAD_SIZE && size >= src.capacity().div_ceil(2)
 }
 
-/// Appends a line to an accumulated field value, joining multiple lines with `LF`.
-fn append_line<'a>(lines: &mut Option<Cow<'a, [u8]>>, line: &'a [u8]) {
+/// A single value range in the frame or an owned buffer of values joined with `LF`.
+enum FieldLines {
+    Single(Range<usize>),
+    Joined(Vec<u8>),
+}
+
+/// Records a value range in `frame` and joins multiple values with `LF`.
+fn append_line(lines: &mut Option<FieldLines>, frame: &[u8], range: Range<usize>) {
     match lines {
-        None => *lines = Some(Cow::Borrowed(line)),
-        Some(Cow::Borrowed(first)) => {
-            let mut joined = Vec::with_capacity(first.len() + 1 + line.len());
+        None => *lines = Some(FieldLines::Single(range)),
+
+        Some(FieldLines::Single(first)) => {
+            let first = &frame[first.clone()];
+            let next = &frame[range];
+            let mut joined = Vec::with_capacity(first.len() + 1 + next.len());
+
             joined.extend_from_slice(first);
             joined.push(LF);
-            joined.extend_from_slice(line);
-            *lines = Some(Cow::Owned(joined));
+            joined.extend_from_slice(next);
+
+            *lines = Some(FieldLines::Joined(joined));
         }
-        Some(Cow::Owned(joined)) => {
+
+        Some(FieldLines::Joined(joined)) => {
             joined.push(LF);
-            joined.extend_from_slice(line);
+            joined.extend_from_slice(&frame[range]);
         }
     }
 }
 
-/// Validates and converts accumulated field lines into a `ByteString`.
-fn finish_lines(lines: Cow<'_, [u8]>) -> Result<ByteString, str::Utf8Error> {
+/// Converts the accumulated values to a `ByteString` and returns an error for invalid UTF-8.
+fn finish_lines(frame: &[u8], lines: FieldLines) -> Result<ByteString, str::Utf8Error> {
     match lines {
-        Cow::Borrowed(line) => ByteString::try_from(line),
-        Cow::Owned(joined) => ByteString::try_from(joined),
+        FieldLines::Single(range) => ByteString::try_from(&frame[range]),
+        FieldLines::Joined(joined) => ByteString::try_from(joined),
+    }
+}
+
+/// Collects the fields of one frame before the decoder emits events.
+#[derive(Default)]
+struct ParsedFrame {
+    data: Option<FieldLines>,
+    comments: Option<FieldLines>,
+    id: Option<ByteString>,
+    event: Option<ByteString>,
+    retry: Option<Duration>,
+}
+
+impl ParsedFrame {
+    /// Parses the lines of a complete frame in order.
+    ///
+    /// Scans for line endings before `last_line_start` and parses the final line directly.
+    fn parse_lines(&mut self, frame: &[u8], last_line_start: usize) -> Result<(), Error> {
+        let mut line_start = 0;
+
+        for line_end in memchr2_iter(CR, LF, &frame[..last_line_start]) {
+            let line = &frame[line_start..line_end];
+            let current_start = line_start;
+            line_start = line_end + 1;
+
+            self.parse_line(frame, current_start, line)?;
+        }
+
+        let last_line = &frame[last_line_start..];
+        let last_line = last_line.strip_suffix(&[CR]).unwrap_or(last_line);
+        self.parse_line(frame, last_line_start, last_line)
+    }
+
+    /// Parses a line that starts at offset `line_start` in `frame`, without its line ending.
+    ///
+    /// Validates `id` and `event` as UTF-8 immediately. The caller validates `data` and comments
+    /// after collecting all lines.
+    fn parse_line(&mut self, frame: &[u8], line_start: usize, line: &[u8]) -> Result<(), Error> {
+        match line {
+            // Skip empty segments from CRLF.
+            [] => {}
+            [b'd', ..] => {
+                if let Some(value) = field_value(line, b"data") {
+                    let value_end = line_start + line.len();
+                    append_line(&mut self.data, frame, value_end - value.len()..value_end);
+                }
+            }
+            [b':', value @ ..] => {
+                let value = strip_space(value);
+                let value_end = line_start + line.len();
+                append_line(
+                    &mut self.comments,
+                    frame,
+                    value_end - value.len()..value_end,
+                );
+            }
+            [b'i', ..] => {
+                if let Some(id) = parse_id(line)? {
+                    self.id = Some(id);
+                }
+            }
+            [b'e', ..] => {
+                if let Some(value) = field_value(line, b"event") {
+                    self.event = Some(ByteString::try_from(value)?);
+                }
+            }
+            [b'r', ..] => {
+                if let Some(delay) = field_value(line, b"retry").and_then(parse_retry) {
+                    self.retry = Some(delay);
+                }
+            }
+            _ => {}
+        }
+
+        Ok(())
     }
 }
 
@@ -203,6 +291,7 @@ impl tokio_util::codec::Decoder for Decoder {
             }
 
             let kind = mem::take(&mut self.frame_kind);
+            let last_line_start = mem::take(&mut self.last_line_start);
 
             match kind {
                 FrameKind::DataLines => {
@@ -278,19 +367,18 @@ impl tokio_util::codec::Decoder for Decoder {
                         }
 
                         [b'i', ..] => {
-                            if let Some(value) = field_value(line, b"id") {
-                                let id = ByteString::try_from(value);
-                                src.advance(consumed);
+                            let id = parse_id(line);
+                            src.advance(consumed);
 
+                            if let Some(id) = id? {
                                 return Ok(Some(Event::Message(Message {
                                     data: ByteString::new(),
                                     event: None,
                                     retry: None,
-                                    id: Some(id?),
+                                    id: Some(id),
                                 })));
                             }
 
-                            src.advance(consumed);
                             continue;
                         }
 
@@ -321,12 +409,7 @@ impl tokio_util::codec::Decoder for Decoder {
                 FrameKind::Other => {}
             }
 
-            let event = self.parse_frame(&src[..delimiter]);
-
-            // Consume the entire frame even when parsing fails.
-            src.advance(consumed);
-
-            if let Some(event) = event? {
+            if let Some(event) = self.parse_frame(src, delimiter, consumed, last_line_start)? {
                 return Ok(Some(event));
             }
         }
@@ -335,7 +418,7 @@ impl tokio_util::codec::Decoder for Decoder {
 
 impl Decoder {
     /// Scans `src` for the next blank-line frame delimiter and classifies the
-    /// frame while recording `data`-only lines.
+    /// frame while tracking line starts and recording `data`-only lines.
     ///
     /// Returns the index of the first delimiter byte, or `None` if more bytes
     /// are needed.
@@ -348,6 +431,7 @@ impl Decoder {
             // Reset scan state if the caller replaced or truncated src.
             self.frame_kind = FrameKind::SingleLine;
             self.data_lines.clear();
+            self.last_line_start = 0;
             0
         };
 
@@ -377,16 +461,18 @@ impl Decoder {
                 }
 
                 // A non-ending byte starts another line; record the line that just ended.
-                _ if !matches!(self.frame_kind, FrameKind::Other) => {
-                    self.frame_kind = if self.data_lines.record_range(src, pos) {
-                        FrameKind::DataLines
-                    } else {
-                        self.data_lines.clear();
-                        FrameKind::Other
-                    };
-                }
+                _ => {
+                    self.last_line_start = pos + 1;
 
-                _ => {}
+                    if !matches!(self.frame_kind, FrameKind::Other) {
+                        self.frame_kind = if self.data_lines.record_range(src, pos) {
+                            FrameKind::DataLines
+                        } else {
+                            self.data_lines.clear();
+                            FrameKind::Other
+                        };
+                    }
+                }
             }
         }
 
@@ -395,65 +481,65 @@ impl Decoder {
         None
     }
 
-    /// Parses a complete frame slice with the general SSE field parser.
-    fn parse_frame(&mut self, frame: &[u8]) -> Result<Option<Event>, Error> {
-        let mut data = None;
-        let mut comments = None;
-        let mut id = None;
-        let mut event = None;
-        let mut retry = None;
+    /// Parses the frame in `src[..delimiter]` and consumes `consumed` bytes, even on error.
+    ///
+    /// Uses `last_line_start` to skip scanning the final line for a line ending. A large
+    /// single-line `data` value can share the backing buffer of `src`.
+    fn parse_frame(
+        &mut self,
+        src: &mut BytesMut,
+        delimiter: usize,
+        consumed: usize,
+        last_line_start: usize,
+    ) -> Result<Option<Event>, Error> {
+        let mut parsed = ParsedFrame::default();
 
-        // The frame delimiter also ends the final line.
-        let line_ends = memchr2_iter(CR, LF, frame).chain(iter::once(frame.len()));
-        let mut line_start = 0;
-
-        for line_end in line_ends {
-            let line = &frame[line_start..line_end];
-            line_start = line_end + 1;
-
-            // Skip empty segments from CRLF.
-            if line.is_empty() {
-                continue;
-            }
-
-            match line {
-                [b'd', ..] => {
-                    if let Some(value) = field_value(line, b"data") {
-                        append_line(&mut data, value);
-                    }
-                }
-                [b':', value @ ..] => append_line(&mut comments, strip_space(value)),
-                [b'i', ..] => {
-                    if let Some(value) = field_value(line, b"id") {
-                        id = Some(ByteString::try_from(value)?);
-                    }
-                }
-                [b'e', ..] => {
-                    if let Some(value) = field_value(line, b"event") {
-                        event = Some(ByteString::try_from(value)?);
-                    }
-                }
-                [b'r', ..] => {
-                    if let Some(delay) = field_value(line, b"retry").and_then(parse_retry) {
-                        retry = Some(delay);
-                    }
-                }
-                _ => {}
-            }
+        if let Err(err) = parsed.parse_lines(&src[..delimiter], last_line_start) {
+            src.advance(consumed);
+            return Err(err);
         }
 
-        let data = data.map(finish_lines).transpose()?;
-        let comment = comments.map(finish_lines).transpose()?;
+        let (data, comment) = match parsed.data {
+            Some(FieldLines::Single(range)) if share_payload(src, range.len()) => {
+                let mut payload = src.split_to(consumed);
+                let comment = parsed.comments.map(|lines| finish_lines(&payload, lines));
 
-        let event = if data.is_some() || id.is_some() || event.is_some() {
+                payload.advance(range.start);
+                payload.truncate(range.len());
+
+                let data = Some(ByteString::try_from(payload)?);
+                let comment = comment.transpose()?;
+
+                (data, comment)
+            }
+
+            data => {
+                let frame = &src[..delimiter];
+                let data = data.map(|lines| finish_lines(frame, lines)).transpose();
+
+                let comment = match &data {
+                    Err(_) => Ok(None),
+                    Ok(_) => parsed
+                        .comments
+                        .map(|lines| finish_lines(frame, lines))
+                        .transpose(),
+                };
+
+                src.advance(consumed);
+
+                (data?, comment?)
+            }
+        };
+
+        let event = if data.is_some() || parsed.id.is_some() || parsed.event.is_some() {
             Some(Event::Message(Message {
                 data: data.unwrap_or_default(),
-                event,
-                retry,
-                id,
+                event: parsed.event,
+                retry: parsed.retry,
+                id: parsed.id,
             }))
         } else {
-            retry.map(Event::Retry)
+            parsed.retry.map(Event::Retry)
         };
 
         if let Some(comment) = comment {
@@ -502,6 +588,29 @@ mod tests {
         let mut input = BytesMut::from("\0\n\n");
 
         let _ = Decoder::default().decode(&mut input);
+    }
+
+    #[test]
+    fn ignores_single_line_id_containing_nul() {
+        let mut input = BytesMut::from("id: a\0b\n\ndata: next\n\n");
+
+        assert_eq!(
+            Decoder::default().decode(&mut input).unwrap(),
+            Some(Event::Message(Message::data("next"))),
+        );
+    }
+
+    #[test]
+    fn ignores_id_containing_nul_between_data_lines() {
+        let mut input = BytesMut::from("id: keep\ndata: first\nid: a\0b\ndata: last\n\n");
+
+        assert_eq!(
+            Decoder::default().decode(&mut input).unwrap(),
+            Some(Event::Message(Message {
+                id: Some("keep".into()),
+                ..Message::data("first\nlast")
+            })),
+        );
     }
 
     #[test]
@@ -879,6 +988,23 @@ mod tests {
             Some(Event::Message(Message::data("after clear"))),
         );
         assert!(buffer.is_empty());
+
+        // Repeat with a multi-field partial frame so last_line_start also resets.
+        let mut buffer = BytesMut::from("event: first\ndata: second");
+
+        assert_none!(decoder.decode(&mut buffer).unwrap());
+
+        buffer.clear();
+        buffer.extend_from_slice(b"event: ok\n\n");
+
+        assert_eq!(
+            decoder.decode(&mut buffer).unwrap(),
+            Some(Event::Message(Message {
+                event: Some("ok".into()),
+                ..Default::default()
+            })),
+        );
+        assert!(buffer.is_empty());
     }
 
     #[test]
@@ -903,6 +1029,185 @@ mod tests {
         );
         assert_eq!(&*first.data, data);
         assert!(input.is_empty());
+    }
+
+    #[test]
+    fn shares_large_single_line_data_in_multi_field_frames() {
+        let data = "café".repeat(256);
+
+        for (prefix, suffix, expected_event, expected_id) in [
+            ("event: update\n", "", Some("update"), None),
+            ("id: 42\r\n", "", None, Some("42")),
+            ("", "\nevent: after", Some("after"), None),
+            ("id: 7\nevent: update\n", "", Some("update"), Some("7")),
+        ] {
+            let frame = format!("{prefix}data: {data}{suffix}\r\n\r\n");
+            let mut input = BytesMut::from(frame.as_str());
+            let payload_offset = prefix.len() + b"data: ".len();
+            let payload = input[payload_offset..].as_ptr();
+            let mut decoder = Decoder::default();
+
+            let Some(Event::Message(first)) = decoder.decode(&mut input).unwrap() else {
+                panic!("expected a message");
+            };
+
+            assert_eq!(first.data.as_ptr(), payload);
+            assert_eq!(first.event.as_deref(), expected_event);
+            assert_eq!(first.id.as_deref(), expected_id);
+
+            input.extend_from_slice(frame.as_bytes());
+
+            assert_eq!(
+                decoder.decode(&mut input).unwrap(),
+                Some(Event::Message(Message {
+                    event: expected_event.map(ByteString::from),
+                    id: expected_id.map(ByteString::from),
+                    ..Message::data(data.as_str())
+                })),
+            );
+            assert_eq!(&*first.data, data);
+            assert!(input.is_empty());
+        }
+    }
+
+    #[test]
+    fn shares_large_single_line_data_with_comments() {
+        let data = "café".repeat(256);
+
+        for (frame, payload_offset, expected_comment, expected_event) in [
+            (
+                format!(": heartbeat\nevent: update\ndata: {data}\r\n\r\n"),
+                b": heartbeat\nevent: update\ndata: ".len(),
+                "heartbeat",
+                Some("update"),
+            ),
+            (
+                format!(": first\n: second\ndata: {data}\n: third\n\n"),
+                b": first\n: second\ndata: ".len(),
+                "first\nsecond\nthird",
+                None,
+            ),
+        ] {
+            let mut input = BytesMut::from(frame.as_str());
+            let payload = input[payload_offset..].as_ptr();
+            let mut decoder = Decoder::default();
+
+            assert_eq!(
+                decoder.decode(&mut input).unwrap(),
+                Some(Event::Comment(expected_comment.into())),
+            );
+
+            let Some(Event::Message(message)) = decoder.decode(&mut input).unwrap() else {
+                panic!("expected a message");
+            };
+
+            assert_eq!(message.data.as_ptr(), payload);
+            assert_eq!(&*message.data, data);
+            assert_eq!(message.event.as_deref(), expected_event);
+            assert!(input.is_empty());
+        }
+    }
+
+    #[test]
+    fn invalid_utf8_in_multi_field_frames_consumes_frame_and_preserves_precedence() {
+        let large_prefix = "a".repeat(2048);
+
+        let mut large_bad_data = Vec::from(b"event: update\ndata: ".as_slice());
+        large_bad_data.extend_from_slice(large_prefix.as_bytes());
+        large_bad_data.push(0xff);
+
+        let mut large_bad_comment = Vec::from(b": bad\xff\nevent: update\ndata: ".as_slice());
+        large_bad_comment.extend_from_slice(large_prefix.as_bytes());
+
+        let mut both_bad = Vec::from(b": \xff\nevent: update\ndata: ".as_slice());
+        both_bad.extend_from_slice(large_prefix.as_bytes());
+        both_bad.extend_from_slice(b"\xC3\x28");
+
+        let cases: &[(&[u8], usize)] = &[
+            (b"id: bad\xff\ndata: ok", 3),
+            (b"event: bad\xff\ndata: ok", 3),
+            (b"event: update\ndata: bad\xff", 3),
+            (b": bad\xff\nevent: update\ndata: small", 3),
+            (&large_bad_data, large_prefix.len()),
+            (&large_bad_comment, 3),
+            (&both_bad, large_prefix.len()),
+        ];
+
+        for delimiter in [b"\n\n".as_slice(), b"\r\n\r\n"] {
+            for &(frame, expected_valid_up_to) in cases {
+                let mut decoder = Decoder::default();
+                let mut buffer = BytesMut::from(frame);
+
+                let following = b"data: next\n\n";
+                buffer.extend_from_slice(delimiter);
+                buffer.extend_from_slice(following);
+
+                let err = decoder.decode(&mut buffer).unwrap_err();
+                let Error::InvalidUtf8 { source } = err else {
+                    panic!("expected invalid UTF-8 error, got: {err:?}");
+                };
+
+                assert_eq!(source.valid_up_to(), expected_valid_up_to);
+                assert_eq!(&buffer[..], following);
+                assert_eq!(
+                    decoder.decode(&mut buffer).unwrap(),
+                    Some(Event::Message(Message::data("next"))),
+                );
+                assert!(buffer.is_empty());
+            }
+        }
+    }
+
+    #[test]
+    fn decodes_multi_field_frames_across_all_chunk_sizes() {
+        let input = concat!(
+            "event: update\r\n",
+            "id: 42\r\n",
+            ": heartbeat\r\n",
+            "retry: 500\r\n",
+            "data: café\r\n\r\n",
+            "id: 43\n",
+            "data: hello\n\n",
+            "event: ping\r",
+            "data: world\r\r",
+        );
+        let input = input.as_bytes();
+        let expected = [
+            Event::Comment("heartbeat".into()),
+            Event::Message(Message {
+                data: "café".into(),
+                event: Some("update".into()),
+                id: Some("42".into()),
+                retry: Some(Duration::from_millis(500)),
+            }),
+            Event::Message(Message {
+                data: "hello".into(),
+                id: Some("43".into()),
+                ..Default::default()
+            }),
+            Event::Message(Message {
+                data: "world".into(),
+                event: Some("ping".into()),
+                ..Default::default()
+            }),
+        ];
+
+        for chunk_size in 1..=input.len() {
+            let mut decoder = Decoder::default();
+            let mut buffer = BytesMut::new();
+            let mut events = Vec::new();
+
+            for chunk in input.chunks(chunk_size) {
+                buffer.extend_from_slice(chunk);
+
+                while let Some(event) = decoder.decode(&mut buffer).unwrap() {
+                    events.push(event);
+                }
+            }
+
+            assert_eq!(events, expected, "chunk size {chunk_size}");
+            assert!(buffer.is_empty(), "chunk size {chunk_size}");
+        }
     }
 
     #[test]

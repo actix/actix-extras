@@ -141,6 +141,22 @@ fn decode_message(b: Bencher<'_, '_>, size: usize) {
     );
 }
 
+#[divan::bench(args = ["ascii", "utf8"], sample_size = 32)]
+fn decode_named_message(b: Bencher<'_, '_>, kind: &str) {
+    let data = match kind {
+        "ascii" => "x".repeat(65536),
+        "utf8" => "café".repeat(65536 / "café".len()),
+        _ => unreachable!(),
+    };
+    let input = format!("event: update\ndata: {data}\n\n");
+    let expected = [Event::Message(Message {
+        event: Some("update".into()),
+        ..data_message(data)
+    })];
+
+    bench_decode(b, &input, &expected, input.len());
+}
+
 #[divan::bench(
     args = ["dense_64b", "dense_1k", "dense_64k", "late_non_ascii_64k"],
     sample_size = 128,
