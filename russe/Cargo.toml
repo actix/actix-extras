@@ -39,7 +39,6 @@ reqwest-0_13 = { package = "reqwest", version = "0.13", optional = true, default
 ] }
 tokio = { version = "1", features = ["sync"] }
 tokio-util = { version = "0.7", features = ["codec"] }
-tracing = "0.1.41"
 
 [dev-dependencies]
 color-eyre = "0.6"

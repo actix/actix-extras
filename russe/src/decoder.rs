@@ -261,8 +261,8 @@ impl tokio_util::codec::Decoder for Decoder {
     type Error = Error;
 
     fn decode(&mut self, src: &mut BytesMut) -> Result<Option<Self::Item>, Self::Error> {
-        if let Some(event) = self.pending_event.take() {
-            return Ok(Some(event));
+        if self.pending_event.is_some() {
+            return Ok(self.pending_event.take());
         }
 
         // Skip empty or unknown-only frames without waiting for more input.
@@ -276,7 +276,6 @@ impl tokio_util::codec::Decoder for Decoder {
             }
 
             let Some(delimiter) = self.find_frame_delimiter(src) else {
-                tracing::trace!(buffered_bytes = src.len(), "Not enough data in buffer");
                 return Ok(None);
             };
 
