@@ -143,24 +143,29 @@ fn share_payload(src: &BytesMut, size: usize) -> bool {
     size >= MIN_SHARED_PAYLOAD_SIZE && size >= src.capacity().div_ceil(2)
 }
 
+/// A single value range in the frame or an owned buffer of values joined with `LF`.
 enum FieldLines {
     Single(Range<usize>),
     Joined(Vec<u8>),
 }
 
-/// Appends a line range to an accumulated field value, joining multiple lines with `LF`.
+/// Records a value range in `frame` and joins multiple values with `LF`.
 fn append_line(lines: &mut Option<FieldLines>, frame: &[u8], range: Range<usize>) {
     match lines {
         None => *lines = Some(FieldLines::Single(range)),
+
         Some(FieldLines::Single(first)) => {
             let first = &frame[first.clone()];
             let next = &frame[range];
             let mut joined = Vec::with_capacity(first.len() + 1 + next.len());
+
             joined.extend_from_slice(first);
             joined.push(LF);
             joined.extend_from_slice(next);
+
             *lines = Some(FieldLines::Joined(joined));
         }
+
         Some(FieldLines::Joined(joined)) => {
             joined.push(LF);
             joined.extend_from_slice(&frame[range]);
@@ -168,7 +173,7 @@ fn append_line(lines: &mut Option<FieldLines>, frame: &[u8], range: Range<usize>
     }
 }
 
-/// Validates and converts accumulated field lines into a `ByteString`.
+/// Converts the accumulated values to a `ByteString` and returns an error for invalid UTF-8.
 fn finish_lines(frame: &[u8], lines: FieldLines) -> Result<ByteString, str::Utf8Error> {
     match lines {
         FieldLines::Single(range) => ByteString::try_from(&frame[range]),
@@ -176,6 +181,7 @@ fn finish_lines(frame: &[u8], lines: FieldLines) -> Result<ByteString, str::Utf8
     }
 }
 
+/// Collects the fields of one frame before the decoder emits events.
 #[derive(Default)]
 struct ParsedFrame {
     data: Option<FieldLines>,
@@ -186,6 +192,9 @@ struct ParsedFrame {
 }
 
 impl ParsedFrame {
+    /// Parses the lines of a complete frame in order.
+    ///
+    /// Scans for line endings before `last_line_start` and parses the final line directly.
     fn parse_lines(&mut self, frame: &[u8], last_line_start: usize) -> Result<(), Error> {
         let mut line_start = 0;
 
@@ -202,6 +211,10 @@ impl ParsedFrame {
         self.parse_line(frame, last_line_start, last_line)
     }
 
+    /// Parses a line that starts at offset `line_start` in `frame`, without its line ending.
+    ///
+    /// Validates `id` and `event` as UTF-8 immediately. The caller validates `data` and comments
+    /// after collecting all lines.
     fn parse_line(&mut self, frame: &[u8], line_start: usize, line: &[u8]) -> Result<(), Error> {
         match line {
             // Skip empty segments from CRLF.
@@ -406,7 +419,7 @@ impl tokio_util::codec::Decoder for Decoder {
 
 impl Decoder {
     /// Scans `src` for the next blank-line frame delimiter and classifies the
-    /// frame while recording `data`-only lines.
+    /// frame while tracking line starts and recording `data`-only lines.
     ///
     /// Returns the index of the first delimiter byte, or `None` if more bytes
     /// are needed.
@@ -469,8 +482,10 @@ impl Decoder {
         None
     }
 
-    /// Parses a complete frame with the general SSE field parser and consumes
-    /// `consumed` bytes from `src`.
+    /// Parses the frame in `src[..delimiter]` and consumes `consumed` bytes, even on error.
+    ///
+    /// Uses `last_line_start` to skip scanning the final line for a line ending. A large
+    /// single-line `data` value can share the backing buffer of `src`.
     fn parse_frame(
         &mut self,
         src: &mut BytesMut,

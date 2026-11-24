@@ -141,7 +141,7 @@ fn decode_message(b: Bencher<'_, '_>, size: usize) {
     );
 }
 
-#[divan::bench(args = ["ascii", "utf8"])]
+#[divan::bench(args = ["ascii", "utf8"], sample_size = 32)]
 fn decode_named_message(b: Bencher<'_, '_>, kind: &str) {
     let data = match kind {
         "ascii" => "x".repeat(65536),
