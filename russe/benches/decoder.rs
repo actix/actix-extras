@@ -142,6 +142,31 @@ fn decode_message(b: Bencher<'_, '_>, size: usize) {
 }
 
 #[divan::bench(
+    args = ["dense_64b", "dense_1k", "dense_64k", "late_non_ascii_64k"],
+    sample_size = 128,
+)]
+fn decode_utf8_message(b: Bencher<'_, '_>, kind: &str) {
+    // 16-byte dense UTF-8 chunk containing 1-, 2-, 3-, and 4-byte code points.
+    const DENSE_UTF8_16B: &str = "café世界!🎉";
+
+    let data = match kind {
+        "dense_64b" => DENSE_UTF8_16B.repeat(4),
+        "dense_1k" => DENSE_UTF8_16B.repeat(64),
+        "dense_64k" => DENSE_UTF8_16B.repeat(4096),
+        "late_non_ascii_64k" => format!("{}🎉", "x".repeat(65536 - 4)),
+        _ => unreachable!(),
+    };
+    let input = format!("data: {data}\n\n");
+
+    bench_decode(
+        b,
+        &input,
+        &[Event::Message(data_message(data))],
+        input.len(),
+    );
+}
+
+#[divan::bench(
     args = [
         (32, 1),
         (32, 7),
