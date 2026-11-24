@@ -505,6 +505,29 @@ mod tests {
     }
 
     #[test]
+    fn ignores_single_line_id_containing_nul() {
+        let mut input = BytesMut::from("id: a\0b\n\ndata: next\n\n");
+
+        assert_eq!(
+            Decoder::default().decode(&mut input).unwrap(),
+            Some(Event::Message(Message::data("next"))),
+        );
+    }
+
+    #[test]
+    fn ignores_id_containing_nul_between_data_lines() {
+        let mut input = BytesMut::from("id: keep\ndata: first\nid: a\0b\ndata: last\n\n");
+
+        assert_eq!(
+            Decoder::default().decode(&mut input).unwrap(),
+            Some(Event::Message(Message {
+                id: Some("keep".into()),
+                ..Message::data("first\nlast")
+            })),
+        );
+    }
+
+    #[test]
     fn preserves_multiline_comments() {
         let mut input = BytesMut::from(indoc! {"
             : first
