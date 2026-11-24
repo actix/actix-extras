@@ -220,32 +220,100 @@ impl tokio_util::codec::Decoder for Decoder {
                     // The frame delimiter can start at the LF of a CRLF ending.
                     let line = frame.strip_suffix(&[CR]).unwrap_or(frame);
 
-                    if let Some(value) = line.strip_prefix(b"data:") {
-                        let (offset, value) = match value.strip_prefix(b" ") {
-                            Some(value) => (b"data: ".len(), value),
-                            None => (b"data:".len(), value),
-                        };
-                        let size = value.len();
-
-                        let data = if share_payload(src, size) {
-                            let mut payload = src.split_to(consumed);
-                            payload.advance(offset);
-                            payload.truncate(size);
-                            ByteString::try_from(payload)
-                        } else {
-                            let data = ByteString::try_from(value);
+                    match line {
+                        [] => {
                             src.advance(consumed);
-                            data
-                        };
+                            continue;
+                        }
 
-                        return Ok(Some(data_event(data?)));
-                    }
+                        [b'd', ..] => {
+                            if let Some(value) = line.strip_prefix(b"data:") {
+                                let (offset, value) = match value.strip_prefix(b" ") {
+                                    Some(value) => (b"data: ".len(), value),
+                                    None => (b"data:".len(), value),
+                                };
+                                let size = value.len();
 
-                    if let Some(value) = line.strip_prefix(b":") {
-                        let comment = ByteString::try_from(strip_space(value));
-                        src.advance(consumed);
+                                let data = if share_payload(src, size) {
+                                    let mut payload = src.split_to(consumed);
+                                    payload.advance(offset);
+                                    payload.truncate(size);
+                                    ByteString::try_from(payload)
+                                } else {
+                                    let data = ByteString::try_from(value);
+                                    src.advance(consumed);
+                                    data
+                                };
 
-                        return Ok(Some(Event::Comment(comment?)));
+                                return Ok(Some(data_event(data?)));
+                            }
+
+                            let is_bare_data = line == b"data";
+                            src.advance(consumed);
+
+                            if is_bare_data {
+                                return Ok(Some(data_event(ByteString::new())));
+                            }
+
+                            continue;
+                        }
+
+                        [b':', value @ ..] => {
+                            let comment = ByteString::try_from(strip_space(value));
+                            src.advance(consumed);
+
+                            return Ok(Some(Event::Comment(comment?)));
+                        }
+
+                        [b'r', ..] => {
+                            let retry = field_value(line, b"retry").and_then(parse_retry);
+                            src.advance(consumed);
+
+                            if let Some(delay) = retry {
+                                return Ok(Some(Event::Retry(delay)));
+                            }
+
+                            continue;
+                        }
+
+                        [b'i', ..] => {
+                            if let Some(value) = field_value(line, b"id") {
+                                let id = ByteString::try_from(value);
+                                src.advance(consumed);
+
+                                return Ok(Some(Event::Message(Message {
+                                    data: ByteString::new(),
+                                    event: None,
+                                    retry: None,
+                                    id: Some(id?),
+                                })));
+                            }
+
+                            src.advance(consumed);
+                            continue;
+                        }
+
+                        [b'e', ..] => {
+                            if let Some(value) = field_value(line, b"event") {
+                                let event = ByteString::try_from(value);
+                                src.advance(consumed);
+
+                                return Ok(Some(Event::Message(Message {
+                                    data: ByteString::new(),
+                                    event: Some(event?),
+                                    retry: None,
+                                    id: None,
+                                })));
+                            }
+
+                            src.advance(consumed);
+                            continue;
+                        }
+
+                        _ => {
+                            src.advance(consumed);
+                            continue;
+                        }
                     }
                 }
 
@@ -1153,5 +1221,174 @@ mod tests {
 
         // no more events in the stream
         assert_none!(event_stream.next().await);
+    }
+
+    #[test]
+    fn decodes_single_line_retry_frames() {
+        for (input, expected) in [
+            (
+                "retry: 42\n\n",
+                Some(Event::Retry(Duration::from_millis(42))),
+            ),
+            (
+                "retry:42\r\n\r\n",
+                Some(Event::Retry(Duration::from_millis(42))),
+            ),
+            (
+                "retry: 18446744073709551616\n\n",
+                Some(Event::Retry(Duration::new(
+                    18_446_744_073_709_551,
+                    616_000_000,
+                ))),
+            ),
+            ("retry: invalid\n\n", None),
+            ("retry\n\n", None),
+            ("retrying: 42\n\n", None),
+        ] {
+            let mut input = BytesMut::from(input);
+
+            assert_eq!(Decoder::default().decode(&mut input).unwrap(), expected);
+            assert!(input.is_empty());
+        }
+    }
+
+    #[test]
+    fn decodes_single_line_id_and_event_frames() {
+        for (input, expected) in [
+            (
+                "id: 42\n\n",
+                Some(Event::Message(Message {
+                    id: Some("42".into()),
+                    ..Default::default()
+                })),
+            ),
+            (
+                "id:42\r\n\r\n",
+                Some(Event::Message(Message {
+                    id: Some("42".into()),
+                    ..Default::default()
+                })),
+            ),
+            (
+                "id\n\n",
+                Some(Event::Message(Message {
+                    id: Some("".into()),
+                    ..Default::default()
+                })),
+            ),
+            ("identifier: 42\n\n", None),
+            (
+                "event: ping\n\n",
+                Some(Event::Message(Message {
+                    event: Some("ping".into()),
+                    ..Default::default()
+                })),
+            ),
+            (
+                "event:ping\r\n\r\n",
+                Some(Event::Message(Message {
+                    event: Some("ping".into()),
+                    ..Default::default()
+                })),
+            ),
+            (
+                "event\n\n",
+                Some(Event::Message(Message {
+                    event: Some("".into()),
+                    ..Default::default()
+                })),
+            ),
+            ("eventual: ping\n\n", None),
+        ] {
+            let mut input = BytesMut::from(input);
+
+            assert_eq!(Decoder::default().decode(&mut input).unwrap(), expected);
+            assert!(input.is_empty());
+        }
+    }
+
+    #[test]
+    fn decodes_single_line_bare_data_and_unknown_d_fields() {
+        let mut input = BytesMut::from("data\n\n");
+        assert_eq!(
+            Decoder::default().decode(&mut input).unwrap(),
+            Some(Event::Message(Message::data(""))),
+        );
+        assert!(input.is_empty());
+
+        let mut input = BytesMut::from("data\r\n\r\n");
+        assert_eq!(
+            Decoder::default().decode(&mut input).unwrap(),
+            Some(Event::Message(Message::data(""))),
+        );
+        assert!(input.is_empty());
+
+        for ignored in ["database: ignored\n\n", "data2: ignored\r\n\r\n", "d\n\n"] {
+            let mut input = BytesMut::from(format!("{ignored}data: next\n\n").as_str());
+
+            assert_eq!(
+                Decoder::default().decode(&mut input).unwrap(),
+                Some(Event::Message(Message::data("next"))),
+            );
+            assert!(input.is_empty());
+        }
+    }
+
+    #[test]
+    fn skips_single_line_empty_frames() {
+        for empty in ["\n\n", "\r\n\r\n", "\r\r", "\n\r", "\n\n\r\n\r\n"] {
+            let mut input = BytesMut::from(empty);
+
+            assert_none!(Decoder::default().decode(&mut input).unwrap());
+            assert!(input.is_empty(), "empty frame {empty:?} was not consumed");
+
+            let mut input = BytesMut::from(format!("{empty}data: ok\n\n").as_str());
+
+            assert_eq!(
+                Decoder::default().decode(&mut input).unwrap(),
+                Some(Event::Message(Message::data("ok"))),
+            );
+            assert!(input.is_empty());
+        }
+    }
+
+    #[test]
+    fn consumes_invalid_utf8_single_line_frames() {
+        let large_invalid = [
+            b"data: ".as_slice(),
+            &vec![b'x'; MIN_SHARED_PAYLOAD_SIZE],
+            b"\xff",
+        ]
+        .concat();
+
+        let cases: Vec<&[u8]> = vec![
+            b"data: \xff",
+            &large_invalid,
+            b": \xff",
+            b"id: \xff",
+            b"event: \xff",
+        ];
+
+        for frame in cases {
+            for delimiter in [b"\n\n".as_slice(), b"\r\n\r\n"] {
+                let mut decoder = Decoder::default();
+                let mut buffer = BytesMut::from(frame);
+                let following = b"data: next\n\n";
+
+                buffer.extend_from_slice(delimiter);
+                buffer.extend_from_slice(following);
+
+                assert!(matches!(
+                    decoder.decode(&mut buffer),
+                    Err(Error::InvalidUtf8 { .. })
+                ));
+                assert_eq!(&buffer[..], following);
+                assert_eq!(
+                    decoder.decode(&mut buffer).unwrap(),
+                    Some(Event::Message(Message::data("next"))),
+                );
+                assert!(buffer.is_empty());
+            }
+        }
     }
 }

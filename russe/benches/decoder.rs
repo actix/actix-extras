@@ -192,6 +192,38 @@ fn decode_message_batch(b: Bencher<'_, '_>, count: usize) {
     bench_decode(b, &input, &expected, input.len());
 }
 
+#[divan::bench(args = [1, 16, 128], sample_size = 32)]
+fn decode_retry_batch(b: Bencher<'_, '_>, count: usize) {
+    let input = "retry: 1500\n\n".repeat(count);
+    let expected = vec![Event::Retry(Duration::from_millis(1500)); count];
+
+    bench_decode(b, &input, &expected, input.len());
+}
+
+#[divan::bench(sample_size = 16)]
+fn decode_empty_frames(b: Bencher<'_, '_>) {
+    let input = format!("{}data: payload\n\n", "\n\n".repeat(128));
+
+    bench_decode(
+        b,
+        &input,
+        &[Event::Message(data_message("payload"))],
+        input.len(),
+    );
+}
+
+#[divan::bench(sample_size = 16)]
+fn decode_unknown_single_line_frames(b: Bencher<'_, '_>) {
+    let input = format!("{}data: payload\n\n", "unknown: ignored\n\n".repeat(128));
+
+    bench_decode(
+        b,
+        &input,
+        &[Event::Message(data_message("payload"))],
+        input.len(),
+    );
+}
+
 #[divan::bench(sample_size = 16)]
 fn decode_ignored_frames(b: Bencher<'_, '_>) {
     let input = format!(
