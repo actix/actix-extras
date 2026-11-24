@@ -27,7 +27,7 @@ fn bench_event(b: Bencher<'_, '_>, event: Event, expected: &str) {
         .bench_values(|event| event.into_bytestring().unwrap());
 }
 
-#[divan::bench(args = [32, 1000, 1024, 60000, 65536])]
+#[divan::bench(args = [32, 1000, 1024, 60000, 65536], sample_size = 32)]
 fn encode_into_bytestring_message(b: Bencher<'_, '_>, size: usize) {
     let data = "x".repeat(size);
     let expected = format!("data: {data}\n\n");
@@ -35,7 +35,7 @@ fn encode_into_bytestring_message(b: Bencher<'_, '_>, size: usize) {
     bench_event(b, Event::Message(data_message(data)), &expected);
 }
 
-#[divan::bench]
+#[divan::bench(sample_size = 16)]
 fn encode_into_bytestring_multiline_message(b: Bencher<'_, '_>) {
     let expected = format!(
         "id: 42\nevent: update\nretry: 1500\n{}\n",
@@ -54,7 +54,7 @@ fn encode_into_bytestring_multiline_message(b: Bencher<'_, '_>) {
     );
 }
 
-#[divan::bench(args = [6, 32, 1024])]
+#[divan::bench(args = [6, 32, 1024], sample_size = 32)]
 fn encode_codec_message_fields_reused_buffer(b: Bencher<'_, '_>, size: usize) {
     let field = ByteString::from("x".repeat(size));
     let event = Event::Message(Message {
@@ -83,12 +83,12 @@ fn encode_codec_message_fields_reused_buffer(b: Bencher<'_, '_>, size: usize) {
     });
 }
 
-#[divan::bench]
+#[divan::bench(sample_size = 64)]
 fn encode_into_bytestring_comment(b: Bencher<'_, '_>) {
     bench_event(b, Event::Comment("keep-alive".into()), ": keep-alive\n\n");
 }
 
-#[divan::bench]
+#[divan::bench(sample_size = 64)]
 fn encode_into_bytestring_retry(b: Bencher<'_, '_>) {
     bench_event(
         b,
@@ -117,18 +117,18 @@ fn bench_codec_message(b: Bencher<'_, '_>, size: usize) {
     });
 }
 
-#[divan::bench(args = [32, 1000, 1024, 60000, 65536])]
+#[divan::bench(args = [32, 1000, 1024, 60000, 65536], sample_size = 32)]
 fn encode_codec_message_new_buffer(b: Bencher<'_, '_>, size: usize) {
     bench_codec_message(b, size);
 }
 
-#[divan::bench(args = [32, 1024, 65536])]
+#[divan::bench(args = [32, 1024, 65536], sample_size = 32)]
 fn encode_codec_frame_size_new_buffer(b: Bencher<'_, '_>, frame_size: usize) {
     // Include the data field prefix and final blank line in the frame size.
     bench_codec_message(b, frame_size - "data: \n\n".len());
 }
 
-#[divan::bench(args = [32, 1000, 1024, 60000, 65536])]
+#[divan::bench(args = [32, 1000, 1024, 60000, 65536], sample_size = 64)]
 fn encode_codec_message_reused_buffer(b: Bencher<'_, '_>, size: usize) {
     let data = "x".repeat(size);
     let expected = format!("data: {data}\n\n");
@@ -148,7 +148,7 @@ fn encode_codec_message_reused_buffer(b: Bencher<'_, '_>, size: usize) {
     });
 }
 
-#[divan::bench(args = [64, 4096])]
+#[divan::bench(args = [64, 4096], sample_size = 16)]
 fn encode_codec_multiline_message_reused_buffer(b: Bencher<'_, '_>, lines: usize) {
     let data = "0123456789abcde\n".repeat(lines);
     let expected = "data: 0123456789abcde\n".repeat(lines) + "data: \n\n";
@@ -168,7 +168,7 @@ fn encode_codec_multiline_message_reused_buffer(b: Bencher<'_, '_>, lines: usize
     });
 }
 
-#[divan::bench(args = [0, 1500, u64::MAX])]
+#[divan::bench(args = [0, 1500, u64::MAX], sample_size = 64)]
 fn encode_codec_retry_reused_buffer(b: Bencher<'_, '_>, millis: u64) {
     let event = Event::Retry(Duration::from_millis(millis));
     let expected = format!("retry: {millis}\n\n");

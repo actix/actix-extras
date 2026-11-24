@@ -123,12 +123,12 @@ fn bench_decode(b: Bencher<'_, '_>, input: &str, expected: &[Event], chunk_size:
         });
 }
 
-#[divan::bench]
+#[divan::bench(sample_size = 512)]
 fn decode_startup() -> Decoder {
     Decoder::default()
 }
 
-#[divan::bench(args = [32, 1000, 1024, 60000, 65536])]
+#[divan::bench(args = [32, 1000, 1024, 60000, 65536], sample_size = 32)]
 fn decode_message(b: Bencher<'_, '_>, size: usize) {
     let data = "x".repeat(size);
     let input = format!("data: {data}\n\n");
@@ -141,16 +141,19 @@ fn decode_message(b: Bencher<'_, '_>, size: usize) {
     );
 }
 
-#[divan::bench(args = [
-    (32, 1),
-    (32, 7),
-    (1000, 13),
-    (1024, 1),
-    (1024, 7),
-    (60000, 1500),
-    (65536, 7),
-    (65536, 1024),
-])]
+#[divan::bench(
+    args = [
+        (32, 1),
+        (32, 7),
+        (1000, 13),
+        (1024, 1),
+        (1024, 7),
+        (60000, 1500),
+        (65536, 7),
+        (65536, 1024),
+    ],
+    sample_size = 8,
+)]
 fn decode_fragmented_message(b: Bencher<'_, '_>, (size, chunk_size): (usize, usize)) {
     let data = "x".repeat(size);
     let input = format!("data: {data}\n\n");
@@ -158,7 +161,7 @@ fn decode_fragmented_message(b: Bencher<'_, '_>, (size, chunk_size): (usize, usi
     bench_decode(b, &input, &[Event::Message(data_message(data))], chunk_size);
 }
 
-#[divan::bench(args = ["lf", "crlf", "cr"])]
+#[divan::bench(args = ["lf", "crlf", "cr"], sample_size = 16)]
 fn decode_line_endings(b: Bencher<'_, '_>, name: &str) {
     let ending = match name {
         "lf" => "\n",
@@ -181,7 +184,7 @@ fn decode_line_endings(b: Bencher<'_, '_>, name: &str) {
     bench_decode(b, &input, &expected, 7);
 }
 
-#[divan::bench(args = [1, 16, 128])]
+#[divan::bench(args = [1, 16, 128], sample_size = 32)]
 fn decode_message_batch(b: Bencher<'_, '_>, count: usize) {
     let input = "data: payload\n\n".repeat(count);
     let expected = vec![Event::Message(data_message("payload")); count];
@@ -189,7 +192,7 @@ fn decode_message_batch(b: Bencher<'_, '_>, count: usize) {
     bench_decode(b, &input, &expected, input.len());
 }
 
-#[divan::bench]
+#[divan::bench(sample_size = 16)]
 fn decode_ignored_frames(b: Bencher<'_, '_>) {
     let input = format!(
         "{}data: payload\n\n",
@@ -221,7 +224,7 @@ async fn decode_stream(input: &str, mut consume: impl FnMut(Event)) -> usize {
     count
 }
 
-#[divan::bench]
+#[divan::bench(sample_size = 16)]
 fn decode_sse_events(b: Bencher<'_, '_>) {
     let rt = tokio::runtime::Handle::current();
     let mut actual = Vec::new();
