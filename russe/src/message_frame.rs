@@ -476,7 +476,10 @@ impl MessageFrame {
         })))
     }
 
-    /// Extracts `event` and `id` values from `src` in the order they appeared in the frame.
+    /// Extracts `(event, id)` values from `src`.
+    ///
+    /// Validates UTF-8 in the order the fields appeared in the frame so error
+    /// precedence matches `ParsedFrame`.
     fn extract_headers(
         &self,
         src: &[u8],
