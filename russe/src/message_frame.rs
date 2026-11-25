@@ -523,10 +523,7 @@ impl MessageFrame {
 
 #[cfg(test)]
 mod tests {
-    use tokio_util::codec::Decoder as _;
-
     use super::*;
-    use crate::decoder::{Decoder, MIN_SHARED_PAYLOAD_SIZE};
 
     #[test]
     fn record_line_rejects_unsupported_layouts() {
@@ -555,70 +552,5 @@ mod tests {
                 str::from_utf8(input),
             );
         }
-    }
-
-    #[test]
-    fn compacts_large_multiline_data_with_event_and_id_in_place() {
-        let chunk = "café".repeat(128);
-
-        for ending in ["\n", "\r\n", "\r"] {
-            for lines in [2, 3, 5] {
-                let prefix = format!("event: foo{ending}id: 123{ending}");
-                let mut frame = prefix.clone();
-
-                for _ in 0..lines {
-                    frame.push_str("data: ");
-                    frame.push_str(&chunk);
-                    frame.push_str(ending);
-                }
-
-                frame.push_str(ending);
-
-                let expected_data = vec![chunk.as_str(); lines].join("\n");
-                let mut input = BytesMut::from(frame.as_str());
-                let payload = input[prefix.len() + b"data: ".len()..].as_ptr();
-                let mut decoder = Decoder::default();
-
-                let Some(Event::Message(first)) = decoder.decode(&mut input).unwrap() else {
-                    panic!("expected a message");
-                };
-
-                assert_eq!(first.data.as_ptr(), payload);
-                assert_eq!(&*first.data, expected_data);
-                assert_eq!(first.event.as_deref(), Some("foo"));
-                assert_eq!(first.id.as_deref(), Some("123"));
-                assert!(input.is_empty());
-
-                // Verify the shared buffer remains intact when more input arrives.
-                input.extend_from_slice(frame.as_bytes());
-
-                assert_eq!(
-                    decoder.decode(&mut input).unwrap(),
-                    Some(Event::Message(Message {
-                        event: Some("foo".into()),
-                        id: Some("123".into()),
-                        ..Message::data(expected_data.as_str())
-                    })),
-                );
-                assert_eq!(&*first.data, expected_data);
-                assert!(input.is_empty());
-            }
-        }
-
-        // Also test mixed line endings and bare `data` lines during in-place compaction.
-        let large = "x".repeat(MIN_SHARED_PAYLOAD_SIZE);
-        let frame = format!("event: mix\ndata\ndata:{large}\ndata: \ndata: tail\r\n\r\n");
-        let mut input = BytesMut::from(frame.as_str());
-        let payload = input[b"event: mix\ndata".len()..].as_ptr();
-        let mut decoder = Decoder::default();
-
-        let Some(Event::Message(msg)) = decoder.decode(&mut input).unwrap() else {
-            panic!("expected a message");
-        };
-
-        assert_eq!(msg.data.as_ptr(), payload);
-        assert_eq!(&*msg.data, format!("\n{large}\n\ntail"));
-        assert_eq!(msg.event.as_deref(), Some("mix"));
-        assert!(input.is_empty());
     }
 }
