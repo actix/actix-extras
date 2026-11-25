@@ -239,6 +239,10 @@ impl MessageFrame {
     /// Builds an event from the recorded fields, consumes `consumed` bytes from `src`,
     /// and clears this state.
     ///
+    /// Returns `Ok(None)` when the complete frame produces no event (for example,
+    /// invalid `retry` values or an ignored NUL-containing `id` with no `data` or `event`).
+    /// The frame bytes are still consumed so the caller can continue to the next frame.
+    ///
     /// Large `data` payloads are sliced or compacted in place inside a split slice of `src`
     /// to avoid allocating a new payload buffer.
     #[inline(never)]
@@ -254,6 +258,10 @@ impl MessageFrame {
         result
     }
 
+    /// Implements [`Self::finish`] without clearing state.
+    ///
+    /// Returns `Ok(None)` when the consumed frame produces no event (not when more input
+    /// is needed).
     fn finish_inner(&self, src: &mut BytesMut, consumed: usize) -> Result<Option<Event>, Error> {
         // Validate `event` and `id` in line order before `data` to match `ParsedFrame`.
         let (event, id) = match self.extract_headers(src) {
@@ -282,46 +290,46 @@ impl MessageFrame {
         let Some(first) = self.inline_data[0] else {
             unreachable!("MessageFrame with data_count > 0 must record first line");
         };
-        let first = first.as_range();
+        let first_range = first.as_range();
         let data_len = self.data_len as usize;
 
         let data = if self.data_count == 1 {
-            if share_payload(src, first.len()) {
+            if share_payload(src, first_range.len()) {
                 let mut frame = src.split_to(consumed);
-                frame.truncate(first.end);
-                frame.advance(first.start);
+                frame.truncate(first_range.end);
+                frame.advance(first_range.start);
 
                 ByteString::try_from(frame)
             } else {
-                let data = ByteString::try_from(&src[first]);
+                let data = ByteString::try_from(&src[first_range]);
                 src.advance(consumed);
 
                 data
             }
         } else if (self.data_count as usize) <= Self::INLINE_LINES {
-            let inline_rest = &self.inline_data[1..self.data_count as usize];
+            let rest_ranges = &self.inline_data[1..self.data_count as usize];
 
             if share_payload(src, data_len) {
                 let mut frame = src.split_to(consumed);
-                let mut write = first.end;
+                let mut write_idx = first_range.end;
 
                 // The first value is already in place. Move later values toward it.
-                for value in inline_rest.iter().flatten() {
-                    frame[write] = LF;
-                    write += 1;
-                    frame.copy_within(value.as_range(), write);
-                    write += value.len();
+                for value in rest_ranges.iter().flatten() {
+                    frame[write_idx] = LF;
+                    write_idx += 1;
+                    frame.copy_within(value.as_range(), write_idx);
+                    write_idx += value.len();
                 }
 
-                frame.truncate(write);
-                frame.advance(first.start);
+                frame.truncate(write_idx);
+                frame.advance(first_range.start);
 
                 ByteString::try_from(frame)
             } else {
                 let mut data = Vec::with_capacity(data_len);
-                data.extend_from_slice(&src[first]);
+                data.extend_from_slice(&src[first_range]);
 
-                for value in inline_rest.iter().flatten() {
+                for value in rest_ranges.iter().flatten() {
                     data.push(LF);
                     data.extend_from_slice(&src[value.as_range()]);
                 }
@@ -332,39 +340,39 @@ impl MessageFrame {
             }
         } else {
             let data_end = self.data_end as usize;
-            let mut next_start = first.end + 1;
+            let mut next_start = first_range.end + 1;
 
-            if self.has_cr && src[first.end] == CR && src.get(next_start) == Some(&LF) {
+            if self.has_cr && src[first_range.end] == CR && src.get(next_start) == Some(&LF) {
                 next_start += 1;
             }
 
             if share_payload(src, data_len) {
                 let mut frame = src.split_to(consumed);
-                let mut write = first.end;
-                let mut read = next_start;
+                let mut read_idx = next_start;
+                let mut write_idx = first_range.end;
 
                 // The first value is already in place. Compact later values toward it.
                 if !self.has_cr {
                     loop {
-                        let value_start = data_value_start(&frame, read, data_end);
+                        let value_start = data_value_start(&frame, read_idx, data_end);
 
                         match memchr(LF, &frame[value_start..data_end]) {
                             Some(offset) => {
                                 let pos = value_start + offset;
 
-                                frame[write] = LF;
-                                write += 1;
-                                frame.copy_within(value_start..pos, write);
-                                write += offset;
+                                frame[write_idx] = LF;
+                                write_idx += 1;
+                                frame.copy_within(value_start..pos, write_idx);
+                                write_idx += offset;
 
-                                read = pos + 1;
+                                read_idx = pos + 1;
                             }
 
                             None => {
-                                frame[write] = LF;
-                                write += 1;
-                                frame.copy_within(value_start..data_end, write);
-                                write += data_end - value_start;
+                                frame[write_idx] = LF;
+                                write_idx += 1;
+                                frame.copy_within(value_start..data_end, write_idx);
+                                write_idx += data_end - value_start;
 
                                 break;
                             }
@@ -372,29 +380,29 @@ impl MessageFrame {
                     }
                 } else {
                     loop {
-                        let value_start = data_value_start(&frame, read, data_end);
+                        let value_start = data_value_start(&frame, read_idx, data_end);
 
                         match memchr2(CR, LF, &frame[value_start..data_end]) {
                             Some(offset) => {
-                                let pos = value_start + offset;
+                                let eol_idx = value_start + offset;
 
-                                frame[write] = LF;
-                                write += 1;
-                                frame.copy_within(value_start..pos, write);
-                                write += offset;
+                                frame[write_idx] = LF;
+                                write_idx += 1;
+                                frame.copy_within(value_start..eol_idx, write_idx);
+                                write_idx += offset;
 
-                                read = pos + 1;
+                                read_idx = eol_idx + 1;
 
-                                if frame[pos] == CR && frame.get(read) == Some(&LF) {
-                                    read += 1;
+                                if frame[eol_idx] == CR && frame.get(read_idx) == Some(&LF) {
+                                    read_idx += 1;
                                 }
                             }
 
                             None => {
-                                frame[write] = LF;
-                                write += 1;
-                                frame.copy_within(value_start..data_end, write);
-                                write += data_end - value_start;
+                                frame[write_idx] = LF;
+                                write_idx += 1;
+                                frame.copy_within(value_start..data_end, write_idx);
+                                write_idx += data_end - value_start;
 
                                 break;
                             }
@@ -402,19 +410,19 @@ impl MessageFrame {
                     }
                 }
 
-                frame.truncate(write);
-                frame.advance(first.start);
+                frame.truncate(write_idx);
+                frame.advance(first_range.start);
 
                 ByteString::try_from(frame)
             } else {
                 let mut data = Vec::with_capacity(data_len);
-                data.extend_from_slice(&src[first]);
+                data.extend_from_slice(&src[first_range]);
 
-                let mut read = next_start;
+                let mut read_idx = next_start;
 
                 if !self.has_cr {
                     loop {
-                        let value_start = data_value_start(src, read, data_end);
+                        let value_start = data_value_start(src, read_idx, data_end);
 
                         match memchr(LF, &src[value_start..data_end]) {
                             Some(offset) => {
@@ -423,7 +431,7 @@ impl MessageFrame {
                                 data.push(LF);
                                 data.extend_from_slice(&src[value_start..pos]);
 
-                                read = pos + 1;
+                                read_idx = pos + 1;
                             }
 
                             None => {
@@ -436,7 +444,7 @@ impl MessageFrame {
                     }
                 } else {
                     loop {
-                        let value_start = data_value_start(src, read, data_end);
+                        let value_start = data_value_start(src, read_idx, data_end);
 
                         match memchr2(CR, LF, &src[value_start..data_end]) {
                             Some(offset) => {
@@ -445,10 +453,10 @@ impl MessageFrame {
                                 data.push(LF);
                                 data.extend_from_slice(&src[value_start..pos]);
 
-                                read = pos + 1;
+                                read_idx = pos + 1;
 
-                                if src[pos] == CR && src.get(read) == Some(&LF) {
-                                    read += 1;
+                                if src[pos] == CR && src.get(read_idx) == Some(&LF) {
+                                    read_idx += 1;
                                 }
                             }
 
