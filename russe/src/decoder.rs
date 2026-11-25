@@ -97,7 +97,7 @@ impl MessageFrame {
     // Store short multiline payloads inline to avoid re-scanning data lines.
     const INLINE_LINES: usize = 2;
 
-    /// Records the next line ending at `end` in `src`.
+    /// Records the next line in `src`, where `end` is the index of its line terminator.
     ///
     /// Accepts a contiguous block of `data` lines with optional `event`, `id`, and
     /// `retry` fields before or after the `data` lines (at most one `event` and one `id`).
