@@ -326,6 +326,35 @@ fn decode_mixed_multiline_data(b: Bencher<'_, '_>, lines: usize) {
     bench_decode(b, &input, &[expected], input.len());
 }
 
+#[divan::bench(args = [1, 16, 128], sample_size = 32)]
+fn decode_event_multiline_batch(b: Bencher<'_, '_>, count: usize) {
+    let input = "event: foo\ndata: bar\ndata: baz\n\n".repeat(count);
+    let expected = vec![
+        Event::Message(Message {
+            event: Some("foo".into()),
+            ..data_message("bar\nbaz")
+        });
+        count
+    ];
+
+    bench_decode(b, &input, &expected, input.len());
+}
+
+#[divan::bench(args = [1, 16, 128], sample_size = 32)]
+fn decode_event_id_multiline_batch(b: Bencher<'_, '_>, count: usize) {
+    let input = "event: foo\nid: 123\ndata: bar\ndata: baz\n\n".repeat(count);
+    let expected = vec![
+        Event::Message(Message {
+            event: Some("foo".into()),
+            id: Some("123".into()),
+            ..data_message("bar\nbaz")
+        });
+        count
+    ];
+
+    bench_decode(b, &input, &expected, input.len());
+}
+
 #[divan::bench(args = [1025, 2048], sample_size = 8)]
 fn decode_many_data_lines(b: Bencher<'_, '_>, lines: usize) {
     let input = format!("{}\n", "data: payload\n".repeat(lines));
