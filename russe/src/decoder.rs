@@ -79,17 +79,51 @@ fn data_value_start(src: &[u8], line_start: usize, limit: usize) -> usize {
     value_start
 }
 
+/// Fast-path field offsets for a frame with a contiguous block of `data` lines.
+///
+/// Tracks optional `event`, `id`, and `retry` fields alongside the `data` block
+/// using `u32` byte offsets into the decoder's input buffer.
 #[derive(Debug, Clone, Copy, Default)]
 struct MessageFrame {
+    /// Byte range of the `event` field value in `src`, if seen.
     event: Option<ByteRange>,
+
+    /// Byte range of the `id` field value in `src`, if seen.
     id: Option<ByteRange>,
+
+    /// Last valid `retry` delay in this frame, if seen.
     retry: Option<Duration>,
+
+    /// Byte ranges of the first `data` field values in `src`, avoiding a re-scan
+    /// for short multiline payloads.
+    ///
+    /// Only the first `min(data_count, Self::INLINE_LINES)` entries are valid;
+    /// `clear` does not reset this array.
     inline_data: [Option<ByteRange>; Self::INLINE_LINES],
+
+    /// Exclusive end byte offset in `src` of the last recorded `data` value,
+    /// before its line terminator.
     data_end: u32,
+
+    /// Exact byte length of the joined `data` payload, including `LF` separators
+    /// between consecutive `data` lines.
     data_len: u32,
+
+    /// Number of `data` lines recorded in this frame.
     data_count: u32,
+
+    /// Start byte offset in `src` of the next line to record.
     next_line: u32,
+
+    /// Set once a non-`data` field appears after at least one `data` line.
+    ///
+    /// Prevents later `data` lines from entering this fast path so the recorded
+    /// `data` lines stay contiguous.
     data_closed: bool,
+
+    /// Set if any recorded line ended with `CR` or `CRLF`.
+    ///
+    /// When `false`, the multiline `data` scan searches only for `LF`.
     has_cr: bool,
 }
 
