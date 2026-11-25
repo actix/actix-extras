@@ -1,13 +1,13 @@
-use std::{mem, ops::Range, str, time::Duration};
+use std::{mem, num::NonZeroU32, ops::Range, str, time::Duration};
 
 use bytes::{Buf as _, BytesMut};
 use bytestring::ByteString;
-use memchr::{memchr2, memchr2_iter};
+use memchr::{memchr, memchr2, memchr2_iter};
 
 use crate::{
     CR, Error, LF,
     event::Event,
-    fields::{data_event, field_value, parse_id, parse_retry, strip_space},
+    fields::{data_event, field_value, parse_id, parse_id_value, parse_retry, strip_space},
     message::Message,
 };
 
@@ -25,7 +25,7 @@ pub struct Decoder {
     scan_from: usize,
     last_line_start: usize,
     frame_kind: FrameKind,
-    data_lines: DataLines,
+    message: MessageFrame,
     skip_lf: bool,
 }
 
@@ -33,106 +33,474 @@ pub struct Decoder {
 enum FrameKind {
     #[default]
     SingleLine,
-    DataLines,
+    Message,
     Other,
 }
 
-#[derive(Debug, Clone, Default)]
-struct DataLines {
-    values: Vec<Range<usize>>,
-    next_line: usize,
-    len: usize,
+#[derive(Debug, Clone, Copy)]
+struct ByteRange {
+    start: u32,
+    end: NonZeroU32,
 }
 
-impl DataLines {
-    // Bound the metadata retained for a frame with many short lines.
-    const MAX_LINES: usize = 1024;
+impl ByteRange {
+    /// Creates a byte range for a value at the end of a line starting at `line_start`.
+    fn from_suffix(line_start: usize, line_len: usize, value_len: usize) -> Option<Self> {
+        let value_end = line_start + line_len;
+        let end = NonZeroU32::new(u32::try_from(value_end).ok()?)?;
 
-    /// Records the byte range of the next `data` line ending at `end` in `src`.
-    ///
-    /// Returns true if the line is a `data` field and was recorded.
-    ///
-    /// Returns false if the line is not a `data` field or `Self::MAX_LINES`
-    /// is already reached. The caller must then clear this state and use the
-    /// general frame parser.
-    fn record_range(&mut self, src: &[u8], end: usize) -> bool {
-        if self.values.len() == Self::MAX_LINES {
-            return false;
+        Some(Self {
+            start: (value_end - value_len) as u32,
+            end,
+        })
+    }
+
+    fn as_range(self) -> Range<usize> {
+        self.start as usize..self.end.get() as usize
+    }
+
+    fn len(self) -> usize {
+        (self.end.get() - self.start) as usize
+    }
+}
+
+/// Returns the start offset of the value for a known `data` line starting at `line_start`.
+fn data_value_start(src: &[u8], line_start: usize, limit: usize) -> usize {
+    let mut value_start = line_start + b"data".len();
+
+    if value_start < limit && src[value_start] == b':' {
+        value_start += 1;
+
+        if value_start < limit && src[value_start] == b' ' {
+            value_start += 1;
         }
+    }
 
-        let line = &src[self.next_line..end];
-        let line = line.strip_suffix(&[CR]).unwrap_or(line);
-        let Some(value) = field_value(line, b"data") else {
+    value_start
+}
+
+#[derive(Debug, Clone, Copy, Default)]
+struct MessageFrame {
+    event: Option<ByteRange>,
+    id: Option<ByteRange>,
+    retry: Option<Duration>,
+    inline_data: [Option<ByteRange>; Self::INLINE_LINES],
+    data_end: u32,
+    data_len: u32,
+    data_count: u32,
+    next_line: u32,
+    data_closed: bool,
+    has_cr: bool,
+}
+
+impl MessageFrame {
+    // Store short multiline payloads inline to avoid re-scanning data lines.
+    const INLINE_LINES: usize = 2;
+
+    /// Records the next line ending at `end` in `src`.
+    ///
+    /// Accepts a contiguous block of `data` lines with optional `event`, `id`, and
+    /// `retry` fields before or after the `data` lines (at most one `event` and one `id`).
+    ///
+    /// Returns false if the line is a comment, unknown field, duplicate `event` or `id`,
+    /// a `data` line after non-`data` fields following earlier `data` lines, or exceeds
+    /// `u32` offsets. The caller must then clear this state and use the general frame parser.
+    fn record_line(&mut self, src: &[u8], end: usize) -> bool {
+        let Ok(next_line) = u32::try_from(end + 1) else {
             return false;
         };
 
-        if !self.values.is_empty() {
-            // Reserve one byte for the LF separator between joined data lines.
-            self.len += 1;
+        let line_start = self.next_line as usize;
+        let line = &src[line_start..end];
+        let line = match line.strip_suffix(&[CR]) {
+            Some(stripped) => {
+                self.has_cr = true;
+                stripped
+            }
+            None => {
+                self.has_cr |= src[end] == CR;
+                line
+            }
+        };
+
+        match line {
+            [b'd', ..] => {
+                if self.data_closed {
+                    return false;
+                }
+
+                let Some(value) = field_value(line, b"data") else {
+                    return false;
+                };
+
+                self.push_data(line_start, line.len(), value.len(), next_line)
+            }
+
+            [b'e', ..] => {
+                if self.event.is_some() {
+                    return false;
+                }
+
+                let Some(value) = field_value(line, b"event") else {
+                    return false;
+                };
+
+                let Some(range) = ByteRange::from_suffix(line_start, line.len(), value.len())
+                else {
+                    return false;
+                };
+
+                self.event = Some(range);
+                self.data_closed |= self.data_count > 0;
+                self.next_line = next_line;
+
+                true
+            }
+
+            [b'i', ..] => {
+                if self.id.is_some() {
+                    return false;
+                }
+
+                let Some(value) = field_value(line, b"id") else {
+                    return false;
+                };
+
+                let Some(range) = ByteRange::from_suffix(line_start, line.len(), value.len())
+                else {
+                    return false;
+                };
+
+                self.id = Some(range);
+                self.data_closed |= self.data_count > 0;
+                self.next_line = next_line;
+
+                true
+            }
+
+            [b'r', ..] => {
+                let Some(value) = field_value(line, b"retry") else {
+                    return false;
+                };
+
+                if let Some(delay) = parse_retry(value) {
+                    self.retry = Some(delay);
+                }
+
+                self.data_closed |= self.data_count > 0;
+                self.next_line = next_line;
+
+                true
+            }
+
+            _ => false,
+        }
+    }
+
+    fn push_data(
+        &mut self,
+        line_start: usize,
+        line_len: usize,
+        value_len: usize,
+        next_line: u32,
+    ) -> bool {
+        let Some(range) = ByteRange::from_suffix(line_start, line_len, value_len) else {
+            return false;
+        };
+
+        let index = self.data_count as usize;
+
+        if index < Self::INLINE_LINES {
+            self.inline_data[index] = Some(range);
         }
 
-        let value_end = self.next_line + line.len();
-        self.len += value.len();
-        self.values.push(value_end - value.len()..value_end);
-        self.next_line = end + 1;
+        let extra = value_len as u32 + u32::from(self.data_count > 0);
+        let Some(data_len) = self.data_len.checked_add(extra) else {
+            return false;
+        };
+
+        self.data_end = range.end.get();
+        self.data_len = data_len;
+        self.data_count += 1;
+        self.next_line = next_line;
 
         true
     }
 
-    /// Joins the recorded `data` lines into a `ByteString`, consumes `consumed`
-    /// bytes from `src`, and clears this state.
+    /// Builds an event from the recorded fields, consumes `consumed` bytes from `src`,
+    /// and clears this state.
     ///
-    /// Large payloads are compacted in place inside a split slice of `src` to
-    /// avoid allocating a new payload buffer.
-    fn finish(
-        &mut self,
-        src: &mut BytesMut,
-        consumed: usize,
-    ) -> Result<ByteString, str::Utf8Error> {
-        let Some((first, rest)) = self.values.split_first() else {
-            unreachable!("DataLines::finish requires at least one recorded line");
-        };
-
-        let data = if share_payload(src, self.len) {
-            let mut frame = src.split_to(consumed);
-            let mut write = first.end;
-
-            // The first value is already in place. Move later values toward it.
-            for value in rest {
-                frame[write] = LF;
-                write += 1;
-                frame.copy_within(value.clone(), write);
-                write += value.len();
-            }
-
-            frame.truncate(write);
-            frame.advance(first.start);
-
-            ByteString::try_from(frame)
-        } else {
-            let mut data = Vec::with_capacity(self.len);
-            data.extend_from_slice(&src[first.clone()]);
-
-            for value in rest {
-                data.push(LF);
-                data.extend_from_slice(&src[value.clone()]);
-            }
-
-            src.advance(consumed);
-
-            ByteString::try_from(data)
-        };
+    /// Large `data` payloads are sliced or compacted in place inside a split slice of `src`
+    /// to avoid allocating a new payload buffer.
+    fn finish(&mut self, src: &mut BytesMut, consumed: usize) -> Result<Option<Event>, Error> {
+        let result = self.finish_inner(src, consumed);
 
         self.clear();
 
-        data
+        result
     }
 
-    /// Resets the recorded ranges while keeping the `Vec` capacity.
+    fn finish_inner(&self, src: &mut BytesMut, consumed: usize) -> Result<Option<Event>, Error> {
+        // Validate `event` and `id` in line order before `data` to match `ParsedFrame`.
+        let (event, id) = match self.extract_headers(src) {
+            Ok(headers) => headers,
+            Err(err) => {
+                src.advance(consumed);
+                return Err(err.into());
+            }
+        };
+
+        if self.data_count == 0 {
+            src.advance(consumed);
+
+            if event.is_some() || id.is_some() {
+                return Ok(Some(Event::Message(Message {
+                    data: ByteString::new(),
+                    event,
+                    retry: self.retry,
+                    id,
+                })));
+            }
+
+            return Ok(self.retry.map(Event::Retry));
+        }
+
+        let Some(first) = self.inline_data[0] else {
+            unreachable!("MessageFrame with data_count > 0 must record first line");
+        };
+        let first = first.as_range();
+        let data_len = self.data_len as usize;
+
+        let data = if self.data_count == 1 {
+            if share_payload(src, first.len()) {
+                let mut frame = src.split_to(consumed);
+                frame.truncate(first.end);
+                frame.advance(first.start);
+
+                ByteString::try_from(frame)
+            } else {
+                let data = ByteString::try_from(&src[first]);
+                src.advance(consumed);
+
+                data
+            }
+        } else if (self.data_count as usize) <= Self::INLINE_LINES {
+            let inline_rest = &self.inline_data[1..self.data_count as usize];
+
+            if share_payload(src, data_len) {
+                let mut frame = src.split_to(consumed);
+                let mut write = first.end;
+
+                // The first value is already in place. Move later values toward it.
+                for value in inline_rest.iter().flatten() {
+                    frame[write] = LF;
+                    write += 1;
+                    frame.copy_within(value.as_range(), write);
+                    write += value.len();
+                }
+
+                frame.truncate(write);
+                frame.advance(first.start);
+
+                ByteString::try_from(frame)
+            } else {
+                let mut data = Vec::with_capacity(data_len);
+                data.extend_from_slice(&src[first]);
+
+                for value in inline_rest.iter().flatten() {
+                    data.push(LF);
+                    data.extend_from_slice(&src[value.as_range()]);
+                }
+
+                src.advance(consumed);
+
+                ByteString::try_from(data)
+            }
+        } else {
+            let data_end = self.data_end as usize;
+            let mut next_start = first.end + 1;
+
+            if self.has_cr && src[first.end] == CR && src.get(next_start) == Some(&LF) {
+                next_start += 1;
+            }
+
+            if share_payload(src, data_len) {
+                let mut frame = src.split_to(consumed);
+                let mut write = first.end;
+                let mut read = next_start;
+
+                // The first value is already in place. Compact later values toward it.
+                if !self.has_cr {
+                    loop {
+                        let value_start = data_value_start(&frame, read, data_end);
+
+                        match memchr(LF, &frame[value_start..data_end]) {
+                            Some(offset) => {
+                                let pos = value_start + offset;
+
+                                frame[write] = LF;
+                                write += 1;
+                                frame.copy_within(value_start..pos, write);
+                                write += offset;
+
+                                read = pos + 1;
+                            }
+
+                            None => {
+                                frame[write] = LF;
+                                write += 1;
+                                frame.copy_within(value_start..data_end, write);
+                                write += data_end - value_start;
+
+                                break;
+                            }
+                        }
+                    }
+                } else {
+                    loop {
+                        let value_start = data_value_start(&frame, read, data_end);
+
+                        match memchr2(CR, LF, &frame[value_start..data_end]) {
+                            Some(offset) => {
+                                let pos = value_start + offset;
+
+                                frame[write] = LF;
+                                write += 1;
+                                frame.copy_within(value_start..pos, write);
+                                write += offset;
+
+                                read = pos + 1;
+
+                                if frame[pos] == CR && frame.get(read) == Some(&LF) {
+                                    read += 1;
+                                }
+                            }
+
+                            None => {
+                                frame[write] = LF;
+                                write += 1;
+                                frame.copy_within(value_start..data_end, write);
+                                write += data_end - value_start;
+
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                frame.truncate(write);
+                frame.advance(first.start);
+
+                ByteString::try_from(frame)
+            } else {
+                let mut data = Vec::with_capacity(data_len);
+                data.extend_from_slice(&src[first]);
+
+                let mut read = next_start;
+
+                if !self.has_cr {
+                    loop {
+                        let value_start = data_value_start(src, read, data_end);
+
+                        match memchr(LF, &src[value_start..data_end]) {
+                            Some(offset) => {
+                                let pos = value_start + offset;
+
+                                data.push(LF);
+                                data.extend_from_slice(&src[value_start..pos]);
+
+                                read = pos + 1;
+                            }
+
+                            None => {
+                                data.push(LF);
+                                data.extend_from_slice(&src[value_start..data_end]);
+
+                                break;
+                            }
+                        }
+                    }
+                } else {
+                    loop {
+                        let value_start = data_value_start(src, read, data_end);
+
+                        match memchr2(CR, LF, &src[value_start..data_end]) {
+                            Some(offset) => {
+                                let pos = value_start + offset;
+
+                                data.push(LF);
+                                data.extend_from_slice(&src[value_start..pos]);
+
+                                read = pos + 1;
+
+                                if src[pos] == CR && src.get(read) == Some(&LF) {
+                                    read += 1;
+                                }
+                            }
+
+                            None => {
+                                data.push(LF);
+                                data.extend_from_slice(&src[value_start..data_end]);
+
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                src.advance(consumed);
+
+                ByteString::try_from(data)
+            }
+        };
+
+        Ok(Some(Event::Message(Message {
+            data: data?,
+            event,
+            retry: self.retry,
+            id,
+        })))
+    }
+
+    /// Extracts `event` and `id` values from `src` in the order they appeared in the frame.
+    fn extract_headers(
+        &self,
+        src: &[u8],
+    ) -> Result<(Option<ByteString>, Option<ByteString>), str::Utf8Error> {
+        match (self.event, self.id) {
+            (None, None) => Ok((None, None)),
+
+            (Some(event), None) => Ok((Some(ByteString::try_from(&src[event.as_range()])?), None)),
+
+            (None, Some(id)) => Ok((None, parse_id_value(&src[id.as_range()])?)),
+
+            (Some(event), Some(id)) if id.start < event.start => {
+                let id = parse_id_value(&src[id.as_range()])?;
+                let event = ByteString::try_from(&src[event.as_range()])?;
+
+                Ok((Some(event), id))
+            }
+
+            (Some(event), Some(id)) => {
+                let event = ByteString::try_from(&src[event.as_range()])?;
+                let id = parse_id_value(&src[id.as_range()])?;
+
+                Ok((Some(event), id))
+            }
+        }
+    }
+
+    /// Resets the recorded frame state.
     fn clear(&mut self) {
-        self.values.clear();
+        self.event = None;
+        self.id = None;
+        self.retry = None;
+        self.data_end = 0;
+        self.data_len = 0;
+        self.data_count = 0;
         self.next_line = 0;
-        self.len = 0;
+        self.data_closed = false;
+        self.has_cr = false;
     }
 }
 
@@ -299,15 +667,17 @@ impl tokio_util::codec::Decoder for Decoder {
             let last_line_start = mem::take(&mut self.last_line_start);
 
             match kind {
-                FrameKind::DataLines => {
+                FrameKind::Message => {
                     // Record the final line before the frame delimiter.
-                    if self.data_lines.record_range(src, delimiter) {
-                        let data = self.data_lines.finish(src, consumed)?;
+                    if self.message.record_line(src, delimiter) {
+                        if let Some(event) = self.message.finish(src, consumed)? {
+                            return Ok(Some(event));
+                        }
 
-                        return Ok(Some(data_event(data)));
+                        continue;
                     }
 
-                    self.data_lines.clear();
+                    self.message.clear();
                 }
 
                 FrameKind::SingleLine => {
@@ -423,7 +793,7 @@ impl tokio_util::codec::Decoder for Decoder {
 
 impl Decoder {
     /// Scans `src` for the next blank-line frame delimiter and classifies the
-    /// frame while tracking line starts and recording `data`-only lines.
+    /// frame while tracking line starts and recording fast-path message fields.
     ///
     /// Returns the index of the first delimiter byte, or `None` if more bytes
     /// are needed.
@@ -435,7 +805,7 @@ impl Decoder {
         } else {
             // Reset scan state if the caller replaced or truncated src.
             self.frame_kind = FrameKind::SingleLine;
-            self.data_lines.clear();
+            self.message.clear();
             self.last_line_start = 0;
             0
         };
@@ -470,10 +840,10 @@ impl Decoder {
                     self.last_line_start = pos + 1;
 
                     if !matches!(self.frame_kind, FrameKind::Other) {
-                        self.frame_kind = if self.data_lines.record_range(src, pos) {
-                            FrameKind::DataLines
+                        self.frame_kind = if self.message.record_line(src, pos) {
+                            FrameKind::Message
                         } else {
-                            self.data_lines.clear();
+                            self.message.clear();
                             FrameKind::Other
                         };
                     }
@@ -1265,7 +1635,7 @@ mod tests {
 
     #[test]
     fn decodes_more_than_the_maximum_tracked_data_lines() {
-        let lines = DataLines::MAX_LINES + 1;
+        let lines = 1025;
         let frame = format!("{}\ndata: next\n\n", "data: x\n".repeat(lines));
         let data = "x\n".repeat(lines - 1) + "x";
         let mut decoder = Decoder::default();
@@ -1410,7 +1780,7 @@ mod tests {
 
     #[test]
     fn decodes_more_than_max_tracked_data_lines_with_crlf_and_varied_lengths() {
-        let count = DataLines::MAX_LINES + 128;
+        let count = 1152;
         let mut frame = String::new();
         let mut expected = Vec::with_capacity(count);
 
@@ -2190,5 +2560,70 @@ mod tests {
                 assert!(buffer.is_empty());
             }
         }
+    }
+
+    #[test]
+    fn compacts_large_multiline_data_with_event_and_id_in_place() {
+        let chunk = "café".repeat(128);
+
+        for ending in ["\n", "\r\n", "\r"] {
+            for lines in [2, 3, 5] {
+                let prefix = format!("event: foo{ending}id: 123{ending}");
+                let mut frame = prefix.clone();
+
+                for _ in 0..lines {
+                    frame.push_str("data: ");
+                    frame.push_str(&chunk);
+                    frame.push_str(ending);
+                }
+
+                frame.push_str(ending);
+
+                let expected_data = vec![chunk.as_str(); lines].join("\n");
+                let mut input = BytesMut::from(frame.as_str());
+                let payload = input[prefix.len() + b"data: ".len()..].as_ptr();
+                let mut decoder = Decoder::default();
+
+                let Some(Event::Message(first)) = decoder.decode(&mut input).unwrap() else {
+                    panic!("expected a message");
+                };
+
+                assert_eq!(first.data.as_ptr(), payload);
+                assert_eq!(&*first.data, expected_data);
+                assert_eq!(first.event.as_deref(), Some("foo"));
+                assert_eq!(first.id.as_deref(), Some("123"));
+                assert!(input.is_empty());
+
+                // Verify the shared buffer remains intact when more input arrives.
+                input.extend_from_slice(frame.as_bytes());
+
+                assert_eq!(
+                    decoder.decode(&mut input).unwrap(),
+                    Some(Event::Message(Message {
+                        event: Some("foo".into()),
+                        id: Some("123".into()),
+                        ..Message::data(expected_data.as_str())
+                    })),
+                );
+                assert_eq!(&*first.data, expected_data);
+                assert!(input.is_empty());
+            }
+        }
+
+        // Also test mixed line endings and bare `data` lines during in-place compaction.
+        let large = "x".repeat(MIN_SHARED_PAYLOAD_SIZE);
+        let frame = format!("event: mix\ndata\ndata:{large}\ndata: \ndata: tail\r\n\r\n");
+        let mut input = BytesMut::from(frame.as_str());
+        let payload = input[b"event: mix\ndata".len()..].as_ptr();
+        let mut decoder = Decoder::default();
+
+        let Some(Event::Message(msg)) = decoder.decode(&mut input).unwrap() else {
+            panic!("expected a message");
+        };
+
+        assert_eq!(msg.data.as_ptr(), payload);
+        assert_eq!(&*msg.data, format!("\n{large}\n\ntail"));
+        assert_eq!(msg.event.as_deref(), Some("mix"));
+        assert!(input.is_empty());
     }
 }

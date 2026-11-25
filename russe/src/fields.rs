@@ -30,13 +30,23 @@ pub(crate) fn field_value<'a>(line: &'a [u8], field: &[u8]) -> Option<&'a [u8]> 
     }
 }
 
+/// Parses an SSE `id` field value, ignoring valid UTF-8 values that contain NUL.
+pub(crate) fn parse_id_value(value: &[u8]) -> Result<Option<ByteString>, str::Utf8Error> {
+    if memchr::memchr(0, value).is_some() {
+        // Still validate UTF-8 so a NUL byte does not hide invalid UTF-8.
+        str::from_utf8(value)?;
+        return Ok(None);
+    }
+
+    ByteString::try_from(value).map(Some)
+}
+
 /// Parses an SSE `id` line, ignoring valid UTF-8 values that contain NUL.
 pub(crate) fn parse_id(line: &[u8]) -> Result<Option<ByteString>, str::Utf8Error> {
-    let id = field_value(line, b"id")
-        .map(ByteString::try_from)
-        .transpose()?;
-
-    Ok(id.filter(|id| !id.as_bytes().contains(&0)))
+    field_value(line, b"id")
+        .map(parse_id_value)
+        .transpose()
+        .map(Option::flatten)
 }
 
 /// Parses an SSE `retry` field value in milliseconds into a `Duration`.
