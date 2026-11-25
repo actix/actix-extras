@@ -302,6 +302,43 @@ fn decode_ignored_frames(b: Bencher<'_, '_>) {
     );
 }
 
+#[divan::bench(args = [2, 16, 128], sample_size = 16)]
+fn decode_multiline_comment(b: Bencher<'_, '_>, lines: usize) {
+    let input = format!("{}\n", ": comment line\n".repeat(lines));
+    let expected = "comment line\n".repeat(lines - 1) + "comment line";
+
+    bench_decode(b, &input, &[Event::Comment(expected.into())], input.len());
+}
+
+#[divan::bench(args = [2, 16, 128], sample_size = 16)]
+fn decode_mixed_multiline_data(b: Bencher<'_, '_>, lines: usize) {
+    let input = format!(
+        "id: 42\nevent: update\n{}\n",
+        "data: payload line\n".repeat(lines),
+    );
+    let data = "payload line\n".repeat(lines - 1) + "payload line";
+    let expected = Event::Message(Message {
+        id: Some("42".into()),
+        event: Some("update".into()),
+        ..data_message(data)
+    });
+
+    bench_decode(b, &input, &[expected], input.len());
+}
+
+#[divan::bench(args = [1025, 2048], sample_size = 8)]
+fn decode_many_data_lines(b: Bencher<'_, '_>, lines: usize) {
+    let input = format!("{}\n", "data: payload\n".repeat(lines));
+    let data = "payload\n".repeat(lines - 1) + "payload";
+
+    bench_decode(
+        b,
+        &input,
+        &[Event::Message(data_message(data))],
+        input.len(),
+    );
+}
+
 async fn decode_stream(input: &str, mut consume: impl FnMut(Event)) -> usize {
     let body_stream = stream::iter(input.as_bytes().chunks(7))
         .map(|chunk| Ok::<_, io::Error>(Bytes::copy_from_slice(chunk)))

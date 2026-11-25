@@ -1278,6 +1278,105 @@ mod tests {
     }
 
     #[test]
+    fn decodes_many_multiline_comments() {
+        for ending in ["\n", "\r\n"] {
+            for count in [2, 64] {
+                let mut frame = String::new();
+                let mut expected = Vec::with_capacity(count);
+
+                for i in 0..count {
+                    let text = if i % 7 == 0 {
+                        String::new()
+                    } else {
+                        format!("comment-{i}")
+                    };
+                    frame.push_str(": ");
+                    frame.push_str(&text);
+                    frame.push_str(ending);
+                    expected.push(text);
+                }
+
+                frame.push_str(ending);
+
+                let mut decoder = Decoder::default();
+                let mut input = BytesMut::from(frame.as_str());
+
+                assert_eq!(
+                    decoder.decode(&mut input).unwrap(),
+                    Some(Event::Comment(expected.join("\n").into())),
+                );
+                assert!(input.is_empty());
+            }
+        }
+    }
+
+    #[test]
+    fn decodes_mixed_field_multiline_data() {
+        for ending in ["\n", "\r\n"] {
+            for count in [2, 64] {
+                let mut frame = format!(
+                    "id: 42{ending}event: update{ending}retry: 250{ending}: note-1{ending}: note-2{ending}: note-3{ending}"
+                );
+                let mut expected_data = Vec::with_capacity(count);
+
+                for i in 0..count {
+                    let line = format!("chunk-{i}");
+                    frame.push_str("data: ");
+                    frame.push_str(&line);
+                    frame.push_str(ending);
+                    expected_data.push(line);
+                }
+
+                frame.push_str(ending);
+
+                let mut decoder = Decoder::default();
+                let mut input = BytesMut::from(frame.as_str());
+
+                assert_eq!(
+                    decoder.decode(&mut input).unwrap(),
+                    Some(Event::Comment("note-1\nnote-2\nnote-3".into())),
+                );
+                assert_eq!(
+                    decoder.decode(&mut input).unwrap(),
+                    Some(Event::Message(Message {
+                        data: expected_data.join("\n").into(),
+                        id: Some("42".into()),
+                        event: Some("update".into()),
+                        retry: Some(Duration::from_millis(250)),
+                    })),
+                );
+                assert!(input.is_empty());
+            }
+        }
+    }
+
+    #[test]
+    fn decodes_more_than_max_tracked_data_lines_with_crlf_and_varied_lengths() {
+        let count = DataLines::MAX_LINES + 128;
+        let mut frame = String::new();
+        let mut expected = Vec::with_capacity(count);
+
+        for i in 0..count {
+            let line = format!("row-{i}-{}", "a".repeat(i % 17));
+            frame.push_str("data: ");
+            frame.push_str(&line);
+            frame.push_str("\r\n");
+            expected.push(line);
+        }
+
+        frame.push_str("\r\n");
+
+        let mut decoder = Decoder::default();
+        let mut input = BytesMut::from(frame.as_str());
+
+        assert_eq!(
+            decoder.decode(&mut input).unwrap(),
+            Some(Event::Message(Message::data(expected.join("\n")))),
+        );
+        assert!(input.is_empty());
+    }
+
+    #[test]
     fn decodes_cr_line_endings() {
         for (input, expected) in [
             (
