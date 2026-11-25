@@ -123,11 +123,6 @@ fn bench_decode(b: Bencher<'_, '_>, input: &str, expected: &[Event], chunk_size:
         });
 }
 
-#[divan::bench(sample_size = 512)]
-fn decode_startup() -> Decoder {
-    Decoder::default()
-}
-
 #[divan::bench(args = [32, 1000, 1024, 60000, 65536], sample_size = 32)]
 fn decode_message(b: Bencher<'_, '_>, size: usize) {
     let data = "x".repeat(size);
