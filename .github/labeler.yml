@@ -22,6 +22,12 @@ A-settings:
   - changed-files:
       - any-glob-to-any-file: actix-settings/**
 
+A-sse:
+  - changed-files:
+      - any-glob-to-any-file:
+          - actix-sse/**
+          - russe/**
+
 A-httpauth:
   - changed-files:
       - any-glob-to-any-file: actix-web-httpauth/**
