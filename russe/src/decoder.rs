@@ -150,14 +150,19 @@ enum FieldLines {
 }
 
 /// Records a value range in `frame` and joins multiple values with `LF`.
+///
+/// The remaining bytes in `frame` after `range.end` bound the bytes that later
+/// lines can append, so promoting to an owned buffer allocates once without
+/// further reallocations.
 fn append_line(lines: &mut Option<FieldLines>, frame: &[u8], range: Range<usize>) {
     match lines {
         None => *lines = Some(FieldLines::Single(range)),
 
         Some(FieldLines::Single(first)) => {
+            let remaining = frame.len() - range.end;
             let first = &frame[first.clone()];
             let next = &frame[range];
-            let mut joined = Vec::with_capacity(first.len() + 1 + next.len());
+            let mut joined = Vec::with_capacity(first.len() + 1 + next.len() + remaining);
 
             joined.extend_from_slice(first);
             joined.push(LF);
@@ -196,6 +201,7 @@ impl ParsedFrame {
     ///
     /// Scans for line endings before `last_line_start` and parses the final line directly.
     fn parse_lines(&mut self, frame: &[u8], last_line_start: usize) -> Result<(), Error> {
+        let frame = frame.strip_suffix(&[CR]).unwrap_or(frame);
         let mut line_start = 0;
 
         for line_end in memchr2_iter(CR, LF, &frame[..last_line_start]) {
@@ -207,7 +213,6 @@ impl ParsedFrame {
         }
 
         let last_line = &frame[last_line_start..];
-        let last_line = last_line.strip_suffix(&[CR]).unwrap_or(last_line);
         self.parse_line(frame, last_line_start, last_line)
     }
 
@@ -1275,6 +1280,59 @@ mod tests {
             Some(Event::Message(Message::data("next"))),
         );
         assert!(input.is_empty());
+    }
+
+    #[test]
+    fn append_line_presizes_without_reallocating() {
+        let two_line_frame = b"data: first\ndata: second";
+        let mut two_lines = None;
+        append_line(&mut two_lines, two_line_frame, 6..11);
+        append_line(&mut two_lines, two_line_frame, 18..24);
+
+        let Some(FieldLines::Joined(joined)) = two_lines else {
+            panic!("expected owned buffer after two lines");
+        };
+
+        assert_eq!(joined, b"first\nsecond");
+        assert_eq!(joined.capacity(), b"first\nsecond".len());
+
+        let frame = (0..64)
+            .map(|i| format!("data: line-{i}"))
+            .collect::<Vec<_>>()
+            .join("\n");
+        let frame = frame.as_bytes();
+
+        let mut many_lines = None;
+        let mut initial_ptr = None;
+        let mut initial_cap = None;
+        let mut line_start = 0;
+
+        for line_end in memchr2_iter(CR, LF, frame).chain(std::iter::once(frame.len())) {
+            let line = &frame[line_start..line_end];
+            let value = field_value(line, b"data").unwrap();
+            let value_end = line_start + line.len();
+            line_start = line_end + 1;
+
+            append_line(&mut many_lines, frame, value_end - value.len()..value_end);
+
+            if let Some(FieldLines::Joined(joined)) = &many_lines {
+                let ptr = *initial_ptr.get_or_insert(joined.as_ptr());
+                let cap = *initial_cap.get_or_insert(joined.capacity());
+                assert_eq!(joined.as_ptr(), ptr);
+                assert_eq!(joined.capacity(), cap);
+            }
+        }
+
+        let expected = (0..64)
+            .map(|i| format!("line-{i}"))
+            .collect::<Vec<_>>()
+            .join("\n");
+
+        let Some(FieldLines::Joined(joined)) = many_lines else {
+            panic!("expected owned buffer after many lines");
+        };
+
+        assert_eq!(joined, expected.as_bytes());
     }
 
     #[test]
