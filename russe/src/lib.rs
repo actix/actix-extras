@@ -9,6 +9,7 @@ mod error;
 mod event;
 mod fields;
 mod message;
+mod message_frame;
 #[cfg(feature = "reqwest-0_12")]
 pub mod reqwest_0_12;
 #[cfg(feature = "reqwest-0_13")]

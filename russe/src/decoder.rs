@@ -9,6 +9,7 @@ use crate::{
     event::Event,
     fields::{data_event, field_value, parse_id, parse_retry, strip_space},
     message::Message,
+    message_frame::MessageFrame,
 };
 
 /// SSE decoder.
@@ -25,7 +26,7 @@ pub struct Decoder {
     scan_from: usize,
     last_line_start: usize,
     frame_kind: FrameKind,
-    data_lines: DataLines,
+    message: MessageFrame,
     skip_lf: bool,
 }
 
@@ -33,113 +34,14 @@ pub struct Decoder {
 enum FrameKind {
     #[default]
     SingleLine,
-    DataLines,
+    Message,
     Other,
-}
-
-#[derive(Debug, Clone, Default)]
-struct DataLines {
-    values: Vec<Range<usize>>,
-    next_line: usize,
-    len: usize,
-}
-
-impl DataLines {
-    // Bound the metadata retained for a frame with many short lines.
-    const MAX_LINES: usize = 1024;
-
-    /// Records the byte range of the next `data` line ending at `end` in `src`.
-    ///
-    /// Returns true if the line is a `data` field and was recorded.
-    ///
-    /// Returns false if the line is not a `data` field or `Self::MAX_LINES`
-    /// is already reached. The caller must then clear this state and use the
-    /// general frame parser.
-    fn record_range(&mut self, src: &[u8], end: usize) -> bool {
-        if self.values.len() == Self::MAX_LINES {
-            return false;
-        }
-
-        let line = &src[self.next_line..end];
-        let line = line.strip_suffix(&[CR]).unwrap_or(line);
-        let Some(value) = field_value(line, b"data") else {
-            return false;
-        };
-
-        if !self.values.is_empty() {
-            // Reserve one byte for the LF separator between joined data lines.
-            self.len += 1;
-        }
-
-        let value_end = self.next_line + line.len();
-        self.len += value.len();
-        self.values.push(value_end - value.len()..value_end);
-        self.next_line = end + 1;
-
-        true
-    }
-
-    /// Joins the recorded `data` lines into a `ByteString`, consumes `consumed`
-    /// bytes from `src`, and clears this state.
-    ///
-    /// Large payloads are compacted in place inside a split slice of `src` to
-    /// avoid allocating a new payload buffer.
-    fn finish(
-        &mut self,
-        src: &mut BytesMut,
-        consumed: usize,
-    ) -> Result<ByteString, str::Utf8Error> {
-        let Some((first, rest)) = self.values.split_first() else {
-            unreachable!("DataLines::finish requires at least one recorded line");
-        };
-
-        let data = if share_payload(src, self.len) {
-            let mut frame = src.split_to(consumed);
-            let mut write = first.end;
-
-            // The first value is already in place. Move later values toward it.
-            for value in rest {
-                frame[write] = LF;
-                write += 1;
-                frame.copy_within(value.clone(), write);
-                write += value.len();
-            }
-
-            frame.truncate(write);
-            frame.advance(first.start);
-
-            ByteString::try_from(frame)
-        } else {
-            let mut data = Vec::with_capacity(self.len);
-            data.extend_from_slice(&src[first.clone()]);
-
-            for value in rest {
-                data.push(LF);
-                data.extend_from_slice(&src[value.clone()]);
-            }
-
-            src.advance(consumed);
-
-            ByteString::try_from(data)
-        };
-
-        self.clear();
-
-        data
-    }
-
-    /// Resets the recorded ranges while keeping the `Vec` capacity.
-    fn clear(&mut self) {
-        self.values.clear();
-        self.next_line = 0;
-        self.len = 0;
-    }
 }
 
 const MIN_SHARED_PAYLOAD_SIZE: usize = 1024;
 
 /// Returns true when `size` is large enough to share `src`'s backing buffer.
-fn share_payload(src: &BytesMut, size: usize) -> bool {
+pub(crate) fn share_payload(src: &BytesMut, size: usize) -> bool {
     size >= MIN_SHARED_PAYLOAD_SIZE && size >= src.capacity().div_ceil(2)
 }
 
@@ -266,8 +168,8 @@ impl tokio_util::codec::Decoder for Decoder {
     type Error = Error;
 
     fn decode(&mut self, src: &mut BytesMut) -> Result<Option<Self::Item>, Self::Error> {
-        if let Some(event) = self.pending_event.take() {
-            return Ok(Some(event));
+        if self.pending_event.is_some() {
+            return Ok(self.pending_event.take());
         }
 
         // Skip empty or unknown-only frames without waiting for more input.
@@ -299,15 +201,17 @@ impl tokio_util::codec::Decoder for Decoder {
             let last_line_start = mem::take(&mut self.last_line_start);
 
             match kind {
-                FrameKind::DataLines => {
+                FrameKind::Message => {
                     // Record the final line before the frame delimiter.
-                    if self.data_lines.record_range(src, delimiter) {
-                        let data = self.data_lines.finish(src, consumed)?;
+                    if self.message.record_line(src, delimiter) {
+                        if let Some(event) = self.message.finish(src, consumed)? {
+                            return Ok(Some(event));
+                        }
 
-                        return Ok(Some(data_event(data)));
+                        continue;
                     }
 
-                    self.data_lines.clear();
+                    self.message.clear();
                 }
 
                 FrameKind::SingleLine => {
@@ -423,7 +327,7 @@ impl tokio_util::codec::Decoder for Decoder {
 
 impl Decoder {
     /// Scans `src` for the next blank-line frame delimiter and classifies the
-    /// frame while tracking line starts and recording `data`-only lines.
+    /// frame while tracking line starts and recording fast-path message fields.
     ///
     /// Returns the index of the first delimiter byte, or `None` if more bytes
     /// are needed.
@@ -435,7 +339,7 @@ impl Decoder {
         } else {
             // Reset scan state if the caller replaced or truncated src.
             self.frame_kind = FrameKind::SingleLine;
-            self.data_lines.clear();
+            self.message.clear();
             self.last_line_start = 0;
             0
         };
@@ -470,10 +374,10 @@ impl Decoder {
                     self.last_line_start = pos + 1;
 
                     if !matches!(self.frame_kind, FrameKind::Other) {
-                        self.frame_kind = if self.data_lines.record_range(src, pos) {
-                            FrameKind::DataLines
+                        self.frame_kind = if self.message.record_line(src, pos) {
+                            FrameKind::Message
                         } else {
-                            self.data_lines.clear();
+                            self.message.clear();
                             FrameKind::Other
                         };
                     }
@@ -1264,8 +1168,8 @@ mod tests {
     }
 
     #[test]
-    fn decodes_more_than_the_maximum_tracked_data_lines() {
-        let lines = DataLines::MAX_LINES + 1;
+    fn decodes_many_data_lines() {
+        let lines = 1025;
         let frame = format!("{}\ndata: next\n\n", "data: x\n".repeat(lines));
         let data = "x\n".repeat(lines - 1) + "x";
         let mut decoder = Decoder::default();
@@ -1409,8 +1313,8 @@ mod tests {
     }
 
     #[test]
-    fn decodes_more_than_max_tracked_data_lines_with_crlf_and_varied_lengths() {
-        let count = DataLines::MAX_LINES + 128;
+    fn decodes_many_crlf_data_lines_with_varied_lengths() {
+        let count = 1152;
         let mut frame = String::new();
         let mut expected = Vec::with_capacity(count);
 
@@ -2190,5 +2094,70 @@ mod tests {
                 assert!(buffer.is_empty());
             }
         }
+    }
+
+    #[test]
+    fn compacts_large_multiline_data_with_event_and_id_in_place() {
+        let chunk = "café".repeat(128);
+
+        for ending in ["\n", "\r\n", "\r"] {
+            for lines in [2, 3, 5] {
+                let prefix = format!("event: foo{ending}id: 123{ending}");
+                let mut frame = prefix.clone();
+
+                for _ in 0..lines {
+                    frame.push_str("data: ");
+                    frame.push_str(&chunk);
+                    frame.push_str(ending);
+                }
+
+                frame.push_str(ending);
+
+                let expected_data = vec![chunk.as_str(); lines].join("\n");
+                let mut input = BytesMut::from(frame.as_str());
+                let payload = input[prefix.len() + b"data: ".len()..].as_ptr();
+                let mut decoder = Decoder::default();
+
+                let Some(Event::Message(first)) = decoder.decode(&mut input).unwrap() else {
+                    panic!("expected a message");
+                };
+
+                assert_eq!(first.data.as_ptr(), payload);
+                assert_eq!(&*first.data, expected_data);
+                assert_eq!(first.event.as_deref(), Some("foo"));
+                assert_eq!(first.id.as_deref(), Some("123"));
+                assert!(input.is_empty());
+
+                // Verify the shared buffer remains intact when more input arrives.
+                input.extend_from_slice(frame.as_bytes());
+
+                assert_eq!(
+                    decoder.decode(&mut input).unwrap(),
+                    Some(Event::Message(Message {
+                        event: Some("foo".into()),
+                        id: Some("123".into()),
+                        ..Message::data(expected_data.as_str())
+                    })),
+                );
+                assert_eq!(&*first.data, expected_data);
+                assert!(input.is_empty());
+            }
+        }
+
+        // Also test mixed line endings and bare `data` lines during in-place compaction.
+        let large = "x".repeat(MIN_SHARED_PAYLOAD_SIZE);
+        let frame = format!("event: mix\ndata\ndata:{large}\ndata: \ndata: tail\r\n\r\n");
+        let mut input = BytesMut::from(frame.as_str());
+        let payload = input[b"event: mix\ndata".len()..].as_ptr();
+        let mut decoder = Decoder::default();
+
+        let Some(Event::Message(msg)) = decoder.decode(&mut input).unwrap() else {
+            panic!("expected a message");
+        };
+
+        assert_eq!(msg.data.as_ptr(), payload);
+        assert_eq!(&*msg.data, format!("\n{large}\n\ntail"));
+        assert_eq!(msg.event.as_deref(), Some("mix"));
+        assert!(input.is_empty());
     }
 }
