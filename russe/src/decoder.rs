@@ -232,6 +232,7 @@ impl MessageFrame {
     ///
     /// Large `data` payloads are sliced or compacted in place inside a split slice of `src`
     /// to avoid allocating a new payload buffer.
+    #[inline(never)]
     fn finish(&mut self, src: &mut BytesMut, consumed: usize) -> Result<Option<Event>, Error> {
         let result = self.finish_inner(src, consumed);
 
@@ -634,8 +635,8 @@ impl tokio_util::codec::Decoder for Decoder {
     type Error = Error;
 
     fn decode(&mut self, src: &mut BytesMut) -> Result<Option<Self::Item>, Self::Error> {
-        if let Some(event) = self.pending_event.take() {
-            return Ok(Some(event));
+        if self.pending_event.is_some() {
+            return Ok(self.pending_event.take());
         }
 
         // Skip empty or unknown-only frames without waiting for more input.
