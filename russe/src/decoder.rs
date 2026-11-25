@@ -1981,4 +1981,214 @@ mod tests {
             }
         }
     }
+
+    #[test]
+    fn decodes_event_and_id_headers_with_multiline_data() {
+        for ending in ["\n", "\r\n", "\r"] {
+            let cases = [
+                (
+                    format!("event: foo{ending}data: bar{ending}data: baz{ending}{ending}"),
+                    Message {
+                        event: Some("foo".into()),
+                        ..Message::data("bar\nbaz")
+                    },
+                ),
+                (
+                    format!(
+                        "event: foo{ending}id: 123{ending}data: bar{ending}data: baz{ending}{ending}"
+                    ),
+                    Message {
+                        event: Some("foo".into()),
+                        id: Some("123".into()),
+                        ..Message::data("bar\nbaz")
+                    },
+                ),
+                (
+                    format!(
+                        "id: 123{ending}event: foo{ending}retry: 250{ending}data: a{ending}data: b{ending}data: c{ending}{ending}"
+                    ),
+                    Message {
+                        event: Some("foo".into()),
+                        id: Some("123".into()),
+                        retry: Some(Duration::from_millis(250)),
+                        ..Message::data("a\nb\nc")
+                    },
+                ),
+                (
+                    format!(
+                        "data: a{ending}data: b{ending}data: c{ending}event: foo{ending}id: 123{ending}{ending}"
+                    ),
+                    Message {
+                        event: Some("foo".into()),
+                        id: Some("123".into()),
+                        ..Message::data("a\nb\nc")
+                    },
+                ),
+                (
+                    format!(
+                        "event: foo{ending}data{ending}data:{ending}data: {ending}data:  x{ending}data{ending}{ending}"
+                    ),
+                    Message {
+                        event: Some("foo".into()),
+                        ..Message::data("\n\n\n x\n")
+                    },
+                ),
+            ];
+
+            for (input, expected) in cases {
+                for chunk_size in [1, 7, input.len()] {
+                    let mut decoder = Decoder::default();
+                    let mut buffer = BytesMut::new();
+                    let mut events = Vec::new();
+
+                    for chunk in input.as_bytes().chunks(chunk_size) {
+                        buffer.extend_from_slice(chunk);
+
+                        while let Some(event) = decoder.decode(&mut buffer).unwrap() {
+                            events.push(event);
+                        }
+                    }
+
+                    assert_eq!(
+                        events,
+                        [Event::Message(expected.clone())],
+                        "ending: {ending:?}, chunk_size: {chunk_size}, input: {input:?}",
+                    );
+                    assert!(buffer.is_empty());
+
+                    buffer.extend_from_slice(b"data: next\n\n");
+                    assert_eq!(
+                        decoder.decode(&mut buffer).unwrap(),
+                        Some(Event::Message(Message::data("next"))),
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn decodes_interleaved_and_duplicate_message_fields() {
+        for (input, expected) in [
+            (
+                "data: bar\nevent: foo\ndata: baz\n\n",
+                vec![Event::Message(Message {
+                    event: Some("foo".into()),
+                    ..Message::data("bar\nbaz")
+                })],
+            ),
+            (
+                "data: bar\nid: 123\ndata: baz\n\n",
+                vec![Event::Message(Message {
+                    id: Some("123".into()),
+                    ..Message::data("bar\nbaz")
+                })],
+            ),
+            (
+                "data: bar\nretry: 500\ndata: baz\n\n",
+                vec![Event::Message(Message {
+                    retry: Some(Duration::from_millis(500)),
+                    ..Message::data("bar\nbaz")
+                })],
+            ),
+            (
+                "event: first\nevent: second\ndata: bar\ndata: baz\n\n",
+                vec![Event::Message(Message {
+                    event: Some("second".into()),
+                    ..Message::data("bar\nbaz")
+                })],
+            ),
+            (
+                "id: first\nid: second\ndata: bar\ndata: baz\n\n",
+                vec![Event::Message(Message {
+                    id: Some("second".into()),
+                    ..Message::data("bar\nbaz")
+                })],
+            ),
+            (
+                "event: foo\ndata: bar\ndata: baz\n: trailing\n\n",
+                vec![
+                    Event::Comment("trailing".into()),
+                    Event::Message(Message {
+                        event: Some("foo".into()),
+                        ..Message::data("bar\nbaz")
+                    }),
+                ],
+            ),
+            (
+                "event: foo\nid: 123\n\n",
+                vec![Event::Message(Message {
+                    event: Some("foo".into()),
+                    id: Some("123".into()),
+                    ..Default::default()
+                })],
+            ),
+            (
+                "id: a\0b\nretry: 500\n\n",
+                vec![Event::Retry(Duration::from_millis(500))],
+            ),
+            (
+                "id: a\0b\nretry: invalid\n\ndata: next\n\n",
+                vec![Event::Message(Message::data("next"))],
+            ),
+            (
+                "retry: 500\nretry: invalid\n\n",
+                vec![Event::Retry(Duration::from_millis(500))],
+            ),
+            (
+                "retry: invalid\nretry: bad\n\ndata: next\n\n",
+                vec![Event::Message(Message::data("next"))],
+            ),
+        ] {
+            let mut decoder = Decoder::default();
+            let mut buffer = BytesMut::from(input);
+            let events =
+                std::iter::from_fn(|| decoder.decode(&mut buffer).unwrap()).collect::<Vec<_>>();
+
+            assert_eq!(events, expected, "input: {input:?}");
+            assert!(buffer.is_empty());
+        }
+    }
+
+    #[test]
+    fn preserves_utf8_error_precedence_in_message_frames() {
+        let large = "a".repeat(MIN_SHARED_PAYLOAD_SIZE);
+
+        let mut large_bad_data = Vec::from(b"event: foo\nid: 123\ndata: ".as_slice());
+        large_bad_data.extend_from_slice(large.as_bytes());
+        large_bad_data.extend_from_slice(b"\ndata: ok\ndata: bad\xff");
+
+        let cases: &[(&[u8], usize)] = &[
+            (b"event: bad\xff\nid: x\xff\ndata: ok", 3),
+            (b"id: bad\xff\nevent: x\xff\ndata: ok", 3),
+            (b"id: a\0\xff\nevent: ok\ndata: ok", 2),
+            (b"event: ok\nid: 123\ndata: ok\ndata: bad\xff", 6),
+            (b"event: bad\xff\nevent: ok\ndata: ok", 3),
+            (b"id: bad\xff\nid: ok\ndata: ok", 3),
+            (&large_bad_data, large.len() + 1 + b"ok\nbad".len()),
+        ];
+
+        for &(frame, expected_valid_up_to) in cases {
+            for delimiter in [b"\n\n".as_slice(), b"\r\n\r\n"] {
+                let mut decoder = Decoder::default();
+                let mut buffer = BytesMut::from(frame);
+                let following = b"data: next\n\n";
+
+                buffer.extend_from_slice(delimiter);
+                buffer.extend_from_slice(following);
+
+                let err = decoder.decode(&mut buffer).unwrap_err();
+                let Error::InvalidUtf8 { source } = err else {
+                    panic!("expected invalid UTF-8 error, got: {err:?}");
+                };
+
+                assert_eq!(source.valid_up_to(), expected_valid_up_to);
+                assert_eq!(&buffer[..], following);
+                assert_eq!(
+                    decoder.decode(&mut buffer).unwrap(),
+                    Some(Event::Message(Message::data("next"))),
+                );
+                assert!(buffer.is_empty());
+            }
+        }
+    }
 }
