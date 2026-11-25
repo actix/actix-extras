@@ -1168,7 +1168,7 @@ mod tests {
     }
 
     #[test]
-    fn decodes_more_than_the_maximum_tracked_data_lines() {
+    fn decodes_many_data_lines() {
         let lines = 1025;
         let frame = format!("{}\ndata: next\n\n", "data: x\n".repeat(lines));
         let data = "x\n".repeat(lines - 1) + "x";
@@ -1313,7 +1313,7 @@ mod tests {
     }
 
     #[test]
-    fn decodes_more_than_max_tracked_data_lines_with_crlf_and_varied_lengths() {
+    fn decodes_many_crlf_data_lines_with_varied_lengths() {
         let count = 1152;
         let mut frame = String::new();
         let mut expected = Vec::with_capacity(count);
