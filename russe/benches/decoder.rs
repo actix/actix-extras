@@ -355,6 +355,23 @@ fn decode_event_id_multiline_batch(b: Bencher<'_, '_>, count: usize) {
     bench_decode(b, &input, &expected, input.len());
 }
 
+#[divan::bench(args = ["whole", "after_first_data", "inside_last_data"], sample_size = 32)]
+fn decode_named_multiline_reads(b: Bencher<'_, '_>, split: &str) {
+    let input = "event: foo\ndata: bar\ndata: baz\n\n";
+    let chunk_size = match split {
+        "whole" => input.len(),
+        "after_first_data" => "event: foo\ndata: bar\n".len(),
+        "inside_last_data" => "event: foo\ndata: bar\ndata: b".len(),
+        _ => unreachable!(),
+    };
+    let expected = Event::Message(Message {
+        event: Some("foo".into()),
+        ..data_message("bar\nbaz")
+    });
+
+    bench_decode(b, input, &[expected], chunk_size);
+}
+
 #[divan::bench(args = [1025, 2048], sample_size = 8)]
 fn decode_many_data_lines(b: Bencher<'_, '_>, lines: usize) {
     let input = format!("{}\n", "data: payload\n".repeat(lines));
