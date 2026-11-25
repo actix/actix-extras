@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.3.4
+
+- Improve decoding performance up to 20% for common `event`/`id` + multiline `data` messages.
+- Improve decoding performance up to 55% for large multiline messages.
+- Reduce allocation up to 99% on multiline messages.
+
 ## 0.3.3
 
 - Improve decoding performance in many cases by ~3-6x.
