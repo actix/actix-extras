@@ -37,13 +37,13 @@ jobs:
         run: cargo codspeed build -p russe --all-features --locked --measurement-mode walltime --measurement-mode memory
 
       - name: Archive benchmark executables
-        run: tar -cf benchmarks.tar target/codspeed
+        run: tar -I 'zstd -3' -cf benchmarks.tar.zst target/codspeed
 
       - name: Upload benchmark executables
         uses: actions/upload-artifact@v7.0.2
         with:
-          name: benchmarks
-          path: benchmarks.tar
+          archive: false
+          path: benchmarks.tar.zst
           if-no-files-found: error
 
   benchmarks:
@@ -74,10 +74,11 @@ jobs:
       - name: Download benchmark executables
         uses: actions/download-artifact@v8.0.2
         with:
-          name: benchmarks
+          name: benchmarks.tar.zst
+          skip-decompress: true
 
       - name: Extract benchmark executables
-        run: tar -xf benchmarks.tar
+        run: tar --zstd -xf benchmarks.tar.zst
 
       - name: Run benchmarks
         uses: CodSpeedHQ/action@v5.6.3
