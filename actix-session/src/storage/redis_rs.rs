@@ -427,20 +427,20 @@ mod tests {
         }
     }
 
-    #[actix_web::test]
+    #[tokio::test(flavor = "local")]
     async fn test_session_workflow() {
         let redis_store = redis_store().await;
         acceptance_test_suite(move || redis_store.clone(), true).await;
     }
 
-    #[actix_web::test]
+    #[tokio::test(flavor = "local")]
     async fn loading_a_missing_session_returns_none() {
         let store = redis_store().await;
         let session_key = generate_session_key();
         assert!(store.load(&session_key).await.unwrap().is_none());
     }
 
-    #[actix_web::test]
+    #[tokio::test(flavor = "local")]
     async fn loading_an_invalid_session_state_returns_deserialization_error() {
         let store = redis_store().await;
         let session_key = generate_session_key();
@@ -469,7 +469,7 @@ mod tests {
         ));
     }
 
-    #[actix_web::test]
+    #[tokio::test(flavor = "local")]
     async fn updating_of_an_expired_state_is_handled_gracefully() {
         let store = redis_store().await;
         let session_key = generate_session_key();

@@ -307,7 +307,7 @@ mod tests {
     use crate::extractors::{basic::BasicAuth, bearer::BearerAuth};
 
     /// This is a test for https://github.com/actix/actix-extras/issues/10
-    #[actix_web::test]
+    #[tokio::test(flavor = "local")]
     async fn test_middleware_panic() {
         let middleware = AuthenticationMiddleware {
             service: Rc::new(into_service(|_: ServiceRequest| async move {
@@ -330,7 +330,7 @@ mod tests {
     }
 
     /// This is a test for https://github.com/actix/actix-extras/issues/10
-    #[actix_web::test]
+    #[tokio::test(flavor = "local")]
     async fn test_middleware_panic_several_orders() {
         let middleware = AuthenticationMiddleware {
             service: Rc::new(into_service(|_: ServiceRequest| async move {
@@ -366,7 +366,7 @@ mod tests {
         assert!(f3.is_err());
     }
 
-    #[actix_web::test]
+    #[tokio::test(flavor = "local")]
     async fn test_middleware_opt_extractor() {
         let middleware = AuthenticationMiddleware {
             service: Rc::new(into_service(|req: ServiceRequest| async move {
@@ -390,7 +390,7 @@ mod tests {
         assert!(f.is_ok());
     }
 
-    #[actix_web::test]
+    #[tokio::test(flavor = "local")]
     async fn test_middleware_res_extractor() {
         let middleware = AuthenticationMiddleware {
             service: Rc::new(into_service(|req: ServiceRequest| async move {
@@ -416,7 +416,7 @@ mod tests {
         assert!(f.is_ok());
     }
 
-    #[actix_web::test]
+    #[tokio::test(flavor = "local")]
     async fn test_middleware_works_with_app() {
         async fn validator(
             req: ServiceRequest,
@@ -441,7 +441,7 @@ mod tests {
         assert_eq!(resp.status(), StatusCode::UNAUTHORIZED);
     }
 
-    #[actix_web::test]
+    #[tokio::test(flavor = "local")]
     async fn test_middleware_works_with_scope() {
         async fn validator(
             req: ServiceRequest,

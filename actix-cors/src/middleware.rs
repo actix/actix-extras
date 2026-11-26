@@ -277,7 +277,7 @@ mod tests {
         let _ = App::new().wrap(Compat::new(Cors::default()));
     }
 
-    #[actix_web::test]
+    #[tokio::test(flavor = "local")]
     async fn test_options_no_origin() {
         // Tests case where allowed_origins is All but there are validate functions to run in case.
         // In this case, origins are only allowed when the DNT header is sent.

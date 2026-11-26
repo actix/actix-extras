@@ -101,12 +101,12 @@ mod tests {
     use super::*;
     use crate::{storage::utils::generate_session_key, test_helpers::acceptance_test_suite};
 
-    #[actix_web::test]
+    #[tokio::test(flavor = "local")]
     async fn test_session_workflow() {
         acceptance_test_suite(CookieSessionStore::default, false).await;
     }
 
-    #[actix_web::test]
+    #[tokio::test(flavor = "local")]
     async fn loading_a_random_session_key_returns_deserialization_error() {
         let store = CookieSessionStore::default();
         let session_key = generate_session_key();
@@ -116,7 +116,7 @@ mod tests {
         ));
     }
 
-    #[actix_web::test]
+    #[tokio::test(flavor = "local")]
     async fn saving_state_is_versioned_and_does_not_double_serialize_strings() {
         let store = CookieSessionStore::default();
         let mut state = Map::new();
@@ -138,7 +138,7 @@ mod tests {
         assert_eq!(decoded["state"]["n"], Value::from(1));
     }
 
-    #[actix_web::test]
+    #[tokio::test(flavor = "local")]
     async fn legacy_state_format_is_migrated_on_load() {
         let store = CookieSessionStore::default();
         let legacy = serde_json::json!({

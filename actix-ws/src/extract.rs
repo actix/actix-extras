@@ -92,7 +92,7 @@ mod tests {
 
     use super::WebSocket;
 
-    #[actix_web::test]
+    #[tokio::test(flavor = "local")]
     async fn extractor_connects_payload_and_session() {
         use actix_web::{body::to_bytes, FromRequest};
 
@@ -142,7 +142,7 @@ mod tests {
         ws.response
     }
 
-    #[actix_web::test]
+    #[tokio::test(flavor = "local")]
     async fn extractor_accepts_websocket_handshake() {
         let app = test::init_service(App::new().route("/", web::get().to(upgrade))).await;
         let req = test::TestRequest::get()
@@ -164,7 +164,7 @@ mod tests {
         );
     }
 
-    #[actix_web::test]
+    #[tokio::test(flavor = "local")]
     async fn extractor_rejects_invalid_handshake_before_handler() {
         let app = test::init_service(App::new().route(
             "/",

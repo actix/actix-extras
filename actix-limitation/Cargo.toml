@@ -37,6 +37,7 @@ actix-session = { version = "0.12", optional = true }
 actix-web = "4"
 env_logger = "0.11"
 static_assertions = "1"
+tokio = { version = "1.51", features = ["macros", "rt"] }
 uuid = { version = "1", features = ["v4"] }
 
 [lints]

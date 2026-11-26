@@ -31,6 +31,7 @@ awc = { version = "3", default-features = false }
 actix-cors = "0.7"
 actix-service = "2"
 actix-web = { version = "4.1", default-features = false, features = ["macros"] }
+tokio = { version = "1.51", features = ["macros", "rt"] }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tracing = "0.1.44"
 

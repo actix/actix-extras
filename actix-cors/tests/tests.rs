@@ -16,7 +16,7 @@ fn val_as_str(val: &HeaderValue) -> &str {
     val.to_str().unwrap()
 }
 
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 #[should_panic]
 async fn test_wildcard_origin() {
     Cors::default()
@@ -26,7 +26,7 @@ async fn test_wildcard_origin() {
         .unwrap();
 }
 
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 async fn test_not_allowed_origin_fn() {
     let cors = Cors::default()
         .allowed_origin("https://www.example.com")
@@ -72,7 +72,7 @@ async fn test_not_allowed_origin_fn() {
     }
 }
 
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 async fn test_allowed_origin_fn() {
     let cors = Cors::default()
         .allowed_origin("https://www.example.com")
@@ -117,7 +117,7 @@ async fn test_allowed_origin_fn() {
     );
 }
 
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 async fn test_allowed_origin_fn_with_environment() {
     let regex = Regex::new("https:.+\\.unknown\\.com").unwrap();
 
@@ -164,7 +164,7 @@ async fn test_allowed_origin_fn_with_environment() {
     );
 }
 
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 async fn test_multiple_origins_preflight() {
     let cors = Cors::default()
         .allowed_origin("https://example.com")
@@ -203,7 +203,7 @@ async fn test_multiple_origins_preflight() {
     );
 }
 
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 async fn test_multiple_origins() {
     let cors = Cors::default()
         .allowed_origin("https://example.com")
@@ -238,7 +238,7 @@ async fn test_multiple_origins() {
     );
 }
 
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 async fn test_response() {
     let exposed_headers = vec![header::AUTHORIZATION, header::ACCEPT];
     let cors = Cors::default()
@@ -354,7 +354,7 @@ async fn test_response() {
     assert_eq!(Some("https://www.example.com"), origins_str);
 }
 
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 async fn test_validate_origin() {
     let cors = Cors::default()
         .allowed_origin("https://www.example.com")
@@ -370,7 +370,7 @@ async fn test_validate_origin() {
     assert_eq!(resp.status(), StatusCode::OK);
 }
 
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 async fn test_blocks_mismatched_origin_by_default() {
     let cors = Cors::default()
         .allowed_origin("https://www.example.com")
@@ -392,7 +392,7 @@ async fn test_blocks_mismatched_origin_by_default() {
         .contains_key(header::ACCESS_CONTROL_ALLOW_METHODS));
 }
 
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 async fn test_mismatched_origin_block_turned_off() {
     let cors = Cors::default()
         .allow_any_method()
@@ -419,7 +419,7 @@ async fn test_mismatched_origin_block_turned_off() {
     assert_eq!(res.headers().get(header::ACCESS_CONTROL_ALLOW_ORIGIN), None);
 }
 
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 async fn test_no_origin_response() {
     let cors = Cors::permissive()
         .disable_preflight()
@@ -447,7 +447,7 @@ async fn test_no_origin_response() {
     );
 }
 
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 async fn cors_headers_are_added_to_error_responses() {
     let cors = Cors::permissive()
         .disable_preflight()
@@ -489,7 +489,7 @@ async fn cors_headers_are_added_to_error_responses() {
     );
 }
 
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 async fn validate_origin_allows_all_origins() {
     let cors = Cors::permissive()
         .new_transform(test::ok_service())
@@ -504,7 +504,7 @@ async fn validate_origin_allows_all_origins() {
     assert_eq!(resp.status(), StatusCode::OK);
 }
 
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 async fn vary_header_on_all_handled_responses() {
     let cors = Cors::permissive()
         .new_transform(test::ok_service())
@@ -630,7 +630,7 @@ async fn vary_header_on_all_handled_responses() {
     );
 }
 
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 async fn test_allow_any_origin_any_method_any_header() {
     let cors = Cors::default()
         .allow_any_origin()
@@ -651,7 +651,7 @@ async fn test_allow_any_origin_any_method_any_header() {
     assert_eq!(resp.status(), StatusCode::OK);
 }
 
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 async fn expose_all_request_header_values() {
     let cors = Cors::permissive()
         .new_transform(fn_service(|req: ServiceRequest| async move {
@@ -686,7 +686,7 @@ async fn expose_all_request_header_values() {
 }
 
 #[cfg(feature = "draft-private-network-access")]
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 async fn private_network_access() {
     let cors = Cors::permissive()
         .allowed_origin("https://public.site")

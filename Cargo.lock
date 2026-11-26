@@ -31,6 +31,7 @@ dependencies = [
  "once_cell",
  "regex",
  "smallvec",
+ "tokio",
 ]
 
 [[package]]
@@ -111,6 +112,7 @@ dependencies = [
  "futures-core",
  "reqwest 0.13.5",
  "serde",
+ "tokio",
  "tracing",
  "uuid",
 ]
@@ -127,6 +129,7 @@ dependencies = [
  "redis",
  "static_assertions",
  "time",
+ "tokio",
  "uuid",
 ]
 
@@ -149,6 +152,7 @@ dependencies = [
  "derive_more",
  "futures-util",
  "prost",
+ "tokio",
 ]
 
 [[package]]
@@ -218,6 +222,7 @@ dependencies = [
  "redis",
  "serde",
  "serde_json",
+ "tokio",
  "tracing",
  "tracing-subscriber 0.3.23",
 ]
@@ -383,6 +388,7 @@ dependencies = [
  "futures-util",
  "log",
  "pin-project-lite",
+ "tokio",
  "tracing",
  "tracing-subscriber 0.3.23",
 ]

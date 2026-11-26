@@ -651,7 +651,7 @@ mod test {
             .is_err());
     }
 
-    #[actix_web::test]
+    #[tokio::test(flavor = "local")]
     async fn restrictive_defaults() {
         let cors = Cors::default()
             .new_transform(test::ok_service())
@@ -667,12 +667,12 @@ mod test {
         assert!(!res.headers().contains_key("Access-Control-Allow-Origin"));
     }
 
-    #[actix_web::test]
+    #[tokio::test(flavor = "local")]
     async fn allowed_header_try_from() {
         let _cors = Cors::default().allowed_header("Content-Type");
     }
 
-    #[actix_web::test]
+    #[tokio::test(flavor = "local")]
     async fn allowed_header_try_into() {
         struct ContentType;
 
@@ -687,7 +687,7 @@ mod test {
         let _cors = Cors::default().allowed_header(ContentType);
     }
 
-    #[actix_web::test]
+    #[tokio::test(flavor = "local")]
     async fn middleware_generic_over_body_type() {
         let srv = fn_service(|req: ServiceRequest| async move {
             Ok(req.into_response(HttpResponse::with_body(StatusCode::OK, body::None::new())))
