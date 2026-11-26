@@ -80,7 +80,6 @@ async fn manager_delivers_sse_events() {
     let mut manager = Manager::new(&client, req);
 
     let (task, events) = manager.send().await.unwrap();
-    drop(manager);
 
     let events = tokio::time::timeout(
         Duration::from_secs(5),
