@@ -51,7 +51,7 @@ async fn test_limiter_count_error() -> Result<(), Error> {
                 assert_eq!(status.limit(), limit);
                 assert_eq!(status.remaining(), 0);
             }
-            err => panic!("error should be LimitExceeded variant, got {err:?}"),
+            err => panic!("Error should be LimitExceeded variant, got {err:?}"),
         }
     }
 
@@ -110,14 +110,14 @@ async fn test_middleware_limits_requests() {
         if index <= limit {
             assert!(
                 resp.status().is_success(),
-                "request {index} should succeed, got {:?}",
+                "Request {index} should succeed, got {:?}",
                 resp.status()
             );
         } else {
             assert_eq!(
                 resp.status(),
                 StatusCode::TOO_MANY_REQUESTS,
-                "request {index} should exceed the limit"
+                "Request {index} should exceed the limit"
             );
         }
     }
@@ -179,6 +179,6 @@ async fn test_middleware_window_resets() {
 
     assert!(
         call().await.status().is_success(),
-        "request should succeed after the window resets",
+        "Request should succeed after the window resets",
     );
 }

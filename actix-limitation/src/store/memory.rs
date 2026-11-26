@@ -126,7 +126,7 @@ impl MemoryStore {
         let counter = state
             .counters
             .get_mut(key)
-            .expect("counter should exist after initializing its window");
+            .expect("Counter should exist after initializing its window");
 
         counter.count += 1;
 
@@ -253,15 +253,15 @@ mod tests {
         let repr = format!("{store:?}");
         assert!(
             repr.starts_with("MemoryStore"),
-            "debug output should name the store: {repr}"
+            "Debug output should name the store: {repr}"
         );
         assert!(
             !repr.contains("some-very-distinctive-key"),
-            "debug output should omit counter keys: {repr}"
+            "Debug output should omit counter keys: {repr}"
         );
         assert!(
             repr.contains("counters: 1"),
-            "debug output should include the counter count: {repr}"
+            "Debug output should include the counter count: {repr}"
         );
     }
 
@@ -294,7 +294,7 @@ mod tests {
         assert_eq!(count, 2);
         assert!(
             reset <= Duration::from_millis(260),
-            "remaining time should decrease within a fixed window, got {reset:?} of {period:?}",
+            "Remaining time should decrease within a fixed window, got {reset:?} of {period:?}",
         );
 
         sleep(Duration::from_millis(300));

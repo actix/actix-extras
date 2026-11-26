@@ -48,7 +48,7 @@ async fn main() -> std::io::Result<()> {
         .limit(LIMIT)
         .period(PERIOD)
         .build()
-        .expect("limiter should build");
+        .expect("Limiter should build");
 
     let limiter = web::Data::new(limiter);
     let served = web::Data::new(Served::default());

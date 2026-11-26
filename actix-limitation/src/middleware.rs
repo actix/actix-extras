@@ -64,7 +64,7 @@ where
         // method description is important context for the developer.
         let limiter = req
             .app_data::<web::Data<Limiter>>()
-            .expect("web::Data<Limiter> should be set in app data for RateLimiter middleware")
+            .expect("App data should contain web::Data<Limiter> for RateLimiter middleware")
             .clone();
 
         let key = (limiter.get_key_fn)(&req);

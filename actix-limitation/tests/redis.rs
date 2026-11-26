@@ -43,7 +43,7 @@ async fn test_limiter_count_error() -> Result<(), Error> {
 
     match limiter.count(id.to_string()).await.unwrap_err() {
         Error::LimitExceeded(status) => assert_eq!(status.remaining(), 0),
-        _ => panic!("error should be LimitExceeded variant"),
+        _ => panic!("Error should be LimitExceeded variant"),
     };
 
     let id = Uuid::new_v4();

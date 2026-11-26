@@ -54,7 +54,7 @@ async fn main() -> std::io::Result<()> {
         .limit(LIMIT)
         .period(PERIOD)
         .build()
-        .expect("limiter should build");
+        .expect("Limiter should build");
 
     // Share one `Limiter` handle across all worker threads.
     let limiter = web::Data::new(limiter);
