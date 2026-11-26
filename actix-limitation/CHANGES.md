@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Add `memory-store` crate feature (off-by-default) which enables a process-local, in-memory counter store.
+- Add `MemoryStore` and `MemoryStoreBuilder` types.
+- Add `Limiter::memory_builder()` constructor for building a limiter backed by a `MemoryStore`.
+- Add `memory` example, runnable with no Redis server, and `redis` example.
+
 ## 0.7.0
 
 - Use `time` instead of `chrono` to calculate rate limit reset timestamps.

@@ -4,7 +4,7 @@ use actix_limitation::{Error, Limiter, RateLimiter};
 use actix_web::{dev::ServiceRequest, http::StatusCode, test, web, App, HttpRequest, HttpResponse};
 use uuid::Uuid;
 
-#[test]
+#[actix_web::test]
 #[should_panic = "Redis URL did not parse"]
 async fn test_create_limiter_error() {
     Limiter::builder("127.0.0.1").build().unwrap();
