@@ -2,9 +2,10 @@
 
 ## Unreleased
 
+## 0.7.1
+
 - Add `MemoryStore` and `MemoryStoreBuilder` types.
 - Add `Limiter::memory_builder()` constructor for building a limiter backed by a `MemoryStore`.
-- Add `memory` example, runnable with no Redis server, and `redis` example.
 
 ## 0.7.0
 
