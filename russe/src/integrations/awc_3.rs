@@ -15,7 +15,7 @@ use bytes::Bytes;
 use bytestring::ByteString;
 use futures_util::{Stream, StreamExt as _, TryStreamExt as _, stream::LocalBoxStream};
 use tokio::{
-    sync::mpsc::{UnboundedReceiver, UnboundedSender, unbounded_channel},
+    sync::mpsc::{UnboundedReceiver, unbounded_channel},
     task::{JoinHandle, spawn_local},
 };
 use tokio_util::{codec::FramedRead, io::StreamReader};
@@ -100,8 +100,7 @@ where
 pub struct Manager {
     req: FrozenClientRequest,
     last_event_id: Option<ByteString>,
-    tx: UnboundedSender<Result<Event, Error>>,
-    rx: Option<UnboundedReceiver<Result<Event, Error>>>,
+    sent: bool,
 }
 
 impl fmt::Debug for Manager {
@@ -109,16 +108,14 @@ impl fmt::Debug for Manager {
         let Self {
             req,
             last_event_id,
-            tx,
-            rx,
+            sent,
         } = self;
 
         f.debug_struct("Manager")
             .field("method", req.get_method())
             .field("uri", req.get_uri())
             .field("last_event_id", last_event_id)
-            .field("tx", tx)
-            .field("rx", rx)
+            .field("sent", sent)
             .finish()
     }
 }
@@ -145,20 +142,18 @@ impl Manager {
             .freeze()
             .expect("Failed to freeze AWC request");
 
-        let (tx, rx) = unbounded_channel();
-
         Self {
             req,
             last_event_id: None,
-            tx,
-            rx: Some(rx),
+            sent: false,
         }
     }
 
     /// Sends the request and returns a task handle and a receiver of events.
     ///
     /// Waits for response headers before starting the task that reads the event stream. A failed
-    /// request can be retried by calling this method again.
+    /// request can be retried by calling this method again. The event channel closes when the
+    /// response stream ends.
     ///
     /// # Errors
     ///
@@ -172,12 +167,13 @@ impl Manager {
     pub async fn send(
         &mut self,
     ) -> Result<(JoinHandle<()>, UnboundedReceiver<Result<Event, Error>>), Error> {
-        assert!(self.rx.is_some(), "The request has already been sent");
+        assert!(!self.sent, "The request has already been sent");
 
         let res = self.req.send().await.map_err(http_error)?;
 
-        let tx = self.tx.clone();
-        let rx = self.rx.take().unwrap();
+        self.sent = true;
+
+        let (tx, rx) = unbounded_channel();
 
         let task_handle = spawn_local(async move {
             let mut stream = res.sse_stream();
@@ -378,7 +374,6 @@ mod tests {
         let mut manager = Manager::new(req);
 
         let (task, events) = manager.send().await.unwrap();
-        drop(manager);
 
         let events = UnboundedReceiverStream::new(events)
             .try_collect::<Vec<_>>()
