@@ -5,7 +5,7 @@ use bytestring::ByteString;
 use crate::{Event, Message};
 
 /// Builds a data-only message event.
-pub(crate) fn data_event(data: ByteString) -> Event {
+pub(super) fn data_event(data: ByteString) -> Event {
     Event::Message(Message {
         data,
         event: None,
@@ -15,14 +15,14 @@ pub(crate) fn data_event(data: ByteString) -> Event {
 }
 
 /// Removes at most one leading ASCII space from an SSE field value.
-pub(crate) fn strip_space(value: &[u8]) -> &[u8] {
+pub(super) fn strip_space(value: &[u8]) -> &[u8] {
     value.strip_prefix(b" ").unwrap_or(value)
 }
 
 /// Returns the field value slice if `line` has the given `field` name.
 ///
 /// Accepts both bare `field` (empty value) and `field:value`.
-pub(crate) fn field_value<'a>(line: &'a [u8], field: &[u8]) -> Option<&'a [u8]> {
+pub(super) fn field_value<'a>(line: &'a [u8], field: &[u8]) -> Option<&'a [u8]> {
     match line.strip_prefix(field)? {
         [] => Some(&[]),
         [b':', value @ ..] => Some(strip_space(value)),
@@ -31,7 +31,7 @@ pub(crate) fn field_value<'a>(line: &'a [u8], field: &[u8]) -> Option<&'a [u8]> 
 }
 
 /// Parses an SSE `id` field value, ignoring valid UTF-8 values that contain NUL.
-pub(crate) fn parse_id_value(value: &[u8]) -> Result<Option<ByteString>, str::Utf8Error> {
+pub(super) fn parse_id_value(value: &[u8]) -> Result<Option<ByteString>, str::Utf8Error> {
     if memchr::memchr(0, value).is_some() {
         // Still validate UTF-8 so a NUL byte does not hide invalid UTF-8.
         str::from_utf8(value)?;
@@ -42,7 +42,7 @@ pub(crate) fn parse_id_value(value: &[u8]) -> Result<Option<ByteString>, str::Ut
 }
 
 /// Parses an SSE `id` line, ignoring valid UTF-8 values that contain NUL.
-pub(crate) fn parse_id(line: &[u8]) -> Result<Option<ByteString>, str::Utf8Error> {
+pub(super) fn parse_id(line: &[u8]) -> Result<Option<ByteString>, str::Utf8Error> {
     field_value(line, b"id")
         .map(parse_id_value)
         .transpose()
@@ -50,7 +50,7 @@ pub(crate) fn parse_id(line: &[u8]) -> Result<Option<ByteString>, str::Utf8Error
 }
 
 /// Parses an SSE `retry` field value in milliseconds into a `Duration`.
-pub(crate) fn parse_retry(value: &[u8]) -> Option<Duration> {
+pub(super) fn parse_retry(value: &[u8]) -> Option<Duration> {
     // SSE accepts only nonempty ASCII digit sequences.
     if value.is_empty() {
         return None;

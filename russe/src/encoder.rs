@@ -4,13 +4,12 @@ use crate::{Error, Event};
 
 /// SSE encoder for use with [`tokio_util::codec::FramedWrite`].
 ///
-/// Implements [`tokio_util::codec::Encoder<Event>`]. Each event ends with a blank line.
-/// CRLF and bare CR in message data and comments are converted to LF. Empty lines are preserved.
-/// Retry delays are written in whole milliseconds. Fractions of a millisecond are discarded.
+/// Implements [`tokio_util::codec::Encoder<Event>`]. Each event ends with a blank line. CRLF and
+/// bare CR in message data and comments are converted to LF. Empty lines are preserved. Retry
+/// delays are written in whole milliseconds. Fractions of a millisecond are discarded.
 ///
-/// Returns [`Error::InvalidFieldValue`] if an event name contains CR or LF,
-/// or an ID contains NUL, CR, or LF.
-/// These fields are checked before any bytes are added to the output buffer.
+/// Returns [`Error::InvalidFieldValue`] if an event name contains CR or LF, or an ID contains NUL,
+/// CR, or LF. These fields are checked before any bytes are added to the output buffer.
 ///
 /// # Examples
 ///

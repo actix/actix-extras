@@ -88,13 +88,13 @@ impl Manager {
 
     /// Sends the request and returns a task handle and a receiver of events.
     ///
-    /// Waits for response headers before starting the task that reads the event stream.
-    /// A failed request can be retried by calling this method again.
+    /// Waits for response headers before starting the task that reads the event stream. A failed
+    /// request can be retried by calling this method again.
     ///
     /// # Errors
     ///
-    /// Returns [`Error::Http`] if the initial request fails.
-    /// Body and decoding errors are sent through the event receiver.
+    /// Returns [`Error::Http`] if the initial request fails. Body and decoding errors are sent
+    /// through the event receiver.
     ///
     /// # Panics
     ///

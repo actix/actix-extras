@@ -23,7 +23,8 @@ impl Event {
     ///
     /// # Errors
     ///
-    /// Returns an error if the event cannot be encoded. See [`crate::Encoder`] for field requirements.
+    /// Returns an error if the event cannot be encoded. See [`crate::Encoder`] for field
+    /// requirements.
     ///
     /// # Examples
     ///

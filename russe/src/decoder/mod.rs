@@ -1,22 +1,25 @@
+mod fields;
+mod message_frame;
+
 use std::{mem, ops::Range, str, time::Duration};
 
 use bytes::{Buf as _, BytesMut};
 use bytestring::ByteString;
 use memchr::{memchr2, memchr2_iter};
 
-use crate::{
-    CR, Error, LF,
-    event::Event,
+use self::{
     fields::{data_event, field_value, parse_id, parse_retry, strip_space},
-    message::Message,
     message_frame::MessageFrame,
 };
+use crate::{CR, Error, LF, event::Event, message::Message};
+
+const MIN_SHARED_PAYLOAD_SIZE: usize = 1024;
 
 /// SSE decoder.
 ///
-/// Comment lines within a frame are combined into one [`Event::Comment`] and emitted
-/// before its message or retry event, regardless of their position. Decoding and
-/// re-encoding can therefore produce different bytes.
+/// Comment lines within a frame are combined into one [`Event::Comment`] and emitted before its
+/// message or retry event, regardless of their position. Decoding and re-encoding can therefore
+/// produce different bytes.
 ///
 /// If you call the codec directly, keep unread bytes in the buffer and append new bytes to them.
 #[derive(Debug, Clone, Default)]
@@ -38,8 +41,6 @@ enum FrameKind {
     Other,
 }
 
-const MIN_SHARED_PAYLOAD_SIZE: usize = 1024;
-
 /// Returns true when `size` is large enough to share `src`'s backing buffer.
 pub(crate) fn share_payload(src: &BytesMut, size: usize) -> bool {
     size >= MIN_SHARED_PAYLOAD_SIZE && size >= src.capacity().div_ceil(2)
@@ -53,9 +54,8 @@ enum FieldLines {
 
 /// Records a value range in `frame` and joins multiple values with `LF`.
 ///
-/// The remaining bytes in `frame` after `range.end` bound the bytes that later
-/// lines can append, so promoting to an owned buffer allocates once without
-/// further reallocations.
+/// The remaining bytes in `frame` after `range.end` bound the bytes that later lines can append, so
+/// promoting to an owned buffer allocates once without further reallocations.
 fn append_line(lines: &mut Option<FieldLines>, frame: &[u8], range: Range<usize>) {
     match lines {
         None => *lines = Some(FieldLines::Single(range)),
@@ -326,11 +326,10 @@ impl tokio_util::codec::Decoder for Decoder {
 }
 
 impl Decoder {
-    /// Scans `src` for the next blank-line frame delimiter and classifies the
-    /// frame while tracking line starts and recording fast-path message fields.
+    /// Scans `src` for the next blank-line frame delimiter and classifies the frame while tracking
+    /// line starts and recording fast-path message fields.
     ///
-    /// Returns the index of the first delimiter byte, or `None` if more bytes
-    /// are needed.
+    /// Returns the index of the first delimiter byte, or `None` if more bytes are needed.
     fn find_frame_delimiter(&mut self, src: &[u8]) -> Option<usize> {
         // Stop one byte early so the lookahead byte at pos + 1 is always in bounds.
         let end = src.len().saturating_sub(1);

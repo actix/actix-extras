@@ -6,9 +6,11 @@ use memchr::{memchr, memchr2};
 
 use crate::{
     CR, Error, LF,
-    decoder::share_payload,
+    decoder::{
+        fields::{field_value, parse_id_value, parse_retry},
+        share_payload,
+    },
     event::Event,
-    fields::{field_value, parse_id_value, parse_retry},
     message::Message,
 };
 
@@ -56,8 +58,8 @@ fn data_value_start(src: &[u8], line_start: usize, limit: usize) -> usize {
 
 /// Fast-path field offsets for a frame with a contiguous block of `data` lines.
 ///
-/// Tracks optional `event`, `id`, and `retry` fields alongside the `data` block
-/// using `u32` byte offsets into the decoder's input buffer.
+/// Tracks optional `event`, `id`, and `retry` fields alongside the `data` block using `u32` byte
+/// offsets into the decoder's input buffer.
 #[derive(Debug, Clone, Copy, Default)]
 pub(crate) struct MessageFrame {
     /// Byte range of the `event` field value in `src`, if seen.
@@ -69,19 +71,19 @@ pub(crate) struct MessageFrame {
     /// Last valid `retry` delay in this frame, if seen.
     retry: Option<Duration>,
 
-    /// Byte ranges of the first `data` field values in `src`, avoiding a re-scan
-    /// for short multiline payloads.
+    /// Byte ranges of the first `data` field values in `src`, avoiding a re-scan for short
+    /// multiline payloads.
     ///
-    /// Only the first `min(data_count, Self::INLINE_LINES)` entries are valid;
-    /// `clear` does not reset this array.
+    /// Only the first `min(data_count, Self::INLINE_LINES)` entries are valid; `clear` does not
+    /// reset this array.
     inline_data: [Option<ByteRange>; Self::INLINE_LINES],
 
-    /// Exclusive end byte offset in `src` of the last recorded `data` value,
-    /// before its line terminator.
+    /// Exclusive end byte offset in `src` of the last recorded `data` value, before its line
+    /// terminator.
     data_end: u32,
 
-    /// Exact byte length of the joined `data` payload, including `LF` separators
-    /// between consecutive `data` lines.
+    /// Exact byte length of the joined `data` payload, including `LF` separators between
+    /// consecutive `data` lines.
     data_len: u32,
 
     /// Number of `data` lines recorded in this frame.
@@ -92,8 +94,8 @@ pub(crate) struct MessageFrame {
 
     /// Set once a non-`data` field appears after at least one `data` line.
     ///
-    /// Prevents later `data` lines from entering this fast path so the recorded
-    /// `data` lines stay contiguous.
+    /// Prevents later `data` lines from entering this fast path so the recorded `data` lines stay
+    /// contiguous.
     data_closed: bool,
 
     /// Set if any recorded line ended with `CR` or `CRLF`.
@@ -108,12 +110,12 @@ impl MessageFrame {
 
     /// Records the next line in `src`, where `end` is the index of its line terminator.
     ///
-    /// Accepts a contiguous block of `data` lines with optional `event`, `id`, and
-    /// `retry` fields before or after the `data` lines (at most one `event` and one `id`).
+    /// Accepts a contiguous block of `data` lines with optional `event`, `id`, and `retry` fields
+    /// before or after the `data` lines (at most one `event` and one `id`).
     ///
-    /// Returns false if the line is a comment, unknown field, duplicate `event` or `id`,
-    /// a `data` line after non-`data` fields following earlier `data` lines, or exceeds
-    /// `u32` offsets. The caller must then clear this state and use the general frame parser.
+    /// Returns false if the line is a comment, unknown field, duplicate `event` or `id`, a `data`
+    /// line after non-`data` fields following earlier `data` lines, or exceeds `u32` offsets. The
+    /// caller must then clear this state and use the general frame parser.
     pub(crate) fn record_line(&mut self, src: &[u8], end: usize) -> bool {
         let Ok(next_line) = u32::try_from(end + 1) else {
             return false;
@@ -236,15 +238,15 @@ impl MessageFrame {
         true
     }
 
-    /// Builds an event from the recorded fields, consumes `consumed` bytes from `src`,
-    /// and clears this state.
+    /// Builds an event from the recorded fields, consumes `consumed` bytes from `src`, and clears
+    /// this state.
     ///
-    /// Returns `Ok(None)` when the complete frame produces no event (for example,
-    /// invalid `retry` values or an ignored NUL-containing `id` with no `data` or `event`).
-    /// The frame bytes are still consumed so the caller can continue to the next frame.
+    /// Returns `Ok(None)` when the complete frame produces no event (for example, invalid `retry`
+    /// values or an ignored NUL-containing `id` with no `data` or `event`). The frame bytes are
+    /// still consumed so the caller can continue to the next frame.
     ///
-    /// Large `data` payloads are sliced or compacted in place inside a split slice of `src`
-    /// to avoid allocating a new payload buffer.
+    /// Large `data` payloads are sliced or compacted in place inside a split slice of `src` to
+    /// avoid allocating a new payload buffer.
     #[inline(never)]
     pub(crate) fn finish(
         &mut self,
@@ -260,8 +262,8 @@ impl MessageFrame {
 
     /// Implements [`Self::finish`] without clearing state.
     ///
-    /// Returns `Ok(None)` when the consumed frame produces no event (not when more input
-    /// is needed).
+    /// Returns `Ok(None)` when the consumed frame produces no event (not when more input is
+    /// needed).
     fn finish_inner(&self, src: &mut BytesMut, consumed: usize) -> Result<Option<Event>, Error> {
         // Validate `event` and `id` in line order before `data` to match `ParsedFrame`.
         let (event, id) = match self.extract_headers(src) {
@@ -486,8 +488,8 @@ impl MessageFrame {
 
     /// Extracts `(event, id)` values from `src`.
     ///
-    /// Validates UTF-8 in the order the fields appeared in the frame so error
-    /// precedence matches `ParsedFrame`.
+    /// Validates UTF-8 in the order the fields appeared in the frame so error precedence matches
+    /// `ParsedFrame`.
     fn extract_headers(
         &self,
         src: &[u8],
