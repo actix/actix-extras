@@ -1,18 +1,14 @@
-//! Rate limiting with the in-memory store — no Redis, no other service required.
+//! Rate limiting with the in-memory store (no Redis server required).
 //!
-//! Run it:
+//! Run:
 //!
 //! ```console
 //! cargo run --example memory --features memory-store
-//! curl -i localhost:8080     # 200 five times, then 429
+//! curl -i localhost:8080 # 200 five times, then 429
 //! ```
 //!
-//! The limit is 5 requests per 10 seconds per client IP, so you can also exhaust it by refreshing
-//! <http://localhost:8080> in a browser and then watch it recover once the window rolls over.
-//!
-//! Requests are keyed on the client's socket address, so each client gets its own counter.
-//!
-//! See `examples/redis.rs` for the same app backed by Redis instead.
+//! Limits each client IP to 5 requests per 10 seconds.
+//! See `examples/redis.rs` for the Redis-backed equivalent.
 
 use std::{
     sync::atomic::{AtomicUsize, Ordering},
@@ -25,7 +21,7 @@ use actix_web::{dev::ServiceRequest, get, middleware, web, App, HttpServer, Resp
 const LIMIT: usize = 5;
 const PERIOD: Duration = Duration::from_secs(10);
 
-/// Counts requests that made it past the rate limiter, so the limit is visible in the response.
+/// Counts requests that pass the rate limiter.
 #[derive(Debug, Default)]
 struct Served(AtomicUsize);
 
@@ -41,31 +37,19 @@ async fn index(served: web::Data<Served>) -> impl Responder {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    // Initialise logging before the store is built, or its startup warning is dropped.
+    // Initialize logging before building the store so its startup warning is emitted.
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
 
-    // Both backends can be compiled in at once, so a real app can pick one at startup from its
-    // configuration — in-memory in development, Redis in production:
-    //
-    //     let mut builder = match env::var("REDIS_URL") {
-    //         Ok(url) => Limiter::builder(url),
-    //         Err(_) => Limiter::memory_builder(MemoryStore::new()),
-    //     };
+    // Construct the limiter outside `HttpServer::new` so all worker threads share one store.
     let limiter = Limiter::memory_builder(MemoryStore::new())
-        // Without an explicit key the default derives one from a session or cookie; a bare `curl`
-        // has neither, and the middleware lets a `None` key through *unlimited*.
-        //
-        // `peer_addr` cannot be forged. `realip_remote_addr` trusts `X-Forwarded-For` instead, so
-        // use it only behind a proxy you control — otherwise a client mints a fresh quota per
-        // request.
+        // `peer_addr` uses the socket address and cannot be spoofed via headers.
+        // Use `realip_remote_addr` only behind a trusted proxy.
         .key_by(|req: &ServiceRequest| req.connection_info().peer_addr().map(str::to_owned))
         .limit(LIMIT)
         .period(PERIOD)
         .build()
         .expect("limiter should build");
 
-    // Build the limiter *once*, out here: the `HttpServer::new` closure runs per worker thread, so
-    // building it inside would give each worker its own store and multiply the effective limit.
     let limiter = web::Data::new(limiter);
     let served = web::Data::new(Served::default());
 
