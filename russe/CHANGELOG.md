@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add `Reconnect` enum.
+- Add `Manager::reconnect()` methods.
+
 ## 0.3.6
 
 - Add `ureq-3` crate feature, disabled by default.
