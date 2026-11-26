@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.3.6
+
 - Add `ureq-3` crate feature, disabled by default.
 - Add `ureq_3::UreqExt` extension trait to read server-sent events with a blocking iterator.
 
