@@ -59,7 +59,7 @@ assert_eq!(msg.data, "Hello World!\nHow are you, today?");
 
 ## Client integrations
 
-With Reqwest, use `ReqwestExt::sse_stream` to stream events from a response or `Manager` to send a request and receive events through a channel. Enable the feature for your Reqwest version:
+Both Reqwest integrations provide `ReqwestExt::sse_stream` to stream events from a response and a browser-like request manager (`Manager`) to receive events through a channel. Enable the feature for your Reqwest version:
 
 - `reqwest-0_12` for Reqwest 0.12
 - `reqwest-0_13` for Reqwest 0.13

@@ -1,4 +1,11 @@
-//! Utilities for `reqwest` v0.12.
+//! Connection manager and fluent API for `reqwest` v0.12.
+//!
+//! This module provides two ways to interact with an SSE stream.
+//!
+//! 1. The [extension trait](ReqwestExt) to provide a fluent API to chain on a response
+//!    (`.sse_stream()` in place of `.bytes_stream()`).
+//! 2. The [connection manager](Manager) which takes ownership of the client and tracks
+//!    `Last-Event-ID` header state.
 
 use std::io;
 
@@ -23,6 +30,25 @@ mod sealed {
 /// SSE extension methods for `reqwest` v0.12.
 pub trait ReqwestExt: sealed::Sealed {
     /// Returns a stream of server-sent events.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// # use reqwest_0_12 as reqwest;
+    /// use futures_util::TryStreamExt as _;
+    /// use russe::reqwest_0_12::ReqwestExt as _;
+    ///
+    /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+    /// let mut events = reqwest::get("https://httpbin.org/sse")
+    ///     .await?
+    ///     .sse_stream();
+    ///
+    /// while let Some(event) = events.try_next().await? {
+    ///     println!("{:?}", event);
+    /// }
+    /// # Ok(())
+    /// # }
+    /// ```
     fn sse_stream(self) -> BoxStream<'static, Result<Event, Error>>;
 }
 
@@ -37,7 +63,37 @@ impl ReqwestExt for Response {
     }
 }
 
-/// An SSE request manager which tracks latest IDs and automatically reconnects.
+/// Connection manager that delivers server-sent events via a channel and tracks
+/// `Last-Event-ID` header state.
+///
+/// Automatic retries and `Last-Event-ID` sending are coming soon.
+///
+/// # Examples
+///
+/// ```no_run
+/// # use reqwest_0_12 as reqwest;
+/// use russe::{Event, reqwest_0_12::Manager};
+///
+/// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+/// let client = reqwest::Client::new();
+/// let request = client.get("https://httpbin.org/sse").build()?;
+///
+/// let mut manager = Manager::new(&client, request);
+/// let (_task, mut events) = manager.send().await?;
+///
+/// while let Some(Ok(event)) = events.recv().await {
+///     if let Event::Message(msg) = event {
+///         println!("{}", msg.data);
+///
+///         if let Some(id) = msg.id {
+///             manager.commit_id(id);
+///         }
+///     }
+/// }
+///
+/// # Ok(())
+/// # }
+/// ```
 #[derive(Debug)]
 pub struct Manager {
     client: Client,
@@ -48,13 +104,13 @@ pub struct Manager {
 }
 
 impl Manager {
-    /// Constructs new SSE request manager.
+    /// Constructs a new SSE request manager.
     ///
     /// No attempts are made to validate or modify the given request.
     ///
     /// # Panics
     ///
-    /// Panics if request is given a stream body.
+    /// Panics if the request has a stream body.
     pub fn new(client: &Client, req: Request) -> Self {
         let (tx, rx) = unbounded_channel();
 
@@ -110,9 +166,9 @@ impl Manager {
         Ok((task_handle, rx))
     }
 
-    /// Commits an event ID for this manager.
+    /// Stores the latest event ID for this manager.
     ///
-    /// The given ID will be used as the `Last-Event-Id` header in case of reconnects.
+    /// The stored ID is reserved for reconnect support.
     pub fn commit_id(&mut self, id: impl Into<ByteString>) {
         self.last_event_id = Some(id.into());
     }

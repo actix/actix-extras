@@ -15,7 +15,11 @@ jobs:
       fail-fast: false
       matrix:
         target:
-          - { name: Linux, os: blacksmith-2vcpu-ubuntu-2404, triple: x86_64-unknown-linux-gnu }
+          - {
+              name: Linux,
+              os: blacksmith-2vcpu-ubuntu-2404,
+              triple: x86_64-unknown-linux-gnu,
+            }
 
     name: ${{ matrix.target.name }} / nightly
     runs-on: ${{ matrix.target.os }}

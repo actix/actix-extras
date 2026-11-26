@@ -1,4 +1,11 @@
-//! Utilities for `reqwest` v0.13.
+//! Connection manager and fluent API for `reqwest` v0.13.
+//!
+//! This module provides two ways to interact with an SSE stream.
+//!
+//! 1. The [extension trait](ReqwestExt) to provide a fluent API to chain on a response
+//!    (`.sse_stream()` in place of `.bytes_stream()`).
+//! 2. The [connection manager](Manager) which takes ownership of the client and tracks
+//!    `Last-Event-ID` header state.
 
 use std::io;
 
@@ -27,15 +34,17 @@ pub trait ReqwestExt: sealed::Sealed {
     /// # Examples
     ///
     /// ```no_run
-    /// use futures_util::StreamExt as _;
+    /// # use reqwest_0_13 as reqwest;
+    /// use futures_util::TryStreamExt as _;
     /// use russe::reqwest_0_13::ReqwestExt as _;
     ///
     /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-    /// let response = reqwest_0_13::get("https://sse.dev/test").await?;
-    /// let mut events = response.sse_stream();
+    /// let mut events = reqwest::get("https://httpbin.org/sse")
+    ///     .await?
+    ///     .sse_stream();
     ///
-    /// while let Some(event) = events.next().await {
-    ///     println!("{:?}", event?);
+    /// while let Some(event) = events.try_next().await? {
+    ///     println!("{:?}", event);
     /// }
     /// # Ok(())
     /// # }
@@ -54,7 +63,37 @@ impl ReqwestExt for Response {
     }
 }
 
-/// An SSE request manager that delivers events through a channel.
+/// Connection manager that delivers server-sent events via a channel and tracks
+/// `Last-Event-ID` header state.
+///
+/// Automatic retries and `Last-Event-ID` sending are coming soon.
+///
+/// # Examples
+///
+/// ```no_run
+/// # use reqwest_0_13 as reqwest;
+/// use russe::{Event, reqwest_0_13::Manager};
+///
+/// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+/// let client = reqwest::Client::new();
+/// let request = client.get("https://httpbin.org/sse").build()?;
+///
+/// let mut manager = Manager::new(&client, request);
+/// let (_task, mut events) = manager.send().await?;
+///
+/// while let Some(Ok(event)) = events.recv().await {
+///     if let Event::Message(msg) = event {
+///         println!("{}", msg.data);
+///
+///         if let Some(id) = msg.id {
+///             manager.commit_id(id);
+///         }
+///     }
+/// }
+///
+/// # Ok(())
+/// # }
+/// ```
 #[derive(Debug)]
 pub struct Manager {
     client: Client,
