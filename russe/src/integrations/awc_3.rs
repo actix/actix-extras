@@ -54,8 +54,6 @@ impl_more::impl_error_enum! {
     Decode { source } => source,
 }
 
-impl_more::impl_enum_from!(DecodeError => ManagerError::Decode { source });
-
 mod sealed {
     use super::*;
 
@@ -246,7 +244,10 @@ impl Manager {
 
             let res = req.await.map_err(http_error)?;
 
-            Ok((res.status().as_u16() != 204).then(|| res.sse_stream()))
+            Ok((res.status().as_u16() != 204).then(|| {
+                res.sse_stream()
+                    .map_err(|source| ManagerError::Decode { source })
+            }))
         };
 
         let id = self.last_event_id.borrow().clone();

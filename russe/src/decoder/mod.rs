@@ -102,7 +102,7 @@ impl ParsedFrame {
     /// Parses the lines of a complete frame in order.
     ///
     /// Scans for line endings before `last_line_start` and parses the final line directly.
-    fn parse_lines(&mut self, frame: &[u8], last_line_start: usize) -> Result<(), DecodeError> {
+    fn parse_lines(&mut self, frame: &[u8], last_line_start: usize) -> Result<(), str::Utf8Error> {
         let frame = frame.strip_suffix(&[CR]).unwrap_or(frame);
         let mut line_start = 0;
 
@@ -127,7 +127,7 @@ impl ParsedFrame {
         frame: &[u8],
         line_start: usize,
         line: &[u8],
-    ) -> Result<(), DecodeError> {
+    ) -> Result<(), str::Utf8Error> {
         match line {
             // Skip empty segments from CRLF.
             [] => {}
@@ -173,6 +173,13 @@ impl tokio_util::codec::Decoder for Decoder {
     type Error = DecodeError;
 
     fn decode(&mut self, src: &mut BytesMut) -> Result<Option<Self::Item>, Self::Error> {
+        self.decode_event(src)
+            .map_err(|source| DecodeError::InvalidUtf8 { source })
+    }
+}
+
+impl Decoder {
+    fn decode_event(&mut self, src: &mut BytesMut) -> Result<Option<Event>, str::Utf8Error> {
         if self.pending_event.is_some() {
             return Ok(self.pending_event.take());
         }
@@ -328,9 +335,7 @@ impl tokio_util::codec::Decoder for Decoder {
             }
         }
     }
-}
 
-impl Decoder {
     /// Scans `src` for the next blank-line frame delimiter and classifies the frame while tracking
     /// line starts and recording fast-path message fields.
     ///
@@ -404,7 +409,7 @@ impl Decoder {
         delimiter: usize,
         consumed: usize,
         last_line_start: usize,
-    ) -> Result<Option<Event>, DecodeError> {
+    ) -> Result<Option<Event>, str::Utf8Error> {
         let mut parsed = ParsedFrame::default();
 
         if let Err(err) = parsed.parse_lines(&src[..delimiter], last_line_start) {

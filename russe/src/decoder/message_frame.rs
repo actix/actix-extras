@@ -5,7 +5,7 @@ use bytestring::ByteString;
 use memchr::{memchr, memchr2};
 
 use crate::{
-    CR, DecodeError, LF,
+    CR, LF,
     decoder::{
         fields::{field_value, parse_id_value, parse_retry},
         share_payload,
@@ -252,7 +252,7 @@ impl MessageFrame {
         &mut self,
         src: &mut BytesMut,
         consumed: usize,
-    ) -> Result<Option<Event>, DecodeError> {
+    ) -> Result<Option<Event>, str::Utf8Error> {
         let result = self.finish_inner(src, consumed);
 
         self.clear();
@@ -268,13 +268,13 @@ impl MessageFrame {
         &self,
         src: &mut BytesMut,
         consumed: usize,
-    ) -> Result<Option<Event>, DecodeError> {
+    ) -> Result<Option<Event>, str::Utf8Error> {
         // Validate `event` and `id` in line order before `data` to match `ParsedFrame`.
         let (event, id) = match self.extract_headers(src) {
             Ok(headers) => headers,
             Err(err) => {
                 src.advance(consumed);
-                return Err(err.into());
+                return Err(err);
             }
         };
 

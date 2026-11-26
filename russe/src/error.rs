@@ -75,5 +75,4 @@ impl_more::impl_error_enum! {
     Io { source } => source,
 }
 
-impl_more::impl_enum_from!(str::Utf8Error => DecodeError::InvalidUtf8 { source });
 impl_more::impl_enum_from!(io::Error => DecodeError::Io { source });
