@@ -9,7 +9,9 @@
 use std::{fmt, io};
 
 use awc_3::{
-    ClientRequest, ClientResponse, FrozenClientRequest, error::PayloadError, http::header,
+    ClientRequest, ClientResponse, FrozenClientRequest,
+    error::{PayloadError, SendRequestError},
+    http::header,
 };
 use bytes::Bytes;
 use bytestring::ByteString;
@@ -32,7 +34,7 @@ pub enum ManagerError {
     /// The HTTP request failed.
     Http {
         /// Source of the request error.
-        source: Box<dyn std::error::Error + Send + Sync>,
+        source: SendRequestError,
     },
 
     /// Reading or decoding the response body failed.
@@ -50,7 +52,7 @@ impl_more::impl_display_enum! {
 
 impl_more::impl_error_enum! {
     ManagerError:
-    Http { source } => source.as_ref(),
+    Http { source } => source,
     Decode { source } => source,
 }
 
@@ -169,13 +171,6 @@ impl fmt::Debug for Manager {
     }
 }
 
-fn http_error(err: impl std::error::Error) -> ManagerError {
-    // AWC request errors can contain sources that are not Send or Sync.
-    ManagerError::Http {
-        source: err_report::Report::new(err).to_string().into(),
-    }
-}
-
 impl Manager {
     /// Freezes the request and constructs an SSE request manager.
     ///
@@ -242,7 +237,7 @@ impl Manager {
                 None => req.send(),
             };
 
-            let res = req.await.map_err(http_error)?;
+            let res = req.await.map_err(|source| ManagerError::Http { source })?;
 
             Ok((res.status().as_u16() != 204).then(|| {
                 res.sse_stream()
@@ -539,7 +534,9 @@ mod tests {
 
         assert!(matches!(
             manager.send().await.unwrap_err(),
-            ManagerError::Http { .. }
+            ManagerError::Http {
+                source: awc_3::error::SendRequestError::Timeout
+            }
         ));
 
         drop(slow_response);

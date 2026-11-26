@@ -17,7 +17,7 @@ all-features = true
 allowed_external_types = ["bytestring::*", "tokio_util::*"]
 
 [features]
-awc-3 = ["dep:awc-3", "dep:err-report", "dep:futures-util", "tokio/macros", "tokio/time", "tokio-util/io"]
+awc-3 = ["dep:awc-3", "dep:futures-util", "tokio/macros", "tokio/time", "tokio-util/io"]
 mime = ["dep:mime"]
 reqwest-0_12 = ["dep:reqwest-0_12", "dep:futures-util", "tokio/macros", "tokio/time"]
 reqwest-0_13 = ["dep:reqwest-0_13", "dep:futures-util", "tokio/macros", "tokio/time"]
@@ -27,7 +27,6 @@ ureq-3 = ["dep:ureq-3"]
 awc-3 = { package = "awc", version = "3", optional = true, default-features = false }
 bytes = "1"
 bytestring = { version = "1.6.1", features = ["simd", "std"] }
-err-report = { version = "0.1", optional = true }
 futures-util = { version = "0.3.18", optional = true }
 impl-more = "0.3.8"
 itoa = "1"
@@ -48,6 +47,7 @@ ureq-3 = { package = "ureq", version = "3", optional = true, default-features = 
 actix-http = "3"
 color-eyre = "0.6"
 divan = { package = "codspeed-divan-compat", version = "4" }
+err-report = "0.1"
 eyre = "0.6"
 futures-test = "0.3"
 futures-util = { version = "0.3.18", features = ["sink"] }
