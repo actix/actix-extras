@@ -60,59 +60,66 @@ impl Bearer {
     }
 }
 
+const BEARER: &[u8] = b"Bearer";
+const REALM: &[u8] = b" realm=\"";
+const SCOPE: &[u8] = b" scope=\"";
+const ERROR: &[u8] = b" error=\"";
+const ERROR_DESCRIPTION: &[u8] = b" error_description=\"";
+const ERROR_URI: &[u8] = b" error_uri=\"";
+const ATTRIBUTE_CLOSE: &[u8] = b"\",";
+
+fn opt_len(val: &Option<impl AsRef<str>>, attribute: &[u8]) -> usize {
+    val.as_ref().map_or(0, |val| {
+        attribute.len() + val.as_ref().len() + ATTRIBUTE_CLOSE.len()
+    })
+}
+
 #[doc(hidden)]
 impl Challenge for Bearer {
     fn to_bytes(&self) -> Bytes {
-        let desc_uri_required = self
-            .error_description
-            .as_ref()
-            .map_or(0, |desc| desc.len() + 20)
-            + self.error_uri.as_ref().map_or(0, |url| url.len() + 12);
-
-        let capacity = 6
-            + self.realm.as_ref().map_or(0, |realm| realm.len() + 9)
-            + self.scope.as_ref().map_or(0, |scope| scope.len() + 9)
-            + desc_uri_required;
+        let capacity = BEARER.len()
+            + opt_len(&self.realm, REALM)
+            + opt_len(&self.scope, SCOPE)
+            + opt_len(&self.error, ERROR)
+            + opt_len(&self.error_description, ERROR_DESCRIPTION)
+            + opt_len(&self.error_uri, ERROR_URI);
 
         let mut buffer = BytesMut::with_capacity(capacity);
         buffer.put(&b"Bearer"[..]);
 
         if let Some(ref realm) = self.realm {
-            buffer.put(&b" realm=\""[..]);
+            buffer.extend_from_slice(REALM);
             utils::put_quoted(&mut buffer, realm);
-            buffer.put_u8(b'"');
+            buffer.extend_from_slice(ATTRIBUTE_CLOSE);
         }
 
         if let Some(ref scope) = self.scope {
-            buffer.put(&b" scope=\""[..]);
+            buffer.extend_from_slice(SCOPE);
             utils::put_quoted(&mut buffer, scope);
-            buffer.put_u8(b'"');
+            buffer.extend_from_slice(ATTRIBUTE_CLOSE);
         }
 
         if let Some(ref error) = self.error {
-            let error_repr = error.as_str();
-            let remaining = buffer.remaining_mut();
-            let required = desc_uri_required + error_repr.len() + 9; // 9 is for `" error=\"\""`
-
-            if remaining < required {
-                buffer.reserve(required);
-            }
-
-            buffer.put(&b" error=\""[..]);
-            utils::put_quoted(&mut buffer, error_repr);
-            buffer.put_u8(b'"')
+            buffer.extend_from_slice(ERROR);
+            utils::put_quoted(&mut buffer, error.as_str());
+            buffer.extend_from_slice(ATTRIBUTE_CLOSE);
         }
 
         if let Some(ref error_description) = self.error_description {
-            buffer.put(&b" error_description=\""[..]);
+            buffer.extend_from_slice(ERROR_DESCRIPTION);
             utils::put_quoted(&mut buffer, error_description);
-            buffer.put_u8(b'"');
+            buffer.extend_from_slice(ATTRIBUTE_CLOSE);
         }
 
         if let Some(ref error_uri) = self.error_uri {
-            buffer.put(&b" error_uri=\""[..]);
+            buffer.extend_from_slice(ERROR_URI);
             utils::put_quoted(&mut buffer, error_uri);
-            buffer.put_u8(b'"');
+            buffer.extend_from_slice(ATTRIBUTE_CLOSE);
+        }
+
+        // If we wrote attributes, remove the last trailing comma
+        if capacity > BEARER.len() {
+            buffer.truncate(buffer.len() - 1);
         }
 
         buffer.freeze()

@@ -43,6 +43,12 @@ impl Error {
     }
 }
 
+impl std::convert::AsRef<str> for Error {
+    fn as_ref(&self) -> &str {
+        self.as_str()
+    }
+}
+
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(self.as_str())
