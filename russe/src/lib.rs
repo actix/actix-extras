@@ -50,12 +50,13 @@
 //!
 //! # Client integrations
 //!
-//! Each integration provides an extension trait to stream events from a response and a `Manager` to
-//! receive events through a channel.
+//! Each integration provides an extension trait to read events from a response. The async clients
+//! also provide a `Manager` to receive events through a channel.
 //!
 //! - `awc-3` for `awc` v3 extension trait and connection manager.
 //! - `reqwest-0_12` for `reqwest` v0.12 extension trait and connection manager.
 //! - `reqwest-0_13` for `reqwest` v0.13 extension trait and connection manager.
+//! - `ureq-3` for `ureq` v3 blocking iterator.
 
 #![forbid(unsafe_code)]
 #![cfg_attr(docsrs, feature(doc_cfg))]
@@ -74,6 +75,9 @@ pub mod reqwest_0_12;
 #[cfg(feature = "reqwest-0_13")]
 #[path = "integrations/reqwest_0_13.rs"]
 pub mod reqwest_0_13;
+#[cfg(feature = "ureq-3")]
+#[path = "integrations/ureq_3.rs"]
+pub mod ureq_3;
 
 pub use self::{decoder::Decoder, encoder::Encoder, error::Error, event::Event, message::Message};
 
