@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.3.5
+
 - Set `Accept: text/event-stream` in connection managers when the request has no `Accept` header.
 - Add `awc-3` crate feature, disabled by default.
 - Add `awc_3::AwcExt` extension trait.
