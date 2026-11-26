@@ -8,6 +8,7 @@ allow = [
     "Zlib",
     "ISC",
     "BSL-1.0",
+    "CDLA-Permissive-2.0",
 ]
 private = { ignore = true }
 
