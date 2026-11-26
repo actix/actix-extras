@@ -11,7 +11,10 @@ use std::io;
 
 use bytestring::ByteString;
 use futures_util::{StreamExt as _, TryStreamExt as _, stream::BoxStream};
-use reqwest_0_12::{Client, Request, Response};
+use reqwest_0_12::{
+    Client, Request, Response,
+    header::{self, HeaderValue},
+};
 use tokio::{
     sync::mpsc::{UnboundedReceiver, UnboundedSender, unbounded_channel},
     task::JoinHandle,
@@ -106,15 +109,20 @@ pub struct Manager {
 impl Manager {
     /// Constructs a new SSE request manager.
     ///
-    /// No attempts are made to validate or modify the given request.
+    /// Sets `Accept: text/event-stream` if the request has no `Accept` header.
     ///
     /// # Panics
     ///
     /// Panics if the request has a stream body.
     pub fn new(client: &Client, req: Request) -> Self {
+        const DEFAULT_ACCEPT: HeaderValue = HeaderValue::from_static(crate::MEDIA_TYPE_STR);
+
         let (tx, rx) = unbounded_channel();
 
-        let req = req.try_clone().expect("Request should be clone-able");
+        let mut req = req.try_clone().expect("Request should be clone-able");
+        req.headers_mut()
+            .entry(header::ACCEPT)
+            .or_insert(DEFAULT_ACCEPT);
 
         Self {
             client: client.clone(),

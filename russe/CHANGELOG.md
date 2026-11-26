@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Set `Accept: text/event-stream` in connection managers when the request has no `Accept` header.
+
 ## 0.3.4
 
 - Improve decoding performance up to 20% for common `event`/`id` + multiline `data` messages.

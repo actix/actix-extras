@@ -10,9 +10,7 @@ async fn main() -> eyre::Result<()> {
 
     let client = reqwest::Client::default();
 
-    let mut req = client.get("https://httpbin.org/sse").build()?;
-    let headers = req.headers_mut();
-    headers.insert("accept", russe::MEDIA_TYPE_STR.parse().unwrap());
+    let req = client.get("https://httpbin.org/sse").build()?;
 
     let mut manager = Manager::new(&client, req);
 

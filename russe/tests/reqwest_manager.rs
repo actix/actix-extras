@@ -63,6 +63,29 @@ macro_rules! manager_tests {
             }
 
             #[tokio::test]
+            async fn sends_accept_header() {
+                let server = MockServer::start().await;
+                Mock::given(method("GET"))
+                    .respond_with(ResponseTemplate::new(200))
+                    .mount(&server)
+                    .await;
+
+                let client = client();
+                let url = server.uri();
+                let custom = "text/event-stream, text/plain;q=0.1";
+
+                for request in [client.get(&url), client.get(&url).header("accept", custom)] {
+                    let mut manager = Manager::new(&client, request.build().unwrap());
+                    let (task, _) = manager.send().await.unwrap();
+                    task.await.unwrap();
+                }
+
+                let requests = server.received_requests().await.unwrap();
+                assert_eq!(requests[0].headers["accept"], russe::MEDIA_TYPE_STR);
+                assert_eq!(requests[1].headers["accept"], custom);
+            }
+
+            #[tokio::test]
             async fn returns_initial_request_errors() {
                 let server = MockServer::start().await;
 
