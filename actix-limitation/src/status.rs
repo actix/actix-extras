@@ -13,7 +13,7 @@ pub struct Status {
 }
 
 impl Status {
-    /// Constructs status limit status from parts.
+    /// Constructs a [`Status`] from count, limit, and reset timestamp.
     #[must_use]
     pub(crate) fn new(count: usize, limit: usize, reset_epoch_utc: usize) -> Self {
         let remaining = limit.saturating_sub(count);

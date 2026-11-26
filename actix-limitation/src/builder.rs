@@ -5,18 +5,19 @@ use actix_session::SessionExt as _;
 use actix_web::dev::ServiceRequest;
 use redis::Client;
 
-#[cfg(feature = "memory-store")]
-use crate::store::MemoryStore;
-use crate::{errors::Error, store::Backend, GetArcBoxKeyFn, Limiter};
+use crate::{
+    errors::Error,
+    store::{Backend, MemoryStore},
+    GetArcBoxKeyFn, Limiter,
+};
 
-/// The backend a [`Builder`] will construct, before it is resolved into a [`Backend`].
+/// Backend specification stored in [`Builder`] before [`Builder::build`].
 #[derive(Debug, Clone)]
 pub(crate) enum BackendSpec {
-    /// A Redis connection URL, parsed into a client by [`Builder::build`].
+    /// Redis connection URL, parsed into a client by [`Builder::build`].
     RedisUrl(String),
 
-    /// An already-constructed in-memory store.
-    #[cfg(feature = "memory-store")]
+    /// Pre-constructed in-memory store.
     Memory(MemoryStore),
 }
 
@@ -33,21 +34,21 @@ pub struct Builder {
 }
 
 impl Builder {
-    /// Set upper limit.
+    /// Sets the maximum number of requests allowed per period.
     pub fn limit(&mut self, limit: usize) -> &mut Self {
         self.limit = limit;
         self
     }
 
-    /// Set limit window/period.
+    /// Sets the duration of the fixed rate-limit window.
     pub fn period(&mut self, period: Duration) -> &mut Self {
         self.period = period;
         self
     }
 
-    /// Sets rate limit key derivation function.
+    /// Sets the rate limit key derivation function.
     ///
-    /// Should not be used in combination with `cookie_name` or `session_key` as they conflict.
+    /// Conflicts with deprecated `cookie_name` and `session_key`.
     pub fn key_by<F>(&mut self, resolver: F) -> &mut Self
     where
         F: Fn(&ServiceRequest) -> Option<String> + Send + Sync + 'static,
@@ -56,9 +57,9 @@ impl Builder {
         self
     }
 
-    /// Sets name of cookie to be sent.
+    /// Sets the name of the request cookie used to derive the rate limit key.
     ///
-    /// This method should not be used in combination of `key_by` as they conflict.
+    /// Panics if [`key_by`](Self::key_by) was already set.
     #[deprecated = "Prefer `key_by`."]
     pub fn cookie_name(&mut self, cookie_name: impl Into<Cow<'static, str>>) -> &mut Self {
         if self.get_key_fn.is_some() {
@@ -68,9 +69,9 @@ impl Builder {
         self
     }
 
-    /// Sets session key to be used in backend.
+    /// Sets the session key used to derive the rate limit key.
     ///
-    /// This method should not be used in combination of `key_by` as they conflict.
+    /// Panics if [`key_by`](Self::key_by) was already set.
     #[deprecated = "Prefer `key_by`."]
     #[cfg(feature = "session")]
     pub fn session_key(&mut self, session_key: impl Into<Cow<'static, str>>) -> &mut Self {
@@ -81,10 +82,10 @@ impl Builder {
         self
     }
 
-    /// Finalizes and returns a `Limiter`.
+    /// Builds and returns a [`Limiter`].
     ///
-    /// For the Redis backend, the URL is parsed here; no connection is established until the first
-    /// request is counted. An invalid URL is therefore reported as an error by this method.
+    /// For the Redis backend, this parses the URL without opening a connection. An invalid URL
+    /// returns an error; connection errors occur when requests are counted.
     pub fn build(&mut self) -> Result<Limiter, Error> {
         let get_key = if let Some(resolver) = self.get_key_fn.clone() {
             resolver
@@ -112,7 +113,6 @@ impl Builder {
         let backend = match &self.backend {
             BackendSpec::RedisUrl(url) => Backend::Redis(Client::open(url.as_str())?),
 
-            #[cfg(feature = "memory-store")]
             BackendSpec::Memory(store) => Backend::Memory(store.clone()),
         };
 
@@ -146,8 +146,7 @@ mod tests {
         match &builder.backend {
             BackendSpec::RedisUrl(url) => assert_eq!(url, redis_url),
 
-            #[cfg(feature = "memory-store")]
-            BackendSpec::Memory(_) => panic!("expected a Redis backend"),
+            BackendSpec::Memory(_) => panic!("Builder should use the Redis backend"),
         }
         assert_eq!(builder.limit, 100);
         assert_eq!(builder.period, period);

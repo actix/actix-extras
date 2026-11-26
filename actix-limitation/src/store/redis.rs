@@ -22,20 +22,19 @@ pub(crate) async fn track(
         .get_multiplexed_async_connection_with_config(&connection_config)
         .await?;
 
-    // The seed of this approach is outlined Atul R in a blog post about rate limiting using
-    // NodeJS and Redis. For more details, see https://blog.atulr.com/rate-limiter
+    // Based on the fixed-window Redis pattern described at https://blog.atulr.com/rate-limiter.
     let mut pipe = redis::pipe();
     pipe.atomic()
-        .cmd("SET") // Set key and value
+        .cmd("SET")
         .arg(key)
         .arg(0)
-        .arg("EX") // Set the specified expire time, in seconds.
+        .arg("EX") // Set the window length in seconds.
         .arg(expires)
-        .arg("NX") // Only set the key if it does not already exist.
-        .ignore() // --- ignore returned value of SET command ---
-        .cmd("INCR") // Increment key
+        .arg("NX") // Create the counter only if absent, preserving any active window.
+        .ignore() // Omit the SET reply from the (count, ttl) result.
+        .cmd("INCR") // Count this request.
         .arg(key)
-        .cmd("TTL") // Return time-to-live of key
+        .cmd("TTL") // Read the seconds left in the window.
         .arg(key);
 
     let (count, ttl) = pipe.query_async(&mut connection).await?;

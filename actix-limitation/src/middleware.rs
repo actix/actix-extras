@@ -14,6 +14,10 @@ use actix_web::{
 use crate::{Error as LimitationError, Limiter};
 
 /// Rate limit middleware.
+///
+/// Requires `web::Data<Limiter>` in app data. Requests whose key function returns `None` pass
+/// through without rate limiting. Exceeded limits return `429 Too Many Requests`, and backend
+/// errors return `500 Internal Server Error`.
 #[derive(Debug, Default)]
 #[non_exhaustive]
 pub struct RateLimiter;
@@ -60,7 +64,7 @@ where
         // method description is important context for the developer.
         let limiter = req
             .app_data::<web::Data<Limiter>>()
-            .expect("web::Data<Limiter> should be set in app data for RateLimiter middleware")
+            .expect("App data should contain web::Data<Limiter> for RateLimiter middleware")
             .clone();
 
         let key = (limiter.get_key_fn)(&req);

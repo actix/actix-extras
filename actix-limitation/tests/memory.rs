@@ -1,5 +1,3 @@
-#![cfg(feature = "memory-store")]
-
 use std::{thread::sleep, time::Duration};
 
 use actix_limitation::{Error, Limiter, MemoryStore, RateLimiter};
@@ -51,7 +49,7 @@ async fn test_limiter_count_error() -> Result<(), Error> {
                 assert_eq!(status.limit(), limit);
                 assert_eq!(status.remaining(), 0);
             }
-            err => panic!("error should be LimitExceeded variant, got {err:?}"),
+            err => panic!("Error should be LimitExceeded variant, got {err:?}"),
         }
     }
 
@@ -110,14 +108,14 @@ async fn test_middleware_limits_requests() {
         if index <= limit {
             assert!(
                 resp.status().is_success(),
-                "request {index}: {:?}",
+                "Request {index} should succeed, got {:?}",
                 resp.status()
             );
         } else {
             assert_eq!(
                 resp.status(),
                 StatusCode::TOO_MANY_REQUESTS,
-                "request {index}"
+                "Request {index} should exceed the limit"
             );
         }
     }
@@ -179,6 +177,6 @@ async fn test_middleware_window_resets() {
 
     assert!(
         call().await.status().is_success(),
-        "window did not reset for the middleware",
+        "Request should succeed after the window resets",
     );
 }

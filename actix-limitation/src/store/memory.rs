@@ -9,127 +9,33 @@ use std::{
 /// Default interval between lazy sweeps of expired counters.
 const DEFAULT_SWEEP_INTERVAL: Duration = Duration::from_secs(60);
 
-/// A process-local, in-memory rate limit store.
+/// A process-local store for fixed-window counters.
 ///
-/// **Counters live in this process only.** They are not shared with any other instance of your
-/// application, and they are lost on restart. Run more than one instance — several pods, several
-/// hosts, or a rolling deploy — and each keeps its own counts, so a client can be served by any of
-/// them and the effective limit becomes `limit × instances`. Restarting an instance resets every
-/// counter it held, letting clients that were over their limit start again immediately.
+/// Clones share counters. Create one store outside `HttpServer::new` to share it across workers.
+/// Each application process has its own counters and loses them on restart.
 ///
-/// It is intended for local development, examples, and tests — none of which should need a Redis
-/// server — and is a real implementation, not a stub: on a single instance it is correct, and safe
-/// in production. Reach for [`Limiter::builder()`](crate::Limiter::builder) and Redis as soon as
-/// there is more than one instance to share counts between.
+/// The first request for a key starts its window. Later requests increment the count until the
+/// window expires. This store supports sub-second periods. Use whole seconds if the same
+/// configuration must also work with Redis.
 ///
-/// A store is constructed once and cloned; cloning is cheap and all clones share one set of
-/// counters. Constructing one logs a warning at `WARN` level, so an in-memory store shipped to
-/// production by accident is visible in the logs.
-///
-/// The window is fixed, not sliding, matching the Redis backend: the first request for a key opens
-/// a window of [`period`](crate::Builder::period), and later requests inside that window increment
-/// the counter without extending it.
-///
-/// # Examples
-///
-/// ```no_run
-/// use std::time::Duration;
-/// use actix_web::{dev::ServiceRequest, web, App, HttpServer};
-/// use actix_limitation::{Limiter, MemoryStore, RateLimiter};
-///
-/// #[actix_web::main]
-/// async fn main() -> std::io::Result<()> {
-///     // Build the limiter ONCE, here, outside the `HttpServer::new` closure, then clone the
-///     // `web::Data` handle into each worker. The closure runs once per worker thread: building the
-///     // limiter inside it would give every worker its own store, so nothing is shared and the
-///     // effective limit is silently multiplied by the worker count.
-///     let limiter = web::Data::new(
-///         Limiter::memory_builder(MemoryStore::new())
-///             .key_by(|req: &ServiceRequest| {
-///                 req.connection_info().peer_addr().map(str::to_owned)
-///             })
-///             .limit(5)
-///             .period(Duration::from_secs(10))
-///             .build()
-///             .unwrap(),
-///     );
-///
-///     HttpServer::new(move || {
-///         App::new()
-///             .wrap(RateLimiter::default())
-///             .app_data(limiter.clone())
-///             .default_service(web::to(|| async { "Hello!" }))
-///     })
-///     .bind(("127.0.0.1", 8080))?
-///     .run()
-///     .await
-/// }
-/// ```
-///
-/// Configure the store with [`MemoryStore::builder()`]:
+/// Writes sweep expired entries once the 60-second sweep interval has elapsed. A new key also
+/// triggers a sweep when the store is full. If all entries are still active, the new key passes
+/// untracked. The default capacity is `usize::MAX`. Set a smaller limit with
+/// [`max_keys`](MemoryStoreBuilder::max_keys).
 ///
 /// ```
-/// use actix_limitation::MemoryStore;
+/// use actix_limitation::{Limiter, MemoryStore};
 ///
 /// let store = MemoryStore::builder().max_keys(10_000).build();
+/// let limiter = Limiter::memory_builder(store).build().unwrap();
 /// ```
-///
-/// # Differences From The Redis Backend
-///
-/// Rate limiting semantics are otherwise the same, but two behaviours differ, so that "works
-/// locally, differs in production" does not come as a surprise:
-///
-/// - **Sub-second periods.** This store honours a [`period`](crate::Builder::period) of any
-///   resolution. The Redis backend truncates it with [`Duration::as_secs`], so a period under one
-///   second becomes `SET … EX 0`, which Redis rejects as an invalid expire time. Keep periods at
-///   whole seconds if the same configuration has to run against both backends.
-/// - **Behaviour at capacity.** With [`max_keys`](MemoryStoreBuilder::max_keys) set, this store
-///   fails open: once it is full, a new key is not tracked at all and its requests pass unlimited.
-///   Redis instead applies its own `maxmemory-policy`, which evicts existing counters — resetting
-///   the windows of clients already being tracked — rather than letting new keys through.
-///
-/// # Limitations
-///
-/// Counters are process-local, as above: no sharing between instances, and no persistence across
-/// restarts. Both are inherent, not bugs to be worked around.
-///
-/// Because the store is per-process, a [`Limiter`](crate::Limiter) built inside the
-/// `HttpServer::new(…)` closure gives each worker thread its own counters. Build it once, outside,
-/// and clone the [`web::Data`] handle in — see the example above.
-///
-/// Expired counters are removed lazily, by a sweep that runs on a write at most once a minute;
-/// there is no background task. Memory use is therefore proportional to the number of distinct
-/// keys seen within a sweep interval, and is
-/// unbounded unless [`max_keys`](MemoryStoreBuilder::max_keys) is set — which trades that bound for
-/// failing open, as above.
-///
-/// # Exclusivity
-///
-/// The `memory-store` and Redis backends may be compiled in at the same time, on purpose. **This
-/// must not be "fixed" into a `compile_error!` on the combination.** It is not an oversight:
-///
-/// - A [`Limiter`](crate::Limiter) holds exactly one backend, fixed at construction by the
-///   constructor used — [`Limiter::builder()`](crate::Limiter::builder) or
-///   [`Limiter::memory_builder()`](crate::Limiter::memory_builder) — and [`Builder`](crate::Builder)
-///   offers no way to change or add one afterwards. Using two backends at once is therefore not
-///   merely discouraged, it is unrepresentable: no sequence of calls that compiles produces such a
-///   limiter, so no runtime guard or feature-flag exclusion is needed.
-/// - Mutually exclusive features would break the `--all-features` builds this crate relies on: the
-///   docs.rs build (`all-features = true`), `cargo ci-test` and the `--all-features` clippy job.
-/// - Cargo features are additive by contract. A `compile_error!` on the combination makes downstream
-///   dependency graphs unbuildable through feature unification whenever two unrelated crates each
-///   enable a different backend, with no recourse for the end user.
-/// - It keeps backend selection at startup possible — memory locally, Redis in production, chosen
-///   from configuration — which requires both to be compiled in.
-///
-/// [`web::Data`]: actix_web::web::Data
 #[derive(Clone)]
 pub struct MemoryStore {
     inner: Arc<Inner>,
 }
 
 struct Inner {
-    max_keys: Option<NonZeroUsize>,
+    max_keys: NonZeroUsize,
     sweep_interval: Duration,
     state: Mutex<State>,
 }
@@ -147,26 +53,26 @@ struct Counter {
 }
 
 impl MemoryStore {
-    /// Constructs an in-memory store with defaults: unbounded, swept every 60 seconds.
+    /// Constructs an in-memory store.
     ///
     /// Use [`MemoryStore::builder()`] to configure it.
+    ///
+    /// Defaults to `usize::MAX` keys and a 60-second sweep interval.
     #[must_use]
     pub fn new() -> Self {
         MemoryStore::builder().build()
     }
 
-    /// Constructs an in-memory store builder with defaults.
+    /// Constructs a [`MemoryStoreBuilder`].
     #[must_use]
     pub fn builder() -> MemoryStoreBuilder {
         MemoryStoreBuilder {
-            max_keys: None,
+            max_keys: NonZeroUsize::MAX,
             sweep_interval: DEFAULT_SWEEP_INTERVAL,
         }
     }
 
-    /// Tracks the given key in a period, returning the count and the time left in its window.
-    ///
-    /// Synchronous: there is no I/O to await.
+    /// Tracks the given key in a period, returning the count and remaining window duration.
     pub(crate) fn track(&self, key: &str, period: Duration) -> (usize, Duration) {
         let now = Instant::now();
 
@@ -185,30 +91,27 @@ impl MemoryStore {
 
         let start_new_window = counter.is_none_or(|counter| counter.expires_at <= now);
 
-        if counter.is_none() {
-            if let Some(max_keys) = self.inner.max_keys {
-                if state.counters.len() >= max_keys.get() {
-                    state.counters.retain(|_, counter| counter.expires_at > now);
-                    state.next_sweep = now + self.inner.sweep_interval;
+        let max_keys = self.inner.max_keys.get();
+        if counter.is_none() && state.counters.len() >= max_keys {
+            state.counters.retain(|_, counter| counter.expires_at > now);
+            state.next_sweep = now + self.inner.sweep_interval;
 
-                    if state.counters.len() >= max_keys.get() {
-                        let warn = state.capacity_warned_at.is_none_or(|at| {
-                            now.saturating_duration_since(at) >= self.inner.sweep_interval
-                        });
+            if state.counters.len() >= max_keys {
+                let warn = state.capacity_warned_at.is_none_or(|at| {
+                    now.saturating_duration_since(at) >= self.inner.sweep_interval
+                });
 
-                        if warn {
-                            state.capacity_warned_at = Some(now);
+                if warn {
+                    state.capacity_warned_at = Some(now);
 
-                            log::warn!(
-                                "actix-limitation: in-memory store is at its {} key capacity; new \
-                                 keys are not being rate limited",
-                                max_keys.get(),
-                            );
-                        }
-
-                        return (1, period);
-                    }
+                    log::warn!(
+                        "actix-limitation: in-memory store is at its {} key capacity; new \
+                         keys are not being rate limited",
+                        max_keys,
+                    );
                 }
+
+                return (1, period);
             }
         }
 
@@ -225,7 +128,7 @@ impl MemoryStore {
         let counter = state
             .counters
             .get_mut(key)
-            .expect("counter is either pre-existing or was just inserted");
+            .expect("Counter should exist after initializing its window");
 
         counter.count += 1;
 
@@ -242,7 +145,7 @@ impl Default for MemoryStore {
     }
 }
 
-/// Hand-written so that the counters themselves are never dumped; only how many there are.
+// Omit counter keys and values from Debug output; show only the entry count.
 impl fmt::Debug for MemoryStore {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let counters = match self.inner.state.try_lock() {
@@ -268,33 +171,35 @@ impl fmt::Debug for MemoryStore {
 /// Builder for [`MemoryStore`].
 #[derive(Debug, Clone)]
 pub struct MemoryStoreBuilder {
-    max_keys: Option<NonZeroUsize>,
+    max_keys: NonZeroUsize,
     sweep_interval: Duration,
 }
 
 impl MemoryStoreBuilder {
-    /// Sets the maximum number of keys tracked at once. Unbounded by default.
+    /// Sets the maximum number of keys tracked at once.
     ///
-    /// Expired counters are only removed lazily, so the map can hold more keys than are live. When
-    /// the store is full, a new key forces a sweep; if that frees nothing, the store **fails open**
-    /// — the key is not tracked and the request passes — and warns at most once per sweep interval.
+    /// Because expired counters are removed lazily, the map can hold expired entries until the
+    /// next sweep. When the store is full, a new key forces a sweep; if the store remains full,
+    /// it fails open (the key is not tracked and the request passes) and logs a warning at most
+    /// once per sweep interval.
     ///
-    /// A `max` of `0` is treated as `1`, never as unbounded.
+    /// A `max` of `0` is clamped to `1`, never unbounded.
+    ///
+    /// Defaults to `usize::MAX`.
     #[must_use]
     pub fn max_keys(mut self, max: usize) -> Self {
-        self.max_keys = Some(NonZeroUsize::new(max).unwrap_or(NonZeroUsize::MIN));
+        self.max_keys = NonZeroUsize::new(max).unwrap_or(NonZeroUsize::MIN);
         self
     }
 
-    /// Shortens the otherwise fixed [`DEFAULT_SWEEP_INTERVAL`], so sweeping is observable in a
-    /// test without sleeping for a minute.
+    // Overrides the default sweep interval for tests.
     #[cfg(test)]
     fn sweep_interval(mut self, every: Duration) -> Self {
         self.sweep_interval = every;
         self
     }
 
-    /// Constructs the configured [`MemoryStore`], warning once that its counters are process-local.
+    /// Builds the configured [`MemoryStore`] and logs a warning that counters are process-local.
     #[must_use]
     pub fn build(self) -> MemoryStore {
         log::warn!(
@@ -322,6 +227,9 @@ mod tests {
 
     use super::*;
 
+    static_assertions::assert_impl_all!(MemoryStore: Send, Sync);
+    static_assertions::assert_impl_all!(MemoryStoreBuilder: Send, Sync);
+
     /// Number of counters currently held, expired or not.
     fn tracked_keys(store: &MemoryStore) -> usize {
         store.inner.state.lock().unwrap().counters.len()
@@ -334,18 +242,11 @@ mod tests {
     #[test]
     fn defaults() {
         let store = MemoryStore::new();
-        assert!(store.inner.max_keys.is_none());
+        assert_eq!(store.inner.max_keys, NonZeroUsize::MAX);
         assert_eq!(store.inner.sweep_interval, DEFAULT_SWEEP_INTERVAL);
 
         let store = MemoryStore::default();
-        assert!(store.inner.max_keys.is_none());
-    }
-
-    #[test]
-    fn store_is_send_and_sync() {
-        fn assert_send_sync<T: Send + Sync>() {}
-        assert_send_sync::<MemoryStore>();
-        assert_send_sync::<MemoryStoreBuilder>();
+        assert_eq!(store.inner.max_keys, NonZeroUsize::MAX);
     }
 
     #[test]
@@ -354,9 +255,18 @@ mod tests {
         store.track("some-very-distinctive-key", Duration::from_secs(60));
 
         let repr = format!("{store:?}");
-        assert!(repr.starts_with("MemoryStore"), "{repr}");
-        assert!(!repr.contains("some-very-distinctive-key"), "{repr}");
-        assert!(repr.contains("counters: 1"), "{repr}");
+        assert!(
+            repr.starts_with("MemoryStore"),
+            "Debug output should name the store: {repr}"
+        );
+        assert!(
+            !repr.contains("some-very-distinctive-key"),
+            "Debug output should omit counter keys: {repr}"
+        );
+        assert!(
+            repr.contains("counters: 1"),
+            "Debug output should include the counter count: {repr}"
+        );
     }
 
     #[test]
@@ -388,7 +298,7 @@ mod tests {
         assert_eq!(count, 2);
         assert!(
             reset <= Duration::from_millis(260),
-            "window slid: {reset:?} left of a {period:?} window",
+            "Remaining time should decrease within a fixed window, got {reset:?} of {period:?}",
         );
 
         sleep(Duration::from_millis(300));
@@ -480,7 +390,7 @@ mod tests {
     #[test]
     fn max_keys_zero_is_treated_as_one() {
         let store = MemoryStore::builder().max_keys(0).build();
-        assert_eq!(store.inner.max_keys, NonZeroUsize::new(1));
+        assert_eq!(store.inner.max_keys, NonZeroUsize::MIN);
 
         assert_eq!(store.track("a", Duration::from_secs(60)).0, 1);
         assert_eq!(tracked_keys(&store), 1);
