@@ -15,7 +15,54 @@
 
 <!-- cargo-rdme start -->
 
-Server-Sent Events (SSE) encoder and decoder.
+High-performance Server-Sent Events (SSE) encoder and decoder.
+
+## Encoding (server-side)
+
+```rust
+let event = Event::Message(Message {
+    data: "Hello World!\nHow are you, today?".into(),
+    event: Some("chat".into()),
+    retry: None,
+    id: None,
+});
+
+let expected = indoc! {"
+    event: chat
+    data: Hello World!
+    data: How are you, today?
+
+"};
+
+assert_eq!(event.into_bytestring()?, expected);
+```
+
+## Decoding (client-side)
+
+The client receives the server's encoded `chat` event in the response body.
+
+```rust
+let mut body = BytesMut::from(indoc! {"
+    event: chat
+    data: Hello World!
+    data: How are you, today?
+
+"});
+
+let Event::Message(msg) = Decoder::default().decode(&mut body)?.unwrap() else {
+    panic!("Expected a message event");
+};
+
+assert_eq!(msg.event.unwrap(), "chat");
+assert_eq!(msg.data, "Hello World!\nHow are you, today?");
+```
+
+## Client integrations
+
+With Reqwest, use `ReqwestExt::sse_stream` to stream events from a response or `Manager` to send a request and receive events through a channel. Enable the feature for your Reqwest version:
+
+- `reqwest-0_12` for Reqwest 0.12
+- `reqwest-0_13` for Reqwest 0.13
 
 <!-- cargo-rdme end -->
 
