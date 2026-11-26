@@ -28,13 +28,13 @@ pub(crate) async fn track(
         .cmd("SET")
         .arg(key)
         .arg(0)
-        .arg("EX")
+        .arg("EX") // Set the window length in seconds.
         .arg(expires)
-        .arg("NX")
-        .ignore()
-        .cmd("INCR")
+        .arg("NX") // Create the counter only if absent, preserving any active window.
+        .ignore() // Omit the SET reply from the (count, ttl) result.
+        .cmd("INCR") // Count this request.
         .arg(key)
-        .cmd("TTL")
+        .cmd("TTL") // Read the seconds left in the window.
         .arg(key);
 
     let (count, ttl) = pipe.query_async(&mut connection).await?;
