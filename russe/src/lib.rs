@@ -69,8 +69,10 @@ mod error;
 mod event;
 mod message;
 #[cfg(feature = "reqwest-0_12")]
+#[path = "integrations/reqwest_0_12.rs"]
 pub mod reqwest_0_12;
 #[cfg(feature = "reqwest-0_13")]
+#[path = "integrations/reqwest_0_13.rs"]
 pub mod reqwest_0_13;
 
 pub use self::{decoder::Decoder, encoder::Encoder, error::Error, event::Event, message::Message};
