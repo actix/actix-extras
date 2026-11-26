@@ -1,8 +1,16 @@
-//! Fixed-window rate limiting for Actix Web.
+//! Fixed-window rate limiting for arbitrary keys in Actix Web, backed by Redis or an in-memory
+//! store.
 //!
-//! [`Limiter::builder`] uses Redis to share counters across application instances. Enable
-//! `redis-native-tls` or `redis-rustls` for TLS. The optional `memory-store` feature adds
-//! `Limiter::memory_builder` for process-local counters.
+//! Originally based on <https://github.com/fnichol/limitation>.
+//!
+//! # Backends
+//!
+//! [`Limiter::builder`](https://docs.rs/actix-limitation/latest/actix_limitation/struct.Limiter.html#method.builder) uses Redis to share counters across application instances that use the
+//! same database. Enable `redis-native-tls` or `redis-rustls` for TLS.
+//!
+//! The optional `memory-store` feature adds `Limiter::memory_builder` for process-local counters
+//! that reset on restart. Build the store outside `HttpServer::new` and clone it into each worker
+//! to share counters.
 //!
 //! # Example
 //!
@@ -36,6 +44,27 @@
 //!     .await
 //! }
 //! ```
+//!
+//! # Running the Bundled Examples
+//!
+//! Both bundled examples (`examples/memory.rs` and `examples/redis.rs`) allow five requests per
+//! peer IP in a ten-second window.
+//!
+//! Run the in-memory example:
+//!
+//! ```console
+//! cargo run --example memory --features memory-store
+//! ```
+//!
+//! Or start Redis and run the Redis example:
+//!
+//! ```console
+//! docker run --rm -d -p 127.0.0.1:6379:6379 redis:8
+//! cargo run --example redis
+//! ```
+//!
+//! From another terminal, repeat `curl -i http://127.0.0.1:8080/` six times within ten seconds.
+//! The sixth request returns HTTP 429.
 
 #![forbid(unsafe_code)]
 #![warn(missing_docs, missing_debug_implementations)]
