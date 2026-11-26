@@ -24,7 +24,46 @@ use tokio::{
 };
 use tokio_util::{codec::FramedRead, io::StreamReader};
 
-use crate::{Decoder, Error, Event, Reconnect};
+use crate::{DecodeError, Decoder, Event, Reconnect};
+
+/// Error returned by this client's connection manager.
+#[derive(Debug)]
+#[non_exhaustive]
+pub enum ManagerError {
+    /// The HTTP request failed.
+    Http {
+        /// Source of the request error.
+        source: reqwest_0_12::Error,
+    },
+
+    /// The committed event ID is invalid in an HTTP header.
+    InvalidEventId {
+        /// Source of the header error.
+        source: header::InvalidHeaderValue,
+    },
+
+    /// Reading or decoding the response body failed.
+    Decode {
+        /// Source of the stream error.
+        source: DecodeError,
+    },
+}
+
+impl_more::impl_display_enum! {
+    ManagerError:
+    Http { .. } => "HTTP request failed",
+    InvalidEventId { .. } => "Invalid Last-Event-ID header",
+    Decode { source } => "{source}",
+}
+
+impl_more::impl_error_enum! {
+    ManagerError:
+    Http { source } => source,
+    InvalidEventId { source } => source,
+    Decode { source } => source,
+}
+
+impl_more::impl_enum_from!(DecodeError => ManagerError::Decode { source });
 
 mod sealed {
     use super::*;
@@ -55,11 +94,11 @@ pub trait ReqwestExt: sealed::Sealed {
     /// # Ok(())
     /// # }
     /// ```
-    fn sse_stream(self) -> BoxStream<'static, Result<Event, Error>>;
+    fn sse_stream(self) -> BoxStream<'static, Result<Event, DecodeError>>;
 }
 
 impl ReqwestExt for Response {
-    fn sse_stream(self) -> BoxStream<'static, Result<Event, Error>> {
+    fn sse_stream(self) -> BoxStream<'static, Result<Event, DecodeError>> {
         let body_stream = self.bytes_stream().map_err(io::Error::other);
         let body_reader = StreamReader::new(body_stream);
 
@@ -161,15 +200,21 @@ impl Manager {
     ///
     /// # Errors
     ///
-    /// Returns [`Error::Http`] if the initial request fails. Body and decoding errors are sent
-    /// through the event receiver.
+    /// Returns [`ManagerError::InvalidEventId`] if the committed ID is invalid in a header, or
+    /// [`ManagerError::Http`] if the initial request fails. The receiver reports later errors.
     ///
     /// # Panics
     ///
     /// Panics if called after a successful send.
     pub async fn send(
         &mut self,
-    ) -> Result<(JoinHandle<()>, UnboundedReceiver<Result<Event, Error>>), Error> {
+    ) -> Result<
+        (
+            JoinHandle<()>,
+            UnboundedReceiver<Result<Event, ManagerError>>,
+        ),
+        ManagerError,
+    > {
         assert!(!self.sent, "The request has already been sent");
 
         let client = self.client.clone();
@@ -179,17 +224,16 @@ impl Manager {
             let mut req = req.try_clone().unwrap();
 
             if let Some(id) = id {
-                let value =
-                    HeaderValue::from_bytes(id.as_bytes()).map_err(|source| Error::Http {
-                        source: Box::new(source),
-                    })?;
+                let value = HeaderValue::from_bytes(id.as_bytes())
+                    .map_err(|source| ManagerError::InvalidEventId { source })?;
 
                 req.headers_mut().insert("last-event-id", value);
             }
 
-            let res = client.execute(req).await.map_err(|source| Error::Http {
-                source: Box::new(source),
-            })?;
+            let res = client
+                .execute(req)
+                .await
+                .map_err(|source| ManagerError::Http { source })?;
 
             Ok((res.status().as_u16() != 204).then(|| res.sse_stream()))
         };

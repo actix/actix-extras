@@ -3,7 +3,7 @@ use std::{fmt::Write, time::Duration};
 use bytes::BytesMut;
 use bytestring::ByteString;
 
-use crate::{Error, Message};
+use crate::{EncodeError, Message};
 
 /// An SSE event.
 #[derive(Debug, Clone, PartialEq)]
@@ -33,9 +33,9 @@ impl Event {
     ///
     /// let encoded = Event::Comment("keep-alive".into()).into_bytestring()?;
     /// assert_eq!(encoded, ": keep-alive\n\n");
-    /// # Ok::<_, russe::Error>(())
+    /// # Ok::<_, russe::EncodeError>(())
     /// ```
-    pub fn into_bytestring(self) -> crate::Result<ByteString> {
+    pub fn into_bytestring(self) -> Result<ByteString, EncodeError> {
         let mut dst = String::new();
 
         self.encode_into(&mut dst)?;
@@ -43,19 +43,19 @@ impl Event {
         Ok(dst.into())
     }
 
-    pub(crate) fn encode_into(self, dst: &mut impl EncodeBuffer) -> crate::Result<()> {
+    pub(crate) fn encode_into(self, dst: &mut impl EncodeBuffer) -> Result<(), EncodeError> {
         match self {
             Event::Message(message) => {
                 if let Some(id) = message.id.as_deref()
                     && let Some(offset) = memchr::memchr3(b'\0', b'\r', b'\n', id.as_bytes())
                 {
-                    return Err(Error::invalid_field_value("id", id, offset));
+                    return Err(EncodeError::invalid_field_value("id", id, offset));
                 }
 
                 if let Some(event) = message.event.as_deref()
                     && let Some(offset) = memchr::memchr2(b'\r', b'\n', event.as_bytes())
                 {
-                    return Err(Error::invalid_field_value("event", event, offset));
+                    return Err(EncodeError::invalid_field_value("event", event, offset));
                 }
 
                 // Start with the known payload and field lengths.
@@ -358,7 +358,7 @@ mod tests {
 
             assert!(matches!(
                 Event::Message(message).into_bytestring(),
-                Err(crate::Error::InvalidFieldValue { .. })
+                Err(crate::EncodeError::InvalidFieldValue { .. })
             ));
         }
     }
@@ -419,7 +419,7 @@ mod tests {
             };
 
             let err = Event::Message(message).into_bytestring().unwrap_err();
-            let Error::InvalidFieldValue {
+            let EncodeError::InvalidFieldValue {
                 field,
                 character,
                 offset,

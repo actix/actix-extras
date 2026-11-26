@@ -1,10 +1,9 @@
-use core::{error::Error as StdError, str};
-use std::io;
+use std::{io, str};
 
-/// SSE request, encoding, or decoding error.
+/// Error returned when encoding an SSE stream.
 #[derive(Debug)]
 #[non_exhaustive]
-pub enum Error {
+pub enum EncodeError {
     /// An event ID or event name contains a forbidden character.
     InvalidFieldValue {
         /// Field name: `id` or `event`.
@@ -17,18 +16,6 @@ pub enum Error {
         offset: usize,
     },
 
-    /// Stream contained invalid UTF-8.
-    InvalidUtf8 {
-        /// Source error.
-        source: str::Utf8Error,
-    },
-
-    /// HTTP request failed.
-    Http {
-        /// Boxed to support multiple HTTP clients.
-        source: Box<dyn StdError + Send + Sync>,
-    },
-
     /// I/O error.
     Io {
         /// Source error.
@@ -36,7 +23,7 @@ pub enum Error {
     },
 }
 
-impl Error {
+impl EncodeError {
     pub(crate) fn invalid_field_value(field: &'static str, value: &str, offset: usize) -> Self {
         Self::InvalidFieldValue {
             field,
@@ -47,19 +34,46 @@ impl Error {
 }
 
 impl_more::impl_display_enum! {
-    Error:
+    EncodeError:
     InvalidFieldValue { field, character, offset } => "Invalid SSE {field}: {character:?} at byte {offset}",
-    InvalidUtf8 { .. } => "Stream contained invalid UTF-8",
-    Http { .. } => "HTTP request failed",
     Io { .. } => "I/O error",
 }
 
 impl_more::impl_error_enum! {
-    Error:
-    InvalidUtf8 { source } => source,
-    Http { source } => source.as_ref(),
+    EncodeError:
     Io { source } => source,
 }
 
-impl_more::impl_enum_from!(str::Utf8Error => Error::InvalidUtf8 { source });
-impl_more::impl_enum_from!(io::Error => Error::Io { source });
+impl_more::impl_enum_from!(io::Error => EncodeError::Io { source });
+
+/// Error returned when decoding an SSE stream.
+#[derive(Debug)]
+#[non_exhaustive]
+pub enum DecodeError {
+    /// Stream contained invalid UTF-8.
+    InvalidUtf8 {
+        /// Source error.
+        source: str::Utf8Error,
+    },
+
+    /// I/O error.
+    Io {
+        /// Source error.
+        source: io::Error,
+    },
+}
+
+impl_more::impl_display_enum! {
+    DecodeError:
+    InvalidUtf8 { .. } => "Stream contained invalid UTF-8",
+    Io { .. } => "I/O error",
+}
+
+impl_more::impl_error_enum! {
+    DecodeError:
+    InvalidUtf8 { source } => source,
+    Io { source } => source,
+}
+
+impl_more::impl_enum_from!(str::Utf8Error => DecodeError::InvalidUtf8 { source });
+impl_more::impl_enum_from!(io::Error => DecodeError::Io { source });

@@ -20,7 +20,7 @@
 //! "};
 //!
 //! assert_eq!(event.into_bytestring()?, expected);
-//! # Ok::<_, russe::Error>(())
+//! # Ok::<_, russe::EncodeError>(())
 //! ```
 //!
 //! # Decoding (client-side)
@@ -45,7 +45,7 @@
 //!
 //! assert_eq!(msg.event.unwrap(), "chat");
 //! assert_eq!(msg.data, "Hello World!\nHow are you, today?");
-//! # Ok::<_, russe::Error>(())
+//! # Ok::<_, russe::DecodeError>(())
 //! ```
 //!
 //! # Client integrations
@@ -83,10 +83,13 @@ pub mod ureq_3;
 mod reconnect;
 #[cfg(any(feature = "awc-3", feature = "reqwest-0_12", feature = "reqwest-0_13"))]
 pub use self::reconnect::Reconnect;
-pub use self::{decoder::Decoder, encoder::Encoder, error::Error, event::Event, message::Message};
-
-/// A specialized `Result` type for `russe` operations.
-pub type Result<T> = std::result::Result<T, Error>;
+pub use self::{
+    decoder::Decoder,
+    encoder::Encoder,
+    error::{DecodeError, EncodeError},
+    event::Event,
+    message::Message,
+};
 
 pub(crate) const LF: u8 = b'\n';
 pub(crate) const CR: u8 = b'\r';

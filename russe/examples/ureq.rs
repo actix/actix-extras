@@ -17,7 +17,7 @@ fn main() -> eyre::Result<()> {
         .call()?
         .sse_iter();
 
-    let reader = thread::spawn(move || -> russe::Result<()> {
+    let reader = thread::spawn(move || -> Result<(), russe::DecodeError> {
         for event in events {
             if let Event::Message(msg) = event? {
                 println!("{}", msg.data);

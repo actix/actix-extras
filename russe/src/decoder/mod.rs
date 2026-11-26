@@ -11,7 +11,7 @@ use self::{
     fields::{data_event, field_value, parse_id, parse_retry, strip_space},
     message_frame::MessageFrame,
 };
-use crate::{CR, Error, LF, event::Event, message::Message};
+use crate::{CR, DecodeError, LF, event::Event, message::Message};
 
 const MIN_SHARED_PAYLOAD_SIZE: usize = 1024;
 
@@ -102,7 +102,7 @@ impl ParsedFrame {
     /// Parses the lines of a complete frame in order.
     ///
     /// Scans for line endings before `last_line_start` and parses the final line directly.
-    fn parse_lines(&mut self, frame: &[u8], last_line_start: usize) -> Result<(), Error> {
+    fn parse_lines(&mut self, frame: &[u8], last_line_start: usize) -> Result<(), DecodeError> {
         let frame = frame.strip_suffix(&[CR]).unwrap_or(frame);
         let mut line_start = 0;
 
@@ -122,7 +122,12 @@ impl ParsedFrame {
     ///
     /// Validates `id` and `event` as UTF-8 immediately. The caller validates `data` and comments
     /// after collecting all lines.
-    fn parse_line(&mut self, frame: &[u8], line_start: usize, line: &[u8]) -> Result<(), Error> {
+    fn parse_line(
+        &mut self,
+        frame: &[u8],
+        line_start: usize,
+        line: &[u8],
+    ) -> Result<(), DecodeError> {
         match line {
             // Skip empty segments from CRLF.
             [] => {}
@@ -165,7 +170,7 @@ impl ParsedFrame {
 
 impl tokio_util::codec::Decoder for Decoder {
     type Item = Event;
-    type Error = Error;
+    type Error = DecodeError;
 
     fn decode(&mut self, src: &mut BytesMut) -> Result<Option<Self::Item>, Self::Error> {
         if self.pending_event.is_some() {
@@ -399,7 +404,7 @@ impl Decoder {
         delimiter: usize,
         consumed: usize,
         last_line_start: usize,
-    ) -> Result<Option<Event>, Error> {
+    ) -> Result<Option<Event>, DecodeError> {
         let mut parsed = ParsedFrame::default();
 
         if let Err(err) = parsed.parse_lines(&src[..delimiter], last_line_start) {
@@ -841,7 +846,7 @@ mod tests {
 
             assert!(matches!(
                 decoder.decode(&mut buffer),
-                Err(Error::InvalidUtf8 { .. })
+                Err(DecodeError::InvalidUtf8 { .. })
             ));
             assert_eq!(&buffer[..], following);
             assert_eq!(
@@ -1051,7 +1056,7 @@ mod tests {
                 buffer.extend_from_slice(following);
 
                 let err = decoder.decode(&mut buffer).unwrap_err();
-                let Error::InvalidUtf8 { source } = err else {
+                let DecodeError::InvalidUtf8 { source } = err else {
                     panic!("expected invalid UTF-8 error, got: {err:?}");
                 };
 
@@ -1700,7 +1705,7 @@ mod tests {
 
         let err = event_stream.next().await.unwrap().unwrap_err();
 
-        let Error::InvalidUtf8 { source } = &err else {
+        let DecodeError::InvalidUtf8 { source } = &err else {
             panic!("expected invalid UTF-8 error, got: {err:?}");
         };
 
@@ -1873,7 +1878,7 @@ mod tests {
 
                 assert!(matches!(
                     decoder.decode(&mut buffer),
-                    Err(Error::InvalidUtf8 { .. })
+                    Err(DecodeError::InvalidUtf8 { .. })
                 ));
                 assert_eq!(&buffer[..], following);
                 assert_eq!(
@@ -2080,7 +2085,7 @@ mod tests {
                 buffer.extend_from_slice(following);
 
                 let err = decoder.decode(&mut buffer).unwrap_err();
-                let Error::InvalidUtf8 { source } = err else {
+                let DecodeError::InvalidUtf8 { source } = err else {
                     panic!("expected invalid UTF-8 error, got: {err:?}");
                 };
 

@@ -11,7 +11,7 @@ use bytes::BytesMut;
 use tokio_util::codec::Decoder as _;
 use ureq_3::{Body, BodyReader, http::Response};
 
-use crate::{Decoder, Error, Event};
+use crate::{DecodeError, Decoder, Event};
 
 mod sealed {
     use super::*;
@@ -42,11 +42,11 @@ pub trait UreqExt: sealed::Sealed {
     /// # Ok(())
     /// # }
     /// ```
-    fn sse_iter(self) -> impl Iterator<Item = Result<Event, Error>> + Send + 'static;
+    fn sse_iter(self) -> impl Iterator<Item = Result<Event, DecodeError>> + Send + 'static;
 }
 
 impl UreqExt for Response<Body> {
-    fn sse_iter(self) -> impl Iterator<Item = Result<Event, Error>> + Send + 'static {
+    fn sse_iter(self) -> impl Iterator<Item = Result<Event, DecodeError>> + Send + 'static {
         SseIter {
             reader: self.into_body().into_reader(),
             decoder: Decoder::default(),
@@ -66,7 +66,7 @@ struct SseIter {
 }
 
 impl Iterator for SseIter {
-    type Item = Result<Event, Error>;
+    type Item = Result<Event, DecodeError>;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.done {
@@ -133,7 +133,7 @@ mod tests {
     };
 
     use super::UreqExt as _;
-    use crate::{Error, Event, Message};
+    use crate::{DecodeError, Event, Message};
 
     struct ScriptedReader(VecDeque<io::Result<&'static [u8]>>);
 
@@ -252,7 +252,7 @@ mod tests {
         let err = events.next().unwrap().unwrap_err();
 
         assert!(
-            matches!(err, Error::Io { .. }),
+            matches!(err, DecodeError::Io { .. }),
             "expected I/O error, got: {err:?}"
         );
 
@@ -299,7 +299,7 @@ mod tests {
         let err = events.next().unwrap().unwrap_err();
 
         assert!(
-            matches!(err, Error::InvalidUtf8 { .. }),
+            matches!(err, DecodeError::InvalidUtf8 { .. }),
             "expected invalid UTF-8 error, got: {err:?}"
         );
 
@@ -315,7 +315,7 @@ mod tests {
         let err = events.next().unwrap().unwrap_err();
 
         assert!(
-            matches!(err, Error::Io { .. }),
+            matches!(err, DecodeError::Io { .. }),
             "expected I/O error, got: {err:?}"
         );
 

@@ -23,7 +23,38 @@ use tokio::{
 };
 use tokio_util::{codec::FramedRead, io::StreamReader};
 
-use crate::{Decoder, Error, Event, Reconnect};
+use crate::{DecodeError, Decoder, Event, Reconnect};
+
+/// Error returned by this client's connection manager.
+#[derive(Debug)]
+#[non_exhaustive]
+pub enum ManagerError {
+    /// The HTTP request failed.
+    Http {
+        /// Source of the request error.
+        source: Box<dyn std::error::Error + Send + Sync>,
+    },
+
+    /// Reading or decoding the response body failed.
+    Decode {
+        /// Source of the stream error.
+        source: DecodeError,
+    },
+}
+
+impl_more::impl_display_enum! {
+    ManagerError:
+    Http { .. } => "HTTP request failed",
+    Decode { source } => "{source}",
+}
+
+impl_more::impl_error_enum! {
+    ManagerError:
+    Http { source } => source.as_ref(),
+    Decode { source } => source,
+}
+
+impl_more::impl_enum_from!(DecodeError => ManagerError::Decode { source });
 
 mod sealed {
     use super::*;
@@ -57,14 +88,14 @@ pub trait AwcExt: sealed::Sealed {
     /// # Ok(())
     /// # }
     /// ```
-    fn sse_stream(self) -> LocalBoxStream<'static, Result<Event, Error>>;
+    fn sse_stream(self) -> LocalBoxStream<'static, Result<Event, DecodeError>>;
 }
 
 impl<S> AwcExt for ClientResponse<S>
 where
     S: Stream<Item = Result<Bytes, PayloadError>> + Unpin + 'static,
 {
-    fn sse_stream(self) -> LocalBoxStream<'static, Result<Event, Error>> {
+    fn sse_stream(self) -> LocalBoxStream<'static, Result<Event, DecodeError>> {
         let body_stream = self.map_err(io::Error::other);
         let body_reader = StreamReader::new(body_stream);
 
@@ -140,9 +171,9 @@ impl fmt::Debug for Manager {
     }
 }
 
-fn http_error(err: impl std::error::Error) -> Error {
+fn http_error(err: impl std::error::Error) -> ManagerError {
     // AWC request errors can contain sources that are not Send or Sync.
-    Error::Http {
+    ManagerError::Http {
         source: err_report::Report::new(err).to_string().into(),
     }
 }
@@ -187,7 +218,7 @@ impl Manager {
     ///
     /// # Errors
     ///
-    /// Returns [`Error::Http`] if the initial request fails. Body and decoding errors are sent
+    /// Returns [`ManagerError::Http`] if the initial request fails. Body and decoding errors are sent
     /// through the event receiver.
     ///
     /// # Panics
@@ -196,7 +227,13 @@ impl Manager {
     /// [`spawn_local`].
     pub async fn send(
         &mut self,
-    ) -> Result<(JoinHandle<()>, UnboundedReceiver<Result<Event, Error>>), Error> {
+    ) -> Result<
+        (
+            JoinHandle<()>,
+            UnboundedReceiver<Result<Event, ManagerError>>,
+        ),
+        ManagerError,
+    > {
         assert!(!self.sent, "The request has already been sent");
 
         let req = self.req.clone();
@@ -257,8 +294,8 @@ mod tests {
         matchers::{method, path},
     };
 
-    use super::{AwcExt as _, Manager};
-    use crate::{Error, Event, Message};
+    use super::{AwcExt as _, Manager, ManagerError};
+    use crate::{DecodeError, Event, Message};
 
     async fn sse_server() -> MockServer {
         let server = MockServer::start().await;
@@ -422,7 +459,7 @@ mod tests {
 
         let error = res.sse_stream().try_next().await.unwrap_err();
 
-        let Error::Io { source } = error else {
+        let DecodeError::Io { source } = error else {
             panic!("Expected an I/O error; got: {error:?}");
         };
 
@@ -440,7 +477,7 @@ mod tests {
 
         let error = res.sse_stream().try_next().await.unwrap_err();
 
-        assert!(matches!(error, Error::InvalidUtf8 { .. }));
+        assert!(matches!(error, DecodeError::InvalidUtf8 { .. }));
     }
 
     #[tokio::test(flavor = "local")]
@@ -501,7 +538,7 @@ mod tests {
 
         assert!(matches!(
             manager.send().await.unwrap_err(),
-            Error::Http { .. }
+            ManagerError::Http { .. }
         ));
 
         drop(slow_response);
@@ -546,7 +583,9 @@ mod tests {
         drop(manager);
         assert!(matches!(
             events.recv().await,
-            Some(Err(Error::InvalidUtf8 { .. }))
+            Some(Err(ManagerError::Decode {
+                source: DecodeError::InvalidUtf8 { .. }
+            }))
         ));
 
         task.await.unwrap();

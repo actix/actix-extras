@@ -1,6 +1,6 @@
 use bytes::BytesMut;
 
-use crate::{Error, Event};
+use crate::{EncodeError, Event};
 
 /// SSE encoder for use with [`tokio_util::codec::FramedWrite`].
 ///
@@ -8,7 +8,7 @@ use crate::{Error, Event};
 /// bare CR in message data and comments are converted to LF. Empty lines are preserved. Retry
 /// delays are written in whole milliseconds. Fractions of a millisecond are discarded.
 ///
-/// Returns [`Error::InvalidFieldValue`] if an event name contains CR or LF, or an ID contains NUL,
+/// Returns [`EncodeError::InvalidFieldValue`] if an event name contains CR or LF, or an ID contains NUL,
 /// CR, or LF. These fields are checked before any bytes are added to the output buffer.
 ///
 /// # Examples
@@ -21,14 +21,14 @@ use crate::{Error, Event};
 /// let mut output = BytesMut::new();
 /// Encoder::default().encode(Event::Comment("keep-alive".into()), &mut output)?;
 /// assert_eq!(output, ": keep-alive\n\n");
-/// # Ok::<_, russe::Error>(())
+/// # Ok::<_, russe::EncodeError>(())
 /// ```
 #[derive(Debug, Clone, Copy, Default)]
 #[non_exhaustive]
 pub struct Encoder {}
 
 impl tokio_util::codec::Encoder<Event> for Encoder {
-    type Error = Error;
+    type Error = EncodeError;
 
     fn encode(&mut self, item: Event, dst: &mut BytesMut) -> Result<(), Self::Error> {
         item.encode_into(dst)
@@ -191,7 +191,7 @@ mod tests {
             let result = Encoder::default().encode(Event::Message(message), &mut output);
 
             assert!(
-                matches!(result, Err(Error::InvalidFieldValue { .. })),
+                matches!(result, Err(EncodeError::InvalidFieldValue { .. })),
                 "got: {result:?}",
             );
             assert_eq!(output, "data: previous\n\n");
