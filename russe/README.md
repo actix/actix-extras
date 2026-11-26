@@ -59,10 +59,11 @@ assert_eq!(msg.data, "Hello World!\nHow are you, today?");
 
 ## Client integrations
 
-Both Reqwest integrations provide `ReqwestExt::sse_stream` to stream events from a response and a browser-like request manager (`Manager`) to receive events through a channel. Enable the feature for your Reqwest version:
+Each integration provides an extension trait to stream events from a response and a `Manager` to receive events through a channel.
 
-- `reqwest-0_12` for Reqwest 0.12
-- `reqwest-0_13` for Reqwest 0.13
+- `awc-3` for `awc` v3 extension trait and connection manager.
+- `reqwest-0_12` for `reqwest` v0.12 extension trait and connection manager.
+- `reqwest-0_13` for `reqwest` v0.13 extension trait and connection manager.
 
 <!-- cargo-rdme end -->
 

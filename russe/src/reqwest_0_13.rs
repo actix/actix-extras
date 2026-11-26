@@ -38,7 +38,7 @@ pub trait ReqwestExt: sealed::Sealed {
     ///
     /// ```no_run
     /// # use reqwest_0_13 as reqwest;
-    /// use futures_util::TryStreamExt as _;
+    /// use futures_util::StreamExt as _;
     /// use russe::reqwest_0_13::ReqwestExt as _;
     ///
     /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
@@ -46,7 +46,7 @@ pub trait ReqwestExt: sealed::Sealed {
     ///     .await?
     ///     .sse_stream();
     ///
-    /// while let Some(event) = events.try_next().await? {
+    /// while let Some(Ok(event)) = events.next().await {
     ///     println!("{:?}", event);
     /// }
     /// # Ok(())
