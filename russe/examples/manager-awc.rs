@@ -4,12 +4,13 @@ extern crate awc_3 as awc;
 
 use std::time::Duration;
 
-use russe::{Event, Reconnect, awc_3::Manager};
+use russe::{
+    Event, Reconnect,
+    awc_3::{Manager, ManagerError},
+};
 
 #[tokio::main(flavor = "local")]
-async fn main() -> eyre::Result<()> {
-    color_eyre::install()?;
-
+async fn main() -> Result<(), ManagerError> {
     let client = awc::Client::default();
 
     let url = std::env::args()

@@ -5,7 +5,7 @@ use bytestring::ByteString;
 use memchr::{memchr, memchr2};
 
 use crate::{
-    CR, Error, LF,
+    CR, LF,
     decoder::{
         fields::{field_value, parse_id_value, parse_retry},
         share_payload,
@@ -252,7 +252,7 @@ impl MessageFrame {
         &mut self,
         src: &mut BytesMut,
         consumed: usize,
-    ) -> Result<Option<Event>, Error> {
+    ) -> Result<Option<Event>, str::Utf8Error> {
         let result = self.finish_inner(src, consumed);
 
         self.clear();
@@ -264,13 +264,17 @@ impl MessageFrame {
     ///
     /// Returns `Ok(None)` when the consumed frame produces no event (not when more input is
     /// needed).
-    fn finish_inner(&self, src: &mut BytesMut, consumed: usize) -> Result<Option<Event>, Error> {
+    fn finish_inner(
+        &self,
+        src: &mut BytesMut,
+        consumed: usize,
+    ) -> Result<Option<Event>, str::Utf8Error> {
         // Validate `event` and `id` in line order before `data` to match `ParsedFrame`.
         let (event, id) = match self.extract_headers(src) {
             Ok(headers) => headers,
             Err(err) => {
                 src.advance(consumed);
-                return Err(err.into());
+                return Err(err);
             }
         };
 

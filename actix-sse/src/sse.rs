@@ -349,8 +349,8 @@ mod tests {
             let err = body::to_bytes(sse).await.unwrap_err();
 
             assert!(matches!(
-                err.downcast_ref::<russe::Error>(),
-                Some(russe::Error::InvalidFieldValue { .. }),
+                err.downcast_ref::<russe::EncodeError>(),
+                Some(russe::EncodeError::InvalidFieldValue { .. }),
             ));
         }
     }

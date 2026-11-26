@@ -4,7 +4,7 @@ use bytestring::ByteString;
 use futures_util::{Stream, StreamExt as _};
 use tokio::sync::{mpsc::UnboundedSender, watch};
 
-use crate::{Error, Event};
+use crate::Event;
 
 /// Controls what a connection manager does when a response stream ends.
 ///
@@ -62,14 +62,14 @@ pub enum Reconnect {
     },
 }
 
-pub(crate) async fn run<S>(
+pub(crate) async fn run<S, E>(
     initial_stream: Option<S>,
     policy: Reconnect,
     ids: watch::Receiver<Option<ByteString>>,
-    tx: UnboundedSender<Result<Event, Error>>,
-    reconnect: impl AsyncFn(Option<ByteString>) -> Result<Option<S>, Error>,
+    tx: UnboundedSender<Result<Event, E>>,
+    reconnect: impl AsyncFn(Option<ByteString>) -> Result<Option<S>, E>,
 ) where
-    S: Stream<Item = Result<Event, Error>> + Unpin,
+    S: Stream<Item = Result<Event, E>> + Unpin,
 {
     let mut stream = initial_stream;
 

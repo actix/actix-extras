@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Replace `Error` and `Result` with `EncodeError`, `DecodeError`, and a `ManagerError` in each async client module.
 - Add `Reconnect` enum.
 - Add `Manager::reconnect()` methods.
 

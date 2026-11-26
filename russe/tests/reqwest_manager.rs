@@ -9,7 +9,10 @@ macro_rules! manager_tests {
 
             use ::$reqwest::Client;
             use indoc::indoc;
-            use russe::{Error, Event, $reqwest::Manager};
+            use russe::{
+                DecodeError, Event,
+                $reqwest::{Manager, ManagerError},
+            };
             use tokio::{
                 io::{AsyncBufReadExt as _, AsyncWriteExt as _, BufReader},
                 net::TcpListener,
@@ -131,7 +134,12 @@ macro_rules! manager_tests {
                 let (task, mut events) = manager.send().await.unwrap();
                 task.timeout(Duration::from_secs(5)).await.unwrap().unwrap();
 
-                assert!(matches!(events.recv().await, Some(Err(Error::Io { .. }))));
+                assert!(matches!(
+                    events.recv().await,
+                    Some(Err(ManagerError::Decode {
+                        source: DecodeError::Io { .. }
+                    }))
+                ));
                 assert_eq!(
                     events.recv().await.unwrap().unwrap(),
                     Event::Comment("ping".into())
@@ -156,7 +164,12 @@ macro_rules! manager_tests {
                 let (task, mut events) = manager.send().await.unwrap();
                 task.timeout(Duration::from_secs(5)).await.unwrap().unwrap();
 
-                assert!(matches!(events.recv().await, Some(Err(Error::Io { .. }))));
+                assert!(matches!(
+                    events.recv().await,
+                    Some(Err(ManagerError::Decode {
+                        source: DecodeError::Io { .. }
+                    }))
+                ));
 
                 for _ in 0..2 {
                     assert_eq!(
@@ -185,7 +198,12 @@ macro_rules! manager_tests {
                 let (task, mut events) = manager.send().await.unwrap();
                 task.timeout(Duration::from_secs(5)).await.unwrap().unwrap();
 
-                assert!(matches!(events.recv().await, Some(Err(Error::Io { .. }))));
+                assert!(matches!(
+                    events.recv().await,
+                    Some(Err(ManagerError::Decode {
+                        source: DecodeError::Io { .. }
+                    }))
+                ));
                 assert!(events.recv().await.is_none());
 
                 server.await.unwrap();
@@ -208,9 +226,22 @@ macro_rules! manager_tests {
                 server.await.unwrap();
 
                 // Both responses were truncated. The final request found the listener closed.
-                assert!(matches!(events.recv().await, Some(Err(Error::Io { .. }))));
-                assert!(matches!(events.recv().await, Some(Err(Error::Io { .. }))));
-                assert!(matches!(events.recv().await, Some(Err(Error::Http { .. }))));
+                assert!(matches!(
+                    events.recv().await,
+                    Some(Err(ManagerError::Decode {
+                        source: DecodeError::Io { .. }
+                    }))
+                ));
+                assert!(matches!(
+                    events.recv().await,
+                    Some(Err(ManagerError::Decode {
+                        source: DecodeError::Io { .. }
+                    }))
+                ));
+                assert!(matches!(
+                    events.recv().await,
+                    Some(Err(ManagerError::Http { .. }))
+                ));
                 assert!(events.recv().await.is_none());
             }
 
@@ -267,6 +298,19 @@ macro_rules! manager_tests {
             }
 
             #[tokio::test]
+            async fn rejects_invalid_event_id_before_sending() {
+                let client = client();
+                let req = client.get("http://localhost/events").build().unwrap();
+                let mut manager = Manager::new(&client, req);
+                manager.commit_id("first\nsecond");
+
+                assert!(matches!(
+                    manager.send().await,
+                    Err(ManagerError::InvalidEventId { .. })
+                ));
+            }
+
+            #[tokio::test]
             async fn returns_initial_request_errors() {
                 let server = MockServer::start().await;
 
@@ -290,7 +334,7 @@ macro_rules! manager_tests {
                     .await
                     .expect_err("The initial request failure must return from send()");
 
-                assert!(matches!(err, Error::Http { .. }), "got: {err:?}");
+                assert!(matches!(err, ManagerError::Http { .. }), "got: {err:?}");
                 assert!(
                     err.source()
                         .unwrap()
@@ -368,7 +412,15 @@ macro_rules! manager_tests {
                     .unwrap()
                     .unwrap_err();
 
-                assert!(matches!(err, Error::Io { .. }), "got: {err:?}");
+                assert!(
+                    matches!(
+                        err,
+                        ManagerError::Decode {
+                            source: DecodeError::Io { .. }
+                        }
+                    ),
+                    "got: {err:?}"
+                );
 
                 task.await.unwrap();
                 server.await.unwrap();

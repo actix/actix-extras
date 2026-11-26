@@ -9,7 +9,9 @@
 use std::{fmt, io};
 
 use awc_3::{
-    ClientRequest, ClientResponse, FrozenClientRequest, error::PayloadError, http::header,
+    ClientRequest, ClientResponse, FrozenClientRequest,
+    error::{PayloadError, SendRequestError},
+    http::header,
 };
 use bytes::Bytes;
 use bytestring::ByteString;
@@ -23,7 +25,36 @@ use tokio::{
 };
 use tokio_util::{codec::FramedRead, io::StreamReader};
 
-use crate::{Decoder, Error, Event, Reconnect};
+use crate::{DecodeError, Decoder, Event, Reconnect};
+
+/// Error returned by this client's connection manager.
+#[derive(Debug)]
+#[non_exhaustive]
+pub enum ManagerError {
+    /// The HTTP request failed.
+    Http {
+        /// Source of the request error.
+        source: SendRequestError,
+    },
+
+    /// Reading or decoding the response body failed.
+    Decode {
+        /// Source of the stream error.
+        source: DecodeError,
+    },
+}
+
+impl_more::impl_display_enum! {
+    ManagerError:
+    Http { .. } => "HTTP request failed",
+    Decode { source } => "{source}",
+}
+
+impl_more::impl_error_enum! {
+    ManagerError:
+    Http { source } => source,
+    Decode { source } => source,
+}
 
 mod sealed {
     use super::*;
@@ -57,14 +88,14 @@ pub trait AwcExt: sealed::Sealed {
     /// # Ok(())
     /// # }
     /// ```
-    fn sse_stream(self) -> LocalBoxStream<'static, Result<Event, Error>>;
+    fn sse_stream(self) -> LocalBoxStream<'static, Result<Event, DecodeError>>;
 }
 
 impl<S> AwcExt for ClientResponse<S>
 where
     S: Stream<Item = Result<Bytes, PayloadError>> + Unpin + 'static,
 {
-    fn sse_stream(self) -> LocalBoxStream<'static, Result<Event, Error>> {
+    fn sse_stream(self) -> LocalBoxStream<'static, Result<Event, DecodeError>> {
         let body_stream = self.map_err(io::Error::other);
         let body_reader = StreamReader::new(body_stream);
 
@@ -140,13 +171,6 @@ impl fmt::Debug for Manager {
     }
 }
 
-fn http_error(err: impl std::error::Error) -> Error {
-    // AWC request errors can contain sources that are not Send or Sync.
-    Error::Http {
-        source: err_report::Report::new(err).to_string().into(),
-    }
-}
-
 impl Manager {
     /// Freezes the request and constructs an SSE request manager.
     ///
@@ -187,7 +211,7 @@ impl Manager {
     ///
     /// # Errors
     ///
-    /// Returns [`Error::Http`] if the initial request fails. Body and decoding errors are sent
+    /// Returns [`ManagerError::Http`] if the initial request fails. Body and decoding errors are sent
     /// through the event receiver.
     ///
     /// # Panics
@@ -196,7 +220,13 @@ impl Manager {
     /// [`spawn_local`].
     pub async fn send(
         &mut self,
-    ) -> Result<(JoinHandle<()>, UnboundedReceiver<Result<Event, Error>>), Error> {
+    ) -> Result<
+        (
+            JoinHandle<()>,
+            UnboundedReceiver<Result<Event, ManagerError>>,
+        ),
+        ManagerError,
+    > {
         assert!(!self.sent, "The request has already been sent");
 
         let req = self.req.clone();
@@ -207,9 +237,12 @@ impl Manager {
                 None => req.send(),
             };
 
-            let res = req.await.map_err(http_error)?;
+            let res = req.await.map_err(|source| ManagerError::Http { source })?;
 
-            Ok((res.status().as_u16() != 204).then(|| res.sse_stream()))
+            Ok((res.status().as_u16() != 204).then(|| {
+                res.sse_stream()
+                    .map_err(|source| ManagerError::Decode { source })
+            }))
         };
 
         let id = self.last_event_id.borrow().clone();
@@ -257,8 +290,8 @@ mod tests {
         matchers::{method, path},
     };
 
-    use super::{AwcExt as _, Manager};
-    use crate::{Error, Event, Message};
+    use super::{AwcExt as _, Manager, ManagerError};
+    use crate::{DecodeError, Event, Message};
 
     async fn sse_server() -> MockServer {
         let server = MockServer::start().await;
@@ -422,7 +455,7 @@ mod tests {
 
         let error = res.sse_stream().try_next().await.unwrap_err();
 
-        let Error::Io { source } = error else {
+        let DecodeError::Io { source } = error else {
             panic!("Expected an I/O error; got: {error:?}");
         };
 
@@ -440,7 +473,7 @@ mod tests {
 
         let error = res.sse_stream().try_next().await.unwrap_err();
 
-        assert!(matches!(error, Error::InvalidUtf8 { .. }));
+        assert!(matches!(error, DecodeError::InvalidUtf8 { .. }));
     }
 
     #[tokio::test(flavor = "local")]
@@ -501,7 +534,9 @@ mod tests {
 
         assert!(matches!(
             manager.send().await.unwrap_err(),
-            Error::Http { .. }
+            ManagerError::Http {
+                source: awc_3::error::SendRequestError::Timeout
+            }
         ));
 
         drop(slow_response);
@@ -546,7 +581,9 @@ mod tests {
         drop(manager);
         assert!(matches!(
             events.recv().await,
-            Some(Err(Error::InvalidUtf8 { .. }))
+            Some(Err(ManagerError::Decode {
+                source: DecodeError::InvalidUtf8 { .. }
+            }))
         ));
 
         task.await.unwrap();
