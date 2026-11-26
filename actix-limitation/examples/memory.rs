@@ -3,7 +3,7 @@
 //! Run:
 //!
 //! ```console
-//! cargo run --example memory --features memory-store
+//! cargo run --example memory
 //! curl -i localhost:8080 # 200 five times, then 429
 //! ```
 //!

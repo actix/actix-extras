@@ -5,9 +5,11 @@ use actix_session::SessionExt as _;
 use actix_web::dev::ServiceRequest;
 use redis::Client;
 
-#[cfg(feature = "memory-store")]
-use crate::store::MemoryStore;
-use crate::{errors::Error, store::Backend, GetArcBoxKeyFn, Limiter};
+use crate::{
+    errors::Error,
+    store::{Backend, MemoryStore},
+    GetArcBoxKeyFn, Limiter,
+};
 
 /// Backend specification stored in [`Builder`] before [`Builder::build`].
 #[derive(Debug, Clone)]
@@ -16,7 +18,6 @@ pub(crate) enum BackendSpec {
     RedisUrl(String),
 
     /// Pre-constructed in-memory store.
-    #[cfg(feature = "memory-store")]
     Memory(MemoryStore),
 }
 
@@ -112,7 +113,6 @@ impl Builder {
         let backend = match &self.backend {
             BackendSpec::RedisUrl(url) => Backend::Redis(Client::open(url.as_str())?),
 
-            #[cfg(feature = "memory-store")]
             BackendSpec::Memory(store) => Backend::Memory(store.clone()),
         };
 
@@ -146,7 +146,6 @@ mod tests {
         match &builder.backend {
             BackendSpec::RedisUrl(url) => assert_eq!(url, redis_url),
 
-            #[cfg(feature = "memory-store")]
             BackendSpec::Memory(_) => panic!("Builder should use the Redis backend"),
         }
         assert_eq!(builder.limit, 100);

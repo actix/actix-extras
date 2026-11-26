@@ -148,7 +148,7 @@ jobs:
       # in-memory store needs no external service, so those tests can run here.
       - name: tests (actix-limitation, memory store)
         timeout-minutes: 10
-        run: cargo test -p actix-limitation --features memory-store --test memory
+        run: cargo test -p actix-limitation --test memory
 
       - name: tests (actix-settings)
         timeout-minutes: 40

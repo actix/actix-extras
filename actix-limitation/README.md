@@ -19,7 +19,7 @@ Originally based on <https://github.com/fnichol/limitation>.
 
 [`Limiter::builder`](https://docs.rs/actix-limitation/latest/actix_limitation/struct.Limiter.html#method.builder) uses Redis to share counters across application instances that use the same database. Enable `redis-native-tls` or `redis-rustls` for TLS.
 
-The optional `memory-store` feature adds `Limiter::memory_builder` for process-local counters that reset on restart. Build the store outside `HttpServer::new` and clone it into each worker to share counters.
+Use `Limiter::memory_builder` for process-local counters that reset on restart. Build the store outside `HttpServer::new` and clone it into each worker to share counters.
 
 ## Example
 
@@ -61,7 +61,7 @@ Both bundled examples (`examples/memory.rs` and `examples/redis.rs`) allow five 
 Run the in-memory example:
 
 ```console
-cargo run --example memory --features memory-store
+cargo run --example memory
 ```
 
 Or start Redis and run the Redis example:

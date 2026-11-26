@@ -19,7 +19,6 @@ all-features = true
 [features]
 default = ["session"]
 session = ["actix-session"]
-memory-store = []
 redis-native-tls = ["redis/tokio-native-tls-comp"]
 redis-rustls = ["redis/tokio-rustls-comp"]
 
@@ -35,7 +34,6 @@ time = "0.3"
 actix-session = { version = "0.12", optional = true }
 
 [dev-dependencies]
-actix-limitation = { path = ".", features = ["memory-store"] }
 actix-web = "4"
 env_logger = "0.11"
 static_assertions = "1"
@@ -43,7 +41,3 @@ uuid = { version = "1", features = ["v4"] }
 
 [lints]
 workspace = true
-
-[[example]]
-name = "memory"
-required-features = ["memory-store"]

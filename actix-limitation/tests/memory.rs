@@ -1,5 +1,3 @@
-#![cfg(feature = "memory-store")]
-
 use std::{thread::sleep, time::Duration};
 
 use actix_limitation::{Error, Limiter, MemoryStore, RateLimiter};

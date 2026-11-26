@@ -53,15 +53,17 @@ struct Counter {
 }
 
 impl MemoryStore {
-    /// Constructs a store with the default capacity and a 60-second sweep interval.
+    /// Constructs an in-memory store.
     ///
     /// Use [`MemoryStore::builder()`] to configure it.
+    ///
+    /// Defaults to `usize::MAX` keys and a 60-second sweep interval.
     #[must_use]
     pub fn new() -> Self {
         MemoryStore::builder().build()
     }
 
-    /// Constructs an in-memory store builder with defaults.
+    /// Constructs a [`MemoryStoreBuilder`].
     #[must_use]
     pub fn builder() -> MemoryStoreBuilder {
         MemoryStoreBuilder {
@@ -174,7 +176,7 @@ pub struct MemoryStoreBuilder {
 }
 
 impl MemoryStoreBuilder {
-    /// Sets the maximum number of keys tracked at once. Defaults to `usize::MAX`.
+    /// Sets the maximum number of keys tracked at once.
     ///
     /// Because expired counters are removed lazily, the map can hold expired entries until the
     /// next sweep. When the store is full, a new key forces a sweep; if the store remains full,
@@ -182,6 +184,8 @@ impl MemoryStoreBuilder {
     /// once per sweep interval.
     ///
     /// A `max` of `0` is clamped to `1`, never unbounded.
+    ///
+    /// Defaults to `usize::MAX`.
     #[must_use]
     pub fn max_keys(mut self, max: usize) -> Self {
         self.max_keys = NonZeroUsize::new(max).unwrap_or(NonZeroUsize::MIN);

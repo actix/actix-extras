@@ -2,10 +2,8 @@
 
 pub(crate) mod redis;
 
-#[cfg(feature = "memory-store")]
 pub(crate) mod memory;
 
-#[cfg(feature = "memory-store")]
 pub use self::memory::{MemoryStore, MemoryStoreBuilder};
 
 /// Counter store backend bound to a [`Limiter`](crate::Limiter).
@@ -17,6 +15,5 @@ pub(crate) enum Backend {
     Redis(::redis::Client),
 
     /// Counters stored in process memory.
-    #[cfg(feature = "memory-store")]
     Memory(MemoryStore),
 }

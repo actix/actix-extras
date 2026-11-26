@@ -8,7 +8,7 @@
 //! [`Limiter::builder`](https://docs.rs/actix-limitation/latest/actix_limitation/struct.Limiter.html#method.builder) uses Redis to share counters across application instances that use the
 //! same database. Enable `redis-native-tls` or `redis-rustls` for TLS.
 //!
-//! The optional `memory-store` feature adds `Limiter::memory_builder` for process-local counters
+//! Use `Limiter::memory_builder` for process-local counters
 //! that reset on restart. Build the store outside `HttpServer::new` and clone it into each worker
 //! to share counters.
 //!
@@ -53,7 +53,7 @@
 //! Run the in-memory example:
 //!
 //! ```console
-//! cargo run --example memory --features memory-store
+//! cargo run --example memory
 //! ```
 //!
 //! Or start Redis and run the Redis example:
@@ -83,11 +83,14 @@ mod middleware;
 mod status;
 mod store;
 
-#[cfg(feature = "memory-store")]
-#[cfg_attr(docsrs, doc(cfg(feature = "memory-store")))]
-pub use self::store::{MemoryStore, MemoryStoreBuilder};
 use self::{builder::BackendSpec, store::Backend};
-pub use self::{builder::Builder, errors::Error, middleware::RateLimiter, status::Status};
+pub use self::{
+    builder::Builder,
+    errors::Error,
+    middleware::RateLimiter,
+    status::Status,
+    store::{MemoryStore, MemoryStoreBuilder},
+};
 
 /// Default request limit.
 pub const DEFAULT_REQUEST_LIMIT: usize = 5000;
@@ -127,7 +130,7 @@ pub struct Limiter {
 }
 
 impl Limiter {
-    /// Constructs a rate limiter builder backed by Redis with default settings.
+    /// Constructs a rate limiter builder backed by Redis.
     ///
     /// See the [`redis` connection parameters docs](https://docs.rs/redis/1/redis/#connection-parameters)
     /// for supported URL formats.
@@ -151,8 +154,6 @@ impl Limiter {
     ///
     /// Pass [`MemoryStore::new()`] for defaults, or [`MemoryStore::builder()`] to configure the
     /// store.
-    #[cfg(feature = "memory-store")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "memory-store")))]
     #[must_use]
     pub fn memory_builder(store: MemoryStore) -> Builder {
         Builder {
@@ -186,7 +187,6 @@ impl Limiter {
         match &self.backend {
             Backend::Redis(client) => store::redis::track(client, &key, self.period).await,
 
-            #[cfg(feature = "memory-store")]
             Backend::Memory(store) => Ok(store.track(&key, self.period)),
         }
     }
