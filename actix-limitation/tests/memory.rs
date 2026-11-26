@@ -110,14 +110,14 @@ async fn test_middleware_limits_requests() {
         if index <= limit {
             assert!(
                 resp.status().is_success(),
-                "request {index}: {:?}",
+                "request {index} should succeed, got {:?}",
                 resp.status()
             );
         } else {
             assert_eq!(
                 resp.status(),
                 StatusCode::TOO_MANY_REQUESTS,
-                "request {index}"
+                "request {index} should exceed the limit"
             );
         }
     }
@@ -179,6 +179,6 @@ async fn test_middleware_window_resets() {
 
     assert!(
         call().await.status().is_success(),
-        "window did not reset for the middleware",
+        "request should succeed after the window resets",
     );
 }

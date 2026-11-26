@@ -147,7 +147,7 @@ mod tests {
             BackendSpec::RedisUrl(url) => assert_eq!(url, redis_url),
 
             #[cfg(feature = "memory-store")]
-            BackendSpec::Memory(_) => panic!("expected a Redis backend"),
+            BackendSpec::Memory(_) => panic!("builder should use the Redis backend"),
         }
         assert_eq!(builder.limit, 100);
         assert_eq!(builder.period, period);

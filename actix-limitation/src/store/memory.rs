@@ -20,7 +20,7 @@ const DEFAULT_SWEEP_INTERVAL: Duration = Duration::from_secs(60);
 ///
 /// Writes sweep expired entries once the 60-second sweep interval has elapsed. A new key also
 /// triggers a sweep when the store is full. If all entries are still active, the new key passes
-/// untracked. The store grows without a fixed bound unless you set
+/// untracked. The default capacity is `usize::MAX`. Set a smaller limit with
 /// [`max_keys`](MemoryStoreBuilder::max_keys).
 ///
 /// ```
@@ -35,7 +35,7 @@ pub struct MemoryStore {
 }
 
 struct Inner {
-    max_keys: Option<NonZeroUsize>,
+    max_keys: NonZeroUsize,
     sweep_interval: Duration,
     state: Mutex<State>,
 }
@@ -53,7 +53,7 @@ struct Counter {
 }
 
 impl MemoryStore {
-    /// Constructs an in-memory store with defaults: unbounded, swept every 60 seconds.
+    /// Constructs a store with the default capacity and a 60-second sweep interval.
     ///
     /// Use [`MemoryStore::builder()`] to configure it.
     #[must_use]
@@ -65,7 +65,7 @@ impl MemoryStore {
     #[must_use]
     pub fn builder() -> MemoryStoreBuilder {
         MemoryStoreBuilder {
-            max_keys: None,
+            max_keys: NonZeroUsize::MAX,
             sweep_interval: DEFAULT_SWEEP_INTERVAL,
         }
     }
@@ -89,30 +89,27 @@ impl MemoryStore {
 
         let start_new_window = counter.is_none_or(|counter| counter.expires_at <= now);
 
-        if counter.is_none() {
-            if let Some(max_keys) = self.inner.max_keys {
-                if state.counters.len() >= max_keys.get() {
-                    state.counters.retain(|_, counter| counter.expires_at > now);
-                    state.next_sweep = now + self.inner.sweep_interval;
+        let max_keys = self.inner.max_keys.get();
+        if counter.is_none() && state.counters.len() >= max_keys {
+            state.counters.retain(|_, counter| counter.expires_at > now);
+            state.next_sweep = now + self.inner.sweep_interval;
 
-                    if state.counters.len() >= max_keys.get() {
-                        let warn = state.capacity_warned_at.is_none_or(|at| {
-                            now.saturating_duration_since(at) >= self.inner.sweep_interval
-                        });
+            if state.counters.len() >= max_keys {
+                let warn = state.capacity_warned_at.is_none_or(|at| {
+                    now.saturating_duration_since(at) >= self.inner.sweep_interval
+                });
 
-                        if warn {
-                            state.capacity_warned_at = Some(now);
+                if warn {
+                    state.capacity_warned_at = Some(now);
 
-                            log::warn!(
-                                "actix-limitation: in-memory store is at its {} key capacity; new \
-                                 keys are not being rate limited",
-                                max_keys.get(),
-                            );
-                        }
-
-                        return (1, period);
-                    }
+                    log::warn!(
+                        "actix-limitation: in-memory store is at its {} key capacity; new \
+                         keys are not being rate limited",
+                        max_keys,
+                    );
                 }
+
+                return (1, period);
             }
         }
 
@@ -129,7 +126,7 @@ impl MemoryStore {
         let counter = state
             .counters
             .get_mut(key)
-            .expect("counter is either pre-existing or was just inserted");
+            .expect("counter should exist after initializing its window");
 
         counter.count += 1;
 
@@ -172,12 +169,12 @@ impl fmt::Debug for MemoryStore {
 /// Builder for [`MemoryStore`].
 #[derive(Debug, Clone)]
 pub struct MemoryStoreBuilder {
-    max_keys: Option<NonZeroUsize>,
+    max_keys: NonZeroUsize,
     sweep_interval: Duration,
 }
 
 impl MemoryStoreBuilder {
-    /// Sets the maximum number of keys tracked at once. Unbounded by default.
+    /// Sets the maximum number of keys tracked at once. Defaults to `usize::MAX`.
     ///
     /// Because expired counters are removed lazily, the map can hold expired entries until the
     /// next sweep. When the store is full, a new key forces a sweep; if the store remains full,
@@ -187,7 +184,7 @@ impl MemoryStoreBuilder {
     /// A `max` of `0` is clamped to `1`, never unbounded.
     #[must_use]
     pub fn max_keys(mut self, max: usize) -> Self {
-        self.max_keys = Some(NonZeroUsize::new(max).unwrap_or(NonZeroUsize::MIN));
+        self.max_keys = NonZeroUsize::new(max).unwrap_or(NonZeroUsize::MIN);
         self
     }
 
@@ -226,6 +223,9 @@ mod tests {
 
     use super::*;
 
+    static_assertions::assert_impl_all!(MemoryStore: Send, Sync);
+    static_assertions::assert_impl_all!(MemoryStoreBuilder: Send, Sync);
+
     /// Number of counters currently held, expired or not.
     fn tracked_keys(store: &MemoryStore) -> usize {
         store.inner.state.lock().unwrap().counters.len()
@@ -238,18 +238,11 @@ mod tests {
     #[test]
     fn defaults() {
         let store = MemoryStore::new();
-        assert!(store.inner.max_keys.is_none());
+        assert_eq!(store.inner.max_keys, NonZeroUsize::MAX);
         assert_eq!(store.inner.sweep_interval, DEFAULT_SWEEP_INTERVAL);
 
         let store = MemoryStore::default();
-        assert!(store.inner.max_keys.is_none());
-    }
-
-    #[test]
-    fn store_is_send_and_sync() {
-        fn assert_send_sync<T: Send + Sync>() {}
-        assert_send_sync::<MemoryStore>();
-        assert_send_sync::<MemoryStoreBuilder>();
+        assert_eq!(store.inner.max_keys, NonZeroUsize::MAX);
     }
 
     #[test]
@@ -258,9 +251,18 @@ mod tests {
         store.track("some-very-distinctive-key", Duration::from_secs(60));
 
         let repr = format!("{store:?}");
-        assert!(repr.starts_with("MemoryStore"), "{repr}");
-        assert!(!repr.contains("some-very-distinctive-key"), "{repr}");
-        assert!(repr.contains("counters: 1"), "{repr}");
+        assert!(
+            repr.starts_with("MemoryStore"),
+            "debug output should name the store: {repr}"
+        );
+        assert!(
+            !repr.contains("some-very-distinctive-key"),
+            "debug output should omit counter keys: {repr}"
+        );
+        assert!(
+            repr.contains("counters: 1"),
+            "debug output should include the counter count: {repr}"
+        );
     }
 
     #[test]
@@ -292,7 +294,7 @@ mod tests {
         assert_eq!(count, 2);
         assert!(
             reset <= Duration::from_millis(260),
-            "window slid: {reset:?} left of a {period:?} window",
+            "remaining time should decrease within a fixed window, got {reset:?} of {period:?}",
         );
 
         sleep(Duration::from_millis(300));
@@ -384,7 +386,7 @@ mod tests {
     #[test]
     fn max_keys_zero_is_treated_as_one() {
         let store = MemoryStore::builder().max_keys(0).build();
-        assert_eq!(store.inner.max_keys, NonZeroUsize::new(1));
+        assert_eq!(store.inner.max_keys, NonZeroUsize::MIN);
 
         assert_eq!(store.track("a", Duration::from_secs(60)).0, 1);
         assert_eq!(tracked_keys(&store), 1);
