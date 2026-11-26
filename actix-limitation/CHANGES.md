@@ -7,6 +7,13 @@
 - Add `Limiter::memory_builder()` constructor for building a limiter backed by a `MemoryStore`.
 - Add `memory` example, runnable with no Redis server, and `redis` example.
 
+## 0.7.0
+
+- Use `time` instead of `chrono` to calculate rate limit reset timestamps.
+- Use `std::future::{ready, Ready}` instead of `actix-utils` types.
+- Update `actix-session` dependency to `0.12`.
+- Minimum supported Rust version (MSRV) is now 1.89.
+
 ## 0.6.0
 
 - Update `redis` dependency to `1`.

@@ -11,7 +11,7 @@ use crate::headers::authorization::{errors::ParseError, scheme::Scheme};
 ///
 /// Should be used in combination with [`Authorization`] header.
 ///
-/// [RFC 6750]: https://tools.ietf.org/html/rfc6750
+/// [RFC 6750]: https://www.rfc-editor.org/info/rfc6750
 /// [`Authorization`]: crate::headers::authorization::Authorization
 #[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Bearer {

@@ -1,6 +1,10 @@
-use std::{fmt, future::Future, pin::Pin, rc::Rc};
+use std::{
+    fmt,
+    future::{ready, Future, Ready},
+    pin::Pin,
+    rc::Rc,
+};
 
-use actix_utils::future::{ready, Ready};
 use actix_web::{
     body::MessageBody,
     cookie::{Cookie, CookieJar, Key},

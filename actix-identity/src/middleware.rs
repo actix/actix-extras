@@ -1,7 +1,9 @@
-use std::rc::Rc;
+use std::{
+    future::{ready, Ready},
+    rc::Rc,
+};
 
 use actix_session::SessionExt;
-use actix_utils::future::{ready, Ready};
 use actix_web::{
     body::MessageBody,
     cookie::time::{format_description::well_known::Rfc3339, OffsetDateTime},

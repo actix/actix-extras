@@ -1,6 +1,74 @@
-//! WebSockets for Actix Web, without actors.
+//! WebSockets for Actix Web.
 //!
-//! For usage, see documentation on [`handle()`] and [`handle_with_protocols()`].
+//! Use the [`WebSocket`] extractor to accept a connection. Return its response from the handler
+//! and spawn a task to handle messages.
+//!
+//! # Examples
+//!
+//! ```no_run
+//! use std::time::Duration;
+//!
+//! use actix_web::{get, HttpResponse};
+//! use tokio::{task::spawn_local, time::interval};
+//! use actix_ws::{AggregatedMessage, WebSocket};
+//!
+//! #[get("/ws")]
+//! async fn ws(WebSocket { response, mut session, mut stream }: WebSocket) -> HttpResponse {
+//!     // handle messages in a separate task
+//!     spawn_local(async move {
+//!         let mut interval = interval(Duration::from_secs(5));
+//!
+//!         loop {
+//!             let message = tokio::select! {
+//!                 // client sent message
+//!                 message = stream.recv() => message,
+//!
+//!                 // send a heartbeat ping every five seconds
+//!                 _ = interval.tick() => {
+//!                     if session.ping(b"").await.is_err() {
+//!                         // client has disconnected without warning
+//!                         return;
+//!                     }
+//!
+//!                     continue;
+//!                 }
+//!             };
+//!
+//!             let Some(Ok(message)) = message else {
+//!                 break;
+//!             };
+//!
+//!             match message {
+//!                 AggregatedMessage::Text(text) => {
+//!                     // echo text back to client
+//!                     if session.text(text).await.is_err() {
+//!                         return;
+//!                     }
+//!                 }
+//!
+//!                 AggregatedMessage::Ping(bytes) => {
+//!                     let _ = session.pong(&bytes).await;
+//!                 }
+//!
+//!                 AggregatedMessage::Close(reason) => {
+//!                     let _ = session.close(reason).await;
+//!                     return;
+//!                 }
+//!
+//!                 _ => {}
+//!             }
+//!         }
+//!
+//!         let _ = session.close(None).await;
+//!     });
+//!
+//!     // return the handshake response to complete the upgrade
+//!     response
+//! }
+//! ```
+//!
+//! Use [`handle()`] to receive individual frames, or [`handle_with_protocols()`] to negotiate
+//! subprotocols.
 
 #![warn(missing_docs)]
 #![doc(html_logo_url = "https://actix.rs/img/logo.png")]
@@ -17,11 +85,13 @@ use tokio::sync::{mpsc::channel, oneshot};
 
 mod aggregated;
 pub mod codec;
+mod extract;
 mod session;
 mod stream;
 
 pub use self::{
     aggregated::{AggregatedMessage, AggregatedMessageStream},
+    extract::WebSocket,
     session::{Closed, Session},
     stream::{MessageStream, StreamingBody},
 };
@@ -88,6 +158,14 @@ pub fn handle_with_protocols(
     body: web::Payload,
     protocols: &[&str],
 ) -> Result<(HttpResponse, Session, MessageStream), actix_web::Error> {
+    handle_payload(req, body.into_inner(), protocols)
+}
+
+fn handle_payload(
+    req: &HttpRequest,
+    body: actix_web::dev::Payload,
+    protocols: &[&str],
+) -> Result<(HttpResponse, Session, MessageStream), actix_web::Error> {
     let mut response = handshake_with_protocols(req, protocols)?;
     let (tx, rx) = channel(32);
     let (connection_closed_tx, connection_closed_rx) = oneshot::channel();
@@ -102,7 +180,7 @@ pub fn handle_with_protocols(
             )?
             .into(),
         Session::new(tx),
-        MessageStream::new(body.into_inner()).with_connection_close_signal(connection_closed_rx),
+        MessageStream::new(body).with_connection_close_signal(connection_closed_rx),
     ))
 }
 

@@ -5,9 +5,9 @@
 <!-- prettier-ignore-start -->
 
 [![crates.io](https://img.shields.io/crates/v/actix-settings?label=latest)](https://crates.io/crates/actix-settings)
-[![Documentation](https://docs.rs/actix-settings/badge.svg?version=0.9.0)](https://docs.rs/actix-settings/0.9.0)
+[![Documentation](https://docs.rs/actix-settings/badge.svg?version=0.10.0)](https://docs.rs/actix-settings/0.10.0)
 ![Apache 2.0 or MIT licensed](https://img.shields.io/crates/l/actix-settings)
-[![Dependency Status](https://deps.rs/crate/actix-settings/0.9.0/status.svg)](https://deps.rs/crate/actix-settings/0.9.0)
+[![Dependency Status](https://deps.rs/crate/actix-settings/0.10.0/status.svg)](https://deps.rs/crate/actix-settings/0.10.0)
 
 <!-- prettier-ignore-end -->
 
@@ -15,7 +15,7 @@
 
 - [API Documentation](https://docs.rs/actix-settings)
 - [Usage Example][usage]
-- Minimum Supported Rust Version (MSRV): 1.57
+- Minimum Supported Rust Version (MSRV): 1.89
 
 ### Custom Settings
 
@@ -26,6 +26,12 @@ Have a look at [the usage example][usage] to see how.
 ## Special Thanks
 
 This crate was made possible by support from Accept B.V and [@jjpe].
+
+## Sponsors
+
+<a href="https://www.blacksmith.sh/">
+  <img src="https://raw.githubusercontent.com/actix/actix-extras/main/.github/sponsors/blacksmith.png" alt="CI powered by Blacksmith" width="280" />
+</a>
 
 [usage]: https://github.com/actix/actix-extras/blob/main/actix-settings/examples/actix.rs
 [@jjpe]: https://github.com/jjpe

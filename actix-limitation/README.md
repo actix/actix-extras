@@ -6,9 +6,9 @@
 <!-- prettier-ignore-start -->
 
 [![crates.io](https://img.shields.io/crates/v/actix-limitation?label=latest)](https://crates.io/crates/actix-limitation)
-[![Documentation](https://docs.rs/actix-limitation/badge.svg?version=0.6.0)](https://docs.rs/actix-limitation/0.6.0)
+[![Documentation](https://docs.rs/actix-limitation/badge.svg?version=0.7.0)](https://docs.rs/actix-limitation/0.7.0)
 ![Apache 2.0 or MIT licensed](https://img.shields.io/crates/l/actix-limitation)
-[![Dependency Status](https://deps.rs/crate/actix-limitation/0.6.0/status.svg)](https://deps.rs/crate/actix-limitation/0.6.0)
+[![Dependency Status](https://deps.rs/crate/actix-limitation/0.7.0/status.svg)](https://deps.rs/crate/actix-limitation/0.7.0)
 
 <!-- prettier-ignore-end -->
 
@@ -53,7 +53,7 @@ cargo run --example redis
 ```toml
 [dependencies]
 actix-web = "4"
-actix-limitation = "0.6"
+actix-limitation = "0.7"
 ```
 
 ```rust
@@ -125,3 +125,9 @@ async fn main() -> std::io::Result<()> {
     .await
 }
 ```
+
+## Sponsors
+
+<a href="https://www.blacksmith.sh/">
+  <img src="https://raw.githubusercontent.com/actix/actix-extras/main/.github/sponsors/blacksmith.png" alt="CI powered by Blacksmith" width="280" />
+</a>

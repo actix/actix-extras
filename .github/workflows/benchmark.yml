@@ -1,0 +1,90 @@
+name: Benchmark
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build benchmarks
+    runs-on: blacksmith-2vcpu-ubuntu-2204-arm
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: useblacksmith/checkout@v1.8.3
+        with:
+          persist-credentials: false
+
+      - name: Install Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v2.0.1
+        with:
+          toolchain: nightly
+
+      - name: Install cargo-codspeed
+        uses: taiki-e/install-action@v2.90.5
+        with:
+          tool: cargo-codspeed
+
+      - name: Build benchmarks
+        run: cargo codspeed build -p russe --all-features --locked --measurement-mode walltime --measurement-mode memory
+
+      - name: Archive benchmark executables
+        run: tar -I 'zstd -3' -cf benchmarks.tar.zst target/codspeed
+
+      - name: Upload benchmark executables
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          archive: false
+          path: benchmarks.tar.zst
+          if-no-files-found: error
+
+  benchmarks:
+    name: Run benchmarks
+    needs: build
+    runs-on: codspeed-macro-arm64-graviton-ubuntu-22-04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v2.0.1
+        with:
+          toolchain: nightly
+          cache: false
+
+      - name: Install cargo-codspeed
+        uses: taiki-e/install-action@v2.90.5
+        with:
+          tool: cargo-codspeed
+
+      - name: Download benchmark executables
+        uses: actions/download-artifact@v8.0.2
+        with:
+          name: benchmarks.tar.zst
+          skip-decompress: true
+
+      - name: Extract benchmark executables
+        run: tar --zstd -xf benchmarks.tar.zst
+
+      - name: Run benchmarks
+        uses: CodSpeedHQ/action@v5.6.3
+        env:
+          DIVAN_MIN_TIME: "1"
+          DIVAN_MAX_TIME: "1"
+        with:
+          mode: walltime,memory
+          run: cargo codspeed run

@@ -4,7 +4,7 @@ use actix_web::http::StatusCode;
 
 /// Bearer authorization error types, described in [RFC 6750].
 ///
-/// [RFC 6750]: https://tools.ietf.org/html/rfc6750#section-3.1
+/// [RFC 6750]: https://www.rfc-editor.org/info/rfc6750/#section-3.1
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Error {
     /// The request is missing a required parameter, includes an unsupported parameter or parameter

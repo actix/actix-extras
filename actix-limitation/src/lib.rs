@@ -144,6 +144,7 @@
 use std::{borrow::Cow, fmt, sync::Arc, time::Duration};
 
 use actix_web::dev::ServiceRequest;
+use time::OffsetDateTime;
 
 mod builder;
 mod errors;
@@ -239,7 +240,7 @@ impl Limiter {
     /// Consumes one rate limit unit, returning the status.
     pub async fn count(&self, key: impl Into<String>) -> Result<Status, Error> {
         let (count, reset) = self.track(key).await?;
-        let reset = Status::epoch_utc_plus(reset)?;
+        let reset = Status::epoch_utc_plus(OffsetDateTime::now_utc(), reset)?;
         let status = Status::new(count, self.limit, reset);
 
         if count > self.limit {

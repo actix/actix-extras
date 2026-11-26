@@ -15,7 +15,7 @@
 
 - [API Documentation](https://docs.rs/actix-protobuf)
 - [Example Project](https://github.com/actix/examples/tree/main/protobuf)
-- Minimum Supported Rust Version (MSRV): 1.57
+- Minimum Supported Rust Version (MSRV): 1.89
 
 ## Example
 
@@ -40,6 +40,16 @@ async fn index(msg: ProtoBuf<MyObj>) -> Result<HttpResponse> {
 
 See [here](https://github.com/actix/examples/tree/main/protobuf) for the complete example.
 
+## Client Requests
+
+Use `prost::Message::encode_to_vec()` to encode a message, then send the bytes with `awc::ClientRequest::send_body`. Set `Content-Type` to `application/protobuf` so the server can extract the request with `ProtoBuf<T>`. Read the response body and decode it with `prost::Message::decode()`.
+
+The [client example](examples/client.rs) starts a local server, sends a Protobuf request, checks the decoded response, and stops the server:
+
+```sh
+cargo run -p actix-protobuf --example client
+```
+
 ## License
 
 This project is licensed under either of
@@ -48,3 +58,9 @@ This project is licensed under either of
 - MIT license ([LICENSE-MIT](LICENSE-MIT) or [https://opensource.org/licenses/MIT](https://opensource.org/licenses/MIT))
 
 at your option.
+
+## Sponsors
+
+<a href="https://www.blacksmith.sh/">
+  <img src="https://raw.githubusercontent.com/actix/actix-extras/main/.github/sponsors/blacksmith.png" alt="CI powered by Blacksmith" width="280" />
+</a>

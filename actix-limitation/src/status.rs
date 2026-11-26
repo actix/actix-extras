@@ -1,6 +1,6 @@
-use std::{ops::Add, time::Duration};
+use std::time::Duration;
 
-use chrono::SubsecRound as _;
+use time::OffsetDateTime;
 
 use crate::Error as LimitationError;
 
@@ -43,19 +43,23 @@ impl Status {
         self.reset_epoch_utc
     }
 
-    pub(crate) fn epoch_utc_plus(duration: Duration) -> Result<usize, LimitationError> {
-        match chrono::Duration::from_std(duration) {
-            Ok(value) => Ok(chrono::Utc::now()
-                .add(value)
-                .round_subsecs(0)
-                .timestamp()
-                .try_into()
-                .unwrap_or(0)),
+    pub(crate) fn epoch_utc_plus(
+        now: OffsetDateTime,
+        duration: Duration,
+    ) -> Result<usize, LimitationError> {
+        let duration = time::Duration::try_from(duration).map_err(|_| {
+            LimitationError::Other(
+                "Source duration value is out of range for the target type".to_owned(),
+            )
+        })?;
 
-            Err(_) => Err(LimitationError::Other(
-                "Source duration value is out of range for the target type".to_string(),
-            )),
-        }
+        // Use Unix time so long periods can extend beyond the calendar date range.
+        let reset_nanos = now.unix_timestamp_nanos() + duration.whole_nanoseconds();
+
+        // Round to the nearest second, with half seconds rounded up.
+        let reset_secs = (reset_nanos + 500_000_000).div_euclid(1_000_000_000);
+
+        Ok(reset_secs.try_into().unwrap_or(0))
     }
 }
 
@@ -97,22 +101,33 @@ mod tests {
 
     #[test]
     fn test_epoch_utc_plus_zero() {
-        let duration = Duration::from_secs(0);
-        let seconds = Status::epoch_utc_plus(duration).unwrap();
-        assert!(seconds as u64 >= duration.as_secs());
+        let now = OffsetDateTime::from_unix_timestamp_nanos(100_499_999_999).unwrap();
+
+        assert_eq!(Status::epoch_utc_plus(now, Duration::ZERO).unwrap(), 100);
     }
 
     #[test]
     fn test_epoch_utc_plus() {
-        let duration = Duration::from_secs(10);
-        let seconds = Status::epoch_utc_plus(duration).unwrap();
-        assert!(seconds as u64 >= duration.as_secs() + 10);
+        let now = OffsetDateTime::from_unix_timestamp_nanos(100_250_000_000).unwrap();
+        let duration = Duration::from_millis(10_250);
+
+        assert_eq!(Status::epoch_utc_plus(now, duration).unwrap(), 111);
     }
 
     #[test]
-    #[should_panic = "Source duration value is out of range for the target type"]
+    fn test_epoch_utc_plus_beyond_calendar_range() {
+        let duration = Duration::from_secs(253_402_300_800); // Start of year 10000.
+
+        assert_eq!(
+            Status::epoch_utc_plus(OffsetDateTime::UNIX_EPOCH, duration).unwrap(),
+            usize::try_from(duration.as_secs()).unwrap_or(0),
+        );
+    }
+
+    #[test]
     fn test_epoch_utc_plus_overflow() {
-        let duration = Duration::from_secs(10000000000000000000);
-        Status::epoch_utc_plus(duration).unwrap();
+        let err = Status::epoch_utc_plus(OffsetDateTime::UNIX_EPOCH, Duration::MAX).unwrap_err();
+
+        assert!(matches!(err, LimitationError::Other(_)));
     }
 }

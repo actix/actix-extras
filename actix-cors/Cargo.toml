@@ -20,7 +20,6 @@ all-features = true
 draft-private-network-access = []
 
 [dependencies]
-actix-utils = "3"
 actix-web = { version = "4.15", default-features = false }
 
 derive_more = { version = "2", features = ["display", "error"] }

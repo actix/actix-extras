@@ -29,7 +29,7 @@ We refer to the cookie used for sessions as a **session cookie**. Its content is
 
 Further reading on sessions:
 
-- [RFC 6265](https://datatracker.ietf.org/doc/html/rfc6265);
+- [RFC 6265](https://www.rfc-editor.org/info/rfc6265);
 - [OWASP's session management cheat-sheet](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html).
 
 ## Getting started
@@ -123,3 +123,9 @@ You can implement your own session storage backend using the [`SessionStore`] tr
 [`RedisSessionStore`]: storage::RedisSessionStore
 
 <!-- cargo-rdme end -->
+
+## Sponsors
+
+<a href="https://www.blacksmith.sh/">
+  <img src="https://raw.githubusercontent.com/actix/actix-extras/main/.github/sponsors/blacksmith.png" alt="CI powered by Blacksmith" width="280" />
+</a>

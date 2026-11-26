@@ -5,16 +5,16 @@
 <!-- prettier-ignore-start -->
 
 [![crates.io](https://img.shields.io/crates/v/actix-web-httpauth?label=latest)](https://crates.io/crates/actix-web-httpauth)
-[![Documentation](https://docs.rs/actix-web-httpauth/badge.svg?version=0.8.2)](https://docs.rs/actix-web-httpauth/0.8.2)
+[![Documentation](https://docs.rs/actix-web-httpauth/badge.svg?version=0.8.3)](https://docs.rs/actix-web-httpauth/0.8.3)
 ![Apache 2.0 or MIT licensed](https://img.shields.io/crates/l/actix-web-httpauth)
-[![Dependency Status](https://deps.rs/crate/actix-web-httpauth/0.8.2/status.svg)](https://deps.rs/crate/actix-web-httpauth/0.8.2)
+[![Dependency Status](https://deps.rs/crate/actix-web-httpauth/0.8.3/status.svg)](https://deps.rs/crate/actix-web-httpauth/0.8.3)
 
 <!-- prettier-ignore-end -->
 
 ## Documentation & Resources
 
 - [API Documentation](https://docs.rs/actix-web-httpauth/)
-- Minimum Supported Rust Version (MSRV): 1.57
+- Minimum Supported Rust Version (MSRV): 1.89
 
 ## Features
 
@@ -26,8 +26,24 @@ All supported schemas can be used in both middleware and request handlers.
 
 ## Supported Schemes
 
-- [HTTP Basic](https://tools.ietf.org/html/rfc7617)
-- [OAuth Bearer](https://tools.ietf.org/html/rfc6750)
+- [HTTP Basic](https://www.rfc-editor.org/info/rfc7617)
+- [OAuth Bearer](https://www.rfc-editor.org/info/rfc6750)
+
+## Client Example
+
+Use `awc`, the Actix HTTP client, to send typed `Authorization` headers with `ClientRequest::insert_header`. The [client example](examples/client.rs) sends both Basic and Bearer credentials to a local server and checks the responses:
+
+```sh
+cargo run -p actix-web-httpauth --example client
+```
+
+The example starts and stops its own server. `awc` replaces the old `actix_web::client` module.
+
+## Sponsors
+
+<a href="https://www.blacksmith.sh/">
+  <img src="https://raw.githubusercontent.com/actix/actix-extras/main/.github/sponsors/blacksmith.png" alt="CI powered by Blacksmith" width="280" />
+</a>
 
 <!-- LINKS -->
 

@@ -1,6 +1,5 @@
-use std::{collections::HashSet, rc::Rc};
+use std::{collections::HashSet, future::ready, rc::Rc};
 
-use actix_utils::future::ok;
 use actix_web::{
     body::{EitherBody, MessageBody},
     dev::{forward_ready, Service, ServiceRequest, ServiceResponse},
@@ -203,7 +202,7 @@ where
         // handle preflight requests
         if inner.preflight && Self::is_request_preflight(&req) {
             let res = self.handle_preflight(req);
-            return ok(res.map_into_right_body()).boxed_local();
+            return ready(Ok(res.map_into_right_body())).boxed_local();
         }
 
         // only check actual requests with a origin header
@@ -218,7 +217,7 @@ where
                     add_vary_header(res.headers_mut());
                 }
 
-                return ok(res.map_into_right_body()).boxed_local();
+                return ready(Ok(res.map_into_right_body())).boxed_local();
             }
         };
 

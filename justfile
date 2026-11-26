@@ -23,7 +23,7 @@ clippy:
     cargo {{ toolchain }} clippy -p tracing-actix-web --lib --tests --examples --bins
     cargo {{ toolchain }} clippy -p tracing-actix-web --lib --tests --examples --bins --features uuid_v7
     cargo {{ toolchain }} clippy -p tracing-actix-web --lib --tests --examples --bins --features opentelemetry_0_13
-    cargo {{ toolchain }} clippy -p tracing-actix-web --lib --tests --examples --bins --features opentelemetry_0_32
+    cargo {{ toolchain }} clippy -p tracing-actix-web --lib --tests --examples --bins --features opentelemetry_0_33
     cargo {{ toolchain }} clippy -p actix-settings --tests --examples --bins
     cargo {{ toolchain }} clippy -p actix-settings --all-targets --features openssl
     cargo {{ toolchain }} clippy -p actix-settings --all-targets --features rustls-0_23
@@ -46,6 +46,7 @@ update-readmes:
     cd ./actix-cors && cargo rdme --force
     cd ./actix-identity && cargo rdme --force
     cd ./actix-session && cargo rdme --force
+    cd ./russe && cargo rdme --force
     fd README.md --exec-batch npx -y prettier --write
 
 # Test workspace code.
@@ -119,6 +120,7 @@ test-docs:
     cargo {{ toolchain }} check -p tracing-actix-web --all-targets --features opentelemetry_0_30
     cargo {{ toolchain }} check -p tracing-actix-web --all-targets --features opentelemetry_0_31
     cargo {{ toolchain }} check -p tracing-actix-web --all-targets --features opentelemetry_0_32
+    cargo {{ toolchain }} check -p tracing-actix-web --all-targets --features opentelemetry_0_33
 
 # Test `actix-settings` with feature sets that cannot be covered by `--all-features`.
 [group("test")]
@@ -141,7 +143,7 @@ ci-test-tracing-actix-web:
     cargo {{ toolchain }} test -p tracing-actix-web --lib --tests --examples --bins --no-fail-fast
     cargo {{ toolchain }} test -p tracing-actix-web --lib --tests --examples --bins --no-fail-fast --features uuid_v7
     cargo {{ toolchain }} test -p tracing-actix-web --lib --tests --examples --bins --no-fail-fast --features opentelemetry_0_13
-    cargo {{ toolchain }} test -p tracing-actix-web --lib --tests --examples --bins --no-fail-fast --features opentelemetry_0_32
+    cargo {{ toolchain }} test -p tracing-actix-web --lib --tests --examples --bins --no-fail-fast --features opentelemetry_0_33
 
 # Document crates in workspace.
 [group("docs")]
@@ -151,7 +153,7 @@ doc *args: && doc-set-workspace-crates
     # `--all-features` cannot be used for the entire workspace.
     RUSTDOCFLAGS="--cfg=docsrs -D warnings" cargo +nightly doc --workspace --no-deps --all-features --exclude tracing-actix-web --exclude actix-settings {{ args }}
     RUSTDOCFLAGS="--cfg=docsrs -D warnings" cargo +nightly doc -p actix-settings --no-deps --all-features {{ args }}
-    RUSTDOCFLAGS="--cfg=docsrs -D warnings" cargo +nightly doc -p tracing-actix-web --no-deps --features "uuid_v7 opentelemetry_0_32" {{ args }}
+    RUSTDOCFLAGS="--cfg=docsrs -D warnings" cargo +nightly doc -p tracing-actix-web --no-deps --features "uuid_v7 opentelemetry_0_33" {{ args }}
 
 [group("docs")]
 [private]
@@ -169,6 +171,20 @@ doc-set-workspace-crates:
 doc-watch:
     @just doc --open
     cargo watch -- just doc
+
+# Check security advisories.
+check-advisories:
+    cargo deny --log-level warn --workspace --all-features check advisories
+
+# Update the GitHub Actions lockfile.
+[group("maintenance")]
+actions-lock:
+    gh actions-lock --no-interactive
+
+# Verify the GitHub Actions lockfile without changes.
+[group("lint")]
+check-actions-lock:
+    gh actions-lock --verify --no-interactive
 
 # Check for unintentional external type exposure on all crates in workspace.
 [group("lint")]

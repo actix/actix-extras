@@ -18,7 +18,7 @@ use tokio_util::sync::PollSender;
 
 // RFC 6455: Control frames MUST have payload length <= 125 bytes.
 // Close payload is: 2-byte close code + optional UTF-8 reason, therefore the reason is <= 123 bytes.
-// ref. https://www.rfc-editor.org/rfc/rfc6455.html#section-5.5
+// ref. https://www.rfc-editor.org/info/rfc6455/#section-5.5
 const MAX_CONTROL_PAYLOAD_BYTES: usize = 125;
 const MAX_CLOSE_REASON_BYTES: usize = MAX_CONTROL_PAYLOAD_BYTES - 2;
 

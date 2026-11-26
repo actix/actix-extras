@@ -23,6 +23,7 @@ futures-util = { version = "0.3.17", default-features = false, features = ["std"
 prost = { version = "0.14", default-features = false }
 
 [dev-dependencies]
+awc = { version = "3", default-features = false }
 actix-web = { version = "4", default-features = false, features = ["macros"] }
 prost = { version = "0.14", default-features = false, features = ["derive"] }
 

@@ -39,6 +39,7 @@
 //! - `opentelemetry_0_30`: same as above but using `opentelemetry` 0.30;
 //! - `opentelemetry_0_31`: same as above but using `opentelemetry` 0.31;
 //! - `opentelemetry_0_32`: same as above but using `opentelemetry` 0.32;
+//! - `opentelemetry_0_33`: same as above but using `opentelemetry` 0.33;
 //! - `emit_event_on_error`: emit a [`tracing`] event when request processing fails with an error (enabled by default).
 //! - `uuid_v7`: use the UUID v7 implementation inside [`RequestId`] instead of UUID v4 (disabled by default).
 //!
@@ -56,7 +57,7 @@
 //! });
 //! ```
 //!
-//! Check out [the examples on GitHub](https://github.com/actix/actix-extras/tree/main/tracing-actix-web/examples) to get a taste of how [`TracingLogger`] can be used to observe and monitor your
+//! Check out [the examples on GitHub](https://github.com/actix/examples/tree/main/tracing) to get a taste of how [`TracingLogger`] can be used to observe and monitor your
 //! application.
 //!
 //! # From zero to hero: a crash course in observability
@@ -283,7 +284,7 @@
 //! If you add [`tracing-opentelemetry::OpenTelemetryLayer`](https://docs.rs/tracing-opentelemetry/0.17.0/tracing_opentelemetry/struct.OpenTelemetryLayer.html)
 //! in your `tracing::Subscriber` you will be able to export the root span (and all its children) as OpenTelemetry spans.
 //!
-//! Check out the [relevant example in the GitHub repository](https://github.com/actix/actix-extras/tree/main/tracing-actix-web/examples/opentelemetry) for reference.
+//! Check out the [relevant example in the GitHub repository](https://github.com/actix/examples/tree/main/tracing/opentelemetry) for reference.
 //!
 //! [root span]: crate::RootSpan
 //! [`actix-web`]: https://docs.rs/actix-web/4.0.0-beta.13/actix_web/index.html
@@ -323,6 +324,7 @@ mutually_exclusive_features::none_or_one_of!(
     "opentelemetry_0_30",
     "opentelemetry_0_31",
     "opentelemetry_0_32",
+    "opentelemetry_0_33",
 );
 
 #[cfg(any(
@@ -346,5 +348,6 @@ mutually_exclusive_features::none_or_one_of!(
     feature = "opentelemetry_0_30",
     feature = "opentelemetry_0_31",
     feature = "opentelemetry_0_32",
+    feature = "opentelemetry_0_33",
 ))]
 mod otel;
