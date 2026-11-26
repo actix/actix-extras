@@ -160,8 +160,6 @@ macro_rules! manager_tests {
                 assert_eq!(event, Event::Comment("ping".into()));
 
                 task.await.unwrap();
-
-                assert!(events.is_closed());
             }
 
             #[tokio::test]

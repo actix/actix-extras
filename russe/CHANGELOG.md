@@ -4,7 +4,6 @@
 
 - Add `ureq-3` crate feature, disabled by default.
 - Add `ureq_3::UreqExt` extension trait to read server-sent events with a blocking iterator.
-- Close the manager's event channel when the response stream ends.
 
 ## 0.3.5
 

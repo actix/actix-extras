@@ -16,7 +16,7 @@ use reqwest_0_13::{
     header::{self, HeaderValue},
 };
 use tokio::{
-    sync::mpsc::{UnboundedReceiver, unbounded_channel},
+    sync::mpsc::{UnboundedReceiver, UnboundedSender, unbounded_channel},
     task::JoinHandle,
 };
 use tokio_util::{codec::FramedRead, io::StreamReader};
@@ -102,7 +102,8 @@ pub struct Manager {
     client: Client,
     req: Request,
     last_event_id: Option<ByteString>,
-    sent: bool,
+    tx: UnboundedSender<Result<Event, Error>>,
+    rx: Option<UnboundedReceiver<Result<Event, Error>>>,
 }
 
 impl Manager {
@@ -116,6 +117,8 @@ impl Manager {
     pub fn new(client: &Client, req: Request) -> Self {
         const DEFAULT_ACCEPT: HeaderValue = HeaderValue::from_static(crate::MEDIA_TYPE_STR);
 
+        let (tx, rx) = unbounded_channel();
+
         let mut req = req.try_clone().expect("Request should be clone-able");
         req.headers_mut()
             .entry(header::ACCEPT)
@@ -125,15 +128,15 @@ impl Manager {
             client: client.clone(),
             req,
             last_event_id: None,
-            sent: false,
+            tx,
+            rx: Some(rx),
         }
     }
 
     /// Sends the request and returns a task handle and a receiver of events.
     ///
     /// Waits for response headers before starting the task that reads the event stream. A failed
-    /// request can be retried by calling this method again. The event channel closes when the
-    /// response stream ends.
+    /// request can be retried by calling this method again.
     ///
     /// # Errors
     ///
@@ -146,7 +149,7 @@ impl Manager {
     pub async fn send(
         &mut self,
     ) -> Result<(JoinHandle<()>, UnboundedReceiver<Result<Event, Error>>), Error> {
-        assert!(!self.sent, "The request has already been sent");
+        assert!(self.rx.is_some(), "The request has already been sent");
 
         let req = self.req.try_clone().unwrap();
         let res = self
@@ -157,9 +160,8 @@ impl Manager {
                 source: Box::new(source),
             })?;
 
-        self.sent = true;
-
-        let (tx, rx) = unbounded_channel();
+        let tx = self.tx.clone();
+        let rx = self.rx.take().unwrap();
 
         let task_handle = tokio::spawn(async move {
             let mut stream = res.sse_stream();
