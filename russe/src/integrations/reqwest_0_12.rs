@@ -10,18 +10,21 @@
 use std::io;
 
 use bytestring::ByteString;
-use futures_util::{StreamExt as _, TryStreamExt as _, stream::BoxStream};
+use futures_util::{TryStreamExt as _, stream::BoxStream};
 use reqwest_0_12::{
     Client, Request, Response,
     header::{self, HeaderValue},
 };
 use tokio::{
-    sync::mpsc::{UnboundedReceiver, UnboundedSender, unbounded_channel},
+    sync::{
+        mpsc::{UnboundedReceiver, unbounded_channel},
+        watch,
+    },
     task::JoinHandle,
 };
 use tokio_util::{codec::FramedRead, io::StreamReader};
 
-use crate::{Decoder, Error, Event};
+use crate::{Decoder, Error, Event, Reconnect};
 
 mod sealed {
     use super::*;
@@ -69,28 +72,38 @@ impl ReqwestExt for Response {
 /// Connection manager that delivers server-sent events via a channel and tracks
 /// `Last-Event-ID` header state.
 ///
-/// Automatic retries and `Last-Event-ID` sending are coming soon.
+/// Use [`Self::reconnect`] to reconnect when a response stream ends.
 ///
 /// # Examples
 ///
 /// ```no_run
 /// # use reqwest_0_12 as reqwest;
-/// use russe::{Event, reqwest_0_12::Manager};
+/// # use std::time::Duration;
+/// use russe::{Event, Reconnect, reqwest_0_12::Manager};
 ///
 /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 /// let client = reqwest::Client::new();
-/// let request = client.get("https://httpbin.org/sse").build()?;
+/// let req = client.get("https://httpbin.org/sse").build()?;
 ///
-/// let mut manager = Manager::new(&client, request);
+/// let mut manager = Manager::new(&client, req)
+///     .reconnect(Reconnect::OnError {
+///         delay: Duration::from_secs(1),
+///         max_retries: 3,
+///     });
+///
 /// let (_task, mut events) = manager.send().await?;
 ///
-/// while let Some(Ok(event)) = events.recv().await {
-///     if let Event::Message(msg) = event {
-///         println!("{}", msg.data);
+/// while let Some(event) = events.recv().await {
+///     match event {
+///         Ok(Event::Message(msg)) => {
+///             println!("{}", msg.data);
 ///
-///         if let Some(id) = msg.id {
-///             manager.commit_id(id);
+///             if let Some(id) = msg.id {
+///                 manager.commit_id(id);
+///             }
 ///         }
+///         Ok(_) => {}
+///         Err(err) => eprintln!("{err}"),
 ///     }
 /// }
 ///
@@ -101,9 +114,9 @@ impl ReqwestExt for Response {
 pub struct Manager {
     client: Client,
     req: Request,
-    last_event_id: Option<ByteString>,
-    tx: UnboundedSender<Result<Event, Error>>,
-    rx: Option<UnboundedReceiver<Result<Event, Error>>>,
+    last_event_id: watch::Sender<Option<ByteString>>,
+    reconnect: Reconnect,
+    sent: bool,
 }
 
 impl Manager {
@@ -114,10 +127,9 @@ impl Manager {
     /// # Panics
     ///
     /// Panics if the request has a stream body.
+    #[must_use]
     pub fn new(client: &Client, req: Request) -> Self {
         const DEFAULT_ACCEPT: HeaderValue = HeaderValue::from_static(crate::MEDIA_TYPE_STR);
-
-        let (tx, rx) = unbounded_channel();
 
         let mut req = req.try_clone().expect("Request should be clone-able");
         req.headers_mut()
@@ -127,16 +139,25 @@ impl Manager {
         Self {
             client: client.clone(),
             req,
-            last_event_id: None,
-            tx,
-            rx: Some(rx),
+            last_event_id: watch::Sender::new(None),
+            reconnect: Reconnect::default(),
+            sent: false,
         }
+    }
+
+    /// Selects the reconnect behavior for the request.
+    ///
+    /// Default is [`Reconnect::Never`].
+    #[must_use]
+    pub fn reconnect(mut self, policy: Reconnect) -> Self {
+        self.reconnect = policy;
+        self
     }
 
     /// Sends the request and returns a task handle and a receiver of events.
     ///
     /// Waits for response headers before starting the task that reads the event stream. A failed
-    /// request can be retried by calling this method again.
+    /// request can be retried by calling this method again. By default, the event channel closes at EOF.
     ///
     /// # Errors
     ///
@@ -149,36 +170,55 @@ impl Manager {
     pub async fn send(
         &mut self,
     ) -> Result<(JoinHandle<()>, UnboundedReceiver<Result<Event, Error>>), Error> {
-        assert!(self.rx.is_some(), "The request has already been sent");
+        assert!(!self.sent, "The request has already been sent");
 
+        let client = self.client.clone();
         let req = self.req.try_clone().unwrap();
-        let res = self
-            .client
-            .execute(req)
-            .await
-            .map_err(|source| Error::Http {
+
+        let connect = async move |id: Option<ByteString>| {
+            let mut req = req.try_clone().unwrap();
+
+            if let Some(id) = id {
+                let value =
+                    HeaderValue::from_bytes(id.as_bytes()).map_err(|source| Error::Http {
+                        source: Box::new(source),
+                    })?;
+
+                req.headers_mut().insert("last-event-id", value);
+            }
+
+            let res = client.execute(req).await.map_err(|source| Error::Http {
                 source: Box::new(source),
             })?;
 
-        let tx = self.tx.clone();
-        let rx = self.rx.take().unwrap();
+            Ok((res.status().as_u16() != 204).then(|| res.sse_stream()))
+        };
 
-        let task_handle = tokio::spawn(async move {
-            let mut stream = res.sse_stream();
+        let id = self.last_event_id.borrow().clone();
+        let first = connect(id).await?;
+        self.sent = true;
 
-            while let Some(ev) = stream.next().await {
-                let _ = tx.send(ev);
-            }
-        });
+        let (tx, rx) = unbounded_channel();
+
+        let task_handle = tokio::spawn(crate::reconnect::run(
+            first,
+            self.reconnect,
+            self.last_event_id.subscribe(),
+            tx,
+            connect,
+        ));
 
         Ok((task_handle, rx))
     }
 
     /// Stores the latest event ID for this manager.
     ///
-    /// The stored ID is reserved for reconnect support.
+    /// The initial request and each reconnect send the latest committed ID in the `Last-Event-ID`
+    /// header. An empty ID leaves the original request headers in effect.
     pub fn commit_id(&mut self, id: impl Into<ByteString>) {
-        self.last_event_id = Some(id.into());
+        let id = id.into();
+        self.last_event_id
+            .send_replace((!id.is_empty()).then_some(id));
     }
 }
 

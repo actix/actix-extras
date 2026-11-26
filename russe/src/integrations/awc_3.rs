@@ -13,14 +13,17 @@ use awc_3::{
 };
 use bytes::Bytes;
 use bytestring::ByteString;
-use futures_util::{Stream, StreamExt as _, TryStreamExt as _, stream::LocalBoxStream};
+use futures_util::{Stream, TryStreamExt as _, stream::LocalBoxStream};
 use tokio::{
-    sync::mpsc::{UnboundedReceiver, UnboundedSender, unbounded_channel},
+    sync::{
+        mpsc::{UnboundedReceiver, unbounded_channel},
+        watch,
+    },
     task::{JoinHandle, spawn_local},
 };
 use tokio_util::{codec::FramedRead, io::StreamReader};
 
-use crate::{Decoder, Error, Event};
+use crate::{Decoder, Error, Event, Reconnect};
 
 mod sealed {
     use super::*;
@@ -75,23 +78,37 @@ where
 /// the last event ID.
 ///
 /// Runs on an Actix runtime, a Tokio local runtime, or a Tokio [`LocalSet`](tokio::task::LocalSet).
-/// Automatic retries and sending the `Last-Event-ID` header are not yet supported.
+/// Use [`Self::reconnect`] to reconnect when a response stream ends.
 ///
 /// # Examples
 ///
 /// ```no_run
-/// use russe::{Event, awc_3::Manager};
+/// # use std::time::Duration;
+/// use russe::{Event, Reconnect, awc_3::Manager};
 ///
 /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 /// let client = awc_3::Client::default();
-/// let request = client.get("http://httpbin.org/sse");
-/// let mut manager = Manager::new(request);
+/// let req = client.get("http://httpbin.org/sse");
+///
+/// let mut manager = Manager::new(req)
+///     .reconnect(Reconnect::OnError {
+///         delay: Duration::from_secs(1),
+///         max_retries: 3,
+///     });
+///
 /// let (task, mut events) = manager.send().await?;
 ///
-/// if let Some(Ok(Event::Message(msg))) = events.recv().await {
-///     println!("{}", msg.data);
-///     if let Some(id) = msg.id {
-///         manager.commit_id(id);
+/// while let Some(event) = events.recv().await {
+///     match event {
+///         Ok(Event::Message(msg)) => {
+///             println!("{}", msg.data);
+///
+///             if let Some(id) = msg.id {
+///                 manager.commit_id(id);
+///             }
+///         }
+///         Ok(_) => {}
+///         Err(err) => eprintln!("{err}"),
 ///     }
 /// }
 /// # Ok(())
@@ -99,9 +116,9 @@ where
 /// ```
 pub struct Manager {
     req: FrozenClientRequest,
-    last_event_id: Option<ByteString>,
-    tx: UnboundedSender<Result<Event, Error>>,
-    rx: Option<UnboundedReceiver<Result<Event, Error>>>,
+    last_event_id: watch::Sender<Option<ByteString>>,
+    reconnect: Reconnect,
+    sent: bool,
 }
 
 impl fmt::Debug for Manager {
@@ -109,16 +126,16 @@ impl fmt::Debug for Manager {
         let Self {
             req,
             last_event_id,
-            tx,
-            rx,
+            reconnect,
+            sent,
         } = self;
 
         f.debug_struct("Manager")
             .field("method", req.get_method())
             .field("uri", req.get_uri())
             .field("last_event_id", last_event_id)
-            .field("tx", tx)
-            .field("rx", rx)
+            .field("reconnect", reconnect)
+            .field("sent", sent)
             .finish()
     }
 }
@@ -139,26 +156,34 @@ impl Manager {
     /// # Panics
     ///
     /// Panics if the request cannot be frozen.
+    #[must_use]
     pub fn new(req: ClientRequest) -> Self {
         let req = req
             .insert_header_if_none((header::ACCEPT, crate::MEDIA_TYPE_STR))
             .freeze()
             .expect("Failed to freeze AWC request");
 
-        let (tx, rx) = unbounded_channel();
-
         Self {
             req,
-            last_event_id: None,
-            tx,
-            rx: Some(rx),
+            last_event_id: watch::Sender::new(None),
+            reconnect: Reconnect::default(),
+            sent: false,
         }
+    }
+
+    /// Selects the reconnect behavior for the request.
+    ///
+    /// Default is [`Reconnect::Never`].
+    #[must_use]
+    pub fn reconnect(mut self, policy: Reconnect) -> Self {
+        self.reconnect = policy;
+        self
     }
 
     /// Sends the request and returns a task handle and a receiver of events.
     ///
     /// Waits for response headers before starting the task that reads the event stream. A failed
-    /// request can be retried by calling this method again.
+    /// request can be retried by calling this method again. By default, the event channel closes at EOF.
     ///
     /// # Errors
     ///
@@ -172,29 +197,46 @@ impl Manager {
     pub async fn send(
         &mut self,
     ) -> Result<(JoinHandle<()>, UnboundedReceiver<Result<Event, Error>>), Error> {
-        assert!(self.rx.is_some(), "The request has already been sent");
+        assert!(!self.sent, "The request has already been sent");
 
-        let res = self.req.send().await.map_err(http_error)?;
+        let req = self.req.clone();
 
-        let tx = self.tx.clone();
-        let rx = self.rx.take().unwrap();
+        let connect = async move |id: Option<ByteString>| {
+            let req = match id {
+                Some(id) => req.extra_header(("last-event-id", id.as_str())).send(),
+                None => req.send(),
+            };
 
-        let task_handle = spawn_local(async move {
-            let mut stream = res.sse_stream();
+            let res = req.await.map_err(http_error)?;
 
-            while let Some(ev) = stream.next().await {
-                let _ = tx.send(ev);
-            }
-        });
+            Ok((res.status().as_u16() != 204).then(|| res.sse_stream()))
+        };
+
+        let id = self.last_event_id.borrow().clone();
+        let first = connect(id).await?;
+        self.sent = true;
+
+        let (tx, rx) = unbounded_channel();
+
+        let task_handle = spawn_local(crate::reconnect::run(
+            first,
+            self.reconnect,
+            self.last_event_id.subscribe(),
+            tx,
+            connect,
+        ));
 
         Ok((task_handle, rx))
     }
 
     /// Stores the latest event ID for this manager.
     ///
-    /// The stored ID is reserved for reconnect support.
+    /// The initial request and each reconnect send the latest committed ID in the `Last-Event-ID`
+    /// header. An empty ID leaves the original request headers in effect.
     pub fn commit_id(&mut self, id: impl Into<ByteString>) {
-        self.last_event_id = Some(id.into());
+        let id = id.into();
+        self.last_event_id
+            .send_replace((!id.is_empty()).then_some(id));
     }
 }
 
@@ -240,6 +282,46 @@ mod tests {
     }
 
     #[tokio::test(flavor = "local")]
+    async fn reconnect_uses_committed_id_and_server_delay() {
+        let server = MockServer::start().await;
+
+        Mock::given(method("GET"))
+            .respond_with(
+                ResponseTemplate::new(200)
+                    .set_body_raw("retry: 1\n\ndata: hello\n\n", crate::MEDIA_TYPE_STR),
+            )
+            .up_to_n_times(1)
+            .expect(1)
+            .mount(&server)
+            .await;
+
+        Mock::given(method("GET"))
+            .and(wiremock::matchers::header("last-event-id", "42"))
+            .respond_with(ResponseTemplate::new(204))
+            .expect(1)
+            .mount(&server)
+            .await;
+
+        let req = Client::default().get(server.uri());
+
+        let mut manager = Manager::new(req).reconnect(crate::Reconnect::OnEof {
+            delay: Duration::from_secs(60),
+            max_retries: 3,
+        });
+        manager.commit_id("42");
+
+        let (task, mut events) = manager.send().await.unwrap();
+        task.timeout(Duration::from_secs(5)).await.unwrap().unwrap();
+
+        assert!(matches!(events.recv().await, Some(Ok(Event::Retry(_)))));
+        assert!(matches!(events.recv().await, Some(Ok(Event::Message(_)))));
+        assert!(events.recv().await.is_none());
+
+        let requests = server.received_requests().await.unwrap();
+        assert_eq!(requests[0].headers.get("last-event-id").unwrap(), "42");
+    }
+
+    #[tokio::test(flavor = "local")]
     async fn response_stream_decodes_sse_events() {
         let server = sse_server().await;
         let url = format!("{}/events", server.uri());
@@ -271,14 +353,14 @@ mod tests {
 
     #[tokio::test]
     async fn response_stream_decodes_custom_payload() {
-        let response =
+        let res =
             TestResponse::default()
                 .finish()
                 .map_body(|_, _| -> Payload<BoxedPayloadStream> {
                     Bytes::from_static(b"data: hello\n\n").into()
                 });
 
-        let events = response.sse_stream().try_collect::<Vec<_>>().await.unwrap();
+        let events = res.sse_stream().try_collect::<Vec<_>>().await.unwrap();
 
         assert_eq!(
             events,
@@ -294,10 +376,10 @@ mod tests {
     #[tokio::test]
     async fn response_stream_decodes_events_before_eof() {
         let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
-        let response = TestResponse::default()
+        let res = TestResponse::default()
             .finish()
             .map_body(|_, _| UnboundedReceiverStream::new(rx).boxed_local().into());
-        let mut events = response.sse_stream();
+        let mut events = res.sse_stream();
 
         tx.send(Ok(Bytes::from_static(b"data: hel"))).unwrap();
 
@@ -329,7 +411,7 @@ mod tests {
 
     #[tokio::test]
     async fn response_stream_reports_payload_errors() {
-        let response =
+        let res =
             TestResponse::default()
                 .finish()
                 .map_body(|_, _| -> Payload<BoxedPayloadStream> {
@@ -338,7 +420,7 @@ mod tests {
                         .into()
                 });
 
-        let error = response.sse_stream().try_next().await.unwrap_err();
+        let error = res.sse_stream().try_next().await.unwrap_err();
 
         let Error::Io { source } = error else {
             panic!("Expected an I/O error; got: {error:?}");
@@ -352,11 +434,11 @@ mod tests {
 
     #[tokio::test]
     async fn response_stream_reports_invalid_utf8() {
-        let response = TestResponse::default()
+        let res = TestResponse::default()
             .set_payload(Bytes::from_static(b"data: \xff\n\n"))
             .finish();
 
-        let error = response.sse_stream().try_next().await.unwrap_err();
+        let error = res.sse_stream().try_next().await.unwrap_err();
 
         assert!(matches!(error, Error::InvalidUtf8 { .. }));
     }
@@ -365,7 +447,7 @@ mod tests {
     #[should_panic(expected = "Failed to freeze AWC request")]
     async fn manager_panics_on_invalid_request() {
         let req = Client::default().get("http://[");
-        Manager::new(req);
+        let _ = Manager::new(req);
     }
 
     #[tokio::test(flavor = "local")]
@@ -375,10 +457,10 @@ mod tests {
 
         let client = Client::builder().timeout(Duration::from_secs(5)).finish();
         let req = client.get(url);
+
         let mut manager = Manager::new(req);
 
         let (task, events) = manager.send().await.unwrap();
-        drop(manager);
 
         let events = UnboundedReceiverStream::new(events)
             .try_collect::<Vec<_>>()
@@ -414,6 +496,7 @@ mod tests {
 
         let client = Client::builder().timeout(Duration::from_secs(1)).finish();
         let req = client.get(server.uri());
+
         let mut manager = Manager::new(req);
 
         assert!(matches!(
@@ -438,11 +521,15 @@ mod tests {
         );
 
         task.await.unwrap();
+
+        assert!(events.is_closed());
+        assert!(events.recv().await.is_none());
     }
 
     #[tokio::test(flavor = "local")]
     async fn manager_sends_decoding_errors_through_receiver() {
         let server = MockServer::start().await;
+
         Mock::given(method("GET"))
             .respond_with(
                 ResponseTemplate::new(200).set_body_raw(b"data: \xff\n\n", crate::MEDIA_TYPE_STR),
@@ -452,6 +539,7 @@ mod tests {
             .await;
 
         let req = Client::default().get(server.uri());
+
         let mut manager = Manager::new(req);
 
         let (task, mut events) = manager.send().await.unwrap();
@@ -467,6 +555,7 @@ mod tests {
     #[tokio::test(flavor = "local")]
     async fn manager_sends_accept_header() {
         let server = MockServer::start().await;
+
         Mock::given(method("GET"))
             .respond_with(ResponseTemplate::new(200))
             .mount(&server)
@@ -474,11 +563,13 @@ mod tests {
 
         let client = Client::default();
         let custom = "text/event-stream, text/plain;q=0.1";
-        for request in [
+
+        for req in [
             client.get(server.uri()),
             client.get(server.uri()).insert_header(("accept", custom)),
         ] {
-            let mut manager = Manager::new(request);
+            let mut manager = Manager::new(req);
+
             let (task, _) = manager.send().await.unwrap();
             task.await.unwrap();
         }

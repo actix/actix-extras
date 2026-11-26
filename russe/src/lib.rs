@@ -79,6 +79,10 @@ pub mod reqwest_0_13;
 #[path = "integrations/ureq_3.rs"]
 pub mod ureq_3;
 
+#[cfg(any(feature = "awc-3", feature = "reqwest-0_12", feature = "reqwest-0_13"))]
+mod reconnect;
+#[cfg(any(feature = "awc-3", feature = "reqwest-0_12", feature = "reqwest-0_13"))]
+pub use self::reconnect::Reconnect;
 pub use self::{decoder::Decoder, encoder::Encoder, error::Error, event::Event, message::Message};
 
 /// A specialized `Result` type for `russe` operations.

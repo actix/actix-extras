@@ -11,6 +11,7 @@ use russe::{
     reqwest_0_13::{Manager, ReqwestExt as _},
 };
 use tokio_stream::wrappers::UnboundedReceiverStream;
+use tokio_util::time::FutureExt as _;
 use wiremock::{
     Mock, MockServer, ResponseTemplate,
     matchers::{method, path},
@@ -77,18 +78,17 @@ async fn manager_delivers_sse_events() {
         .get(format!("{}/events", server.uri()))
         .build()
         .unwrap();
-    let mut manager = Manager::new(&client, req);
+
+    let mut manager = Manager::new(&client, req).reconnect(russe::Reconnect::Never);
 
     let (task, events) = manager.send().await.unwrap();
-    drop(manager);
 
-    let events = tokio::time::timeout(
-        Duration::from_secs(5),
-        UnboundedReceiverStream::new(events).try_collect::<Vec<_>>(),
-    )
-    .await
-    .unwrap()
-    .unwrap();
+    let events = UnboundedReceiverStream::new(events)
+        .try_collect::<Vec<_>>()
+        .timeout(Duration::from_secs(5))
+        .await
+        .unwrap()
+        .unwrap();
 
     assert_eq!(
         events,

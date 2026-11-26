@@ -17,10 +17,10 @@ all-features = true
 allowed_external_types = ["bytestring::*", "tokio_util::*"]
 
 [features]
-awc-3 = ["dep:awc-3", "dep:err-report", "dep:futures-util", "tokio-util/io"]
+awc-3 = ["dep:awc-3", "dep:err-report", "dep:futures-util", "tokio/macros", "tokio/time", "tokio-util/io"]
 mime = ["dep:mime"]
-reqwest-0_12 = ["dep:reqwest-0_12", "dep:futures-util"]
-reqwest-0_13 = ["dep:reqwest-0_13", "dep:futures-util"]
+reqwest-0_12 = ["dep:reqwest-0_12", "dep:futures-util", "tokio/macros", "tokio/time"]
+reqwest-0_13 = ["dep:reqwest-0_13", "dep:futures-util", "tokio/macros", "tokio/time"]
 ureq-3 = ["dep:ureq-3"]
 
 [dependencies]
