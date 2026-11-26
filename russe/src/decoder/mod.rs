@@ -173,13 +173,8 @@ impl tokio_util::codec::Decoder for Decoder {
     type Error = DecodeError;
 
     fn decode(&mut self, src: &mut BytesMut) -> Result<Option<Self::Item>, Self::Error> {
-        self.decode_event(src)
-            .map_err(|source| DecodeError::InvalidUtf8 { source })
-    }
-}
+        let invalid_utf8 = |source| DecodeError::InvalidUtf8 { source };
 
-impl Decoder {
-    fn decode_event(&mut self, src: &mut BytesMut) -> Result<Option<Event>, str::Utf8Error> {
         if self.pending_event.is_some() {
             return Ok(self.pending_event.take());
         }
@@ -216,7 +211,9 @@ impl Decoder {
                 FrameKind::Message => {
                     // Record the final line before the frame delimiter.
                     if self.message.record_line(src, delimiter) {
-                        if let Some(event) = self.message.finish(src, consumed)? {
+                        if let Some(event) =
+                            self.message.finish(src, consumed).map_err(invalid_utf8)?
+                        {
                             return Ok(Some(event));
                         }
 
@@ -256,7 +253,7 @@ impl Decoder {
                                     data
                                 };
 
-                                return Ok(Some(data_event(data?)));
+                                return Ok(Some(data_event(data.map_err(invalid_utf8)?)));
                             }
 
                             let is_bare_data = line == b"data";
@@ -273,7 +270,7 @@ impl Decoder {
                             let comment = ByteString::try_from(strip_space(value));
                             src.advance(consumed);
 
-                            return Ok(Some(Event::Comment(comment?)));
+                            return Ok(Some(Event::Comment(comment.map_err(invalid_utf8)?)));
                         }
 
                         [b'r', ..] => {
@@ -291,7 +288,7 @@ impl Decoder {
                             let id = parse_id(line);
                             src.advance(consumed);
 
-                            if let Some(id) = id? {
+                            if let Some(id) = id.map_err(invalid_utf8)? {
                                 return Ok(Some(Event::Message(Message {
                                     data: ByteString::new(),
                                     event: None,
@@ -310,7 +307,7 @@ impl Decoder {
 
                                 return Ok(Some(Event::Message(Message {
                                     data: ByteString::new(),
-                                    event: Some(event?),
+                                    event: Some(event.map_err(invalid_utf8)?),
                                     retry: None,
                                     id: None,
                                 })));
@@ -330,12 +327,17 @@ impl Decoder {
                 FrameKind::Other => {}
             }
 
-            if let Some(event) = self.parse_frame(src, delimiter, consumed, last_line_start)? {
+            if let Some(event) = self
+                .parse_frame(src, delimiter, consumed, last_line_start)
+                .map_err(invalid_utf8)?
+            {
                 return Ok(Some(event));
             }
         }
     }
+}
 
+impl Decoder {
     /// Scans `src` for the next blank-line frame delimiter and classifies the frame while tracking
     /// line starts and recording fast-path message fields.
     ///
