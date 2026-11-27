@@ -244,6 +244,19 @@ impl<Store: SessionStore> SessionMiddlewareBuilder<Store> {
         self
     }
 
+    /// Set the `Partitioned` attribute for the cookie used to store the session ID.
+    ///
+    /// If the cookie is set as partitioned, it will be stored separately for each top-level site
+    /// (see [CHIPS]). Partitioned cookies are always marked as `Secure`.
+    ///
+    /// Default is `false`.
+    ///
+    /// [CHIPS]: https://developer.mozilla.org/en-US/docs/Web/Privacy/Guides/Privacy_sandbox/Partitioned_cookies
+    pub fn cookie_partitioned(mut self, partitioned: bool) -> Self {
+        self.configuration.cookie.partitioned = partitioned;
+        self
+    }
+
     /// Determines what type of session cookie should be used and how its lifecycle should be managed.
     /// Check out [`SessionLifecycle`]'s documentation for more details on the available options.
     ///
@@ -366,6 +379,7 @@ pub(crate) struct SessionConfiguration {
 #[derive(Clone)]
 pub(crate) struct CookieConfiguration {
     pub(crate) secure: bool,
+    pub(crate) partitioned: bool,
     pub(crate) http_only: bool,
     pub(crate) name: String,
     pub(crate) same_site: SameSite,
@@ -380,6 +394,7 @@ pub(crate) fn default_configuration(key: Key) -> Configuration {
     Configuration {
         cookie: CookieConfiguration {
             secure: true,
+            partitioned: false,
             http_only: true,
             name: "id".into(),
             same_site: SameSite::Lax,
