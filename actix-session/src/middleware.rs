@@ -1,5 +1,5 @@
 use std::{
-    fmt,
+    fmt::{self, Write as _},
     future::{ready, Future, Ready},
     pin::Pin,
     rc::Rc,
@@ -9,7 +9,7 @@ use actix_web::{
     body::MessageBody,
     cookie::{Cookie, CookieJar, Key},
     dev::{forward_ready, ResponseHead, Service, ServiceRequest, ServiceResponse, Transform},
-    http::header::{HeaderValue, SET_COOKIE},
+    http::header::{HeaderValue, InvalidHeaderValue, SET_COOKIE},
     HttpResponse,
 };
 use anyhow::Context;
@@ -412,7 +412,7 @@ fn set_session_cookie(
     let value: String = session_key.into();
     let mut cookie = Cookie::new(config.name.clone(), value);
 
-    cookie.set_secure(config.secure);
+    cookie.set_secure(config.secure || config.partitioned);
     cookie.set_http_only(config.http_only);
     cookie.set_same_site(config.same_site);
     cookie.set_path(config.path.clone());
@@ -433,7 +433,7 @@ fn set_session_cookie(
 
     // set cookie
     let cookie = jar.delta().next().unwrap();
-    let val = HeaderValue::from_str(&cookie.encoded().to_string())
+    let val = cookie_header_value(cookie.encoded(), cookie.value().len(), config)
         .context("Failed to attach a session cookie to the outgoing response")?;
 
     response.headers_mut().append(SET_COOKIE, val);
@@ -447,7 +447,7 @@ fn delete_session_cookie(
 ) -> Result<(), anyhow::Error> {
     let removal_cookie = Cookie::build(config.name.clone(), "")
         .path(config.path.clone())
-        .secure(config.secure)
+        .secure(config.secure || config.partitioned)
         .http_only(config.http_only)
         .same_site(config.same_site);
 
@@ -460,9 +460,37 @@ fn delete_session_cookie(
 
     removal_cookie.make_removal();
 
-    let val = HeaderValue::from_str(&removal_cookie.to_string())
+    let val = cookie_header_value(&removal_cookie, 0, config)
         .context("Failed to attach a session removal cookie to the outgoing response")?;
     response.headers_mut().append(SET_COOKIE, val);
 
     Ok(())
+}
+
+/// Upper bound for cookie attributes length, excluding path and domain.
+const COOKIE_ATTRIBUTES_LEN: usize = 128;
+
+/// Serializes a cookie into a pre-sized `Set-Cookie` header value.
+fn cookie_header_value(
+    cookie: impl fmt::Display,
+    value_len: usize,
+    config: &CookieConfiguration,
+) -> Result<HeaderValue, InvalidHeaderValue> {
+    // headroom for percent-encoded value
+    let capacity = config.name.len()
+        + value_len
+        + value_len / 16
+        + config.path.len()
+        + config.domain.as_ref().map_or(0, String::len)
+        + COOKIE_ATTRIBUTES_LEN;
+
+    let mut header = String::with_capacity(capacity);
+    write!(header, "{cookie}").expect("a Display implementation returned an error unexpectedly");
+
+    // not supported by the `cookie` version used by `actix-web`
+    if config.partitioned {
+        header.push_str("; Partitioned");
+    }
+
+    HeaderValue::try_from(header)
 }

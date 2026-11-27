@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add `SessionMiddlewareBuilder::cookie_partitioned()` method.
+
 ## 0.12.0
 
 - Session state is now stored as JSON values rather than JSON strings, avoiding double serialization in storage backends. The stored session-state format is versioned and older sessions are automatically migrated when loaded.
