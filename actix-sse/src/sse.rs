@@ -171,7 +171,7 @@ mod tests {
     use super::*;
     use crate::Data;
 
-    #[actix_web::test]
+    #[tokio::test(flavor = "local")]
     async fn data_builders_and_setters_encode_fields() {
         let mut data = Data::new("old data").id("old ID").event("old event");
 
@@ -189,7 +189,7 @@ mod tests {
         );
     }
 
-    #[actix_web::test]
+    #[tokio::test(flavor = "local")]
     async fn message_fields_are_encoded() {
         let events = stream::iter([
             Event::Comment("foo".into()),
@@ -204,7 +204,7 @@ mod tests {
         );
     }
 
-    #[actix_web::test]
+    #[tokio::test(flavor = "local")]
     async fn message_retry_is_omitted_by_default() {
         let events = stream::iter([
             Data::new("payload").into(),
@@ -223,7 +223,7 @@ mod tests {
         );
     }
 
-    #[actix_web::test]
+    #[tokio::test(flavor = "local")]
     async fn message_retry_can_be_zero() {
         let data = Data::new("payload")
             .id("42")
@@ -243,7 +243,7 @@ mod tests {
         );
     }
 
-    #[actix_web::test]
+    #[tokio::test(flavor = "local")]
     async fn consecutive_messages_have_independent_retry_fields() {
         let mut data =
             Data::new(serde_json::json!({ "bar": 42 }).to_string()).retry(Duration::from_secs(1));
@@ -272,7 +272,7 @@ mod tests {
         );
     }
 
-    #[actix_web::test]
+    #[tokio::test(flavor = "local")]
     async fn initial_retry_precedes_message_retry() {
         let events = stream::iter([Data::new("payload")
             .retry(Duration::from_millis(1234))
@@ -302,7 +302,7 @@ mod tests {
         assert!(end.is_none());
     }
 
-    #[actix_web::test]
+    #[tokio::test(flavor = "local")]
     async fn sse_from_external_streams() {
         let st = stream::empty::<Result<_, Infallible>>();
         let sse = Sse::from_stream(st);
@@ -320,7 +320,7 @@ mod tests {
         );
     }
 
-    #[actix_web::test]
+    #[tokio::test(flavor = "local")]
     async fn normalizes_line_endings() {
         let events = stream::iter([
             Event::Data(Data::new("first\r\nsecond\rthird\n")),
@@ -334,7 +334,7 @@ mod tests {
         );
     }
 
-    #[actix_web::test]
+    #[tokio::test(flavor = "local")]
     async fn rejects_invalid_message_fields() {
         for (id, event) in [
             ("bad\nid", "update"),
@@ -368,7 +368,7 @@ mod tests {
         }
     }
 
-    #[actix_web::test]
+    #[tokio::test(flavor = "local")]
     async fn retry_precedes_stream_events() {
         let events = stream::iter([Event::Comment("first".into())]);
         let sse =
@@ -380,7 +380,7 @@ mod tests {
         );
     }
 
-    #[actix_web::test]
+    #[tokio::test(flavor = "local")]
     async fn receiver_errors_are_preserved() {
         let (sender, receiver) = mpsc::channel(1);
         let sse = Sse::from_stream(ReceiverStream::new(receiver));
@@ -398,7 +398,7 @@ mod tests {
         );
     }
 
-    #[actix_web::test]
+    #[tokio::test(flavor = "local")]
     async fn closed_receiver_ends_with_keep_alive() {
         let (sender, receiver) = mpsc::channel(1);
         let sse = Sse::from_infallible_receiver(receiver).with_keep_alive(Duration::from_millis(4));
@@ -408,7 +408,7 @@ mod tests {
         assert_eq!(body::to_bytes(sse).await.unwrap(), "");
     }
 
-    #[actix_web::test]
+    #[tokio::test(flavor = "local")]
     async fn appropriate_headers_are_set_on_responder() {
         let st = stream::empty::<Result<_, Infallible>>();
         let sse = Sse::from_stream(st);
@@ -424,7 +424,7 @@ mod tests {
         assert_eq!(res.headers().get("cache-control").unwrap(), "no-cache");
     }
 
-    #[actix_web::test]
+    #[tokio::test(flavor = "local")]
     async fn messages_are_received_from_sender() {
         let (sender, receiver) = tokio::sync::mpsc::channel(2);
         let mut sse = Sse::from_infallible_receiver(receiver);
@@ -446,7 +446,7 @@ mod tests {
         }
     }
 
-    #[actix_web::test]
+    #[tokio::test(flavor = "local")]
     async fn keep_alive_is_sent() {
         let waker = noop_waker();
         let mut cx = Context::from_waker(&waker);

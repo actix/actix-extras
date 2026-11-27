@@ -263,7 +263,7 @@ mod test {
         val.to_str().unwrap()
     }
 
-    #[actix_web::test]
+    #[tokio::test(flavor = "local")]
     async fn test_validate_not_allowed_origin() {
         let cors = Cors::default()
             .allowed_origin("https://www.example.com")
@@ -282,7 +282,7 @@ mod test {
         assert!(cors.inner.validate_allowed_headers(req.head()).is_err());
     }
 
-    #[actix_web::test]
+    #[tokio::test(flavor = "local")]
     async fn test_preflight() {
         let mut cors = Cors::default()
             .allow_any_origin()
@@ -374,7 +374,7 @@ mod test {
         assert_eq!(resp.status(), StatusCode::OK);
     }
 
-    #[actix_web::test]
+    #[tokio::test(flavor = "local")]
     async fn allow_fn_origin_equals_head_origin() {
         let cors = Cors::default()
             .allowed_origin_fn(|origin, head| {

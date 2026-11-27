@@ -14,7 +14,7 @@ async fn logout(session: Session) -> impl Responder {
     "Logged out"
 }
 
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 async fn cookie_storage() -> std::io::Result<()> {
     let signing_key = Key::generate();
     let app = test::init_service(

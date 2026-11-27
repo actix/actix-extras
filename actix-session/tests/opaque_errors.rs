@@ -12,7 +12,7 @@ use actix_web::{
 use anyhow::Error;
 use serde_json::{Map, Value};
 
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 async fn errors_are_opaque() {
     let signing_key = Key::generate();
     let app = test::init_service(

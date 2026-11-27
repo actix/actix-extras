@@ -2,7 +2,7 @@ use actix_session::{Session, SessionExt, SessionStatus};
 use actix_web::{test, HttpResponse};
 use serde_json::Value;
 
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 async fn standalone_session() {
     let session = Session::new();
 
@@ -18,7 +18,7 @@ async fn standalone_session() {
     );
 }
 
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 async fn default_session() {
     let session = Session::default();
 
@@ -26,7 +26,7 @@ async fn default_session() {
     assert!(session.entries().is_empty());
 }
 
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 async fn session() {
     let req = test::TestRequest::default().to_srv_request();
     let session = req.get_session();
@@ -45,7 +45,7 @@ async fn session() {
     );
 }
 
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 async fn get_session() {
     let req = test::TestRequest::default().to_srv_request();
 
@@ -55,7 +55,7 @@ async fn get_session() {
     assert_eq!(res, Some(true));
 }
 
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 async fn get_session_from_request_head() {
     let req = test::TestRequest::default().to_srv_request();
 
@@ -65,7 +65,7 @@ async fn get_session_from_request_head() {
     assert_eq!(res, Some(10));
 }
 
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 async fn purge_session() {
     let req = test::TestRequest::default().to_srv_request();
     let session = req.get_session();
@@ -74,7 +74,7 @@ async fn purge_session() {
     assert_eq!(session.status(), SessionStatus::Purged);
 }
 
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 async fn renew_session() {
     let req = test::TestRequest::default().to_srv_request();
     let session = req.get_session();
@@ -83,7 +83,7 @@ async fn renew_session() {
     assert_eq!(session.status(), SessionStatus::Renewed);
 }
 
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 async fn session_entries() {
     let req = test::TestRequest::default().to_srv_request();
     let session = req.get_session();
@@ -94,7 +94,7 @@ async fn session_entries() {
     map.contains_key("test_num");
 }
 
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 async fn session_contains_key() {
     let req = test::TestRequest::default().to_srv_request();
     let session = req.get_session();
@@ -104,7 +104,7 @@ async fn session_contains_key() {
     assert!(!session.contains_key("test_num"));
 }
 
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 async fn insert_session_after_renew() {
     let session = test::TestRequest::default().to_srv_request().get_session();
 
@@ -118,7 +118,7 @@ async fn insert_session_after_renew() {
     assert_eq!(session.status(), SessionStatus::Renewed);
 }
 
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 async fn update_session() {
     let session = test::TestRequest::default().to_srv_request().get_session();
 
@@ -135,7 +135,7 @@ async fn update_session() {
     assert_eq!(session.get("test_val").unwrap(), Some(2));
 }
 
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 async fn update_or_session() {
     let session = test::TestRequest::default().to_srv_request().get_session();
 
@@ -147,7 +147,7 @@ async fn update_or_session() {
     assert_eq!(session.get("test_val").unwrap(), Some(2));
 }
 
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 async fn remove_session_after_renew() {
     let session = test::TestRequest::default().to_srv_request().get_session();
 
@@ -161,7 +161,7 @@ async fn remove_session_after_renew() {
     assert_eq!(session.status(), SessionStatus::Renewed);
 }
 
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 async fn clear_session_after_renew() {
     let session = test::TestRequest::default().to_srv_request().get_session();
 

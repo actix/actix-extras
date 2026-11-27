@@ -43,6 +43,7 @@ deadpool-redis = { version = "0.23", optional = true }
 actix-session = { path = ".", features = ["cookie-session", "redis-session"] }
 actix-test = "0.1"
 actix-web = { version = "4", default-features = false, features = ["cookies", "secure-cookies", "macros"] }
+tokio = { version = "1.51", features = ["macros", "rt"] }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tracing = "0.1.44"
 

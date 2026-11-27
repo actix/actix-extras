@@ -311,7 +311,7 @@ mod tests {
         pub name: String,
     }
 
-    #[actix_web::test]
+    #[tokio::test(flavor = "local")]
     async fn test_protobuf() {
         let protobuf = ProtoBuf(MyObject {
             number: 9,
@@ -323,7 +323,7 @@ mod tests {
         assert_eq!(ct, "application/protobuf");
     }
 
-    #[actix_web::test]
+    #[tokio::test(flavor = "local")]
     async fn test_protobuf_message() {
         let (req, mut pl) = TestRequest::default().to_http_parts();
         let protobuf = ProtoBufMessage::<MyObject>::new(&req, &mut pl).await;

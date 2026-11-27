@@ -19,7 +19,7 @@ fn memory_limiter(limit: usize, period: Duration) -> Limiter {
         .unwrap()
 }
 
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 async fn test_limiter_count() -> Result<(), Error> {
     let limit = 20;
     let limiter = memory_limiter(limit, LONG_PERIOD);
@@ -33,7 +33,7 @@ async fn test_limiter_count() -> Result<(), Error> {
     Ok(())
 }
 
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 async fn test_limiter_count_error() -> Result<(), Error> {
     let limit = 5;
     let limiter = memory_limiter(limit, LONG_PERIOD);
@@ -59,7 +59,7 @@ async fn test_limiter_count_error() -> Result<(), Error> {
     Ok(())
 }
 
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 async fn test_limiters_share_one_store() -> Result<(), Error> {
     let limit = 4;
     let store = MemoryStore::new();
@@ -80,7 +80,7 @@ async fn test_limiters_share_one_store() -> Result<(), Error> {
     Ok(())
 }
 
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 async fn test_middleware_limits_requests() {
     let limit = 2;
     let limiter = Limiter::memory_builder(MemoryStore::new())
@@ -121,7 +121,7 @@ async fn test_middleware_limits_requests() {
     }
 }
 
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 async fn test_middleware_passes_through_unkeyed_requests() {
     let app = actix_test::init_service(
         App::new()
@@ -148,7 +148,7 @@ async fn test_middleware_passes_through_unkeyed_requests() {
     }
 }
 
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 async fn test_middleware_window_resets() {
     let limiter = Limiter::memory_builder(MemoryStore::new())
         .limit(1)

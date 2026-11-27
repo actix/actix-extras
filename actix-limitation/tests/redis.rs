@@ -4,13 +4,13 @@ use actix_limitation::{Error, Limiter, RateLimiter};
 use actix_web::{dev::ServiceRequest, http::StatusCode, test, web, App, HttpRequest, HttpResponse};
 use uuid::Uuid;
 
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 #[should_panic = "Redis URL did not parse"]
 async fn test_create_limiter_error() {
     Limiter::builder("127.0.0.1").build().unwrap();
 }
 
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 async fn test_limiter_count() -> Result<(), Error> {
     let limiter = Limiter::builder("redis://127.0.0.1:6379/2")
         .limit(20)
@@ -28,7 +28,7 @@ async fn test_limiter_count() -> Result<(), Error> {
     Ok(())
 }
 
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 async fn test_limiter_count_error() -> Result<(), Error> {
     let limiter = Limiter::builder("redis://127.0.0.1:6379/3")
         .limit(25)
@@ -55,7 +55,7 @@ async fn test_limiter_count_error() -> Result<(), Error> {
     Ok(())
 }
 
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 async fn test_limiter_key_by() -> Result<(), Error> {
     let cooldown_period = Duration::from_secs(1);
     let limiter = Limiter::builder("redis://127.0.0.1:6379/3")

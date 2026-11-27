@@ -33,6 +33,7 @@ actix-session = { version = "0.12", features = ["redis-session", "cookie-session
 
 env_logger = "0.11"
 reqwest = { version = "0.13", default-features = false, features = ["cookies", "json"] }
+tokio = { version = "1.51", features = ["macros", "rt"] }
 uuid = { version = "1", features = ["v4"] }
 
 [lints]

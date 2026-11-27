@@ -26,6 +26,7 @@ prost = { version = "0.14", default-features = false }
 awc = { version = "3", default-features = false }
 actix-web = { version = "4", default-features = false, features = ["macros"] }
 prost = { version = "0.14", default-features = false, features = ["derive"] }
+tokio = { version = "1.51", features = ["macros", "rt"] }
 
 [lints]
 workspace = true

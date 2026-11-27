@@ -5,7 +5,7 @@ use reqwest::StatusCode;
 
 use crate::{fixtures::user_id, test_app::TestApp};
 
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 async fn opaque_401_is_returned_for_unauthenticated_users() {
     let app = TestApp::spawn();
 
@@ -14,7 +14,7 @@ async fn opaque_401_is_returned_for_unauthenticated_users() {
     assert!(response.bytes().await.unwrap().is_empty());
 }
 
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 async fn login_works() {
     let app = TestApp::spawn();
     let user_id = user_id();
@@ -28,7 +28,7 @@ async fn login_works() {
     assert!(response.status().is_success());
 }
 
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 async fn custom_keys_work_as_expected() {
     let custom_id_key = "custom.user_id";
     let custom_last_visited_key = "custom.last_visited_at";
@@ -55,7 +55,7 @@ async fn custom_keys_work_as_expected() {
     assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
 }
 
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 async fn logging_in_again_replaces_the_current_identity() {
     let app = TestApp::spawn();
     let first_user_id = user_id();
@@ -73,7 +73,7 @@ async fn logging_in_again_replaces_the_current_identity() {
     assert_eq!(body.user_id, Some(second_user_id.clone()));
 }
 
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 async fn session_key_is_renewed_on_login() {
     let app = TestApp::spawn();
     let user_id = user_id();
@@ -91,7 +91,7 @@ async fn session_key_is_renewed_on_login() {
     assert_eq!(body.session_status, "renewed");
 }
 
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 async fn logout_works() {
     let app = TestApp::spawn();
     let user_id = user_id();
@@ -109,7 +109,7 @@ async fn logout_works() {
     assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
 }
 
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 async fn logout_can_avoid_destroying_the_whole_session() {
     let app = TestApp::spawn_with_config(
         IdentityMiddleware::builder().logout_behavior(LogoutBehavior::DeleteIdentityKeys),
@@ -137,7 +137,7 @@ async fn logout_can_avoid_destroying_the_whole_session() {
     assert_eq!(body.counter, 1);
 }
 
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 async fn user_is_logged_out_when_login_deadline_is_elapsed() {
     let login_deadline = Duration::from_millis(10);
     let app = TestApp::spawn_with_config(
@@ -157,7 +157,7 @@ async fn user_is_logged_out_when_login_deadline_is_elapsed() {
     assert_eq!(body.user_id, None);
 }
 
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 async fn login_deadline_does_not_log_users_out_before_their_time() {
     // 1 hour
     let login_deadline = Duration::from_secs(60 * 60);
@@ -174,7 +174,7 @@ async fn login_deadline_does_not_log_users_out_before_their_time() {
     assert_eq!(body.user_id, Some(user_id));
 }
 
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 async fn visit_deadline_does_not_log_users_out_before_their_time() {
     // 1 hour
     let visit_deadline = Duration::from_secs(60 * 60);
@@ -191,7 +191,7 @@ async fn visit_deadline_does_not_log_users_out_before_their_time() {
     assert_eq!(body.user_id, Some(user_id));
 }
 
-#[actix_web::test]
+#[tokio::test(flavor = "local")]
 async fn user_is_logged_out_when_visit_deadline_is_elapsed() {
     let visit_deadline = Duration::from_millis(10);
     let app = TestApp::spawn_with_config(
